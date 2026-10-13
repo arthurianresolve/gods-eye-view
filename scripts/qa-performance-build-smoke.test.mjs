@@ -1774,8 +1774,10 @@ test('outer fault document bounds a hung journey and closes ownership before pag
     createBrowserContext: async () => context,
     targets: () => [],
   };
+  let observedOperationTimeoutMs = null;
   const captureModule = {
-    async runNativeMapStreamingFaultControl() {
+    async runNativeMapStreamingFaultControl(_page, options) {
+      observedOperationTimeoutMs = options.operationTimeoutMs;
       return new Promise(() => {});
     },
   };
@@ -1832,8 +1834,9 @@ test('outer fault document bounds a hung journey and closes ownership before pag
         embeddedWorkerSource: 'self.postMessage({ready:true});',
         allowedModuleIds: ['Core/Test'],
       },
-      startedAt: Date.now(),
+      startedAt: 1_000_000,
       budgetMs: 15_200,
+      nowImpl: () => 1_000_000,
       documentId: `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`,
       preparePageImpl: async (_browser, _baseUrl, options) => {
         page.fixtureRespond = options.respond;
@@ -1869,6 +1872,11 @@ test('outer fault document bounds a hung journey and closes ownership before pag
   assert.equal(observedDocument?.interceptionRelease?.confirmed, true);
   assert.equal(observedDocument?.delivery?.status, 'disposed');
   assert.equal(observedDocument?.delivery?.pendingCount, 0);
+  assert.equal(
+    observedOperationTimeoutMs,
+    200,
+    'the controlled clock preserves the intended 200ms hung-journey budget after setup',
+  );
 });
 
 test('map owner closes its target before draining pending interception and catches late callbacks', async () => {
@@ -5084,14 +5092,31 @@ test('smoke compaction does not label an unbounded or unrecognized report as raw
 
 test('bounded child runner stops an owned process on timeout', async () => {
   const started = Date.now();
+  const syncCommands = [];
   await assert.rejects(
     runBoundedChild(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
       timeoutMs: 150,
       maxOutputBytes: 2048,
+      spawnSyncImpl(command, args, options) {
+        syncCommands.push(path.basename(command).toLowerCase());
+        return spawnSync(command, args, options);
+      },
     }),
     /timed out; .*cleanup confirmed/,
   );
   assert.ok(Date.now() - started < 5000);
+  if (process.platform === 'win32') {
+    assert.equal(
+      syncCommands.filter((command) => command === 'taskkill').length,
+      1,
+      'a confirmed Windows process-tree termination is not repeated after child close',
+    );
+    assert.equal(
+      syncCommands.filter((command) => command === 'tasklist').length,
+      0,
+      'the child close event confirms the root process exit',
+    );
+  }
 });
 
 test('bounded child runner stops an owned process when output exceeds its cap', async () => {
@@ -5132,15 +5157,38 @@ test('bounded child runner stops a separately owned browser process', async (t) 
     `fs.writeFileSync(${JSON.stringify(pidPath)}, String(child.pid));`,
     'setInterval(() => {}, 1000);',
   ].join('\n');
+  const syncCommands = [];
   await assert.rejects(
     runBoundedChild(process.execPath, ['-e', code], {
       timeoutMs: 200,
       maxOutputBytes: 2048,
       ownedPidFile: pidPath,
+      spawnSyncImpl(command, args, options) {
+        const result = spawnSync(command, args, options);
+        syncCommands.push({
+          command: path.basename(command).toLowerCase(),
+          args,
+          status: result.status,
+          error: result.error?.code || null,
+        });
+        return result;
+      },
     }),
     /timed out; .*cleanup confirmed/,
   );
   ownedPid = Number((await readFile(pidPath, 'utf8')).trim());
+  if (process.platform === 'win32') {
+    assert.equal(
+      syncCommands.filter((entry) => entry.command === 'taskkill').length,
+      2,
+      `the CLI tree and separately-owned browser are each terminated once: ${JSON.stringify(syncCommands)}`,
+    );
+    assert.equal(
+      syncCommands.filter((entry) => entry.command === 'tasklist').length,
+      1,
+      'only the separately-owned browser requires PID verification after close',
+    );
+  }
   if (process.platform !== 'win32')
     assert.throws(() => process.kill(ownedPid, 0), { code: 'ESRCH' });
 });

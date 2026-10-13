@@ -459,6 +459,7 @@ export async function runMapStreamingFaultControlDocument({
   workerContract,
   startedAt,
   budgetMs,
+  nowImpl = Date.now,
   documentId,
   preparePageImpl = prepareFixturePage,
   preflightImpl = runSameOriginWorkerPreflight,
@@ -485,7 +486,7 @@ export async function runMapStreamingFaultControlDocument({
   assert.match(revision || '', /^[a-f0-9]{40}$/);
   assert.match(harnessCommit || '', /^[a-f0-9]{40}$/);
   const remainingBudgetMs = () =>
-    Math.max(0, budgetMs - (Date.now() - startedAt));
+    Math.max(0, budgetMs - (nowImpl() - startedAt));
   let operationTimedOut = false;
   const runWithinBudget = async (label, timeoutMs, operation) => {
     const available = remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS;
@@ -1688,7 +1689,12 @@ export function parseSmokeArguments(argv) {
 export function runBoundedChild(
   command,
   args,
-  { timeoutMs, maxOutputBytes = 64 * 1024, ownedPidFile = null } = {},
+  {
+    timeoutMs,
+    maxOutputBytes = 64 * 1024,
+    ownedPidFile = null,
+    spawnSyncImpl = spawnSync,
+  } = {},
 ) {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1)
     throw new TypeError('Child timeout must be a positive integer.');
@@ -1710,6 +1716,9 @@ export function runBoundedChild(
     let timeoutTimer = null;
     let settled = false;
     let ownedBrowserPid = null;
+    let windowsTreeTerminationConfirmed = false;
+    let windowsOwnedBrowserTerminationConfirmed = false;
+    let windowsOwnedBrowserExitConfirmed = false;
 
     const rememberOwnedBrowserPid = () => {
       if (!ownedPidFile) return;
@@ -1723,7 +1732,7 @@ export function runBoundedChild(
     const terminatePid = (pid, signal) => {
       if (!Number.isSafeInteger(pid) || pid < 1) return false;
       if (process.platform === 'win32') {
-        const result = spawnSync(
+        const result = spawnSyncImpl(
           'taskkill',
           ['/PID', String(pid), '/T', '/F'],
           {
@@ -1749,7 +1758,9 @@ export function runBoundedChild(
       if (!child.pid) return;
       rememberOwnedBrowserPid();
       if (process.platform === 'win32') {
-        terminatePid(child.pid, signal);
+        if (!windowsTreeTerminationConfirmed) {
+          windowsTreeTerminationConfirmed = terminatePid(child.pid, signal);
+        }
       } else {
         try {
           process.kill(-child.pid, signal);
@@ -1759,7 +1770,12 @@ export function runBoundedChild(
       }
       if (ownedBrowserPid && ownedBrowserPid !== child.pid) {
         if (process.platform === 'win32') {
-          terminatePid(ownedBrowserPid, signal);
+          if (!windowsOwnedBrowserTerminationConfirmed) {
+            windowsOwnedBrowserTerminationConfirmed = terminatePid(
+              ownedBrowserPid,
+              signal,
+            );
+          }
         } else {
           try {
             process.kill(-ownedBrowserPid, signal);
@@ -1773,7 +1789,7 @@ export function runBoundedChild(
     const isProcessPresent = (pid, group) => {
       if (!Number.isSafeInteger(pid) || pid < 1) return false;
       if (process.platform === 'win32') {
-        const result = spawnSync(
+        const result = spawnSyncImpl(
           'tasklist',
           ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'],
           {
@@ -1884,7 +1900,27 @@ export function runBoundedChild(
       rememberOwnedBrowserPid();
       if (stopReason || code !== 0 || ownedBrowserPid) {
         try {
-          signalOwnedTree('SIGKILL');
+          if (
+            process.platform === 'win32' &&
+            stopReason &&
+            windowsTreeTerminationConfirmed
+          ) {
+            // taskkill /T /F already completed for this child tree before its
+            // close event could be delivered. Do not synchronously repeat the
+            // same tree kill after close. A separately-owned browser PID is
+            // killed only if its first bounded taskkill did not confirm exit;
+            // its presence is still checked below.
+            if (ownedBrowserPid && !windowsOwnedBrowserTerminationConfirmed) {
+              windowsOwnedBrowserExitConfirmed =
+                isProcessPresent(ownedBrowserPid, false) === false;
+              if (!windowsOwnedBrowserExitConfirmed) {
+                windowsOwnedBrowserTerminationConfirmed = terminatePid(
+                  ownedBrowserPid,
+                  'SIGKILL',
+                );
+              }
+            }
+          } else signalOwnedTree('SIGKILL');
         } catch {
           // The owned process group may already have exited.
         }
@@ -1900,8 +1936,12 @@ export function runBoundedChild(
         const ownedTargets = [
           ...(process.platform !== 'win32'
             ? [{ pid: child.pid, group: true }]
-            : [{ pid: child.pid, group: false }]),
-          ...(ownedBrowserPid ? [{ pid: ownedBrowserPid, group: true }] : []),
+            : windowsTreeTerminationConfirmed && stopReason
+              ? []
+              : [{ pid: child.pid, group: false }]),
+          ...(ownedBrowserPid && !windowsOwnedBrowserExitConfirmed
+            ? [{ pid: ownedBrowserPid, group: true }]
+            : []),
         ];
         let cleanupConfirmed = true;
         for (const target of ownedTargets) {
