@@ -21,6 +21,16 @@ retirement is explicitly unconfirmed until context close; it is not called a
 successful in-page disposal. The scenario needs a corrected strict asset
 identity and a fresh run; no path-pattern relaxation or retry is appropriate.
 
+Reviewed correction `e0710bd5cf3ba7c5d0d5383189b82fd8475ec087` (Luna source
+`e5dc52017ff1d8790122e51f5b517c96d74dafe2`) takes the exact held path from the
+declared fault scenario and binds the test fake to the fixture manifest. It
+keeps the strict equality assertion and all existing counts and deadlines.
+Root passes all 100 map capture, delivery and build-smoke tests, capture-harness
+lint (29 files), changed-file formatting and the diff check. The original
+focused output is in [fix-focused-tests.log](fix-focused-tests.log).
+[Fresh native run 38439382587](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38439382587)
+tests that exact corrected revision; its outcome is not inferred from local tests.
+
 Original artifact `11833113912` is retained unchanged:
 
 | File                                                                                   |  Bytes | SHA-256                                                            |

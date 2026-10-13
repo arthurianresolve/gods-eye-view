@@ -1,5 +1,19 @@
 # Current main reconciliation
 
+The 13 October 19:31 CEST fetch again confirms both main refs at `9beadbda`
+and remote dev at `e8ccc268`. Reviewed QA `e0710bd5` contains both (853 commits
+ahead of main, zero behind). Remote dev remains fourteen commits behind main;
+the required reconciliation is already included in reviewed merge `8b84a2e0`.
+No additional merge, rebase or history discard is needed on QA. Promotion to
+dev remains pending current candidate validation; VM105 is unchanged.
+
+The latest [map fault report](../s47-map-streaming/native-fault-38436364036/README.md)
+passes missing/corrupt recovery but finds an incorrect held-asset path in the
+harness. The strict manifest-based correction at `e0710bd5` passes 100 root
+checks and is being tested in [run 38439382587](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38439382587).
+Current Windows recovery already passes at `15c0cff3`; historical readiness
+failures remain recorded below.
+
 The 13 October 18:55 CEST recheck still finds fork/main and upstream/main at
 `9beadbda6333b83f79aa03047e2d851830f01f6b`, and remote dev at
 `e8ccc268608fbece8b6d87a0b6db86e1800ddf90`. Dev is 697 commits ahead and

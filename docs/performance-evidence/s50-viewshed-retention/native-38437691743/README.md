@@ -26,6 +26,21 @@ Investigate late footprint/pose resolution versus an unchanged-geometry rebuild;
 do not raise the expected count. This failure remains visible even though the
 pixel, visibility reuse and teardown observations succeed.
 
+Subsequent production-factory reproduction establishes one concrete duplicate
+build mechanism: resolving footprint measurement from unknown to known with
+unchanged zero-height supports replaces a volume despite identical Cartesian
+vertices. The aggregate original report cannot identify its exact camera or
+attribute its extra build retrospectively.
+
+Reviewed runtime fix `641cdd3fb585a07f75b86cb59fd3c4786c51b9ff` (Luna source
+`11ef385383bc2867904460b0117682f29f76327b`) separates observation metadata from
+rendered geometry equivalence. Metadata refreshes while positions and the real
+Cesium primitive remain identical; changed support heights still rebuild, and
+a hidden volume is evicted on source-owner replacement. Root passes all 30
+`geometryReuse.test.mjs` and `groundRevision.test.mjs` tests plus formatting and
+diff checks. The strict rendered fourteen-build control still needs a fresh
+run; its expected count has not changed.
+
 Artifact `11832814362`: [original report](hosted-native-renderer.json), 40,573
 bytes, SHA-256
 `e5a2c1b29e457e5fc83bfe781dd89ae5b47fd05860a064e2da66335bd2367631`.

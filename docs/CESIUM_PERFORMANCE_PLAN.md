@@ -22,8 +22,12 @@ Stage-specific correction `e701e0ff` passes 98 root checks, original-report repl
 and three wrong-provider controls. Its [fresh native run](performance-evidence/s47-map-streaming/native-fault-38434748788/README.md)
 passes complete missing-metadata validation, then correctly rejects a stale
 startup-camera frame in the corrupt-metadata control. The reviewed post-positioning
-frame boundary at `fe28df76` passes 100 affected root checks and is under fresh
-rendered validation. These are harness corrections, not new hardware qualification.
+frame boundary at `fe28df76` passes 100 affected root checks. Its
+[fresh rendered run](performance-evidence/s47-map-streaming/native-fault-38436364036/README.md)
+passes missing/corrupt recovery, then exposes an incorrect held-asset path.
+Strict manifest-based correction `e0710bd5` passes the same 100 affected tests
+and is under fresh native validation. These are harness corrections, not new
+hardware qualification.
 
 The [13 October acceptance amendment](CESIUM_ACCEPTANCE.md) is authoritative for
 remaining S47-S60 work. It separates engineering closure, automatic validation,
@@ -55,8 +59,14 @@ is separately retained as a setup failure.
 The [S50 bounded volume-retention change](performance-evidence/s50-viewshed-retention/README.md)
 at `2731162b` reuses the current capped cohort, evicts obsolete hidden geometry,
 uses weak source-owner tokens and updates tint without rebuilding. Root passes
-110 focused ownership/source tests. Rendered equivalence remains under
-implementation; S50 stays partial and no new slice is marked closed.
+110 focused ownership/source tests. The
+[first rendered comparison](performance-evidence/s50-viewshed-retention/native-38437691743/README.md)
+has exact pixel equivalence, zero builds across unchanged visibility cycles,
+and bounded teardown, but fails the strict rebuild-control count (15 versus 14).
+A production-factory reproduction finds metadata-only footprint resolution can
+rebuild identical vertices. Reviewed fix `641cdd3f` passes 30 focused tests and
+preserves genuine geometry/source invalidation; a fresh rendered check remains
+pending. S50 stays partial and no new slice is marked closed.
 
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
 closes S52 engineering after rechecking its unchanged accepted renderer, 13
