@@ -53,6 +53,8 @@ const EXPECTED_IMAGERY_CLASS = Object.freeze({
 const MAP_JOURNEY_POLL_INTERVAL_MS = 250;
 const MAP_JOURNEY_MAX_POLL_COUNT = 720;
 const MAP_JOURNEY_HOST_DEADLINE_MS = 150_000;
+const MAP_GLOBE_QUEUE_SAMPLE_LIMIT = 8;
+const MAP_GLOBE_IMAGERY_SAMPLE_LIMIT = 32;
 let nextMapJourneyOperationId = 0;
 
 const MAP_JOURNEY_PHASES = new Set([
@@ -132,6 +134,182 @@ function projectMapJourneyCheckpoint(value) {
         observation[name] === null ||
           (Number.isSafeInteger(observation[name]) && observation[name] >= 0),
       );
+    let globeQueueDiagnostics = null;
+    if (
+      observation.globeQueueDiagnostics !== null &&
+      observation.globeQueueDiagnostics !== undefined
+    ) {
+      const queue = observation.globeQueueDiagnostics;
+      assert.ok(queue && typeof queue === 'object' && !Array.isArray(queue));
+      assert.equal(typeof queue.available, 'boolean');
+      if (queue.available) {
+        assert.equal(queue.unavailableReason, null);
+        assert.ok(queue.queueCounts && typeof queue.queueCounts === 'object');
+        for (const name of ['high', 'medium', 'low', 'total'])
+          assert.ok(
+            Number.isSafeInteger(queue.queueCounts[name]) &&
+              queue.queueCounts[name] >= 0,
+          );
+        assert.equal(
+          queue.queueCounts.total,
+          queue.queueCounts.high +
+            queue.queueCounts.medium +
+            queue.queueCounts.low,
+        );
+        assert.ok(
+          queue.renderedTileCount === null ||
+            (Number.isSafeInteger(queue.renderedTileCount) &&
+              queue.renderedTileCount >= 0),
+        );
+        assert.ok(Array.isArray(queue.sampledTiles));
+        assert.ok(queue.sampledTiles.length <= MAP_GLOBE_QUEUE_SAMPLE_LIMIT);
+        const sampledTiles = queue.sampledTiles.map((tile) => {
+          assert.ok(tile && typeof tile === 'object' && !Array.isArray(tile));
+          assert.ok(['high', 'medium', 'low'].includes(tile.queue));
+          for (const name of ['x', 'y', 'level'])
+            assert.ok(
+              tile[name] === null ||
+                (Number.isSafeInteger(tile[name]) && tile[name] >= 0),
+            );
+          assert.ok(
+            tile.tileState === null ||
+              (Number.isSafeInteger(tile.tileState) &&
+                tile.tileState >= 0 &&
+                tile.tileState <= 3),
+          );
+          assert.ok(
+            tile.terrainState === null ||
+              (Number.isSafeInteger(tile.terrainState) &&
+                tile.terrainState >= 0 &&
+                tile.terrainState <= 6),
+          );
+          assert.ok(
+            tile.meshPresent === null || typeof tile.meshPresent === 'boolean',
+          );
+          assert.ok(
+            tile.imageryEntryCount === null ||
+              (Number.isSafeInteger(tile.imageryEntryCount) &&
+                tile.imageryEntryCount >= 0),
+          );
+          assert.ok(
+            Number.isSafeInteger(tile.imageryEntriesSampled) &&
+              tile.imageryEntriesSampled >= 0 &&
+              tile.imageryEntriesSampled <= MAP_GLOBE_IMAGERY_SAMPLE_LIMIT,
+          );
+          assert.ok(
+            tile.omittedImageryEntryCount === null ||
+              (Number.isSafeInteger(tile.omittedImageryEntryCount) &&
+                tile.omittedImageryEntryCount >= 0),
+          );
+          assert.ok(
+            Number.isSafeInteger(tile.loadingImagerySampledCount) &&
+              tile.loadingImagerySampledCount >= 0 &&
+              tile.loadingImagerySampledCount <= tile.imageryEntriesSampled,
+          );
+          assert.ok(Array.isArray(tile.loadingImageryStateCounts));
+          assert.equal(tile.loadingImageryStateCounts.length, 8);
+          for (const count of tile.loadingImageryStateCounts)
+            assert.ok(Number.isSafeInteger(count) && count >= 0);
+          assert.ok(
+            Number.isSafeInteger(tile.unknownLoadingImageryStateCount) &&
+              tile.unknownLoadingImageryStateCount >= 0,
+          );
+          if (tile.imageryEntryCount === null) {
+            assert.equal(tile.imageryEntriesSampled, 0);
+            assert.equal(tile.omittedImageryEntryCount, null);
+            assert.equal(tile.loadingImagerySampledCount, 0);
+          } else {
+            assert.equal(
+              tile.imageryEntriesSampled,
+              Math.min(tile.imageryEntryCount, MAP_GLOBE_IMAGERY_SAMPLE_LIMIT),
+            );
+            assert.equal(
+              tile.omittedImageryEntryCount,
+              tile.imageryEntryCount - tile.imageryEntriesSampled,
+            );
+          }
+          assert.equal(
+            tile.loadingImagerySampledCount,
+            tile.loadingImageryStateCounts.reduce(
+              (sum, count) => sum + count,
+              tile.unknownLoadingImageryStateCount,
+            ),
+          );
+          return {
+            queue: tile.queue,
+            x: tile.x,
+            y: tile.y,
+            level: tile.level,
+            tileState: tile.tileState,
+            terrainState: tile.terrainState,
+            meshPresent: tile.meshPresent,
+            imageryEntryCount: tile.imageryEntryCount,
+            imageryEntriesSampled: tile.imageryEntriesSampled,
+            omittedImageryEntryCount: tile.omittedImageryEntryCount,
+            loadingImagerySampledCount: tile.loadingImagerySampledCount,
+            loadingImageryStateCounts: [...tile.loadingImageryStateCounts],
+            unknownLoadingImageryStateCount:
+              tile.unknownLoadingImageryStateCount,
+          };
+        });
+        for (const queueName of ['high', 'medium', 'low'])
+          assert.ok(
+            sampledTiles.filter((tile) => tile.queue === queueName).length <=
+              queue.queueCounts[queueName],
+          );
+        globeQueueDiagnostics = {
+          available: true,
+          unavailableReason: null,
+          queueCounts: {
+            high: queue.queueCounts.high,
+            medium: queue.queueCounts.medium,
+            low: queue.queueCounts.low,
+            total: queue.queueCounts.total,
+          },
+          renderedTileCount: queue.renderedTileCount,
+          sampledTiles,
+          omittedSampledTileCount: queue.omittedSampledTileCount,
+        };
+        assert.ok(
+          Number.isSafeInteger(globeQueueDiagnostics.omittedSampledTileCount) &&
+            globeQueueDiagnostics.omittedSampledTileCount >= 0,
+        );
+        assert.equal(
+          globeQueueDiagnostics.sampledTiles.length,
+          Math.min(
+            MAP_GLOBE_QUEUE_SAMPLE_LIMIT,
+            globeQueueDiagnostics.queueCounts.total,
+          ),
+        );
+        assert.equal(
+          globeQueueDiagnostics.omittedSampledTileCount,
+          globeQueueDiagnostics.queueCounts.total -
+            globeQueueDiagnostics.sampledTiles.length,
+        );
+      } else {
+        assert.ok(
+          ['surface-unavailable', 'private-queue-fields-unavailable'].includes(
+            queue.unavailableReason,
+          ),
+        );
+        assert.equal(queue.queueCounts, null);
+        assert.ok(
+          queue.renderedTileCount === null ||
+            (Number.isSafeInteger(queue.renderedTileCount) &&
+              queue.renderedTileCount >= 0),
+        );
+        assert.deepEqual(queue.sampledTiles, []);
+        assert.equal(queue.omittedSampledTileCount, null);
+        globeQueueDiagnostics = {
+          available: false,
+          unavailableReason: queue.unavailableReason,
+          queueCounts: null,
+          renderedTileCount: queue.renderedTileCount,
+          sampledTiles: [],
+          omittedSampledTileCount: null,
+        };
+      }
+    }
     latestObservation = {
       activeStack: observation.activeStack,
       controllerStatus: observation.controllerStatus,
@@ -145,6 +323,7 @@ function projectMapJourneyCheckpoint(value) {
       photorealTilesLoaded: observation.photorealTilesLoaded,
       photorealReadyContentTiles: observation.photorealReadyContentTiles,
       photorealSelectedTiles: observation.photorealSelectedTiles,
+      globeQueueDiagnostics,
     };
   }
   return {
@@ -239,12 +418,39 @@ export function projectMapStreamingJourneyFailureEvidence(value) {
       retirement[name] === null ||
         ['protocol-timeout', 'evaluation-failed'].includes(retirement[name]),
     );
+  let sourceCheckpoint = value.checkpoint;
+  if (
+    value.checkpointGlobeQueueDiagnostics !== undefined &&
+    value.checkpointGlobeQueueDiagnostics !== null
+  ) {
+    assert.ok(sourceCheckpoint?.latestObservation);
+    if (sourceCheckpoint.latestObservation.globeQueueDiagnostics !== undefined)
+      assert.deepEqual(
+        sourceCheckpoint.latestObservation.globeQueueDiagnostics,
+        value.checkpointGlobeQueueDiagnostics,
+      );
+    sourceCheckpoint = {
+      ...sourceCheckpoint,
+      latestObservation: {
+        ...sourceCheckpoint.latestObservation,
+        globeQueueDiagnostics: value.checkpointGlobeQueueDiagnostics,
+      },
+    };
+  }
+  const checkpoint = projectMapJourneyCheckpoint(sourceCheckpoint);
+  const checkpointGlobeQueueDiagnostics =
+    checkpoint?.latestObservation?.globeQueueDiagnostics ?? null;
+  if (checkpoint?.latestObservation)
+    delete checkpoint.latestObservation.globeQueueDiagnostics;
   return {
     schema: value.schema,
     operationId: value.operationId,
     failureCode: value.failureCode,
     elapsedMs: value.elapsedMs,
-    checkpoint: projectMapJourneyCheckpoint(value.checkpoint),
+    checkpoint,
+    ...(checkpointGlobeQueueDiagnostics
+      ? { checkpointGlobeQueueDiagnostics }
+      : {}),
     expected,
     retirement: {
       cancelStatus: retirement.cancelStatus,
@@ -585,6 +791,111 @@ export async function runNativeMapStreamingJourneyInPage({
     return samples;
   };
 
+  const readGlobeQueueDiagnostics = () => {
+    const surface = globe?._surface;
+    const renderedTileCount = Array.isArray(surface?._tilesToRender)
+      ? surface._tilesToRender.length
+      : null;
+    if (!surface)
+      return {
+        available: false,
+        unavailableReason: 'surface-unavailable',
+        queueCounts: null,
+        renderedTileCount: null,
+        sampledTiles: [],
+        omittedSampledTileCount: null,
+      };
+    const queues = [
+      ['high', surface._tileLoadQueueHigh],
+      ['medium', surface._tileLoadQueueMedium],
+      ['low', surface._tileLoadQueueLow],
+    ];
+    if (!queues.every(([, queue]) => Array.isArray(queue)))
+      return {
+        available: false,
+        unavailableReason: 'private-queue-fields-unavailable',
+        queueCounts: null,
+        renderedTileCount,
+        sampledTiles: [],
+        omittedSampledTileCount: null,
+      };
+
+    const queueCounts = {
+      high: queues[0][1].length,
+      medium: queues[1][1].length,
+      low: queues[2][1].length,
+      total: queues[0][1].length + queues[1][1].length + queues[2][1].length,
+    };
+    const sampledTiles = [];
+    for (const [queueName, queue] of queues) {
+      for (
+        let index = 0;
+        index < queue.length && sampledTiles.length < 8;
+        index += 1
+      ) {
+        const tile = queue[index];
+        const data = tile?.data;
+        const imagery = Array.isArray(data?.imagery) ? data.imagery : null;
+        const imageryEntriesSampled = imagery
+          ? Math.min(imagery.length, 32)
+          : 0;
+        const loadingImageryStateCounts = Array(8).fill(0);
+        let loadingImagerySampledCount = 0;
+        let unknownLoadingImageryStateCount = 0;
+        for (
+          let imageryIndex = 0;
+          imageryIndex < imageryEntriesSampled;
+          imageryIndex += 1
+        ) {
+          const loadingImagery = imagery[imageryIndex]?.loadingImagery;
+          if (!loadingImagery) continue;
+          loadingImagerySampledCount += 1;
+          const state = loadingImagery.state;
+          if (Number.isSafeInteger(state) && state >= 0 && state < 8)
+            loadingImageryStateCounts[state] += 1;
+          else unknownLoadingImageryStateCount += 1;
+        }
+        const finiteIndex = (value) =>
+          Number.isSafeInteger(value) && value >= 0 ? value : null;
+        const boundedState = (value, max) =>
+          Number.isSafeInteger(value) && value >= 0 && value <= max
+            ? value
+            : null;
+        sampledTiles.push({
+          queue: queueName,
+          x: finiteIndex(tile?._x),
+          y: finiteIndex(tile?._y),
+          level: finiteIndex(tile?._level),
+          tileState: boundedState(tile?.state, 3),
+          terrainState: boundedState(data?.terrainState, 6),
+          meshPresent:
+            data && 'mesh' in data
+              ? data.mesh !== null && data.mesh !== undefined
+              : null,
+          imageryEntryCount: imagery ? imagery.length : null,
+          imageryEntriesSampled,
+          omittedImageryEntryCount: imagery
+            ? imagery.length - imageryEntriesSampled
+            : null,
+          loadingImagerySampledCount,
+          loadingImageryStateCounts,
+          unknownLoadingImageryStateCount,
+        });
+      }
+    }
+    return {
+      available: true,
+      unavailableReason: null,
+      queueCounts,
+      renderedTileCount,
+      sampledTiles,
+      omittedSampledTileCount: Math.max(
+        0,
+        queueCounts.total - sampledTiles.length,
+      ),
+    };
+  };
+
   const captureState = (postRenderElapsedMs = null) => {
     const controllerState = controller.getState?.() || null;
     const tileset = app.tileset;
@@ -613,6 +924,7 @@ export async function runNativeMapStreamingJourneyInPage({
       globeShown: globe.show === true,
       globeTilesLoaded:
         typeof globe.tilesLoaded === 'boolean' ? globe.tilesLoaded : null,
+      globeQueueDiagnostics: readGlobeQueueDiagnostics(),
       terrainProviderClass: canonicalProviderType(globe.terrainProvider),
       terrainSamples: readTerrainSamples(),
       imageryLayerCount: scene.imageryLayers?.length ?? null,
@@ -654,6 +966,7 @@ export async function runNativeMapStreamingJourneyInPage({
     photorealTilesLoaded: state.photorealTilesLoaded,
     photorealReadyContentTiles: state.photorealReadyContentTiles,
     photorealSelectedTiles: state.photorealSelectedTiles,
+    globeQueueDiagnostics: state.globeQueueDiagnostics,
   });
   const updateProgress = (phase, targetStack = null, state = null) => {
     if (!operation) return;

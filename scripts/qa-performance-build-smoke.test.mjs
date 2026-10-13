@@ -22,6 +22,8 @@ import {
   respondToSmokeFixtureRequest,
   closeMapSmokeFixtureOwner,
   finalizeMapSmokeFixtureDocument,
+  attachFinalizedMapStreamingFailureEvidence,
+  attachMapStreamingJourneyFailureEvidence,
   observeSmokeLayerPopulationInPage,
   runNativeMapJourneyForSmoke,
   smokeProviderPreparationMode,
@@ -1031,6 +1033,14 @@ test('outer smoke projects only validated CLI map-journey failure evidence', () 
         photorealTilesLoaded: true,
         photorealReadyContentTiles: 12,
         photorealSelectedTiles: 9,
+        globeQueueDiagnostics: {
+          available: true,
+          unavailableReason: null,
+          queueCounts: { high: 0, medium: 0, low: 0, total: 0 },
+          renderedTileCount: 3,
+          sampledTiles: [],
+          omittedSampledTileCount: 0,
+        },
       },
     },
     retirement: {
@@ -1069,6 +1079,20 @@ test('outer smoke projects only validated CLI map-journey failure evidence', () 
     9,
   );
   assert.equal(projected.retirement.disposeStatus, 'confirmed');
+  assert.equal(
+    projected.checkpoint.latestObservation.globeQueueDiagnostics,
+    undefined,
+  );
+  assert.equal(projected.checkpointGlobeQueueDiagnostics.renderedTileCount, 3);
+  const outerError = new Error('map journey failed');
+  outerError.smokeDiagnostics = { phase: 'map-transition-readiness' };
+  attachMapStreamingJourneyFailureEvidence(outerError, projected);
+  const outerJson = JSON.parse(JSON.stringify(outerError.smokeDiagnostics));
+  assert.equal(
+    outerJson.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+      .queueCounts.total,
+    0,
+  );
   assert.deepEqual(
     projectMapStreamingJourneyFailureForSmoke(
       {
@@ -1339,6 +1363,109 @@ test('baseline and candidate map orchestration finalize delivery after target re
       fixture.manifest.assets.length,
     );
     assert.equal(finalized.deliveryEvidence.cleanupConfirmed, true);
+    const failedSmoke = new Error('controlled post-journey failure');
+    failedSmoke.smokeDiagnostics = { phase: 'native-map-transition' };
+    attachFinalizedMapStreamingFailureEvidence(failedSmoke, {
+      fixture,
+      deliveryEvidence: {
+        ...finalized.deliveryEvidence,
+        untrustedExtra: { privatePayload: 'must not be copied' },
+      },
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    const serializedFailure = JSON.parse(
+      JSON.stringify(failedSmoke.smokeDiagnostics),
+    );
+    assert.equal(
+      serializedFailure.mapStreamingFixtureSetup.delivery.fulfilledAckCount,
+      fixture.manifest.assets.length,
+    );
+    assert.equal(
+      serializedFailure.mapStreamingFixtureSetup.delivery.cleanupConfirmed,
+      true,
+    );
+    assert.equal(
+      serializedFailure.mapStreamingInterceptionRelease.targetClosed,
+      true,
+    );
+    assert.equal(
+      serializedFailure.mapStreamingFixtureSetup.comparisonEligible,
+      false,
+    );
+    assert.equal(
+      serializedFailure.mapStreamingFixtureSetup.delivery.untrustedExtra,
+      undefined,
+    );
+    const partialDelivery = createMapStreamingFixtureDelivery(fixture, {
+      appOrigin: MAP_SMOKE_APP_ORIGIN,
+    });
+    await partialDelivery.respond(
+      new URL('https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json'),
+      {
+        url: () =>
+          'https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json',
+        method: () => 'GET',
+      },
+    );
+    const pendingFailure = new Error('map request still pending');
+    pendingFailure.smokeDiagnostics = { phase: 'native-map-transition' };
+    attachFinalizedMapStreamingFailureEvidence(pendingFailure, {
+      fixture,
+      deliveryEvidence: partialDelivery.summary(),
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    const pendingProjection =
+      pendingFailure.smokeDiagnostics.mapStreamingFixtureSetup.delivery;
+    assert.equal(pendingProjection.status, 'active');
+    assert.equal(pendingProjection.pendingCount, 1);
+    assert.equal(pendingProjection.cleanupConfirmed, false);
+    const cancelledSummary = partialDelivery.dispose();
+    const cancelledFailure = new Error('cancelled map setup');
+    cancelledFailure.smokeDiagnostics = { phase: 'native-map-transition' };
+    attachFinalizedMapStreamingFailureEvidence(cancelledFailure, {
+      fixture,
+      deliveryEvidence: cancelledSummary,
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    const cancelledProjection =
+      cancelledFailure.smokeDiagnostics.mapStreamingFixtureSetup.delivery;
+    assert.equal(cancelledProjection.status, 'disposed');
+    assert.equal(cancelledProjection.requestedCount, 1);
+    assert.equal(cancelledProjection.fulfilledAckCount, 0);
+    assert.equal(cancelledProjection.cancelledCount, 1);
+    assert.equal(cancelledProjection.assets[0].pendingCount, 0);
+    assert.equal(cancelledProjection.cleanupConfirmed, true);
+
+    const erroredDelivery = createMapStreamingFixtureDelivery(fixture, {
+      appOrigin: MAP_SMOKE_APP_ORIGIN,
+    });
+    await assert.rejects(
+      erroredDelivery.respond(
+        new URL(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/01/0/0',
+        ),
+        {
+          url: () =>
+            'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/01/0/0',
+          method: () => 'GET',
+        },
+      ),
+    );
+    const erroredSummary = erroredDelivery.dispose();
+    const erroredFailure = new Error('preserve original failure');
+    erroredFailure.smokeDiagnostics = { message: erroredFailure.message };
+    attachFinalizedMapStreamingFailureEvidence(erroredFailure, {
+      fixture,
+      deliveryEvidence: erroredSummary,
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    const erroredProjection =
+      erroredFailure.smokeDiagnostics.mapStreamingFixtureSetup.delivery;
+    assert.equal(erroredFailure.message, 'preserve original failure');
+    assert.equal(erroredProjection.cleanupConfirmed, false);
+    assert.equal(erroredProjection.errorObservationCount, 1);
+    assert.equal(erroredProjection.errors.length, 1);
+    assert.equal(erroredProjection.errors[0].code, 'arcgis-route-invalid');
     if (injectLateRequest) {
       assert.equal(finalized.confirmed, false);
       assert.equal(
