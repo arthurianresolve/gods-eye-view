@@ -50,12 +50,126 @@ const EXPECTED_IMAGERY_CLASS = Object.freeze({
   'esri-imagery': 'ArcGisMapServerImageryProvider',
   osm: 'OpenStreetMapImageryProvider',
 });
+const MAP_JOURNEY_POLL_INTERVAL_MS = 250;
+const MAP_JOURNEY_MAX_POLL_COUNT = 720;
+const MAP_JOURNEY_CANCEL_DRAIN_POLL_COUNT = 12;
+const MAP_JOURNEY_CANCEL_DRAIN_INTERVAL_MS = 50;
+let nextMapJourneyOperationId = 0;
 
 /** Browser-serialized driver. Keep all helpers inside this function. */
 export async function runNativeMapStreamingJourneyInPage({
   durationMs,
   route,
+  command = 'run',
+  operationId = null,
 }) {
+  const operationKey = '__gevMapStreamingJourneyV1';
+  const operations = () => {
+    const current = window[operationKey];
+    if (current && typeof current === 'object') return current;
+    const created = Object.create(null);
+    Object.defineProperty(window, operationKey, {
+      configurable: true,
+      value: created,
+    });
+    return created;
+  };
+  if (command === 'start') {
+    if (
+      typeof operationId !== 'string' ||
+      !/^[a-z0-9-]{1,96}$/i.test(operationId)
+    )
+      throw new Error('Map journey operation identity is invalid.');
+    const store = operations();
+    if (store[operationId])
+      throw new Error('Map journey operation identity is already owned.');
+    const operation = {
+      status: 'running',
+      checkpoint: {
+        phase: 'starting',
+        initialReadinessComplete: false,
+        transitionCount: 0,
+        targetStack: null,
+        latestObservation: null,
+      },
+      result: null,
+      failure: null,
+      cancel: null,
+      completion: null,
+    };
+    store[operationId] = operation;
+    operation.completion = Promise.resolve()
+      .then(() =>
+        runNativeMapStreamingJourneyInPage({
+          durationMs,
+          route,
+          command: 'run',
+          operationId,
+        }),
+      )
+      .then(
+        (result) => {
+          operation.result = result;
+          operation.status = 'completed';
+          operation.checkpoint = {
+            ...operation.checkpoint,
+            phase: 'completed',
+            routeElapsedMs: result.route.elapsedMs,
+            transitionCount: result.transitions.length,
+            targetStack: result.finalState.activeStack,
+          };
+        },
+        (error) => {
+          const message = String(error?.message || error)
+            .replace(/([?&]key=)[^&\s]+/gi, '$1[redacted]')
+            .slice(0, 512);
+          operation.failure = {
+            name:
+              typeof error?.name === 'string'
+                ? error.name.slice(0, 64)
+                : 'Error',
+            message,
+          };
+          operation.status = 'failed';
+        },
+      );
+    return { operationId, status: operation.status };
+  }
+  if (command === 'poll' || command === 'cancel' || command === 'dispose') {
+    const store = window[operationKey];
+    const operation =
+      typeof operationId === 'string' ? store?.[operationId] : null;
+    if (!operation) return { operationId, status: 'missing' };
+    if (command === 'cancel') {
+      if (operation.status === 'running') operation.cancel?.();
+      return {
+        operationId,
+        status: operation.status,
+        checkpoint: operation.checkpoint,
+      };
+    }
+    if (command === 'dispose') {
+      if (operation.status === 'running')
+        throw new Error('A running map journey cannot be disposed.');
+      delete store[operationId];
+      if (Object.keys(store).length === 0) delete window[operationKey];
+      return { operationId, status: 'disposed' };
+    }
+    return {
+      operationId,
+      status: operation.status,
+      checkpoint: operation.checkpoint,
+      ...(operation.status === 'completed' ? { result: operation.result } : {}),
+      ...(operation.status === 'failed' ? { failure: operation.failure } : {}),
+    };
+  }
+  if (command !== 'run')
+    throw new Error('Map journey operation command is invalid.');
+  const operation =
+    typeof operationId === 'string'
+      ? window[operationKey]?.[operationId]
+      : null;
+
   const app = window.__godsEyeView;
   const viewer = app?.viewer;
   const controller = app?.mapStackController;
@@ -296,6 +410,38 @@ export async function runNativeMapStreamingJourneyInPage({
   };
 
   const journeyAbort = new AbortController();
+  if (operation) operation.cancel = () => journeyAbort.abort();
+  const progressObservation = (state) => ({
+    activeStack: state.activeStack,
+    controllerStatus: state.controllerStatus,
+    switchOrigin: state.switchOrigin,
+    hasError: state.lastError !== null,
+    stackAvailable: state.stackAvailable,
+    globeTilesLoaded: state.globeTilesLoaded,
+    terrainProviderClass: state.terrainProviderClass,
+    imageryLayerCount: state.imageryLayerCount,
+    imageryProviderClass: state.imageryProviderClass,
+    photorealTilesLoaded: state.photorealTilesLoaded,
+    photorealReadyContentTiles: state.photorealReadyContentTiles,
+    photorealSelectedTiles: state.photorealSelectedTiles,
+  });
+  const updateProgress = (phase, targetStack = null, state = null) => {
+    if (!operation) return;
+    operation.checkpoint = {
+      phase,
+      initialReadinessComplete,
+      transitionCount: transitionsCompleted,
+      targetStack,
+      routeElapsedMs:
+        routeStartedAt === null
+          ? 0
+          : Math.max(0, performance.now() - routeStartedAt),
+      latestObservation: state ? progressObservation(state) : null,
+    };
+  };
+  let initialReadinessComplete = false;
+  let transitionsCompleted = 0;
+  let routeStartedAt = null;
   const waitForPostRender = (timeoutMs, signal) =>
     new Promise((resolve, reject) => {
       let settled = false;
@@ -360,7 +506,8 @@ export async function runNativeMapStreamingJourneyInPage({
     );
   };
 
-  const waitForReadyStack = async (stackId) => {
+  const waitForReadyStack = async (stackId, phase = 'readiness') => {
+    updateProgress(phase, stackId);
     const deadline = performance.now() + readyTimeoutMs;
     let readyFrames = 0;
     let last = null;
@@ -370,6 +517,7 @@ export async function runNativeMapStreamingJourneyInPage({
         journeyAbort.signal,
       );
       last = captureState(postRenderAt);
+      updateProgress(phase, stackId, last);
       if (isReady(last, stackId)) readyFrames += 1;
       else readyFrames = 0;
       if (readyFrames >= 2) return last;
@@ -402,7 +550,12 @@ export async function runNativeMapStreamingJourneyInPage({
   });
   scene.requestRender?.();
 
-  const initialState = await waitForReadyStack('photoreal');
+  updateProgress('initial-readiness', 'photoreal');
+  const initialState = await waitForReadyStack(
+    'photoreal',
+    'initial-readiness',
+  );
+  initialReadinessComplete = true;
   const transitions = [
     {
       stackId: 'photoreal',
@@ -412,7 +565,8 @@ export async function runNativeMapStreamingJourneyInPage({
       state: initialState,
     },
   ];
-  const routeStartedAt = performance.now();
+  routeStartedAt = performance.now();
+  updateProgress('route');
   const routeOrigin = {
     position: {
       x: camera.positionWC.x,
@@ -510,6 +664,7 @@ export async function runNativeMapStreamingJourneyInPage({
   const transitionTask = (async () => {
     for (const schedule of route.stackSchedule.slice(1)) {
       if (journeyAbort.signal.aborted) return;
+      updateProgress('transition', schedule.stackId);
       const delay = routeStartedAt + schedule.atMs - performance.now();
       if (delay > 0)
         await new Promise((resolve, reject) => {
@@ -569,7 +724,10 @@ export async function runNativeMapStreamingJourneyInPage({
         throw new Error(
           `Native map stack switch to ${schedule.stackId} failed or fell back.`,
         );
-      const state = await waitForReadyStack(schedule.stackId);
+      const state = await waitForReadyStack(
+        schedule.stackId,
+        'transition-readiness',
+      );
       transitions.push({
         stackId: schedule.stackId,
         scheduledAtMs: schedule.atMs,
@@ -577,6 +735,8 @@ export async function runNativeMapStreamingJourneyInPage({
         settledAtMs: performance.now() - routeStartedAt,
         state,
       });
+      transitionsCompleted = transitions.length - 1;
+      updateProgress('route', schedule.stackId, state);
     }
   })();
   try {
@@ -614,7 +774,8 @@ export async function runNativeMapStreamingJourneyInPage({
       });
       scene.requestRender?.();
     }
-    const finalState = await waitForReadyStack('photoreal');
+    updateProgress('final-readiness', 'photoreal');
+    const finalState = await waitForReadyStack('photoreal', 'final-readiness');
     includeView();
     const terrainSamples = transitions
       .filter((entry) => entry.stackId !== 'photoreal')
@@ -670,7 +831,116 @@ export async function runNativeMapStreamingJourneyInPage({
 }
 
 export async function runNativeMapStreamingJourney(page, options) {
-  return page.evaluate(runNativeMapStreamingJourneyInPage, options);
+  assert.ok(page && typeof page.evaluate === 'function');
+  assert.ok(options && typeof options === 'object');
+  const operationId = `map-${Date.now().toString(36)}-${(++nextMapJourneyOperationId).toString(
+    36,
+  )}`;
+  const evaluate = (command) =>
+    page.evaluate(runNativeMapStreamingJourneyInPage, {
+      ...options,
+      command,
+      operationId,
+    });
+  let startAttempted = false;
+  let terminal = false;
+  let result = null;
+  let primaryError = null;
+  let lastCheckpoint = null;
+  try {
+    startAttempted = true;
+    const start = await evaluate('start');
+    if (start?.operationId !== operationId || start.status !== 'running')
+      throw new Error('Native map journey operation did not start.');
+    for (
+      let pollCount = 0;
+      pollCount < MAP_JOURNEY_MAX_POLL_COUNT;
+      pollCount += 1
+    ) {
+      const state = await evaluate('poll');
+      if (state?.operationId !== operationId)
+        throw new Error('Native map journey poll identity changed.');
+      lastCheckpoint = state.checkpoint || lastCheckpoint;
+      if (state.status === 'completed') {
+        terminal = true;
+        result = state.result;
+        break;
+      }
+      if (state.status === 'failed') {
+        terminal = true;
+        const error = new Error(
+          `Native map journey failed during ${state.checkpoint?.phase || 'unknown phase'}: ${state.failure?.message || 'page operation failed.'}`,
+        );
+        error.actual = state.checkpoint || null;
+        error.expected = {
+          operationId,
+          status: 'completed',
+        };
+        throw error;
+      }
+      if (state.status !== 'running')
+        throw new Error(`Native map journey operation became ${state.status}.`);
+      await new Promise((resolve) =>
+        setTimeout(resolve, MAP_JOURNEY_POLL_INTERVAL_MS),
+      );
+    }
+    if (!terminal) {
+      const error = new Error(
+        'Native map journey exceeded its bounded host polling limit.',
+      );
+      error.actual = lastCheckpoint;
+      error.expected = {
+        operationId,
+        maxPollCount: MAP_JOURNEY_MAX_POLL_COUNT,
+        pollIntervalMs: MAP_JOURNEY_POLL_INTERVAL_MS,
+      };
+      throw error;
+    }
+  } catch (error) {
+    primaryError = error;
+    if (startAttempted && !terminal) {
+      try {
+        let cancelled = await evaluate('cancel');
+        lastCheckpoint = cancelled?.checkpoint || lastCheckpoint;
+        for (
+          let drainCount = 0;
+          cancelled?.status === 'running' &&
+          drainCount < MAP_JOURNEY_CANCEL_DRAIN_POLL_COUNT;
+          drainCount += 1
+        ) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, MAP_JOURNEY_CANCEL_DRAIN_INTERVAL_MS),
+          );
+          cancelled = await evaluate('poll');
+          lastCheckpoint = cancelled?.checkpoint || lastCheckpoint;
+        }
+        if (
+          cancelled?.status &&
+          cancelled.status !== 'running' &&
+          cancelled.status !== 'missing'
+        )
+          terminal = true;
+      } catch {
+        // The owning page/context close is the fallback operation retirement boundary.
+      }
+      if (!primaryError.actual && lastCheckpoint)
+        primaryError.actual = lastCheckpoint;
+    }
+  }
+  if (startAttempted && terminal) {
+    try {
+      const disposed = await evaluate('dispose');
+      if (disposed?.status !== 'disposed')
+        throw new Error(
+          'Native map journey operation disposal was not confirmed.',
+        );
+    } catch (error) {
+      if (primaryError) primaryError.disposeError = error.message;
+      else primaryError = error;
+    }
+  }
+  if (primaryError) throw primaryError;
+  return result;
 }
 
 export function createMapStreamingCaptureReport({
