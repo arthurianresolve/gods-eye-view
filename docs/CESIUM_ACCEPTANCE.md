@@ -24,7 +24,9 @@ The evaluator correction is implemented at `6f635ecd` (reviewed Luna source
 `4e4127f5`). It emits this policy ID, reports each target's actual percentage and
 achieved/missed/unassessed outcome, and derives tracking coverage from measured
 tracking rather than target achievement. Root passes 73 focused candidate,
-comparison and retention tests. Exact-commit full integration remains pending;
+comparison and retention tests. Standard integration passes all seven selected
+jobs at containing revision `f50565a0` (see the
+[exact-commit evidence](performance-evidence/integration-f50565a0/README.md));
 historical results retain their original policy and outcome. See the
 [implementation evidence](performance-evidence/acceptance-policy-20261013/README.md).
 

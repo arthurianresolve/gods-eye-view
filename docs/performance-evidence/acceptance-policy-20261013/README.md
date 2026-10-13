@@ -27,7 +27,9 @@ qualification while reporting those misses, target achievement, actual >10%
 regression, missing tracking/dense measurements and software-only insufficiency.
 These are controlled evaluator fixtures, not new hardware measurements.
 
-Exact-commit standard integration is pending. No historical raw result was
+Standard integration passes all seven selected jobs at exact containing revision
+`f50565a0`; see the [preserved run summary](../integration-f50565a0/README.md).
+No historical raw result was
 rewritten, no target was marked achieved without measurement, and no current
 candidate was certified or published by this change. Later recomputation uses
 the explicit new policy and is a separate evaluation, not a replacement for an

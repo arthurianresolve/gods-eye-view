@@ -1,4 +1,31 @@
-# Current main needs a reviewed merge
+# Current main reconciliation
+
+## Reviewed merge prepared
+
+Merge `8b84a2e0de1393d183c54e50d28d468468fa53f9` now combines reviewed QA
+`f50565a094d583820a661849d9b888c5a65b0ae8` with upstream/fork main
+`9beadbda6333b83f79aa03047e2d851830f01f6b`. The QA working branch has advanced
+to this merge; `dev` and the deployed VM have not been changed. A fresh remote
+fetch still finds both main refs at `9beadbda` and local/remote dev at `e8ccc268`.
+
+Root compared the resolved merge tree with Git's automatic merge tree: only
+`src/data/scenePick.test.mjs` differs from the automatic result. The resolution
+retains both the QA attribution tests and upstream ground/surface picking tests.
+Root independently passes 485 focused Street Level, picking, layer-state, key,
+markup, build and UI checks. Luna also passes package boundaries (1,015 modules,
+80 entries), adopted changed-file formatting and its 347 focused checks. Root
+passes published layer-token checks against both `fork/main` and `fork/dev`:
+29 published tokens, no new allocations. These local checks do not substitute
+for representative pull-request workflow evidence.
+
+The [preceding exact QA revision passes all seven standard CI jobs](../integration-f50565a0/README.md).
+The merged revision still needs its own Node 24/26, build, onboarding/recovery and
+browser integration run. The [separate native diagnostic failure](../s47-map-streaming/native-v4-38416400160/README.md)
+is a capture-report topology mismatch and remains failed. It is not caused by
+the Street View merge, which that run predates. Promotion to dev follows review
+and merged-candidate validation; no rebase or history discard is needed.
+
+## Original assessment before the merge
 
 A fresh fetch on 13 October 2026 finds:
 
@@ -33,7 +60,9 @@ builds, onboarding/recovery, browser journeys and the Street Level/picking gates
 A new merged candidate needs its own exact-commit evidence; older performance
 results remain tied to their original revisions.
 
-No merge, rebase, push to main/dev, or deployment was performed for this check.
+At the original assessment checkpoint, no merge, rebase, push to main/dev, or
+deployment had been performed. The reviewed merge update above supersedes that
+checkpoint for QA only.
 Fork main advanced from `8b8ccc9a` to `9beadbda` during this check; both remotes
 were fetched again to confirm the final table. The earlier checkpoint at
 upstream `8b8ccc9a` was correct for that fetched

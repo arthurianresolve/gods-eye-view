@@ -31,5 +31,9 @@ next native browser run still has to verify both revisions' actual requests.
 Three missing browser path identities from the old bounded report remain unknown.
 
 This is a fixture correction with automatic/component evidence. Cross-platform
-integration and native baseline/candidate execution remain pending. No physical
-Windows, matched performance or complete S47/S57/S60 acceptance is claimed.
+standard integration now passes at `f50565a0`; the
+[native run](../native-v4-38416400160/README.md) has no missing fixture paths on
+either revision and passes its baseline variant. Its candidate fails outer report
+topology validation after the CLI samples complete. That failure remains open;
+no physical Windows, matched performance or complete S47/S57/S60 acceptance is
+claimed.
