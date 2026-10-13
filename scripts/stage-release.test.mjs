@@ -43,7 +43,7 @@ test('release verification downloads the exact uploaded artifact ID', async () =
     /ARTIFACT_ID: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
   );
   assert.match(guard, /test -n "\$ARTIFACT_ID"/);
-  assert.match(guard, /\[\[ "\$ARTIFACT_ID" =~ \^\[0-9\]\+\$ \]\]/);
+  assert.match(guard, /\[\[ "\$ARTIFACT_ID" =~ \^\[1-9\]\[0-9\]\*\$ \]\]/);
   assert.match(
     download,
     /uses: actions\/download-artifact@[0-9a-f]{40} # v4\.3\.0/,
@@ -52,6 +52,7 @@ test('release verification downloads the exact uploaded artifact ID', async () =
     download,
     /artifact-ids: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
   );
+  assert.match(download, /merge-multiple: true/);
   assert.doesNotMatch(download, /^\s+name:/m);
   assert.match(workflow, /sha256sum -c "\$\{ARCHIVE_NAME\}\.sha256"/);
   assert.match(workflow, /gh attestation verify "\$ARCHIVE_NAME"/);
