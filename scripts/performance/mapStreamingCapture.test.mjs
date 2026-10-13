@@ -3,8 +3,9 @@ import test from 'node:test';
 import vm from 'node:vm';
 import * as Cesium from 'cesium';
 import {
-  createMapStreamingCaptureReport,
+  createFinalizedMapStreamingCaptureEvidence,
   MAP_STREAMING_ROUTE,
+  mapStreamingCaptureWorkloadFields,
   runNativeMapStreamingJourneyInPage,
   validateMapStreamingCaptureReport,
 } from './mapStreamingCapture.mjs';
@@ -510,13 +511,23 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
   journey.finalState.camera = nativeEndpoints.end;
   journey.route.start = nativeEndpoints.start;
   journey.route.end = nativeEndpoints.end;
-  const report = createMapStreamingCaptureReport({
+  const finalized = createFinalizedMapStreamingCaptureEvidence({
     fixture,
-    fixtureDelivery,
     journey,
     profile,
     documentDeliveries: [row],
   });
+  const report = finalized.mapStreamingCapture;
+  assert.deepEqual(finalized.fixtureDelivery, fixtureDelivery);
+  assert.deepEqual(
+    mapStreamingCaptureWorkloadFields(finalized),
+    {
+      mapStreamingCapture: report,
+      mapStreamingFixtureDocuments: [row],
+      performanceAcceptanceEligible: false,
+    },
+    'The actual finalizer projection is the workload shape serialized by capture CLI.',
+  );
   assert.equal(report.performanceAcceptanceEligible, false);
   assert.equal(
     report.fixtureDelivery.assets.length,

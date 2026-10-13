@@ -168,6 +168,7 @@ let mapStreamingDeliveryFactory = null;
 let mapStreamingFixture = null;
 let mapStreamingJourney = null;
 let mapStreamingCaptureReport = null;
+let mapStreamingFinalEvidence = null;
 const mapStreamingFixtureOwners = [];
 let austinOperatingModule = null;
 let austinOperatingWorkload = null;
@@ -5354,18 +5355,6 @@ try {
           ],
         }
       : {}),
-    ...(mapStreamingWorkloadSelected
-      ? {
-          mapStreamingCapture:
-            mapStreamingCaptureReport ||
-            failureProgress.workload.mapStreamingCapture ||
-            null,
-          mapStreamingFixtureDocuments: [
-            ...(failureProgress.workload.mapStreamingFixtureDocuments || []),
-          ],
-          performanceAcceptanceEligible: false,
-        }
-      : {}),
     ...(productionFlightFixture
       ? {
           expectedFixture: productionFlightFixture,
@@ -5422,21 +5411,18 @@ try {
     await releaseFlightFixtureSession(session);
   if (mapStreamingWorkloadSelected) {
     const documentDeliveries = collectMapStreamingFixtureDocumentDeliveries();
-    const aggregateDelivery =
-      mapStreamingModule.aggregateMapStreamingDocumentDeliveries(
-        mapStreamingFixture,
-        documentDeliveries,
-      );
-    mapStreamingCaptureReport =
-      mapStreamingModule.createMapStreamingCaptureReport({
+    mapStreamingFinalEvidence =
+      mapStreamingModule.createFinalizedMapStreamingCaptureEvidence({
         fixture: mapStreamingFixture,
-        fixtureDelivery: aggregateDelivery,
         journey: mapStreamingJourney,
         profile: resolveMapFixtureBuildProfile(expectedBuildProfile),
         documentDeliveries,
       });
-    failureProgress.fixtureDelivery = aggregateDelivery;
-    failureProgress.workload.mapStreamingFixtureDocuments = documentDeliveries;
+    mapStreamingCaptureReport = mapStreamingFinalEvidence.mapStreamingCapture;
+    fixtureDelivery = mapStreamingFinalEvidence.fixtureDelivery;
+    failureProgress.fixtureDelivery = fixtureDelivery;
+    failureProgress.workload.mapStreamingFixtureDocuments =
+      mapStreamingFinalEvidence.mapStreamingFixtureDocuments;
     failureProgress.workload.mapStreamingCapture = mapStreamingCaptureReport;
   }
   if (austinOperatingWorkload) {
@@ -5585,6 +5571,11 @@ try {
         }
       : {}),
     ...(weatherEffectsWorkload ? { performanceAcceptanceEligible: false } : {}),
+    ...(mapStreamingWorkloadSelected
+      ? mapStreamingModule.mapStreamingCaptureWorkloadFields(
+          mapStreamingFinalEvidence,
+        )
+      : {}),
     mixedLayers: mixedLayerFixture,
     qualityMode,
     expectedDensityPct: Number.isFinite(expectedDensityPct)

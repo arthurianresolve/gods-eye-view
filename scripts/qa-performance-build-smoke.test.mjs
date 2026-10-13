@@ -18,6 +18,7 @@ import {
   executeCaptureCliWithReportArtifact,
   parseSmokeArguments,
   preserveCaptureCliReportArtifact,
+  respondToSmokeFixtureRequest,
   readProviderCpuProfileIndexSet,
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
@@ -27,6 +28,10 @@ import {
 import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
 import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
+import {
+  MAP_FIXTURE_BUILD_PROFILE_ID,
+  resolveMapFixtureBuildProfile,
+} from './performance/buildProvenance.mjs';
 import {
   appendAustinOperatingReadinessHistory,
   createAustinOperatingReadinessHistory,
@@ -44,6 +49,8 @@ import {
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
+import { createDeterministicMapStreamingFixture } from './performance/mapStreamingFixture.mjs';
+import { createMapStreamingFixtureDelivery } from './performance/mapStreamingFixtureDelivery.mjs';
 import {
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsFixtureLifecycle,
@@ -515,40 +522,248 @@ test('capture report renderer validation binds verified evidence to the observed
   );
 });
 
-test('map capture CLI validation binds the full report to the outer delivery and diagnostic status', () => {
-  const innerDelivery = {
+function mapProducerShapedCleanup(topology) {
+  const releases = topology.workerAudits.map((document, index) => ({
+    ...document,
+    sessionOrdinal: index + 1,
+    confirmed: true,
+    targetClosed: true,
+    stop: {
+      confirmed: true,
+      listenerRemovalConfirmed: true,
+      pendingAtStop: 0,
+      pendingPreparationAtStop: 0,
+      pendingAbortSubscriptionsAtStop: 0,
+      pendingCommandsAtStop: 0,
+      pendingCommandsAfterDrain: 0,
+      pendingPreparationsAfterDrain: 0,
+      pendingAbortSubscriptionsAfterDrain: 0,
+      rejectedDrainOperations: 0,
+      drainCommandFailures: 0,
+      unexpectedLateRequestCount: 0,
+    },
+    interception: {
+      confirmed: true,
+      interception: {
+        confirmed: true,
+        listenerRemovalConfirmed: true,
+        pendingAtStop: 0,
+        pendingPreparationAtStop: 0,
+        pendingAbortSubscriptionsAtStop: 0,
+        pendingCommandsAtStop: 0,
+        pendingCommandsAfterDrain: 0,
+        pendingPreparationsAfterDrain: 0,
+        pendingAbortSubscriptionsAfterDrain: 0,
+        unexpectedLateRequestCount: 0,
+        rejectedDrainOperations: 0,
+        drainCommandFailures: 0,
+      },
+      fetchDisable: 'target-closed',
+      detach: 'target-closed',
+    },
+    fetchDisable: 'target-closed',
+    detach: 'target-closed',
+  }));
+  return releases;
+}
+
+function createMapCliProducerShape(fixture) {
+  const topology = createCaptureDocumentTopology({
+    startupRuns: 1,
+    captureCount: 4,
+  });
+  const releases = mapProducerShapedCleanup(topology);
+  const documentDeliveries = topology.workerAudits.map((document, index) => ({
+    ...document,
+    sessionOrdinal: index + 1,
+    delivery: {
+      status: 'disposed',
+      fixtureId: fixture.id,
+      manifestSha256: fixture.manifestSha256,
+      cleanupConfirmed: true,
+      pendingCount: 0,
+      errorObservationCount: 0,
+    },
+    release: releases[index],
+  }));
+  const fixtureDelivery = {
     schema: 'gev-map-streaming-fixture-delivery/v1',
-    fixtureId: 'austin-map-streaming-fixture-v1',
-    manifestSha256: 'a'.repeat(64),
+    fixtureId: fixture.id,
+    manifestSha256: fixture.manifestSha256,
     status: 'observed',
-    requestedCount: 72,
-    fulfilledAckCount: 72,
+    requestedCount: 8,
+    fulfilledAckCount: 8,
+    cancelledCount: 0,
+    pendingCount: 0,
+    unexpectedFulfillmentCount: 0,
+    errorObservationCount: 0,
+    assets: [],
     cleanupConfirmed: true,
+    browserDecodeObserved: false,
+    renderedReadinessObserved: false,
   };
-  const mapCapture = { fixtureDelivery: innerDelivery };
+  const mapCapture = {
+    schema: 'gev-map-streaming-capture/v1',
+    workloadId: MAP_STREAMING_WORKLOAD_ID,
+    status: 'observed',
+    performanceAcceptanceEligible: false,
+    fixtureId: fixture.id,
+    manifestSha256: fixture.manifestSha256,
+    buildProfile: resolveMapFixtureBuildProfile(MAP_FIXTURE_BUILD_PROFILE_ID),
+    fixtureDelivery,
+    documentDeliveries,
+  };
+  const retire = (document, phase, scenario, run) => ({
+    ...document,
+    phase,
+    ...(scenario ? { scenario, run } : {}),
+    requested: true,
+    status:
+      phase === 'startup-final-details'
+        ? 'retired-with-final-observation'
+        : 'retired-at-final-post-render',
+    before: true,
+    after: false,
+    confirmed: true,
+    elapsedMs: 2,
+  });
+  const captures = topology.samples.map((document, index) => {
+    const scenario = index < 2 ? 'idle' : 'scripted-motion';
+    const run = (index % 2) + 1;
+    const renderLoopRetirement = retire(
+      document,
+      'provider-sample-measurement-post-render',
+      scenario,
+      run,
+    );
+    return {
+      ...document,
+      scenario,
+      run,
+      renderLoopRetirement,
+    };
+  });
+  const rendererProbeCleanup = topology.workerAudits.map((document) => ({
+    ...document,
+    confirmed: true,
+    document: {
+      status: 'confirmed',
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: true,
+      stateDeleted: true,
+      listenerCount: 0,
+      listenerRemovalFailedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalAttemptedCount: 0,
+      renderLoopRetirement: {
+        requested: true,
+        confirmed: true,
+        after: false,
+      },
+    },
+    scriptRegistration: {
+      status: 'confirmed',
+      errorKind: null,
+      verification: 'puppeteer-registration-removal-acknowledged;test',
+    },
+  }));
+  const rendererLoopRetirements = [
+    ...topology.workerAudits
+      .filter((document) => document.documentRole.startsWith('startup-'))
+      .map((document) =>
+        retire(document, 'startup-final-details', undefined, undefined),
+      ),
+    ...captures.map((capture) => ({ ...capture.renderLoopRetirement })),
+  ];
+  return {
+    topology,
+    releases,
+    documentDeliveries,
+    fixtureDelivery,
+    mapCapture,
+    captures,
+    rendererProbeCleanup,
+    rendererLoopRetirements,
+  };
+}
+
+test('map capture CLI validates the complete producer envelope and rejects outer evidence mutations', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const produced = createMapCliProducerShape(fixture);
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode: 'diagnostic',
     comparisonEligible: false,
+    environment: {
+      renderer: 'Google SwiftShader',
+      hardwareEligible: false,
+    },
+    source: {
+      appCommit: 'a'.repeat(40),
+      harnessCommit: 'b'.repeat(40),
+      appWorktreeState: 'clean',
+      harnessDirtyWorktree: false,
+      provenanceStatus:
+        'verified-local-build-and-served-assets-before-and-after',
+      buildProvenance: {
+        receiptSha256: 'c'.repeat(64),
+        pageAssetAudit: {
+          workerAuditMode: 'diagnostic',
+          scriptRequestCount: 5,
+          loadedAssetPaths: ['index.html', 'assets/app.js'],
+          unexpectedAssetPaths: [],
+        },
+      },
+    },
+    integrity: { status: 'passed', sampleCount: produced.captures.length },
     comparisonReadiness: {
       status: 'not-ready',
       reasons: [
         'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
       ],
     },
-    fixtureDelivery: structuredClone(innerDelivery),
+    fixtureDelivery: produced.fixtureDelivery,
     workload: {
       providerFixture: MAP_STREAMING_WORKLOAD_ID,
-      fixtureId: innerDelivery.fixtureId,
+      fixtureId: fixture.id,
+      fixture: {
+        id: fixture.id,
+        sha256: fixture.manifestSha256,
+        byteLength: fixture.manifest.totalBytes,
+      },
+      warmupMs: 1000,
+      durationPerSampleMs: 1000,
+      runsPerScenario: 2,
+      startupRuns: 1,
+      scenarios: ['idle', 'scripted-motion'],
       performanceAcceptanceEligible: false,
-      mapStreamingCapture: mapCapture,
+      mapStreamingCapture: produced.mapCapture,
+      mapStreamingFixtureDocuments: produced.documentDeliveries,
+      rendererProbeCleanup: produced.rendererProbeCleanup,
+      rendererProbeCleanupOmittedCount: 0,
+      rendererLoopRetirements: produced.rendererLoopRetirements,
+      rendererLoopRetirementsOmittedCount: 0,
+      fixtureInterceptionReleases: produced.releases,
     },
+    captures: produced.captures,
   };
   const expected = {
+    appSha: 'a'.repeat(40),
+    harnessSha: 'b'.repeat(40),
+    receiptSha256: 'c'.repeat(64),
     providerFixture: MAP_STREAMING_WORKLOAD_ID,
-    mapStreamingFixture: { id: innerDelivery.fixtureId },
+    workerAuditMode: 'diagnostic',
+    mapStreamingFixture: fixture,
+    mapStreamingBuildProfile: resolveMapFixtureBuildProfile(
+      MAP_FIXTURE_BUILD_PROFILE_ID,
+    ),
+    warmupMs: 1000,
+    durationPerSampleMs: 1000,
     validateMapStreamingCapture(observed) {
-      assert.equal(observed?.fixtureDelivery?.schema, innerDelivery.schema);
+      assert.equal(observed?.fixtureId, fixture.id);
+      assert.equal(observed?.manifestSha256, fixture.manifestSha256);
+      assert.deepEqual(observed?.fixtureDelivery, produced.fixtureDelivery);
     },
   };
   assert.equal(
@@ -556,16 +771,85 @@ test('map capture CLI validation binds the full report to the outer delivery and
     false,
   );
 
-  const eligible = structuredClone(report);
-  eligible.comparisonEligible = true;
-  assert.throws(() => validateCaptureCliReport(eligible, expected));
+  const mutations = [
+    [(copy) => delete copy.source, /app commit/],
+    [(copy) => (copy.source.appCommit = 'd'.repeat(40)), /app commit/],
+    [(copy) => (copy.source.harnessCommit = 'd'.repeat(40)), /harness commit/],
+    [
+      (copy) => (copy.source.buildProvenance.receiptSha256 = 'd'.repeat(64)),
+      /receipt identity/,
+    ],
+    [
+      (copy) => (copy.source.provenanceStatus = 'unverified'),
+      /verified local build/,
+    ],
+    [
+      (copy) => (copy.environment.hardwareEligible = true),
+      /ineligible for hardware/,
+    ],
+    [
+      (copy) => (copy.environment.renderer = 'Other renderer'),
+      /software-renderer contract/i,
+    ],
+    [(copy) => (copy.integrity.status = 'failed'), /integrity/],
+    [(copy) => copy.captures.pop(), /sampleCount|length/],
+    [
+      (copy) => delete copy.workload.mapStreamingCapture,
+      /Finalized map capture/,
+    ],
+    [
+      (copy) => copy.workload.mapStreamingFixtureDocuments.pop(),
+      /exactly match the native map owners/,
+    ],
+    [
+      (copy) => (copy.fixtureDelivery.fulfilledAckCount += 1),
+      /strictly deep-equal/,
+    ],
+    [
+      (copy) => copy.workload.rendererProbeCleanup.pop(),
+      /exactly one cleanup record/,
+    ],
+    [
+      (copy) => (copy.workload.rendererProbeCleanup[0].confirmed = false),
+      /Renderer probe cleanup/,
+    ],
+    [
+      (copy) => copy.workload.fixtureInterceptionReleases.pop(),
+      /exactly cover/,
+    ],
+    [
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].stop.pendingCommandsAfterDrain = 1),
+      /drain pending commands/,
+    ],
+  ];
+  for (const [mutate, pattern] of mutations) {
+    const copy = structuredClone(report);
+    mutate(copy);
+    assert.throws(() => validateCaptureCliReport(copy, expected), pattern);
+  }
+});
 
-  const wrongDelivery = structuredClone(report);
-  wrongDelivery.fixtureDelivery.manifestSha256 = 'b'.repeat(64);
-  assert.throws(
-    () => validateCaptureCliReport(wrongDelivery, expected),
-    /Outer delivery summary must bind/,
-  );
+test('smoke fixture responder awaits the native map classifier before flight fallback', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const mapDelivery = createMapStreamingFixtureDelivery(fixture, {
+    appOrigin: 'http://127.0.0.1:4173',
+  });
+  const flightFixture = createProductionFlightFixture({
+    count: 2,
+    fixedTime: '2026-10-08T12:00:00.000Z',
+  });
+  const url = 'http://127.0.0.1:4173/api/flights';
+  const request = { url: () => url, method: () => 'GET' };
+  const response = await respondToSmokeFixtureRequest(new URL(url), request, {
+    baseUrl: 'http://127.0.0.1:4173',
+    mapStreamingDelivery: mapDelivery,
+    flightFixture,
+  });
+  assert.equal(response?.status, 200);
+  assert.equal(response?.body, flightFixture.body);
+  assert.equal(mapDelivery.summary().requestedCount, 0);
+  mapDelivery.dispose();
 });
 
 test('Austin readiness-history smoke contract rejects unbounded or mismatched host samples', () => {

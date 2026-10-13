@@ -98,6 +98,22 @@ const ROOT = await realpath(
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
 const CAPTURE_CLI_TIMEOUT_MS = 180 * 1000;
+
+export async function respondToSmokeFixtureRequest(
+  url,
+  request,
+  { baseUrl, mapStreamingDelivery, flightFixture },
+) {
+  const workerResponse = respondToWorkerPreflight(url, baseUrl);
+  if (workerResponse !== undefined) return workerResponse;
+
+  const mapResponse = mapStreamingDelivery
+    ? await mapStreamingDelivery.respond(url, request)
+    : null;
+  if (mapResponse !== null && mapResponse !== undefined) return mapResponse;
+
+  return respondToProductionFlightFixture(url, request, flightFixture, baseUrl);
+}
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -779,6 +795,175 @@ export function assertProviderFixtureCaptureClock(
   assert.ok(clock.ageAtEndMs <= clock.freshnessWindowMs);
 }
 
+function validateMapStreamingCaptureCliReport(report, expected) {
+  const fixture = expected.mapStreamingFixture;
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  assert.equal(
+    report.environment?.hardwareEligible,
+    false,
+    'Map fixture capture is ineligible for hardware performance acceptance.',
+  );
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
+    assert.ok(
+      report.comparisonReadiness?.reasons?.includes(
+        'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+      ),
+      'Native map rendering remains comparison-ineligible.',
+    );
+    assert.ok(report.environment?.renderer);
+  } else {
+    assert.match(
+      report.environment?.renderer || '',
+      /swiftshader/i,
+      'Default map smoke must preserve the software-renderer contract.',
+    );
+  }
+  assert.equal(
+    report.source?.appCommit,
+    expected.appSha,
+    'Capture report app commit must match the exact verified build.',
+  );
+  assert.equal(
+    report.source?.harnessCommit,
+    expected.harnessSha,
+    'Capture report harness commit must match the exact harness.',
+  );
+  assert.equal(
+    report.source?.appWorktreeState,
+    'clean',
+    'Map capture app checkout must be the verified clean build source.',
+  );
+  assert.equal(
+    report.source?.harnessDirtyWorktree,
+    false,
+    'Map capture harness checkout must be clean.',
+  );
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+    'Map capture requires verified local build and served-asset provenance.',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+    'Capture report must retain the verified build receipt identity.',
+  );
+  const pageAssetAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAssetAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isSafeInteger(pageAssetAudit?.scriptRequestCount) &&
+      pageAssetAudit.scriptRequestCount > 0,
+    'Map capture requires observed receipted script requests.',
+  );
+  assert.ok(pageAssetAudit?.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAssetAudit?.unexpectedAssetPaths, []);
+  assert.deepEqual(
+    report.integrity,
+    {
+      status: 'passed',
+      sampleCount: report.captures?.length,
+    },
+    'Map capture integrity must pass for every reported sample.',
+  );
+  assert.equal(report.workload?.providerFixture, MAP_STREAMING_WORKLOAD_ID);
+  assert.equal(report.workload?.fixtureId, fixture?.id);
+  assert.deepEqual(report.workload?.fixture, {
+    id: fixture?.id,
+    sha256: fixture?.manifestSha256,
+    byteLength: fixture?.manifest?.totalBytes,
+  });
+  assert.equal(report.workload?.performanceAcceptanceEligible, false);
+  assert.equal(report.workload?.warmupMs, expected.warmupMs);
+  assert.equal(
+    report.workload?.durationPerSampleMs,
+    expected.durationPerSampleMs,
+  );
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.ok(
+    report.comparisonReadiness?.reasons?.includes(
+      'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
+    ),
+  );
+  assert.equal(typeof expected.validateMapStreamingCapture, 'function');
+  assert.equal(report.captures?.length, 4);
+  const topology = createCaptureDocumentTopology({
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  const sampleKeys = new Set();
+  for (const sample of report.captures) {
+    assert.ok(['idle', 'scripted-motion'].includes(sample.scenario));
+    assert.ok([1, 2].includes(sample.run));
+    const key = `${sample.scenario}:${sample.run}`;
+    assert.equal(sampleKeys.has(key), false, `Duplicate map sample ${key}.`);
+    sampleKeys.add(key);
+  }
+  assert.deepEqual([...sampleKeys].sort(), [
+    'idle:1',
+    'idle:2',
+    'scripted-motion:1',
+    'scripted-motion:2',
+  ]);
+  assertCaptureCleanupEvidence(report.workload, topology, {
+    captures: report.captures,
+  });
+
+  const mapCapture = report.workload?.mapStreamingCapture;
+  assert.equal(
+    mapCapture?.schema,
+    'gev-map-streaming-capture/v1',
+    'Finalized map capture report is required.',
+  );
+  assert.equal(mapCapture?.workloadId, MAP_STREAMING_WORKLOAD_ID);
+  assert.equal(mapCapture?.status, 'observed');
+  assert.equal(mapCapture?.performanceAcceptanceEligible, false);
+  assert.equal(mapCapture?.fixtureId, fixture?.id);
+  assert.equal(mapCapture?.manifestSha256, fixture?.manifestSha256);
+  assert.deepEqual(
+    mapCapture?.buildProfile,
+    expected.mapStreamingBuildProfile,
+    'Map capture build profile must match the receipted profile.',
+  );
+  expected.validateMapStreamingCapture(mapCapture);
+  assert.deepEqual(
+    report.workload?.mapStreamingFixtureDocuments,
+    mapCapture.documentDeliveries,
+    'Outer map document inventory must match the validated native capture.',
+  );
+  const mapReleases = mapCapture.documentDeliveries.map(
+    (entry) => entry.release,
+  );
+  const outerReleases = report.workload.fixtureInterceptionReleases;
+  assert.ok(Array.isArray(outerReleases));
+  const releaseByIdentity = (rows) =>
+    rows
+      .map((row) => ({
+        identity: `${row.documentRole}\0${row.documentId}`,
+        row,
+      }))
+      .sort((left, right) => left.identity.localeCompare(right.identity));
+  assert.deepEqual(
+    releaseByIdentity(outerReleases),
+    releaseByIdentity(mapReleases),
+    'Fixture session releases must exactly match the native map owners.',
+  );
+  assert.deepEqual(
+    report.fixtureDelivery,
+    mapCapture.fixtureDelivery,
+    'Outer delivery summary must bind to the validated native map report.',
+  );
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+  };
+}
+
 export function validateCaptureCliReport(report, expected) {
   validateRendererBackendEvidence(report, expected.captureRendererBackend);
   const nativeRendererReason =
@@ -795,31 +980,7 @@ export function validateCaptureCliReport(report, expected) {
   if (expected.providerFixture === WEATHER_EFFECTS_WORKLOAD_ID)
     return validateWeatherEffectsCaptureCliReport(report, expected);
   if (expected.providerFixture === MAP_STREAMING_WORKLOAD_ID) {
-    assert.equal(report?.schema, 'gev-performance-capture/v1');
-    assert.equal(report.workerAuditMode, 'diagnostic');
-    assert.equal(report.comparisonEligible, false);
-    assert.equal(report.workload?.providerFixture, MAP_STREAMING_WORKLOAD_ID);
-    assert.equal(report.workload?.fixtureId, expected.mapStreamingFixture?.id);
-    assert.equal(report.workload?.performanceAcceptanceEligible, false);
-    assert.equal(report.comparisonReadiness?.status, 'not-ready');
-    assert.ok(
-      report.comparisonReadiness?.reasons?.includes(
-        'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
-      ),
-    );
-    assert.equal(typeof expected.validateMapStreamingCapture, 'function');
-    const mapCapture = report.workload?.mapStreamingCapture;
-    expected.validateMapStreamingCapture(mapCapture);
-    assert.deepEqual(
-      report.fixtureDelivery,
-      mapCapture.fixtureDelivery,
-      'Outer delivery summary must bind to the validated native map report.',
-    );
-    return {
-      schema: report.schema,
-      status: report.status,
-      comparisonEligible: false,
-    };
+    return validateMapStreamingCaptureCliReport(report, expected);
   }
   if (expected.providerFixture?.startsWith('infrastructure'))
     return validateInfrastructureCaptureCliReport(report, expected);
@@ -2115,8 +2276,16 @@ export function assertCaptureCleanupEvidence(
         entry.documentRole === expectedDocument.documentRole &&
         entry.documentId === expectedDocument.documentId,
     );
-    assert.equal(evidence?.confirmed, true);
-    assert.equal(evidence?.document?.status, 'confirmed');
+    assert.equal(
+      evidence?.confirmed,
+      true,
+      `Renderer probe cleanup ${expectedDocument.documentId} must be confirmed.`,
+    );
+    assert.equal(
+      evidence?.document?.status,
+      'confirmed',
+      `Renderer probe document ${expectedDocument.documentId} must report confirmed state.`,
+    );
     assert.equal(evidence?.document?.statePresent, true);
     assert.equal(evidence?.document?.hookRestoreAttempted, true);
     assert.equal(evidence?.document?.hookRestored, true);
@@ -2178,8 +2347,16 @@ export function assertCaptureCleanupEvidence(
         entry.documentRole === expectedDocument.documentRole &&
         entry.documentId === expectedDocument.documentId,
     );
-    assert.equal(release?.confirmed, true);
-    assert.equal(release?.targetClosed, true);
+    assert.equal(
+      release?.confirmed,
+      true,
+      `Fixture release ${expectedDocument.documentId} must be confirmed.`,
+    );
+    assert.equal(
+      release?.targetClosed,
+      true,
+      `Fixture target ${expectedDocument.documentId} must be closed.`,
+    );
     assert.equal(release?.stop?.confirmed, true);
     assert.equal(release?.stop?.listenerRemovalConfirmed, true);
     for (const field of [
@@ -2193,7 +2370,11 @@ export function assertCaptureCleanupEvidence(
           release.stop[field] >= 0,
         `Fixture release ${field} must be a nonnegative observed count.`,
       );
-    assert.equal(release?.stop?.pendingCommandsAfterDrain, 0);
+    assert.equal(
+      release?.stop?.pendingCommandsAfterDrain,
+      0,
+      `Fixture release ${expectedDocument.documentId} must drain pending commands.`,
+    );
     assert.equal(release?.stop?.pendingPreparationsAfterDrain, 0);
     assert.equal(release?.stop?.pendingAbortSubscriptionsAfterDrain, 0);
     assert.equal(release?.stop?.rejectedDrainOperations, 0);
@@ -3390,6 +3571,8 @@ export function buildCaptureCliValidationExpectations({
   captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   austinOperatingFixture,
   mapStreamingFixture,
+  warmupMs = 1000,
+  durationPerSampleMs = 1000,
   validateMapStreamingCapture,
   receiptOnlyWorkerContract,
 }) {
@@ -3410,7 +3593,11 @@ export function buildCaptureCliValidationExpectations({
     ...(providerFixture === MAP_STREAMING_WORKLOAD_ID
       ? {
           mapStreamingFixture,
+          mapStreamingBuildProfile:
+            build.receipt.buildRecipe?.mapFixtureProfile || null,
           validateMapStreamingCapture,
+          warmupMs,
+          durationPerSampleMs,
         }
       : {}),
     workerAuditMode,
@@ -3855,14 +4042,11 @@ async function runRevision({
       page,
       viewport: { width: 1280, height: 900 },
       respond: (url, request) =>
-        respondToWorkerPreflight(url, served.baseUrl) ??
-        mapStreamingSmokeDelivery?.respond(url, request) ??
-        respondToProductionFlightFixture(
-          url,
-          request,
+        respondToSmokeFixtureRequest(url, request, {
+          baseUrl: served.baseUrl,
+          mapStreamingDelivery: mapStreamingSmokeDelivery,
           flightFixture,
-          served.baseUrl,
-        ),
+        }),
       onFulfilled: (event) => {
         flightFixtureDelivery.onFulfilled(event);
         mapStreamingSmokeDelivery?.onFulfilled(event);
