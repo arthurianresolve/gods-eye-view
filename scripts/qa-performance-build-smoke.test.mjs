@@ -875,6 +875,14 @@ test('map capture CLI validates the complete producer envelope and rejects outer
     [(copy) => (copy.integrity.status = 'failed'), /integrity/],
     [(copy) => copy.captures.pop(), /sampleCount|length/],
     [
+      (copy) => delete copy.captures[0].documentId,
+      /exact planned main document owner/,
+    ],
+    [
+      (copy) => (copy.captures[0].documentRole = 'provider-sample-1'),
+      /exact planned main document owner/,
+    ],
+    [
       (copy) => delete copy.workload.mapStreamingCapture,
       /Finalized map capture/,
     ],

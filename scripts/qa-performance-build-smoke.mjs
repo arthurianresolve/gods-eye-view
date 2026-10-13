@@ -1398,7 +1398,12 @@ function validateMapStreamingCaptureCliReport(report, expected) {
   assert.equal(typeof expected.validateMapStreamingCapture, 'function');
   assert.equal(report.captures?.length, 4);
   const sampleKeys = new Set();
-  for (const sample of report.captures) {
+  for (const [index, sample] of report.captures.entries()) {
+    assert.deepEqual(
+      ownerIdentity(sample),
+      ownerIdentity(topology.samples[index]),
+      'Every map sample must belong to its exact planned main document owner.',
+    );
     assert.ok(['idle', 'scripted-motion'].includes(sample.scenario));
     assert.ok([1, 2].includes(sample.run));
     const key = `${sample.scenario}:${sample.run}`;
@@ -2958,61 +2963,48 @@ export function assertRendererLoopRetirementEvidence({
       run: undefined,
       retirement: null,
     }));
-  const documentIdentity = (entry) =>
-    [entry.documentRole, entry.documentId].join('\u0000');
 
   if (captures !== null) {
     assert.ok(Array.isArray(captures), 'Austin captures must be an array.');
     assert.equal(
       captures.length,
       topology.samples.length,
-      'Every Austin sample topology entry must have one capture record.',
+      'Every Austin sample document must have one capture record.',
     );
-    const sampleCounts = new Map();
     for (const document of topology.samples) {
-      const key = documentIdentity(document);
-      sampleCounts.set(key, (sampleCounts.get(key) || 0) + 1);
-    }
-    const captureCounts = new Map();
-    for (const capture of captures) {
-      const key = documentIdentity(capture);
-      assert.ok(
-        sampleCounts.has(key),
-        `Capture ${capture.documentRole} is not owned by the capture topology.`,
+      const matchingCaptures = captures.filter(
+        (capture) =>
+          capture.documentRole === document.documentRole &&
+          capture.documentId === document.documentId,
       );
-      captureCounts.set(key, (captureCounts.get(key) || 0) + 1);
+      assert.equal(
+        matchingCaptures.length,
+        1,
+        `Austin sample ${document.documentRole} must map to exactly one capture.`,
+      );
+      const capture = matchingCaptures[0];
       assert.ok(
         capture.renderLoopRetirement &&
           typeof capture.renderLoopRetirement === 'object' &&
           !Array.isArray(capture.renderLoopRetirement),
-        `Austin sample ${capture.documentRole} must include its observed render-loop retirement.`,
+        `Austin sample ${document.documentRole} must include its observed render-loop retirement.`,
       );
       assert.ok(
         ['idle', 'scripted-motion'].includes(capture.scenario),
-        `Austin sample ${capture.documentRole} has an unknown scenario.`,
+        `Austin sample ${document.documentRole} has an unknown scenario.`,
       );
       assert.ok(
         Number.isSafeInteger(capture.run) && capture.run > 0,
-        `Austin sample ${capture.documentRole} has an invalid run ordinal.`,
+        `Austin sample ${document.documentRole} has an invalid run ordinal.`,
       );
       expected.push({
-        documentRole: capture.documentRole,
-        documentId: capture.documentId,
+        ...document,
         phase: 'provider-sample-measurement-post-render',
         scenario: capture.scenario,
         run: capture.run,
         retirement: capture.renderLoopRetirement,
       });
     }
-    assert.deepEqual(
-      [...captureCounts.entries()].sort(([left], [right]) =>
-        left.localeCompare(right),
-      ),
-      [...sampleCounts.entries()].sort(([left], [right]) =>
-        left.localeCompare(right),
-      ),
-      'Austin captures must preserve the planned per-document sample ownership counts.',
-    );
   }
 
   assert.equal(
@@ -3020,7 +3012,7 @@ export function assertRendererLoopRetirementEvidence({
     expected.length,
     'Renderer-loop retirement rows must exactly cover the expected boundaries.',
   );
-  const retirementIdentity = (entry) =>
+  const identity = (entry) =>
     [
       entry.phase,
       entry.documentRole,
@@ -3030,7 +3022,7 @@ export function assertRendererLoopRetirementEvidence({
     ].join('\u0000');
   const expectedByIdentity = new Map();
   for (const entry of expected) {
-    const key = retirementIdentity(entry);
+    const key = identity(entry);
     assert.equal(
       expectedByIdentity.has(key),
       false,
@@ -3040,7 +3032,7 @@ export function assertRendererLoopRetirementEvidence({
   }
   const actualByIdentity = new Map();
   for (const entry of retirements) {
-    const key = retirementIdentity(entry);
+    const key = identity(entry);
     assert.equal(
       actualByIdentity.has(key),
       false,
