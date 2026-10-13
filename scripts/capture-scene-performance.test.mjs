@@ -5,6 +5,8 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
+import { MAP_FIXTURE_BUILD_PROFILE_ID } from './performance/buildProvenance.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
@@ -88,6 +90,40 @@ test('capture CLI recognizes an infrastructure workload before browser startup',
     result.stderr,
     /Browser was not found|Could not find Chrome/,
   );
+});
+
+test('map workload requires its named build profile before loading Cesium infrastructure', async () => {
+  await withForbiddenCesiumLoader(async (loaderPath) => {
+    const missingProfile = invoke(
+      ['--provider-fixture', MAP_STREAMING_WORKLOAD_ID],
+      { loaderPath },
+    );
+    assert.equal(missingProfile.status, 1, missingProfile.stderr);
+    assert.match(
+      missingProfile.stderr,
+      /requires --build-profile austin-map-streaming-v1/,
+    );
+    assert.doesNotMatch(
+      missingProfile.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const missingReceipt = invoke(
+      [
+        '--provider-fixture',
+        MAP_STREAMING_WORKLOAD_ID,
+        '--build-profile',
+        MAP_FIXTURE_BUILD_PROFILE_ID,
+      ],
+      { loaderPath },
+    );
+    assert.equal(missingReceipt.status, 1, missingReceipt.stderr);
+    assert.match(missingReceipt.stderr, /requires a verified build receipt/);
+    assert.doesNotMatch(
+      missingReceipt.stderr,
+      /forbidden Cesium import witness/,
+    );
+  });
 });
 
 test('capture CLI rejects unsupported infrastructure names and mixed populations', () => {

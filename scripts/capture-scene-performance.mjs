@@ -12,7 +12,11 @@ import {
   beginCaptureBuildProvenance,
   projectPublicCaptureBuildProvenance,
 } from './performance/captureBuildProvenance.mjs';
-import { resolveMapFixtureBuildProfile } from './performance/buildProvenance.mjs';
+import {
+  MAP_FIXTURE_BUILD_PROFILE_ID,
+  resolveMapFixtureBuildProfile,
+} from './performance/buildProvenance.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import {
   closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
@@ -157,6 +161,14 @@ const infrastructureWorkloadSelected =
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
+const mapStreamingWorkloadSelected =
+  providerFixtureMode === MAP_STREAMING_WORKLOAD_ID;
+let mapStreamingModule = null;
+let mapStreamingDeliveryFactory = null;
+let mapStreamingFixture = null;
+let mapStreamingJourney = null;
+let mapStreamingCaptureReport = null;
+const mapStreamingFixtureOwners = [];
 let austinOperatingModule = null;
 let austinOperatingWorkload = null;
 let austinSatelliteEpochModule = null;
@@ -210,7 +222,8 @@ if (
   providerFixtureMode !== 'dense-investigation' &&
   !infrastructureWorkloadSelected &&
   !weatherEffectsWorkload &&
-  !austinOperatingWorkloadSelected
+  !austinOperatingWorkloadSelected &&
+  !mapStreamingWorkloadSelected
 )
   throw new Error(
     '--provider-fixture must be dense-investigation or a registered static workload.',
@@ -226,7 +239,8 @@ if (
 if (
   (infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
-    austinOperatingWorkloadSelected) &&
+    austinOperatingWorkloadSelected ||
+    mapStreamingWorkloadSelected) &&
   (fixtureAircraftCount !== 0 || args.includes('--mixed-layers'))
 )
   throw new Error(
@@ -321,6 +335,17 @@ if (
 )
   throw new Error('--build-profile requires a value.');
 resolveMapFixtureBuildProfile(expectedBuildProfile);
+if (
+  mapStreamingWorkloadSelected &&
+  expectedBuildProfile !== MAP_FIXTURE_BUILD_PROFILE_ID
+)
+  throw new Error(
+    `Map streaming capture requires --build-profile ${MAP_FIXTURE_BUILD_PROFILE_ID}.`,
+  );
+if (mapStreamingWorkloadSelected && workerAuditMode !== 'diagnostic')
+  throw new Error(
+    'Map streaming capture supports diagnostic worker auditing only.',
+  );
 const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
   Boolean,
 );
@@ -337,7 +362,8 @@ if (
   (productionFlightFixture ||
     infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
-    austinOperatingWorkloadSelected) &&
+    austinOperatingWorkloadSelected ||
+    mapStreamingWorkloadSelected) &&
   !buildProvenanceEnabled
 )
   throw new Error(
@@ -385,7 +411,8 @@ if (
     productionFlightFixture ||
     infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
-    austinOperatingWorkloadSelected
+    austinOperatingWorkloadSelected ||
+    mapStreamingWorkloadSelected
   ) ||
     !(softwareRendering || nativeRenderingDiagnostic) ||
     !buildProvenanceEnabled)
@@ -401,7 +428,8 @@ if (
       productionFlightFixture ||
       infrastructureWorkloadSelected ||
       weatherEffectsWorkload ||
-      austinOperatingWorkloadSelected
+      austinOperatingWorkloadSelected ||
+      mapStreamingWorkloadSelected
     ))
 )
   throw new Error(
@@ -627,7 +655,8 @@ const failureProgress = {
     productionFlightFixture ||
     infrastructureWorkload ||
     weatherEffectsWorkload ||
-    austinOperatingWorkload,
+    austinOperatingWorkload ||
+    mapStreamingFixture,
   fixtureDelivery: null,
   fixtureInterceptionErrors: [],
   workload: {
@@ -1214,6 +1243,19 @@ if (austinOperatingWorkloadSelected) {
     );
   failureProgress.fixture = austinOperatingWorkload;
 }
+if (mapStreamingWorkloadSelected) {
+  mapStreamingModule = await import('./performance/mapStreamingCapture.mjs');
+  const { createDeterministicMapStreamingFixture } =
+    await import('./performance/mapStreamingFixture.mjs');
+  ({ createMapStreamingFixtureDelivery: mapStreamingDeliveryFactory } =
+    await import('./performance/mapStreamingFixtureDelivery.mjs'));
+  mapStreamingFixture = await createDeterministicMapStreamingFixture();
+  failureProgress.fixture = {
+    id: mapStreamingFixture.id,
+    sha256: mapStreamingFixture.manifestSha256,
+    byteLength: mapStreamingFixture.manifest.totalBytes,
+  };
+}
 
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
@@ -1412,6 +1454,87 @@ async function configureAustinOperatingFixturePage(
     },
   );
   return { session, delivery, owner };
+}
+
+async function configureMapStreamingFixturePage(
+  page,
+  { documentRole = 'unclassified', documentId = null } = {},
+) {
+  if (!mapStreamingWorkloadSelected) return null;
+  const delivery = mapStreamingDeliveryFactory(mapStreamingFixture, {
+    appOrigin: new URL(url).origin,
+  });
+  const owner = {
+    delivery,
+    documentRole,
+    documentId,
+    sessionOrdinal: null,
+    disposed: false,
+    finalEvidence: null,
+    error: null,
+  };
+  mapStreamingFixtureOwners.push(owner);
+  page.once('close', () => delivery.cancel());
+  const session = await page.createCDPSession();
+  fixtureInterceptionSessions.push(session);
+  const sessionContext = {
+    sessionOrdinal: ++fixtureInterceptionSessionOrdinal,
+    documentRole,
+    documentId,
+    page,
+    lifecycleStage: 'active',
+  };
+  owner.sessionOrdinal = sessionContext.sessionOrdinal;
+  owner.session = session;
+  fixtureInterceptionSessionContexts.set(session, sessionContext);
+  sessionContext.interception = await interceptFixtureSession(
+    session,
+    new URL(url).origin + '/',
+    (requestUrl, request) => delivery.respond(requestUrl, request),
+    fixtureInterceptionErrorRecorder.onError,
+    {
+      onFulfilled: delivery.onFulfilled,
+      getErrorContext: () => ({ ...sessionContext }),
+    },
+  );
+  return { session, delivery, owner };
+}
+
+function finalizeMapStreamingFixtureDelivery(owner) {
+  if (!owner || owner.disposed) return owner?.finalEvidence || null;
+  try {
+    owner.delivery.cancel();
+    owner.finalEvidence = owner.delivery.dispose();
+  } catch (error) {
+    owner.error = {
+      name: String(error?.name || 'Error').slice(0, 80),
+      message: String(error?.message || error).slice(0, 240),
+    };
+    throw error;
+  } finally {
+    owner.disposed = true;
+  }
+  return owner.finalEvidence;
+}
+
+function collectMapStreamingFixtureDocumentDeliveries() {
+  const releases = failureProgress.workload.fixtureInterceptionReleases || [];
+  return mapStreamingFixtureOwners.map((owner) => {
+    const delivery = finalizeMapStreamingFixtureDelivery(owner);
+    const matchingReleases = releases.filter(
+      (release) =>
+        release.documentRole === owner.documentRole &&
+        release.documentId === owner.documentId &&
+        release.sessionOrdinal === owner.sessionOrdinal,
+    );
+    return {
+      documentRole: owner.documentRole,
+      documentId: owner.documentId,
+      sessionOrdinal: owner.sessionOrdinal,
+      delivery,
+      release: matchingReleases.length === 1 ? matchingReleases[0] : null,
+    };
+  });
 }
 
 function publishAustinOperatingFixtureDocumentEvidence() {
@@ -2383,6 +2506,10 @@ try {
       documentId,
       phasedClock: Boolean(austinOperatingWorkload),
     });
+    const mapStreamingFixturePage = await configureMapStreamingFixturePage(
+      auditPage,
+      { documentRole, documentId },
+    );
     earlyRendererProbeScripts.set(
       auditPage,
       await installEarlyCesiumRendererProbe(auditPage, {
@@ -2395,6 +2522,7 @@ try {
       fixtureSession,
       weatherFixtureSession,
       austinFixture,
+      mapStreamingFixturePage,
       auditState: auditPageCodeRequests(auditPage),
       infrastructureFixtureDelivery: documentInfrastructureDelivery,
     };
@@ -2429,6 +2557,10 @@ try {
       },
     );
     const startupAustinFixture = await configureAustinOperatingFixturePage(
+      startupPage,
+      { documentRole: startupDocumentRole, documentId: startupDocumentId },
+    );
+    const startupMapFixture = await configureMapStreamingFixturePage(
       startupPage,
       { documentRole: startupDocumentRole, documentId: startupDocumentId },
     );
@@ -2513,6 +2645,7 @@ try {
     for (const ownedSession of [
       startupFixtureSession,
       startupAustinFixture?.session,
+      startupMapFixture?.session,
     ]) {
       if (!ownedSession) continue;
       const startupInterceptionStopped =
@@ -2538,6 +2671,7 @@ try {
     for (const ownedSession of [
       startupFixtureSession,
       startupAustinFixture?.session,
+      startupMapFixture?.session,
     ])
       await releaseFlightFixtureSession(ownedSession);
     if (startupAustinFixture?.owner)
@@ -2545,6 +2679,8 @@ try {
         startupAustinFixture.owner,
         'startup-page-closed-after-session-release',
       );
+    if (startupMapFixture?.owner)
+      finalizeMapStreamingFixtureDelivery(startupMapFixture.owner);
   }
 
   process.stdout.write('[performance] preparing measured scene\n');
@@ -2755,6 +2891,13 @@ try {
     productionFlightFixture ||
     infrastructureWorkload ||
     weatherEffectsWorkload ||
+    (mapStreamingFixture
+      ? {
+          id: mapStreamingFixture.id,
+          sha256: mapStreamingFixture.manifestSha256,
+          byteLength: mapStreamingFixture.manifest.totalBytes,
+        }
+      : null) ||
     fixture;
 
   const summarizeFlightFixtureDelivery = async (observedCount = undefined) => {
@@ -3480,6 +3623,31 @@ try {
       environment.renderer,
       environment.vendor,
     );
+  }
+
+  if (mapStreamingWorkloadSelected) {
+    failureProgress.phase = 'austin-map-streaming-route';
+    failureProgress.workload.mapStreamingCapture = {
+      status: 'running',
+      fixtureId: mapStreamingFixture.id,
+      manifestSha256: mapStreamingFixture.manifestSha256,
+      routeId: mapStreamingModule.MAP_STREAMING_ROUTE.id,
+    };
+    mapStreamingJourney = await mapStreamingModule.runNativeMapStreamingJourney(
+      page,
+      {
+        durationMs: mapStreamingModule.MAP_STREAMING_ROUTE.durationLimitMs,
+        route: mapStreamingModule.MAP_STREAMING_ROUTE,
+      },
+    );
+    failureProgress.workload.mapStreamingCapture = {
+      status: 'journey-observed',
+      fixtureId: mapStreamingFixture.id,
+      manifestSha256: mapStreamingFixture.manifestSha256,
+      routeId: mapStreamingModule.MAP_STREAMING_ROUTE.id,
+      route: mapStreamingJourney.route,
+      transitionCount: mapStreamingJourney.transitions.length,
+    };
   }
 
   const scenarios = ['idle', 'scripted-motion'];
@@ -5186,6 +5354,18 @@ try {
           ],
         }
       : {}),
+    ...(mapStreamingWorkloadSelected
+      ? {
+          mapStreamingCapture:
+            mapStreamingCaptureReport ||
+            failureProgress.workload.mapStreamingCapture ||
+            null,
+          mapStreamingFixtureDocuments: [
+            ...(failureProgress.workload.mapStreamingFixtureDocuments || []),
+          ],
+          performanceAcceptanceEligible: false,
+        }
+      : {}),
     ...(productionFlightFixture
       ? {
           expectedFixture: productionFlightFixture,
@@ -5240,6 +5420,25 @@ try {
     });
   for (const session of [...fixtureInterceptionSessions])
     await releaseFlightFixtureSession(session);
+  if (mapStreamingWorkloadSelected) {
+    const documentDeliveries = collectMapStreamingFixtureDocumentDeliveries();
+    const aggregateDelivery =
+      mapStreamingModule.aggregateMapStreamingDocumentDeliveries(
+        mapStreamingFixture,
+        documentDeliveries,
+      );
+    mapStreamingCaptureReport =
+      mapStreamingModule.createMapStreamingCaptureReport({
+        fixture: mapStreamingFixture,
+        fixtureDelivery: aggregateDelivery,
+        journey: mapStreamingJourney,
+        profile: resolveMapFixtureBuildProfile(expectedBuildProfile),
+        documentDeliveries,
+      });
+    failureProgress.fixtureDelivery = aggregateDelivery;
+    failureProgress.workload.mapStreamingFixtureDocuments = documentDeliveries;
+    failureProgress.workload.mapStreamingCapture = mapStreamingCaptureReport;
+  }
   if (austinOperatingWorkload) {
     for (const owner of austinOperatingFixtureDeliveries)
       finalizeAustinOperatingFixtureDelivery(
@@ -5312,6 +5511,13 @@ try {
       infrastructureWorkload ||
       weatherEffectsWorkload ||
       austinOperatingWorkload ||
+      (mapStreamingFixture
+        ? {
+            id: mapStreamingFixture.id,
+            sha256: mapStreamingFixture.manifestSha256,
+            byteLength: mapStreamingFixture.manifest.totalBytes,
+          }
+        : null) ||
       fixture,
     providerFixture: infrastructureWorkload
       ? infrastructureWorkload.workloadId
@@ -5319,13 +5525,16 @@ try {
         ? weatherEffectsWorkload.workloadId
         : austinOperatingWorkload
           ? austinOperatingWorkload.workloadId
-          : productionFlightFixture
-            ? 'dense-investigation'
-            : null,
+          : mapStreamingWorkloadSelected
+            ? MAP_STREAMING_WORKLOAD_ID
+            : productionFlightFixture
+              ? 'dense-investigation'
+              : null,
     fixtureId:
       infrastructureWorkload?.id ||
       weatherEffectsWorkload?.id ||
       austinOperatingWorkload?.id ||
+      mapStreamingFixture?.id ||
       productionFlightFixture?.id ||
       null,
     injectedDelayMs: delayMs,
@@ -5465,6 +5674,10 @@ try {
   if (weatherEffectsWorkload)
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
+    );
+  if (mapStreamingWorkloadSelected)
+    comparisonReadinessReasons.push(
+      'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
     );
   const comparisonEligible = comparisonReadinessReasons.length === 0;
   // These host/browser identity reads happen after all timed samples. Keep
@@ -5641,6 +5854,15 @@ try {
     }
   }
   publishAustinOperatingFixtureDocumentEvidence();
+  if (mapStreamingWorkloadSelected) {
+    try {
+      failureProgress.workload.mapStreamingFixtureDocuments =
+        collectMapStreamingFixtureDocumentDeliveries();
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
   weatherEffectsFixtureDelivery?.dispose();
   for (const [
     responsePage,

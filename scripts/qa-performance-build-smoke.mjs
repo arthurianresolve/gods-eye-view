@@ -20,7 +20,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
+import {
+  createLocalBuildReceipt,
+  MAP_FIXTURE_BUILD_PROFILE_ID,
+} from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import {
   auditReceiptedCodeRequests,
@@ -64,6 +67,7 @@ import {
 } from './performance/captureComparisonContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './performance/austinOperatingWorkloadContract.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './performance/receiptOnlyWorkerAudit.mjs';
 import {
   assertVerifiedNativeRendererEvidence,
@@ -334,7 +338,8 @@ export function parseSmokeArguments(argv) {
       value !== 'dense-investigation' &&
       !INFRASTRUCTURE_WORKLOAD_IDS.includes(value) &&
       value !== WEATHER_EFFECTS_WORKLOAD_ID &&
-      value !== AUSTIN_OPERATING_WORKLOAD_ID
+      value !== AUSTIN_OPERATING_WORKLOAD_ID &&
+      value !== MAP_STREAMING_WORKLOAD_ID
     )
       throw new TypeError('Provider fixture must be a registered workload.');
     if (
@@ -789,6 +794,33 @@ export function validateCaptureCliReport(report, expected) {
     return validateAustinOperatingCaptureCliReport(report, expected);
   if (expected.providerFixture === WEATHER_EFFECTS_WORKLOAD_ID)
     return validateWeatherEffectsCaptureCliReport(report, expected);
+  if (expected.providerFixture === MAP_STREAMING_WORKLOAD_ID) {
+    assert.equal(report?.schema, 'gev-performance-capture/v1');
+    assert.equal(report.workerAuditMode, 'diagnostic');
+    assert.equal(report.comparisonEligible, false);
+    assert.equal(report.workload?.providerFixture, MAP_STREAMING_WORKLOAD_ID);
+    assert.equal(report.workload?.fixtureId, expected.mapStreamingFixture?.id);
+    assert.equal(report.workload?.performanceAcceptanceEligible, false);
+    assert.equal(report.comparisonReadiness?.status, 'not-ready');
+    assert.ok(
+      report.comparisonReadiness?.reasons?.includes(
+        'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
+      ),
+    );
+    assert.equal(typeof expected.validateMapStreamingCapture, 'function');
+    const mapCapture = report.workload?.mapStreamingCapture;
+    expected.validateMapStreamingCapture(mapCapture);
+    assert.deepEqual(
+      report.fixtureDelivery,
+      mapCapture.fixtureDelivery,
+      'Outer delivery summary must bind to the validated native map report.',
+    );
+    return {
+      schema: report.schema,
+      status: report.status,
+      comparisonEligible: false,
+    };
+  }
   if (expected.providerFixture?.startsWith('infrastructure'))
     return validateInfrastructureCaptureCliReport(report, expected);
   assert.equal(report?.schema, 'gev-performance-capture/v1');
@@ -3357,15 +3389,17 @@ export function buildCaptureCliValidationExpectations({
   shaderProgramAttribution,
   captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   austinOperatingFixture,
+  mapStreamingFixture,
+  validateMapStreamingCapture,
   receiptOnlyWorkerContract,
 }) {
   return {
     appSha: commit,
     harnessSha: harnessCommit,
     receiptSha256: build.receipt.receiptSha256,
-    fixtureSha256: fixture.sha256,
+    fixtureSha256: fixture?.sha256 || fixture?.manifestSha256 || null,
     providerFixture,
-    fixedTime: fixture.fixedTime,
+    fixedTime: fixture?.fixedTime || null,
     ...(providerFixture.startsWith('infrastructure')
       ? { infrastructureFixture: fixture }
       : providerFixture === WEATHER_EFFECTS_WORKLOAD_ID
@@ -3373,6 +3407,12 @@ export function buildCaptureCliValidationExpectations({
         : providerFixture === AUSTIN_OPERATING_WORKLOAD_ID
           ? { austinOperatingFixture: fixture }
           : {}),
+    ...(providerFixture === MAP_STREAMING_WORKLOAD_ID
+      ? {
+          mapStreamingFixture,
+          validateMapStreamingCapture,
+        }
+      : {}),
     workerAuditMode,
     ...(captureRendererBackend !== DEFAULT_CAPTURE_RENDERER_BACKEND
       ? { captureRendererBackend }
@@ -3395,6 +3435,7 @@ async function runCandidateCaptureCli({
   served,
   tempRoot,
   fixture,
+  mapStreamingCaptureModule = null,
   providerFixture,
   workerAuditMode,
   captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
@@ -3446,7 +3487,7 @@ async function runCandidateCaptureCli({
     '--provider-fixture',
     providerFixture,
     '--provider-fixture-time',
-    fixture.fixedTime,
+    fixture.fixedTime || '2026-10-08T12:00:00.000Z',
     '--worker-audit-mode',
     workerAuditMode,
     '--quality-mode',
@@ -3488,6 +3529,8 @@ async function runCandidateCaptureCli({
     '--out',
     reportPath,
   ];
+  if (providerFixture === MAP_STREAMING_WORKLOAD_ID)
+    args.push('--build-profile', MAP_FIXTURE_BUILD_PROFILE_ID);
   args.push(...captureCliRendererArgs(captureRendererBackend));
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
@@ -3548,6 +3591,19 @@ async function runCandidateCaptureCli({
         depthPickAttribution,
         shaderProgramAttribution,
         receiptOnlyWorkerContract: expectedReceiptOnlyWorkerContract,
+        mapStreamingFixture:
+          providerFixture === MAP_STREAMING_WORKLOAD_ID ? fixture : null,
+        validateMapStreamingCapture:
+          providerFixture === MAP_STREAMING_WORKLOAD_ID
+            ? (mapCapture) =>
+                mapStreamingCaptureModule.validateMapStreamingCaptureReport(
+                  mapCapture,
+                  {
+                    fixture,
+                    profile: build.receipt.buildRecipe?.mapFixtureProfile,
+                  },
+                )
+            : null,
       }),
     );
     if (providerFixture === AUSTIN_OPERATING_WORKLOAD_ID) {
@@ -3653,6 +3709,9 @@ async function runRevision({
   infrastructureCaptureFixture,
   weatherEffectsCaptureFixture,
   austinOperatingCaptureFixture,
+  mapStreamingCaptureFixture,
+  mapStreamingCaptureModule,
+  createMapStreamingFixtureDelivery,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -3665,6 +3724,10 @@ async function runRevision({
       expectedAppCommit: commit,
       expectedHarnessCommit: harnessCommit,
       commandTimeoutMs: BUILD_COMMAND_TIMEOUT_MS,
+      buildProfile:
+        providerFixture === MAP_STREAMING_WORKLOAD_ID
+          ? MAP_FIXTURE_BUILD_PROFILE_ID
+          : null,
     });
     const bundlePath = 'cesium/Cesium.js';
     const bundleAsset = build.receipt.assets.find(
@@ -3725,6 +3788,8 @@ async function runRevision({
   let failure = null;
   let result = null;
   let nativeRendererEvidence = null;
+  let mapStreamingSmokeDelivery = null;
+  let mapStreamingSmokeEvidence = null;
   try {
     const captureUrl = served.baseUrl;
     phase = 'verify-served-assets-before';
@@ -3738,6 +3803,10 @@ async function runRevision({
       expectedHarnessCommit: harnessCommit,
       baseUrl: served.baseUrl,
       captureUrl,
+      expectedBuildProfile:
+        providerFixture === MAP_STREAMING_WORKLOAD_ID
+          ? MAP_FIXTURE_BUILD_PROFILE_ID
+          : null,
     });
     phase = 'budget-check-before-browser';
     if (Date.now() - startedAt > budgetMs)
@@ -3777,18 +3846,27 @@ async function runRevision({
       flightFixture,
       served.baseUrl,
     );
+    mapStreamingSmokeDelivery = mapStreamingCaptureFixture
+      ? createMapStreamingFixtureDelivery(mapStreamingCaptureFixture, {
+          appOrigin: served.baseUrl,
+        })
+      : null;
     fixturePage = await prepareFixturePage(browser, served.baseUrl, {
       page,
       viewport: { width: 1280, height: 900 },
       respond: (url, request) =>
         respondToWorkerPreflight(url, served.baseUrl) ??
+        mapStreamingSmokeDelivery?.respond(url, request) ??
         respondToProductionFlightFixture(
           url,
           request,
           flightFixture,
           served.baseUrl,
         ),
-      onFulfilled: flightFixtureDelivery.onFulfilled,
+      onFulfilled: (event) => {
+        flightFixtureDelivery.onFulfilled(event);
+        mapStreamingSmokeDelivery?.onFulfilled(event);
+      },
     });
     const workerNetworkPreflight = await runSameOriginWorkerPreflight({
       page,
@@ -4140,6 +4218,14 @@ async function runRevision({
       context = null;
       page = null;
       fixturePage = null;
+      if (mapStreamingSmokeDelivery) {
+        mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
+        mapStreamingSmokeDelivery = null;
+        if (mapStreamingSmokeEvidence.cleanupConfirmed !== true)
+          throw new Error(
+            'Map fixture setup interception cleanup was not confirmed.',
+          );
+      }
       phase = 'candidate-capture-cli-integration';
       captureCliDiagnostic = await runCandidateCaptureCli({
         build,
@@ -4153,7 +4239,9 @@ async function runRevision({
             ? flightFixture
             : infrastructureCaptureFixture ||
               weatherEffectsCaptureFixture ||
-              austinOperatingCaptureFixture,
+              austinOperatingCaptureFixture ||
+              mapStreamingCaptureFixture,
+        mapStreamingCaptureModule,
         providerFixture,
         workerAuditMode,
         captureRendererBackend,
@@ -4211,6 +4299,17 @@ async function runRevision({
         comparisonIneligibilityReason:
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
+      ...(mapStreamingSmokeEvidence
+        ? {
+            mapStreamingFixtureSetup: {
+              fixtureId: mapStreamingCaptureFixture?.id || null,
+              manifestSha256:
+                mapStreamingCaptureFixture?.manifestSha256 || null,
+              delivery: mapStreamingSmokeEvidence,
+              comparisonEligible: false,
+            },
+          }
+        : {}),
       ...(captureCliDiagnostic ? { captureCliDiagnostic } : {}),
       terminalRenderLoopRetirement,
       rendererProbeCleanup,
@@ -4308,6 +4407,18 @@ async function runRevision({
         cleanupErrors.push(sanitizeError(error));
       }
     }
+    if (mapStreamingSmokeDelivery) {
+      try {
+        mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
+        mapStreamingSmokeDelivery = null;
+        if (mapStreamingSmokeEvidence.cleanupConfirmed !== true)
+          cleanupErrors.push(
+            'Map fixture setup interception cleanup was not confirmed.',
+          );
+      } catch (error) {
+        cleanupErrors.push(sanitizeError(error));
+      }
+    }
     try {
       await closeServer(served.server);
     } catch (error) {
@@ -4355,6 +4466,9 @@ async function main() {
   let infrastructureCaptureFixture = null;
   let weatherEffectsCaptureFixture = null;
   let austinOperatingCaptureFixture = null;
+  let mapStreamingCaptureFixture = null;
+  let mapStreamingCaptureModule = null;
+  let createMapStreamingFixtureDelivery = null;
   if (providerFixture.startsWith('infrastructure')) {
     const { createInfrastructureWorkloadFixture } =
       await import('./performance/infrastructureWorkloadFixture.mjs');
@@ -4368,6 +4482,14 @@ async function main() {
     const { createAustinOperatingWorkloadFixture } =
       await import('./performance/austinOperatingWorkloadFixture.mjs');
     austinOperatingCaptureFixture = createAustinOperatingWorkloadFixture();
+  } else if (providerFixture === MAP_STREAMING_WORKLOAD_ID) {
+    mapStreamingCaptureModule =
+      await import('./performance/mapStreamingCapture.mjs');
+    const { createDeterministicMapStreamingFixture } =
+      await import('./performance/mapStreamingFixture.mjs');
+    ({ createMapStreamingFixtureDelivery } =
+      await import('./performance/mapStreamingFixtureDelivery.mjs'));
+    mapStreamingCaptureFixture = await createDeterministicMapStreamingFixture();
   }
   const outputPath = path.resolve(
     out ||
@@ -4501,6 +4623,9 @@ async function main() {
           infrastructureCaptureFixture,
           weatherEffectsCaptureFixture,
           austinOperatingCaptureFixture,
+          mapStreamingCaptureFixture,
+          mapStreamingCaptureModule,
+          createMapStreamingFixtureDelivery,
         });
         Object.assign(variant, result);
       } catch (error) {

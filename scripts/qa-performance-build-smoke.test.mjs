@@ -26,6 +26,7 @@ import {
 } from './qa-performance-build-smoke.mjs';
 import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
 import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import {
   appendAustinOperatingReadinessHistory,
   createAustinOperatingReadinessHistory,
@@ -403,6 +404,7 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     'infrastructure-cables',
     'infrastructure',
     WEATHER_EFFECTS_WORKLOAD_ID,
+    MAP_STREAMING_WORKLOAD_ID,
   ])
     assert.deepEqual(
       parseSmokeArguments(['--provider-fixture', providerFixture]),
@@ -510,6 +512,59 @@ test('capture report renderer validation binds verified evidence to the observed
         NATIVE_MACOS_DIAGNOSTIC_BACKEND,
       ),
     /accelerated graphics/,
+  );
+});
+
+test('map capture CLI validation binds the full report to the outer delivery and diagnostic status', () => {
+  const innerDelivery = {
+    schema: 'gev-map-streaming-fixture-delivery/v1',
+    fixtureId: 'austin-map-streaming-fixture-v1',
+    manifestSha256: 'a'.repeat(64),
+    status: 'observed',
+    requestedCount: 72,
+    fulfilledAckCount: 72,
+    cleanupConfirmed: true,
+  };
+  const mapCapture = { fixtureDelivery: innerDelivery };
+  const report = {
+    schema: 'gev-performance-capture/v1',
+    workerAuditMode: 'diagnostic',
+    comparisonEligible: false,
+    comparisonReadiness: {
+      status: 'not-ready',
+      reasons: [
+        'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
+      ],
+    },
+    fixtureDelivery: structuredClone(innerDelivery),
+    workload: {
+      providerFixture: MAP_STREAMING_WORKLOAD_ID,
+      fixtureId: innerDelivery.fixtureId,
+      performanceAcceptanceEligible: false,
+      mapStreamingCapture: mapCapture,
+    },
+  };
+  const expected = {
+    providerFixture: MAP_STREAMING_WORKLOAD_ID,
+    mapStreamingFixture: { id: innerDelivery.fixtureId },
+    validateMapStreamingCapture(observed) {
+      assert.equal(observed?.fixtureDelivery?.schema, innerDelivery.schema);
+    },
+  };
+  assert.equal(
+    validateCaptureCliReport(report, expected).comparisonEligible,
+    false,
+  );
+
+  const eligible = structuredClone(report);
+  eligible.comparisonEligible = true;
+  assert.throws(() => validateCaptureCliReport(eligible, expected));
+
+  const wrongDelivery = structuredClone(report);
+  wrongDelivery.fixtureDelivery.manifestSha256 = 'b'.repeat(64);
+  assert.throws(
+    () => validateCaptureCliReport(wrongDelivery, expected),
+    /Outer delivery summary must bind/,
   );
 });
 
