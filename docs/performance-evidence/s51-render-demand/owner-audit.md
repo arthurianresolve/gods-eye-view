@@ -10,6 +10,14 @@ candidate passes ownership, source and endpoint checks; its separate tracking
 browser run passes 111 checks. A same-candidate repeat passes with zero frames.
 Blocked imagery and simulated visibility keep the qualification scope narrow.
 
+The later [dense-cadence correction](dense-cadence-9a2517af/README.md) restores
+per-frame propagation ownership for visible dense populations. The reviewed
+[focus follow-up at `22a08416`](focus-22a08416/README.md) uses separate core and
+focus deadlines and retires stale/no-op work. Root passes 74 focused checks and
+three deliberate negative controls. Full current integration remains pending;
+the preceding Windows suite's three failures are retained, not reclassified.
+The historical checkpoints below keep their original validation scope.
+
 ## Governor behavior and app wake/disposal
 
 [`src/renderGovernor.js`](../../../src/renderGovernor.js) switches to
