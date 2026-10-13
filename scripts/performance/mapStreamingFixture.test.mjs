@@ -17,9 +17,25 @@ function digest(bytes) {
 }
 
 function createFixtureServer(fixture, { corruptPath = null } = {}) {
+  const observedRequests = [];
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
-    const assetPath = decodeURIComponent(url.pathname.slice('/map/'.length));
+    const requestPath = decodeURIComponent(url.pathname.slice('/map/'.length));
+    observedRequests.push({ path: requestPath, query: url.search });
+    const servicePath = 'arcgis/rest/services/World_Imagery/MapServer';
+    let assetPath = requestPath;
+    if (
+      requestPath.replace(/\/$/, '') === servicePath &&
+      url.searchParams.get('f') === 'json'
+    )
+      assetPath = `${servicePath}/metadata.json`;
+    else {
+      const tileRequest = requestPath.match(
+        /^arcgis\/rest\/services\/World_Imagery\/MapServer\/tile\/(\d+)\/(\d+)\/(\d+)$/,
+      );
+      if (tileRequest)
+        assetPath = `imagery/${tileRequest[1]}/${tileRequest[3]}/${tileRequest[2]}.png`;
+    }
     let bytes = fixture.assets.get(assetPath);
     if (!bytes) {
       response.writeHead(404);
@@ -37,6 +53,7 @@ function createFixtureServer(fixture, { corruptPath = null } = {}) {
     response.writeHead(200, { 'content-type': contentType });
     response.end(bytes);
   });
+  server.observedRequests = observedRequests;
   return server;
 }
 
@@ -46,7 +63,7 @@ async function withFixtureServer(fixture, options, callback) {
   await once(server, 'listening');
   const baseUrl = `http://127.0.0.1:${server.address().port}/map/`;
   try {
-    return await callback(baseUrl);
+    return await callback(baseUrl, server);
   } finally {
     server.close();
     await once(server, 'close');
@@ -62,7 +79,7 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
   assert.ok(first.manifest.totalBytes < 2 * 1024 * 1024);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 69);
+  assert.equal(first.manifest.assetCount, 70);
   assert.equal(first.manifest.geometry.tilesetNodeCount, 21);
   const terrainBounds = first.manifest.geometry.terrainMeshBoundsDegrees;
   assert.ok(terrainBounds.west <= first.manifest.routeBoundsDegrees.west);
@@ -158,7 +175,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       digest(fixture.assets.get(row.path)),
     ]),
   );
-  await withFixtureServer(fixture, {}, async (baseUrl) => {
+  await withFixtureServer(fixture, {}, async (baseUrl, server) => {
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: `${baseUrl}imagery/{z}/{x}/{y}.png`,
       maximumLevel: 12,
@@ -169,6 +186,86 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
     assert.equal(imageryProvider.tileHeight, 256);
     assert.equal(imageryProvider.minimumLevel, 0);
     assert.equal(imageryProvider.maximumLevel, 12);
+    const arcgisMetadataRow = fixture.manifest.assets.find(
+      (row) => row.kind === 'arcgis-mapserver-metadata-json',
+    );
+    assert.ok(arcgisMetadataRow, 'ArcGIS service metadata must be hash-bound');
+    const arcgisServicePath = arcgisMetadataRow.identity.servicePath;
+    const arcgisProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+      `${baseUrl}${arcgisServicePath}`,
+      {
+        credit: 'Powered by Esri',
+        enablePickFeatures: false,
+        tileDiscardPolicy: new Cesium.NeverTileDiscardPolicy(),
+      },
+    );
+    assert.ok(
+      server.observedRequests.some(
+        (request) =>
+          request.path.replace(/\/$/, '') === arcgisServicePath &&
+          request.query === '?f=json',
+      ),
+      'native ArcGIS provider must retrieve the fixture metadata through its f=json endpoint',
+    );
+    assert.equal(arcgisProvider.usingPrecachedTiles, true);
+    assert.equal(arcgisProvider.tileWidth, 256);
+    assert.equal(arcgisProvider.tileHeight, 256);
+    assert.equal(arcgisProvider.maximumLevel, 12);
+    assert.ok(
+      arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
+    );
+    assert.equal(arcgisProvider.enablePickFeatures, false);
+    const route = fixture.manifest.routeBoundsDegrees;
+    assert.deepEqual(
+      [
+        Cesium.Math.toDegrees(arcgisProvider.rectangle.west),
+        Cesium.Math.toDegrees(arcgisProvider.rectangle.south),
+        Cesium.Math.toDegrees(arcgisProvider.rectangle.east),
+        Cesium.Math.toDegrees(arcgisProvider.rectangle.north),
+      ].map((value) => Number(value.toFixed(8))),
+      [route.west, route.south, route.east, route.north],
+      'native Esri metadata parser must retain the route extent',
+    );
+    const arcgisTile = fixture.manifest.coverage.imagery.at(-1).tiles[0];
+    const arcgisTileRow = fixture.manifest.assets.find(
+      (row) =>
+        row.kind === 'webmercator-imagery-png' &&
+        row.identity.level === arcgisTile.level &&
+        row.identity.x === arcgisTile.x &&
+        row.identity.y === arcgisTile.y,
+    );
+    const originalLoadImage = Cesium.ImageryProvider.loadImage;
+    const fetchedArcgisImages = [];
+    Cesium.ImageryProvider.loadImage = async (_provider, resource) => {
+      const bytes = Buffer.from(await resource.fetchArrayBuffer());
+      fetchedArcgisImages.push({ url: resource.url, bytes });
+      return bytes;
+    };
+    let arcgisTileBytes;
+    try {
+      arcgisTileBytes = await arcgisProvider.requestImage(
+        arcgisTile.x,
+        arcgisTile.y,
+        arcgisTile.level,
+      );
+    } finally {
+      Cesium.ImageryProvider.loadImage = originalLoadImage;
+    }
+    assert.equal(fetchedArcgisImages.length, 1);
+    assert.match(
+      fetchedArcgisImages[0].url,
+      new RegExp(
+        `/MapServer/tile/${arcgisTile.level}/${arcgisTile.y}/${arcgisTile.x}$`,
+      ),
+      'native ArcGIS requestImage must use the service tile level/row/column path',
+    );
+    assert.equal(digest(arcgisTileBytes), arcgisTileRow.sha256);
+    assert.deepEqual(
+      await sharp(arcgisTileBytes)
+        .metadata()
+        .then(({ width, height }) => [width, height]),
+      [256, 256],
+    );
     const imageryRows = fixture.manifest.assets.filter(
       (row) => row.kind === 'webmercator-imagery-png',
     );

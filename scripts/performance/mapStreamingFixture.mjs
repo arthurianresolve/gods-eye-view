@@ -831,6 +831,67 @@ export async function createDeterministicMapStreamingFixture() {
     }
     return { level, tiles };
   });
+  const imageryServicePath = 'arcgis/rest/services/World_Imagery/MapServer';
+  const imageryProjection = new Cesium.WebMercatorProjection();
+  const imagerySouthwest = imageryProjection.project(
+    Cesium.Cartographic.fromDegrees(ROUTE.west, ROUTE.south),
+  );
+  const imageryNortheast = imageryProjection.project(
+    Cesium.Cartographic.fromDegrees(ROUTE.east, ROUTE.north),
+  );
+  const imageryServiceMetadata = {
+    currentVersion: 11.2,
+    serviceDescription: 'Deterministic synthetic Austin route imagery fixture.',
+    mapName: 'Synthetic Austin Route Imagery',
+    copyrightText: 'Synthetic fixture imagery; no live provider data.',
+    capabilities: 'Map,Tilemap',
+    spatialReference: { wkid: 102100, latestWkid: 3857 },
+    singleFusedMapCache: true,
+    tileInfo: {
+      rows: 256,
+      cols: 256,
+      dpi: 96,
+      format: 'PNG',
+      compressionQuality: 0,
+      origin: {
+        x: -20_037_508.342789244,
+        y: 20_037_508.342789244,
+      },
+      spatialReference: { wkid: 102100, latestWkid: 3857 },
+      lods: IMAGERY_LEVELS.map((level) => {
+        const resolution = 156_543.03392804097 / 2 ** level;
+        return {
+          level,
+          resolution,
+          scale: (resolution * 96) / 0.0254,
+        };
+      }),
+    },
+    fullExtent: {
+      xmin: imagerySouthwest.x,
+      ymin: imagerySouthwest.y,
+      xmax: imageryNortheast.x,
+      ymax: imageryNortheast.y,
+      spatialReference: { wkid: 102100, latestWkid: 3857 },
+    },
+  };
+  assetRows.push(
+    addAsset(
+      assets,
+      `${imageryServicePath}/metadata.json`,
+      'arcgis-mapserver-metadata-json',
+      stableJson(imageryServiceMetadata),
+      {
+        servicePath: imageryServicePath,
+        fixtureService: true,
+        spatialReferenceWkid: 102100,
+        tileWidth: 256,
+        tileHeight: 256,
+        maximumLevel: IMAGERY_LEVELS.at(-1),
+        routeBoundsDegrees: ROUTE,
+      },
+    ),
+  );
   const terrainCoverage = TERRAIN_LEVELS.map((level) => {
     const tiles = tileCoordinates(terrainScheme, ROUTE, level);
     const yTileCount = terrainScheme.getNumberOfYTilesAtLevel(level);
