@@ -9,6 +9,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+  assertRendererLoopRetirementEvidence,
   assertProviderFixtureCaptureClock,
   buildCaptureCliValidationExpectations,
   compactCaptureCliFailure,
@@ -2414,6 +2415,108 @@ test('capture CLI validates the selected infrastructure workload and rejects den
       ...expected,
       providerFixture: 'infrastructure-datacenters',
     }),
+  );
+});
+
+test('Austin renderer retirements exactly match startup and provider sample boundaries', () => {
+  const topology = createCaptureDocumentTopology({
+    startupRuns: 1,
+    captureCount: 4,
+  });
+  const captures = topology.samples.map((document, index) => ({
+    ...document,
+    scenario: index < 2 ? 'idle' : 'scripted-motion',
+    run: (index % 2) + 1,
+    renderLoopRetirement: {
+      requested: true,
+      status: 'retired-at-final-post-render',
+      before: true,
+      after: false,
+      confirmed: true,
+      elapsedMs: index / 10,
+    },
+  }));
+  const startup = {
+    phase: 'startup-final-details',
+    ...topology.workerAudits[0],
+    requested: true,
+    status: 'retired-with-final-observation',
+    before: true,
+    after: false,
+    confirmed: true,
+    elapsedMs: 0.1,
+  };
+  const retirements = [
+    startup,
+    ...captures.map((capture) => ({
+      phase: 'provider-sample-measurement-post-render',
+      scenario: capture.scenario,
+      run: capture.run,
+      documentRole: capture.documentRole,
+      documentId: capture.documentId,
+      ...capture.renderLoopRetirement,
+    })),
+  ];
+  const workload = {
+    rendererLoopRetirements: retirements,
+    rendererLoopRetirementsOmittedCount: 0,
+  };
+
+  assert.doesNotThrow(() =>
+    assertRendererLoopRetirementEvidence({ workload, topology, captures }),
+  );
+
+  const cases = [
+    ['missing sample retirement', (copy) => copy.splice(2, 1)],
+    ['duplicate retirement', (copy) => copy.push(structuredClone(copy[1]))],
+    [
+      'unknown document retirement',
+      (copy) => (copy[1].documentId = 'unknown-document'),
+    ],
+    ['wrong sample phase', (copy) => (copy[1].phase = 'setup')],
+    ['wrong sample scenario', (copy) => (copy[1].scenario = 'unrelated')],
+    ['wrong sample run', (copy) => (copy[1].run = 3)],
+    ['unconfirmed sample', (copy) => (copy[1].confirmed = false)],
+    ['retirement did not stop loop', (copy) => (copy[1].after = true)],
+    ['startup has wrong status', (copy) => (copy[0].status = 'confirmed')],
+    ['non-finite retirement time', (copy) => (copy[1].elapsedMs = NaN)],
+  ];
+  for (const [label, mutate] of cases) {
+    const invalid = structuredClone(workload);
+    mutate(invalid.rendererLoopRetirements);
+    assert.throws(
+      () =>
+        assertRendererLoopRetirementEvidence({
+          workload: invalid,
+          topology,
+          captures,
+        }),
+      undefined,
+      label,
+    );
+  }
+
+  const captureMismatch = structuredClone(captures);
+  captureMismatch[0].renderLoopRetirement.elapsedMs += 1;
+  assert.throws(
+    () =>
+      assertRendererLoopRetirementEvidence({
+        workload,
+        topology,
+        captures: captureMismatch,
+      }),
+    /elapsedMs must match its capture boundary/,
+  );
+  const missingCaptureRetirement = structuredClone(captures);
+  delete missingCaptureRetirement[0].renderLoopRetirement;
+  assert.throws(
+    () =>
+      assertRendererLoopRetirementEvidence({
+        workload,
+        topology,
+        captures: missingCaptureRetirement,
+      }),
+    /must include its observed render-loop retirement/,
   );
 });
 
