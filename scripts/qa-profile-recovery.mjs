@@ -40,6 +40,7 @@ import {
   createRecoveryBrowserCloseTrace,
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
+  readRecoveryBrowserProcessInfo,
   recoveryPageCleanupError,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
@@ -506,7 +507,12 @@ async function reopen(label, { seed = false } = {}) {
           forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
           closeTrace: browserCloseTrace,
           shutdownDiagnostics:
-            process.env.GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS === '1',
+            process.env.GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS === '1'
+              ? {
+                  systemInfoSnapshot: () =>
+                    readRecoveryBrowserProcessInfo(browser),
+                }
+              : null,
         });
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
