@@ -28,6 +28,18 @@ re-entry, selection, source replacement and final teardown. Keep the original
 appearance and picking behavior and measure construction/resource effects before
 acceptance. Do not accumulate one hidden GPU primitive for every camera visited.
 
+The current production cohort is bounded by `COVERAGE_NEIGHBOR_LIMIT = 14`.
+A compatible implementation can retain the current cohort while hidden, evict
+off-cohort volumes before admitting replacements, and release all volumes on
+source/layer destruction. Hidden pose updates must invalidate obsolete geometry;
+they must not rebuild a hidden volume repeatedly or expose stale geometry on
+re-entry. Tint-only updates need to cover both unprepared primitives and ready
+Cesium per-instance attributes without changing translucency or picking.
+Validation must include moving through more than fourteen cameras, unchanged
+disable/re-enable and workspace restore, hidden edits, active tint changes,
+source replacement and complete teardown. CPU construction counts and rendered
+pixel/ownership checks establish different facts and both are required.
+
 Run the scoped reproduction at this revision:
 
 ```sh

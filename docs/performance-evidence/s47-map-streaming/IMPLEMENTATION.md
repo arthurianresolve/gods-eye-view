@@ -1,22 +1,35 @@
 # Production map-streaming workload
 
-This is the remaining S47/S57 workload delivery sequence, reviewed on 13 October
-2026. It does not mark either slice complete. GPT-6 Luna implements the packets;
+This is the remaining S47/S57 workload delivery sequence, reviewed on 13 October 2026. It does not mark either slice complete. GPT-6 Luna implements the packets;
 root reviews source, reruns focused checks, and integrates exact-commit evidence.
 The frozen comparison baseline remains eb8c682.
 
-| Packet | Deliverable | Current evidence and completion requirement |
-| --- | --- | --- |
-| M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | The 578-asset v3 corpus at b91dafa8 passes fixed-hash, pixel and native parser checks on Windows/macOS/Linux at 88420e23. Native run 38409997486 exposes eleven missing lower-level imagery requests despite in-route camera frusta. Derive complete native coverage before treating the corpus as sufficient. Earlier rejected and partial corpora remain recorded. |
-| M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | Profile/receipt/CLI implementation and negative input checks are integrated. The actual baseline profiled production build and native startup run at 88420e23; the separate native delivery failure prevents reaching the candidate in that run. Both-revision native acceptance remains open. |
-| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | CLI and outer validation are integrated. Root passes 107 focused checks at b91dafa8. Native baseline run 38409997486 completes all four stack states, the 60-second route, settings checks and owner retirement, but fails strict delivery on the lower-level inventory gap. Complete candidate execution and rendered missing/corrupt/superseded-switch recovery controls remain open. |
-| M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
+| Packet                | Deliverable                                                                                                                                                    | Current evidence and completion requirement                                                                                                                                                                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1 fixture corpus     | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | The 599-asset v4 corpus passes cross-platform parser checks. Native run 38420739560 at 4b60f453 completes both revision journeys with zero missing or pending assets. Earlier v3 failures remain recorded; fixture sufficiency is established for this declared route, not arbitrary global navigation. |
+| M2 build identity     | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification              | Both exact-revision profiled builds, native startup and receipt verification pass in run 38420739560. The inert profile stays explicit; this is unsigned local build identity, not release attestation or hardware performance evidence.                                                                |
+| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup          | Both production healthy journeys and the full candidate capture CLI pass at 4b60f453 after the shared-document ownership correction. The bounded fault-delivery adapter is reviewed at c05d973a; page wiring and rendered missing/corrupt/superseded-switch recovery controls remain open.              |
+| M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate                          | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental.                                                                                                                                         |
 
 V4 follow-up `ec71877a` supplies the finite native OSM skeleton/ancestor image
 set while retaining the v3 route imagery. Its 599 assets preserve all 578 prior
 asset bytes; 108 root focused checks and the independent pixel comparison pass.
-The [review](imagery-dependencies-v4/README.md) leaves cross-platform and actual
-both-revision delivery pending. Earlier v3 failure remains failed.
+The [review](imagery-dependencies-v4/README.md) originally left cross-platform and
+actual both-revision delivery pending. Those checks subsequently pass in standard
+CI at `f50565a0` and the [native run at `4b60f453`](native-v4-38420739560/README.md).
+Earlier v3 and v4 failures remain failed. This does not complete M3 fault controls
+or M4 Windows qualification.
+
+The [fault-delivery adapter](fault-delivery-adapter/README.md) declares exactly one
+targeted metadata fault per fresh candidate document. Missing/corrupt responses
+must cause actual production OSM fallback and explicit Esri recovery. For a held
+valid response, observe the request in flight when the newer OSM switch starts;
+require a fresh completed render after late Esri completion and verify that the
+newer generation retains ownership. Merely seeing the same stack name before and
+after release is insufficient. Retain complete visual/provider/terrain readiness
+and owner cleanup evidence. These controls are candidate-only: the frozen
+baseline's known retry defect remains a separate reproduction, not a requirement
+to modify the comparison baseline. Fault reports cannot supply timing acceptance.
 
 ## Existing application boundaries
 
