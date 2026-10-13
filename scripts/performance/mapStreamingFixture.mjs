@@ -270,10 +270,20 @@ function createTerrainTile(tile) {
       coverageRectangle.east,
       point.x / (gridSize - 1),
     );
-    return Math.round(
+    const scaled =
       ((longitude - rectangle.west) / (rectangle.east - rectangle.west)) *
-        32767,
-    );
+      32767;
+    if (
+      point.x === 0 &&
+      coverageRectangle.west === Cesium.Math.toRadians(ROUTE.west)
+    )
+      return Math.floor(scaled);
+    if (
+      point.x === gridSize - 1 &&
+      coverageRectangle.east === Cesium.Math.toRadians(ROUTE.east)
+    )
+      return Math.ceil(scaled);
+    return Math.round(scaled);
   });
   const v = vertexPoints.map((point) => {
     const latitude = Cesium.Math.lerp(
@@ -281,10 +291,20 @@ function createTerrainTile(tile) {
       coverageRectangle.north,
       point.y / (gridSize - 1),
     );
-    return Math.round(
+    const scaled =
       ((latitude - rectangle.south) / (rectangle.north - rectangle.south)) *
-        32767,
-    );
+      32767;
+    if (
+      point.y === 0 &&
+      coverageRectangle.south === Cesium.Math.toRadians(ROUTE.south)
+    )
+      return Math.floor(scaled);
+    if (
+      point.y === gridSize - 1 &&
+      coverageRectangle.north === Cesium.Math.toRadians(ROUTE.north)
+    )
+      return Math.ceil(scaled);
+    return Math.round(scaled);
   });
   const height = vertexPoints.map((_, index) => {
     const longitude = Cesium.Math.lerp(
@@ -370,37 +390,45 @@ function createTerrainTile(tile) {
       Cesium.Ellipsoid.WGS84,
     );
   });
-  const skirtPositions = new Set([
-    ...edgeIndices.west,
-    ...edgeIndices.south,
-    ...edgeIndices.east,
-    ...edgeIndices.north,
-  ]);
   const boundingPositions = [...positions];
-  for (const index of skirtPositions) {
-    const longitude = Cesium.Math.lerp(
-      rectangle.west,
-      rectangle.east,
-      u[index] / 32767,
-    );
-    const latitude = Cesium.Math.lerp(
-      rectangle.south,
-      rectangle.north,
-      v[index] / 32767,
-    );
-    const altitude =
-      minimumHeight +
-      (height[index] / 32767) * (maximumHeight - minimumHeight) -
-      skirtHeight;
-    boundingPositions.push(
-      Cesium.Cartesian3.fromRadians(
-        longitude,
-        latitude,
-        altitude,
-        Cesium.Ellipsoid.WGS84,
-      ),
-    );
-  }
+  const minimumLongitude = Math.min(...u.map((value) => value / 32767));
+  const maximumLongitude = Math.max(...u.map((value) => value / 32767));
+  const minimumLatitude = Math.min(...v.map((value) => value / 32767));
+  const maximumLatitude = Math.max(...v.map((value) => value / 32767));
+  const longitudeOffset =
+    (maximumLongitude - minimumLongitude) *
+    (rectangle.east - rectangle.west) *
+    0.0001;
+  const latitudeOffset =
+    (maximumLatitude - minimumLatitude) *
+    (rectangle.north - rectangle.south) *
+    0.0001;
+  for (const [edge, longitudeOffsetForEdge, latitudeOffsetForEdge] of [
+    [edgeIndices.west, -longitudeOffset, 0],
+    [edgeIndices.south, 0, -latitudeOffset],
+    [edgeIndices.east, longitudeOffset, 0],
+    [edgeIndices.north, 0, latitudeOffset],
+  ])
+    for (const index of edge) {
+      const longitude =
+        Cesium.Math.lerp(rectangle.west, rectangle.east, u[index] / 32767) +
+        longitudeOffsetForEdge;
+      const latitude =
+        Cesium.Math.lerp(rectangle.south, rectangle.north, v[index] / 32767) +
+        latitudeOffsetForEdge;
+      const altitude =
+        minimumHeight +
+        (height[index] / 32767) * (maximumHeight - minimumHeight) -
+        skirtHeight;
+      boundingPositions.push(
+        Cesium.Cartesian3.fromRadians(
+          longitude,
+          latitude,
+          altitude,
+          Cesium.Ellipsoid.WGS84,
+        ),
+      );
+    }
   const boundingSphere = Cesium.BoundingSphere.fromPoints(boundingPositions);
   boundingSphere.radius += 0.1;
   const occluder = new Cesium.EllipsoidalOccluder(Cesium.Ellipsoid.WGS84);

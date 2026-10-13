@@ -64,6 +64,11 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
   assert.equal(first.manifest.assetCount, 69);
   assert.equal(first.manifest.geometry.tilesetNodeCount, 21);
+  const terrainBounds = first.manifest.geometry.terrainMeshBoundsDegrees;
+  assert.ok(terrainBounds.west <= first.manifest.routeBoundsDegrees.west);
+  assert.ok(terrainBounds.south <= first.manifest.routeBoundsDegrees.south);
+  assert.ok(terrainBounds.east >= first.manifest.routeBoundsDegrees.east);
+  assert.ok(terrainBounds.north >= first.manifest.routeBoundsDegrees.north);
   assert.deepEqual(
     first.manifest.coverage.imagery.map(({ level, tiles }) => [
       level,
@@ -271,18 +276,21 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       };
       assert.equal(quantized.u.length, quantized.v.length);
       assert.equal(quantized.u.length, quantized.height.length);
-      const cartesianForVertex = (index, skirtDepth = 0) =>
+      const cartesianForVertex = (
+        index,
+        { skirtDepth = 0, longitudeOffset = 0, latitudeOffset = 0 } = {},
+      ) =>
         Cesium.Cartesian3.fromRadians(
           Cesium.Math.lerp(
             rectangle.west,
             rectangle.east,
             quantized.u[index] / 32767,
-          ),
+          ) + longitudeOffset,
           Cesium.Math.lerp(
             rectangle.south,
             rectangle.north,
             quantized.v[index] / 32767,
-          ),
+          ) + latitudeOffset,
           data._minimumHeight +
             (quantized.height[index] / 32767) *
               (data._maximumHeight - data._minimumHeight) -
@@ -325,16 +333,37 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
           'legacy eight-corner terrain sphere must fail the root-vertex negative control',
         );
       }
-      for (const [indices, skirtHeight] of [
-        [data._westIndices, data._westSkirtHeight],
-        [data._southIndices, data._southSkirtHeight],
-        [data._eastIndices, data._eastSkirtHeight],
-        [data._northIndices, data._northSkirtHeight],
+      const quantizedLongitudes = quantized.u.map((value) =>
+        Cesium.Math.lerp(rectangle.west, rectangle.east, value / 32767),
+      );
+      const quantizedLatitudes = quantized.v.map((value) =>
+        Cesium.Math.lerp(rectangle.south, rectangle.north, value / 32767),
+      );
+      const longitudeOffset =
+        (Math.max(...quantizedLongitudes) - Math.min(...quantizedLongitudes)) *
+        0.0001;
+      const latitudeOffset =
+        (Math.max(...quantizedLatitudes) - Math.min(...quantizedLatitudes)) *
+        0.0001;
+      for (const [
+        indices,
+        skirtHeight,
+        longitudeOffsetForEdge,
+        latitudeOffsetForEdge,
+      ] of [
+        [data._westIndices, data._westSkirtHeight, -longitudeOffset, 0],
+        [data._southIndices, data._southSkirtHeight, 0, -latitudeOffset],
+        [data._eastIndices, data._eastSkirtHeight, longitudeOffset, 0],
+        [data._northIndices, data._northSkirtHeight, 0, latitudeOffset],
       ])
         for (const index of indices) {
           const distance = Cesium.Cartesian3.distance(
             sphere.center,
-            cartesianForVertex(index, skirtHeight),
+            cartesianForVertex(index, {
+              skirtDepth: skirtHeight,
+              longitudeOffset: longitudeOffsetForEdge,
+              latitudeOffset: latitudeOffsetForEdge,
+            }),
           );
           assert.ok(
             distance <= sphere.radius + 0.05,
