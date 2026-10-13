@@ -1,7 +1,7 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -18,11 +18,22 @@ import {
 
 const digest = (value) =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const EVIDENCE_TEMP_PREFIX = 'gev-performance-evidence-';
+const ownedEvidenceDirectories = new Set();
+
+after(async () => {
+  for (const directory of ownedEvidenceDirectories) {
+    const basename = path.basename(directory);
+    assert.equal(path.dirname(directory), path.resolve(os.tmpdir()));
+    assert.ok(basename.startsWith(EVIDENCE_TEMP_PREFIX));
+    assert.equal(basename.length, EVIDENCE_TEMP_PREFIX.length + 6);
+    await rm(directory, { recursive: true, force: false });
+  }
+});
 
 async function setupManifest({ comparisons = [], retention = [] } = {}) {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), 'gev-performance-evidence-'),
-  );
+  const directory = await mkdtemp(path.join(os.tmpdir(), EVIDENCE_TEMP_PREFIX));
+  ownedEvidenceDirectories.add(directory);
   const writeArtifact = async (name, value) => {
     const filename = `${name}.json`;
     const bytes = Buffer.from(JSON.stringify(value));
