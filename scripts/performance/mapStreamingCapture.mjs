@@ -3084,7 +3084,7 @@ export async function runNativeMapStreamingFaultControlInPage({
         typeof scene.postProcessStages?.fxaa?.enabled !== 'boolean' ||
         !contextAttributes ||
         typeof contextAttributes.antialias !== 'boolean' ||
-        typeof contextAttributes.preserveDrawingBuffer !== 'boolean' ||
+        contextAttributes.preserveDrawingBuffer !== true ||
         !Number.isSafeInteger(scene.context?.drawingBufferWidth) ||
         !Number.isSafeInteger(scene.context?.drawingBufferHeight) ||
         !Number.isFinite(tileset?.maximumScreenSpaceError) ||
@@ -3326,6 +3326,15 @@ export async function runNativeMapStreamingFaultControlInPage({
     command === 'begin-osm' ||
     command === 'retry-esri'
   ) {
+    if (
+      command === 'begin-osm' &&
+      (operation.pending.initialEsri !== true ||
+        operation.outcomes.initialEsri !== undefined ||
+        operation.controller.getActiveId() !== 'photoreal')
+    )
+      throw new Error(
+        'Map supersession requires the initial Esri request to remain pending.',
+      );
     const name =
       command === 'begin-osm'
         ? 'supersedingOsm'
@@ -3752,7 +3761,7 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
     assert.equal(settings.visualState?.mapStack, selectedStack);
     assert.equal(settings.resolutionScale, 1);
     assert.equal(settings.antialias, true);
-    assert.equal(typeof settings.preserveDrawingBuffer, 'boolean');
+    assert.equal(settings.preserveDrawingBuffer, true);
     assert.equal(settings.msaaSamples, 4);
     assert.equal(settings.fxaa, false);
     assert.equal(settings.drawingBufferWidth, 1440);
@@ -3787,6 +3796,16 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
   assert.equal(report.settingsBefore?.visualState?.mapStack, 'photoreal');
   assert.ok(
     Array.isArray(report.transitions) && report.transitions.length === 2,
+  );
+  assert.deepEqual(
+    report.final,
+    report.transitions.at(-1),
+    'Final map fault state is the last validated transition snapshot.',
+  );
+  assert.ok(
+    report.transitions[0].postRenderSequence <
+      report.transitions[1].postRenderSequence,
+    'Map fault transition snapshots retain strictly increasing render sequences.',
   );
   if (report.scenarioId === 'esri-metadata-superseded-v1') {
     for (const transition of report.transitions)

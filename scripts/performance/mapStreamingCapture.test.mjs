@@ -640,7 +640,7 @@ function createMapFaultControlHarness({ scenarioId }) {
       _gl: {
         getContextAttributes: () => ({
           antialias: true,
-          preserveDrawingBuffer: false,
+          preserveDrawingBuffer: true,
         }),
       },
     },
@@ -956,6 +956,25 @@ test('serialized map fault owner observes explicit retry recovery and supersessi
       assert.throws(() =>
         validateMapStreamingFaultControlReport(preReleaseFrame, fixture),
       );
+      const finalNotLastTransition = structuredClone(report);
+      finalNotLastTransition.final = structuredClone(
+        finalNotLastTransition.transitions[0],
+      );
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(finalNotLastTransition, fixture),
+      );
+      const nonMonotonicTransitions = structuredClone(report);
+      nonMonotonicTransitions.transitions[1].postRenderSequence =
+        nonMonotonicTransitions.transitions[0].postRenderSequence;
+      nonMonotonicTransitions.final = structuredClone(
+        nonMonotonicTransitions.transitions[1],
+      );
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(
+          nonMonotonicTransitions,
+          fixture,
+        ),
+      );
     } else {
       assert.equal(report.transitions[0].activeStack, 'osm');
       assert.equal(report.transitions[0].hasError, true);
@@ -979,6 +998,55 @@ test('serialized map fault owner observes explicit retry recovery and supersessi
       );
     }
   }
+});
+
+test('map supersession can start only while the initial Esri switch is still pending', async () => {
+  const harness = createMapFaultControlHarness({
+    scenarioId: 'esri-metadata-superseded-v1',
+  });
+  await harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+    command: 'prepare',
+    operationId: 'map-fault-too-late-supersession',
+    route: MAP_STREAMING_ROUTE,
+  });
+  await harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+    command: 'begin-esri',
+    operationId: 'map-fault-too-late-supersession',
+    route: MAP_STREAMING_ROUTE,
+  });
+  harness.delivery.releaseFaultResponse();
+  await Promise.resolve();
+  await Promise.resolve();
+  await assert.rejects(
+    harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+      command: 'begin-osm',
+      operationId: 'map-fault-too-late-supersession',
+      route: MAP_STREAMING_ROUTE,
+    }),
+    /initial Esri request to remain pending/,
+  );
+});
+
+test('map fault control rejects an altered preserve-drawing-buffer setting', async () => {
+  const harness = createMapFaultControlHarness({
+    scenarioId: 'esri-metadata-missing-v1',
+  });
+  harness.context.window.__godsEyeView.viewer.scene.context._gl.getContextAttributes =
+    () => ({ antialias: true, preserveDrawingBuffer: false });
+  await assert.rejects(
+    harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+      command: 'prepare',
+      operationId: 'map-fault-invalid-buffer-setting',
+      route: MAP_STREAMING_ROUTE,
+    }),
+    /visual settings are incomplete/,
+  );
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(
+    Object.keys(harness.context.window.__gevMapStreamingFaultControlV1 || {})
+      .length,
+    0,
+  );
 });
 
 test('serialized map fault owner rejects a route mutation before retaining page state', async () => {
