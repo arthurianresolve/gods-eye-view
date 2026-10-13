@@ -1,8 +1,8 @@
 # Engineering closure audit under the amended criteria
 
-S50, S52 and S57 are **engineering closed**, with scoped component checks passed and
+S50, S52, S56 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **3/14 engineering closed (21.4%)**, **11/14 partial**
+their own audit. Counts are **4/14 engineering closed (28.6%)**, **10/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
 
@@ -98,3 +98,37 @@ reduced.
 These reviewed implementations and component checks close S57 engineering.
 Final physical Windows routes, equivalent-detail captures, timing regression
 checks and the full retention soak remain pending. No map speedup is claimed.
+
+## S56 fresh capture and surface lifetime
+
+The [S56 review](s56-review.json) binds the current capture helper, actual viewport
+and pointer callers, viewer teardown, tests and preservation-default decision.
+Root passes all 199 frame/pointer/voice checks in [the focused log](s56-focused.log).
+The caller tests drive postRender and cover success, null contexts, drawing and
+encoding failures, black/oversized rejection, resized dimensions, and all temporary
+surfaces. The helper separately checks abort, visibility, timeout, concurrent
+destruction, missing/zero canvases and stale completion cleanup.
+
+The new tests first reproduce fourteen failures in [the negative log](s56-negative.log)
+at `e842103c`: the black-frame sampler keeps a 48 by 32 canvas backing surface
+after return. Fix `d73f3c89` releases it in `finally`, including context/readback
+failures. It preserves the luminance test, existing null-context behavior and
+error propagation. This is bounded transient-resource cleanup; it does not prove
+an unbounded leak or explain the historical Windows rendering stalls.
+
+The existing capture-matrix fixture creates the real application viewer and
+tests `destroy-pending`. Both preservation modes pass that component case in
+[native run 38439815077](../s50-viewshed-retention/native-38439815077/README.md).
+No test-only production constructor hook is added.
+
+The explicit default decision is to retain `preserveDrawingBuffer: true`.
+The [controlled Windows observations](../windows-gpu-20261012/README.md) still show
+frame-delivery stalls with preservation disabled and do not demonstrate a
+qualifying application benefit. Changing the default is not accepted. The
+preservation option remains available for controlled investigation; resolution,
+antialiasing, effects, capture-size limits and deadlines are unchanged.
+
+This closes S56 engineering under the conditional default-change requirement.
+The full application idle/moving/portrait/resized/restored/hidden capture matrix,
+physical Windows qualification and any performance claim remain pending. The
+small application-viewer component matrix is not substituted for those checks.

@@ -2,6 +2,13 @@
 
 ## Current execution checkpoint - 13 October 2026
 
+[Standard integration at `fa0e8a49`](performance-evidence/integration-fa0e8a49/README.md)
+passes all seven jobs, including Windows recovery and rendered mixed-use smoke.
+The subsequent S56 caller audit reproduces a bounded black-frame sample-surface
+cleanup gap. Fix `d73f3c89` clears that surface on every exit; all 199 affected
+frame/pointer/voice tests pass. Framebuffer preservation remains enabled, with
+no hardware speedup or historical-stall root-cause claim.
+
 The latest [main recheck](performance-evidence/main-reconciliation-20261013/README.md)
 finds no additional commits beyond reviewed merge `8b84a2e0`. Remote dev remains
 fourteen commits behind main; QA already contains both. Current promotion is
@@ -76,11 +83,12 @@ All 183 affected root checks pass. The engineering audit now closes S50;
 primary Windows and final-candidate qualification remain pending.
 
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
-closes S50, S52 and S57 engineering. S52 retains its unchanged accepted renderer, 13
+closes S50, S52, S56 and S57 engineering. S52 retains its unchanged accepted renderer, 13
 artifact hashes and 90 focused tests, and the supported paint-cache
 rejection. S50 adds the strict rendered retention and workspace-restore evidence
 above. S57 adds the native map/fault journeys and fifty passing ownership,
-factory, host and retry tests. Counts: **3/14 engineering closed (21.4%)**, **11/14 partial**, and
+factory, host and retry tests. S56 adds actual caller cleanup coverage and the
+explicit preservation-default decision. Counts: **4/14 engineering closed (28.6%)**, **10/14 partial**, and
 **0/14 fully qualified**. The remaining rows still require their own audits;
 the amendment alone grants no pass. Historical failures remain failed.
 
