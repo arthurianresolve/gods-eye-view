@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { createServer, get, request } from 'node:http';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
+import { mkdtemp, realpath, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -489,9 +489,10 @@ test('owned fixture server closes active connections within its bounded cleanup'
 });
 
 test('scratch profile cleanup reports removal only after successful deletion', async () => {
-  const scratch = await mkdtemp(
+  const scratchCreated = await mkdtemp(
     path.join(os.tmpdir(), 'gev-shutdown-cleanup-'),
   );
+  const scratch = await realpath(scratchCreated);
   const removed = await cleanupScratchProfile(scratch);
   assert.deepEqual(removed, { status: 'removed' });
   await assert.rejects(stat(scratch));
@@ -508,6 +509,21 @@ test('scratch profile cleanup reports removal only after successful deletion', a
     failure: 'temporary-profile-cleanup-failed',
   });
   await rm(scratch, { recursive: true, force: true });
+
+  const aliasScratchCreated = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-shutdown-alias-'),
+  );
+  const aliasScratch = `${path.dirname(aliasScratchCreated)}${path.sep}.${path.sep}${path.basename(aliasScratchCreated)}`;
+  const aliasRejected = await cleanupScratchProfile(aliasScratch, {
+    resolvePath: async (value) => realpath(value),
+    removeOwned: async () =>
+      assert.fail('noncanonical path must not be removed'),
+  });
+  assert.deepEqual(aliasRejected, {
+    status: 'retained-path-validation-failed',
+    failure: 'temporary-profile-root-escaped',
+  });
+  await rm(aliasScratchCreated, { recursive: true, force: true });
 
   const rejectedPath = await cleanupScratchProfile('elsewhere', {
     resolvePath: async (value) =>
