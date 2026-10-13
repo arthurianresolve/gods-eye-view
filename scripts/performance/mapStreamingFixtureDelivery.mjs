@@ -314,8 +314,9 @@ export function createMapStreamingFixtureDelivery(
   const fulfilledByPath = new Map();
   const cancelledByPath = new Map();
   const pendingByUrl = new Map();
-  const expectedFaultByUrl = new Map();
-  const heldFaultByUrl = new Map();
+  const pendingByRequestId = new Map();
+  const expectedFaultByRequestId = new Map();
+  const heldFaultByRequestId = new Map();
   const signals = new Map();
   const errorCounts = new Map();
   const missingAssetPathCounts = new Map();
@@ -331,7 +332,10 @@ export function createMapStreamingFixtureDelivery(
   let faultedByPathCount = 0;
   let faultHeldRequestCount = 0;
   let faultReleasedCount = 0;
+  let faultRequestId = null;
   let heldFaultRequest = null;
+  let heldFaultTimer = null;
+  let faultAcknowledgement = null;
   const heldFaultWaiters = new Set();
   let disposed = false;
   let cancelled = false;
@@ -405,6 +409,16 @@ export function createMapStreamingFixtureDelivery(
       throw deliveryError('request-url-accessor-required');
     return context.url();
   };
+  const requestIdentity = (value) => {
+    if (
+      typeof value !== 'string' ||
+      value.length < 1 ||
+      value.length > 128 ||
+      !/^[A-Za-z0-9._:-]+$/.test(value)
+    )
+      throw deliveryError('request-identity-invalid');
+    return value;
+  };
   const notifyHeldFaultWaiters = () => {
     for (const waiter of heldFaultWaiters) waiter.finish(null, true);
     heldFaultWaiters.clear();
@@ -418,6 +432,8 @@ export function createMapStreamingFixtureDelivery(
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000)
       throw new RangeError('Fault request wait is outside its fixed bound.');
     if (heldFaultRequest) return Promise.resolve(true);
+    if (heldFaultWaiters.size >= 1)
+      throw deliveryError('fault-waiter-limit-exceeded');
     return new Promise((resolve, reject) => {
       let settled = false;
       const timer = setTimeout(
@@ -443,8 +459,10 @@ export function createMapStreamingFixtureDelivery(
     if (!heldFaultRequest || disposed || cancelled) return false;
     const held = heldFaultRequest;
     heldFaultRequest = null;
+    if (heldFaultTimer !== null) clearTimeout(heldFaultTimer);
+    heldFaultTimer = null;
     faultReleasedCount += 1;
-    heldFaultByUrl.set(held.rawUrl, true);
+    heldFaultByRequestId.set(held.requestId, true);
     held.resolve(held.response);
     return true;
   };
@@ -464,6 +482,9 @@ export function createMapStreamingFixtureDelivery(
       }
       if (requestedCount >= maxRequests)
         throw deliveryError('request-limit-exceeded');
+      const requestId = requestIdentity(context.requestId);
+      if (pendingByRequestId.has(requestId))
+        throw deliveryError('duplicate-pending-request-identity');
       let bytes = fixture.assets.get(assetPath);
       let status = 200;
       const injectFault =
@@ -492,10 +513,12 @@ export function createMapStreamingFixtureDelivery(
       counts.set(assetPath, (counts.get(assetPath) || 0) + 1);
       pendingByPath.set(assetPath, (pendingByPath.get(assetPath) || 0) + 1);
       pendingByUrl.set(rawUrl, (pendingByUrl.get(rawUrl) || 0) + 1);
+      pendingByRequestId.set(requestId, assetPath);
       if (injectFault) {
         faultInjectedCount += 1;
+        faultRequestId = requestId;
         if (faultScenario.mode !== 'superseded-valid')
-          expectedFaultByUrl.set(rawUrl, {
+          expectedFaultByRequestId.set(requestId, {
             scenarioId: faultScenarioId,
             assetPath,
             status,
@@ -512,7 +535,13 @@ export function createMapStreamingFixtureDelivery(
       if (injectFault && faultScenario.mode === 'superseded-valid') {
         faultHeldRequestCount += 1;
         return await new Promise((resolve, reject) => {
-          heldFaultRequest = { rawUrl, response, resolve, reject };
+          heldFaultRequest = { rawUrl, requestId, response, resolve, reject };
+          heldFaultTimer = setTimeout(() => {
+            if (heldFaultRequest?.requestId !== requestId) return;
+            heldFaultRequest = null;
+            heldFaultTimer = null;
+            reject(deliveryError('held-fault-response-expired'));
+          }, 30_000);
           notifyHeldFaultWaiters();
         });
       }
@@ -526,6 +555,7 @@ export function createMapStreamingFixtureDelivery(
     try {
       if (typeof event.url !== 'string' || event.url.length > 2_048)
         throw deliveryError('fulfillment-url-invalid');
+      const requestId = requestIdentity(event.requestId);
       const url = new URL(event.url);
       const assetPath = route(url, event.url);
       // Generic offline API responses and unrelated fulfillments belong to
@@ -540,14 +570,18 @@ export function createMapStreamingFixtureDelivery(
       }
       const expectedPending = pendingByPath.get(assetPath) || 0;
       const pendingUrlCount = pendingByUrl.get(event.url) || 0;
-      if (expectedPending < 1 || pendingUrlCount < 1) {
+      if (
+        pendingByRequestId.get(requestId) !== assetPath ||
+        expectedPending < 1 ||
+        pendingUrlCount < 1
+      ) {
         unexpectedFulfillmentCount = Math.min(
           maxRequests + 1,
           unexpectedFulfillmentCount + 1,
         );
         throw deliveryError('fulfillment-without-owned-request');
       }
-      const expectedFault = expectedFaultByUrl.get(event.url);
+      const expectedFault = expectedFaultByRequestId.get(requestId);
       if (expectedFault) {
         if (
           event.method !== 'GET' ||
@@ -563,12 +597,21 @@ export function createMapStreamingFixtureDelivery(
           sha256(faultBytes) !== expectedFault.bodySha256
         )
           throw deliveryError('fault-fulfillment-identity-mismatch');
-        expectedFaultByUrl.delete(event.url);
+        expectedFaultByRequestId.delete(requestId);
+        pendingByRequestId.delete(requestId);
         pendingByPath.set(assetPath, expectedPending - 1);
         pendingByUrl.set(event.url, pendingUrlCount - 1);
         if (pendingUrlCount === 1) pendingByUrl.delete(event.url);
         faultAcknowledgedCount += 1;
         faultedByPathCount += 1;
+        faultAcknowledgement = {
+          requestId,
+          assetPath,
+          method: event.method,
+          status: event.status,
+          byteLength: faultBytes.length,
+          sha256: sha256(faultBytes),
+        };
         return true;
       }
       if (event.method !== 'GET' || event.status !== 200)
@@ -589,9 +632,20 @@ export function createMapStreamingFixtureDelivery(
       pendingByPath.set(assetPath, expectedPending - 1);
       pendingByUrl.set(event.url, pendingUrlCount - 1);
       if (pendingUrlCount === 1) pendingByUrl.delete(event.url);
+      pendingByRequestId.delete(requestId);
       fulfilledByPath.set(assetPath, (fulfilledByPath.get(assetPath) || 0) + 1);
       fulfilledAckCount += 1;
-      if (heldFaultByUrl.delete(event.url)) faultAcknowledgedCount += 1;
+      if (heldFaultByRequestId.delete(requestId)) {
+        faultAcknowledgedCount += 1;
+        faultAcknowledgement = {
+          requestId,
+          assetPath,
+          method: event.method,
+          status: event.status,
+          byteLength: bytes.length,
+          sha256: sha256(bytes),
+        };
+      }
       return true;
     } catch (error) {
       recordError(error);
@@ -605,6 +659,8 @@ export function createMapStreamingFixtureDelivery(
     if (heldFaultRequest) {
       const held = heldFaultRequest;
       heldFaultRequest = null;
+      if (heldFaultTimer !== null) clearTimeout(heldFaultTimer);
+      heldFaultTimer = null;
       held.reject(deliveryError('request-cancelled'));
     }
     for (const [path, pending] of pendingByPath) {
@@ -613,6 +669,7 @@ export function createMapStreamingFixtureDelivery(
     }
     pendingByPath.clear();
     pendingByUrl.clear();
+    pendingByRequestId.clear();
   };
   const summary = () => {
     const pendingCount = [...pendingByPath.values()].reduce(
@@ -657,12 +714,14 @@ export function createMapStreamingFixtureDelivery(
               scenarioId: faultScenarioId,
               mode: faultScenario.mode,
               assetPath: faultScenario.assetPath,
+              requestId: faultRequestId,
               declaredCount: 1,
               injectedCount: faultInjectedCount,
               heldRequestCount: faultHeldRequestCount,
               releasedCount: faultReleasedCount,
               acknowledgedCount: faultAcknowledgedCount,
               observationCount: faultAcknowledgedCount,
+              acknowledgement: faultAcknowledgement,
               performanceAcceptanceEligible: false,
             },
           }
@@ -694,7 +753,7 @@ export function createMapStreamingFixtureDelivery(
       cleanupConfirmed:
         disposed &&
         pendingCount === 0 &&
-        expectedFaultByUrl.size === 0 &&
+        expectedFaultByRequestId.size === 0 &&
         (!faultScenario ||
           (faultInjectedCount === 1 &&
             faultAcknowledgedCount === 1 &&
@@ -753,23 +812,42 @@ export function validateMapStreamingFaultDeliverySummary(
     omittedPathCount: 0,
     paths: [],
   });
-  assert.deepEqual(summary.faultInjection, {
-    schema: MAP_STREAMING_FAULT_DELIVERY_SCHEMA,
-    scenarioId: expectedScenarioId,
-    mode: scenario.mode,
-    assetPath: scenario.assetPath,
-    declaredCount: 1,
-    injectedCount: 1,
-    heldRequestCount: scenario.mode === 'superseded-valid' ? 1 : 0,
-    releasedCount: scenario.mode === 'superseded-valid' ? 1 : 0,
-    acknowledgedCount: 1,
-    observationCount: 1,
-    performanceAcceptanceEligible: false,
-  });
+  const faultEvidence = summary.faultInjection;
+  assert.equal(faultEvidence?.schema, MAP_STREAMING_FAULT_DELIVERY_SCHEMA);
+  assert.equal(faultEvidence?.scenarioId, expectedScenarioId);
+  assert.equal(faultEvidence?.mode, scenario.mode);
+  assert.equal(faultEvidence?.assetPath, scenario.assetPath);
+  assert.match(faultEvidence?.requestId || '', /^[A-Za-z0-9._:-]{1,128}$/);
+  assert.equal(faultEvidence?.declaredCount, 1);
+  assert.equal(faultEvidence?.injectedCount, 1);
+  assert.equal(
+    faultEvidence?.heldRequestCount,
+    scenario.mode === 'superseded-valid' ? 1 : 0,
+  );
+  assert.equal(
+    faultEvidence?.releasedCount,
+    scenario.mode === 'superseded-valid' ? 1 : 0,
+  );
+  assert.equal(faultEvidence?.acknowledgedCount, 1);
+  assert.equal(faultEvidence?.observationCount, 1);
+  assert.equal(faultEvidence?.performanceAcceptanceEligible, false);
+  assert.deepEqual(Object.keys(faultEvidence?.acknowledgement || {}).sort(), [
+    'assetPath',
+    'byteLength',
+    'method',
+    'requestId',
+    'sha256',
+    'status',
+  ]);
   assert.ok(Number.isSafeInteger(summary.requestedCount));
   assert.ok(summary.requestedCount > 0);
-  assert.ok(Number.isSafeInteger(summary.fulfilledAckCount));
-  assert.ok(Number.isSafeInteger(summary.cancelledCount));
+  assert.ok(
+    Number.isSafeInteger(summary.fulfilledAckCount) &&
+      summary.fulfilledAckCount >= 0,
+  );
+  assert.ok(
+    Number.isSafeInteger(summary.cancelledCount) && summary.cancelledCount >= 0,
+  );
   assert.equal(
     summary.fulfilledAckCount +
       summary.cancelledCount +
@@ -793,8 +871,12 @@ export function validateMapStreamingFaultDeliverySummary(
     assert.equal(row.sha256, expected.sha256);
     assert.equal(row.byteLength, expected.byteLength);
     assert.ok(Number.isSafeInteger(row.requests) && row.requests > 0);
-    assert.ok(Number.isSafeInteger(row.fulfilledAckCount));
-    assert.ok(Number.isSafeInteger(row.cancelledCount));
+    assert.ok(
+      Number.isSafeInteger(row.fulfilledAckCount) && row.fulfilledAckCount >= 0,
+    );
+    assert.ok(
+      Number.isSafeInteger(row.cancelledCount) && row.cancelledCount >= 0,
+    );
     const rowFaulted = row.faultedCount ?? 0;
     assert.ok(Number.isSafeInteger(rowFaulted) && rowFaulted >= 0);
     assert.equal(
@@ -813,8 +895,26 @@ export function validateMapStreamingFaultDeliverySummary(
   assert.equal(fulfilled, summary.fulfilledAckCount);
   assert.equal(cancelled, summary.cancelledCount);
   assert.equal(faulted, scenario.mode === 'superseded-valid' ? 0 : 1);
-  if (scenario.mode === 'superseded-valid')
-    assert.equal(summary.fulfilledAckCount, 1);
+  const acknowledgement = faultEvidence.acknowledgement;
+  assert.ok(acknowledgement && typeof acknowledgement === 'object');
+  assert.equal(
+    typeof acknowledgement.requestId,
+    'string',
+    'Fault acknowledgment retains the request-scoped CDP identity.',
+  );
+  assert.match(acknowledgement.requestId, /^[A-Za-z0-9._:-]{1,128}$/);
+  assert.equal(acknowledgement.requestId, faultEvidence.requestId);
+  assert.equal(acknowledgement.assetPath, scenario.assetPath);
+  assert.equal(acknowledgement.method, 'GET');
+  const expectedBytes = Buffer.from(fixture.assets.get(scenario.assetPath));
+  let expectedStatus = scenario.status;
+  if (scenario.mode === 'corrupt-json') expectedBytes[0] = 0x21;
+  if (scenario.mode === 'superseded-valid') expectedStatus = 200;
+  const expectedFaultBytes =
+    scenario.mode === 'missing' ? Buffer.alloc(0) : expectedBytes;
+  assert.equal(acknowledgement.status, expectedStatus);
+  assert.equal(acknowledgement.byteLength, expectedFaultBytes.length);
+  assert.equal(acknowledgement.sha256, sha256(expectedFaultBytes));
   assert.equal(summary.browserDecodeObserved, false);
   assert.equal(summary.renderedReadinessObserved, false);
   return true;

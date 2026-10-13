@@ -55,6 +55,7 @@ export async function fixtureRequestCommand(event, base, respond) {
   const { requestId, request } = event;
   const url = new URL(request.url);
   let response = await respond?.(url, {
+    requestId,
     url: () => request.url,
     postData: () => request.postData,
     method: () => request.method,
@@ -247,6 +248,7 @@ export async function interceptFixtureSession(
         try {
           phase = 'fulfillment-callback';
           onFulfilled?.({
+            requestId: event.requestId,
             url: event.request.url,
             method: event.request.method,
             status: params.responseCode,

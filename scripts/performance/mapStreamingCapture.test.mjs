@@ -2340,6 +2340,7 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
       fixture.manifest.assets.map((asset) => [asset.kind, asset]),
     ).values(),
   ];
+  let requestOrdinal = 0;
   for (const asset of requiredAssets) {
     let url;
     if (asset.path === 'tileset/tileset.json')
@@ -2369,7 +2370,9 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
       url = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
     }
     assert.ok(url, `Fixture asset ${asset.path} has a native request URL.`);
+    const requestId = `map-capture-test-${++requestOrdinal}`;
     const response = await adapter.respond(new URL(url), {
+      requestId,
       url: () => url,
       method: () => 'GET',
     });
@@ -2382,6 +2385,7 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     assert.equal(digest(response.body), asset.sha256, `${asset.path} SHA-256`);
     assert.equal(
       adapter.onFulfilled({
+        requestId,
         url,
         method: 'GET',
         status: 200,

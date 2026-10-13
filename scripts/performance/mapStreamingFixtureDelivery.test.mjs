@@ -37,6 +37,7 @@ const CONTENT_TYPES = Object.freeze({
 });
 
 let fixturePromise;
+let requestOrdinal = 0;
 const fixture = () =>
   (fixturePromise ??= createDeterministicMapStreamingFixture());
 
@@ -72,9 +73,10 @@ function nativeUrl(row) {
 }
 
 async function issueRequest(delivery, url, method = 'GET') {
+  const requestId = `request-for-test-${++requestOrdinal}`;
   const [command, params] = await fixtureRequestCommand(
     {
-      requestId: 'request-for-test',
+      requestId,
       request: { url, method, postData: null },
     },
     APP_ORIGIN,
@@ -82,12 +84,13 @@ async function issueRequest(delivery, url, method = 'GET') {
   );
   if (command !== 'Fetch.fulfillRequest') return { command, params };
   const acknowledged = delivery.onFulfilled({
+    requestId,
     url,
     method,
     status: params.responseCode,
     bodyBase64: params.body,
   });
-  return { command, params, acknowledged };
+  return { command, params, acknowledged, requestId };
 }
 
 test('native map URLs resolve every manifest asset through real interception callbacks', async () => {
@@ -259,8 +262,37 @@ test('declared Esri missing and corrupt metadata responses are isolated fault ob
           pinned,
           scenarioId,
         ),
-      /deepStrictEqual|deep-equal/i,
+      /strictly equal/,
     );
+    for (const mutate of [
+      (copy) => {
+        copy.faultInjection.acknowledgement.status += 1;
+      },
+      (copy) => {
+        copy.faultInjection.acknowledgement.sha256 = '0'.repeat(64);
+      },
+      (copy) => {
+        copy.faultInjection.acknowledgement.requestId = 'other-request';
+      },
+      (copy) => {
+        copy.fulfilledAckCount = -1;
+        copy.cancelledCount += 1;
+      },
+      (copy) => {
+        copy.assets[0].fulfilledAckCount = -1;
+        copy.assets[0].cancelledCount += 1;
+      },
+    ]) {
+      const alteredAcknowledgement = structuredClone(summary);
+      mutate(alteredAcknowledgement);
+      assert.throws(() =>
+        validateMapStreamingFaultDeliverySummary(
+          alteredAcknowledgement,
+          pinned,
+          scenarioId,
+        ),
+      );
+    }
     const unrelatedError = structuredClone(summary);
     unrelatedError.errorObservationCount = 1;
     assert.throws(
@@ -313,12 +345,14 @@ test('fault delivery does not accept a response that differs from its declaratio
     faultScenarioId: 'esri-metadata-corrupt-v1',
   });
   const response = await delivery.respond(new URL(url), {
+    requestId: 'corrupt-target',
     url: () => url,
     method: () => 'GET',
   });
   assert.throws(
     () =>
       delivery.onFulfilled({
+        requestId: 'corrupt-target',
         url,
         method: 'GET',
         status: response.status,
@@ -352,6 +386,7 @@ test('supersession fault adapter holds one owned response and releases it only o
     faultScenarioId: 'esri-metadata-superseded-v1',
   });
   const pendingResponse = delivery.respond(new URL(url), {
+    requestId: 'held-target',
     url: () => url,
     method: () => 'GET',
     signal: new AbortController().signal,
@@ -359,6 +394,16 @@ test('supersession fault adapter holds one owned response and releases it only o
   assert.equal(await delivery.waitForFaultRequest({ timeoutMs: 1_000 }), true);
   assert.equal(delivery.summary().pendingCount, 1);
   assert.equal(delivery.summary().faultInjection.heldRequestCount, 1);
+  const sameUrlResponse = await issueRequest(delivery, url);
+  assert.equal(sameUrlResponse.acknowledged, true);
+  const otherAsset = pinned.manifest.assets.find(
+    (row) => row.kind === 'synthetic-google-credit-placeholder-png',
+  );
+  const otherAssetResponse = await issueRequest(
+    delivery,
+    nativeUrl(otherAsset),
+  );
+  assert.equal(otherAssetResponse.acknowledged, true);
   assert.equal(delivery.releaseFaultResponse(), true);
   assert.equal(delivery.releaseFaultResponse(), false);
   const response = await pendingResponse;
@@ -366,6 +411,7 @@ test('supersession fault adapter holds one owned response and releases it only o
   assert.equal(response.body.equals(pinned.assets.get(metadata.path)), true);
   assert.equal(
     delivery.onFulfilled({
+      requestId: 'held-target',
       url,
       method: 'GET',
       status: response.status,
@@ -385,6 +431,8 @@ test('supersession fault adapter holds one owned response and releases it only o
   assert.equal(summary.faultInjection.heldRequestCount, 1);
   assert.equal(summary.faultInjection.releasedCount, 1);
   assert.equal(summary.faultInjection.acknowledgedCount, 1);
+  assert.equal(summary.faultInjection.acknowledgement.requestId, 'held-target');
+  assert.equal(summary.fulfilledAckCount, 3);
   assert.equal(summary.pendingCount, 0);
 });
 
@@ -399,6 +447,7 @@ test('disposing a held fault request fails closed and prevents further waits', a
     faultScenarioId: 'esri-metadata-superseded-v1',
   });
   const pendingResponse = delivery.respond(new URL(url), {
+    requestId: 'dispose-held-target',
     url: () => url,
     method: () => 'GET',
   });
@@ -418,6 +467,10 @@ test('disposing a held fault request fails closed and prevents further waits', a
     faultScenarioId: 'esri-metadata-superseded-v1',
   });
   const waiting = beforeRequest.waitForFaultRequest({ timeoutMs: 30_000 });
+  assert.throws(
+    () => beforeRequest.waitForFaultRequest({ timeoutMs: 30_000 }),
+    /fault-waiter-limit-exceeded/,
+  );
   beforeRequest.cancel();
   await assert.rejects(waiting, /request-cancelled/);
   beforeRequest.dispose();
@@ -481,6 +534,7 @@ test('missing path evidence counts repeated callbacks and saturates safely', asy
     assert.throws(
       () =>
         repeated.onFulfilled({
+          requestId: 'repeat-missing',
           url: repeatedUrl,
           method: 'GET',
           status: 200,
@@ -607,6 +661,7 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
   const cancelledUrl = nativeUrl(cancelledAsset);
   const abort = new AbortController();
   await delivery.respond(new URL(cancelledUrl), {
+    requestId: 'budget-cancelled-request',
     url: () => cancelledUrl,
     method: () => 'GET',
     signal: abort.signal,
@@ -655,6 +710,7 @@ test('cancelled-only required map kinds do not count as delivered', async () => 
   const cancelledUrl = nativeUrl(cancelledAsset);
   const abort = new AbortController();
   await delivery.respond(new URL(cancelledUrl), {
+    requestId: 'required-kind-cancelled-request',
     url: () => cancelledUrl,
     method: () => 'GET',
     signal: abort.signal,
@@ -854,6 +910,7 @@ test('a response is acknowledged only for an exact owned URL and matching bytes'
   assert.throws(
     () =>
       delivery.onFulfilled({
+        requestId: 'owned',
         url: wrongUrl,
         method: 'GET',
         status: params.responseCode,
@@ -864,6 +921,7 @@ test('a response is acknowledged only for an exact owned URL and matching bytes'
   assert.throws(
     () =>
       delivery.onFulfilled({
+        requestId: 'owned',
         url,
         method: 'GET',
         status: params.responseCode,
@@ -874,6 +932,7 @@ test('a response is acknowledged only for an exact owned URL and matching bytes'
   assert.throws(
     () =>
       delivery.onFulfilled({
+        requestId: 'owned',
         url,
         method: 'GET',
         status: 206,
@@ -882,6 +941,7 @@ test('a response is acknowledged only for an exact owned URL and matching bytes'
     /fulfillment-status-invalid/,
   );
   const acknowledged = delivery.onFulfilled({
+    requestId: 'owned',
     url,
     method: 'GET',
     status: 200,
@@ -904,6 +964,7 @@ test('aborted requests are canceled before or after response preparation and lat
   beforeAbort.abort();
   await assert.rejects(
     before.respond(new URL(nativeUrl(pinned.manifest.assets[0])), {
+      requestId: 'before-cancel',
       method: () => 'GET',
       url: () => nativeUrl(pinned.manifest.assets[0]),
       signal: beforeAbort.signal,
@@ -921,6 +982,7 @@ test('aborted requests are canceled before or after response preparation and lat
   );
   const url = nativeUrl(row);
   const response = await after.respond(new URL(url), {
+    requestId: 'after-cancel',
     method: () => 'GET',
     url: () => url,
     signal: controller.signal,
@@ -930,6 +992,7 @@ test('aborted requests are canceled before or after response preparation and lat
   assert.throws(
     () =>
       after.onFulfilled({
+        requestId: 'after-cancel',
         url,
         method: 'GET',
         status: 200,
@@ -953,12 +1016,14 @@ test('per-document request overflow fails closed and disposal removes abort owne
   const first = nativeUrl(pinned.manifest.assets[0]);
   const second = nativeUrl(pinned.manifest.assets[1]);
   await delivery.respond(new URL(first), {
+    requestId: 'overflow-first',
     method: () => 'GET',
     url: () => first,
     signal: controller.signal,
   });
   await assert.rejects(
     delivery.respond(new URL(second), {
+      requestId: 'overflow-second',
       method: () => 'GET',
       url: () => second,
       signal: controller.signal,
