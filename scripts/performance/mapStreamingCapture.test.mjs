@@ -531,9 +531,14 @@ function createFakePage({
 
 function createMapFaultControlHarness({
   scenarioId,
+  fixture,
   renderDuringPreparation = false,
   deferRequestedRender = false,
 }) {
+  const declaredFaultAssetPath = fixture.manifest.assets.find(
+    (asset) => asset.kind === 'arcgis-mapserver-metadata-json',
+  )?.path;
+  assert.equal(typeof declaredFaultAssetPath, 'string');
   const listeners = new Set();
   const types = {
     Cartesian3: {
@@ -763,7 +768,7 @@ function createMapFaultControlHarness({
             ? 1
             : 0,
         faultInjection: {
-          assetPath: 'arcgis/MapServer/index.json',
+          assetPath: declaredFaultAssetPath,
           requestId: 'page-fault-test-4',
           heldRequestCount:
             scenarioId === 'esri-metadata-superseded-v1' && !this.released
@@ -883,7 +888,12 @@ async function buildValidFaultDeliverySummary(fixture, scenarioId) {
       true,
     );
   }
-  return adapter.dispose();
+  const summary = adapter.dispose();
+  const declaredFaultAssetPath = fixture.manifest.assets.find(
+    (asset) => asset.kind === 'arcgis-mapserver-metadata-json',
+  )?.path;
+  assert.equal(summary.faultInjection?.assetPath, declaredFaultAssetPath);
+  return summary;
 }
 
 function makeTerrainChain(seed) {
@@ -943,7 +953,7 @@ test('serialized map fault owner observes explicit retry recovery and supersessi
     'esri-metadata-corrupt-v1',
     'esri-metadata-superseded-v1',
   ]) {
-    const harness = createMapFaultControlHarness({ scenarioId });
+    const harness = createMapFaultControlHarness({ scenarioId, fixture });
     const report = await runNativeMapStreamingFaultControl(harness.page, {
       scenarioId,
       route: MAP_STREAMING_ROUTE,
@@ -1040,6 +1050,7 @@ test('map fault initial readiness discards startup-pose frames before fixed-pose
   const fixture = await createDeterministicMapStreamingFixture();
   const harness = createMapFaultControlHarness({
     scenarioId: 'esri-metadata-missing-v1',
+    fixture,
     renderDuringPreparation: true,
   });
   const report = await runNativeMapStreamingFaultControl(harness.page, {
@@ -1074,8 +1085,10 @@ test('map fault initial readiness discards startup-pose frames before fixed-pose
 });
 
 test('fault switching stays blocked until a separately delivered post-pose render', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
   const harness = createMapFaultControlHarness({
     scenarioId: 'esri-metadata-missing-v1',
+    fixture,
     renderDuringPreparation: true,
     deferRequestedRender: true,
   });
@@ -1139,8 +1152,10 @@ test('fault switching stays blocked until a separately delivered post-pose rende
 });
 
 test('map supersession can start only while the initial Esri switch is still pending', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
   const harness = createMapFaultControlHarness({
     scenarioId: 'esri-metadata-superseded-v1',
+    fixture,
   });
   await harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
     command: 'prepare',
@@ -1166,8 +1181,10 @@ test('map supersession can start only while the initial Esri switch is still pen
 });
 
 test('map fault control rejects an altered preserve-drawing-buffer setting', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
   const harness = createMapFaultControlHarness({
     scenarioId: 'esri-metadata-missing-v1',
+    fixture,
   });
   harness.context.window.__godsEyeView.viewer.scene.context._gl.getContextAttributes =
     () => ({ antialias: true, preserveDrawingBuffer: false });
@@ -1188,8 +1205,10 @@ test('map fault control rejects an altered preserve-drawing-buffer setting', asy
 });
 
 test('serialized map fault owner rejects a route mutation before retaining page state', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
   const harness = createMapFaultControlHarness({
     scenarioId: 'esri-metadata-missing-v1',
+    fixture,
   });
   await assert.rejects(
     harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {

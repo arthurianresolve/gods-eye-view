@@ -3556,10 +3556,10 @@ export async function runNativeMapStreamingFaultControl(
       });
       const held = delivery.summary();
       assert.equal(held.faultInjection?.heldRequestCount, 1);
-      assert.equal(
-        held.faultInjection?.assetPath,
-        'arcgis/MapServer/index.json',
-      );
+      const expectedHeldAssetPath =
+        MAP_STREAMING_FAULT_SCENARIOS[scenarioId]?.assetPath;
+      assert.equal(typeof expectedHeldAssetPath, 'string');
+      assert.equal(held.faultInjection?.assetPath, expectedHeldAssetPath);
       assert.match(
         held.faultInjection?.requestId || '',
         /^[A-Za-z0-9._:-]{1,128}$/,
