@@ -1638,7 +1638,9 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
     startupRuns: report.workload.startupRuns,
     captureCount: report.captures.length,
   });
-  assertWeatherCaptureCleanupEvidence(report.workload, topology);
+  assertCaptureCleanupEvidence(report.workload, topology, {
+    captures: report.captures,
+  });
   assert.equal(
     report.fixtureDelivery?.schema,
     'gev-austin-operating-capture-delivery/v1',
@@ -1710,7 +1712,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     startupRuns: report.workload.startupRuns,
     captureCount: report.captures?.length,
   });
-  assertWeatherCaptureCleanupEvidence(report.workload, captureTopology);
+  assertCaptureCleanupEvidence(report.workload, captureTopology);
   const lifecycle = report.workload?.weatherEffectsFixtureLifecycle;
   assert.equal(lifecycle?.freshBrowserContextPerSample, false);
   assert.equal(lifecycle?.performanceAcceptanceEligible, false);
@@ -2052,7 +2054,11 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   };
 }
 
-function assertWeatherCaptureCleanupEvidence(workload, topology) {
+function assertCaptureCleanupEvidence(
+  workload,
+  topology,
+  { captures = null } = {},
+) {
   const cleanup = workload?.rendererProbeCleanup;
   assert.ok(
     Array.isArray(cleanup),
@@ -2067,7 +2073,7 @@ function assertWeatherCaptureCleanupEvidence(workload, topology) {
     [...expectedDocuments].sort((a, b) =>
       a.documentRole.localeCompare(b.documentRole),
     ),
-    'Every owned weather capture document must have exactly one cleanup record.',
+    'Every owned capture document must have exactly one cleanup record.',
   );
   for (const expectedDocument of expectedDocuments) {
     const evidence = cleanup.find(
@@ -2109,20 +2115,7 @@ function assertWeatherCaptureCleanupEvidence(workload, topology) {
     assert.equal(evidence?.document?.renderLoopRetirement?.after, false);
   }
 
-  const retirements = workload.rendererLoopRetirements;
-  assert.ok(Array.isArray(retirements));
-  assert.equal(workload.rendererLoopRetirementsOmittedCount, 0);
-  const startupDocument = topology.workerAudits.find((entry) =>
-    entry.documentRole.startsWith('startup-'),
-  );
-  assert.equal(retirements.length, 1);
-  const startupRetirement = retirements[0];
-  assert.equal(startupRetirement.phase, 'startup-final-details');
-  assert.equal(startupRetirement.documentRole, startupDocument?.documentRole);
-  assert.equal(startupRetirement.documentId, startupDocument?.documentId);
-  assert.equal(startupRetirement.requested, true);
-  assert.equal(startupRetirement.confirmed, true);
-  assert.equal(startupRetirement.after, false);
+  assertRendererLoopRetirementEvidence({ workload, topology, captures });
 
   const measuredDocuments = [
     ...new Map(
@@ -2212,6 +2205,146 @@ function assertWeatherCaptureCleanupEvidence(workload, topology) {
     assert.equal(release?.interception?.detach, 'target-closed');
     assert.equal(release?.fetchDisable, 'target-closed');
     assert.equal(release?.detach, 'target-closed');
+  }
+}
+
+export function assertRendererLoopRetirementEvidence({
+  workload,
+  topology,
+  captures = null,
+} = {}) {
+  const retirements = workload?.rendererLoopRetirements;
+  assert.ok(
+    Array.isArray(retirements),
+    'Renderer-loop retirement rows are required.',
+  );
+  assert.equal(workload.rendererLoopRetirementsOmittedCount, 0);
+
+  const expected = topology.workerAudits
+    .filter((document) => document.documentRole.startsWith('startup-'))
+    .map((document) => ({
+      ...document,
+      phase: 'startup-final-details',
+      scenario: undefined,
+      run: undefined,
+      retirement: null,
+    }));
+
+  if (captures !== null) {
+    assert.ok(Array.isArray(captures), 'Austin captures must be an array.');
+    assert.equal(
+      captures.length,
+      topology.samples.length,
+      'Every Austin sample document must have one capture record.',
+    );
+    for (const document of topology.samples) {
+      const matchingCaptures = captures.filter(
+        (capture) =>
+          capture.documentRole === document.documentRole &&
+          capture.documentId === document.documentId,
+      );
+      assert.equal(
+        matchingCaptures.length,
+        1,
+        `Austin sample ${document.documentRole} must map to exactly one capture.`,
+      );
+      const capture = matchingCaptures[0];
+      assert.ok(
+        capture.renderLoopRetirement &&
+          typeof capture.renderLoopRetirement === 'object' &&
+          !Array.isArray(capture.renderLoopRetirement),
+        `Austin sample ${document.documentRole} must include its observed render-loop retirement.`,
+      );
+      assert.ok(
+        ['idle', 'scripted-motion'].includes(capture.scenario),
+        `Austin sample ${document.documentRole} has an unknown scenario.`,
+      );
+      assert.ok(
+        Number.isSafeInteger(capture.run) && capture.run > 0,
+        `Austin sample ${document.documentRole} has an invalid run ordinal.`,
+      );
+      expected.push({
+        ...document,
+        phase: 'provider-sample-measurement-post-render',
+        scenario: capture.scenario,
+        run: capture.run,
+        retirement: capture.renderLoopRetirement,
+      });
+    }
+  }
+
+  assert.equal(
+    retirements.length,
+    expected.length,
+    'Renderer-loop retirement rows must exactly cover the expected boundaries.',
+  );
+  const identity = (entry) =>
+    [
+      entry.phase,
+      entry.documentRole,
+      entry.documentId,
+      entry.scenario ?? '',
+      entry.run ?? '',
+    ].join('\u0000');
+  const expectedByIdentity = new Map();
+  for (const entry of expected) {
+    const key = identity(entry);
+    assert.equal(
+      expectedByIdentity.has(key),
+      false,
+      `Expected renderer-loop retirement ${entry.documentRole} is duplicated.`,
+    );
+    expectedByIdentity.set(key, entry);
+  }
+  const actualByIdentity = new Map();
+  for (const entry of retirements) {
+    const key = identity(entry);
+    assert.equal(
+      actualByIdentity.has(key),
+      false,
+      `Renderer-loop retirement ${entry.documentRole} is duplicated.`,
+    );
+    actualByIdentity.set(key, entry);
+  }
+  assert.deepEqual(
+    [...actualByIdentity.keys()].sort(),
+    [...expectedByIdentity.keys()].sort(),
+    'Renderer-loop retirement identities, phases, and sample ordinals must match the capture topology.',
+  );
+
+  for (const [key, expectedEntry] of expectedByIdentity) {
+    const retirement = actualByIdentity.get(key);
+    assert.equal(retirement.requested, true);
+    if (captures !== null) {
+      assert.ok(
+        Number.isFinite(retirement.elapsedMs) && retirement.elapsedMs >= 0,
+        `Retirement ${expectedEntry.documentRole} elapsed time must be finite and nonnegative.`,
+      );
+      assert.equal(
+        retirement.status,
+        expectedEntry.phase === 'startup-final-details'
+          ? 'retired-with-final-observation'
+          : 'retired-at-final-post-render',
+      );
+      assert.equal(retirement.before, true);
+    }
+    assert.equal(retirement.confirmed, true);
+    assert.equal(retirement.after, false);
+    if (expectedEntry.retirement) {
+      for (const field of [
+        'requested',
+        'status',
+        'before',
+        'after',
+        'confirmed',
+        'elapsedMs',
+      ])
+        assert.equal(
+          retirement[field],
+          expectedEntry.retirement[field],
+          `Retirement ${expectedEntry.documentRole} ${field} must match its capture boundary.`,
+        );
+    }
   }
 }
 
