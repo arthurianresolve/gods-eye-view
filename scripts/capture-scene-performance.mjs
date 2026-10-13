@@ -313,7 +313,13 @@ const buildProvenanceOptions = {
   expectedHarnessCommit: option('--expected-harness-sha', null),
   baseUrl: option('--served-base-url', null),
 };
+const buildProfileOptionIndex = args.indexOf('--build-profile');
 const expectedBuildProfile = option('--build-profile', null);
+if (
+  buildProfileOptionIndex >= 0 &&
+  (expectedBuildProfile == null || expectedBuildProfile.startsWith('--'))
+)
+  throw new Error('--build-profile requires a value.');
 resolveMapFixtureBuildProfile(expectedBuildProfile);
 const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
   Boolean,
