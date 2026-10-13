@@ -566,3 +566,26 @@ current-observation replacement under the unchanged 256 KiB cap. All
 the 17-file scope gate and changed-file formatting pass. These controls prove
 the diagnostic behavior, not the cause of run 38325432288. A fresh exact-revision
 hosted capture is needed to obtain that missing observation.
+
+All [seven standard CI jobs](ci-checkpoint-6b675ff9.json) now pass at
+`6b675ff90ade278438ae6111ea2354463bfc01df`, including Windows recovery and
+the complete browser job. This validates the scope and antialiasing contract
+packet, not the later lazy import or installation diagnostic changes.
+
+Read-only source review identifies a hypothesis to test, not a diagnosis of the
+missing after-state: installations camera events use a 180 ms viewport debounce
+(`src/layers/installations/lifecycle.js`, `viewport.js`, `policy.js`).
+Ingestion marks loading during source/floor processing and retains prior records
+until replacement publication (`ingestion.js`). A completed render therefore
+does not prove installation ingestion has finished. The observer reads stats and
+copies analyst projections synchronously before awaiting hashes; those awaits
+alone do not explain an identity/count inconsistency. The new predicate evidence
+must distinguish loading, data validity and identity faults before a correction
+is selected. Current deadlines and rejection rules remain unchanged.
+
+The exact next diagnostic candidate is
+`f9413507bf66a1734e4abb59c6db756c30a232f3`: native Austin run
+[38326601285](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326601285)
+and standard run
+[38326809262](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262).
+Both were dispatched for new validation; this entry does not record a pass.
