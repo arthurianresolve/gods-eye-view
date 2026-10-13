@@ -22,12 +22,16 @@ import {
   respondToSmokeFixtureRequest,
   closeMapSmokeFixtureOwner,
   finalizeMapSmokeFixtureDocument,
+  runMapStreamingFaultControlDocument,
+  projectMapStreamingFaultBuildEvidence,
   attachFinalizedMapStreamingFailureEvidence,
   attachMapStreamingJourneyFailureEvidence,
   observeSmokeLayerPopulationInPage,
   runNativeMapJourneyForSmoke,
   smokeProviderPreparationMode,
   validateMapSmokeInterceptionRelease,
+  validateMapStreamingFaultControlSet,
+  validateMapStreamingFaultControlDocument,
   validateMapSmokeLayerPopulation,
   readProviderCpuProfileIndexSet,
   validateAustinOperatingReadinessHistoryEnvelope,
@@ -43,7 +47,10 @@ import {
   MAP_FIXTURE_BUILD_PROFILE_ID,
   resolveMapFixtureBuildProfile,
 } from './performance/buildProvenance.mjs';
-import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
+import {
+  DEFAULT_CAPTURE_RENDERER_BACKEND,
+  NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+} from './performance/hostedRendererBackend.mjs';
 import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import {
@@ -67,6 +74,8 @@ import { createDeterministicMapStreamingFixture } from './performance/mapStreami
 import { createMapStreamingFixtureDelivery } from './performance/mapStreamingFixtureDelivery.mjs';
 import {
   projectMapStreamingJourneyFailureEvidence,
+  MAP_STREAMING_ROUTE,
+  validateMapStreamingFaultControlReport,
   validateMapStreamingSmokeDeliverySummary,
 } from './performance/mapStreamingCapture.mjs';
 import {
@@ -1218,6 +1227,622 @@ test('map smoke records real layer defaults and requires them to stay stable', (
       ]),
     /preserve the application’s observed layer selection/,
   );
+});
+
+test('outer map smoke requires the exact candidate fault-control document set', () => {
+  const revision = 'a'.repeat(40);
+  const scenarioIds = [
+    'esri-metadata-missing-v1',
+    'esri-metadata-corrupt-v1',
+    'esri-metadata-superseded-v1',
+  ];
+  const cleanDrain = {
+    schema: 'gev-fixture-interception-drain/v1',
+    listenerRemovalConfirmed: true,
+    pendingAtStop: 0,
+    pendingPreparationAtStop: 0,
+    pendingAbortSubscriptionsAtStop: 0,
+    pendingCommandsAtStop: 0,
+    pendingCommandsAfterDrain: 0,
+    pendingPreparationsAfterDrain: 0,
+    pendingAbortSubscriptionsAfterDrain: 0,
+    rejectedDrainOperations: 0,
+    drainCommandFailures: 0,
+    cancelledPreparationCount: 0,
+    unexpectedLateRequestCount: 0,
+    confirmed: true,
+  };
+  const documents = scenarioIds.map((scenarioId) => {
+    const documentId = `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`;
+    const delivery = { schema: 'fixture-fault-summary', scenarioId };
+    const harnessCommit = 'b'.repeat(40);
+    const buildEvidence = {
+      schema: 'gev-map-fault-build-evidence/v1',
+      appCommit: revision,
+      harnessCommit,
+      receiptSha256: 'c'.repeat(64),
+      buildProfile: {
+        id: MAP_FIXTURE_BUILD_PROFILE_ID,
+        configurationSha256: 'f'.repeat(64),
+      },
+      assetCount: 120,
+      totalAssetBytes: 4_000_000,
+      fixtureId: 'fixture-test',
+      fixtureManifestSha256: 'd'.repeat(64),
+    };
+    return {
+      schema: 'gev-map-streaming-fault-document/v1',
+      status: 'passed',
+      scenarioId,
+      revision,
+      harnessCommit,
+      sourceIdentity: { appCommit: revision, harnessCommit },
+      buildEvidence,
+      documentRole: 'candidate-map-fault-control',
+      documentId,
+      performanceAcceptanceEligible: false,
+      pageErrors: [],
+      preflight: { status: 'closed' },
+      rendererEvidence: {
+        schema: 'gev-map-fault-renderer-evidence/v1',
+        backend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+        observedRenderer: 'Google SwiftShader',
+        observedVendor: null,
+        appCommit: revision,
+        drawingBuffer: { width: 1440, height: 900 },
+      },
+      workerEvidence: {
+        schema: 'gev-map-fault-worker-evidence/v1',
+        status: 'receipt-derived-worker-blobs-validated',
+        auditMode: 'diagnostic',
+        embeddedWorkerSourceSha256: 'e'.repeat(64),
+        workerTargetCount: 0,
+        observedBlobCount: 1,
+        validatedWorkerCount: 0,
+        validatedCreatedWrapperCount: 0,
+        createdScriptBlobCount: 1,
+        readBytes: 24,
+        maxRetainedBytes: 32 * 1024 * 1024,
+        overflowCount: 0,
+        restoration: {
+          nativeCreateObjectURLRestored: true,
+          registryEmpty: true,
+          overflowCountAtRestore: 0,
+        },
+      },
+      rendererProbeCleanup: {
+        confirmed: true,
+        document: { renderLoopRetirement: { confirmed: true } },
+      },
+      interceptionRelease: {
+        schema: 'gev-map-smoke-interception-release/v1',
+        documentRole: 'candidate-map-fault-control',
+        documentId,
+        contextCloseStatus: 'closed',
+        targetClosed: true,
+        release: {
+          schema: 'gev-fixture-interception-release/v1',
+          fetchDisable: 'target-closed',
+          detach: 'target-closed',
+          interception: cleanDrain,
+          confirmed: true,
+        },
+        confirmed: true,
+      },
+      delivery,
+      control: {
+        scenarioId,
+        delivery,
+      },
+    };
+  });
+  const fixture = { id: 'fixture-test', manifestSha256: 'd'.repeat(64) };
+  const captureModule = {
+    validateMapStreamingFaultControlReport(report, expectedFixture) {
+      assert.equal(expectedFixture, fixture);
+      assert.equal(report.scenarioId, report.delivery.scenarioId);
+      return true;
+    },
+  };
+  const roundTrip = JSON.parse(JSON.stringify(documents));
+  assert.equal(
+    validateMapStreamingFaultControlSet(roundTrip, {
+      label: 'candidate',
+      revision,
+      harnessCommit: documents[0].harnessCommit,
+      buildEvidence: documents[0].buildEvidence,
+      expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedRenderer: 'Google SwiftShader',
+      expectedVendor: null,
+      expectedWorkerSourceSha256: 'e'.repeat(64),
+      fixture,
+      captureModule,
+    }),
+    true,
+  );
+  assert.equal(
+    validateMapStreamingFaultControlSet([], {
+      label: 'baseline',
+      revision,
+      fixture,
+      captureModule,
+    }),
+    true,
+  );
+  for (const mutate of [
+    (copy) => copy.pop(),
+    (copy) => {
+      copy[1].documentId = 'candidate-foreign-map-fault';
+    },
+    (copy) => {
+      copy[1].revision = '0'.repeat(40);
+    },
+    (copy) => {
+      copy[0].scenarioId = 'esri-metadata-corrupt-v1';
+    },
+    (copy) => {
+      copy[2].interceptionRelease.targetClosed = false;
+    },
+    (copy) => {
+      copy[1].control.delivery.scenarioId = 'other-scenario';
+    },
+  ]) {
+    const altered = structuredClone(roundTrip);
+    mutate(altered);
+    assert.throws(() =>
+      validateMapStreamingFaultControlSet(altered, {
+        label: 'candidate',
+        revision,
+        harnessCommit: roundTrip[0].harnessCommit,
+        buildEvidence: roundTrip[0].buildEvidence,
+        expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+        expectedRenderer: 'Google SwiftShader',
+        expectedVendor: null,
+        expectedWorkerSourceSha256: 'e'.repeat(64),
+        fixture,
+        captureModule,
+      }),
+    );
+  }
+  assert.throws(() =>
+    validateMapStreamingFaultControlSet(roundTrip, {
+      label: 'baseline',
+      revision,
+      fixture,
+      captureModule,
+    }),
+  );
+});
+
+test('fault-control build projection uses the local build receipt asset and profile fields', () => {
+  const appCommit = 'a'.repeat(40);
+  const harnessCommit = 'b'.repeat(40);
+  const fixture = {
+    id: 'austin-map-streaming-synthetic-v4',
+    manifestSha256: 'c'.repeat(64),
+  };
+  const receipt = {
+    schema: 'gev-build-provenance/v1',
+    receiptSha256: 'd'.repeat(64),
+    source: { commit: appCommit, worktree: 'clean' },
+    harness: { commit: harnessCommit, worktree: 'clean' },
+    buildRecipe: {
+      mapFixtureProfile: {
+        id: MAP_FIXTURE_BUILD_PROFILE_ID,
+        configurationSha256: 'e'.repeat(64),
+      },
+    },
+    assets: [
+      { path: 'index.html', bytes: 120, sha256: '1'.repeat(64) },
+      { path: 'assets/app.js', bytes: 480, sha256: '2'.repeat(64) },
+    ],
+    assetCount: 2,
+    totalAssetBytes: 600,
+  };
+  const projected = projectMapStreamingFaultBuildEvidence({
+    receipt,
+    appCommit,
+    harnessCommit,
+    fixture,
+  });
+  assert.deepEqual(projected, {
+    schema: 'gev-map-fault-build-evidence/v1',
+    appCommit,
+    harnessCommit,
+    receiptSha256: receipt.receiptSha256,
+    buildProfile: receipt.buildRecipe.mapFixtureProfile,
+    assetCount: 2,
+    totalAssetBytes: 600,
+    fixtureId: fixture.id,
+    fixtureManifestSha256: fixture.manifestSha256,
+  });
+  assert.throws(
+    () =>
+      projectMapStreamingFaultBuildEvidence({
+        receipt: {
+          ...receipt,
+          assets: receipt.assets.map(({ path, sha256 }) => ({
+            path,
+            sha256,
+            byteLength: 300,
+          })),
+        },
+        appCommit,
+        harnessCommit,
+        fixture,
+      }),
+    /asset\?\.bytes/,
+  );
+  assert.throws(
+    () =>
+      projectMapStreamingFaultBuildEvidence({
+        receipt: { ...receipt, totalAssetBytes: 601 },
+        appCommit,
+        harnessCommit,
+        fixture,
+      }),
+    /strictly equal/,
+  );
+});
+
+test('outer fault document retains a real held delivery failure and closes its owned context', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const scenarioId = 'esri-metadata-superseded-v1';
+  const baseUrl = MAP_SMOKE_APP_ORIGIN;
+  const revision = 'a'.repeat(40);
+  const harnessCommit = 'b'.repeat(40);
+  const buildEvidence = {
+    schema: 'gev-map-fault-build-evidence/v1',
+    appCommit: revision,
+    harnessCommit,
+    receiptSha256: 'c'.repeat(64),
+    buildProfile: {
+      id: MAP_FIXTURE_BUILD_PROFILE_ID,
+      configurationSha256: 'f'.repeat(64),
+    },
+    assetCount: 120,
+    totalAssetBytes: 4_000_000,
+    fixtureId: fixture.id,
+    fixtureManifestSha256: fixture.manifestSha256,
+  };
+  const metadataUrl = `${MAP_SMOKE_ARCGIS}?f=json`;
+  const page = new EventEmitter();
+  let closed = false;
+  page.setDefaultTimeout = () => {};
+  page.setDefaultNavigationTimeout = () => {};
+  page.setViewport = async () => {};
+  page.setCacheEnabled = async () => {};
+  page.setBypassServiceWorker = async () => {};
+  page.evaluateOnNewDocument = async () => {};
+  page.goto = async () => ({ status: () => 200 });
+  page.waitForFunction = async () => {};
+  page.workers = () => [];
+  page.evaluate = async () => ({
+    nativeCreateObjectURLRestored: true,
+    registryEmpty: true,
+    overflowCountAtRestore: 0,
+  });
+  page.isClosed = () => closed;
+  const context = {
+    async newPage() {
+      return page;
+    },
+    async close() {
+      closed = true;
+    },
+  };
+  const browser = {
+    createBrowserContext: async () => context,
+    targets: () => [],
+  };
+  let releaseCalls = 0;
+  let pendingDelivery = null;
+  const cleanDrain = {
+    schema: 'gev-fixture-interception-drain/v1',
+    listenerRemovalConfirmed: true,
+    pendingAtStop: 1,
+    pendingPreparationAtStop: 0,
+    pendingAbortSubscriptionsAtStop: 0,
+    pendingCommandsAtStop: 1,
+    pendingCommandsAfterDrain: 0,
+    pendingPreparationsAfterDrain: 0,
+    pendingAbortSubscriptionsAfterDrain: 0,
+    rejectedDrainOperations: 0,
+    drainCommandFailures: 0,
+    cancelledPreparationCount: 0,
+    unexpectedLateRequestCount: 0,
+    confirmed: true,
+  };
+  const faultCaptureModule = {
+    validateMapStreamingFaultControlReport,
+    async runNativeMapStreamingFaultControl(targetPage, { delivery: owner }) {
+      const requestId = 'outer-held-request-1';
+      pendingDelivery = Promise.resolve(
+        targetPage.fixtureRespond(new URL(metadataUrl), {
+          requestId,
+          url: () => metadataUrl,
+          method: () => 'GET',
+        }),
+      );
+      pendingDelivery.catch(() => {});
+      await owner.waitForFaultRequest({ timeoutMs: 1_000 });
+      const error = new Error(
+        'Held Esri response was retired by outer failure.',
+      );
+      error.mapFaultControl = {
+        schema: 'gev-map-streaming-fault-control/v1',
+        status: 'failed',
+        operationId: 'map-fault-outer-held-test',
+        scenarioId,
+        routeId: MAP_STREAMING_ROUTE.id,
+        performanceAcceptanceEligible: false,
+        delivery: owner.summary(),
+      };
+      throw error;
+    },
+  };
+  let observedDocument;
+  await assert.rejects(
+    runMapStreamingFaultControlDocument({
+      browser,
+      baseUrl,
+      fixture,
+      flightFixture: createProductionFlightFixture(),
+      captureModule: faultCaptureModule,
+      createDelivery: createMapStreamingFixtureDelivery,
+      route: MAP_STREAMING_ROUTE,
+      scenarioId,
+      revision,
+      harnessCommit,
+      buildEvidence,
+      rendererBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedRenderer: 'Google SwiftShader',
+      expectedVendor: null,
+      browserGraphics: null,
+      workerContract: {
+        schema: 'gev-cesium-embedded-worker-contract/v1',
+        workerSourceSha256: 'e'.repeat(64),
+        embeddedWorkerSource: 'self.postMessage({ready:true});',
+        allowedModuleIds: ['Core/Test'],
+      },
+      startedAt: Date.now(),
+      budgetMs: 60_000,
+      documentId: `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`,
+      preparePageImpl: async (_browser, _baseUrl, options) => {
+        page.fixtureRespond = options.respond;
+        return {
+          page,
+          errors: [],
+          interception: {
+            async releaseSession({ targetClosed }) {
+              releaseCalls += 1;
+              assert.equal(targetClosed, true);
+              return {
+                schema: 'gev-fixture-interception-release/v1',
+                fetchDisable: 'target-closed',
+                detach: 'target-closed',
+                interception: cleanDrain,
+                confirmed: true,
+              };
+            },
+          },
+        };
+      },
+      preflightImpl: async () => ({ status: 'passed' }),
+      waitForTargetsImpl: async () => ({ closed: true, remainingCount: 0 }),
+      installRendererProbeImpl: async () => 'owned-renderer-hook',
+      cleanupRendererProbeImpl: async () => ({
+        confirmed: true,
+        document: { renderLoopRetirement: { confirmed: true } },
+      }),
+      cleanupPageDiagnosticsImpl: async () => {},
+      readRendererImpl: () => {},
+      readWorkerBodiesImpl: async () => null,
+    }),
+    (error) => {
+      observedDocument = error.mapStreamingFaultDocument;
+      assert.match(error.message, /Held Esri response was retired/);
+      return true;
+    },
+  );
+  await pendingDelivery.catch(() => {});
+  assert.equal(closed, true);
+  assert.equal(releaseCalls, 1);
+  assert.equal(observedDocument?.status, 'failed');
+  assert.equal(observedDocument?.performanceAcceptanceEligible, false);
+  assert.equal(observedDocument?.interceptionRelease?.confirmed, true);
+  assert.equal(observedDocument?.delivery?.status, 'disposed');
+  assert.equal(observedDocument?.delivery?.cleanupConfirmed, false);
+  assert.equal(observedDocument?.delivery?.pendingCount, 0);
+  assert.equal(observedDocument?.control?.delivery, observedDocument?.delivery);
+  assert.throws(
+    () =>
+      validateMapStreamingFaultControlReport(observedDocument.control, fixture),
+    /observed|failed/,
+  );
+  assert.throws(
+    () =>
+      validateMapStreamingFaultControlDocument(observedDocument, {
+        fixture,
+        captureModule: faultCaptureModule,
+        expectedRevision: revision,
+        expectedHarnessCommit: harnessCommit,
+        expectedBuildEvidence: buildEvidence,
+        expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+        expectedRenderer: 'Google SwiftShader',
+        expectedVendor: null,
+        expectedWorkerSourceSha256: 'e'.repeat(64),
+        expectedDocumentId: `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`,
+      }),
+    /passed/,
+  );
+  assert.throws(() =>
+    validateMapStreamingFaultControlSet([observedDocument, {}, {}], {
+      label: 'candidate',
+      revision,
+      harnessCommit,
+      buildEvidence,
+      expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedRenderer: 'Google SwiftShader',
+      expectedVendor: null,
+      expectedWorkerSourceSha256: 'e'.repeat(64),
+      fixture,
+      captureModule: faultCaptureModule,
+    }),
+  );
+});
+
+test('outer fault document bounds a hung journey and closes ownership before page cleanup', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const scenarioId = 'esri-metadata-superseded-v1';
+  const revision = 'a'.repeat(40);
+  const harnessCommit = 'b'.repeat(40);
+  const buildEvidence = {
+    schema: 'gev-map-fault-build-evidence/v1',
+    appCommit: revision,
+    harnessCommit,
+    receiptSha256: 'c'.repeat(64),
+    buildProfile: {
+      id: MAP_FIXTURE_BUILD_PROFILE_ID,
+      configurationSha256: 'f'.repeat(64),
+    },
+    assetCount: 120,
+    totalAssetBytes: 4_000_000,
+    fixtureId: fixture.id,
+    fixtureManifestSha256: fixture.manifestSha256,
+  };
+  const page = new EventEmitter();
+  const lifecycle = [];
+  let closed = false;
+  let cleanupPageCalls = 0;
+  let pageEvaluateCalls = 0;
+  page.setDefaultTimeout = () => {};
+  page.setDefaultNavigationTimeout = () => {};
+  page.setViewport = async () => {};
+  page.setCacheEnabled = async () => {};
+  page.setBypassServiceWorker = async () => {};
+  page.evaluateOnNewDocument = async () => {};
+  page.goto = async () => ({ status: () => 200 });
+  page.waitForFunction = async () => {};
+  page.workers = () => [];
+  page.evaluate = async () => {
+    pageEvaluateCalls += 1;
+    return {
+      nativeCreateObjectURLRestored: true,
+      registryEmpty: true,
+      overflowCountAtRestore: 0,
+    };
+  };
+  page.isClosed = () => closed;
+  const context = {
+    async newPage() {
+      return page;
+    },
+    async close() {
+      lifecycle.push('context-close');
+      closed = true;
+    },
+  };
+  const browser = {
+    createBrowserContext: async () => context,
+    targets: () => [],
+  };
+  const captureModule = {
+    async runNativeMapStreamingFaultControl() {
+      return new Promise(() => {});
+    },
+  };
+  const interception = {
+    async releaseSession({ targetClosed }) {
+      lifecycle.push('interception-release');
+      assert.equal(targetClosed, true);
+      return {
+        schema: 'gev-fixture-interception-release/v1',
+        fetchDisable: 'target-closed',
+        detach: 'target-closed',
+        interception: {
+          schema: 'gev-fixture-interception-drain/v1',
+          listenerRemovalConfirmed: true,
+          pendingAtStop: 0,
+          pendingPreparationAtStop: 0,
+          pendingAbortSubscriptionsAtStop: 0,
+          pendingCommandsAtStop: 0,
+          pendingCommandsAfterDrain: 0,
+          pendingPreparationsAfterDrain: 0,
+          pendingAbortSubscriptionsAfterDrain: 0,
+          rejectedDrainOperations: 0,
+          drainCommandFailures: 0,
+          cancelledPreparationCount: 0,
+          unexpectedLateRequestCount: 0,
+          confirmed: true,
+        },
+        confirmed: true,
+      };
+    },
+  };
+  let observedDocument;
+  await assert.rejects(
+    runMapStreamingFaultControlDocument({
+      browser,
+      baseUrl: MAP_SMOKE_APP_ORIGIN,
+      fixture,
+      flightFixture: createProductionFlightFixture(),
+      captureModule,
+      createDelivery: createMapStreamingFixtureDelivery,
+      route: MAP_STREAMING_ROUTE,
+      scenarioId,
+      revision,
+      harnessCommit,
+      buildEvidence,
+      rendererBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedBackend: DEFAULT_CAPTURE_RENDERER_BACKEND,
+      expectedRenderer: 'Google SwiftShader',
+      expectedVendor: null,
+      browserGraphics: null,
+      workerContract: {
+        schema: 'gev-cesium-embedded-worker-contract/v1',
+        workerSourceSha256: 'e'.repeat(64),
+        embeddedWorkerSource: 'self.postMessage({ready:true});',
+        allowedModuleIds: ['Core/Test'],
+      },
+      startedAt: Date.now(),
+      budgetMs: 15_200,
+      documentId: `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`,
+      preparePageImpl: async (_browser, _baseUrl, options) => {
+        page.fixtureRespond = options.respond;
+        return { page, errors: [], interception };
+      },
+      preflightImpl: async () => ({ status: 'passed' }),
+      waitForTargetsImpl: async () => ({ closed: true, remainingCount: 0 }),
+      installRendererProbeImpl: async () => 'owned-renderer-hook',
+      cleanupRendererProbeImpl: async () => {
+        lifecycle.push('renderer-cleanup');
+        return {
+          confirmed: true,
+          document: { renderLoopRetirement: { confirmed: true } },
+        };
+      },
+      cleanupPageDiagnosticsImpl: async () => {
+        cleanupPageCalls += 1;
+      },
+      readRendererImpl: () => {},
+      readWorkerBodiesImpl: async () => null,
+    }),
+    (error) => {
+      observedDocument = error.mapStreamingFaultDocument;
+      assert.match(error.message, /Map fault control journey timed out/);
+      return true;
+    },
+  );
+  assert.equal(closed, true);
+  assert.deepEqual(lifecycle, ['context-close', 'interception-release']);
+  assert.equal(cleanupPageCalls, 0);
+  assert.equal(pageEvaluateCalls, 0);
+  assert.equal(observedDocument?.status, 'failed');
+  assert.equal(observedDocument?.interceptionRelease?.confirmed, true);
+  assert.equal(observedDocument?.delivery?.status, 'disposed');
+  assert.equal(observedDocument?.delivery?.pendingCount, 0);
 });
 
 test('map owner closes its target before draining pending interception and catches late callbacks', async () => {

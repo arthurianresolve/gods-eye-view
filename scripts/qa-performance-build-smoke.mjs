@@ -53,6 +53,8 @@ import {
   restoreCesiumWorkerBlobAudit,
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
+  readAndRestoreCesiumWorkerBodies,
+  MAX_WORKER_BLOB_TOTAL_BYTES,
 } from './performance/cesiumWorkerBlobContract.mjs';
 import {
   boundCaptureReportEvidence,
@@ -98,6 +100,12 @@ const ROOT = await realpath(
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
 const CAPTURE_CLI_TIMEOUT_MS = 180 * 1000;
+const MAP_FAULT_CLEANUP_RESERVE_MS = 15_000;
+const MAP_FAULT_CONTROL_SCENARIO_IDS = Object.freeze([
+  'esri-metadata-missing-v1',
+  'esri-metadata-corrupt-v1',
+  'esri-metadata-superseded-v1',
+]);
 
 export async function respondToSmokeFixtureRequest(
   url,
@@ -428,6 +436,723 @@ export async function finalizeMapSmokeFixtureDocument({
     errors,
     confirmed: errors.length === 0,
   };
+}
+
+/** Run one fresh candidate-only document so provider caches cannot skip injection. */
+export async function runMapStreamingFaultControlDocument({
+  browser,
+  baseUrl,
+  fixture,
+  flightFixture,
+  captureModule,
+  createDelivery,
+  route,
+  scenarioId,
+  revision,
+  harnessCommit,
+  buildEvidence,
+  rendererBackend,
+  expectedBackend,
+  expectedRenderer,
+  expectedVendor,
+  browserGraphics,
+  workerContract,
+  startedAt,
+  budgetMs,
+  documentId,
+  preparePageImpl = prepareFixturePage,
+  preflightImpl = runSameOriginWorkerPreflight,
+  waitForTargetsImpl = waitForPreflightWorkerTargetsClosed,
+  cleanupPageDiagnosticsImpl = cleanupFixturePageDiagnostics,
+  readRendererImpl = observeCommonScene,
+  readWorkerBodiesImpl = readAndRestoreCesiumWorkerBodies,
+  installRendererProbeImpl = installEarlyCesiumRendererProbe,
+  cleanupRendererProbeImpl = cleanupEarlyCesiumRendererProbeWithEvidence,
+}) {
+  assert.ok(browser && typeof browser.createBrowserContext === 'function');
+  assert.equal(typeof baseUrl, 'string');
+  assert.ok(fixture && captureModule && typeof createDelivery === 'function');
+  assert.ok(Number.isFinite(startedAt) && Number.isFinite(budgetMs));
+  assert.ok(harnessCommit && buildEvidence && workerContract);
+  assert.equal(rendererBackend, expectedBackend);
+  assert.equal(typeof preparePageImpl, 'function');
+  assert.equal(typeof preflightImpl, 'function');
+  assert.equal(typeof waitForTargetsImpl, 'function');
+  assert.match(
+    documentId || '',
+    /^candidate-[a-f0-9]{7,40}-map-fault-[a-z0-9-]+$/,
+  );
+  assert.match(revision || '', /^[a-f0-9]{40}$/);
+  assert.match(harnessCommit || '', /^[a-f0-9]{40}$/);
+  const remainingBudgetMs = () =>
+    Math.max(0, budgetMs - (Date.now() - startedAt));
+  let operationTimedOut = false;
+  const runWithinBudget = async (label, timeoutMs, operation) => {
+    const available = remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS;
+    if (available < 1) {
+      operationTimedOut = true;
+      throw new Error('Outer smoke budget expired before map fault control.');
+    }
+    try {
+      return await withTimeout(
+        Promise.resolve().then(operation),
+        Math.max(1, Math.min(timeoutMs, available)),
+        label,
+      );
+    } catch (error) {
+      if (error?.message === `${label} timed out.`) operationTimedOut = true;
+      throw error;
+    }
+  };
+  let context = null;
+  let contextCreationTimedOut = false;
+  const contextPromise = Promise.resolve()
+    .then(() => browser.createBrowserContext())
+    .then((created) => {
+      if (contextCreationTimedOut) {
+        void withTimeout(
+          created.close(),
+          5_000,
+          'Late map fault context cleanup',
+        ).catch(() => {});
+      } else context = created;
+      return created;
+    });
+  let page = null;
+  let fixturePage = null;
+  let delivery = null;
+  let control = null;
+  let primaryError = null;
+  let workerAuditRestoration = null;
+  let rendererProbeScriptIdentifier = null;
+  let blobRequestListener = null;
+  const blobCodeRequests = new Set();
+  const document = {
+    schema: 'gev-map-streaming-fault-document/v1',
+    status: 'running',
+    scenarioId,
+    revision,
+    harnessCommit,
+    buildEvidence,
+    sourceIdentity: {
+      appCommit: revision,
+      harnessCommit,
+    },
+    rendererEvidence: null,
+    workerEvidence: null,
+    documentRole: 'candidate-map-fault-control',
+    documentId,
+    performanceAcceptanceEligible: false,
+    pageErrors: [],
+    interceptionRelease: null,
+    control: null,
+    delivery: null,
+  };
+  try {
+    try {
+      await runWithinBudget(
+        'Map fault context creation',
+        15_000,
+        () => contextPromise,
+      );
+    } catch (error) {
+      contextCreationTimedOut = true;
+      contextPromise.catch(() => {});
+      throw error;
+    }
+    page = await runWithinBudget('Map fault page creation', 15_000, () =>
+      context.newPage(),
+    );
+    page.setDefaultTimeout(30_000);
+    page.setDefaultNavigationTimeout(45_000);
+    await runWithinBudget('Map fault viewport setup', 5_000, () =>
+      page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 }),
+    );
+    await runWithinBudget('Map fault cache setup', 5_000, () =>
+      page.setCacheEnabled(false),
+    );
+    await runWithinBudget('Map fault service-worker setup', 5_000, () =>
+      page.setBypassServiceWorker(true),
+    );
+    const flightDelivery = createFlightFixtureDeliveryObserver(
+      flightFixture,
+      baseUrl,
+    );
+    delivery = createDelivery(fixture, {
+      appOrigin: baseUrl,
+      faultScenarioId: scenarioId,
+    });
+    fixturePage = await runWithinBudget(
+      'Map fault interception setup',
+      15_000,
+      () =>
+        preparePageImpl(browser, baseUrl, {
+          page,
+          viewport: { width: 1440, height: 900 },
+          respond: (url, request) =>
+            respondToSmokeFixtureRequest(url, request, {
+              baseUrl,
+              mapStreamingDelivery: delivery,
+              flightFixture,
+            }),
+          onFulfilled: (event) => {
+            flightDelivery.onFulfilled(event);
+            delivery.onFulfilled(event);
+          },
+        }),
+    );
+    await runWithinBudget('Map fault worker preflight', 15_000, () =>
+      preflightImpl({
+        page,
+        baseUrl,
+        verifyNetwork: fixturePage.verifyNetwork,
+        resetRequestAudit: () => ({ requestCount: 0, codeRequestCount: 0 }),
+      }),
+    );
+    const targetDisposal = await runWithinBudget(
+      'Map fault worker retirement',
+      3_000,
+      () =>
+        waitForTargetsImpl({
+          getTargets: () =>
+            browser.targets().map((target) => ({
+              type: target.type(),
+              url: target.url(),
+            })),
+          workerUrls: null,
+        }),
+    );
+    if (!targetDisposal.closed)
+      throw new Error('Fault-control worker preflight target did not close.');
+    await runWithinBudget('Map fault worker audit installation', 5_000, () =>
+      page.evaluateOnNewDocument(installCesiumWorkerBlobAudit),
+    );
+    rendererProbeScriptIdentifier = await runWithinBudget(
+      'Map fault renderer probe installation',
+      5_000,
+      () => installRendererProbeImpl(page),
+    );
+    await runWithinBudget('Map fault clock installation', 5_000, () =>
+      page.evaluateOnNewDocument(
+        installHeldMonotonicWallClock,
+        flightFixture.fixedTimeMs,
+      ),
+    );
+    blobRequestListener = (request) => {
+      try {
+        const url = request.url();
+        if (typeof url === 'string' && url.startsWith('blob:')) {
+          if (blobCodeRequests.size < MAX_WORKER_TARGETS)
+            blobCodeRequests.add(url);
+        }
+      } catch {
+        // Invalid/late browser request observations stay unavailable.
+      }
+    };
+    page.on('request', blobRequestListener);
+    const navigationTimeout = Math.min(
+      45_000,
+      Math.max(1, remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS),
+    );
+    const response = await runWithinBudget(
+      'Map fault application navigation',
+      navigationTimeout,
+      () =>
+        page.goto(`${baseUrl}/?welcome=0`, {
+          waitUntil: 'domcontentloaded',
+          timeout: navigationTimeout,
+        }),
+    );
+    if (response && response.status() >= 400)
+      throw new Error('Fault-control application entry failed.');
+    const readinessTimeout = Math.min(
+      60_000,
+      Math.max(1, remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS),
+    );
+    await runWithinBudget(
+      'Map fault application readiness',
+      readinessTimeout,
+      () =>
+        page.waitForFunction(
+          () =>
+            Boolean(
+              window.__godsEyeView?.viewer &&
+              window.__godsEyeView?.mapStackController &&
+              window.__godsEyeView?.styleManager,
+            ),
+          { timeout: readinessTimeout, polling: 100 },
+        ),
+    );
+    if (fixturePage.errors?.length)
+      throw new Error(
+        'Map fault application reported fixture interception errors.',
+      );
+    control = await runWithinBudget('Map fault control journey', 120_000, () =>
+      captureModule.runNativeMapStreamingFaultControl(page, {
+        scenarioId,
+        route,
+        delivery,
+        operationTimeoutMs: Math.min(
+          120_000,
+          Math.max(1, remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS),
+        ),
+      }),
+    );
+    if (fixturePage.errors.length > 0)
+      throw new Error('Map fault document emitted page errors.');
+    const sceneObservation = await runWithinBudget(
+      'Map fault renderer observation',
+      10_000,
+      () => page.evaluate(readRendererImpl, { appCommit: revision }),
+    );
+    const observedRenderer = sceneObservation?.environment?.renderer;
+    const observedVendor = sceneObservation?.environment?.vendor ?? null;
+    if (
+      typeof observedRenderer !== 'string' ||
+      !observedRenderer.trim() ||
+      sceneObservation.environment.appCommit !== revision
+    )
+      throw new Error(
+        'Map fault renderer observation is incomplete or mismatched.',
+      );
+    if (rendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
+      const nativeEvidence = nativeRendererDiagnosticEvidence({
+        renderer: observedRenderer,
+        vendor: observedVendor,
+        graphics: browserGraphics,
+      });
+      assertVerifiedNativeRendererEvidence(
+        nativeEvidence,
+        observedRenderer,
+        observedVendor,
+      );
+      document.rendererEvidence = {
+        schema: 'gev-map-fault-renderer-evidence/v1',
+        backend: rendererBackend,
+        observedRenderer,
+        observedVendor,
+        appCommit: revision,
+        drawingBuffer: sceneObservation.environment.drawingBuffer,
+        nativeDiagnostic: nativeEvidence,
+      };
+    } else {
+      assert.match(observedRenderer, /swiftshader/i);
+      document.rendererEvidence = {
+        schema: 'gev-map-fault-renderer-evidence/v1',
+        backend: rendererBackend,
+        observedRenderer,
+        observedVendor,
+        appCommit: revision,
+        drawingBuffer: sceneObservation.environment.drawingBuffer,
+      };
+    }
+    if (
+      observedRenderer !== expectedRenderer ||
+      observedVendor !== expectedVendor
+    )
+      throw new Error(
+        'Map fault document renderer differs from the measured document.',
+      );
+    const workerUrls = [
+      ...new Set(page.workers().map((worker) => worker.url())),
+    ];
+    if (workerUrls.length > MAX_WORKER_TARGETS)
+      throw new Error('Map fault worker targets exceeded the audit bound.');
+    const observedBlobUrls = [...new Set([...blobCodeRequests, ...workerUrls])];
+    const blobAudit = await runWithinBudget(
+      'Map fault worker blob read',
+      10_000,
+      () => readWorkerBodiesImpl(page, workerUrls),
+    );
+    if (
+      !blobAudit ||
+      blobAudit.readError !== false ||
+      blobAudit.restoration?.nativeCreateObjectURLRestored !== true ||
+      blobAudit.restoration?.registryEmpty !== true ||
+      blobAudit.restoration?.overflowCountAtRestore !== 0
+    )
+      throw new Error(
+        'Map fault worker blob observation or restoration failed.',
+      );
+    const validatedWorkers = validateCesiumWorkerBlobs({
+      contract: workerContract,
+      baseUrl,
+      workerUrls,
+      observedBlobUrls,
+      blobAudit,
+    });
+    workerAuditRestoration = blobAudit.restoration;
+    document.workerEvidence = {
+      schema: 'gev-map-fault-worker-evidence/v1',
+      status: 'receipt-derived-worker-blobs-validated',
+      auditMode: 'diagnostic',
+      embeddedWorkerSourceSha256: workerContract.workerSourceSha256,
+      workerTargetCount: workerUrls.length,
+      observedBlobCount: observedBlobUrls.length,
+      validatedWorkerCount: validatedWorkers.observation.validatedWorkerCount,
+      validatedCreatedWrapperCount:
+        validatedWorkers.observation.validatedCreatedWrapperCount,
+      createdScriptBlobCount: blobAudit.createdBlobCount,
+      readBytes: blobAudit.totalReadBytes,
+      maxRetainedBytes: blobAudit.maxRetainedBytes,
+      overflowCount: blobAudit.overflowCount,
+      restoration: blobAudit.restoration,
+    };
+    document.preflight = {
+      status: 'closed',
+      targetClosed: targetDisposal.closed,
+      remainingCount: targetDisposal.remainingCount,
+    };
+  } catch (error) {
+    primaryError = error;
+    control = error?.mapFaultControl ?? null;
+    document.error = sanitizeError(error);
+  } finally {
+    if (page) {
+      if (operationTimedOut && context) {
+        try {
+          document.interceptionRelease = await withTimeout(
+            closeMapSmokeFixtureOwner({
+              context,
+              page,
+              fixturePage,
+              documentRole: document.documentRole,
+              documentId,
+            }),
+            8_000,
+            'Timed-out map fault document close and interception release',
+          );
+          context = null;
+        } catch (error) {
+          document.cleanupError ||= sanitizeError(error);
+        }
+      }
+      if (rendererProbeScriptIdentifier && !operationTimedOut) {
+        try {
+          document.rendererProbeCleanup = await withTimeout(
+            cleanupRendererProbeImpl(
+              page,
+              rendererProbeScriptIdentifier,
+              1_000,
+              {
+                retireViewerRenderLoop: true,
+              },
+            ),
+            3_000,
+            'Map fault renderer probe cleanup',
+          );
+          if (document.rendererProbeCleanup?.confirmed !== true)
+            throw new Error(
+              'Map fault renderer probe cleanup was not confirmed.',
+            );
+          rendererProbeScriptIdentifier = null;
+        } catch (error) {
+          document.cleanupError ||= sanitizeError(error);
+        }
+      }
+      if (!workerAuditRestoration && !operationTimedOut) {
+        try {
+          workerAuditRestoration = await withTimeout(
+            page.evaluate(restoreCesiumWorkerBlobAudit),
+            3_000,
+            'Map fault worker audit restoration',
+          );
+          if (
+            workerAuditRestoration?.nativeCreateObjectURLRestored !== true ||
+            workerAuditRestoration?.registryEmpty !== true
+          )
+            throw new Error(
+              'Map fault worker audit restoration was incomplete.',
+            );
+        } catch (error) {
+          document.cleanupError ||= sanitizeError(error);
+        }
+      }
+      if (!operationTimedOut) {
+        try {
+          await withTimeout(
+            cleanupPageDiagnosticsImpl(page),
+            2_000,
+            'Fault-control page diagnostic cleanup',
+          );
+        } catch (error) {
+          document.cleanupError ||= sanitizeError(error);
+        }
+      }
+    }
+    if (context) {
+      try {
+        document.interceptionRelease = await withTimeout(
+          closeMapSmokeFixtureOwner({
+            context,
+            page,
+            fixturePage,
+            documentRole: document.documentRole,
+            documentId,
+          }),
+          8_000,
+          'Map fault document close and interception release',
+        );
+      } catch (error) {
+        document.cleanupError ||= sanitizeError(error);
+      }
+    }
+    if (fixturePage?.errors?.length)
+      document.pageErrors = fixturePage.errors.slice(0, 4).map(sanitizeError);
+    if (delivery) {
+      try {
+        document.delivery = delivery.dispose();
+        if (control) control.delivery = document.delivery;
+      } catch (error) {
+        document.cleanupError ||= sanitizeError(error);
+      }
+    }
+    document.control = control;
+    document.status = primaryError ? 'failed' : 'passed';
+    if (!primaryError) {
+      try {
+        validateMapStreamingFaultControlDocument(document, {
+          fixture,
+          captureModule,
+          expectedRevision: revision,
+          expectedHarnessCommit: harnessCommit,
+          expectedBuildEvidence: buildEvidence,
+          expectedBackend,
+          expectedRenderer: expectedRenderer,
+          expectedVendor: expectedVendor,
+          expectedWorkerSourceSha256: workerContract.workerSourceSha256,
+          expectedDocumentId: documentId,
+        });
+      } catch (error) {
+        primaryError = error;
+        document.status = 'failed';
+        document.error = sanitizeError(error);
+      }
+    }
+  }
+  if (primaryError) {
+    primaryError.mapStreamingFaultDocument = document;
+    throw primaryError;
+  }
+  return document;
+}
+
+export function validateMapStreamingFaultControlDocument(
+  document,
+  {
+    fixture,
+    captureModule,
+    expectedRevision,
+    expectedHarnessCommit,
+    expectedBuildEvidence,
+    expectedBackend,
+    expectedRenderer,
+    expectedVendor,
+    expectedWorkerSourceSha256,
+    expectedDocumentId,
+  },
+) {
+  assert.equal(document?.schema, 'gev-map-streaming-fault-document/v1');
+  assert.equal(document.status, 'passed');
+  assert.ok(MAP_FAULT_CONTROL_SCENARIO_IDS.includes(document.scenarioId));
+  assert.equal(document.documentRole, 'candidate-map-fault-control');
+  assert.equal(document.revision, expectedRevision);
+  assert.match(document.revision || '', /^[a-f0-9]{40}$/);
+  assert.equal(document.harnessCommit, expectedHarnessCommit);
+  assert.match(document.harnessCommit || '', /^[a-f0-9]{40}$/);
+  assert.deepEqual(document.sourceIdentity, {
+    appCommit: expectedRevision,
+    harnessCommit: expectedHarnessCommit,
+  });
+  assert.deepEqual(document.buildEvidence, expectedBuildEvidence);
+  assert.equal(
+    document.buildEvidence?.schema,
+    'gev-map-fault-build-evidence/v1',
+  );
+  assert.equal(document.buildEvidence?.appCommit, expectedRevision);
+  assert.equal(document.buildEvidence?.harnessCommit, expectedHarnessCommit);
+  assert.match(document.buildEvidence?.receiptSha256 || '', /^[a-f0-9]{64}$/);
+  assert.equal(
+    document.buildEvidence?.buildProfile?.id,
+    MAP_FIXTURE_BUILD_PROFILE_ID,
+  );
+  assert.match(
+    document.buildEvidence?.buildProfile?.configurationSha256 || '',
+    /^[a-f0-9]{64}$/,
+  );
+  assert.ok(
+    Number.isSafeInteger(document.buildEvidence?.assetCount) &&
+      document.buildEvidence.assetCount > 0,
+  );
+  assert.ok(
+    Number.isSafeInteger(document.buildEvidence?.totalAssetBytes) &&
+      document.buildEvidence.totalAssetBytes > 0,
+  );
+  assert.equal(document.documentId, expectedDocumentId);
+  assert.equal(document.performanceAcceptanceEligible, false);
+  assert.deepEqual(document.pageErrors, []);
+  assert.equal(document.cleanupError, undefined);
+  assert.equal(document.preflight?.status, 'closed');
+  assert.equal(
+    document.rendererEvidence?.schema,
+    'gev-map-fault-renderer-evidence/v1',
+  );
+  assert.equal(document.rendererEvidence?.appCommit, expectedRevision);
+  assert.equal(document.rendererEvidence?.observedRenderer, expectedRenderer);
+  assert.equal(
+    document.rendererEvidence?.observedVendor ?? null,
+    expectedVendor ?? null,
+  );
+  assert.equal(document.rendererEvidence?.backend, expectedBackend);
+  assert.equal(document.rendererEvidence?.drawingBuffer?.width, 1440);
+  assert.equal(document.rendererEvidence?.drawingBuffer?.height, 900);
+  if (document.rendererEvidence?.backend === DEFAULT_CAPTURE_RENDERER_BACKEND)
+    assert.match(document.rendererEvidence.observedRenderer, /swiftshader/i);
+  else {
+    assert.equal(
+      document.rendererEvidence?.backend,
+      NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+    );
+    assert.equal(
+      document.rendererEvidence?.nativeDiagnostic?.observedRenderer,
+      expectedRenderer,
+    );
+    assert.equal(
+      document.rendererEvidence?.nativeDiagnostic?.accelerationVerified,
+      true,
+    );
+  }
+  const workers = document.workerEvidence;
+  assert.equal(workers?.schema, 'gev-map-fault-worker-evidence/v1');
+  assert.equal(workers?.status, 'receipt-derived-worker-blobs-validated');
+  assert.equal(workers?.auditMode, 'diagnostic');
+  assert.equal(workers?.embeddedWorkerSourceSha256, expectedWorkerSourceSha256);
+  assert.match(workers?.embeddedWorkerSourceSha256 || '', /^[a-f0-9]{64}$/);
+  for (const field of [
+    'workerTargetCount',
+    'observedBlobCount',
+    'validatedWorkerCount',
+    'validatedCreatedWrapperCount',
+    'createdScriptBlobCount',
+    'readBytes',
+    'overflowCount',
+  ])
+    assert.ok(Number.isSafeInteger(workers[field]) && workers[field] >= 0);
+  assert.ok(workers.createdScriptBlobCount > 0);
+  assert.ok(workers.overflowCount === 0);
+  assert.equal(workers.maxRetainedBytes, MAX_WORKER_BLOB_TOTAL_BYTES);
+  assert.equal(workers.restoration?.nativeCreateObjectURLRestored, true);
+  assert.equal(workers.restoration?.registryEmpty, true);
+  assert.equal(workers.restoration?.overflowCountAtRestore, 0);
+  assert.equal(document.rendererProbeCleanup?.confirmed, true);
+  assert.equal(
+    document.rendererProbeCleanup?.document?.renderLoopRetirement?.confirmed,
+    true,
+  );
+  validateMapSmokeInterceptionRelease(document.interceptionRelease, {
+    documentRole: document.documentRole,
+    documentId: document.documentId,
+  });
+  assert.equal(
+    typeof captureModule?.validateMapStreamingFaultControlReport,
+    'function',
+  );
+  captureModule.validateMapStreamingFaultControlReport(
+    document.control,
+    fixture,
+  );
+  assert.deepEqual(document.delivery, document.control.delivery);
+  return true;
+}
+
+export function projectMapStreamingFaultBuildEvidence({
+  receipt,
+  appCommit,
+  harnessCommit,
+  fixture,
+}) {
+  assert.ok(receipt && typeof receipt === 'object');
+  assert.match(appCommit || '', /^[a-f0-9]{40}$/);
+  assert.match(harnessCommit || '', /^[a-f0-9]{40}$/);
+  assert.equal(receipt.source?.commit, appCommit);
+  assert.equal(receipt.harness?.commit, harnessCommit);
+  assert.match(receipt.receiptSha256 || '', /^[a-f0-9]{64}$/);
+  const buildProfile = receipt.buildRecipe?.mapFixtureProfile;
+  assert.equal(buildProfile?.id, MAP_FIXTURE_BUILD_PROFILE_ID);
+  assert.match(buildProfile?.configurationSha256 || '', /^[a-f0-9]{64}$/);
+  assert.ok(Array.isArray(receipt.assets));
+  assert.equal(receipt.assetCount, receipt.assets.length);
+  const summedAssetBytes = receipt.assets.reduce((total, asset) => {
+    assert.ok(Number.isSafeInteger(asset?.bytes) && asset.bytes >= 0);
+    return total + asset.bytes;
+  }, 0);
+  assert.ok(Number.isSafeInteger(summedAssetBytes));
+  assert.equal(receipt.totalAssetBytes, summedAssetBytes);
+  assert.ok(fixture && typeof fixture.id === 'string');
+  assert.match(fixture.manifestSha256 || '', /^[a-f0-9]{64}$/);
+  return {
+    schema: 'gev-map-fault-build-evidence/v1',
+    appCommit,
+    harnessCommit,
+    receiptSha256: receipt.receiptSha256,
+    buildProfile: {
+      id: buildProfile.id,
+      configurationSha256: buildProfile.configurationSha256,
+    },
+    assetCount: receipt.assetCount,
+    totalAssetBytes: receipt.totalAssetBytes,
+    fixtureId: fixture.id,
+    fixtureManifestSha256: fixture.manifestSha256,
+  };
+}
+
+export function validateMapStreamingFaultControlSet(
+  documents,
+  {
+    label,
+    revision,
+    harnessCommit,
+    buildEvidence,
+    expectedBackend,
+    expectedRenderer,
+    expectedVendor,
+    expectedWorkerSourceSha256,
+    fixture,
+    captureModule,
+  },
+) {
+  if (label !== 'candidate') {
+    assert.ok(
+      documents === undefined ||
+        (Array.isArray(documents) && documents.length === 0),
+      'Baseline map journeys do not run candidate-only fault controls.',
+    );
+    return true;
+  }
+  assert.match(revision || '', /^[a-f0-9]{40}$/);
+  assert.ok(Array.isArray(documents) && documents.length === 3);
+  for (
+    let index = 0;
+    index < MAP_FAULT_CONTROL_SCENARIO_IDS.length;
+    index += 1
+  ) {
+    const scenarioId = MAP_FAULT_CONTROL_SCENARIO_IDS[index];
+    const expectedDocumentId = `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`;
+    assert.equal(documents[index]?.scenarioId, scenarioId);
+    validateMapStreamingFaultControlDocument(documents[index], {
+      fixture,
+      captureModule,
+      expectedRevision: revision,
+      expectedHarnessCommit: harnessCommit,
+      expectedBuildEvidence: buildEvidence,
+      expectedBackend,
+      expectedRenderer,
+      expectedVendor,
+      expectedWorkerSourceSha256,
+      expectedDocumentId,
+    });
+  }
+  return true;
 }
 
 function projectMapStreamingFailureDeliveryEvidence(summary, fixture) {
@@ -4554,6 +5279,14 @@ async function runRevision({
   let mapStreamingNativeJourney = null;
   let mapStreamingInterceptionRelease = null;
   let mapStreamingRendering = null;
+  const mapStreamingFaultControls = [];
+  const mapStreamingFaultBuildEvidence = projectMapStreamingFaultBuildEvidence({
+    receipt: build.receipt,
+    appCommit: commit,
+    harnessCommit,
+    fixture: mapStreamingCaptureFixture,
+  });
+  let mapStreamingFaultEvidenceContext = null;
   let mapLayerPopulationBefore = null;
   try {
     const captureUrl = served.baseUrl;
@@ -4831,6 +5564,14 @@ async function runRevision({
         observedRenderer: after.environment.renderer,
         observedVendor: after.environment.vendor,
         nativeRendererDiagnostic: nativeRendererEvidence,
+      };
+      mapStreamingFaultEvidenceContext = {
+        harnessCommit,
+        buildEvidence: mapStreamingFaultBuildEvidence,
+        expectedBackend: captureRendererBackend,
+        expectedRenderer: mapStreamingRendering.observedRenderer,
+        expectedVendor: mapStreamingRendering.observedVendor ?? null,
+        expectedWorkerSourceSha256: workerContract.workerSourceSha256,
       };
       route = mapStreamingNativeJourney.journey.route;
       fixtureClockEnd = await page.evaluate(() => ({
@@ -5113,7 +5854,59 @@ async function runRevision({
         startedAt,
         budgetMs,
       });
+      if (
+        providerFixture === MAP_STREAMING_WORKLOAD_ID &&
+        mapStreamingCaptureFixture &&
+        mapStreamingCaptureModule
+      ) {
+        phase = 'candidate-map-fault-controls';
+        for (const scenarioId of MAP_FAULT_CONTROL_SCENARIO_IDS) {
+          try {
+            mapStreamingFaultControls.push(
+              await runMapStreamingFaultControlDocument({
+                browser,
+                baseUrl: served.baseUrl,
+                fixture: mapStreamingCaptureFixture,
+                flightFixture,
+                captureModule: mapStreamingCaptureModule,
+                createDelivery: createMapStreamingFixtureDelivery,
+                route: mapStreamingCaptureModule.MAP_STREAMING_ROUTE,
+                scenarioId,
+                revision: commit,
+                harnessCommit,
+                buildEvidence: mapStreamingFaultBuildEvidence,
+                rendererBackend: captureRendererBackend,
+                expectedBackend: captureRendererBackend,
+                expectedRenderer: mapStreamingRendering?.observedRenderer,
+                expectedVendor: mapStreamingRendering?.observedVendor ?? null,
+                browserGraphics,
+                workerContract,
+                startedAt,
+                budgetMs,
+                documentId: `candidate-${commit.slice(0, 8)}-map-fault-${scenarioId}`,
+              }),
+            );
+          } catch (error) {
+            if (error.mapStreamingFaultDocument)
+              mapStreamingFaultControls.push(error.mapStreamingFaultDocument);
+            throw error;
+          }
+        }
+      }
     }
+    if (providerFixture === MAP_STREAMING_WORKLOAD_ID)
+      validateMapStreamingFaultControlSet(mapStreamingFaultControls, {
+        label,
+        revision: commit,
+        harnessCommit,
+        buildEvidence: mapStreamingFaultBuildEvidence,
+        expectedBackend: captureRendererBackend,
+        expectedRenderer: mapStreamingRendering?.observedRenderer,
+        expectedVendor: mapStreamingRendering?.observedVendor ?? null,
+        expectedWorkerSourceSha256: workerContract.workerSourceSha256,
+        fixture: mapStreamingCaptureFixture,
+        captureModule: mapStreamingCaptureModule,
+      });
     result = {
       revision: commit,
       status: 'passed',
@@ -5163,6 +5956,12 @@ async function runRevision({
           }
         : {}),
       ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
+      ...(mapStreamingFaultControls.length
+        ? { mapStreamingFaultControls }
+        : {}),
+      ...(providerFixture === MAP_STREAMING_WORKLOAD_ID
+        ? { mapStreamingFaultEvidenceContext }
+        : {}),
       ...(mapStreamingSmokeEvidence
         ? {
             mapStreamingFixtureSetup: {
@@ -5220,6 +6019,9 @@ async function runRevision({
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
       ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
+      ...(mapStreamingFaultControls.length
+        ? { mapStreamingFaultControls }
+        : {}),
       ...(mapStreamingJourneyValidationFailure
         ? { mapStreamingJourneyValidationFailure }
         : {}),
@@ -5559,6 +6361,17 @@ async function main() {
           createMapStreamingFixtureDelivery,
         });
         Object.assign(variant, result);
+        if (providerFixture === MAP_STREAMING_WORKLOAD_ID)
+          validateMapStreamingFaultControlSet(
+            variant.mapStreamingFaultControls,
+            {
+              label,
+              revision: commit,
+              ...variant.mapStreamingFaultEvidenceContext,
+              fixture: mapStreamingCaptureFixture,
+              captureModule: mapStreamingCaptureModule,
+            },
+          );
         if (providerFixture === MAP_STREAMING_WORKLOAD_ID && index === 1) {
           const baselineLayerPopulation =
             report.variants[0]?.mapStreamingNativeJourney?.layerPopulation;
