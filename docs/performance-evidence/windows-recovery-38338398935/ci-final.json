@@ -1,0 +1,66 @@
+{
+  "conclusion": "failure",
+  "databaseId": 38338398935,
+  "headSha": "13796691f81be55e977a8241a633586526ce0a4e",
+  "jobs": [
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620537,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620537",
+      "completedAt": "2026-10-13T03:00:30Z"
+    },
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620685,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620685",
+      "completedAt": "2026-10-13T02:47:18Z"
+    },
+    {
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620804,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620804",
+      "completedAt": "2026-10-13T02:48:14Z"
+    },
+    {
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620864,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620864",
+      "completedAt": "2026-10-13T02:50:56Z"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 115103620881,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620881",
+      "completedAt": "2026-10-13T02:51:21Z"
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620906,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620906",
+      "completedAt": "2026-10-13T02:48:14Z"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 115103620997,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935/job/115103620997",
+      "completedAt": "2026-10-13T02:47:36Z"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38338398935",
+  "observedAt": "2026-10-13T03:03:49.190Z"
+}

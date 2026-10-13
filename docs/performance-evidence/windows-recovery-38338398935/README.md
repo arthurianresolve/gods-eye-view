@@ -25,5 +25,6 @@ snapshot after timeout. A bounded, same-browser process inventory before
 close plus lightweight read-only PID observations is a candidate approach;
 its ownership and PID-reuse limits require review before implementation.
 No longer shutdown deadline, unchanged rerun or inferred GPU/OS cause is
-justified by this report. The full integration run remains in progress at
-this observation, with Windows recovery already failed.
+justified by this report. The [final integration result](ci-final.json) is
+failed: six of seven standard jobs pass, including the browser gate; only
+Windows recovery fails. No unchanged rerun was used to replace this result.

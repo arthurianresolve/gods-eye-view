@@ -25,8 +25,8 @@ regression or resolve the intermittent shutdown cause.
 
 The reviewed map-corpus and automatic Windows diagnostic changes are now in
 QA integration `13796691`. All 62 focused checks, formatting, package boundaries
-and capture-harness checks pass. Hosted Node 24/26 and Linux/macOS recovery
-pass, but [Windows shutdown recurs](performance-evidence/windows-recovery-38338398935/README.md)
+and capture-harness checks pass. Six of seven hosted standard jobs pass,
+including Node 24/26, Linux/macOS recovery and the browser gate, but [Windows shutdown recurs](performance-evidence/windows-recovery-38338398935/README.md)
 on the prior application. The bounded process snapshot and forced-cleanup
 callback also time out, leaving process roles and exit unconfirmed. This
 candidate is not yet promoted to dev. Native Esri corpus proof through
