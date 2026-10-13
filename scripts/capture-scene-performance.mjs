@@ -8,7 +8,10 @@ import puppeteer, { CDPSessionEvent } from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
-import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
+import {
+  beginCaptureBuildProvenance,
+  projectPublicCaptureBuildProvenance,
+} from './performance/captureBuildProvenance.mjs';
 import {
   closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
@@ -494,7 +497,9 @@ const source = {
         : harnessSource.dirtyWorktree
           ? 'dirty'
           : 'clean'),
-  buildProvenance: captureProvenance?.source || null,
+  buildProvenance: captureProvenance
+    ? projectPublicCaptureBuildProvenance(captureProvenance.source)
+    : null,
   provenanceStatus: captureProvenance
     ? captureProvenance.source.status
     : 'unverified-exploratory-capture',
@@ -4972,7 +4977,10 @@ try {
   }
 
   if (captureProvenance) {
-    source.buildProvenance.after = await captureProvenance.verifyAfterCapture();
+    await captureProvenance.verifyAfterCapture();
+    source.buildProvenance = projectPublicCaptureBuildProvenance(
+      captureProvenance.source,
+    );
     if (await page.evaluate(() => Boolean(navigator.serviceWorker?.controller)))
       throw new Error(
         'Verified capture page became controlled by a service worker.',
@@ -5044,8 +5052,6 @@ try {
         workerAuditDocuments,
         unexpectedAssetPaths: [],
       };
-    delete source.buildProvenance.expectedAssetPaths;
-    delete source.buildProvenance.entryPaths;
     source.provenanceStatus = source.buildProvenance.status;
   }
 

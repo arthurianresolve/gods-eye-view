@@ -23,6 +23,25 @@ function verifiedSummary(result, receipt) {
   return Object.fromEntries(SUMMARY_KEYS.map((key) => [key, result[key]]));
 }
 
+/** Keep receipt paths private while exposing a stable report projection. */
+export function projectPublicCaptureBuildProvenance(source) {
+  if (!source || typeof source !== 'object' || Array.isArray(source))
+    throw new TypeError('Capture build provenance source is unavailable.');
+  const projection = {
+    schema: source.schema,
+    status: source.status,
+    scope: source.scope,
+    receiptSha256: source.receiptSha256,
+    appCommit: source.appCommit,
+    harnessCommit: source.harnessCommit,
+    buildRecipe: structuredClone(source.buildRecipe),
+    before: structuredClone(source.before),
+  };
+  if (source.after !== undefined)
+    projection.after = structuredClone(source.after);
+  return projection;
+}
+
 /** Verify a local receipt against the named served app both sides of capture. */
 export async function beginCaptureBuildProvenance({
   receipt,
