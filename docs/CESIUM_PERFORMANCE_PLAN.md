@@ -10,21 +10,15 @@ regression at `7c9f65dd` also passes its full 20-test suite and rejects a missin
 guard in a narrow negative control. Its rendered workspace journey and final
 Windows retention qualification remain pending; S49 is still partial.
 
-The [current representative PR matrix](performance-evidence/representative-pr-d6a97e46/README.md)
-tests frozen QA head `d6a97e46` against current dev and main. Both synthetic merge
-trees match that head, pass the published layer-token checks and pass all seven
-standard jobs, including three-OS recovery. All 30 persistence records preserve
-settings/workspaces and close cleanly. Earlier Windows readiness failures remain
-historical failures; their cause is not established by these later passes.
-
-The dev-targeted release verification passes. The main-targeted release still
-fails artifact discovery after upload: the pinned downloader lists artifacts
-even in ID mode. A later direct REST diagnostic verifies the failed run's ZIP,
-inner checksum, manifest and signed attestation; it does not change that run's
-failure. Reviewed direct-REST corrections `8ba383ea`/`6dc93009` pass twelve root
-release tests and pass [fresh workflow validation](performance-evidence/release-rest-6dc93009/README.md). Stable publication remains
-disabled; the [older PR packet](performance-evidence/representative-pr-20261013/README.md)
-is retained unchanged.
+The [current representative PR matrix](performance-evidence/representative-pr-8c0b6f64/README.md)
+passes all seven standard jobs and release verification against both dev and
+main at frozen source `8c0b6f64`. Both merge trees match that source; all published
+token checks and 30 recovery persistence records pass. Direct REST artifact
+retrieval, checksum, manifest and signed attestation checks pass in both PR
+contexts. These runs precede the S49 rollback fix above and do not validate it.
+Earlier Windows timeouts and [artifact discovery failures](performance-evidence/representative-pr-d6a97e46/README.md)
+remain historical failed evidence; their outcomes have not been rewritten.
+Stable publication remains disabled.
 
 The [main reconciliation record](performance-evidence/main-reconciliation-20261013/README.md)
 confirms QA already contains both main `9beadbda` and dev `e8ccc268`. No further

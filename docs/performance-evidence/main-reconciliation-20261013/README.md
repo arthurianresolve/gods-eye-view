@@ -6,14 +6,12 @@ The latest 13 October fetch confirms fork/main and upstream/main at
 QA already contains both through reviewed merge `8b84a2e0`. No additional merge,
 rebase or history discard is needed. Dev promotion and VM105 remain unchanged.
 
-The [current representative PR evidence](../representative-pr-d6a97e46/README.md)
-tests frozen head `d6a97e46` against both bases. Both synthetic merge trees match
-that head and pass all seven standard jobs and published layer-token checks.
-All 30 recovery persistence records pass. Dev-targeted release verification
-passes; main-targeted artifact discovery fails even with the upload ID. The
-reviewed direct-REST correction at `6dc93009` passes twelve focused tests and
-passes [its own workflow check](../release-rest-6dc93009/README.md). The earlier handoff failure is not evidence of a
-source-tree conflict. Historical Windows failures remain disclosed.
+The [current representative PR evidence](../representative-pr-8c0b6f64/README.md)
+passes all seven standard jobs and downloaded-release verification against both
+bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token
+checks and all 30 recovery records pass. Direct REST artifact retrieval now
+passes with exact source/merge binding; the earlier discovery failure remains
+historical. Later S49 rollback changes need their own browser validation.
 PR #4 remains validation-only; no stable release has been published.
 
 ## Earlier checkpoints

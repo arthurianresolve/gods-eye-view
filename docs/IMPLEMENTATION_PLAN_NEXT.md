@@ -1,12 +1,13 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
-Current 13 October follow-up: [QA head d6a97e46](performance-evidence/representative-pr-d6a97e46/README.md)
-passes all seven standard jobs and published-token checks against both PR bases.
-All six OS recovery jobs (30 persistence records) pass. The dev-targeted downloaded
-artifact/attestation check passes; the main-targeted artifact discovery fails.
-Direct-REST correction `6dc93009` passes twelve root tests and has a separate
-[passing workflow check](performance-evidence/release-rest-6dc93009/README.md). No stable release or VM deployment is implied by these results.
-The preceding packet below remains historical evidence.
+Current 13 October follow-up: [QA head 8c0b6f64](performance-evidence/representative-pr-8c0b6f64/README.md)
+passes all seven standard jobs, published-token checks and release verification
+against both PR bases. All six OS recovery jobs (30 persistence records) pass.
+Direct REST download resolves the artifact handoff path; checksum, manifest and
+signed attestation checks pass for each tested merge revision. These scoped
+S32/S34/S45 results precede the later S49 rollback fix. They do not imply final
+candidate acceptance, stable publication or VM deployment. Earlier failures
+remain historical evidence.
 
 13 October representative PR refresh: [the retained matrix](performance-evidence/representative-pr-20261013/README.md)
 tests QA head `44c6532d` on both dev and main, with exact synthetic merge revisions.

@@ -1,0 +1,394 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "80c37853a690489ef3246ece4f3158d02b3f0182",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "darwin",
+  "os": "25.6.0",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "totalMemoryBytes": 7516192768
+  },
+  "requestedRenderingBackend": "swiftshader-webgl-only",
+  "rendererExperiment": null,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "expectedBrowserVersion": null,
+  "browserVersionMatch": null,
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-13T18:49:02.350Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 64689,
+        "rendererQueryDurationMs": 34,
+        "bootPlusQueryCriticalPathMs": 64725,
+        "rendererCheckpointElapsedMs": 73276
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 246903.002334,
+          "closeSettledHostMs": 247677.678667,
+          "closeElapsedMs": 774.6763330000103,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 773.7767079999903
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 1.717000000004191,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 30.725915999995777,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 193.40941600000951,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[7608:21350:1013/184349.611083:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x11c00141a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[7608:21350:1013/184359.710057:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x11c00141a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[7608:21350:1013/184410.118790:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x11c00141a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[7608:21350:1013/184420.689724:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x11c00141a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+            "[7438:21552:1013/184542.056358:ERROR:google_apis/gcm/engine/registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[7438:21552:1013/184542.254422:ERROR:google_apis/gcm/engine/mcs_client.cc:702]   Error code: 401  Error message: Authentication Failed: wrong_secret",
+            "[7438:21552:1013/184542.254468:ERROR:google_apis/gcm/engine/mcs_client.cc:704] Failed to log in to GCM, resetting connection.",
+            "[7438:21552:1013/184603.477727:ERROR:google_apis/gcm/engine/registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          ]
+        }
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 9465,
+        "rendererQueryDurationMs": 10,
+        "bootPlusQueryCriticalPathMs": 9476,
+        "rendererCheckpointElapsedMs": 11942
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 271047.175209,
+          "closeSettledHostMs": 271246.789084,
+          "closeElapsedMs": 199.6138749999809,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 199.3073330000043
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.1775410000118427,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 24.850040999997873,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 81.38441600004444,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 5,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[11217:30689:1013/184631.773949:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c00091400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[11217:30689:1013/184633.822089:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c00091400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[11217:30689:1013/184634.908454:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c00091400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[11217:30689:1013/184635.523224:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c00091400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 13347,
+        "rendererQueryDurationMs": 1258,
+        "bootPlusQueryCriticalPathMs": 14606,
+        "rendererCheckpointElapsedMs": 18340
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 319303.645125,
+          "closeSettledHostMs": 319779.362667,
+          "closeElapsedMs": 475.7175419999985,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 475.4838330000057
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.17466700001386926,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 35.567875000007916,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 141.03912500001024,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[12021:32871:1013/184707.213774:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c0012f000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[12021:32871:1013/184709.104132:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c0012f000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[12021:32871:1013/184710.552598:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c0012f000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[12021:32871:1013/184711.365201:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x12c0012f000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 10300,
+        "rendererQueryDurationMs": 803,
+        "bootPlusQueryCriticalPathMs": 11105,
+        "rendererCheckpointElapsedMs": 16600
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 393678.642709,
+          "closeSettledHostMs": 394056.937334,
+          "closeElapsedMs": 378.29462500003865,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 378.06225000001723
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.15412500000093132,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 34.19295900000725,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 169.08554199995706,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[13933:37577:1013/184834.395576:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x1140012c600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[13933:37577:1013/184836.460670:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x1140012c600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[13933:37577:1013/184837.817412:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x1140012c600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[13933:37577:1013/184838.640940:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x1140012c600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 9982,
+        "rendererQueryDurationMs": 163,
+        "bootPlusQueryCriticalPathMs": 10146,
+        "rendererCheckpointElapsedMs": 11833
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 408877.929375,
+          "closeSettledHostMs": 409049.963584,
+          "closeElapsedMs": 172.03420900000492,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 171.9690829999745
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.05679100000998005,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 21.234833000053186,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 66.92954100004863,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 4,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[14482:38990:1013/184851.658468:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x104000ee400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[14482:38990:1013/184853.568312:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x104000ee400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[14482:38990:1013/184854.520459:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x104000ee400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+            "[14482:38990:1013/184855.247226:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x104000ee400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          ]
+        }
+      }
+    }
+  ],
+  "status": "passed",
+  "failure": null
+}
