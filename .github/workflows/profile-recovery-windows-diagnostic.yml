@@ -52,7 +52,7 @@ jobs:
         run: node scripts/pinokio-install.mjs
 
       - name: Test startup and page ownership diagnostics
-        run: node --test scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs
+        run: node --test scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
 
       - name: Install fixture browser
         run: npx puppeteer browsers install chrome

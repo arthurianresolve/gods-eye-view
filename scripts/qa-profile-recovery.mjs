@@ -49,6 +49,7 @@ import {
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
+import { assertSelectedChromeVersion } from './performance/profileRecoveryBrowserVersion.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
@@ -78,6 +79,12 @@ const sourceStatus = () =>
     encoding: 'utf8',
   }).trim();
 const sourceDirtyAtStart = Boolean(sourceStatus());
+const expectedBrowserVersion =
+  process.env.GEV_QA_PROFILE_RECOVERY_CHROME_VERSION || null;
+if (expectedBrowserVersion) {
+  assert.match(expectedBrowserVersion, /^\d+\.\d+\.\d+\.\d+$/);
+  assert.equal(process.platform, 'win32');
+}
 // Windows can expose the same temporary directory through an 8.3 short name
 // in one process and its long name in another. Vite/Rollup treats those as
 // different roots and may then emit an absolute path for index.html. Resolve
@@ -232,6 +239,7 @@ const server = createServer(async (request, response) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = 'http://127.0.0.1:' + server.address().port;
 let expected, browser, browserVersion;
+let browserVersionMatch = null;
 const checks = [];
 let activeCheck = 'setup',
   activeStep = 'setup',
@@ -290,6 +298,11 @@ async function reopen(label, { seed = false } = {}) {
   let rendererQueryDurationMs = null;
   try {
     browserVersion = await browser.version();
+    if (expectedBrowserVersion) {
+      browserVersionMatch = false;
+      assertSelectedChromeVersion(expectedBrowserVersion, browserVersion);
+      browserVersionMatch = true;
+    }
     timedProgress('install-fixtures');
     const initialPages = await browser.pages();
     pageOwnership.initialPageCount = initialPages.length;
@@ -684,6 +697,8 @@ try {
         }
       : null,
     browserVersion,
+    expectedBrowserVersion,
+    browserVersionMatch,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
     timestamp: new Date().toISOString(),

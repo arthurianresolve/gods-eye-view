@@ -112,6 +112,11 @@ on:
         description: Collect bounded target and owned-process snapshots on Windows recovery runs and optionally on manually selected other OS runs
         type: boolean
         default: false
+      shutdown_browser_version:
+        description: Exact four-part Chrome for Testing version for manual Windows profile-recovery diagnostics only; blank keeps the pinned default
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -352,6 +357,13 @@ jobs:
           node-version: 24.14.0
           cache: npm
 
+      - name: Validate optional profile recovery Chrome version selection
+        env:
+          GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: ${{ inputs.shutdown_browser_version }}
+          GEV_QA_VALIDATION_MODE: ${{ inputs.validation_mode }}
+          GEV_QA_SELECTED_RUNNER: ${{ inputs.shutdown_runner || 'windows-latest' }}
+        run: node scripts/validate-profile-recovery-browser-selection.mjs
+
       - name: Clean install
         run: node scripts/pinokio-install.mjs
 
@@ -361,8 +373,21 @@ jobs:
       - name: Reject incomplete artifacts and reopen portable workspaces
         run: npm run qa:install-recovery
 
+      - name: Test Windows recovery and shutdown ownership before browser setup
+        if: matrix.os == 'windows-latest'
+        run: node --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
+
       - name: Install fixture browser
+        if: ${{ !inputs.shutdown_browser_version }}
         run: npx puppeteer browsers install chrome
+
+      - name: Install selected Chrome for Testing version
+        if: ${{ inputs.shutdown_browser_version }}
+        env:
+          GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: ${{ inputs.shutdown_browser_version }}
+          GEV_QA_VALIDATION_MODE: ${{ inputs.validation_mode }}
+          GEV_QA_SELECTED_RUNNER: ${{ inputs.shutdown_runner || 'windows-latest' }}
+        run: node scripts/install-profile-recovery-browser.mjs
 
       - name: Upgrade and recover a real installation and browser profile
         run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
