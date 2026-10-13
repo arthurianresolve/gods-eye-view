@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { MAP_STREAMING_DELIVERY_SCHEMA } from './mapStreamingFixtureDelivery.mjs';
+import {
+  MAP_STREAMING_DELIVERY_SCHEMA,
+  MAP_STREAMING_FAULT_SCENARIOS,
+  validateMapStreamingFaultDeliverySummary,
+} from './mapStreamingFixtureDelivery.mjs';
 import {
   MAP_STREAMING_CAPTURE_SCHEMA,
   MAP_STREAMING_WORKLOAD_ID,
@@ -61,6 +65,7 @@ const EXPECTED_IMAGERY_CLASS = Object.freeze({
 const MAP_JOURNEY_POLL_INTERVAL_MS = 250;
 const MAP_JOURNEY_MAX_POLL_COUNT = 720;
 const MAP_JOURNEY_HOST_DEADLINE_MS = 150_000;
+const MAP_FAULT_STAGE_TIMEOUT_MS = 30_000;
 const MAP_GLOBE_QUEUE_SAMPLE_LIMIT = 8;
 const MAP_GLOBE_IMAGERY_SAMPLE_LIMIT = 32;
 export const MAP_GLOBE_TERRAIN_ANCESTRY_LIMIT = 24;
@@ -2997,6 +3002,935 @@ export async function runNativeMapStreamingJourney(page, options) {
   }
   if (primaryError) throw primaryError;
   return result;
+}
+
+/** Browser-serialized owner for candidate-only map fault/recovery controls. */
+export async function runNativeMapStreamingFaultControlInPage({
+  command,
+  operationId,
+  route,
+}) {
+  const operationKey = '__gevMapStreamingFaultControlV1';
+  const validId =
+    typeof operationId === 'string' && /^[a-z0-9-]{1,96}$/i.test(operationId);
+  const store = window[operationKey];
+  const operation = validId ? store?.[operationId] : null;
+  if (command === 'prepare') {
+    if (!validId || operation)
+      throw new Error('Map fault operation identity is invalid or occupied.');
+    if (
+      route?.id !== 'austin-map-rightward-v1' ||
+      route.startupFlightDelayMs !== 500 ||
+      route.start?.longitude !== -97.72 ||
+      route.start?.latitude !== 30.27 ||
+      route.start?.heightM !== 6_000 ||
+      route.headingRadians !== 0 ||
+      route.pitchRadians !== -Math.PI / 2
+    )
+      throw new Error('Map fault route does not match the declared route.');
+    const app = window.__godsEyeView;
+    const viewer = app?.viewer;
+    const controller = app?.mapStackController;
+    const scene = viewer?.scene;
+    const camera = viewer?.camera;
+    const globe = scene?.globe;
+    const Cesium = window.Cesium;
+    if (
+      !viewer ||
+      !controller?.getActiveId ||
+      !controller?.setStack ||
+      typeof controller.getSwitchGeneration !== 'function' ||
+      !scene?.postRender?.addEventListener ||
+      !camera?.setView ||
+      !globe ||
+      typeof Cesium?.Cartesian3?.fromDegrees !== 'function' ||
+      typeof Cesium?.CesiumTerrainProvider !== 'function' ||
+      typeof Cesium?.EllipsoidTerrainProvider !== 'function' ||
+      typeof Cesium?.ArcGisMapServerImageryProvider !== 'function' ||
+      typeof Cesium?.OpenStreetMapImageryProvider !== 'function'
+    )
+      throw new Error('Map fault control requires the production map scene.');
+    const snapshotSettings = () => {
+      const style = app.styleManager;
+      const visual = style?.getVisualState?.();
+      const tuning = style?.services?.getDetectionTuning?.();
+      const gl = scene.context?._gl;
+      const contextAttributes = gl?.getContextAttributes?.();
+      const tileset = app.tileset;
+      if (
+        !visual ||
+        typeof visual !== 'object' ||
+        typeof visual.style !== 'string' ||
+        !visual.bloom ||
+        typeof visual.bloom.enabled !== 'boolean' ||
+        !Number.isFinite(visual.bloom.intensity) ||
+        !visual.sharpen ||
+        typeof visual.sharpen.enabled !== 'boolean' ||
+        !Number.isFinite(visual.sharpen.intensity) ||
+        !visual.detection ||
+        typeof visual.detection.mode !== 'string' ||
+        !Number.isFinite(visual.detection.density) ||
+        !visual.scope ||
+        typeof visual.scope.enabled !== 'boolean' ||
+        typeof visual.mapStack !== 'string' ||
+        !visual.styleParams ||
+        typeof visual.styleParams !== 'object' ||
+        !Number.isFinite(tuning?.densityPct) ||
+        typeof style?._adaptiveQuality?.getMode !== 'function' ||
+        typeof style.services?.getDetectionMode !== 'function' ||
+        !Number.isFinite(viewer.resolutionScale) ||
+        !Number.isFinite(globe.maximumScreenSpaceError) ||
+        !Number.isSafeInteger(scene.msaaSamples) ||
+        typeof scene.postProcessStages?.fxaa?.enabled !== 'boolean' ||
+        !contextAttributes ||
+        typeof contextAttributes.antialias !== 'boolean' ||
+        typeof contextAttributes.preserveDrawingBuffer !== 'boolean' ||
+        !Number.isSafeInteger(scene.context?.drawingBufferWidth) ||
+        !Number.isSafeInteger(scene.context?.drawingBufferHeight) ||
+        !Number.isFinite(tileset?.maximumScreenSpaceError) ||
+        !Number.isSafeInteger(tileset?.cacheBytes) ||
+        !Number.isSafeInteger(tileset?.maximumCacheOverflowBytes)
+      )
+        throw new Error('Map fault control visual settings are incomplete.');
+      return {
+        qualityMode: style._adaptiveQuality.getMode(),
+        densityPct: tuning.densityPct,
+        detectionMode: style.services.getDetectionMode?.() ?? null,
+        resolutionScale: viewer.resolutionScale,
+        msaaSamples: scene.msaaSamples,
+        fxaa: scene.postProcessStages.fxaa.enabled,
+        antialias: contextAttributes.antialias,
+        preserveDrawingBuffer: contextAttributes.preserveDrawingBuffer,
+        drawingBufferWidth: scene.context.drawingBufferWidth,
+        drawingBufferHeight: scene.context.drawingBufferHeight,
+        globeMaximumScreenSpaceError: globe.maximumScreenSpaceError,
+        tilesetMaximumScreenSpaceError: tileset.maximumScreenSpaceError,
+        tilesetCacheBytes: tileset.cacheBytes,
+        tilesetMaximumCacheOverflowBytes: tileset.maximumCacheOverflowBytes,
+        visualState: {
+          style: visual.style,
+          bloom: {
+            enabled: visual.bloom.enabled,
+            intensity: visual.bloom.intensity,
+          },
+          sharpen: {
+            enabled: visual.sharpen.enabled,
+            intensity: visual.sharpen.intensity,
+          },
+          detection: {
+            mode: visual.detection.mode,
+            density: visual.detection.density,
+          },
+          scope: { enabled: visual.scope.enabled },
+          mapStack: visual.mapStack,
+          styleParams: visual.styleParams,
+        },
+      };
+    };
+    const providerType = (provider) => {
+      if (provider instanceof Cesium.CesiumTerrainProvider)
+        return 'CesiumTerrainProvider';
+      if (provider instanceof Cesium.EllipsoidTerrainProvider)
+        return 'EllipsoidTerrainProvider';
+      if (provider instanceof Cesium.ArcGisMapServerImageryProvider)
+        return 'ArcGisMapServerImageryProvider';
+      if (provider instanceof Cesium.OpenStreetMapImageryProvider)
+        return 'OpenStreetMapImageryProvider';
+      return null;
+    };
+    const capture = (postRenderSequence) => {
+      const state = controller.getState?.() || null;
+      const tileset = app.tileset;
+      const imageryLayer = scene.imageryLayers?.get?.(0) || null;
+      const position = camera.positionCartographic;
+      return {
+        postRenderSequence,
+        switchGeneration: controller.getSwitchGeneration(),
+        activeStack: controller.getActiveId(),
+        controllerStatus: state?.status ?? null,
+        switchOrigin: state?.switchOrigin ?? null,
+        hasError: state?.lastError !== null && state?.lastError !== undefined,
+        globeShown: globe.show === true,
+        globeTilesLoaded:
+          typeof globe.tilesLoaded === 'boolean' ? globe.tilesLoaded : null,
+        terrainProviderClass: providerType(globe.terrainProvider),
+        imageryProviderClass: providerType(imageryLayer?.imageryProvider),
+        imageryLayerCount: scene.imageryLayers?.length ?? null,
+        imageryLayerShow: imageryLayer?.show ?? null,
+        photorealShown: tileset?.show === true,
+        photorealTilesLoaded:
+          typeof tileset?.tilesLoaded === 'boolean'
+            ? tileset.tilesLoaded
+            : null,
+        photorealReadyContentTiles: Number.isSafeInteger(
+          tileset?.statistics?.numberOfTilesWithContentReady,
+        )
+          ? tileset.statistics.numberOfTilesWithContentReady
+          : null,
+        photorealSelectedTiles: Number.isSafeInteger(
+          tileset?.statistics?.selected,
+        )
+          ? tileset.statistics.selected
+          : null,
+        camera: {
+          longitude: (position.longitude * 180) / Math.PI,
+          latitude: (position.latitude * 180) / Math.PI,
+          heightM: position.height,
+          headingRadians: camera.heading,
+          pitchRadians: camera.pitch,
+        },
+        settings: snapshotSettings(),
+      };
+    };
+    const qualityControl = document.getElementById('presentation-quality-mode');
+    const densityControl = document.getElementById('detection-density-slider');
+    const services = app.styleManager?.services;
+    const adaptiveQuality = app.styleManager?._adaptiveQuality;
+    if (
+      !qualityControl ||
+      !densityControl ||
+      typeof adaptiveQuality?.setMode !== 'function' ||
+      typeof services?.setDetectionModeByLabel !== 'function' ||
+      typeof app.styleManager?.applyVisualState !== 'function'
+    )
+      throw new Error('Map fault control fixed visual setup is unavailable.');
+    qualityControl.value = 'manual';
+    qualityControl.dispatchEvent(new Event('change', { bubbles: true }));
+    densityControl.value = '75';
+    densityControl.dispatchEvent(new Event('input', { bubbles: true }));
+    services.setDetectionModeByLabel('DENSE');
+    viewer.resolutionScale = 1;
+    await app.styleManager.applyVisualState({
+      style: 'normal',
+      detection: { mode: 'DENSE', density: 75 },
+    });
+    if (
+      adaptiveQuality.getMode() !== 'manual' ||
+      services.getDetectionTuning()?.densityPct !== 75 ||
+      services.getDetectionMode?.() !== 'DENSE' ||
+      viewer.resolutionScale !== 1 ||
+      scene.msaaSamples !== 4 ||
+      scene.postProcessStages?.fxaa?.enabled !== false ||
+      scene.context?.drawingBufferWidth !== 1440 ||
+      scene.context?.drawingBufferHeight !== 900 ||
+      app.tileset?.maximumScreenSpaceError !== 16 ||
+      app.tileset?.cacheBytes !== 1536 * 1024 * 1024 ||
+      app.tileset?.maximumCacheOverflowBytes !== 1024 * 1024 * 1024
+    )
+      throw new Error('Map fault control did not establish fixed settings.');
+    const activeStore = store || Object.create(null);
+    if (!store)
+      Object.defineProperty(window, operationKey, {
+        configurable: true,
+        value: activeStore,
+      });
+    const record = {
+      app,
+      viewer,
+      controller,
+      scene,
+      camera,
+      globe,
+      latest: null,
+      renderCount: 0,
+      observerFailed: false,
+      outcomes: Object.create(null),
+      pending: Object.create(null),
+      invocations: Object.create(null),
+      initialSettings: snapshotSettings(),
+      route,
+      listener: null,
+      preparationTimer: null,
+      preparationResolve: null,
+      disposed: false,
+    };
+    record.listener = () => {
+      if (record.disposed) return;
+      record.renderCount += 1;
+      try {
+        record.latest = capture(record.renderCount);
+      } catch {
+        record.observerFailed = true;
+      }
+    };
+    activeStore[operationId] = record;
+    scene.postRender.addEventListener(record.listener);
+    const preparationStartedAt = performance.now();
+    await new Promise((resolve) => {
+      record.preparationResolve = resolve;
+      record.preparationTimer = setTimeout(() => {
+        record.preparationTimer = null;
+        record.preparationResolve = null;
+        resolve();
+      }, route.startupFlightDelayMs);
+    });
+    if (record.disposed)
+      throw new Error('Map fault route preparation was retired.');
+    camera.cancelFlight?.();
+    camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(
+        route.start.longitude,
+        route.start.latitude,
+        route.start.heightM,
+      ),
+      orientation: {
+        heading: route.headingRadians,
+        pitch: route.pitchRadians,
+        roll: 0,
+      },
+    });
+    scene.requestRender?.();
+    record.preparation = {
+      startupFlightDelayMs: route.startupFlightDelayMs,
+      elapsedMs: Math.max(0, performance.now() - preparationStartedAt),
+      startupFlightCancelled: typeof camera.cancelFlight === 'function',
+    };
+    return {
+      operationId,
+      status: 'prepared',
+      preparation: record.preparation,
+      initialSettings: record.initialSettings,
+    };
+  }
+  if (!validId || !operation || operation.disposed)
+    throw new Error('Map fault control operation is not owned.');
+  if (command === 'poll') {
+    return {
+      operationId,
+      status: 'active',
+      observerFailed: operation.observerFailed,
+      renderCount: operation.renderCount,
+      latest: operation.latest,
+      preparation: operation.preparation,
+      initialSettings: operation.initialSettings,
+      outcomes: operation.outcomes,
+      pending: operation.pending,
+    };
+  }
+  if (command === 'request-render-after-settlement') {
+    if (
+      operation.outcomes.initialEsri?.settled !== true ||
+      operation.controller.getActiveId() !== 'osm'
+    )
+      throw new Error('Late map switch has not settled under the OSM owner.');
+    operation.scene.requestRender?.();
+    return {
+      operationId,
+      status: 'render-requested-after-esri-settlement',
+      completedRenderSequence: operation.renderCount,
+      switchGeneration: operation.controller.getSwitchGeneration(),
+    };
+  }
+  if (
+    command === 'begin-esri' ||
+    command === 'begin-osm' ||
+    command === 'retry-esri'
+  ) {
+    const name =
+      command === 'begin-osm'
+        ? 'supersedingOsm'
+        : command === 'retry-esri'
+          ? 'retryEsri'
+          : 'initialEsri';
+    const stackId = command === 'begin-osm' ? 'osm' : 'esri-imagery';
+    if (operation.pending[name] || operation.outcomes[name])
+      throw new Error('Map fault switch is already owned or complete.');
+    const generationBefore =
+      operation.controller.getSwitchGeneration?.() ?? null;
+    if (!Number.isSafeInteger(generationBefore))
+      throw new Error('Map switch generation is unavailable.');
+    operation.pending[name] = true;
+    let switchPromise;
+    try {
+      switchPromise = operation.controller.setStack(stackId);
+    } catch (error) {
+      operation.pending[name] = false;
+      throw error;
+    }
+    const generationAfterStart = operation.controller.getSwitchGeneration();
+    if (
+      !Number.isSafeInteger(generationAfterStart) ||
+      generationAfterStart <= generationBefore
+    ) {
+      operation.pending[name] = false;
+      throw new Error('Map switch generation did not advance at invocation.');
+    }
+    operation.invocations[name] = {
+      generationBefore,
+      generationAfterStart,
+    };
+    Promise.resolve(switchPromise)
+      .then(
+        (state) => {
+          operation.outcomes[name] = {
+            settled: true,
+            generationBefore,
+            generationAfterStart,
+            generationAfter:
+              operation.controller.getSwitchGeneration?.() ?? null,
+            settledAtPostRenderSequence: operation.renderCount,
+            activeStack: operation.controller.getActiveId(),
+            controllerStatus: state?.status ?? null,
+            switchOrigin: state?.switchOrigin ?? null,
+            hasError:
+              state?.lastError !== null && state?.lastError !== undefined,
+          };
+        },
+        () => {
+          operation.outcomes[name] = {
+            settled: false,
+            generationBefore,
+            generationAfterStart,
+            generationAfter:
+              operation.controller.getSwitchGeneration?.() ?? null,
+            settledAtPostRenderSequence: operation.renderCount,
+            activeStack: operation.controller.getActiveId(),
+            controllerStatus: 'rejected',
+            switchOrigin: operation.controller.getSwitchOrigin?.() ?? null,
+            hasError: true,
+          };
+        },
+      )
+      .finally(() => {
+        operation.pending[name] = false;
+      });
+    return {
+      operationId,
+      status: 'switch-started',
+      switchName: name,
+      ...operation.invocations[name],
+    };
+  }
+  if (command === 'dispose') {
+    if (Object.values(operation.pending).some(Boolean))
+      throw new Error('Map fault control cannot dispose a pending switch.');
+    operation.disposed = true;
+    if (operation.preparationTimer !== null) {
+      clearTimeout(operation.preparationTimer);
+      operation.preparationTimer = null;
+    }
+    operation.preparationResolve?.();
+    operation.preparationResolve = null;
+    operation.scene.postRender.removeEventListener(operation.listener);
+    delete window[operationKey][operationId];
+    if (Object.keys(window[operationKey]).length === 0)
+      delete window[operationKey];
+    return {
+      operationId,
+      status: 'disposed',
+      renderCount: operation.renderCount,
+    };
+  }
+  throw new Error('Map fault control command is unsupported.');
+}
+
+export async function runNativeMapStreamingFaultControl(
+  page,
+  {
+    scenarioId,
+    route = MAP_STREAMING_ROUTE,
+    delivery,
+    operationTimeoutMs = 120_000,
+  },
+) {
+  assert.ok(page && typeof page.evaluate === 'function');
+  assert.ok(
+    [
+      'esri-metadata-missing-v1',
+      'esri-metadata-corrupt-v1',
+      'esri-metadata-superseded-v1',
+    ].includes(scenarioId),
+    'Map fault scenario is a declared fixed plan.',
+  );
+  assert.ok(delivery && typeof delivery.waitForFaultRequest === 'function');
+  assert.ok(
+    Number.isSafeInteger(operationTimeoutMs) &&
+      operationTimeoutMs > 0 &&
+      operationTimeoutMs <= 120_000,
+  );
+  const operationId = `map-fault-${Date.now().toString(36)}-${(++nextMapJourneyOperationId).toString(36)}`;
+  const operationStartedAt = performance.now();
+  const deadline = operationStartedAt + operationTimeoutMs;
+  const evaluate = async (command) => {
+    if (performance.now() >= deadline)
+      throw new Error('Map fault operation exceeded its host deadline.');
+    const result = await page.evaluate(
+      runNativeMapStreamingFaultControlInPage,
+      {
+        command,
+        operationId,
+        route,
+      },
+    );
+    if (performance.now() > deadline)
+      throw new Error('Map fault operation exceeded its host deadline.');
+    return result;
+  };
+  const waitFor = async (
+    predicate,
+    label,
+    timeoutMs = MAP_FAULT_STAGE_TIMEOUT_MS,
+  ) => {
+    const stageDeadline = Math.min(deadline, performance.now() + timeoutMs);
+    while (performance.now() < stageDeadline) {
+      const observation = await evaluate('poll');
+      if (observation.observerFailed)
+        throw new Error('Map fault post-render observer failed.');
+      if (predicate(observation)) return observation;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    throw new Error(
+      `Map fault stage did not settle within its bound: ${label}.`,
+    );
+  };
+  let pageOwned = false;
+  let primaryError = null;
+  const report = {
+    schema: 'gev-map-streaming-fault-control/v1',
+    status: 'running',
+    operationId,
+    scenarioId,
+    routeId: route.id,
+    performanceAcceptanceEligible: false,
+    preparation: null,
+    initial: null,
+    transitions: [],
+    switchOutcomes: null,
+    switchInvocations: null,
+    final: null,
+    settingsBefore: null,
+    settingsAfter: null,
+    delivery: null,
+  };
+  try {
+    pageOwned = true;
+    const prepared = await evaluate('prepare');
+    report.preparation = prepared.preparation;
+    report.settingsBefore = prepared.initialSettings;
+    const initialObservation = await waitFor(
+      (value) =>
+        value.latest?.activeStack === 'photoreal' &&
+        value.latest.photorealShown === true &&
+        value.latest.photorealTilesLoaded === true &&
+        Number.isSafeInteger(value.latest.photorealReadyContentTiles) &&
+        value.latest.photorealReadyContentTiles > 0 &&
+        Number.isSafeInteger(value.latest.photorealSelectedTiles) &&
+        value.latest.photorealSelectedTiles > 0,
+      'initial-photoreal-readiness',
+    );
+    report.initial = initialObservation.latest;
+    const initialEsriInvocation = await evaluate('begin-esri');
+    report.switchInvocations = { initialEsri: initialEsriInvocation };
+    if (scenarioId === 'esri-metadata-superseded-v1') {
+      const remainingMs = deadline - performance.now();
+      if (remainingMs <= 0)
+        throw new Error('Map fault operation exceeded its host deadline.');
+      await delivery.waitForFaultRequest({
+        timeoutMs: Math.min(MAP_FAULT_STAGE_TIMEOUT_MS, remainingMs),
+      });
+      const held = delivery.summary();
+      assert.equal(held.faultInjection?.heldRequestCount, 1);
+      assert.equal(
+        held.faultInjection?.assetPath,
+        'arcgis/MapServer/index.json',
+      );
+      assert.match(
+        held.faultInjection?.requestId || '',
+        /^[A-Za-z0-9._:-]{1,128}$/,
+      );
+      assert.ok(held.pendingCount >= 1);
+      const osmInvocation = await evaluate('begin-osm');
+      assert.ok(
+        osmInvocation.generationBefore >=
+          initialEsriInvocation.generationAfterStart,
+      );
+      assert.ok(
+        osmInvocation.generationAfterStart >
+          initialEsriInvocation.generationAfterStart,
+      );
+      report.switchInvocations.supersedingOsm = {
+        ...osmInvocation,
+        heldRequestId: held.faultInjection.requestId,
+      };
+      const stillHeld = delivery.summary();
+      assert.equal(stillHeld.faultInjection?.heldRequestCount, 1);
+      assert.equal(
+        stillHeld.faultInjection?.requestId,
+        held.faultInjection.requestId,
+      );
+      assert.ok(stillHeld.pendingCount >= 1);
+      const osmObservation = await waitFor(
+        (value) =>
+          value.outcomes.supersedingOsm?.settled === true &&
+          value.latest?.activeStack === 'osm' &&
+          value.latest.controllerStatus === 'ready' &&
+          value.latest.switchOrigin === 'manual' &&
+          value.latest.hasError === false &&
+          value.latest.imageryProviderClass ===
+            'OpenStreetMapImageryProvider' &&
+          value.latest.globeTilesLoaded === true,
+        'superseding-osm-readiness',
+      );
+      report.transitions.push(osmObservation.latest);
+      const priorRenderCount = osmObservation.renderCount;
+      assert.equal(delivery.releaseFaultResponse(), true);
+      const lateEsriSettled = await waitFor(
+        (value) =>
+          value.outcomes.initialEsri?.settled === true &&
+          value.latest?.activeStack === 'osm' &&
+          value.latest?.switchGeneration === osmInvocation.generationAfterStart,
+        'late-esri-stale-settlement',
+      );
+      const settledRender = await evaluate('request-render-after-settlement');
+      assert.ok(
+        settledRender.completedRenderSequence >= lateEsriSettled.renderCount,
+      );
+      const settled = await waitFor(
+        (value) =>
+          value.outcomes.initialEsri?.settled === true &&
+          value.renderCount >= settledRender.completedRenderSequence &&
+          value.renderCount > priorRenderCount &&
+          value.latest?.postRenderSequence >
+            value.outcomes.initialEsri.settledAtPostRenderSequence &&
+          value.latest?.activeStack === 'osm' &&
+          value.latest?.switchGeneration ===
+            osmInvocation.generationAfterStart &&
+          value.latest.switchOrigin === 'manual' &&
+          value.latest.hasError === false,
+        'late-esri-completion-preserves-osm',
+      );
+      report.transitions.push(settled.latest);
+      report.final = settled.latest;
+      report.switchOutcomes = {
+        initialEsri: settled.outcomes.initialEsri ?? null,
+        supersedingOsm: settled.outcomes.supersedingOsm ?? null,
+      };
+    } else {
+      const fallback = await waitFor(
+        (value) =>
+          value.outcomes.initialEsri?.settled === true &&
+          value.latest?.activeStack === 'osm' &&
+          value.latest.controllerStatus === 'ready' &&
+          value.latest.switchOrigin === 'automatic' &&
+          value.latest.hasError === true &&
+          value.latest.imageryProviderClass ===
+            'OpenStreetMapImageryProvider' &&
+          value.latest.globeTilesLoaded === true,
+        'declared-esri-construction-fallback',
+      );
+      report.transitions.push(fallback.latest);
+      const retryInvocation = await evaluate('retry-esri');
+      report.switchInvocations.retryEsri = retryInvocation;
+      const recovered = await waitFor(
+        (value) =>
+          value.outcomes.retryEsri?.settled === true &&
+          value.latest?.activeStack === 'esri-imagery' &&
+          value.latest.controllerStatus === 'ready' &&
+          value.latest.switchOrigin === 'manual' &&
+          value.latest.hasError === false &&
+          value.latest.imageryProviderClass ===
+            'ArcGisMapServerImageryProvider' &&
+          value.latest.globeTilesLoaded === true,
+        'explicit-esri-recovery',
+      );
+      report.transitions.push(recovered.latest);
+      report.final = recovered.latest;
+      report.switchOutcomes = {
+        initialEsri: recovered.outcomes.initialEsri ?? null,
+        retryEsri: recovered.outcomes.retryEsri ?? null,
+      };
+    }
+    report.settingsAfter = report.final?.settings ?? null;
+    report.status = 'observed';
+  } catch (error) {
+    primaryError = error;
+    report.status = 'failed';
+    try {
+      const last = await evaluate('poll');
+      if (last.latest && report.transitions.length < 3)
+        report.transitions.push(last.latest);
+      report.settingsAfter = last.latest?.settings ?? null;
+    } catch {
+      // The owning page/context close below is the final observation boundary.
+    }
+  } finally {
+    if (pageOwned) {
+      try {
+        report.operationRetirement = await evaluate('dispose');
+      } catch {
+        report.operationRetirement = {
+          operationId,
+          status: 'unconfirmed-page-close-required',
+        };
+      }
+    }
+    report.elapsedMs = Math.max(0, performance.now() - operationStartedAt);
+    report.delivery = delivery.summary();
+  }
+  if (primaryError) {
+    primaryError.mapFaultControl = report;
+    throw primaryError;
+  }
+  return report;
+}
+
+export function validateMapStreamingFaultControlReport(report, fixture) {
+  validateDeterministicMapStreamingFixture(fixture);
+  assert.equal(report?.schema, 'gev-map-streaming-fault-control/v1');
+  assert.equal(report.status, 'observed');
+  assert.equal(report.scenarioId in MAP_STREAMING_FAULT_SCENARIOS, true);
+  assert.equal(report.routeId, MAP_STREAMING_ROUTE.id);
+  assert.equal(report.performanceAcceptanceEligible, false);
+  assert.match(report.operationId || '', /^map-fault-[a-z0-9-]{1,64}$/);
+  assert.ok(Number.isFinite(report.elapsedMs) && report.elapsedMs >= 0);
+  assert.ok(report.elapsedMs <= 120_000);
+  assert.ok(
+    Number.isFinite(report.preparation?.elapsedMs) &&
+      report.preparation.elapsedMs >= MAP_STREAMING_ROUTE.startupFlightDelayMs,
+  );
+  assert.equal(
+    report.preparation?.startupFlightDelayMs,
+    MAP_STREAMING_ROUTE.startupFlightDelayMs,
+  );
+  assert.equal(report.preparation?.startupFlightCancelled, true);
+  const validObservation = (row, expectedStack, expectedOrigin, hasError) => {
+    assert.equal(row?.activeStack, expectedStack);
+    assert.equal(row?.controllerStatus, 'ready');
+    assert.equal(row?.switchOrigin, expectedOrigin);
+    assert.equal(row?.hasError, hasError);
+    assert.ok(Number.isSafeInteger(row?.switchGeneration));
+    assert.equal(row?.terrainProviderClass, 'CesiumTerrainProvider');
+    assert.equal(row?.imageryLayerCount, expectedStack === 'photoreal' ? 0 : 1);
+    assert.ok(row?.camera && typeof row.camera === 'object');
+    assert.ok(
+      Math.abs(row.camera.longitude - MAP_STREAMING_ROUTE.start.longitude) <
+        0.0001 &&
+        Math.abs(row.camera.latitude - MAP_STREAMING_ROUTE.start.latitude) <
+          0.0001 &&
+        Math.abs(row.camera.heightM - MAP_STREAMING_ROUTE.start.heightM) < 1 &&
+        Math.abs(row.camera.pitchRadians - MAP_STREAMING_ROUTE.pitchRadians) <
+          0.01 &&
+        Math.min(
+          Math.abs(row.camera.headingRadians),
+          Math.abs(Math.abs(row.camera.headingRadians) - Math.PI * 2),
+        ) < 0.01,
+      'Fault control camera remains at the declared fixed route pose.',
+    );
+    assertSettings(row?.settings, expectedStack);
+    if (expectedStack === 'photoreal') {
+      assert.equal(row?.globeShown, false);
+      assert.equal(row?.photorealShown, true);
+      assert.equal(row?.photorealTilesLoaded, true);
+      assert.ok(row?.photorealReadyContentTiles > 0);
+      assert.ok(row?.photorealSelectedTiles > 0);
+    } else {
+      assert.equal(row?.globeShown, true);
+      assert.equal(row?.globeTilesLoaded, true);
+      assert.equal(row?.imageryLayerShow, true);
+      assert.ok(row?.imageryLayerCount > 0);
+      assert.equal(
+        row?.imageryProviderClass,
+        expectedStack === 'osm'
+          ? 'OpenStreetMapImageryProvider'
+          : 'ArcGisMapServerImageryProvider',
+      );
+      assert.equal(row?.photorealShown, false);
+    }
+    assert.ok(
+      Number.isSafeInteger(row?.postRenderSequence) &&
+        row.postRenderSequence > 0,
+    );
+  };
+  const assertSettings = (settings, selectedStack) => {
+    assert.ok(settings && typeof settings === 'object');
+    assert.equal(settings.qualityMode, 'manual');
+    assert.equal(settings.densityPct, 75);
+    assert.equal(settings.detectionMode, 'DENSE');
+    assert.equal(settings.visualState?.detection?.mode, 'DENSE');
+    assert.equal(settings.visualState?.detection?.density, 75);
+    assert.equal(settings.visualState?.style, 'normal');
+    assert.equal(settings.visualState?.mapStack, selectedStack);
+    assert.equal(settings.resolutionScale, 1);
+    assert.equal(settings.antialias, true);
+    assert.equal(typeof settings.preserveDrawingBuffer, 'boolean');
+    assert.equal(settings.msaaSamples, 4);
+    assert.equal(settings.fxaa, false);
+    assert.equal(settings.drawingBufferWidth, 1440);
+    assert.equal(settings.drawingBufferHeight, 900);
+    assert.ok(Number.isFinite(settings.globeMaximumScreenSpaceError));
+    assert.ok(settings.globeMaximumScreenSpaceError > 0);
+    assert.equal(settings.tilesetMaximumScreenSpaceError, 16);
+    assert.equal(settings.tilesetCacheBytes, 1536 * 1024 * 1024);
+    assert.equal(settings.tilesetMaximumCacheOverflowBytes, 1024 * 1024 * 1024);
+    assert.ok(
+      settings.visualState?.bloom &&
+        typeof settings.visualState.bloom.enabled === 'boolean' &&
+        Number.isFinite(settings.visualState.bloom.intensity),
+    );
+    assert.ok(
+      settings.visualState?.sharpen &&
+        typeof settings.visualState.sharpen.enabled === 'boolean' &&
+        Number.isFinite(settings.visualState.sharpen.intensity),
+    );
+    assert.ok(
+      settings.visualState?.scope &&
+        typeof settings.visualState.scope.enabled === 'boolean',
+    );
+    assert.ok(
+      settings.visualState?.styleParams &&
+        typeof settings.visualState.styleParams === 'object' &&
+        !Array.isArray(settings.visualState.styleParams),
+    );
+  };
+  validObservation(report.initial, 'photoreal', 'manual', false);
+  assertSettings(report.settingsBefore, 'photoreal');
+  assert.equal(report.settingsBefore?.visualState?.mapStack, 'photoreal');
+  assert.ok(
+    Array.isArray(report.transitions) && report.transitions.length === 2,
+  );
+  if (report.scenarioId === 'esri-metadata-superseded-v1') {
+    for (const transition of report.transitions)
+      validObservation(transition, 'osm', 'manual', false);
+    assert.equal(report.switchOutcomes?.initialEsri?.settled, true);
+    assert.equal(
+      report.switchOutcomes.initialEsri.generationBefore,
+      report.switchInvocations.initialEsri.generationBefore,
+    );
+    assert.equal(
+      report.switchOutcomes.initialEsri.generationAfterStart,
+      report.switchInvocations.initialEsri.generationAfterStart,
+    );
+    assert.equal(
+      report.switchOutcomes.supersedingOsm.generationBefore,
+      report.switchInvocations.supersedingOsm.generationBefore,
+    );
+    assert.equal(
+      report.switchOutcomes.supersedingOsm.generationAfterStart,
+      report.switchInvocations.supersedingOsm.generationAfterStart,
+    );
+    assert.ok(
+      report.switchInvocations?.supersedingOsm?.generationAfterStart >
+        report.switchInvocations?.initialEsri?.generationAfterStart,
+    );
+    assert.ok(
+      Number.isSafeInteger(
+        report.switchInvocations?.supersedingOsm?.generationBefore,
+      ),
+    );
+    assert.equal(
+      report.switchInvocations?.initialEsri?.status,
+      'switch-started',
+    );
+    assert.ok(
+      Number.isSafeInteger(
+        report.switchInvocations?.initialEsri?.generationBefore,
+      ),
+    );
+    assert.ok(
+      report.switchInvocations.initialEsri.generationAfterStart >
+        report.switchInvocations.initialEsri.generationBefore,
+    );
+    assert.equal(
+      report.switchInvocations.supersedingOsm.status,
+      'switch-started',
+    );
+    assert.match(
+      report.switchInvocations?.supersedingOsm?.heldRequestId || '',
+      /^[A-Za-z0-9._:-]{1,128}$/,
+    );
+    assert.equal(
+      report.switchInvocations.supersedingOsm.heldRequestId,
+      report.delivery?.faultInjection?.requestId,
+    );
+    assert.equal(report.switchOutcomes?.initialEsri?.activeStack, 'osm');
+    assert.ok(
+      report.switchOutcomes.initialEsri.settledAtPostRenderSequence <
+        report.final.postRenderSequence,
+    );
+    assert.ok(
+      report.transitions[1].postRenderSequence >
+        report.transitions[0].postRenderSequence,
+    );
+    assert.equal(
+      report.final.switchGeneration,
+      report.switchInvocations.supersedingOsm.generationAfterStart,
+    );
+    assert.equal(report.switchOutcomes?.supersedingOsm?.settled, true);
+    assert.equal(report.final?.activeStack, 'osm');
+    assert.equal(report.final?.hasError, false);
+  } else {
+    validObservation(report.transitions[0], 'osm', 'automatic', true);
+    validObservation(report.transitions[1], 'esri-imagery', 'manual', false);
+    assert.equal(report.switchOutcomes?.initialEsri?.settled, true);
+    assert.equal(report.switchOutcomes?.initialEsri?.activeStack, 'osm');
+    assert.equal(
+      report.switchOutcomes.initialEsri.generationBefore,
+      report.switchInvocations.initialEsri.generationBefore,
+    );
+    assert.equal(
+      report.switchOutcomes.initialEsri.generationAfterStart,
+      report.switchInvocations.initialEsri.generationAfterStart,
+    );
+    assert.equal(report.switchOutcomes?.initialEsri?.hasError, true);
+    assert.equal(report.switchOutcomes?.retryEsri?.settled, true);
+    assert.equal(
+      report.switchOutcomes.retryEsri.generationBefore,
+      report.switchInvocations.retryEsri.generationBefore,
+    );
+    assert.equal(
+      report.switchOutcomes.retryEsri.generationAfterStart,
+      report.switchInvocations.retryEsri.generationAfterStart,
+    );
+    assert.ok(
+      report.switchInvocations?.retryEsri?.generationAfterStart >
+        report.switchInvocations?.initialEsri?.generationAfterStart,
+    );
+    assert.equal(report.switchInvocations.retryEsri.status, 'switch-started');
+    assert.equal(report.switchOutcomes?.retryEsri?.activeStack, 'esri-imagery');
+    assert.equal(report.final?.activeStack, 'esri-imagery');
+    assert.equal(report.final?.hasError, false);
+    assert.equal(
+      report.final.switchGeneration,
+      report.switchInvocations.retryEsri.generationAfterStart,
+    );
+  }
+  validObservation(
+    report.final,
+    report.final.activeStack,
+    'manual',
+    report.final.hasError,
+  );
+  assert.equal(
+    report.settingsAfter?.visualState?.mapStack,
+    report.final.activeStack,
+  );
+  const commonSettings = (settings) => ({
+    ...settings,
+    visualState: {
+      ...settings.visualState,
+      mapStack: 'transitioned-map-stack',
+    },
+  });
+  assert.deepEqual(
+    commonSettings(report.settingsBefore),
+    commonSettings(report.settingsAfter),
+    'Fault transitions preserve all common visual and renderer settings.',
+  );
+  for (const row of [report.initial, ...report.transitions, report.final])
+    assert.deepEqual(
+      commonSettings(row.settings),
+      commonSettings(report.settingsBefore),
+      'Each fault transition preserves the declared fixed settings.',
+    );
+  assert.equal(report.operationRetirement?.status, 'disposed');
+  assert.equal(report.delivery?.status, 'disposed');
+  assert.equal(report.delivery?.cleanupConfirmed, true);
+  validateMapStreamingFaultDeliverySummary(
+    report.delivery,
+    fixture,
+    report.scenarioId,
+  );
+  return true;
 }
 
 export function createMapStreamingCaptureReport({

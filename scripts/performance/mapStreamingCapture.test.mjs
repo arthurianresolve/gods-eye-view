@@ -8,6 +8,9 @@ import { flyToAustin } from '../../src/camera.js';
 import {
   createFinalizedMapStreamingCaptureEvidence,
   MAP_STREAMING_ROUTE,
+  runNativeMapStreamingFaultControl,
+  runNativeMapStreamingFaultControlInPage,
+  validateMapStreamingFaultControlReport,
   mapStreamingCaptureWorkloadFields,
   runNativeMapStreamingJourney,
   runNativeMapStreamingJourneyInPage,
@@ -291,7 +294,9 @@ function createFakePage({
   };
   const terrainProvider = new CesiumTypes.CesiumTerrainProvider();
   const imageryLayers = {
-    length: 1,
+    get length() {
+      return activeStack === 'photoreal' ? 0 : 1;
+    },
     get() {
       const imageryProvider =
         activeStack === 'osm'
@@ -524,6 +529,341 @@ function createFakePage({
   };
 }
 
+function createMapFaultControlHarness({ scenarioId }) {
+  const listeners = new Set();
+  const types = {
+    Cartesian3: {
+      fromDegrees: (longitude, latitude, height) => ({
+        longitude,
+        latitude,
+        height,
+      }),
+    },
+    CesiumTerrainProvider: class Terrain {},
+    EllipsoidTerrainProvider: class Ellipsoid {},
+    ArcGisMapServerImageryProvider: class ArcGis {},
+    OpenStreetMapImageryProvider: class OSM {},
+  };
+  let activeStack = 'photoreal';
+  let origin = 'manual';
+  let status = 'ready';
+  let lastError = null;
+  let generation = 0;
+  let renderSequence = 0;
+  let resolveFirstEsri;
+  const firstEsriGate = new Promise((resolve) => {
+    resolveFirstEsri = resolve;
+  });
+  const render = () => {
+    renderSequence += 1;
+    for (const listener of [...listeners]) listener();
+  };
+  const controller = {
+    getActiveId: () => activeStack,
+    getSwitchGeneration: () => generation,
+    getState: () => ({ status, switchOrigin: origin, lastError }),
+    async setStack(stackId) {
+      const ownGeneration = ++generation;
+      status = 'switching';
+      origin = 'manual';
+      lastError = null;
+      if (stackId === 'esri-imagery' && ownGeneration === 1) {
+        if (scenarioId === 'esri-metadata-superseded-v1') await firstEsriGate;
+        else {
+          activeStack = 'osm';
+          origin = 'automatic';
+          status = 'ready';
+          lastError = 'declared fixture metadata fault';
+          scene.globe.show = true;
+          app.tileset.show = false;
+          render();
+          return this.getState();
+        }
+      }
+      if (ownGeneration !== generation) return this.getState();
+      activeStack = stackId;
+      origin = 'manual';
+      status = 'ready';
+      lastError = null;
+      scene.globe.show = stackId !== 'photoreal';
+      app.tileset.show = stackId === 'photoreal';
+      render();
+      return this.getState();
+    },
+  };
+  const imageryLayers = {
+    get length() {
+      return activeStack === 'photoreal' ? 0 : 1;
+    },
+    get: () => ({
+      show: activeStack !== 'photoreal',
+      imageryProvider:
+        activeStack === 'osm'
+          ? new types.OpenStreetMapImageryProvider()
+          : new types.ArcGisMapServerImageryProvider(),
+    }),
+  };
+  const camera = {
+    positionCartographic: {
+      longitude: (-97.72 * Math.PI) / 180,
+      latitude: (30.27 * Math.PI) / 180,
+      height: 6_000,
+    },
+    heading: 0,
+    pitch: -Math.PI / 2,
+    cancelFlight() {},
+    setView({ destination }) {
+      this.positionCartographic = {
+        longitude: (destination.longitude * Math.PI) / 180,
+        latitude: (destination.latitude * Math.PI) / 180,
+        height: destination.height,
+      };
+    },
+  };
+  const scene = {
+    postRender: {
+      addEventListener: (listener) => listeners.add(listener),
+      removeEventListener: (listener) => listeners.delete(listener),
+    },
+    globe: {
+      show: activeStack !== 'photoreal',
+      tilesLoaded: true,
+      terrainProvider: new types.CesiumTerrainProvider(),
+      maximumScreenSpaceError: 2,
+    },
+    imageryLayers,
+    msaaSamples: 4,
+    postProcessStages: { fxaa: { enabled: false } },
+    context: {
+      drawingBufferWidth: 1440,
+      drawingBufferHeight: 900,
+      _gl: {
+        getContextAttributes: () => ({
+          antialias: true,
+          preserveDrawingBuffer: false,
+        }),
+      },
+    },
+    requestRender: render,
+  };
+  let qualityMode = 'auto';
+  let densityPct = 50;
+  let detectionMode = 'OFF';
+  const qualityControl = {
+    value: 'auto',
+    dispatchEvent() {
+      qualityMode = this.value;
+    },
+  };
+  const densityControl = {
+    value: '50',
+    dispatchEvent() {
+      densityPct = Number(this.value);
+    },
+  };
+  const app = {
+    viewer: { scene, camera, resolutionScale: 1 },
+    mapStackController: controller,
+    tileset: {
+      show: true,
+      tilesLoaded: true,
+      maximumScreenSpaceError: 16,
+      cacheBytes: 1536 * 1024 * 1024,
+      maximumCacheOverflowBytes: 1024 * 1024 * 1024,
+      statistics: { numberOfTilesWithContentReady: 4, selected: 2 },
+    },
+    styleManager: {
+      _adaptiveQuality: {
+        getMode: () => qualityMode,
+        setMode: (mode) => {
+          qualityMode = mode;
+        },
+      },
+      services: {
+        getDetectionTuning: () => ({ densityPct }),
+        getDetectionMode: () => detectionMode,
+        setDetectionModeByLabel: (mode) => {
+          detectionMode = mode;
+        },
+      },
+      async applyVisualState(state) {
+        if (state.style !== 'normal') throw new Error('unexpected style');
+        if (state.detection?.mode !== 'DENSE')
+          throw new Error('unexpected detection mode');
+      },
+      getVisualState: () => ({
+        style: 'normal',
+        bloom: { enabled: false, intensity: 0 },
+        sharpen: { enabled: false, intensity: 0 },
+        detection: { mode: detectionMode, density: densityPct },
+        scope: { enabled: false },
+        mapStack: activeStack,
+        styleParams: {},
+      }),
+    },
+  };
+  let now = 0;
+  const context = vm.createContext({
+    window: { Cesium: types, __godsEyeView: app },
+    document: {
+      getElementById(id) {
+        return id === 'presentation-quality-mode'
+          ? qualityControl
+          : id === 'detection-density-slider'
+            ? densityControl
+            : null;
+      },
+    },
+    Event: class EventMock {},
+    performance: { now: () => ++now },
+    setTimeout(callback, delay = 0) {
+      now += delay;
+      queueMicrotask(callback);
+      return 1;
+    },
+    clearTimeout() {},
+  });
+  const page = {
+    async evaluate(fn, args) {
+      return vm.runInContext(`(${fn.toString()})`, context)(args);
+    },
+  };
+  const delivery = {
+    released: false,
+    async waitForFaultRequest() {
+      return true;
+    },
+    releaseFaultResponse() {
+      this.released = true;
+      resolveFirstEsri();
+      return true;
+    },
+    summary() {
+      return {
+        schema: 'gev-map-streaming-fixture-delivery/v1',
+        status: 'active',
+        pendingCount:
+          scenarioId === 'esri-metadata-superseded-v1' && !this.released
+            ? 1
+            : 0,
+        faultInjection: {
+          assetPath: 'arcgis/MapServer/index.json',
+          requestId: 'page-fault-test-4',
+          heldRequestCount:
+            scenarioId === 'esri-metadata-superseded-v1' && !this.released
+              ? 1
+              : 0,
+        },
+      };
+    },
+  };
+  return { page, delivery, listeners, context };
+}
+
+function nativeFaultAssetUrl(asset, googleKey) {
+  if (asset.kind === 'arcgis-mapserver-metadata-json')
+    return 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=json';
+  if (asset.kind === 'arcgis-missing-tile-probe-png') {
+    const { level, row, column } = asset.identity;
+    return `https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${row}/${column}`;
+  }
+  if (asset.kind === 'webmercator-imagery-png') {
+    const [, level, column, row] = asset.path.match(
+      /^imagery\/(\d+)\/(\d+)\/(\d+)\.png$/,
+    );
+    return `https://tile.openstreetmap.org/${level}/${column}/${row}.png`;
+  }
+  if (asset.kind === 'quantized-mesh-layer-metadata')
+    return 'https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json';
+  if (asset.kind === 'quantized-mesh-1.0')
+    return `https://terrain.reearth.land/cesium-mesh/ellipsoid/${asset.path.slice('terrain/'.length)}`;
+  if (asset.kind === '3d-tiles-1.1')
+    return new Cesium.Resource({
+      url: 'https://tile.googleapis.com/v1/3dtiles/root.json',
+      queryParameters: { key: googleKey },
+    }).url;
+  if (asset.kind === 'textured-glb') {
+    const root = new Cesium.Resource({
+      url: 'https://tile.googleapis.com/v1/3dtiles/root.json',
+      queryParameters: { key: googleKey },
+    });
+    return root.getDerivedResource({ url: `../${asset.path}` }).url;
+  }
+  if (asset.kind === 'synthetic-google-credit-placeholder-png')
+    return 'https://assets.ion.cesium.com/google-credit.png';
+  throw new Error(`Unmapped native map asset kind ${asset.kind}`);
+}
+
+async function buildValidFaultDeliverySummary(fixture, scenarioId) {
+  const adapter = createMapStreamingFixtureDelivery(fixture, {
+    appOrigin: 'http://127.0.0.1:4173/',
+    faultScenarioId: scenarioId,
+  });
+  const requiredKinds = [
+    '3d-tiles-1.1',
+    'textured-glb',
+    'synthetic-google-credit-placeholder-png',
+    'arcgis-mapserver-metadata-json',
+    'arcgis-missing-tile-probe-png',
+    'webmercator-imagery-png',
+    'quantized-mesh-layer-metadata',
+    'quantized-mesh-1.0',
+  ];
+  const rows = requiredKinds.map((kind) =>
+    fixture.manifest.assets.find((asset) => asset.kind === kind),
+  );
+  assert.ok(rows.every(Boolean));
+  const googleKey = getMapFixtureBuildProfileGoogleApiKey(
+    MAP_FIXTURE_BUILD_PROFILE_ID,
+  );
+  let requestOrdinal = 0;
+  let held = null;
+  for (const asset of rows) {
+    const url = nativeFaultAssetUrl(asset, googleKey);
+    const requestId = `page-fault-test-${++requestOrdinal}`;
+    const responsePromise = adapter.respond(new URL(url), {
+      requestId,
+      url: () => url,
+      method: () => 'GET',
+    });
+    if (
+      scenarioId === 'esri-metadata-superseded-v1' &&
+      asset.kind === 'arcgis-mapserver-metadata-json'
+    ) {
+      await adapter.waitForFaultRequest({ timeoutMs: 1_000 });
+      held = { responsePromise, requestId, url };
+      continue;
+    }
+    const response = await responsePromise;
+    assert.ok(response);
+    assert.equal(
+      adapter.onFulfilled({
+        requestId,
+        url,
+        method: 'GET',
+        status: response.status,
+        bodyBase64: response.body.toString('base64'),
+      }),
+      true,
+    );
+  }
+  if (held) {
+    assert.equal(adapter.releaseFaultResponse(), true);
+    const response = await held.responsePromise;
+    assert.equal(
+      adapter.onFulfilled({
+        requestId: held.requestId,
+        url: held.url,
+        method: 'GET',
+        status: response.status,
+        bodyBase64: response.body.toString('base64'),
+      }),
+      true,
+    );
+  }
+  return adapter.dispose();
+}
+
 function makeTerrainChain(seed) {
   const parity = seed % 2;
   let parent = {
@@ -571,6 +911,92 @@ test('map camera route stays inside the declared corpus footprint at 1-second ch
   assert.ok(
     observed.north <= bounds.north,
     `north ${observed.north} is covered`,
+  );
+});
+
+test('serialized map fault owner observes explicit retry recovery and supersession', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const scenarioId of [
+    'esri-metadata-missing-v1',
+    'esri-metadata-corrupt-v1',
+    'esri-metadata-superseded-v1',
+  ]) {
+    const harness = createMapFaultControlHarness({ scenarioId });
+    const report = await runNativeMapStreamingFaultControl(harness.page, {
+      scenarioId,
+      route: MAP_STREAMING_ROUTE,
+      delivery: harness.delivery,
+      operationTimeoutMs: 15_000,
+    });
+    assert.equal(report.status, 'observed');
+    assert.equal(report.performanceAcceptanceEligible, false);
+    assert.equal(report.initial.activeStack, 'photoreal');
+    assert.equal(report.transitions.length, 2);
+    assert.equal(report.operationRetirement.status, 'disposed');
+    report.delivery = await buildValidFaultDeliverySummary(fixture, scenarioId);
+    assert.equal(validateMapStreamingFaultControlReport(report, fixture), true);
+    assert.equal(harness.listeners.size, 0);
+    assert.equal(
+      harness.context.window.__gevMapStreamingFaultControlV1,
+      undefined,
+    );
+    if (scenarioId === 'esri-metadata-superseded-v1') {
+      assert.equal(harness.delivery.released, true);
+      assert.equal(report.final.activeStack, 'osm');
+      assert.equal(report.switchOutcomes.initialEsri.activeStack, 'osm');
+      const staleGeneration = structuredClone(report);
+      staleGeneration.switchInvocations.supersedingOsm.generationAfterStart =
+        staleGeneration.switchInvocations.initialEsri.generationAfterStart;
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(staleGeneration, fixture),
+      );
+      const preReleaseFrame = structuredClone(report);
+      preReleaseFrame.final.postRenderSequence =
+        preReleaseFrame.transitions[0].postRenderSequence;
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(preReleaseFrame, fixture),
+      );
+    } else {
+      assert.equal(report.transitions[0].activeStack, 'osm');
+      assert.equal(report.transitions[0].hasError, true);
+      assert.equal(report.final.activeStack, 'esri-imagery');
+      assert.equal(report.switchOutcomes.retryEsri.activeStack, 'esri-imagery');
+      const missingSettings = structuredClone(report);
+      delete missingSettings.settingsBefore.msaaSamples;
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(missingSettings, fixture),
+      );
+      const wrongProvider = structuredClone(report);
+      wrongProvider.transitions[1].imageryProviderClass =
+        'OpenStreetMapImageryProvider';
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(wrongProvider, fixture),
+      );
+      const wrongPose = structuredClone(report);
+      wrongPose.final.camera.longitude = 0;
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(wrongPose, fixture),
+      );
+    }
+  }
+});
+
+test('serialized map fault owner rejects a route mutation before retaining page state', async () => {
+  const harness = createMapFaultControlHarness({
+    scenarioId: 'esri-metadata-missing-v1',
+  });
+  await assert.rejects(
+    harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+      command: 'prepare',
+      operationId: 'map-fault-invalid-route',
+      route: { ...MAP_STREAMING_ROUTE, headingRadians: 1 },
+    }),
+    /declared route/,
+  );
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(
+    harness.context.window.__gevMapStreamingFaultControlV1,
+    undefined,
   );
 });
 
