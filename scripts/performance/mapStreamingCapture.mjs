@@ -168,10 +168,10 @@ export async function runNativeMapStreamingJourneyInPage({
       !Number.isSafeInteger(scene.msaaSamples) ||
       scene.msaaSamples < 0 ||
       typeof scene.postProcessStages?.fxaa?.enabled !== 'boolean' ||
-      typeof style.bloomEnabled !== 'boolean' ||
-      !Number.isFinite(style.bloomIntensity) ||
-      typeof style.sharpenEnabled !== 'boolean' ||
-      !Number.isFinite(style.sharpenIntensity) ||
+      typeof visual.bloom.enabled !== 'boolean' ||
+      !Number.isFinite(visual.bloom.intensity) ||
+      typeof visual.sharpen.enabled !== 'boolean' ||
+      !Number.isFinite(visual.sharpen.intensity) ||
       !Number.isFinite(globe.maximumScreenSpaceError) ||
       globe.maximumScreenSpaceError <= 0
     )
@@ -186,10 +186,10 @@ export async function runNativeMapStreamingJourneyInPage({
       msaaSamples: scene.msaaSamples ?? null,
       fxaa: scene.postProcessStages?.fxaa?.enabled ?? null,
       preserveDrawingBuffer: contextAttributes.preserveDrawingBuffer ?? null,
-      bloom: style.bloomEnabled ?? null,
-      bloomIntensity: style.bloomIntensity ?? null,
-      sharpen: style.sharpenEnabled ?? null,
-      sharpenIntensity: style.sharpenIntensity ?? null,
+      bloom: visual.bloom.enabled,
+      bloomIntensity: visual.bloom.intensity,
+      sharpen: visual.sharpen.enabled,
+      sharpenIntensity: visual.sharpen.intensity,
       visualState: visual,
       globeMaximumScreenSpaceError: globe.maximumScreenSpaceError ?? null,
       tilesetMaximumScreenSpaceError: tileset?.maximumScreenSpaceError ?? null,

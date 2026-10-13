@@ -26,7 +26,12 @@ function fakeWindow() {
     preserveDrawingBuffer: true,
     stencil: false,
   };
-  const visualState = { style: 'normal', styleParams: {} };
+  const visualState = {
+    style: 'normal',
+    styleParams: {},
+    bloom: { enabled: false, intensity: 0 },
+    sharpen: { enabled: false, intensity: 0 },
+  };
   const style = {
     getVisualState: () => visualState,
     _adaptiveQuality: { getMode: () => 'manual' },
@@ -34,10 +39,6 @@ function fakeWindow() {
       getDetectionTuning: () => ({ densityPct: 75 }),
       getDetectionMode: () => 'DENSE',
     },
-    bloomEnabled: false,
-    bloomIntensity: 0,
-    sharpenEnabled: false,
-    sharpenIntensity: 0,
     shareLinkManager: {
       getCurrentView: () => ({ style: 'normal', map: 'osm' }),
     },
@@ -135,6 +136,10 @@ test('common observer emits shared Cesium scene and effective workload inputs', 
   assert.equal(observed.environment.appCommit, 'a'.repeat(40));
   assert.equal(observed.settings.densityPct, 75);
   assert.equal(observed.settings.qualityMode, 'manual');
+  assert.equal(observed.settings.bloom, false);
+  assert.equal(observed.settings.bloomIntensity, 0);
+  assert.equal(observed.settings.sharpen, false);
+  assert.equal(observed.settings.sharpenIntensity, 0);
   assert.deepEqual(observed.cesiumClock, {
     currentTime: { dayNumber: 2_461_000, secondsOfDay: 43_200 },
     shouldAnimate: false,
@@ -169,6 +174,35 @@ test('common observer refuses to invent missing renderer, counts or visual setti
     () => observeCommonScene({ windowObject: noVisualState }),
     /visual-state reader/,
   );
+
+  for (const field of ['bloom', 'sharpen']) {
+    const invalidIntensity = fakeWindow();
+    invalidIntensity.__godsEyeView.styleManager.getVisualState = () => ({
+      style: 'normal',
+      styleParams: {},
+      bloom: { enabled: false, intensity: 0 },
+      sharpen: { enabled: false, intensity: 0 },
+      [field]: { enabled: false },
+    });
+    assert.throws(
+      () => observeCommonScene({ windowObject: invalidIntensity }),
+      /effective visual state/,
+      `${field} intensity must be present and finite`,
+    );
+
+    const nonFiniteIntensity = fakeWindow();
+    const readVisualState =
+      nonFiniteIntensity.__godsEyeView.styleManager.getVisualState;
+    nonFiniteIntensity.__godsEyeView.styleManager.getVisualState = () => ({
+      ...readVisualState(),
+      [field]: { enabled: false, intensity: Number.NaN },
+    });
+    assert.throws(
+      () => observeCommonScene({ windowObject: nonFiniteIntensity }),
+      /effective visual state/,
+      `${field} intensity must be finite`,
+    );
+  }
 });
 
 test('common observer rejects missing, replaced, lost, and restored early contexts', () => {

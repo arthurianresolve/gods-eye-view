@@ -84,7 +84,14 @@ export function observeCommonScene({
     };
   });
   const visualState = style.getVisualState();
-  if (!visualState?.style || !visualState.styleParams)
+  if (
+    !visualState?.style ||
+    !visualState.styleParams ||
+    typeof visualState.bloom?.enabled !== 'boolean' ||
+    !Number.isFinite(visualState.bloom.intensity) ||
+    typeof visualState.sharpen?.enabled !== 'boolean' ||
+    !Number.isFinite(visualState.sharpen.intensity)
+  )
     fail('effective visual state');
   const densityPct = style.services.getDetectionTuning()?.densityPct;
   const detectionMode = style.services.getDetectionMode();
@@ -101,10 +108,10 @@ export function observeCommonScene({
     antialias: attributes.antialias,
     msaaSamples: scene.msaaSamples,
     fxaa: scene.postProcessStages?.fxaa?.enabled,
-    bloom: style.bloomEnabled,
-    bloomIntensity: style.bloomIntensity,
-    sharpen: style.sharpenEnabled,
-    sharpenIntensity: style.sharpenIntensity,
+    bloom: visualState.bloom.enabled,
+    bloomIntensity: visualState.bloom.intensity,
+    sharpen: visualState.sharpen.enabled,
+    sharpenIntensity: visualState.sharpen.intensity,
     style: view?.style ?? visualState.style,
     map: view?.map ?? visualState.map ?? null,
     visualState,

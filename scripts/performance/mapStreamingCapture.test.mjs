@@ -282,10 +282,6 @@ function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
         mapStack: activeStack,
         styleParams: {},
       }),
-      bloomEnabled: false,
-      bloomIntensity: 0,
-      sharpenEnabled: false,
-      sharpenIntensity: 0,
     },
   };
   const context = vm.createContext({
@@ -398,6 +394,61 @@ test('serialized native journey observes actual completed renders and returns me
   assert.deepEqual(result.settingsAfter, result.settingsBefore);
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
+});
+
+test('serialized native journey reads bloom and sharpen from the common visual snapshot', async () => {
+  const harness = createFakePage();
+  const app = harness.context.window.__godsEyeView;
+  const getVisualState = app.styleManager.getVisualState;
+  app.styleManager.getVisualState = () => ({
+    ...getVisualState(),
+    bloom: { enabled: true, intensity: 0.625, version: 'test-v1' },
+    sharpen: { enabled: false, intensity: 23 },
+  });
+  assert.equal('bloomEnabled' in app.styleManager, false);
+  assert.equal('bloomIntensity' in app.styleManager, false);
+  assert.equal('sharpenEnabled' in app.styleManager, false);
+  assert.equal('sharpenIntensity' in app.styleManager, false);
+
+  const result = await harness.serializedDriver({
+    durationMs: 60_000,
+    route: harness.route,
+  });
+  assert.equal(result.settingsBefore.bloom, true);
+  assert.equal(result.settingsBefore.bloomIntensity, 0.625);
+  assert.equal(result.settingsBefore.sharpen, false);
+  assert.equal(result.settingsBefore.sharpenIntensity, 23);
+  assert.deepEqual(result.settingsAfter, result.settingsBefore);
+});
+
+test('serialized native journey rejects missing or non-finite visual intensities', async () => {
+  for (const field of ['bloom', 'sharpen']) {
+    for (const invalidIntensity of [undefined, Number.NaN]) {
+      const harness = createFakePage();
+      const app = harness.context.window.__godsEyeView;
+      const getVisualState = app.styleManager.getVisualState;
+      app.styleManager.getVisualState = () => {
+        const visual = getVisualState();
+        const visualField = { ...visual[field] };
+        if (invalidIntensity === undefined) delete visualField.intensity;
+        else visualField.intensity = invalidIntensity;
+        return {
+          ...visual,
+          [field]: visualField,
+        };
+      };
+      await assert.rejects(
+        harness.serializedDriver({
+          durationMs: 60_000,
+          route: harness.route,
+        }),
+        /Native visual state is unavailable from the app observer\./,
+        `${field} intensity ${String(invalidIntensity)} is rejected`,
+      );
+      assert.equal(harness.listeners.size, 0);
+      assert.equal(harness.frames.size, 0);
+    }
+  }
 });
 
 test('transition failure cancels and drains the route sibling without leaving render callbacks', async () => {
