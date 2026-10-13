@@ -333,11 +333,16 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
           'legacy eight-corner terrain sphere must fail the root-vertex negative control',
         );
       }
-      const quantizedLongitudes = quantized.u.map((value) =>
+      const quantizedLongitudes = Array.from(quantized.u, (value) =>
         Cesium.Math.lerp(rectangle.west, rectangle.east, value / 32767),
       );
-      const quantizedLatitudes = quantized.v.map((value) =>
+      const quantizedLatitudes = Array.from(quantized.v, (value) =>
         Cesium.Math.lerp(rectangle.south, rectangle.north, value / 32767),
+      );
+      assert.ok(
+        quantizedLongitudes.every(Number.isFinite) &&
+          quantizedLatitudes.every(Number.isFinite),
+        `${row.path} decoded UV coordinates must remain floating-point radians`,
       );
       const longitudeOffset =
         (Math.max(...quantizedLongitudes) - Math.min(...quantizedLongitudes)) *
@@ -410,6 +415,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       terrainDataByTile.get(
         `${row.identity.level}/${row.identity.x}/${row.identity.y}`,
       );
+    const actualTerrainBoundsByLevel = new Map();
     for (const row of terrainRows) {
       const { level, x, y } = row.identity;
       const data = getTerrainData(row);
@@ -445,6 +451,17 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
             (Math.max(...data._vValues) / 32767) * (rect.north - rect.south),
         ),
       };
+      const levelBounds = actualTerrainBoundsByLevel.get(level) ?? {
+        west: Number.POSITIVE_INFINITY,
+        south: Number.POSITIVE_INFINITY,
+        east: Number.NEGATIVE_INFINITY,
+        north: Number.NEGATIVE_INFINITY,
+      };
+      levelBounds.west = Math.min(levelBounds.west, actualVertexBounds.west);
+      levelBounds.south = Math.min(levelBounds.south, actualVertexBounds.south);
+      levelBounds.east = Math.max(levelBounds.east, actualVertexBounds.east);
+      levelBounds.north = Math.max(levelBounds.north, actualVertexBounds.north);
+      actualTerrainBoundsByLevel.set(level, levelBounds);
       for (const side of ['west', 'south', 'east', 'north'])
         assert.ok(
           Math.abs(
@@ -504,7 +521,6 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         parent.identity.y,
         parent.identity.level,
       );
-      const parentCoordinates = [];
       for (let index = 0; index < data._uValues.length; index += 1) {
         const childPoint = coordinateForVertex(data, rect, index);
         const parentPointIndex = parentData._uValues.findIndex(
@@ -533,6 +549,15 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         );
         commonLodVertices += 1;
       }
+    }
+    for (const [level, bounds] of actualTerrainBoundsByLevel) {
+      assert.ok(
+        bounds.west <= fixture.manifest.routeBoundsDegrees.west &&
+          bounds.south <= fixture.manifest.routeBoundsDegrees.south &&
+          bounds.east >= fixture.manifest.routeBoundsDegrees.east &&
+          bounds.north >= fixture.manifest.routeBoundsDegrees.north,
+        `decoded terrain vertices at level ${level} must cover the full declared route: ${JSON.stringify(bounds)}`,
+      );
     }
     assert.ok(sameLevelSeams > 0, 'all route levels must check sibling seams');
     assert.ok(
