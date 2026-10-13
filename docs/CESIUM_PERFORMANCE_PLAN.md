@@ -9,6 +9,11 @@ pending validation. [Candidate dddef9eb](performance-evidence/integration-dddef9
 again fails the Windows PowerShell readiness prerequisite before browser setup.
 Timing-only diagnostics at `7cda7cfc` separate process launch/readiness and host
 timer delay; 77 root checks pass, but the hosted cause remains unresolved.
+The [targeted Windows recovery run](performance-evidence/integration-15c0cff3/README.md)
+now passes at `15c0cff3`, including all 77 prerequisites and five browser-profile
+recovery checks with matching settings/assets and normal browser closes. The
+earlier failed runs remain historical; this pass is not a root-cause claim or
+hardware qualification.
 
 The [native missing-metadata control](performance-evidence/s47-map-streaming/native-fault-38432631061/README.md)
 now reaches automatic OSM fallback and explicit Esri retry. Its validator had

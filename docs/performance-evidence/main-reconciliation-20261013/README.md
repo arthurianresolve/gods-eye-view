@@ -15,6 +15,12 @@ The reviewed freshness correction at `fe28df76` passes 100 affected root checks
 and is under fresh rendered validation. No dev history has been discarded or
 rewritten, and VM105 has not changed.
 
+The subsequent [targeted Windows recovery run](../integration-15c0cff3/README.md)
+passes at `15c0cff3` with phase diagnostics and unchanged time limits. Historical
+readiness failures remain failed with their cause unresolved. Promotion still
+requires the current map/fixture checks and final candidate validation; the old
+failure is not being treated as a failure of this new targeted run.
+
 [Fresh standard integration at `c7c47245`](../integration-c7c47245/README.md)
 now passes all seven selected jobs, including Windows recovery. This validates
 the reviewed main merge at that exact revision. The later map-navigation fix and
