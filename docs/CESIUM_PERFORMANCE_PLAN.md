@@ -19,7 +19,7 @@ deployed to VM105.
 | Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
 | Native map corpus and build profile (M1-M2) | Deterministic 72-asset corpus, native provider adapter and receipt-bound inert fixture profile | [Parser/adapter review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json), [build-profile review](performance-evidence/s47-map-streaming/build-profile-review-05eefdcb.json) and focused checks pass | Complete rendered delivery in both application revisions |
 | Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected map-specific setup/finalization are in QA | [58 focused checks and finalization review](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json); earlier standard CI passes, but the first native browser attempt fails | Validate the corrected native journeys on baseline and candidate, including rendered fault controls |
-| Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `14472b5b`](performance-evidence/windows-recovery-38349487017/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
+| Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `495f0a71`](performance-evidence/windows-recovery-38353898669/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
 | Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
 | Final performance acceptance (M4/S60) | Exact-commit evidence and rejection contracts exist | Component and hosted results retain their documented limited scope | Five matched runs per workload, visual parity, interaction targets and the corrected 60-minute retention soak on the primary Windows machine |
 
@@ -50,6 +50,17 @@ two nonexistent scalar intensity properties; the values are present in the
 existing visual snapshot. Correction `02151a21`, integrated at `aab42890`, reads
 that snapshot and passes 65 focused checks plus lint. The next browser attempt
 must verify the correction before any map-readiness claim.
+
+The [native retry at `975318f6`](performance-evidence/s47-map-streaming/native-38354738080/README.md)
+fails with a protocol timeout. Source inspection identifies an incompatible
+harness contract: one awaited browser command contains a 60-second route but
+has a 15-second command deadline. The reached in-page phase is not retained,
+so this report cannot attribute additional runtime slowness. The next
+correction uses an owned asynchronous journey with short bounded observation
+commands and explicit cancellation; route and outer deadlines stay unchanged.
+Late probe-cleanup confirmation remains a failure. All seven standard jobs
+pass independently at `495f0a71`, including five natural Windows recovery
+exits; that result does not cover this later map execution correction.
 
 Next actions, in dependency order:
 
