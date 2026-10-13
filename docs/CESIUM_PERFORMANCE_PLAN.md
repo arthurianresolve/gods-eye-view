@@ -47,6 +47,13 @@ records the exact fixture and limited scope. Profiled production builds,
 full application capture/outer validation and M4 remain pending. Preserve
 current resolution, effects, feature populations and detail settings.
 
+The M3 journey/report core is now integrated through `c7b6332f` at QA `0a504d27`.
+Its [independent correction review](performance-evidence/s47-map-streaming/driver-correction-review-c7b6332f.json)
+records actual pinned-Cesium API/pose checks and 28 passing component tests.
+Earlier false acceptance controls remain recorded. Production capture CLI and
+outer-validator integration, native browser readiness and hardware comparisons
+remain pending; this component result does not complete S47 or S57.
+
 After workload coverage, complete the remaining measured S48-S59 work and the
 S60 candidate comparisons and retention soak. Primary Windows UHD 620
 foreground hardware validation remains required. Hosted paravirtual/software

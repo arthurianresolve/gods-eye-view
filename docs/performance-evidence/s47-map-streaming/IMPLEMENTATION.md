@@ -9,7 +9,7 @@ The frozen comparison baseline remains eb8c682.
 | --- | --- | --- |
 | M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Implemented through f24b68ad; five focused tests pass independently, including real Cesium parser traversal, encoded geometry bounds, Esri default discard-policy probe and a failed-decode control. Earlier rejected corpora remain recorded. Browser rendering and full-application coverage remain M3. |
 | M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | Implemented through 05eefdcb; thirteen receipt/capture-provenance tests pass independently. Named profile and exact configuration digest are required on verification. Ignored dotenv inputs are rejected before/after build and verification. Follow-up 4fc34337 rejects an explicit missing CLI value before browser startup; six CLI checks pass independently. Real profiled production builds remain unvalidated. |
-| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | Partial: native delivery adapter at 263f1e2d passes independent focused and callback ownership checks. Actual CLI and outer validator wiring remains, including rendered readiness, coverage and fault controls. |
+| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | Partial: native delivery adapter at 263f1e2d and corrected journey/report core through c7b6332f pass independent component checks. Actual CLI and outer validator wiring remains, followed by real browser readiness, coverage and fault controls. |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
 
 ## Existing application boundaries
@@ -181,3 +181,13 @@ changed mid-route resolution, an invented route start and inflated aggregate
 acknowledgements. The existing four tests pass despite these failures. Correct
 the actual API observation and report invariants before integrating this core;
 this review does not provide browser readiness or performance evidence.
+
+Corrections through `c7b6332f`, integrated at `0a504d27`, address these five
+report failures and use the actual pinned cache properties. Independent
+`Cesium.Camera` evaluation also exposes its equivalent `2-pi` start heading;
+the validator now compares angles circularly and its test uses native camera
+endpoints. The [correction review](driver-correction-review-c7b6332f.json)
+records 28 passing focused tests, formatting, package boundaries and explicit
+lint of all seven new map modules. Serialized driver tests still use a page
+seam. Actual production CLI wiring, browser delivery/readiness and outer
+validation are not established by these component results.
