@@ -83,6 +83,32 @@ releases models, histories, ground samples and related maps. Existing
 billboard identity/mutation counts. There is no
 `src/layers/military/snapshotRenderer.test.mjs` today.
 
+The bounded absolute mutation audit is available as
+[`aircraftBillboardMutationAudit.mjs`](../../../scripts/performance/aircraftBillboardMutationAudit.mjs),
+with a registered producer-path regression in
+[`aircraftBillboardMutationAudit.test.mjs`](../../../scripts/performance/aircraftBillboardMutationAudit.test.mjs).
+Run it with
+`node scripts/performance/aircraftBillboardMutationAudit.mjs`. The report
+binds Cesium 1.138.0, a three-contact fixture digest, and SHA-256 digests for
+the audit implementation plus both snapshot renderers, record stores, and
+record policies. It feeds both real snapshot renderers and record classes,
+backed by real Cesium `BillboardCollection`/`Billboard` objects, with
+deterministic collaborators and no WebGL context.
+
+On this source, both producers add three billboards initially, preserve all
+three object identities through an equivalent repeat and a changed-position
+snapshot, retain them through a partial absence and two complete misses, and
+remove them on the third complete miss. Reappearance creates a new identity.
+Flights attempts three billboard color assignments on the equivalent repeat
+and changed-position snapshots; military attempts none in those same stages.
+Neither snapshot producer writes billboard positions in these scenarios;
+rendering-tick position updates are outside this audit. A deliberate remove,
+map-clear, and same-snapshot re-add control records three removals, three adds,
+and a changed identity digest, proving the measurement detects ownership
+churn. The actual collections are emptied and destroyed after each run;
+instrumentation is confined to proxies around the audit's returned billboard
+objects and does not patch Cesium prototypes.
+
 `src/layers/flights/rendering.js` and `src/layers/military/rendering.js`,
 `_fleetTick`, own the moving billboard position, horizon visibility, focus,
 freshness, limb scale/alpha and model handoff. Position writes are gated by
@@ -93,19 +119,12 @@ membership or allocation measurement. Existing tracking ownership tests cover
 layer ownership and selected transitions, not a paired aircraft collection
 cost comparison.
 
-## Remaining finite evidence
+## Remaining qualification evidence
 
-Add one bounded, reproducible current-path report that feeds the real snapshot
-and record producers and creates real Cesium `BillboardCollection` / `Billboard`
-objects without a WebGL context. Record retained billboard identities,
-collection adds/removes, and attempted position/color writes for: an initial
-population; an equivalent repeated snapshot; changed positions with the same
-identities; incomplete and complete absence according to the real record
-policy; and reappearance. Include a deliberate identity-churn control that the
-report detects. Bind Cesium version, fixture input and source revision. This is
-an absolute current-behavior mutation audit; it cannot establish improvement
-versus an unmeasured prior aircraft implementation, GPU upload savings, or
-frame-time benefit. No runtime change is justified by the current evidence.
+This current-path snapshot/record audit is not a population-scale timing run
+or before/after aircraft optimization comparison. It cannot establish WebGL
+upload counts, GPU work, uploaded bytes, frame time, or visual output. A
+runtime change is not justified by this audit alone.
 
 The collection split is a finite rejected experiment. Reopen it only for a
 concrete supported representation that preserves mixed command bounds,
