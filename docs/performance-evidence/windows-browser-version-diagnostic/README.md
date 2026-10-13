@@ -32,3 +32,10 @@ The [first selected-version attempt](run-38350501407.md) stops before browser
 installation on a Windows scratch-path test assumption. The test correction
 through `974b3f86` passes 28 independent checks without weakening production
 cleanup. Its hosted follow-up remains required.
+
+The corrected [follow-up 38350953804](run-38350953804/README.md) passes at
+`2336337c`: executable metadata and the running browser both match Chrome
+`155.0.8059.39`, all five stages preserve the workspace/settings/asset, and
+every browser exits naturally inside the unchanged five-second gate. This
+completes the isolated version-selector validation; the earlier intermittent
+shutdown cause remains unresolved and the default version is unchanged.

@@ -1,0 +1,61 @@
+{
+  "schema": "gev-windows-selected-version-review/v1",
+  "runId": "38350953804",
+  "jobId": "115142992724",
+  "candidateCommit": "2336337c8a1e8f76f7cbd0a900a41d1a284b19d0",
+  "browserVersion": "Chrome/155.0.8059.39",
+  "expectedBrowserVersion": "155.0.8059.39",
+  "browserVersionMatch": true,
+  "reportSha256": "131898bc6772e7d0df406ee2899c5fbcf4d5e5858040f000d6e5cd2702d39b6c",
+  "reportBytes": 14750,
+  "status": "passed",
+  "hardwareRenderingValidated": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "closeElapsedMs": 383.14830000000075,
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "closeElapsedMs": 361.83699999999953,
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "closeElapsedMs": 317.7992999999551,
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "closeElapsedMs": 536.3327999999747,
+      "exitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "closeElapsedMs": 341.9342000000179,
+      "exitCode": 0,
+      "forced": false
+    }
+  ],
+  "scope": "Single hosted exact-version compatibility and recovery observation. It does not establish a browser-version effect, shutdown root cause, or physical hardware performance."
+}

@@ -122,6 +122,14 @@ stops before installation on a test-only noncanonical temporary-path assumption;
 correction `974b3f86` preserves production cleanup checks and passes 28 focused
 tests. Its hosted follow-up is running separately.
 
+The [selected-version follow-up 38350953804](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md)
+now passes at `2336337c`. Installed metadata and browser protocol identity
+both match Chrome 155.0.8059.39. All five stages preserve settings, workspaces
+and the saved asset; natural shutdown takes 318-537 ms under the unchanged
+five-second gate. This validates the optional selector and compatibility in
+one hosted run, without changing the default version or establishing the
+earlier intermittent shutdown cause. Physical hardware acceptance remains separate.
+
 ## Earlier integration evidence
 
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer
