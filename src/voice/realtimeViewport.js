@@ -247,22 +247,28 @@ export function isNearlyBlackFrame(ctx, width, height) {
   const sampleCanvas = document.createElement('canvas');
   sampleCanvas.width = sampleWidth;
   sampleCanvas.height = sampleHeight;
-  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-  if (!sampleCtx) return false;
-  sampleCtx.drawImage(ctx.canvas, 0, 0, sampleWidth, sampleHeight);
-  const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-  let visiblePixels = 0;
-  let luminanceTotal = 0;
-  for (let index = 0; index < pixels.length; index += 4) {
-    const alpha = pixels[index + 3];
-    if (alpha < 8) continue;
-    visiblePixels++;
-    luminanceTotal +=
-      pixels[index] * 0.2126 +
-      pixels[index + 1] * 0.7152 +
-      pixels[index + 2] * 0.0722;
+  try {
+    const sampleCtx = sampleCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+    if (!sampleCtx) return false;
+    sampleCtx.drawImage(ctx.canvas, 0, 0, sampleWidth, sampleHeight);
+    const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    let visiblePixels = 0;
+    let luminanceTotal = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3];
+      if (alpha < 8) continue;
+      visiblePixels++;
+      luminanceTotal +=
+        pixels[index] * 0.2126 +
+        pixels[index + 1] * 0.7152 +
+        pixels[index + 2] * 0.0722;
+    }
+    return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
+  } finally {
+    sampleCanvas.width = sampleCanvas.height = 0;
   }
-  return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
 }
 
 // True when an error payload is the benign result of deleting a viewport
