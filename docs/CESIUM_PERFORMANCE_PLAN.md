@@ -23,6 +23,15 @@ acknowledging shutdown. The [retained failure and diagnostic follow-up](performa
 remain separate from the earlier passing run. This does not establish a source
 regression or resolve the intermittent shutdown cause.
 
+The reviewed map-corpus and automatic Windows diagnostic changes are now in
+QA integration `13796691`. All 62 focused checks, formatting, package boundaries
+and capture-harness checks pass. Hosted Node 24/26 and Linux/macOS recovery
+pass, but [Windows shutdown recurs](performance-evidence/windows-recovery-38338398935/README.md)
+on the prior application. The bounded process snapshot and forced-cleanup
+callback also time out, leaving process roles and exit unconfirmed. This
+candidate is not yet promoted to dev. Native Esri corpus proof is being
+reviewed separately; build-profile and full-application map capture remain.
+
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
 M3 actual application capture/validation, then M4 matched baseline/candidate
