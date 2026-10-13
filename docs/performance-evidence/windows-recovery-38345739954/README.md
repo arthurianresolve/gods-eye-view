@@ -8,6 +8,15 @@ Linux/macOS/Windows installation recovery and browser journeys. The
 This includes the newly discovered server test suites and the integrated native
 map delivery adapter; it does not include the unmerged M3 production driver.
 
+The [test-inventory audit](server-inventory-review.json) matches all 19 server
+test pass markers to source at the tested commit in both Node job logs. Each
+Linux parallel suite reports 7,565 passes, zero failures and three Windows-only
+skips. The native Windows permission test passes in the onboarding job. The
+two PowerShell ownership/filter tests pass locally under Node 24.16.0 using
+unchanged source and test-provided CIM responses; they do not observe live
+browser shutdown. The calibrated allocation probes run separately under
+Node 24 (14 passes) and are explicitly skipped under Node 26.
+
 All five Windows profile stages preserve settings, the workspace bundle and
 the saved asset. All five browser processes exit naturally with code 0 in
 304-599 ms, within the unchanged 5,000-ms close gate. No forced cleanup is
