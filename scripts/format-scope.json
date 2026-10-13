@@ -1194,6 +1194,7 @@
   "scripts/qa-workspace-library.mjs",
   "scripts/stage-release.mjs",
   "scripts/stage-release.test.mjs",
+  "scripts/download-candidate-artifact.mjs",
   "scripts/verify-release.mjs",
   "src/recording/vessels.js",
   "src/recording/vesselReplaySource.js",

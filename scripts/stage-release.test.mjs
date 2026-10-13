@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,8 +9,13 @@ import {
   verifyReleaseDirectory,
   parseReleaseArgs,
 } from './stage-release.mjs';
+import {
+  validateCandidateArchiveEntries,
+  validateCandidateArtifactMetadata,
+  validateCandidateArtifactZip,
+} from './download-candidate-artifact.mjs';
 
-test('release verification downloads the exact uploaded artifact ID', async () => {
+test('release verification downloads by REST artifact ID and keeps inner verification', async () => {
   const workflow = await readFile(
     new URL('../.github/workflows/release.yml', import.meta.url),
     'utf8',
@@ -44,19 +50,192 @@ test('release verification downloads the exact uploaded artifact ID', async () =
   );
   assert.match(guard, /test -n "\$ARTIFACT_ID"/);
   assert.match(guard, /\[\[ "\$ARTIFACT_ID" =~ \^\[1-9\]\[0-9\]\*\$ \]\]/);
+  assert.match(workflow, /^      actions: read$/m);
   assert.match(
     download,
-    /uses: actions\/download-artifact@[0-9a-f]{40} # v4\.3\.0/,
+    /ARTIFACT_ID: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
   );
   assert.match(
     download,
-    /artifact-ids: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
+    /UPLOAD_ARTIFACT_DIGEST: \$\{\{ steps\.upload_candidate\.outputs\.artifact-digest \}\}/,
   );
-  assert.match(download, /merge-multiple: true/);
-  assert.doesNotMatch(download, /^\s+name:/m);
+  assert.match(
+    download,
+    /EXPECTED_SOURCE_COMMIT: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    download,
+    /node scripts\/download-candidate-artifact\.mjs --out downloaded-release/,
+  );
+  assert.doesNotMatch(download, /actions\/download-artifact|artifact-ids:/);
+  assert.match(workflow, /downloaded-release\/artifact-rest-metadata\.json/);
+  assert.match(workflow, /scripts\/download-candidate-artifact\.mjs/);
   assert.match(workflow, /sha256sum -c "\$\{ARCHIVE_NAME\}\.sha256"/);
   assert.match(workflow, /gh attestation verify "\$ARCHIVE_NAME"/);
   assert.match(workflow, /test "\$\(jq -r \.commit .*\)" = "\$GITHUB_SHA"/);
+});
+
+const sourceCommit = 'a'.repeat(40);
+const candidateCommit = 'b'.repeat(40);
+const zipBytes = Buffer.from('exact uploaded artifact ZIP bytes');
+const artifactDigest = `sha256:${createHash('sha256').update(zipBytes).digest('hex')}`;
+const expectedArtifact = {
+  artifactId: '11837328637',
+  runId: '38444888716',
+  repositoryId: '1362432886',
+  sourceCommit,
+  candidateCommit,
+  artifactName: `gev-candidate-${candidateCommit}`,
+  uploadDigest: artifactDigest,
+};
+
+function candidateMetadata(overrides = {}) {
+  return {
+    id: Number(expectedArtifact.artifactId),
+    name: expectedArtifact.artifactName,
+    size_in_bytes: zipBytes.length,
+    expired: false,
+    digest: artifactDigest,
+    workflow_run: {
+      id: Number(expectedArtifact.runId),
+      repository_id: Number(expectedArtifact.repositoryId),
+      head_repository_id: Number(expectedArtifact.repositoryId),
+      head_sha: sourceCommit,
+    },
+    ...overrides,
+  };
+}
+
+test('candidate REST metadata binds artifact ID, run, repository, name, source and both upload digests', () => {
+  const verified = validateCandidateArtifactMetadata(
+    candidateMetadata(),
+    expectedArtifact,
+  );
+  assert.equal(verified.artifactId, 11837328637);
+  assert.equal(verified.runId, 38444888716);
+  assert.equal(verified.sourceCommit, sourceCommit);
+  assert.notEqual(verified.sourceCommit, candidateCommit);
+
+  const wrongRun = candidateMetadata();
+  wrongRun.workflow_run.id += 1;
+  const wrongRepository = candidateMetadata();
+  wrongRepository.workflow_run.repository_id += 1;
+  const wrongHeadRepository = candidateMetadata();
+  wrongHeadRepository.workflow_run.head_repository_id += 1;
+  const wrongSource = candidateMetadata();
+  wrongSource.workflow_run.head_sha = candidateCommit;
+  const wrongDigest = candidateMetadata({ digest: 'sha256:' + 'c'.repeat(64) });
+  const expired = candidateMetadata({ expired: true });
+  const wrongName = candidateMetadata({
+    name: 'gev-candidate-' + sourceCommit,
+  });
+  const cases = [
+    [candidateMetadata({ id: 1 }), 'uploaded ID'],
+    [wrongRun, 'workflow run'],
+    [wrongRepository, 'repository'],
+    [wrongHeadRepository, 'repository'],
+    [wrongSource, 'source commit'],
+    [wrongDigest, 'digests'],
+    [expired, 'expired'],
+    [wrongName, 'name'],
+  ];
+  for (const [metadata, message] of cases)
+    assert.throws(
+      () => validateCandidateArtifactMetadata(metadata, expectedArtifact),
+      new RegExp(message, 'i'),
+    );
+  assert.throws(
+    () =>
+      validateCandidateArtifactMetadata(candidateMetadata(), {
+        ...expectedArtifact,
+        artifactId: '0',
+      }),
+    /positive integer/,
+  );
+  assert.throws(
+    () =>
+      validateCandidateArtifactMetadata(candidateMetadata(), {
+        ...expectedArtifact,
+        uploadDigest: 'sha256:broken',
+      }),
+    /sha256 digest/,
+  );
+});
+
+test('REST ZIP bytes must match upload and metadata digests and exact archive size', () => {
+  const digest = validateCandidateArtifactZip({
+    metadataSize: zipBytes.length,
+    metadataDigest: artifactDigest,
+    uploadDigest: artifactDigest,
+    zipBytes,
+  });
+  assert.equal(digest, artifactDigest.slice('sha256:'.length));
+  assert.throws(
+    () =>
+      validateCandidateArtifactZip({
+        metadataSize: zipBytes.length + 1,
+        metadataDigest: artifactDigest,
+        uploadDigest: artifactDigest,
+        zipBytes,
+      }),
+    /size differs/,
+  );
+  assert.throws(
+    () =>
+      validateCandidateArtifactZip({
+        metadataSize: zipBytes.length,
+        metadataDigest: artifactDigest,
+        uploadDigest: 'sha256:' + 'd'.repeat(64),
+        zipBytes,
+      }),
+    /digests do not match/,
+  );
+  assert.throws(
+    () =>
+      validateCandidateArtifactZip({
+        metadataSize: Buffer.byteLength('mutated archive'),
+        metadataDigest: artifactDigest,
+        uploadDigest: artifactDigest,
+        zipBytes: Buffer.from('mutated archive'),
+      }),
+    /digest differs/,
+  );
+  assert.throws(
+    () =>
+      validateCandidateArtifactZip({
+        metadataSize: zipBytes.length,
+        metadataDigest: 'sha256:invalid',
+        uploadDigest: artifactDigest,
+        zipBytes,
+      }),
+    /sha256 digest/,
+  );
+});
+
+test('candidate ZIP accepts only the two exact flat filenames', () => {
+  const archiveName = `gods-eye-view-${candidateCommit}.tar.gz`;
+  assert.deepEqual(
+    validateCandidateArchiveEntries(
+      [`${archiveName}.sha256`, archiveName],
+      archiveName,
+    ),
+    [archiveName, `${archiveName}.sha256`],
+  );
+  for (const entries of [
+    [archiveName],
+    [archiveName, `${archiveName}.sha256`, 'unexpected.txt'],
+    [archiveName, `${archiveName}.sha256`, `${archiveName}.sha256`],
+    [`nested/${archiveName}`, `${archiveName}.sha256`],
+    [`../${archiveName}`, `${archiveName}.sha256`],
+  ])
+    assert.throws(
+      () => validateCandidateArchiveEntries(entries, archiveName),
+      /only the candidate archive and checksum/,
+    );
+  assert.throws(
+    () => validateCandidateArchiveEntries([], 'candidate.zip'),
+    /archive name is invalid/,
+  );
 });
 
 async function fixture(t) {
