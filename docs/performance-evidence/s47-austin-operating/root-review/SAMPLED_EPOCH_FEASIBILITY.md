@@ -474,3 +474,37 @@ into an isolated directory, substitutes the two real broken entrypoints from
 Restoring the current entrypoints produces exit 0 with all 17 files passing.
 Tracked files are not modified by this control. This prevents that defect class
 in the audited scope; it does not prove successful capture or runtime performance.
+
+# Rendering contract correction and independent controls
+
+Luna's `0bf84d03` records the actual rendering contract: resolution scale 1,
+four MSAA samples, WebGL antialiasing enabled and FXAA disabled. It binds the
+native before/after settings to the capture and condition copies and rejects
+coherent changes to each rendering property. Follow-up `8282a620` gives
+sample-local assertions the existing `<scenario> run <n>:` prefix, preserving
+scenario/run extraction in bounded failure reports. ALPR coverage and source
+provenance failures also receive explanatory labels. Application settings, fixture
+bytes/hash and the 256 KiB failure cap are unchanged.
+
+The [independent control](austin-aa-contract-control.json) runs the real
+fixture-backed comparison case with a read-only loader substitution of the
+old contract. It [fails at the old FXAA assertion](austin-aa-old-contract-control.tap)
+with the baseline-observed settings. The corrected contract and bounded-failure
+suites pass all 14 checks after integration. This demonstrates the contract defect;
+it does not reconstruct the discarded candidate samples from run 38322832429.
+
+An earlier broader local run at `ac14dfbd` passes 100 of 101 checks. The first
+CLI startup case fails after 15,027.7 ms with empty stderr at its unchanged
+15-second child limit. The subsequent isolated [four-case CLI rerun](austin-aa-cli-recheck.tap)
+passes, with the first case taking 3,250.8 ms. The original failure is preserved
+and its delay cause remains unresolved; no timeout was relaxed.
+
+All [seven standard CI jobs](ci-checkpoint-f204837e.json) pass at exact
+`f204837e224e8a7d5ae98a7ebe051365db24b0e0`, including Windows recovery.
+That revision predates the permanent scope gate and rendering-contract repair;
+those changes require their own exact-revision hosted capture and standard run.
+
+At integration `a734071297f3cd6cc1cbee1d2c43b64412152149`, the full formatting
+check passes across 1,621 files and package-boundary validation passes for
+1,010 modules and 80 portable entries. A fresh fetch also confirms the same
+main/dev revisions and zero missing main commits recorded above.
