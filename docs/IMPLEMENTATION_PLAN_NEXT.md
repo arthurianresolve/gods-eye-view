@@ -1,5 +1,22 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
+13 October QA audit: the unit runner previously discovered `src` tests and
+explicitly listed only the archive server test. It omitted the CCTV-health and
+transit-history server suites. Correction `13d4a0ee`, integrated at `a2d35817`,
+recursively discovers both `src` and `server`, without duplicating archive tests
+or changing the serialized allocation probes. Root independently passes all 28
+focused checks. The newly exercised CCTV test had an obsolete expectation at
+the exact expiry boundary; the corrected regression checks immediately before,
+at and after three declared intervals, or five minutes when cadence is unknown.
+Production expiry behavior is unchanged. Earlier full-suite results describe
+their historical test inventory; they do not cover these omitted tests.
+
+Current Windows recovery remains failed at `9dfff5b4`: four attempted persistence
+stages pass, but upgraded-application shutdown exceeds five seconds and prevents
+the fifth stage. The [preserved report](performance-evidence/windows-recovery-38341548120/README.md)
+records the successful close acknowledgement, remaining process and subsequent
+forced exit. The cause remains unresolved, and QA has not been promoted to dev.
+
 11 October checkpoint: [current dev `ba7c8738`](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
 passes all seven standard jobs, including full Node 24/26 validation and
 Windows/Linux/macOS installation recovery. The corrected [60-minute hosted soak](performance-evidence/hosted-soak-38167171204/README.md)

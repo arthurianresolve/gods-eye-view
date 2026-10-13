@@ -1095,6 +1095,7 @@
   "scripts/fixtures/mission-render-demand.html",
   "scripts/fixtures/mission-render-demand-fixture.mjs",
   "scripts/run-unit-tests.mjs",
+  "scripts/run-unit-tests.test.mjs",
   "scripts/captureNoUndefConfig.mjs",
   "scripts/check-capture-no-undef.mjs",
   "scripts/captureNoUndefConfig.test.mjs",

@@ -69,6 +69,15 @@ The completed standard run has six passing jobs: Node 24/26, Windows onboarding,
 Linux/macOS recovery and browser journeys. Windows recovery remains the sole
 failed job at this exact revision.
 
+The subsequent server-test inventory audit found two omitted suites and an
+obsolete CCTV expiry assertion. Correction `13d4a0ee`, integrated at
+`a2d35817`, discovers server tests recursively and adds exact-boundary checks
+without changing production behavior. Root passes 28 focused checks, including
+allocation-test partitioning. Previous CI results retain their historical scope;
+the next complete suite must include the expanded inventory. The [S32-S46
+checkpoint](IMPLEMENTATION_PLAN_NEXT.md) records this gap separately from the
+unresolved Windows shutdown failure.
+
 ## Earlier integration evidence
 
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer
