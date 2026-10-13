@@ -222,7 +222,7 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
   assert.ok(first.manifest.totalBytes < 2 * 1024 * 1024);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 71);
+  assert.equal(first.manifest.assetCount, 72);
   assert.equal(first.manifest.geometry.tilesetNodeCount, 21);
   const terrainBounds = first.manifest.geometry.terrainMeshBoundsDegrees;
   assert.ok(terrainBounds.west <= first.manifest.routeBoundsDegrees.west);

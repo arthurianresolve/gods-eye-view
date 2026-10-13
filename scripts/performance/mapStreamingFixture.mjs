@@ -920,6 +920,32 @@ export async function createDeterministicMapStreamingFixture() {
       },
     ),
   );
+  const googleCreditPlaceholderBytes = deterministicPng({
+    width: 64,
+    height: 16,
+    seed: seedFromId('synthetic-google-credit-placeholder-v1'),
+    pixel(x, y, seed) {
+      const border = x < 2 || x > 61 || y < 2 || y > 13;
+      const hatch = ((x >> 2) + (y >> 2) + (seed & 1)) % 2 === 0;
+      return border ? 3 : hatch ? 15 : 4;
+    },
+  });
+  assetRows.push(
+    addAsset(
+      assets,
+      'google/credit-placeholder.png',
+      'synthetic-google-credit-placeholder-png',
+      googleCreditPlaceholderBytes,
+      {
+        width: 64,
+        height: 16,
+        synthetic: true,
+        providerBranding: false,
+        reason:
+          'visible generated placeholder for the native Cesium credit image request; not provider artwork',
+      },
+    ),
+  );
   const terrainCoverage = TERRAIN_LEVELS.map((level) => {
     const tiles = tileCoordinates(terrainScheme, ROUTE, level);
     const yTileCount = terrainScheme.getNumberOfYTilesAtLevel(level);
