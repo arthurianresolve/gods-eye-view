@@ -151,3 +151,9 @@ Keep M4 comparisons separate from the short hosted diagnostic smoke.
 The [M2 independent review](build-profile-review-05eefdcb.json) records the
 current source, profile digest and exact validation scope. Default and historical
 receipts remain readable without claiming the new dotenv checks.
+
+An [independent pinned-Cesium resource derivation check](native-google-resource-resolution.json)
+resolves all 21 generated content references from the native Google root path.
+They resolve under `/v1/tiles/`, each retaining the fixed public `key` query,
+and all map to declared GLBs. This is URL derivation evidence only; actual
+network interception and rendered delivery are still M3 requirements.
