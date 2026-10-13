@@ -227,3 +227,26 @@ test('the guard rejects each way Cesium mishandles a degenerate pick', () => {
   assert.ok(Math.abs(Cesium.Math.toDegrees(carto.longitude) + 97.7431) < 1e-6);
   assert.ok(Math.abs(Cesium.Math.toDegrees(carto.latitude) - 30.2672) < 1e-6);
 });
+
+test('the ground under a click: the rendered surface, else the ellipsoid, never the sky', async () => {
+  const { pickGroundPosition } = await import('./scenePick.js');
+  const ground = { x: 6378137, y: 0, z: 0 };
+  const sky = { x: 500, y: 0, z: 0 };
+  const viewer = (picked, ellipsoid) => ({
+    scene: { pickPositionSupported: true, pickPosition: () => picked },
+    camera: { pickEllipsoid: () => ellipsoid },
+  });
+  assert.equal(pickGroundPosition(viewer(ground, null), {}), ground);
+  assert.equal(pickGroundPosition(viewer(sky, ground), {}), ground);
+  assert.equal(pickGroundPosition(viewer(undefined, undefined), {}), null);
+  assert.equal(pickGroundPosition(null, {}), null);
+});
+
+test('a surface pick is nothing, or Google 3D tile content without an id', async () => {
+  const { isSurfacePick } = await import('./scenePick.js');
+  assert.equal(isSurfacePick(undefined), true);
+  assert.equal(isSurfacePick({ content: {} }), true);
+  assert.equal(isSurfacePick({ primitive: { isCesium3DTileset: true } }), true);
+  assert.equal(isSurfacePick({ id: 'flight:1', content: {} }), false);
+  assert.equal(isSurfacePick({ primitive: {} }), false, 'an unnamed primitive');
+});
