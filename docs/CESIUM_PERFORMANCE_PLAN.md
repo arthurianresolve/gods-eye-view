@@ -2,20 +2,32 @@
 
 ## Current execution checkpoint - 13 October 2026
 
-S47-S60 remain partial: all fourteen slices have implementation work, but none
-meets every implementation, automatic-validation and hardware-acceptance
-requirement. The detailed slice ledger below remains the requirement inventory.
-No whole-plan code percentage or achieved performance target is inferred from
-partial components. Historical failed reports remain failed.
+The [13 October acceptance amendment](CESIUM_ACCEPTANCE.md) is authoritative for
+remaining S47-S60 work. It separates engineering closure, automatic validation,
+primary Windows qualification and the 20% performance objective. Rejected designs
+may receive a supported no-change disposition; unavailable physical Mac/discrete
+GPU coverage is explicitly unverified and does not block the primary milestone.
+Visual, integrity, interaction, regression and 60-minute retention gates remain.
+The candidate evaluator's 20% hard-failure mismatch needs a reviewed correction.
 
-Fresh main reconciliation finds fork/main and upstream/main at `8b8ccc9a`, fully
-contained in local and remote dev `e8ccc268` (697 ahead, zero behind). No upstream
-merge or rebase is required. Reviewed QA work is still separate from dev.
+The existing fourteen slice rows still report partial implementation. This
+amendment alone changes no slice to closed or passed. Reaudit engineering closure
+against its finite checklist; report engineering-closed and fully qualified counts
+separately, without inventing a code-completion percentage. Historical failures
+remain failed.
 
-[Standard integration at `b4a9ac81`](performance-evidence/integration-b4a9ac81/README.md)
+[Fresh main reconciliation](performance-evidence/main-reconciliation-20261013/README.md)
+finds both fork and upstream main at `9beadbda`. Local and remote dev still match
+`e8ccc268` (697 ahead of main, fourteen behind). A merge rehearsal finds one
+conflict in the picking tests; preserving both additions passes eight isolated
+tests. A reviewed merge is recommended; no branch was merged, rebased or discarded.
+Later QA work remains separate from dev. This supersedes the earlier zero-behind
+checkpoint.
+
+[Standard integration at `88420e23`](performance-evidence/integration-88420e23/README.md)
 passes all seven selected jobs, including full Node 24/26 suites and builds,
 Windows onboarding, Windows/macOS/Linux persisted-profile recovery and browser
-journeys. The canonical v2 map corpus also passes its fixed-hash/parser checks
+journeys. The canonical v3 map corpus also passes its fixed-hash/parser checks
 on all three operating systems. The separately recorded native map failure remains failed; these passes
 do not establish matched performance, a hardware soak or complete slice acceptance.
 
@@ -25,8 +37,28 @@ The 578-asset fixture preserves existing pixels, terrain, geometry and route
 bounds and remains below the unchanged 5 MiB limit. Root passes 107 focused
 checks and independently compares all 33,161,216 new tile pixels to the original
 formula. Buffer isolation and pinned inventory checks prevent fixture mutation
-from changing its authority. Complete native baseline/candidate journeys and
-cross-platform v3 results remain pending; the old failure is retained.
+from changing its authority. Cross-platform v3 checks pass at `88420e23`;
+complete native baseline/candidate journeys remain pending and the old failure
+is retained.
+
+[Native v3 run 38409997486](performance-evidence/s47-map-streaming/native-38409997486/README.md)
+at `88420e23` completes the baseline's strict four-stack route, but the later
+delivery audit fails on eleven missing lower-level imagery assets. Eight paths
+are retained and three explicitly omitted. The fixture acknowledges all 217
+matched requests; context, interception and probe retirement complete. The
+candidate never runs. A [CPU replay of native imagery dependencies](performance-evidence/s47-map-streaming/native-imagery-dependencies-v3/README.md)
+reproduces all eight retained missing paths. The complete dependency set for the
+fixture terrain tiles contains 21 absent OSM images; correction is in progress.
+The three omitted browser identities remain unknown. Do not repeat the failed
+run unchanged or relax delivery checks.
+
+Reviewed [explicit map retry correction](performance-evidence/s57-construction-fallback-retry/README.md)
+at `e5ff5303` (source `6cb55a5d`) removes a failed source's cached fallback alias
+so a later manual selection can retry it. Root reproduces the old failure and
+passes all 50 map tests after correction, including concurrent attempts and
+destruction during pending fallback. The defective function is identical in the
+frozen baseline, current main and dev. Integration and native recovery validation
+remain pending; healthy-provider reuse and shared fallback ownership are retained.
 
 The [exact-commit Windows recovery run at `feb067d3`](performance-evidence/windows-recovery-38401057945/README.md)
 now passes all prerequisites and all five persisted-profile recovery checks.
@@ -108,7 +140,7 @@ deployed to VM105.
 | Work item | Implemented scope | Automatic evidence | Remaining acceptance |
 | --- | --- | --- | --- |
 | Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
-| Native map corpus and build profile (M1-M2) | Deterministic 578-asset v3 corpus, native provider adapter and receipt-bound inert fixture profile | Canonical v2 bytes pass on three operating systems; [v3 imagery review](performance-evidence/s47-map-streaming/imagery-coverage-v3/README.md), parser/adapter and build-profile checks pass | Complete rendered delivery in both application revisions and cross-platform v3 checks |
+| Native map corpus and build profile (M1-M2) | Deterministic 578-asset v3 corpus, native provider adapter and receipt-bound inert fixture profile | V3 bytes, pixels and parsers pass on three operating systems; [v3 imagery review](performance-evidence/s47-map-streaming/imagery-coverage-v3/README.md), adapter and build-profile checks pass | Complete native imagery coverage and rendered delivery in both application revisions |
 | Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected map-specific setup/finalization are in QA | [58 focused checks and finalization review](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json); earlier standard CI passes, but the first native browser attempt fails | Validate the corrected native journeys on baseline and candidate, including rendered fault controls |
 | Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `495f0a71`](performance-evidence/windows-recovery-38353898669/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
 | Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
@@ -1138,7 +1170,8 @@ This ledger separates code delivery, automatic checks, and hardware acceptance.
 `Partial` means a foundation exists but the full slice contract is not delivered.
 `Pending` means the planned change or acceptance evidence remains outstanding;
 existing behavior alone does not complete a new slice. No S47-S60 slice has full
-acceptance evidence yet. The [S32-S46 ledger](IMPLEMENTATION_PLAN_NEXT.md) retains
+acceptance evidence yet. Reconcile engineering closure against
+[the amended checklist](CESIUM_ACCEPTANCE.md) separately from final qualification. The [S32-S46 ledger](IMPLEMENTATION_PLAN_NEXT.md) retains
 the earlier release requirements and historical results.
 
 | Slice | Code implemented | Automatically validated | Hardware validated |
@@ -3494,9 +3527,10 @@ The renderer, geometry parameters and visual quality settings are unchanged.
 
 ## Completion execution plan - 9 October 2026
 
-This section is the forward work order. The ledger above reports delivered work;
-older reconciliation notes and reports below are historical and do not override
-this queue. Updating this plan does not change a slice to implemented or passed.
+This dated section retains the detailed work packets. The current
+[acceptance amendment](CESIUM_ACCEPTANCE.md) supersedes its completion, experiment
+closure and environment rules where they conflict. The ledger reports delivered
+evidence; updating criteria does not mark code implemented or checks passed.
 The restart point is clean `dev` at `93caf86405a56ba56dbcca72e16eaf23a35e32d6`.
 The original comparison baseline remains `eb8c682`; use both full SHAs in evidence.
 
@@ -3520,9 +3554,10 @@ second runtime.
 - **Hardware validated:** matched results identify the renderer and environment;
   software rendering, hosted paravirtual Metal and a physical desktop are separate.
 - **Experiment rejected:** retain the reproducer, measurements and reason, revert
-  the runtime change, and assess another design. A rejection closes that experiment,
-  not unrelated deliverables in its parent slice. A no-change disposition for a
-  complete optimization requires evidence covering the original contract.
+  the runtime change, and record the reviewed no-change disposition. A rejection closes that experiment,
+  not unrelated deliverables in its parent slice. A supported no-change decision
+  closes the named experiment without requiring an unbounded search for alternatives;
+  mandatory behavior and applicable qualification remain required.
 - **All done:** every packet has an accepted implementation or an evidenced
   no-change disposition, all required available-environment checks pass on the
   frozen candidate, documentation and deployment agree, and remaining unavailable

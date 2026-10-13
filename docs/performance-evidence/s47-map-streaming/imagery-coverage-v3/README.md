@@ -46,7 +46,11 @@ level 12 to 15 with identical bytes. Existing imagery, terrain, 3D geometry and
 route bounds remain unchanged. This review artifact is 1,331 bytes, SHA-256
 `f17e49d19f30a2616241879f997cc6c0fdd5ee2e32aaaad140b5cd089a91df9f`.
 
-Code is implemented and focused automatic validation passes. Complete rendered
-baseline/candidate journeys, cross-platform v3 verification, physical Windows
+Code is implemented and focused automatic validation passes.
+[Standard integration](../../integration-88420e23/README.md) passes all seven jobs,
+including the fixed v3 hash and parser checks on Windows, macOS and Linux.
+The [native v3 journey](../native-38409997486/README.md) completes the baseline's
+route but fails on eleven missing lower-level imagery assets; the candidate
+never runs. Complete rendered baseline/candidate acceptance, physical Windows
 captures and final performance/retention acceptance remain pending. Native
 validation must use diagnostic worker auditing, not receipt-only auditing.
