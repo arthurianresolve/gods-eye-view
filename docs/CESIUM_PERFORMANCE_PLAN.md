@@ -9,8 +9,10 @@ may receive a supported no-change disposition; unavailable physical Mac/discrete
 GPU coverage is explicitly unverified and does not block the primary milestone.
 Visual, integrity, interaction, regression and 60-minute retention gates remain.
 The candidate evaluator now separates target outcome at `6f635ecd`; root passes
-73 focused candidate/comparison/retention checks. Standard integration now passes
-all seven selected jobs at containing revision `f50565a0`.
+73 focused candidate/comparison/retention checks. [Fresh standard integration](performance-evidence/integration-c7c47245/README.md)
+passes all seven selected jobs at `c7c47245`, including Windows, Linux and macOS
+profile recovery. The later map URL fix and S50 runtime change are checked
+separately at candidate `dddef9eb`; the older pass is not their evidence.
 
 The [fresh-document map fault runner](performance-evidence/s47-map-streaming/fault-outer-control/README.md)
 at `cc3328e1` is implemented with independent candidate contexts, bounded stages,
@@ -55,7 +57,10 @@ against both bases. The [merged-candidate CI run](performance-evidence/integrati
 at `4b60f453` finishes with six selected passes, including Street Level, and one
 Windows PowerShell readiness failure before browser recovery. The unchanged
 helper passes locally; the hosted startup cause remains unresolved. Promotion
-still requires the outstanding Windows validation. A fresh fetch finds no newer
+required outstanding Windows validation at that checkpoint. Fresh standard CI
+at `c7c47245` now passes Windows recovery and all six other selected jobs. The
+historical timeout remains failed, with its cause unresolved. The later corrected
+candidate still needs its own integration result. A fresh fetch finds no newer
 main commits beyond the reviewed merge.
 QA remains separate from dev and the deployed VM; no history was rebased or
 discarded. This supersedes the earlier zero-behind and unmerged checkpoints.

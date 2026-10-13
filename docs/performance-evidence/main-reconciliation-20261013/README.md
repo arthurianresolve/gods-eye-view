@@ -1,5 +1,13 @@
 # Current main reconciliation
 
+[Fresh standard integration at `c7c47245`](../integration-c7c47245/README.md)
+now passes all seven selected jobs, including Windows recovery. This validates
+the reviewed main merge at that exact revision. The later map-navigation fix and
+S50 runtime change are under separate validation at `dddef9eb`; they cannot inherit
+the earlier result. Dev/VM105 remain unchanged pending current candidate checks.
+The earlier Windows failure remains historical failed evidence, not a current
+failure of the successful `c7c47245` run.
+
 The latest fetch before the `cc3328e1` integration check again confirms both main
 refs at `9beadbda6333b83f79aa03047e2d851830f01f6b` and fork/dev at
 `e8ccc268608fbece8b6d87a0b6db86e1800ddf90`. Dev remains fourteen commits behind
