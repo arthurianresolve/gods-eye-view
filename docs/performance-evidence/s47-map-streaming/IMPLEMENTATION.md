@@ -7,8 +7,8 @@ The frozen comparison baseline remains eb8c682.
 
 | Packet | Deliverable | Current evidence and completion requirement |
 | --- | --- | --- |
-| M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Initial 06f82b08 packet rejected by independent review: all 21 tileset content URLs return 404, child transforms compound absolute Earth coordinates, and provider ancestors/metadata are incomplete. Corrections in progress. Require real URL/transform and ancestor traversal controls; browser rendering remains separate. |
-| M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | Not implemented. Unknown profiles, arbitrary values and mismatched profile/receipt must fail. Handle ignored dotenv inputs before/after building and during verification; do not modify ordinary application configuration. |
+| M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Implemented through f24b68ad; five focused tests pass independently, including real Cesium parser traversal, encoded geometry bounds, Esri default discard-policy probe and a failed-decode control. Earlier rejected corpora remain recorded. Browser rendering and full-application coverage remain M3. |
+| M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | In progress on the isolated M2 branch. Unknown profiles, arbitrary values and mismatched profile/receipt must fail. Handle ignored dotenv inputs before/after building and during verification; do not modify ordinary application configuration. |
 | M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | Not implemented. Actual CLI and outer validator must both accept the same report. Include missing/corrupt assets, cancellation, supersession and late-response controls. |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
 
@@ -91,3 +91,13 @@ coercion error in the test decoder and adds actual per-level coverage checks.
 The four parser/corpus tests pass independently. Native Esri service metadata,
 browser rendering and full-application capture are still separate work; M1 is
 not yet the complete production map workload.
+
+Native Esri follow-up `75ce3611`, `15c3e4ed` and `f24b68ad` adds actual
+MapServer metadata parsing, native tile URL resolution and the explicit
+transparent missing-tile probe requested by Cesium's default discard policy.
+The [independent parser review](native-parser-review-f24b68ad.json) records
+five passing tests, 71 generated assets and their manifest hash. Successful
+HTTP bytes are insufficient: the injected decode failure is rejected. Node
+uses a sharp-backed image seam; browser image decoding and actual application
+rendering remain M3 requirements. M1 corpus/parser implementation is complete
+within that scope, without declaring S47 or S57 complete.

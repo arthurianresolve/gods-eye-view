@@ -29,13 +29,15 @@ and capture-harness checks pass. Hosted Node 24/26 and Linux/macOS recovery
 pass, but [Windows shutdown recurs](performance-evidence/windows-recovery-38338398935/README.md)
 on the prior application. The bounded process snapshot and forced-cleanup
 callback also time out, leaving process roles and exit unconfirmed. This
-candidate is not yet promoted to dev. Native Esri corpus proof is being
-reviewed separately; build-profile and full-application map capture remain.
+candidate is not yet promoted to dev. Native Esri corpus proof through
+`f24b68ad` is now merged on QA and all five focused corpus/parser tests pass.
+Build-profile and full-application map capture remain.
 
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
 M3 actual application capture/validation, then M4 matched baseline/candidate
-runs. M1 is in progress; the later packets are not implemented. Preserve
+runs. M1 corpus/parser implementation is complete; M2 is in progress, while
+M3-M4 remain pending. Preserve
 current resolution, effects, feature populations and detail settings.
 
 After workload coverage, complete the remaining measured S48-S59 work and the
