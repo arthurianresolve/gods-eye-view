@@ -245,3 +245,21 @@ both common and map observers, with 65 independent focused tests passing.
 The failed raw report is retained, including confirmed interception retirement
 and the secondary unproven credit delivery. Native rendered delivery remains
 unaccepted pending a fresh run.
+
+The [next failure](native-38354738080/README.md) exposes an incompatible
+execution contract: the 60-second route is awaited within a browser command
+whose timeout is 15 seconds. The `e7cd78df`/`1303aaf3` correction, integrated
+at `d0f34f05`, starts a page-owned operation and uses short observation calls.
+A monotonic 150-second host limit bounds slow polling; cancellation drains
+with a five-second timer and terminal disposal requires matching ownership.
+Missing acknowledgements remain failures and context closure retains final
+ownership when page communication cannot confirm cleanup.
+
+Failure records retain a validated phase, observed map state, actual elapsed
+times, expected limits and cancellation/disposal outcomes through CLI and
+outer smoke serialization. A completed checkpoint counts the three actual
+stack switches, excluding the initial state. Observed cancellation-drain time
+is not clipped to its timer deadline. Root passes 82 focused tests, including
+slow commands, lost start responses, late cancellation timers, failed disposal
+after success, and bounded-report replay. These component checks do not prove
+native rendered delivery; the production browser gate remains required.

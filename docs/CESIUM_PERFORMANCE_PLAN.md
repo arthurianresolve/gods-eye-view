@@ -62,6 +62,16 @@ Late probe-cleanup confirmation remains a failure. All seven standard jobs
 pass independently at `495f0a71`, including five natural Windows recovery
 exits; that result does not cover this later map execution correction.
 
+The correction at `e7cd78df` plus `1303aaf3`, integrated at `d0f34f05`, starts
+the owned page journey and polls its state with short browser commands. It
+adds a 150-second monotonic host limit and a five-second cancellation-drain
+timer while preserving the 60-second route, readiness limits, 15-second smoke
+protocol limit and outer capture deadlines. Validated failure checkpoints and
+cleanup outcomes now survive both CLI and outer smoke report serialization.
+Root passes 82 focused checks; these use controlled page/transport seams and
+do not establish a real rendered journey or hardware acceptance. The next
+native browser run must validate this exact integrated correction.
+
 Next actions, in dependency order:
 
 1. Exercise the corrected M3 map-workload setup and post-retirement evidence
