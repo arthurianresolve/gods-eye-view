@@ -34,7 +34,12 @@ finishes with six of seven selected jobs passing. Windows recovery fails its
 prerequisite test when a mocked PowerShell subprocess exceeds
 five seconds, before browser installation. The same ownership test file passes
 all 41 checks locally; the hosted delay's cause remains unproven. This is separate
-from the older Chrome shutdown failure. Root also [reproduces startup camera
+from the older Chrome shutdown failure. Test-only correction `7542775e` now waits
+for an actual PowerShell readiness marker before sending the mocked script, with
+separate startup, execution and cleanup bounds and timing evidence. Root passes
+all 74 recovery/shutdown prerequisites, including both actual PowerShell cases
+and deterministic timeout/cleanup controls. Production deadlines are unchanged;
+hosted recovery validation is pending. Root also [reproduces startup camera
 ownership interference](performance-evidence/s47-map-startup-flight/README.md)
 with actual Cesium camera/tween code: both an active startup flight and a delayed
 startup callback can overwrite the map driver's declared route pose. The source

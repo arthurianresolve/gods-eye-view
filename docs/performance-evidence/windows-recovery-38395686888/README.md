@@ -30,7 +30,19 @@ Windows machine with Node 24.16.0: all pass, including the two actual PowerShell
 script cases at 352 and 479 ms. That local pass does not explain the hosted
 timeout or turn this run into a pass.
 
-Next: separate subprocess readiness from mocked-script execution in the test
-evidence, retaining bounded subprocess cleanup and functional assertions.
-Do not change production browser close or process-inventory deadlines, skip the
-Windows tests, or claim a root cause from the empty hosted output.
+Correction `7542775e` (reviewed source `12a06902`) separates subprocess readiness
+from mocked-script execution. PowerShell emits and flushes a readiness marker
+before the test sends its script over stdin. Startup is bounded at five seconds;
+the script retains its separate five-second execution limit. Failed termination
+has a one-second close bound and remains unconfirmed if no close is observed.
+Failures report the stage and elapsed startup, execution and cleanup separately,
+without retaining script contents or command lines. Production process-inventory
+and browser-close deadlines are unchanged.
+
+Root independently passes all 74 recovery/shutdown prerequisite checks on
+Windows Node 24.16.0, including the two actual PowerShell scripts. Deterministic
+controls cover distinct startup/execution budgets, late readiness during cleanup,
+hung execution, early/nonzero exits, spawn failure, output overflow, immediate
+close and unconfirmed cleanup. This repairs the test's conflation of startup and
+execution; it does not establish which stage caused the historical empty-output
+timeout. A fresh hosted recovery run is required.
