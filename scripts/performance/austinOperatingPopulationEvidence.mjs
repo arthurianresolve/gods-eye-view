@@ -1,10 +1,118 @@
 import { createHash } from 'node:crypto';
 
 const HASH = /^[a-f0-9]{64}$/;
+const MAX_INSTALLATION_DIAGNOSTIC_IDS = 1_024;
 const hashIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
     .digest('hex');
+
+function installationPopulationFailure(
+  label,
+  layer,
+  expectedCatalogCount,
+  allowedInstallationIds,
+) {
+  const population = layer?.sourcePopulation;
+  const ids = population?.identityIds;
+  const idsAvailable = Array.isArray(ids);
+  const identityAnalysisBounded =
+    idsAvailable && ids.length <= MAX_INSTALLATION_DIAGNOSTIC_IDS;
+  const analyzedIds = identityAnalysisBounded ? ids : null;
+  const nonStringIds = analyzedIds
+    ? analyzedIds.filter((id) => typeof id !== 'string')
+    : null;
+  const unknownIds = analyzedIds
+    ? analyzedIds.filter(
+        (id) => typeof id === 'string' && !allowedInstallationIds.has(id),
+      )
+    : null;
+  const uniqueCount = analyzedIds ? new Set(analyzedIds).size : null;
+  const allIdsAreStrings =
+    analyzedIds !== null && analyzedIds.every((id) => typeof id === 'string');
+  const recomputedIdentitySha256 = allIdsAreStrings
+    ? hashIds(analyzedIds)
+    : null;
+  const identitySha256Valid = HASH.test(population?.sha256 || '');
+  const reasons = [];
+
+  if (!layer) reasons.push('layer-missing');
+  if (layer?.enabled !== true) reasons.push('layer-disabled');
+  if (layer?.expectedSourceCatalogCount !== expectedCatalogCount)
+    reasons.push('declared-catalog-count-mismatch');
+  if (layer?.loading === true) reasons.push('still-loading');
+  if (layer?.error != null) reasons.push('layer-error');
+  if (!Number.isSafeInteger(population?.count))
+    reasons.push('count-not-safe-integer');
+  else if (population.count < 1) reasons.push('count-below-one');
+  if (
+    Number.isSafeInteger(population?.count) &&
+    population.count > expectedCatalogCount
+  )
+    reasons.push('count-exceeds-declared-catalog');
+  if (population?.truncated !== false)
+    reasons.push('population-truncated-or-unknown');
+  if (!idsAvailable) reasons.push('identity-list-missing');
+  else if (ids.length !== population?.count)
+    reasons.push('identity-count-mismatch');
+  if (uniqueCount !== null && uniqueCount !== ids.length)
+    reasons.push('duplicate-identities');
+  if (nonStringIds?.length) reasons.push('non-string-identities');
+  if (unknownIds?.length) reasons.push('unknown-identities');
+  if (!identitySha256Valid) reasons.push('identity-digest-invalid');
+  else if (
+    recomputedIdentitySha256 !== null &&
+    recomputedIdentitySha256 !== population.sha256
+  )
+    reasons.push('identity-digest-mismatch');
+
+  const error = new Error(
+    `Austin ${label} installations population is not a valid observed subset of the delivered synthetic catalog.`,
+  );
+  error.actual = {
+    schema: 'gev-austin-installation-population-diagnostic/v1',
+    label,
+    reasonCodes: reasons,
+    layerPresent: Boolean(layer),
+    enabled: layer?.enabled ?? null,
+    expectedSourceCatalogCount: layer?.expectedSourceCatalogCount ?? null,
+    loading: layer?.loading ?? null,
+    layerErrorPresent: layer?.error != null,
+    layerError:
+      typeof layer?.error === 'string' ? layer.error.slice(0, 160) : null,
+    count: population?.count ?? null,
+    truncated: population?.truncated ?? null,
+    identityListPresent: idsAvailable,
+    identityLength: idsAvailable ? ids.length : null,
+    identityUniqueCount: uniqueCount,
+    identityAnalysisTruncated: idsAvailable && !identityAnalysisBounded,
+    unknownIdentityCount: unknownIds?.length ?? null,
+    unknownIdentityExamples:
+      unknownIds?.slice(0, 4).map((id) => id.slice(0, 80)) ?? null,
+    nonStringIdentityCount: nonStringIds?.length ?? null,
+    nonStringIdentityTypes:
+      nonStringIds?.slice(0, 4).map((id) => typeof id) ?? null,
+    identitySha256: population?.sha256 ?? null,
+    identitySha256Valid,
+    recomputedIdentitySha256,
+    identitySha256Matches:
+      recomputedIdentitySha256 === null
+        ? null
+        : recomputedIdentitySha256 === population?.sha256,
+  };
+  error.expected = {
+    enabled: true,
+    expectedSourceCatalogCount: expectedCatalogCount,
+    loadingMustNotBeTrue: true,
+    errorMustBeAbsent: true,
+    countRange: { minimum: 1, maximum: expectedCatalogCount },
+    truncated: false,
+    identityLengthMustEqualCount: true,
+    identitiesMustBeUniqueStringsInCatalog: true,
+    sha256MustMatchSortedIdentityIds: true,
+  };
+  return error;
+}
 
 export function normalizeAustinSatelliteWitness(record) {
   const noradId = Number.isSafeInteger(record?.noradId)
@@ -66,7 +174,7 @@ export function assertAustinPopulationEvidence(state, fixture, label) {
     fixture.sourcePopulationIds?.['military-installations'] || [],
   );
   const observedInstallationIds = installationPopulation?.identityIds;
-  if (
+  const invalidInstallationPopulation =
     !installations ||
     installations.enabled !== true ||
     installations.expectedSourceCatalogCount !==
@@ -84,10 +192,13 @@ export function assertAustinPopulationEvidence(state, fixture, label) {
       (id) => typeof id !== 'string' || !allowedInstallationIds.has(id),
     ) ||
     !HASH.test(installationPopulation.sha256 || '') ||
-    hashIds(observedInstallationIds) !== installationPopulation.sha256
-  )
-    throw new Error(
-      `Austin ${label} installations population is not a valid observed subset of the delivered synthetic catalog.`,
+    hashIds(observedInstallationIds) !== installationPopulation.sha256;
+  if (invalidInstallationPopulation)
+    throw installationPopulationFailure(
+      label,
+      installations,
+      expected['military-installations'],
+      allowedInstallationIds,
     );
 
   const alpr = state.selectedLayers.find(
