@@ -35,6 +35,36 @@ function unavailableSnapshot(reason) {
   return { status: 'unavailable', reason };
 }
 
+function classifyProcessInfoError(error) {
+  const code = error?.code;
+  const message = typeof error?.message === 'string' ? error.message : '';
+  const originalMessage =
+    typeof error?.originalMessage === 'string' ? error.originalMessage : '';
+  if (
+    code === -32601 ||
+    code === 'METHOD_NOT_FOUND' ||
+    originalMessage.startsWith("'SystemInfo.getProcessInfo' wasn't found")
+  )
+    return 'process-info-unsupported';
+  if (
+    code === 'ETIMEDOUT' ||
+    message.includes('SystemInfo.getProcessInfo timed out.')
+  )
+    return 'process-info-timeout';
+  if (code === 'EPERM') return 'process-info-permission-denied';
+  if (
+    code === 'ESRCH' ||
+    error?.name === 'ConnectionClosedError' ||
+    error?.name === 'TargetCloseError'
+  )
+    return 'process-info-connection-lost';
+  if (code === 'GEV_CDP_CONNECTION_UNAVAILABLE')
+    return 'process-info-connection-unavailable';
+  if (code === 'GEV_CDP_LIMITS_INVALID')
+    return 'process-info-timeout-limit-invalid';
+  return 'process-info-query-failed';
+}
+
 function processRole(type) {
   const normalized = type.toLowerCase();
   if (normalized === 'browser') return 'browser';
@@ -177,24 +207,8 @@ async function captureBrowserProcessInfo(snapshot, timeoutMs) {
   }
   if (result.kind === 'timeout')
     return unavailableSnapshot('process-info-timeout');
-  if (result.kind === 'rejected') {
-    const code = result.error?.code;
-    return unavailableSnapshot(
-      code === -32601 || code === 'METHOD_NOT_FOUND'
-        ? 'process-info-unsupported'
-        : code === 'ETIMEDOUT'
-          ? 'process-info-timeout'
-          : code === 'EPERM'
-            ? 'process-info-permission-denied'
-            : code === 'ESRCH'
-              ? 'process-info-connection-lost'
-              : code === 'GEV_CDP_CONNECTION_UNAVAILABLE'
-                ? 'process-info-connection-unavailable'
-                : code === 'GEV_CDP_LIMITS_INVALID'
-                  ? 'process-info-timeout-limit-invalid'
-                  : 'process-info-query-failed',
-    );
-  }
+  if (result.kind === 'rejected')
+    return unavailableSnapshot(classifyProcessInfoError(result.error));
   return summarizeBrowserProcessInfo(result.value);
 }
 

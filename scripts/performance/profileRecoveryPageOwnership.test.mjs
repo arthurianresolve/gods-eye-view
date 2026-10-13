@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { Connection } from 'puppeteer-core/internal/cdp/Connection.js';
 import {
   applyRecoveryCleanupFailure,
   assertInitialRecoveryPage,
@@ -844,6 +845,120 @@ test('CDP unsupported and permission failures remain diagnostic-only', async () 
       { status: 'unavailable', reason: expectedReason },
     );
     assert.equal(JSON.stringify(outcome).includes('sensitive'), false);
+  }
+});
+
+test('pinned Puppeteer CDP errors are classified without retaining protocol text', async () => {
+  const cases = [
+    {
+      label: 'timeout',
+      expected: 'process-info-timeout',
+      timeoutMs: 8,
+      respond: () => {},
+    },
+    {
+      label: 'unsupported',
+      expected: 'process-info-unsupported',
+      respond(request, transport) {
+        setImmediate(() =>
+          transport.onmessage(
+            JSON.stringify({
+              id: request.id,
+              error: {
+                code: -32601,
+                message: "'SystemInfo.getProcessInfo' wasn't found",
+              },
+            }),
+          ),
+        );
+      },
+    },
+    {
+      label: 'unknown protocol failure',
+      expected: 'process-info-query-failed',
+      respond(request, transport) {
+        setImmediate(() =>
+          transport.onmessage(
+            JSON.stringify({
+              id: request.id,
+              error: { code: -32000, message: 'sensitive transport detail' },
+            }),
+          ),
+        );
+      },
+    },
+    {
+      label: 'connection closed',
+      expected: 'process-info-connection-lost',
+      closeBeforeSend: true,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const sentMethods = [];
+    let transportClosed = false;
+    let connection;
+    const transport = {
+      send(message) {
+        const request = JSON.parse(message);
+        sentMethods.push(request.method);
+        scenario.respond?.(request, transport);
+      },
+      close() {
+        transportClosed = true;
+      },
+      onmessage: undefined,
+      onclose: undefined,
+    };
+    connection = new Connection(
+      'ws://owned-browser.test/devtools/browser',
+      transport,
+      0,
+      undefined,
+      false,
+    );
+    if (scenario.closeBeforeSend) transport.onclose();
+
+    const browser = new EventEmitter();
+    browser._connection = connection;
+    browser.process = () => fakeBrowserProcess();
+    browser.isConnected = () => true;
+    browser.targets = () => [];
+    browser.close = async () => {};
+    const outcome = await closeRecoveryBrowser(browser, {
+      processInfoTimeoutMs: 100,
+      shutdownDiagnostics: {
+        systemInfoSnapshot: () =>
+          readRecoveryBrowserProcessInfo(browser, {
+            timeoutMs: scenario.timeoutMs ?? 100,
+          }),
+      },
+    });
+
+    assert.equal(outcome.closeCompleted, true, scenario.label);
+    assert.equal(
+      outcome.observation.shutdownDiagnostics.browserProcessInfoBeforeClose
+        .reason,
+      scenario.expected,
+      scenario.label,
+    );
+    assert.deepEqual(
+      sentMethods,
+      scenario.closeBeforeSend ? [] : ['SystemInfo.getProcessInfo'],
+      scenario.label,
+    );
+    assert.equal(
+      connection.getPendingProtocolErrors().length,
+      0,
+      scenario.label,
+    );
+    assert.equal(transportClosed, false, scenario.label);
+    if (!scenario.closeBeforeSend) assert.equal(connection._closed, false);
+    assert.doesNotMatch(
+      JSON.stringify(outcome),
+      /wasn't found|timed out|Protocol error|Connection closed|sensitive transport/,
+      scenario.label,
+    );
   }
 });
 
