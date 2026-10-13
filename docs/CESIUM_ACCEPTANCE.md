@@ -50,8 +50,10 @@ Publish two counts out of fourteen: engineering-closed slices and fully qualifie
 slices. Fully qualified requires engineering closure, applicable automatic gates
 and the relevant final Windows evidence. Also report how many slices are partial.
 Do not invent a percentage of code written or weight commits/tests as progress.
-The existing fourteen partial ledger entries require a packet-by-packet audit
-under these definitions; this amendment itself closes none of them.
+The original fourteen partial ledger entries require a packet-by-packet audit
+under these definitions; this amendment itself closes none of them. The separate
+[13 October engineering audit](performance-evidence/closure-audit-20261013/README.md)
+has since closed S52 engineering: 1/14 closed, 13/14 partial, 0/14 fully qualified.
 
 ## Requirements that remain mandatory
 

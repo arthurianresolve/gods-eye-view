@@ -1,0 +1,47 @@
+{
+  "schema": "gev-slice-engineering-closure/v1",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "slice": "S52",
+  "reviewedSourceCommit": "f8413015f2b8e1cc2b8215830a54d9adbf51757d",
+  "engineering": "closed",
+  "automaticValidation": {
+    "component": "passed",
+    "tests": 90,
+    "failures": 0,
+    "skips": 0,
+    "rawArtifact": "s52-focused.log",
+    "bytes": 15970,
+    "sha256": "51858a9ed31c782f3f7ae9d40d1549674ff7ccf4398e5f6eac7ad39d6a42f563",
+    "mergedFullIntegration": "pending"
+  },
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "sourceFiles": {
+    "src/overlays/worldOverlay.js": {
+      "sha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+      "exactAcceptedBytes": true
+    },
+    "src/overlays/worldOverlayDraw.js": {
+      "sha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d",
+      "exactAcceptedBytes": true
+    }
+  },
+  "acceptedComponentCommit": "4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5",
+  "reverifiedPriorArtifactHashes": {
+    "cpu-report.json": "f90c01e73b013c2293b0d7f0abff3cc3972e96955b6e53500788d0e1e16c6c6e",
+    "cpu-review.json": "e602078b1edef88211ca0875403704594f7fe877d311fd346667b73a430b5f3c",
+    "cpu-run.json": "2d416c91b8815418d16d9fce6ca1fe46759db9c5172447d8a4f52e068c1a24b2",
+    "visual/report.json": "247fe1c311578d4cbc4dd751b0d0a45d2bf89f62a91bb56ab2b42c4cd307823f",
+    "visual/review.json": "7766ad8edd7f681107351deb4f6c3c70a2ab75770a9c0f9e0194356afd8d9f66",
+    "visual/images.zip": "4734ec640c291d92a43de1bf4ed3aff4b8c0ff3ed88ed6de876945f274e090d2",
+    "native-font-report.json": "1b38d717810823d639c1f48f58cc1e42b3858f236b36f1d8b5f2a9124564821f",
+    "native-font-review.json": "16b9d7d8102c809427043c9e6f2ea7cc501450be6f4d3492b378a54779998ff0",
+    "native-font-run.json": "97f8e4f9218ea135efe5ba9c562d65900b36af6500eab145c97623499aa0c630",
+    "review.json": "b6b22aa7e03cb57cb29d04f1211ee565a60c457ae255f325c3b24782c1670a4c",
+    "work-report.json": "5e02e1e5658e8083ccd49910b79f04142795198ed463166d1ce5b23a79c305ad",
+    "focused.txt": "8a58d6be7d3a27a06c26c992ac9ee50742d2dc7224b3f95764b2d6eb648f75db",
+    "allocation.txt": "d28875655bfe597bd697194a9448a1e4ebc2056313f7ebdf7c1b42e79b563918"
+  },
+  "paintExperimentDisposition": "rejected; retain production painting; original allocation failure unchanged",
+  "qualificationLimitation": "Engineering closure only; no current full-scene physical Windows performance or soak acceptance."
+}
