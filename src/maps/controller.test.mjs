@@ -353,6 +353,105 @@ test('Esri construction fallback reports and attributes the source actually rend
   env.controller.destroy();
 });
 
+test('a later explicit Esri selection retries after construction fallback', async () => {
+  const env = publicFixture();
+  const esri = env.registry.sources.find(
+    (source) => source.descriptor.id === 'esri-imagery',
+  );
+  let attempts = 0,
+    osmDestroyed = 0;
+  env.providers.get('osm').destroy = () => osmDestroyed++;
+  esri.imagery = async () => {
+    attempts++;
+    if (attempts < 3) throw new Error('metadata temporarily unavailable');
+    return env.providers.get('esri-imagery');
+  };
+
+  const concurrentSelections = [
+    env.controller.setStack('esri-imagery'),
+    env.controller.setStack('esri-imagery'),
+  ];
+  await Promise.all(concurrentSelections);
+  assert.equal(env.controller.getActiveId(), 'osm');
+  assert.equal(env.imagery[0].provider, env.providers.get('osm'));
+  assert.equal(
+    env.controller.getState().lastError,
+    'Esri Satellite is unavailable; using OSM',
+  );
+  assert.equal(attempts, 1);
+  assert.equal(osmDestroyed, 0);
+
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 2);
+  assert.equal(env.controller.getActiveId(), 'osm');
+  assert.equal(env.imagery[0].provider, env.providers.get('osm'));
+  assert.equal(osmDestroyed, 0, 'the shared fallback remains controller-owned');
+
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 3);
+  assert.equal(env.controller.getActiveId(), 'esri-imagery');
+  assert.equal(env.imagery[0].provider, env.providers.get('esri-imagery'));
+  assert.equal(env.credits.size, 1);
+  assert.equal(env.controller.getState().lastError, null);
+  assert.equal(
+    osmDestroyed,
+    0,
+    'switching away does not dispose a cached provider',
+  );
+
+  await env.controller.setStack('osm');
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 3, 'a healthy Esri provider remains cached');
+  assert.equal(env.imagery[0].provider, env.providers.get('esri-imagery'));
+  env.controller.destroy();
+  await settle();
+  assert.equal(
+    osmDestroyed,
+    1,
+    'the shared fallback is disposed once on destroy',
+  );
+});
+
+test('destroy drains a held construction fallback without activating it late', async () => {
+  let resolveOsm,
+    destroyed = 0;
+  const env = publicFixture();
+  const esri = env.registry.sources.find(
+    (source) => source.descriptor.id === 'esri-imagery',
+  );
+  const osm = env.registry.sources.find(
+    (source) => source.descriptor.id === 'osm',
+  );
+  esri.imagery = async () => {
+    throw new Error('metadata unavailable');
+  };
+  osm.imagery = () =>
+    new Promise((resolve) => {
+      resolveOsm = resolve;
+    });
+
+  const loading = env.controller.setStack('esri-imagery');
+  await settle();
+  assert.equal(typeof resolveOsm, 'function');
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 2);
+
+  env.controller.destroy();
+  resolveOsm({
+    id: 'late-osm',
+    errorEvent: event(),
+    destroy() {
+      destroyed++;
+    },
+  });
+  await loading;
+  await settle();
+
+  assert.equal(destroyed, 1);
+  assert.equal(env.imagery.length, 0);
+  assert.notEqual(env.controller.getActiveId(), 'osm');
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 0);
+});
+
 test('one Esri tile failure stays put, two fall back, and stale errors cannot replace a selection', async () => {
   const env = publicFixture();
   await env.controller.setStack('esri-imagery');

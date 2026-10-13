@@ -360,23 +360,46 @@ export class MapSourceController {
   _getImageryProvider(stack, visited = new Set()) {
     if (visited.has(stack.id))
       return Promise.reject(new Error('Map source fallback cycle'));
-    return this._cached(this._imageryProviders, stack.id, async () => {
-      const source = this._sources.get(stack.id);
-      try {
-        const provider = await source.imagery({ signal: this._abort.signal });
-        if (this._destroyed) this._dispose(provider);
-        return { provider, effectiveStackId: stack.id, fallbackMessage: null };
-      } catch (error) {
-        const fallback = source.constructionFallback;
-        if (this._destroyed || !fallback || !this.isStackAvailable(fallback.id))
-          throw error;
-        const next = new Set(visited).add(stack.id);
-        const resolution = await this._getImageryProvider(
-          this.getStack(fallback.id),
-          next,
-        );
-        return { ...resolution, fallbackMessage: fallback.message };
-      }
+    const cachedResolution = this._cached(
+      this._imageryProviders,
+      stack.id,
+      async () => {
+        const source = this._sources.get(stack.id);
+        try {
+          const provider = await source.imagery({ signal: this._abort.signal });
+          if (this._destroyed) this._dispose(provider);
+          return {
+            provider,
+            effectiveStackId: stack.id,
+            fallbackMessage: null,
+          };
+        } catch (error) {
+          const fallback = source.constructionFallback;
+          if (
+            this._destroyed ||
+            !fallback ||
+            !this.isStackAvailable(fallback.id)
+          )
+            throw error;
+          const next = new Set(visited).add(stack.id);
+          const resolution = await this._getImageryProvider(
+            this.getStack(fallback.id),
+            next,
+          );
+          return { ...resolution, fallbackMessage: fallback.message };
+        }
+      },
+    );
+    return cachedResolution.then((resolution) => {
+      // A fallback is a successful resolution for this switch, but it is not
+      // a provider for the requested source. Keep the fallback provider's own
+      // cache entry and allow a later explicit selection to retry construction.
+      if (
+        resolution.effectiveStackId !== stack.id &&
+        this._imageryProviders.get(stack.id) === cachedResolution
+      )
+        this._imageryProviders.delete(stack.id);
+      return resolution;
     });
   }
 
