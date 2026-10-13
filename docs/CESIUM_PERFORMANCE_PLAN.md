@@ -106,6 +106,12 @@ ready imagery but no terrain mesh; their terrain state also permits waiting
 for parent upsampling and is not proof of a worker rejection. Source/bundled
 worker comparison and live ancestor readiness are the next diagnostic boundary.
 Do not substitute the unrelated off-route CPU failures for that missing proof.
+The follow-up at `75a50fbb` plus `13344b8b` adds bounded live ancestor evidence
+and a reproducible source/minified-production worker replay. Root passes
+81 focused checks, capture lint, formatting and package boundaries; both CPU
+worker variants match on the exact level-ten through level-seventeen chain.
+The live browser's first stalled ancestor remains to be measured. Component
+success does not complete native readiness or hardware acceptance.
 
 Next actions, in dependency order:
 

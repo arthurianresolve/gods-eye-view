@@ -52,3 +52,30 @@ semantics, then examines the first live ancestor unable to provide a mesh.
 No new terrain data, readiness relaxation, timeout increase or engine change
 is justified until that gap is identified. This run validates useful failure
 retention; it does not complete M3 or performance acceptance.
+
+## Follow-up diagnostic review
+
+The [reproducible CPU replay](terrain-chain-probe.mjs) and
+[saved result](terrain-chain-probe.json) now follow the exact sampled tile
+from level ten through level seventeen. Source handlers and the minified
+`Build/Cesium/Workers` handlers copied by the production Vite plugin agree
+at all eight levels. Quantized vertex counts are
+289, 188, 75, 35, 19, 13, 15 and 16; every horizon point is finite.
+Root independently reran both modes and matched the saved rows and worker
+hashes. This exercises CPU handlers with structured-cloned inputs/outputs,
+not browser Worker transport, scheduling, WebGL or rendered readiness.
+
+Diagnostic commits `75a50fbb` and `13344b8b` add one read-only ancestor chain
+for the first sampled queued tile, capped at 24 rows. It retains mesh/data
+presence, terrain states and upsampling availability with explicit unknown,
+cycle and truncation states. Parent identities are checked during projection.
+The existing eight queue samples and 32 imagery entries per sample remain
+bounded. The chain survives both capture and outer failure serialization.
+
+Root passes 81 focused capture, delivery, failure-report and outer-smoke tests,
+25-file capture lint, changed-file formatting and package boundaries.
+Tests cover the full bound, malformed identity, absent/throwing private
+properties and cycles including the final permitted row. No render setting,
+readiness condition, fixture byte or deadline changed. The next hosted run
+must locate the first live ancestor that cannot provide a mesh; these component
+checks do not establish that the original terrain stall is fixed.

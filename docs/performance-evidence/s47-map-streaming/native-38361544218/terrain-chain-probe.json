@@ -238,5 +238,5 @@
     }
   ],
   "rowsMatch": true,
-  "scope": "Source and CesiumUnminified production worker handlers run as CPU functions with structuredClone inputs/outputs and a scoped TaskProcessor.scheduleTask seam. This does not exercise browser Worker transport, WebGL, or rendering."
+  "scope": "Source and minified production worker handlers run as CPU functions with structuredClone inputs/outputs and a scoped TaskProcessor.scheduleTask seam. This does not exercise browser Worker transport, WebGL, or rendering."
 }

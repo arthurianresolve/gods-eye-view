@@ -238,7 +238,7 @@ const artifact = {
   bundledRows: bundled.rows,
   rowsMatch: true,
   scope:
-    'Source and CesiumUnminified production worker handlers run as CPU functions with structuredClone inputs/outputs and a scoped TaskProcessor.scheduleTask seam. This does not exercise browser Worker transport, WebGL, or rendering.',
+    'Source and minified production worker handlers run as CPU functions with structuredClone inputs/outputs and a scoped TaskProcessor.scheduleTask seam. This does not exercise browser Worker transport, WebGL, or rendering.',
 };
 const outputPath = path.join(here, 'terrain-chain-probe.json');
 await (
