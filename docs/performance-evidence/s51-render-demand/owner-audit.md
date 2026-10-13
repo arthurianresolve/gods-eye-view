@@ -79,8 +79,19 @@ Satellite tracking acquires the continuous hold and releases it on stop or
 destroy (`src/layers/satellites/tracking.js`). Discrete source polls,
 annotations, status/selection updates, installation/ground changes, and
 workspace/UI changes use `governorRequestRender` at their mutation boundary.
-Their existence is not evidence of an idle frame unless the empty-owner app
-probe observes it.
+The vessel owner has producer-path coverage in
+`src/layers/vessels/ownership.test.mjs`: the test verifies idle and focused
+deadlines, early wakes that preserve the original visibility deadline, and
+that destroy prevents a stale scheduled callback from issuing another update.
+The satellite lifecycle has a focused producer-path test in
+`src/layers/satellites/lifecycle.test.mjs`. It installs the real render
+governor, checks the one-second periodic wake reaches the registered pre-render
+callback, verifies tracking switches from periodic scheduling to a continuous
+hold and back, and checks repeated enable plus disable/destroy stale callbacks
+do not duplicate or re-arm ownership. These tests cover lifecycle scheduling;
+they do not measure real SGP4 propagation cadence or the rendered populated
+satellite/vessel layers. The empty-owner app probe remains the evidence for
+whether those scheduled owners affect settled-empty demand.
 
 ## Additional owner and callback dispositions
 
@@ -190,9 +201,8 @@ The projector also now reports `tileContentReady` only when the explicit
 readiness state is `content-ready` and globe loading is true. The fixture's
 `blocked-by-fixture` state remains not content-ready even if Cesium's
 `globe.tilesLoaded` happens to be true. Focused fixture/live-contract checks
-pass 43/43, and capture no-undef passes 32 files. A new matching BEFORE/AFTER
-pair must use the corrected inventory projector; the prior 27-frame result is
-still failed evidence. The hide/resume result is simulated lifecycle evidence,
-not OS/browser tab-occlusion evidence. Periodic satellite wake remains a
-separate follow-up if the current deterministic fixture does not exercise its
-normal producer path; this audit does not claim that path was measured.
+pass 42/42, and capture no-undef passes 32 files. The periodic lifecycle,
+vessel ownership and render-governor tests pass 27/27 with the new satellite
+case. A new matching BEFORE/AFTER pair must use the corrected inventory
+projector; the prior 27-frame result is still failed evidence. The hide/resume
+result is simulated lifecycle evidence, not OS/browser tab-occlusion evidence.
