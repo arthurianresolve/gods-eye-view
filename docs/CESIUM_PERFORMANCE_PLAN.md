@@ -2,133 +2,68 @@
 
 ## Current execution checkpoint - 13 October 2026
 
-S47-S60 remain partial: subcomponent implementation and diagnostic passes are
-recorded separately from full workload and physical hardware acceptance. The
-existing slice ledger below remains the requirement inventory; historical
-reports retain their original failures. No performance target is claimed.
+S47-S60 remain partial: all fourteen slices have implementation work, but none
+meets every implementation, automatic-validation and hardware-acceptance
+requirement. The detailed slice ledger below remains the requirement inventory.
+No whole-plan code percentage or achieved performance target is inferred from
+partial components. Historical failed reports remain failed.
 
-Local and remote dev are synchronized at e8ccc268 and already contain current
-fork/upstream main at 8b8ccc9a. No new rebase, merge or diff discard is needed.
-The Austin QA candidate e8ccc268 has passed its complete hosted build/capture
-smoke, including four short samples and final outer validation. Root
-[recomputed the report and retained hash-bound artifacts](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json).
-All 84 focused checks and [all seven exact-candidate standard jobs](performance-evidence/s47-austin-operating/root-review/ci-38334290706-final.json) pass.
-Local and remote dev were fast-forwarded to this exact tested commit. The
-previous failed reports remain failed.
+Local and remote `dev` match `e8ccc268` and contain current fork/upstream
+`main` at `8b8ccc9a` (697 commits ahead, zero behind). The active
+`qa/s47-austin-receipt-only` branch also contains main. No reconciliation or
+diff discard is required. Later QA changes have not been promoted to dev or
+deployed to VM105.
 
-The subsequent automatic dev run `38335846725` has a new Windows recovery
-failure on the same commit: all five settings/workspace checks match, but the
-last browser process does not exit within the unchanged five-second gate after
-acknowledging shutdown. The [retained failure and diagnostic follow-up](performance-evidence/windows-recovery-38335846725/README.md)
-remain separate from the earlier passing run. This does not establish a source
-regression or resolve the intermittent shutdown cause.
+| Work item | Implemented scope | Automatic evidence | Remaining acceptance |
+| --- | --- | --- | --- |
+| Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
+| Native map corpus and build profile (M1-M2) | Deterministic 72-asset corpus, native provider adapter and receipt-bound inert fixture profile | [Parser/adapter review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json), [build-profile review](performance-evidence/s47-map-streaming/build-profile-review-05eefdcb.json) and focused checks pass | Complete rendered delivery in both application revisions |
+| Native map capture (M3) | Driver/report core and corrected candidate CLI/outer wiring are in QA | [59 focused checks and wiring review](performance-evidence/s47-map-streaming/wiring-correction-review-98944a06.json); standard CI passes, but the first native browser attempt fails | Correct selected-workload preparation and final ownership evidence, then native journeys on baseline and candidate |
+| Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `14472b5b`](performance-evidence/windows-recovery-38349487017/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
+| Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
+| Final performance acceptance (M4/S60) | Exact-commit evidence and rejection contracts exist | Component and hosted results retain their documented limited scope | Five matched runs per workload, visual parity, interaction targets and the corrected 60-minute retention soak on the primary Windows machine |
 
-The reviewed map-corpus and automatic Windows diagnostic changes are now in
-QA integration `13796691`. All 62 focused checks, formatting, package boundaries
-and capture-harness checks pass. Six of seven hosted standard jobs pass,
-including Node 24/26, Linux/macOS recovery and the browser gate, but [Windows shutdown recurs](performance-evidence/windows-recovery-38338398935/README.md)
-on the prior application. The bounded process snapshot and forced-cleanup
-callback also time out, leaving process roles and exit unconfirmed. This
-candidate is not yet promoted to dev. Native Esri corpus proof through
-`f24b68ad` is now merged on QA and all five focused corpus/parser tests pass.
-Build-profile implementation through `05eefdcb` passes thirteen independent
-provenance tests and the capture harness lint check. The missing-value CLI
-control is corrected at `4fc34337`; its six checks pass independently. Full
-production map capture remains.
+The next implementation packet is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md).
+The [first native attempt](performance-evidence/s47-map-streaming/native-38349484331/README.md)
+at `14472b5b` fails during inherited dense-population preparation on baseline
+`eb8c682`, before the candidate capture or map journey. Empty page/interception
+error lists do not establish a cause; probe and worker cleanup are unconfirmed.
+The proposed dedicated setup at `1058e811` is withheld after
+[independent cancellation and disposal-order review](performance-evidence/s47-map-streaming/native-smoke-review-1058e811.json).
+It rejects one legitimate cancellation despite balanced outcomes and finalizes
+baseline delivery before its owning context retires. Correct both defects
+without extending deadlines, weakening cleanup or changing normal dense tests.
 
-The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
-M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
-M3 actual application capture/validation, then M4 matched baseline/candidate
-runs. M1 corpus/parser and M2 build-profile code are implemented with focused
-checks. M3 native delivery adapter `263f1e2d` now passes 24 independent focused
-checks and an actual interception-controller ownership check; its
-[review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json)
-records the exact fixture and limited scope. Profiled production builds,
-full application capture/outer validation and M4 remain pending. Preserve
-current resolution, effects, feature populations and detail settings.
+Next actions, in dependency order:
 
-The M3 journey/report core is now integrated through `c7b6332f` at QA `0a504d27`.
-Its [independent correction review](performance-evidence/s47-map-streaming/driver-correction-review-c7b6332f.json)
-records actual pinned-Cesium API/pose checks and 28 passing component tests.
-Earlier false acceptance controls remain recorded. CLI and outer-validator
-wiring through `98944a06` is now integrated at QA `17f47d05`, with 59 focused
-checks, 24 capture-harness lint targets, formatting and package boundaries
-passing. The [wiring correction review](performance-evidence/s47-map-streaming/wiring-correction-review-98944a06.json)
-keeps production build/browser validation pending. The short smoke adds the
-native journey only to the candidate; baseline native-journey proof, matched
-comparisons and hardware acceptance remain. This does not complete S47 or S57.
+1. Finish M3 with declared map-workload populations, actual post-retirement
+   delivery evidence on both exact revisions, balanced cancellation counts,
+   and negative controls for pending/late requests. Preserve native visual
+   settings, terrain detail, cache budgets and the fixture build profile.
+2. Validate both production map journeys in a real browser, including missing
+   or corrupt assets, aborted/superseded switches and recovery. Failed
+   reports remain failed; a short hosted smoke cannot complete M4.
+3. Complete matched workload coverage, the measured remaining S48-S59 work
+   and the S60 comparison/retention gates in the detailed ledger. Retain
+   accepted optimizations only with their required visual and measured proof.
+4. Continue shutdown-cause investigation from retained failures when evidence
+   supports a discriminating check. The successful Chrome 152 and 155 runs
+   establish compatibility observations, not a browser-version effect or fix.
 
-[Native map run 38349484331](performance-evidence/s47-map-streaming/native-38349484331/README.md)
-at `14472b5b` fails in baseline dense-population preparation before the native
-journey or candidate CLI. Empty page/interception error lists do not establish
-the cause; renderer-probe and worker cleanup remain unconfirmed. Investigate
-the selected map workload's inherited dense setup before another attempt.
+The [earlier Windows shutdown failure](performance-evidence/windows-recovery-38341548120/README.md)
+retains its observed close acknowledgement, live parent PID at the five-second
+limit and forced exit. Subsequent passing observations do not erase it. The
+[first Chrome 155 attempt](performance-evidence/windows-browser-version-diagnostic/run-38350501407.md)
+fails before browser installation on a test-only noncanonical temporary path;
+its correction preserves the production containment checks. The corrected
+155 run validates exact identity, five preserved settings/workspace/asset
+checks and natural shutdowns of 318-537 ms. Chrome 152 remains the default.
 
-After workload coverage, complete the remaining measured S48-S59 work and the
-S60 candidate comparisons and retention soak. Primary Windows UHD 620
-foreground hardware validation remains required. Hosted paravirtual/software
-results, Linux VM checks and unavailable additional physical GPUs remain
-separate evidence categories. Do not turn a missing check into a pass.
-
-The Windows observation follow-up through `8c49b078` now reads process roles
-from the owned browser connection before close, with bounded native protocol
-timeouts and explicit error classification. Root passes 75 focused recovery,
-shutdown and CLI checks. Its [review](performance-evidence/windows-recovery-38338398935/diagnostic-correction-review.json)
-keeps the prior failure, five-second close gate and unresolved cause intact.
-[Hosted run 38341548120](performance-evidence/windows-recovery-38341548120/README.md)
-now validates the new process observation, but Windows recovery still fails:
-four attempted stages preserve settings/workspace/assets, while upgraded-app
-shutdown exceeds the unchanged five-second gate. Process roles are available
-before close; the parent PID is present at timeout and forced cleanup confirms
-exit code 1. This improves attribution without establishing the shutdown cause
-or a fix. The fifth recovery stage is not reached; QA is not promoted.
-The completed standard run has six passing jobs: Node 24/26, Windows onboarding,
-Linux/macOS recovery and browser journeys. Windows recovery remains the sole
-failed job at this exact revision.
-
-The subsequent server-test inventory audit found two omitted suites and an
-obsolete CCTV expiry assertion. Correction `13d4a0ee`, integrated at
-`a2d35817`, discovers server tests recursively and adds exact-boundary checks
-without changing production behavior. Root passes 28 focused checks, including
-allocation-test partitioning. Previous CI results retain their historical scope;
-the next complete suite must include the expanded inventory. The [S32-S46
-checkpoint](IMPLEMENTATION_PLAN_NEXT.md) records this gap separately from the
-unresolved Windows shutdown failure.
-
-[Standard run 38345739954](performance-evidence/windows-recovery-38345739954/README.md)
-now passes all seven selected jobs at QA `ae4de365`, including the expanded
-Node 24/26 test inventory, both production builds, browser journeys and recovery
-on all three operating systems. All five Windows stages preserve settings,
-workspace contents and the saved asset; every browser exits naturally within
-the unchanged close deadline. This passing observation does not resolve the
-earlier intermittent shutdown cause. The unmerged M3 driver is not included,
-and no physical hardware or full map-streaming acceptance is claimed.
-
-The [optional exact-version Windows diagnostic](performance-evidence/windows-browser-version-diagnostic/README.md)
-through `4b6be47f`, integrated at `5070ebe2`, preserves the default Chrome
-version and all recovery/cleanup gates. Root passes 82 focused checks including
-native Windows metadata reads, formatting and capture lint. Its initial
-Windows-incompatible `--version` probe was corrected before dispatch. Hosted
-validation of explicitly selected Chrome 155 remains separate from the
-unresolved shutdown cause.
-
-[Standard run 38349487017](performance-evidence/windows-recovery-38349487017/README.md)
-passes all seven selected jobs at exact QA `14472b5b`, including corrected M3
-wiring, Node 24/26, builds, browser journeys and all three recovery platforms.
-The independent native-map run still fails before its journey. This standard
-pass does not validate that workload, the later version-selector code or the
-unresolved intermittent shutdown cause. The first selected Chrome 155 attempt
-stops before installation on a test-only noncanonical temporary-path assumption;
-correction `974b3f86` preserves production cleanup checks and passes 28 focused
-tests. Its hosted follow-up is running separately.
-
-The [selected-version follow-up 38350953804](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md)
-now passes at `2336337c`. Installed metadata and browser protocol identity
-both match Chrome 155.0.8059.39. All five stages preserve settings, workspaces
-and the saved asset; natural shutdown takes 318-537 ms under the unchanged
-five-second gate. This validates the optional selector and compatibility in
-one hosted run, without changing the default version or establishing the
-earlier intermittent shutdown cause. Physical hardware acceptance remains separate.
+Primary Windows UHD 620 foreground hardware validation remains required.
+Hosted paravirtual/software rendering, Linux VM checks and unavailable
+additional physical GPU coverage stay separate. No missing manual or hardware
+evidence is converted into a pass. All older reports below retain their tested
+revisions, failures and original validation scope.
 
 ## Earlier integration evidence
 
