@@ -112,6 +112,16 @@ Windows-incompatible `--version` probe was corrected before dispatch. Hosted
 validation of explicitly selected Chrome 155 remains separate from the
 unresolved shutdown cause.
 
+[Standard run 38349487017](performance-evidence/windows-recovery-38349487017/README.md)
+passes all seven selected jobs at exact QA `14472b5b`, including corrected M3
+wiring, Node 24/26, builds, browser journeys and all three recovery platforms.
+The independent native-map run still fails before its journey. This standard
+pass does not validate that workload, the later version-selector code or the
+unresolved intermittent shutdown cause. The first selected Chrome 155 attempt
+stops before installation on a test-only noncanonical temporary-path assumption;
+correction `974b3f86` preserves production cleanup checks and passes 28 focused
+tests. Its hosted follow-up is running separately.
+
 ## Earlier integration evidence
 
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer

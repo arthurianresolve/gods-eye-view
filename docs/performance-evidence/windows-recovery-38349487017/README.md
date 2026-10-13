@@ -4,6 +4,12 @@
 passes on exact candidate `14472b5b58174c7755f900278962c067d3d60e61`, using
 Chrome `152.0.7977.75` with the existing WebGL-only SwiftShader flags.
 
+The [terminal standard CI result](ci-final.json) passes all seven selected
+jobs at this exact revision: Node 24/26, Windows onboarding, Linux/macOS/Windows
+recovery and browser journeys. Twelve unrelated optional jobs are skipped by
+the selected mode. This result includes the corrected M3 wiring, but not the
+later optional Chrome-version selector or scratch-path test correction.
+
 All five stages preserve settings, workspace contents and the saved asset.
 Each browser exits naturally with code zero in 270-429 ms, inside the unchanged
 five-second gate. No forced process cleanup is used. The [review](review.json)
