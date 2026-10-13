@@ -18,23 +18,37 @@ function digest(bytes) {
 
 function createFixtureServer(fixture, { corruptPath = null } = {}) {
   const observedRequests = [];
+  const missingTileProbe = fixture.manifest.assets.find(
+    (row) => row.kind === 'arcgis-missing-tile-probe-png',
+  )?.identity;
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     const requestPath = decodeURIComponent(url.pathname.slice('/map/'.length));
     observedRequests.push({ path: requestPath, query: url.search });
     const servicePath = 'arcgis/rest/services/World_Imagery/MapServer';
     let assetPath = requestPath;
-    if (
-      requestPath.replace(/\/$/, '') === servicePath &&
-      url.searchParams.get('f') === 'json'
-    )
-      assetPath = `${servicePath}/metadata.json`;
-    else {
+    if (requestPath === servicePath || requestPath === `${servicePath}/`) {
+      const queryEntries = [...url.searchParams.entries()];
+      assetPath =
+        queryEntries.length === 1 &&
+        queryEntries[0][0] === 'f' &&
+        queryEntries[0][1] === 'json'
+          ? `${servicePath}/metadata.json`
+          : null;
+    } else if (requestPath.startsWith(`${servicePath}/`)) {
       const tileRequest = requestPath.match(
         /^arcgis\/rest\/services\/World_Imagery\/MapServer\/tile\/(\d+)\/(\d+)\/(\d+)$/,
       );
-      if (tileRequest)
-        assetPath = `imagery/${tileRequest[1]}/${tileRequest[3]}/${tileRequest[2]}.png`;
+      if (tileRequest && url.search === '') {
+        const [, level, row, column] = tileRequest;
+        assetPath =
+          missingTileProbe &&
+          Number(level) === missingTileProbe.level &&
+          Number(row) === missingTileProbe.row &&
+          Number(column) === missingTileProbe.column
+            ? `${servicePath}/missing-tile-probe/${level}/${row}/${column}.png`
+            : `imagery/${level}/${column}/${row}.png`;
+      } else assetPath = null;
     }
     let bytes = fixture.assets.get(assetPath);
     if (!bytes) {
@@ -70,6 +84,96 @@ async function withFixtureServer(fixture, options, callback) {
   }
 }
 
+function installCesiumNodeImageDecodeSeam(baseUrl) {
+  // Decode actual fixture responses with sharp in Node, then expose those RGBA
+  // bytes through the minimum canvas surface Cesium's discard policy reads.
+  // This tests the production policy input, not browser image-decoder behavior.
+  const previousDocument = globalThis.document;
+  const previousWindow = globalThis.window;
+  const previousCreateImage = Cesium.Resource._Implementations.createImage;
+  const imageRequests = [];
+  const pendingDecodes = [];
+  let drawnImage = null;
+  globalThis.document = {
+    location: { href: baseUrl },
+    createElement(name) {
+      if (name === 'a') {
+        let href = baseUrl;
+        return {
+          get href() {
+            return href;
+          },
+          set href(value) {
+            href = new URL(value, baseUrl).href;
+          },
+          get host() {
+            return new URL(href).host;
+          },
+          get protocol() {
+            return new URL(href).protocol;
+          },
+        };
+      }
+      assert.equal(name, 'canvas');
+      return {
+        width: 0,
+        height: 0,
+        getContext(type) {
+          assert.equal(type, '2d');
+          return {
+            globalCompositeOperation: 'source-over',
+            drawImage(image) {
+              drawnImage = image;
+            },
+            getImageData() {
+              return { data: drawnImage.data };
+            },
+          };
+        },
+      };
+    },
+  };
+  globalThis.window = { location: { href: baseUrl } };
+  Cesium.Resource._Implementations.createImage = (
+    request,
+    _crossOrigin,
+    deferred,
+  ) => {
+    imageRequests.push(request.url);
+    const decode = fetch(request.url)
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error(`Fixture image request failed: ${response.status}`);
+        const bytes = Buffer.from(await response.arrayBuffer());
+        const decoded = await sharp(bytes)
+          .ensureAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+        return {
+          width: decoded.info.width,
+          height: decoded.info.height,
+          data: new Uint8ClampedArray(decoded.data),
+        };
+      })
+      .then(
+        (image) => deferred.resolve(image),
+        (error) => deferred.reject(error),
+      );
+    pendingDecodes.push(decode);
+  };
+  return {
+    imageRequests,
+    pendingDecodes,
+    restore() {
+      Cesium.Resource._Implementations.createImage = previousCreateImage;
+      if (previousDocument === undefined) delete globalThis.document;
+      else globalThis.document = previousDocument;
+      if (previousWindow === undefined) delete globalThis.window;
+      else globalThis.window = previousWindow;
+    },
+  };
+}
+
 test('map streaming fixture generation is stable, bounded, and route-indexed', async () => {
   const first = await createDeterministicMapStreamingFixture();
   const second = await createDeterministicMapStreamingFixture();
@@ -79,7 +183,7 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
   assert.ok(first.manifest.totalBytes < 2 * 1024 * 1024);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 70);
+  assert.equal(first.manifest.assetCount, 71);
   assert.equal(first.manifest.geometry.tilesetNodeCount, 21);
   const terrainBounds = first.manifest.geometry.terrainMeshBoundsDegrees;
   assert.ok(terrainBounds.west <= first.manifest.routeBoundsDegrees.west);
@@ -191,41 +295,119 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
     );
     assert.ok(arcgisMetadataRow, 'ArcGIS service metadata must be hash-bound');
     const arcgisServicePath = arcgisMetadataRow.identity.servicePath;
-    const arcgisProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
-      `${baseUrl}${arcgisServicePath}`,
-      {
-        credit: 'Powered by Esri',
-        enablePickFeatures: false,
-        tileDiscardPolicy: new Cesium.NeverTileDiscardPolicy(),
-      },
-    );
-    assert.ok(
-      server.observedRequests.some(
-        (request) =>
-          request.path.replace(/\/$/, '') === arcgisServicePath &&
-          request.query === '?f=json',
-      ),
-      'native ArcGIS provider must retrieve the fixture metadata through its f=json endpoint',
-    );
-    assert.equal(arcgisProvider.usingPrecachedTiles, true);
-    assert.equal(arcgisProvider.tileWidth, 256);
-    assert.equal(arcgisProvider.tileHeight, 256);
-    assert.equal(arcgisProvider.maximumLevel, 12);
-    assert.ok(
-      arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
-    );
-    assert.equal(arcgisProvider.enablePickFeatures, false);
-    const route = fixture.manifest.routeBoundsDegrees;
-    assert.deepEqual(
-      [
-        Cesium.Math.toDegrees(arcgisProvider.rectangle.west),
-        Cesium.Math.toDegrees(arcgisProvider.rectangle.south),
-        Cesium.Math.toDegrees(arcgisProvider.rectangle.east),
-        Cesium.Math.toDegrees(arcgisProvider.rectangle.north),
-      ].map((value) => Number(value.toFixed(8))),
-      [route.west, route.south, route.east, route.north],
-      'native Esri metadata parser must retain the route extent',
-    );
+    const nodeImageSeam = installCesiumNodeImageDecodeSeam(baseUrl);
+    let arcgisProvider;
+    try {
+      arcgisProvider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+        `${baseUrl}${arcgisServicePath}`,
+        {
+          credit: 'Powered by Esri',
+          enablePickFeatures: false,
+        },
+      );
+      await Promise.all(nodeImageSeam.pendingDecodes);
+      assert.ok(
+        server.observedRequests.some(
+          (request) =>
+            request.path.replace(/\/$/, '') === arcgisServicePath &&
+            request.query === '?f=json',
+        ),
+        'native ArcGIS provider must retrieve the fixture metadata through its f=json endpoint',
+      );
+      assert.equal(arcgisProvider.usingPrecachedTiles, true);
+      assert.equal(arcgisProvider.tileWidth, 256);
+      assert.equal(arcgisProvider.tileHeight, 256);
+      assert.equal(arcgisProvider.maximumLevel, 12);
+      assert.ok(
+        arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
+      );
+      assert.equal(arcgisProvider.enablePickFeatures, false);
+      const route = fixture.manifest.routeBoundsDegrees;
+      assert.deepEqual(
+        [
+          Cesium.Math.toDegrees(arcgisProvider.rectangle.west),
+          Cesium.Math.toDegrees(arcgisProvider.rectangle.south),
+          Cesium.Math.toDegrees(arcgisProvider.rectangle.east),
+          Cesium.Math.toDegrees(arcgisProvider.rectangle.north),
+        ].map((value) => Number(value.toFixed(8))),
+        [route.west, route.south, route.east, route.north],
+        'native Esri metadata parser must retain the route extent',
+      );
+      const probeRow = fixture.manifest.assets.find(
+        (row) => row.kind === 'arcgis-missing-tile-probe-png',
+      );
+      assert.ok(
+        probeRow,
+        'default ArcGIS missing-tile probe must be hash-bound',
+      );
+      assert.equal(probeRow.identity.intendedAlpha, 0);
+      assert.equal(nodeImageSeam.imageRequests.length, 1);
+      const probeRequest = new URL(nodeImageSeam.imageRequests[0]);
+      const probePath = `${arcgisServicePath}/tile/${probeRow.identity.level}/${probeRow.identity.row}/${probeRow.identity.column}`;
+      assert.equal(
+        probeRequest.pathname.endsWith(probePath),
+        true,
+        'default native discard policy must request the declared out-of-route calibration tile',
+      );
+      assert.equal(probeRequest.search, '');
+      assert.ok(
+        server.observedRequests.some(
+          (request) => request.path === probePath && request.query === '',
+        ),
+        'strict fixture resolver must serve exactly the declared probe path',
+      );
+      const probePixels = await sharp(fixture.assets.get(probeRow.path))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.deepEqual(
+        [
+          probePixels.info.width,
+          probePixels.info.height,
+          probePixels.info.channels,
+        ],
+        [256, 256, 4],
+      );
+      for (let offset = 3; offset < probePixels.data.length; offset += 4)
+        assert.equal(
+          probePixels.data[offset],
+          0,
+          'probe PNG must be fully transparent',
+        );
+      assert.equal(arcgisProvider.tileDiscardPolicy.isReady(), true);
+      assert.equal(
+        arcgisProvider.tileDiscardPolicy.shouldDiscardImage({
+          width: probePixels.info.width,
+          height: probePixels.info.height,
+          data: new Uint8ClampedArray(probePixels.data),
+        }),
+        false,
+        'transparent default probe must disable missing-tile equality checks',
+      );
+      const arcgisTile = fixture.manifest.coverage.imagery.at(-1).tiles[0];
+      const arcgisTileRow = fixture.manifest.assets.find(
+        (row) =>
+          row.kind === 'webmercator-imagery-png' &&
+          row.identity.level === arcgisTile.level &&
+          row.identity.x === arcgisTile.x &&
+          row.identity.y === arcgisTile.y,
+      );
+      const routeImage = await sharp(fixture.assets.get(arcgisTileRow.path))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.equal(
+        arcgisProvider.tileDiscardPolicy.shouldDiscardImage({
+          width: routeImage.info.width,
+          height: routeImage.info.height,
+          data: new Uint8ClampedArray(routeImage.data),
+        }),
+        false,
+        'transparent probe disables tile rejection for native fixture imagery',
+      );
+    } finally {
+      nodeImageSeam.restore();
+    }
     const arcgisTile = fixture.manifest.coverage.imagery.at(-1).tiles[0];
     const arcgisTileRow = fixture.manifest.assets.find(
       (row) =>
@@ -265,6 +447,31 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         .metadata()
         .then(({ width, height }) => [width, height]),
       [256, 256],
+    );
+    const arcgisBaseUrl = `${baseUrl}${arcgisServicePath}`;
+    await assert.rejects(
+      new Cesium.Resource({
+        url: `${arcgisBaseUrl}?f=json&unexpected=1`,
+      }).fetchJson(),
+      'ArcGIS resolver must reject extra service query parameters',
+    );
+    await assert.rejects(
+      new Cesium.Resource({
+        url: `${baseUrl}arcgis/rest/services/Other/MapServer?f=json`,
+      }).fetchJson(),
+      'ArcGIS resolver must reject an undeclared MapServer path',
+    );
+    await assert.rejects(
+      new Cesium.Resource({
+        url: `${arcgisBaseUrl}/tile/${arcgisTile.level}/${arcgisTile.y}/${arcgisTile.x}?f=json`,
+      }).fetchArrayBuffer(),
+      'ArcGIS resolver must reject query parameters on tile requests',
+    );
+    await assert.rejects(
+      new Cesium.Resource({
+        url: `${arcgisBaseUrl}/tile/${arcgisTile.level}/999999/999999`,
+      }).fetchArrayBuffer(),
+      'ArcGIS resolver must reject undeclared out-of-corpus tile coordinates',
     );
     const imageryRows = fixture.manifest.assets.filter(
       (row) => row.kind === 'webmercator-imagery-png',

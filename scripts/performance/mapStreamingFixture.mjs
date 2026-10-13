@@ -103,7 +103,7 @@ function pngChunk(type, data) {
   return chunk;
 }
 
-function deterministicPng({ width, height, seed, pixel }) {
+function deterministicPng({ width, height, seed, pixel, transparent = false }) {
   const palette = Buffer.from(PALETTE.flat());
   const header = Buffer.allocUnsafe(13);
   header.writeUInt32BE(width, 0);
@@ -126,6 +126,7 @@ function deterministicPng({ width, height, seed, pixel }) {
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     pngChunk('IHDR', header),
     pngChunk('PLTE', palette),
+    ...(transparent ? [pngChunk('tRNS', Buffer.alloc(PALETTE.length, 0))] : []),
     pngChunk('IDAT', storedZlib(rows)),
     pngChunk('IEND', Buffer.alloc(0)),
   ]);
@@ -889,6 +890,33 @@ export async function createDeterministicMapStreamingFixture() {
         tileHeight: 256,
         maximumLevel: IMAGERY_LEVELS.at(-1),
         routeBoundsDegrees: ROUTE,
+      },
+    ),
+  );
+  const missingTileProbeLevel = IMAGERY_LEVELS.at(-1);
+  const missingTileProbeBytes = deterministicPng({
+    width: 256,
+    height: 256,
+    seed: seedFromId('arcgis-missing-tile-probe'),
+    transparent: true,
+    pixel: () => 0,
+  });
+  assetRows.push(
+    addAsset(
+      assets,
+      `${imageryServicePath}/missing-tile-probe/${missingTileProbeLevel}/0/0.png`,
+      'arcgis-missing-tile-probe-png',
+      missingTileProbeBytes,
+      {
+        servicePath: imageryServicePath,
+        level: missingTileProbeLevel,
+        row: 0,
+        column: 0,
+        width: 256,
+        height: 256,
+        intendedAlpha: 0,
+        reason:
+          'default ArcGIS discard-policy probe outside Austin route coverage',
       },
     ),
   );
