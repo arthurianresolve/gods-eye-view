@@ -119,6 +119,16 @@ does not provide task age or prove abandonment. Distinguish continuing terrain
 progress during camera motion from an unresolved task before changing runtime
 code or acceptance limits. This native run remains failed.
 
+The [same-code hosted Metal control](performance-evidence/s47-map-streaming/native-38376714168/README.md)
+reaches a later route-start validation failure on baseline. It records 104
+missing-fixture-asset errors, but loses completed journey observations and
+missing asset identities before failure serialization. Owner cleanup completes;
+fixture delivery remains failed. The generated fixture manifest also differs
+from the SwiftShader run: six of 51 shared delivered assets have different
+hashes. Investigate cross-platform fixture determinism as well as the bounded
+failure-reporting gaps before using these environments for comparisons. No
+GPU cause or physical-hardware acceptance is established.
+
 Next actions, in dependency order:
 
 1. Exercise the corrected M3 map-workload setup and post-retirement evidence
