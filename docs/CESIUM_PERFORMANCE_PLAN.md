@@ -19,6 +19,20 @@ page, delivery and outer runner checks plus lint, boundaries and formatting.
 Rendered missing/corrupt/delayed metadata journeys remain pending; M3, S47 and
 S57 are not closed by these local checks.
 
+The [first rendered fault-document run](performance-evidence/s47-map-streaming/native-fault-38430980703/README.md)
+at `c7c47245` completes the healthy baseline/candidate routes and candidate CLI,
+then fails before fault injection because the new runner constructs a doubled
+root slash. Fix `48efbf40` uses canonical URL construction; all 98 affected root
+tests pass. The original run stays failed and a fresh rendered check is required.
+The earlier [invalid audit-mode invocation](performance-evidence/s47-map-streaming/native-fault-invocation-38430705041/README.md)
+is separately retained as a setup failure.
+
+The [S50 bounded volume-retention change](performance-evidence/s50-viewshed-retention/README.md)
+at `2731162b` reuses the current capped cohort, evicts obsolete hidden geometry,
+uses weak source-owner tokens and updates tint without rebuilding. Root passes
+110 focused ownership/source tests. Rendered equivalence remains under
+implementation; S50 stays partial and no new slice is marked closed.
+
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
 closes S52 engineering after rechecking its unchanged accepted renderer, 13
 artifact hashes and 90 focused tests, and retaining the supported paint-cache
