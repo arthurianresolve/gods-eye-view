@@ -575,6 +575,7 @@ function createMapFaultControlHarness({ scenarioId }) {
           status = 'ready';
           lastError = 'declared fixture metadata fault';
           scene.globe.show = true;
+          scene.globe.terrainProvider = new types.CesiumTerrainProvider();
           app.tileset.show = false;
           render();
           return this.getState();
@@ -586,6 +587,10 @@ function createMapFaultControlHarness({ scenarioId }) {
       status = 'ready';
       lastError = null;
       scene.globe.show = stackId !== 'photoreal';
+      scene.globe.terrainProvider =
+        stackId === 'photoreal'
+          ? new types.EllipsoidTerrainProvider()
+          : new types.CesiumTerrainProvider();
       app.tileset.show = stackId === 'photoreal';
       render();
       return this.getState();
@@ -628,7 +633,7 @@ function createMapFaultControlHarness({ scenarioId }) {
     globe: {
       show: activeStack !== 'photoreal',
       tilesLoaded: true,
-      terrainProvider: new types.CesiumTerrainProvider(),
+      terrainProvider: new types.EllipsoidTerrainProvider(),
       maximumScreenSpaceError: 2,
     },
     imageryLayers,
@@ -990,6 +995,20 @@ test('serialized map fault owner observes explicit retry recovery and supersessi
         'OpenStreetMapImageryProvider';
       assert.throws(() =>
         validateMapStreamingFaultControlReport(wrongProvider, fixture),
+      );
+      const wrongInitialTerrain = structuredClone(report);
+      wrongInitialTerrain.initial.terrainProviderClass =
+        'CesiumTerrainProvider';
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(wrongInitialTerrain, fixture),
+      );
+      const wrongRecoveryTerrain = structuredClone(report);
+      wrongRecoveryTerrain.transitions[1].terrainProviderClass =
+        'EllipsoidTerrainProvider';
+      wrongRecoveryTerrain.final.terrainProviderClass =
+        'EllipsoidTerrainProvider';
+      assert.throws(() =>
+        validateMapStreamingFaultControlReport(wrongRecoveryTerrain, fixture),
       );
       const wrongPose = structuredClone(report);
       wrongPose.final.camera.longitude = 0;

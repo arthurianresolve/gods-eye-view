@@ -3702,13 +3702,23 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
     MAP_STREAMING_ROUTE.startupFlightDelayMs,
   );
   assert.equal(report.preparation?.startupFlightCancelled, true);
-  const validObservation = (row, expectedStack, expectedOrigin, hasError) => {
+  const validObservation = (
+    row,
+    expectedStack,
+    expectedOrigin,
+    hasError,
+    expectedTerrainProviderClass,
+  ) => {
     assert.equal(row?.activeStack, expectedStack);
     assert.equal(row?.controllerStatus, 'ready');
     assert.equal(row?.switchOrigin, expectedOrigin);
     assert.equal(row?.hasError, hasError);
     assert.ok(Number.isSafeInteger(row?.switchGeneration));
-    assert.equal(row?.terrainProviderClass, 'CesiumTerrainProvider');
+    assert.equal(
+      row?.terrainProviderClass,
+      expectedTerrainProviderClass,
+      `${expectedStack} snapshot uses its expected terrain-provider stage.`,
+    );
     assert.equal(row?.imageryLayerCount, expectedStack === 'photoreal' ? 0 : 1);
     assert.ok(row?.camera && typeof row.camera === 'object');
     assert.ok(
@@ -3791,7 +3801,13 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
         !Array.isArray(settings.visualState.styleParams),
     );
   };
-  validObservation(report.initial, 'photoreal', 'manual', false);
+  validObservation(
+    report.initial,
+    'photoreal',
+    'manual',
+    false,
+    'EllipsoidTerrainProvider',
+  );
   assertSettings(report.settingsBefore, 'photoreal');
   assert.equal(report.settingsBefore?.visualState?.mapStack, 'photoreal');
   assert.ok(
@@ -3809,7 +3825,13 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
   );
   if (report.scenarioId === 'esri-metadata-superseded-v1') {
     for (const transition of report.transitions)
-      validObservation(transition, 'osm', 'manual', false);
+      validObservation(
+        transition,
+        'osm',
+        'manual',
+        false,
+        'CesiumTerrainProvider',
+      );
     assert.equal(report.switchOutcomes?.initialEsri?.settled, true);
     assert.equal(
       report.switchOutcomes.initialEsri.generationBefore,
@@ -3878,8 +3900,20 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
     assert.equal(report.final?.activeStack, 'osm');
     assert.equal(report.final?.hasError, false);
   } else {
-    validObservation(report.transitions[0], 'osm', 'automatic', true);
-    validObservation(report.transitions[1], 'esri-imagery', 'manual', false);
+    validObservation(
+      report.transitions[0],
+      'osm',
+      'automatic',
+      true,
+      'CesiumTerrainProvider',
+    );
+    validObservation(
+      report.transitions[1],
+      'esri-imagery',
+      'manual',
+      false,
+      'CesiumTerrainProvider',
+    );
     assert.equal(report.switchOutcomes?.initialEsri?.settled, true);
     assert.equal(report.switchOutcomes?.initialEsri?.activeStack, 'osm');
     assert.equal(
@@ -3918,6 +3952,7 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
     report.final.activeStack,
     'manual',
     report.final.hasError,
+    'CesiumTerrainProvider',
   );
   assert.equal(
     report.settingsAfter?.visualState?.mapStack,
