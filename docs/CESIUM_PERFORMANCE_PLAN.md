@@ -110,8 +110,14 @@ The follow-up at `75a50fbb` plus `13344b8b` adds bounded live ancestor evidence
 and a reproducible source/minified-production worker replay. Root passes
 81 focused checks, capture lint, formatting and package boundaries; both CPU
 worker variants match on the exact level-ten through level-seventeen chain.
-The live browser's first stalled ancestor remains to be measured. Component
-success does not complete native readiness or hardware acceptance.
+These component checks do not complete native readiness or hardware acceptance.
+The [run at `7fbbf1fa`](performance-evidence/s47-map-streaming/native-38366041110/README.md)
+now retains that boundary: the sampled level-seventeen tile waits on its
+level-sixteen parent, whose mesh is `TRANSFORMING`; every ancestor through
+level fifteen is ready. All 51 deliveries and cleanup complete. The snapshot
+does not provide task age or prove abandonment. Distinguish continuing terrain
+progress during camera motion from an unresolved task before changing runtime
+code or acceptance limits. This native run remains failed.
 
 Next actions, in dependency order:
 
