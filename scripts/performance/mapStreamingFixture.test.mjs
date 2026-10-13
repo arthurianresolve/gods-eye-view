@@ -258,16 +258,28 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   const second = await createDeterministicMapStreamingFixture();
   assert.equal(first.id, MAP_STREAMING_FIXTURE_ID);
   assert.equal(first.manifestSha256, second.manifestSha256);
+  assert.equal(
+    first.manifestSha256,
+    '0d739d9e4830faff2751d40945870eb7b56b9b76dc65e8cd64cb7deb5cb9b033',
+  );
   assert.deepEqual(first.manifestBytes, second.manifestBytes);
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
-  assert.ok(first.manifest.totalBytes < 3 * 1024 * 1024);
+  assert.equal(first.manifest.totalBytes, 4_013_691);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 578);
+  assert.equal(first.manifest.assetCount, 599);
   assert.ok(first.manifest.assetCount <= MAP_STREAMING_MAX_ASSETS);
   const legacyImageryRows = first.manifest.assets
     .filter(
       (row) =>
-        row.kind === 'webmercator-imagery-png' && row.identity.level <= 12,
+        row.kind === 'webmercator-imagery-png' &&
+        row.identity.level <= 12 &&
+        first.manifest.coverage.imagery.some(
+          ({ level, tiles }) =>
+            level === row.identity.level &&
+            tiles.some(
+              ({ x, y }) => x === row.identity.x && y === row.identity.y,
+            ),
+        ),
     )
     .map(({ path, sha256, byteLength }) => ({ path, sha256, byteLength }));
   assert.equal(legacyImageryRows.length, 26);
@@ -298,6 +310,20 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
     ]),
     Array.from({ length: 11 }, (_, level) => [level, level < 8 ? 1 : 4]),
   );
+  assert.equal(
+    first.manifest.geometry.imageryRouteCoverageKind,
+    'route-bbox tiles only',
+  );
+  assert.equal(
+    first.manifest.geometry.imageryDependencyCoverage.provider,
+    'OpenStreetMapImageryProvider',
+  );
+  assert.equal(
+    first.manifest.geometry.imageryDependencyCoverage
+      .routeCoverageRemainsSeparate,
+    true,
+  );
+  assert.equal(first.manifest.coverage.imagerySkeletonDependencies.length, 21);
   const layerRow = first.manifest.assets.find(
     (row) => row.kind === 'quantized-mesh-layer-metadata',
   );
@@ -314,14 +340,220 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(validateDeterministicMapStreamingFixture(first), true);
 });
 
+test('v4 adds only actual Cesium OSM skeleton and imagery-parent dependencies', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const terrainScheme = new Cesium.GeographicTilingScheme({
+    ellipsoid: Cesium.Ellipsoid.WGS84,
+  });
+  const provider = new Cesium.OpenStreetMapImageryProvider({
+    url: 'https://tile.openstreetmap.org/',
+  });
+  const layer = new Cesium.ImageryLayer(provider);
+  const layers = new Cesium.ImageryLayerCollection();
+  layers.add(layer);
+  const levelZeroError =
+    Cesium.TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      terrainScheme.ellipsoid,
+      65,
+      terrainScheme.getNumberOfXTilesAtLevel(0),
+    );
+  const terrainProvider = {
+    getLevelMaximumGeometricError(level) {
+      return levelZeroError / 2 ** level;
+    },
+  };
+  const dependencies = new Map();
+  try {
+    for (const { level, tiles: terrainTiles } of fixture.manifest.coverage
+      .terrain)
+      for (const { x, y } of terrainTiles) {
+        const tile = new Cesium.QuadtreeTile({
+          x,
+          y,
+          level,
+          tilingScheme: terrainScheme,
+        });
+        tile.data = { imagery: [] };
+        layer._createTileImagerySkeletons(tile, terrainProvider);
+        for (const tileImagery of tile.data.imagery)
+          for (
+            let imagery = tileImagery.loadingImagery;
+            imagery;
+            imagery = imagery.parent
+          ) {
+            const identity = {
+              level: imagery.level,
+              x: imagery.x,
+              y: imagery.y,
+            };
+            dependencies.set(
+              `${identity.level}/${identity.x}/${identity.y}`,
+              identity,
+            );
+          }
+      }
+  } finally {
+    layers.destroy();
+  }
+  const recomputed = [...dependencies.values()].sort(
+    (left, right) =>
+      left.level - right.level || left.x - right.x || left.y - right.y,
+  );
+  const routeBboxPaths = new Set(
+    fixture.manifest.coverage.imagery.flatMap(({ level, tiles }) =>
+      tiles.map(({ x, y }) => `imagery/${level}/${x}/${y}.png`),
+    ),
+  );
+  const expectedSupplementalDependencies = recomputed.filter(
+    ({ level, x, y }) => !routeBboxPaths.has(`imagery/${level}/${x}/${y}.png`),
+  );
+  assert.deepEqual(
+    fixture.manifest.coverage.imagerySkeletonDependencies,
+    expectedSupplementalDependencies,
+  );
+  assert.equal(recomputed.length, 38);
+  const v3MissingDependencies = expectedSupplementalDependencies.map(
+    ({ level, x, y }) => `imagery/${level}/${x}/${y}.png`,
+  );
+  assert.equal(v3MissingDependencies.length, 21);
+  assert.deepEqual(
+    v3MissingDependencies
+      .map((path) => Number(path.split('/')[1]))
+      .reduce(
+        (counts, level) => counts.set(level, (counts.get(level) ?? 0) + 1),
+        new Map(),
+      ),
+    new Map([
+      [1, 1],
+      [2, 1],
+      [3, 1],
+      [4, 1],
+      [5, 1],
+      [6, 1],
+      [7, 1],
+      [8, 2],
+      [9, 6],
+      [10, 4],
+      [11, 2],
+    ]),
+  );
+  for (const path of v3MissingDependencies) {
+    assert.ok(
+      !routeBboxPaths.has(path),
+      `v3 route-only coverage omitted ${path}`,
+    );
+    assert.ok(fixture.assets.has(path), `v4 materializes ${path}`);
+  }
+
+  const routeOnlyV3 = {
+    ...fixture,
+    id: 'austin-map-streaming-synthetic-v3',
+    manifest: {
+      ...fixture.manifest,
+      schema: 'gev-map-streaming-fixture/v3',
+      generatorVersion: '3.0.0',
+      assets: fixture.manifest.assets.filter(
+        (row) =>
+          row.kind !== 'webmercator-imagery-png' ||
+          routeBboxPaths.has(row.path),
+      ),
+    },
+  };
+  assert.ok(
+    v3MissingDependencies.some(
+      (path) => !routeOnlyV3.manifest.assets.some((row) => row.path === path),
+    ),
+    'The v3 route-bbox inventory is missing the actual Cesium dependencies.',
+  );
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(routeOnlyV3),
+    /fixture manifest or asset inventory is invalid/,
+    'The live validator does not accept the v3 fixture identity.',
+  );
+
+  const invalidMetadata = {
+    ...fixture,
+    manifest: structuredClone(fixture.manifest),
+  };
+  invalidMetadata.manifest.coverage.imagerySkeletonDependencies.pop();
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(invalidMetadata),
+    /native imagery skeleton dependencies are invalid/,
+  );
+
+  const unexpectedMetadata = {
+    ...fixture,
+    manifest: structuredClone(fixture.manifest),
+  };
+  unexpectedMetadata.manifest.coverage.imagerySkeletonDependencies.push({
+    level: 1,
+    x: 999,
+    y: 999,
+  });
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(unexpectedMetadata),
+    /native imagery skeleton dependencies are invalid/,
+  );
+
+  const resealManifest = (subject) => {
+    subject.manifest.assetCount = subject.manifest.assets.length;
+    subject.manifest.totalBytes = subject.manifest.assets.reduce(
+      (sum, row) => sum + subject.assets.get(row.path).length,
+      0,
+    );
+    subject.manifestBytes = Buffer.from(
+      `${JSON.stringify(subject.manifest)}\n`,
+      'utf8',
+    );
+    subject.manifestSha256 = digest(subject.manifestBytes);
+  };
+  const missingDependency = {
+    ...fixture,
+    assets: new Map(fixture.assets),
+    manifest: structuredClone(fixture.manifest),
+  };
+  const missingPath = v3MissingDependencies[0];
+  missingDependency.assets.delete(missingPath);
+  missingDependency.manifest.assets = missingDependency.manifest.assets.filter(
+    (row) => row.path !== missingPath,
+  );
+  resealManifest(missingDependency);
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(missingDependency),
+    /route and dependency imagery inventory is invalid/,
+    'Removing a required OSM skeleton image fails even with synchronized counts and manifest digest.',
+  );
+
+  const resealedCorruptDependency = {
+    ...fixture,
+    assets: new Map(fixture.assets),
+    manifest: structuredClone(fixture.manifest),
+  };
+  const corruptRow = resealedCorruptDependency.manifest.assets.find(
+    (row) => row.path === missingPath,
+  );
+  const corruptBytes = Buffer.from(
+    resealedCorruptDependency.assets.get(missingPath),
+  );
+  corruptBytes[corruptBytes.length - 1] ^= 0x01;
+  resealedCorruptDependency.assets.set(missingPath, corruptBytes);
+  corruptRow.sha256 = digest(corruptBytes);
+  resealManifest(resealedCorruptDependency);
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(resealedCorruptDependency),
+    /route and dependency imagery inventory is invalid/,
+    'Rehashing a corrupted dependency image cannot establish authority.',
+  );
+});
+
 test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async () => {
   const fixture = await createDeterministicMapStreamingFixture();
   const rows = fixture.manifest.assets.filter((row) =>
     ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
   );
-  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v3');
-  assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v3');
-  assert.equal(fixture.manifest.generatorVersion, '3.0.0');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v4');
+  assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v4');
+  assert.equal(fixture.manifest.generatorVersion, '4.0.0');
   assert.equal(
     MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256,
     '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
@@ -334,7 +566,7 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   );
   assert.equal(
     fixture.manifestSha256,
-    'fdd277b9107d59a8efd96a151b5f9770e646bbe6598f73ef862b6c5a50cbd6ac',
+    '0d739d9e4830faff2751d40945870eb7b56b9b76dc65e8cd64cb7deb5cb9b033',
   );
   assert.equal(validatePinnedMapTileRows(rows), true);
 
@@ -668,7 +900,7 @@ test('map streaming fixture rejects truncated, modified, missing, and unbounded 
         ),
       }),
     /asset inventory is invalid/,
-    'The v3 manifest inventory stays within its explicit 640-row cap.',
+    'The v4 manifest inventory stays within its explicit 640-row cap.',
   );
 
   const forgedImagery = {
@@ -690,7 +922,7 @@ test('map streaming fixture rejects truncated, modified, missing, and unbounded 
   forgedImagery.manifestSha256 = digest(forgedImagery.manifestBytes);
   assert.throws(
     () => validateDeterministicMapStreamingFixture(forgedImagery),
-    /high-level imagery inventory/,
+    /route and dependency imagery inventory/,
     'A changed high-LOD tile cannot become authoritative by resealing the manifest.',
   );
 
@@ -964,6 +1196,9 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
           `imagery ancestor ${level}/${x}/${y} must be present`,
         );
       }
+    for (const { level, x, y } of fixture.manifest.coverage
+      .imagerySkeletonDependencies)
+      imageryAncestors.add(`${level}/${x}/${y}`);
     assert.equal(imageryAncestors.size, imageryRows.length);
 
     const terrain = await Cesium.CesiumTerrainProvider.fromUrl(

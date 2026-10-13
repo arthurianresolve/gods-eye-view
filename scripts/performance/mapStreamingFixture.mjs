@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 
-export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v3';
-export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v3';
-export const MAP_STREAMING_GENERATOR_VERSION = '3.0.0';
+export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v4';
+export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v4';
+export const MAP_STREAMING_GENERATOR_VERSION = '4.0.0';
 export const MAP_STREAMING_MAX_BYTES = 5 * 1024 * 1024;
 export const MAP_STREAMING_MAX_ASSETS = 640;
 
@@ -290,6 +290,15 @@ const TERRAIN_MINIMUM_HEIGHT = 120;
 const TERRAIN_MAXIMUM_HEIGHT = 880;
 const TILESET_DEPTH = 2;
 const TILESET_LOCAL_TEXTURE_SIZE = 16;
+const IMAGERY_SKELETON_DEPENDENCY_DESCRIPTOR = Object.freeze({
+  provider: 'OpenStreetMapImageryProvider',
+  algorithm:
+    'Cesium ImageryLayer._createTileImagerySkeletons plus imagery parent chain',
+  terrainBounds: 'full Geographic QuadtreeTile rectangles',
+  upsampledDescendants:
+    'not separately enumerated; browser-observed requests remain the rendered-route evidence',
+  routeCoverageRemainsSeparate: true,
+});
 const PALETTE = Object.freeze([
   [17, 32, 57],
   [28, 55, 76],
@@ -589,6 +598,84 @@ function tileCoordinates(scheme, bounds, level) {
   for (let y = minY; y <= maxY; y += 1)
     for (let x = minX; x <= maxX; x += 1) rows.push({ x, y, level });
   return rows;
+}
+
+function imagerySkeletonDependencyTiles(terrainCoverage, terrainScheme) {
+  const imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+    url: 'https://tile.openstreetmap.org/',
+  });
+  const imageryLayer = new Cesium.ImageryLayer(imageryProvider);
+  const imageryLayers = new Cesium.ImageryLayerCollection();
+  imageryLayers.add(imageryLayer);
+  const terrainLevelZeroError =
+    Cesium.TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      terrainScheme.ellipsoid,
+      65,
+      terrainScheme.getNumberOfXTilesAtLevel(0),
+    );
+  const terrainProvider = {
+    getLevelMaximumGeometricError(level) {
+      return terrainLevelZeroError / 2 ** level;
+    },
+  };
+  const identities = new Map();
+  try {
+    for (const { level, x, y } of terrainCoverage.flatMap(
+      ({ tiles }) => tiles,
+    )) {
+      const terrainTile = new Cesium.QuadtreeTile({
+        x,
+        y,
+        level,
+        tilingScheme: terrainScheme,
+      });
+      terrainTile.data = { imagery: [] };
+      imageryLayer._createTileImagerySkeletons(terrainTile, terrainProvider);
+      for (const tileImagery of terrainTile.data.imagery) {
+        for (
+          let imagery = tileImagery.loadingImagery;
+          imagery;
+          imagery = imagery.parent
+        ) {
+          const identity = {
+            level: imagery.level,
+            x: imagery.x,
+            y: imagery.y,
+          };
+          identities.set(
+            `${identity.level}/${identity.x}/${identity.y}`,
+            identity,
+          );
+        }
+      }
+    }
+  } finally {
+    imageryLayers.destroy();
+  }
+  return [...identities.values()].sort(
+    (left, right) =>
+      left.level - right.level || left.x - right.x || left.y - right.y,
+  );
+}
+
+function createImageryTileBytes(tile, templates) {
+  const id = `imagery/${tile.level}/${tile.x}/${tile.y}`;
+  const seed = seedFromId(id);
+  if (tile.level >= 13) {
+    const bytes = templates.get(seed & 0xff);
+    if (!bytes)
+      throw new Error(`Pinned high-level imagery pattern is missing: ${id}`);
+    return Buffer.from(bytes);
+  }
+  return deterministicPng({
+    width: 256,
+    height: 256,
+    seed,
+    pixel(x, y, tileSeed) {
+      const contour = Math.floor((x + y + (tileSeed & 0xff)) / 11);
+      return contour + Math.floor(x / 32) * 3 + Math.floor(y / 32) * 5;
+    },
+  });
 }
 
 function encodeZigZagDelta(values) {
@@ -1249,33 +1336,47 @@ export async function createDeterministicMapStreamingFixture() {
   const terrainScheme = new Cesium.GeographicTilingScheme({
     ellipsoid: Cesium.Ellipsoid.WGS84,
   });
-  const imageryCoverage = IMAGERY_LEVELS.map((level) => {
-    const tiles = tileCoordinates(imageryScheme, ROUTE, level);
-    for (const tile of tiles) {
+  const terrainCoverage = TERRAIN_LEVELS.map((level) => ({
+    level,
+    tiles: tileCoordinates(terrainScheme, ROUTE, level),
+  }));
+  const allImagerySkeletonDependencies = imagerySkeletonDependencyTiles(
+    terrainCoverage,
+    terrainScheme,
+  );
+  const imageryCoverage = IMAGERY_LEVELS.map((level) => ({
+    level,
+    tiles: tileCoordinates(imageryScheme, ROUTE, level),
+  }));
+  const routeImageryIds = new Set(
+    imageryCoverage.flatMap(({ level, tiles }) =>
+      tiles.map(({ x, y }) => `${level}/${x}/${y}`),
+    ),
+  );
+  const imagerySkeletonDependencies = allImagerySkeletonDependencies.filter(
+    (tile) => !routeImageryIds.has(`${tile.level}/${tile.x}/${tile.y}`),
+  );
+  for (const level of IMAGERY_LEVELS) {
+    const tiles = imageryCoverage[level].tiles;
+    const dependencyTiles = imagerySkeletonDependencies.filter(
+      (tile) => tile.level === level,
+    );
+    const assetTiles = [
+      ...new Map(
+        [...tiles, ...dependencyTiles].map((tile) => [
+          `${tile.level}/${tile.x}/${tile.y}`,
+          tile,
+        ]),
+      ).values(),
+    ].sort((left, right) => left.x - right.x || left.y - right.y);
+    for (const tile of assetTiles) {
       const id = `imagery/${tile.level}/${tile.x}/${tile.y}`;
-      const seed = seedFromId(id);
-      const bytes =
-        tile.level >= 13
-          ? Buffer.from(imageryTemplates.get(seed & 0xff) ?? [])
-          : deterministicPng({
-              width: 256,
-              height: 256,
-              seed,
-              pixel(x, y, tileSeed) {
-                const contour = Math.floor((x + y + (tileSeed & 0xff)) / 11);
-                return (
-                  contour + Math.floor(x / 32) * 3 + Math.floor(y / 32) * 5
-                );
-              },
-            });
-      if (!bytes || bytes.length === 0)
-        throw new Error(`Pinned high-level imagery pattern is missing: ${id}`);
+      const bytes = createImageryTileBytes(tile, imageryTemplates);
       assetRows.push(
         addAsset(assets, `${id}.png`, 'webmercator-imagery-png', bytes, tile),
       );
     }
-    return { level, tiles };
-  });
+  }
   const imageryServicePath = 'arcgis/rest/services/World_Imagery/MapServer';
   const imageryProjection = new Cesium.WebMercatorProjection();
   const imagerySouthwest = imageryProjection.project(
@@ -1390,8 +1491,7 @@ export async function createDeterministicMapStreamingFixture() {
       },
     ),
   );
-  const terrainCoverage = TERRAIN_LEVELS.map((level) => {
-    const tiles = tileCoordinates(terrainScheme, ROUTE, level);
+  for (const { level, tiles } of terrainCoverage) {
     const yTileCount = terrainScheme.getNumberOfYTilesAtLevel(level);
     for (const tile of tiles) {
       const tmsY = yTileCount - tile.y - 1;
@@ -1405,8 +1505,7 @@ export async function createDeterministicMapStreamingFixture() {
         }),
       );
     }
-    return { level, tiles };
-  });
+  }
   const terrainAvailability = Array.from(
     { length: TERRAIN_LEVELS.at(-1) + 1 },
     () => [],
@@ -1566,6 +1665,8 @@ export async function createDeterministicMapStreamingFixture() {
         'route-clipped quantized mesh within available tiles',
       imageryFormat: 'PNG indexed-color 256x256',
       imageryTilingScheme: 'WebMercator XYZ',
+      imageryRouteCoverageKind: 'route-bbox tiles only',
+      imageryDependencyCoverage: IMAGERY_SKELETON_DEPENDENCY_DESCRIPTOR,
       imageryLevels: IMAGERY_LEVELS,
       tilesetVersion: '3D Tiles 1.1',
       gltfVersion: '2.0 GLB textured irregular-height grid',
@@ -1574,6 +1675,7 @@ export async function createDeterministicMapStreamingFixture() {
     },
     coverage: {
       imagery: imageryCoverage,
+      imagerySkeletonDependencies,
       terrain: terrainCoverage,
       tilesetRegions: tileNodes.map((node) => ({
         level: node.level,
@@ -1663,7 +1765,12 @@ export function validateDeterministicMapStreamingFixture(fixture) {
       stableJson(IMAGERY_LEVELS),
     ) ||
     fixture.manifest.geometry?.imageryFormat !== 'PNG indexed-color 256x256' ||
-    fixture.manifest.geometry?.imageryTilingScheme !== 'WebMercator XYZ'
+    fixture.manifest.geometry?.imageryTilingScheme !== 'WebMercator XYZ' ||
+    fixture.manifest.geometry?.imageryRouteCoverageKind !==
+      'route-bbox tiles only' ||
+    !stableJson(fixture.manifest.geometry?.imageryDependencyCoverage).equals(
+      stableJson(IMAGERY_SKELETON_DEPENDENCY_DESCRIPTOR),
+    )
   )
     throw new Error('Map streaming imagery route or geometry is invalid.');
   const expectedImageryCoverage = IMAGERY_LEVELS.map((level) => ({
@@ -1676,21 +1783,60 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     )
   )
     throw new Error('Map streaming imagery route coverage is invalid.');
+  const terrainScheme = new Cesium.GeographicTilingScheme({
+    ellipsoid: Cesium.Ellipsoid.WGS84,
+  });
+  const expectedTerrainCoverage = TERRAIN_LEVELS.map((level) => ({
+    level,
+    tiles: tileCoordinates(terrainScheme, ROUTE, level),
+  }));
+  if (
+    !stableJson(fixture.manifest.coverage?.terrain).equals(
+      stableJson(expectedTerrainCoverage),
+    )
+  )
+    throw new Error('Map streaming terrain route coverage is invalid.');
+  const allExpectedImageryDependencies = imagerySkeletonDependencyTiles(
+    expectedTerrainCoverage,
+    terrainScheme,
+  );
+  const expectedRouteImageryIds = new Set(
+    expectedImageryCoverage.flatMap(({ level, tiles }) =>
+      tiles.map(({ x, y }) => `${level}/${x}/${y}`),
+    ),
+  );
+  const expectedImageryDependencies = allExpectedImageryDependencies.filter(
+    (tile) => !expectedRouteImageryIds.has(`${tile.level}/${tile.x}/${tile.y}`),
+  );
+  if (
+    !stableJson(fixture.manifest.coverage?.imagerySkeletonDependencies).equals(
+      stableJson(expectedImageryDependencies),
+    )
+  )
+    throw new Error(
+      'Map streaming native imagery skeleton dependencies are invalid.',
+    );
   const pinnedImagery = loadPinnedMapImageryTemplatesSync();
-  const expectedHighImagery = [];
-  for (const level of [13, 14, 15])
-    for (const tile of tileCoordinates(
-      new Cesium.WebMercatorTilingScheme(),
-      ROUTE,
+  const imageryTilesByLevel = new Map(
+    IMAGERY_LEVELS.map((level) => [
       level,
-    )) {
+      new Map(
+        tileCoordinates(new Cesium.WebMercatorTilingScheme(), ROUTE, level).map(
+          (tile) => [`${tile.level}/${tile.x}/${tile.y}`, tile],
+        ),
+      ),
+    ]),
+  );
+  for (const tile of expectedImageryDependencies)
+    imageryTilesByLevel
+      .get(tile.level)
+      ?.set(`${tile.level}/${tile.x}/${tile.y}`, tile);
+  const expectedImageryRows = [];
+  for (const level of IMAGERY_LEVELS)
+    for (const tile of imageryTilesByLevel.get(level).values()) {
       const path = `imagery/${level}/${tile.x}/${tile.y}.png`;
-      const bytes = pinnedImagery.get(
-        seedFromId(`imagery/${level}/${tile.x}/${tile.y}`) & 0xff,
-      );
-      if (!bytes)
-        throw new Error(`Pinned imagery template is missing for ${path}.`);
-      expectedHighImagery.push({
+      const bytes = createImageryTileBytes(tile, pinnedImagery);
+      expectedImageryRows.push({
         path,
         kind: 'webmercator-imagery-png',
         identity: tile,
@@ -1698,11 +1844,11 @@ export function validateDeterministicMapStreamingFixture(fixture) {
         sha256: sha256(bytes),
       });
     }
-  const actualHighImagery = fixture.manifest.assets
-    .filter(
-      (row) =>
-        row.kind === 'webmercator-imagery-png' && row.identity?.level >= 13,
-    )
+  expectedImageryRows.sort((left, right) =>
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+  );
+  const actualImageryRows = fixture.manifest.assets
+    .filter((row) => row.kind === 'webmercator-imagery-png')
     .map(({ path, kind, identity, byteLength, sha256: digestValue }) => ({
       path,
       kind,
@@ -1713,11 +1859,10 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     .sort((left, right) =>
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     );
-  expectedHighImagery.sort((left, right) =>
-    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-  );
-  if (!stableJson(actualHighImagery).equals(stableJson(expectedHighImagery)))
-    throw new Error('Map streaming high-level imagery inventory is invalid.');
+  if (!stableJson(actualImageryRows).equals(stableJson(expectedImageryRows)))
+    throw new Error(
+      'Map streaming route and dependency imagery inventory is invalid.',
+    );
   if (
     !Number.isSafeInteger(fixture.manifest.totalBytes) ||
     fixture.manifest.totalBytes < 1 ||

@@ -1102,6 +1102,10 @@ test('strict smoke journey rejection retains bounded observed route and transiti
       fixtureId: 'austin-map-streaming-synthetic-v2',
       manifestSha256: 'e'.repeat(64),
     },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v3',
+      manifestSha256: 'd'.repeat(64),
+    },
   ]) {
     const historicalFailure = structuredClone(projectedHistoricalEnvelope);
     historicalFailure.fixtureId = fixtureId;
@@ -1160,6 +1164,7 @@ test('strict smoke journey rejection retains bounded observed route and transiti
   for (const historicalFixtureId of [
     'austin-map-streaming-synthetic-v1',
     'austin-map-streaming-synthetic-v2',
+    'austin-map-streaming-synthetic-v3',
   ])
     await assert.rejects(
       runNativeMapJourneyForSmoke({
@@ -1169,7 +1174,7 @@ test('strict smoke journey rejection retains bounded observed route and transiti
         buildProfile: profile,
         mapStreamingCaptureModule,
       }),
-      /austin-map-streaming-synthetic-v3/,
+      /austin-map-streaming-synthetic-v4/,
       `Live smoke rejects historical ${historicalFixtureId} fixtures.`,
     );
   for (const [field, invalidValue] of [

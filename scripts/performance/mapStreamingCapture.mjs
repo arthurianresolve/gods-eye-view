@@ -15,6 +15,8 @@ const HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID =
   'austin-map-streaming-synthetic-v1';
 const PREVIOUS_MAP_STREAMING_FAILURE_FIXTURE_ID =
   'austin-map-streaming-synthetic-v2';
+const LEGACY_MAP_STREAMING_FAILURE_FIXTURE_ID =
+  'austin-map-streaming-synthetic-v3';
 
 export const MAP_STREAMING_STACK_SEQUENCE = Object.freeze([
   'photoreal',
@@ -1147,7 +1149,8 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
     assert.match(value.manifestSha256, SHA256);
   } else if (
     value.fixtureId === HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID ||
-    value.fixtureId === PREVIOUS_MAP_STREAMING_FAILURE_FIXTURE_ID
+    value.fixtureId === PREVIOUS_MAP_STREAMING_FAILURE_FIXTURE_ID ||
+    value.fixtureId === LEGACY_MAP_STREAMING_FAILURE_FIXTURE_ID
   ) {
     assert.match(value.manifestSha256, SHA256);
   } else {
