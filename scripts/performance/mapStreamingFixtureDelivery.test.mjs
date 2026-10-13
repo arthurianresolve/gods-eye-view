@@ -138,6 +138,43 @@ test('native map URLs resolve every manifest asset through real interception cal
   );
 });
 
+test('Cesium ArcGIS provider metadata URL with its native trailing slash is delivered and acknowledged', async () => {
+  const pinned = await fixture();
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  const originalFetchJson = Cesium.Resource.prototype.fetchJson;
+  const observedUrls = [];
+  Cesium.Resource.prototype.fetchJson = async function (...args) {
+    observedUrls.push(this.url);
+    const response = await issueRequest(delivery, this.url);
+    assert.equal(response.command, 'Fetch.fulfillRequest');
+    assert.equal(response.acknowledged, true);
+    return JSON.parse(
+      Buffer.from(response.params.body, 'base64').toString('utf8'),
+    );
+  };
+
+  try {
+    await Cesium.ArcGisMapServerImageryProvider.fromUrl(ARCGIS, {
+      tileDiscardPolicy: new Cesium.NeverTileDiscardPolicy(),
+    });
+  } finally {
+    Cesium.Resource.prototype.fetchJson = originalFetchJson;
+  }
+
+  assert.deepEqual(observedUrls, [`${ARCGIS}/?f=json`]);
+  const summary = delivery.dispose();
+  assert.equal(summary.requestedCount, 1);
+  assert.equal(summary.fulfilledAckCount, 1);
+  assert.equal(summary.pendingCount, 0);
+  assert.equal(summary.cleanupConfirmed, true);
+  assert.equal(
+    summary.assets[0].path,
+    'arcgis/rest/services/World_Imagery/MapServer/metadata.json',
+  );
+});
+
 test('smoke summary accepts observed cancellations but rejects unbalanced counts', async () => {
   const pinned = await fixture();
   const delivery = createMapStreamingFixtureDelivery(pinned, {
@@ -317,6 +354,10 @@ test('native routes reject extra, duplicate, escaped, and traversing URL shapes'
   );
   const cases = [
     [`${ARCGIS}?f=json&f=json`, /arcgis-metadata-query-invalid/],
+    [`${ARCGIS}//?f=json`, /arcgis-route-invalid/],
+    [`${ARCGIS}/%2F?f=json`, /arcgis-route-invalid/],
+    [`${ARCGIS}/?f=json&f=json`, /arcgis-metadata-query-invalid/],
+    [`${ARCGIS}/?f=json&extra=1`, /arcgis-metadata-query-invalid/],
     [`${ARCGIS}/tile/0/0/0?cache=1`, /arcgis-tile-query-invalid/],
     [`${ARCGIS}/tile/00/0/0`, /arcgis-route-invalid/],
     [`${ARCGIS}/tile/0/0/0?`, /native-path-noncanonical/],
