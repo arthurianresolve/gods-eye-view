@@ -10,7 +10,7 @@ export function createProductionFlightFixture({
   count = DENSE_FLIGHT_FIXTURE_COUNT,
   fixedTime = DEFAULT_FLIGHT_FIXTURE_TIME,
 } = {}) {
-  if (!Number.isInteger(count) || count < 1 || count > 20_000)
+  if (!Number.isInteger(count) || count < 0 || count > 20_000)
     throw new TypeError('Flight fixture count is invalid.');
   const fixedTimeMs = Date.parse(fixedTime);
   if (!Number.isFinite(fixedTimeMs) || new Date(fixedTimeMs).toISOString() !== fixedTime)
@@ -57,6 +57,32 @@ export function createProductionFlightFixture({
   };
 }
 
+/** Build the fixed-epoch empty readsb payload used by app render-demand QA. */
+export function createProductionMilitaryFixture({
+  fixedTime = DEFAULT_FLIGHT_FIXTURE_TIME,
+} = {}) {
+  const fixedTimeMs = Date.parse(fixedTime);
+  if (
+    !Number.isFinite(fixedTimeMs) ||
+    new Date(fixedTimeMs).toISOString() !== fixedTime
+  )
+    throw new TypeError('Military fixture time must be canonical ISO-8601 UTC.');
+  if (fixedTimeMs % 1000 !== 0)
+    throw new TypeError(
+      'Military fixture time must be aligned to a whole second.',
+    );
+  const payload = { now: Math.floor(fixedTimeMs / 1000), ac: [] };
+  const body = JSON.stringify(payload);
+  return {
+    id: 'readsb-empty-render-demand-v1',
+    fixedTime: new Date(fixedTimeMs).toISOString(),
+    fixedTimeMs,
+    body,
+    byteLength: Buffer.byteLength(body, 'utf8'),
+    sha256: createHash('sha256').update(body, 'utf8').digest('hex'),
+  };
+}
+
 /** Fulfill only the production flight-source endpoint on the app origin. */
 export function respondToProductionFlightFixture(
   url,
@@ -80,6 +106,36 @@ export function respondToProductionFlightFixture(
       'cache-control': 'no-store',
       'x-flight-source': 'fixture-opensky-v1',
       'x-flight-coverage': 'fixed deterministic Austin test grid',
+    },
+    body: fixture.body,
+  };
+}
+
+/** Fulfill only the production military-source endpoint on the app origin. */
+export function respondToProductionMilitaryFixture(
+  url,
+  request,
+  fixture,
+  baseUrl,
+) {
+  const base = new URL(baseUrl);
+  if (
+    url.origin !== base.origin ||
+    url.pathname !== '/api/military' ||
+    url.search ||
+    url.username ||
+    url.password ||
+    (typeof request?.method === 'function'
+      ? request.method()
+      : request?.method) !== 'GET'
+  )
+    return undefined;
+  return {
+    status: 200,
+    contentType: 'application/json; charset=utf-8',
+    headers: {
+      'cache-control': 'no-store',
+      'x-feed-source': 'fixture-readsb-v1',
     },
     body: fixture.body,
   };

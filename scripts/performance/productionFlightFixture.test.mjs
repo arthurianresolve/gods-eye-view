@@ -5,6 +5,7 @@ import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
+  createProductionMilitaryFixture,
   installFixedWallClock,
   installFrozenWallClock,
   installHeldMonotonicWallClock,
@@ -14,9 +15,13 @@ import {
   selectFixtureWallClockInstaller,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
+  respondToProductionMilitaryFixture,
 } from './productionFlightFixture.mjs';
 import { interceptFixtureSession } from './fixtureInterception.mjs';
-import { createFlightSource } from '../../src/sources/live/standalone.js';
+import {
+  createFlightSource,
+  createMilitarySource,
+} from '../../src/sources/live/standalone.js';
 
 const BASE = 'http://127.0.0.1:4173/';
 
@@ -49,6 +54,100 @@ test('production fixture rejects subsecond epochs that OpenSky rows cannot repre
       }),
     /whole second/,
   );
+});
+
+test(
+  'production flight fixture accepts zero and still rejects negative populations',
+  () => {
+    assert.equal(createProductionFlightFixture({ count: 0 }).count, 0);
+    assert.throws(
+      () => createProductionFlightFixture({ count: -1 }),
+      /count is invalid/,
+    );
+  },
+);
+
+test(
+  'fixed-time empty flight and readsb fixtures preserve production payload contracts',
+  () => {
+    const fixedTime = '2026-10-08T12:00:00.000Z';
+    const flights = createProductionFlightFixture({ count: 0, fixedTime });
+    const military = createProductionMilitaryFixture({ fixedTime });
+    assert.deepEqual(JSON.parse(flights.body), {
+      time: flights.fixedTimeMs / 1000,
+      states: [],
+    });
+    assert.deepEqual(JSON.parse(military.body), {
+      now: flights.fixedTimeMs / 1000,
+      ac: [],
+    });
+    assert.equal(flights.fixedTime, military.fixedTime);
+    assert.match(flights.sha256, /^[a-f0-9]{64}$/);
+    assert.match(military.sha256, /^[a-f0-9]{64}$/);
+    assert.equal(flights.byteLength, Buffer.byteLength(flights.body));
+    assert.equal(military.byteLength, Buffer.byteLength(military.body));
+  },
+);
+
+test(
+  'production source normalizers accept the fixed-time empty layer snapshots',
+  async () => {
+    const flights = createProductionFlightFixture({ count: 0 });
+    const military = createProductionMilitaryFixture({
+      fixedTime: flights.fixedTime,
+    });
+    const responseFor = (body) => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => JSON.parse(body),
+    });
+    const flightSnapshot = await createFlightSource({
+      fetchImpl: async () => responseFor(flights.body),
+      now: () => flights.fixedTimeMs,
+    }).getSnapshot();
+    const militarySource = createMilitarySource({
+      fetchImpl: async () => responseFor(military.body),
+      now: () => flights.fixedTimeMs,
+    });
+    const militarySnapshot = await militarySource.getSnapshot();
+    assert.deepEqual(flightSnapshot.records, []);
+    assert.equal(flightSnapshot.complete, true);
+    assert.equal(flightSnapshot.freshness, 'current');
+    assert.deepEqual(militarySnapshot.records, []);
+    assert.equal(militarySnapshot.complete, true);
+    assert.equal(militarySnapshot.freshness, 'current');
+    assert.deepEqual(await militarySource.getIdentities(), []);
+  },
+);
+
+test('empty military fixture is restricted to its exact same-origin GET route', () => {
+  const fixture = createProductionMilitaryFixture();
+  const request = { method: () => 'GET' };
+  assert.equal(
+    respondToProductionMilitaryFixture(
+      new URL('/api/military', BASE),
+      request,
+      fixture,
+      BASE,
+    ).body,
+    fixture.body,
+  );
+  for (const [target, method] of [
+    ['https://provider.example/api/military', 'GET'],
+    ['http://127.0.0.1:4173/api/military?unexpected=1', 'GET'],
+    ['http://127.0.0.1:4173/api/military/track', 'GET'],
+    ['http://127.0.0.1:4173/api/military', 'POST'],
+  ])
+    assert.equal(
+      respondToProductionMilitaryFixture(
+        new URL(target),
+        { method: () => method },
+        fixture,
+        BASE,
+      ),
+      undefined,
+    );
 });
 
 test('real flight source accepts all generated vectors and applies its freshness window', async () => {
