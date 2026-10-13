@@ -34,11 +34,16 @@ failure is not caused by the Street View merge, which that run predates.
 Promotion to dev follows review
 and merged-candidate validation; no rebase or history discard is needed.
 
-A subsequent remote fetch still finds fork/main and origin/main at `9beadbda`.
-QA `4b60f453` contains both current main and dev: 820 commits ahead of main and
-zero behind. Local/remote dev remain `e8ccc268`, 697 ahead and fourteen behind
-main. No additional upstream reconciliation is needed beyond the reviewed merge
-already on QA. Dev and VM105 have not been promoted during this recheck.
+A fresh remote fetch for the latest user recheck still finds fork/main and
+origin/main at `9beadbda6333b83f79aa03047e2d851830f01f6b`. Local and remote QA
+`c1850bcb10ba711c1cc027259f35cffca01b41c2` contain both current main and dev:
+826 commits ahead of main and zero behind. Local/remote dev remain
+`e8ccc268608fbece8b6d87a0b6db86e1800ddf90`, 697 ahead and fourteen behind main.
+Both ancestor checks pass, and both local worktrees are clean at this checkpoint.
+No additional upstream reconciliation is needed beyond the reviewed merge
+already on QA. Promotion of that merge to dev still needs the current candidate's
+validation; the CI results above apply to `4b60f453`, not to the later harness and
+report commits. Dev and VM105 have not been promoted during this recheck.
 
 ## Original assessment before the merge
 
