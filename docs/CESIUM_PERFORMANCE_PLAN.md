@@ -24,7 +24,12 @@ finds both fork and upstream main at `9beadbda`. Local and remote dev still matc
 `e8ccc268` (697 ahead of main, fourteen behind). Reviewed QA merge `8b84a2e0`
 combines QA `f50565a0` with main `9beadbda`, preserving both picking-test additions.
 Root passes 485 focused integration checks and published layer-token checks
-against both bases. The merged candidate still requires its own full CI run.
+against both bases. The [merged-candidate CI run](performance-evidence/integration-4b60f453/README.md)
+at `4b60f453` finishes with six selected passes, including Street Level, and one
+Windows PowerShell readiness failure before browser recovery. The unchanged
+helper passes locally; the hosted startup cause remains unresolved. Promotion
+still requires the outstanding Windows validation. A fresh fetch finds no newer
+main commits beyond the reviewed merge.
 QA remains separate from dev and the deployed VM; no history was rebased or
 discarded. This supersedes the earlier zero-behind and unmerged checkpoints.
 
@@ -63,8 +68,17 @@ generic topology expects separate provider documents for samples that reuse
 the measured map document. The [reviewed ownership correction](performance-evidence/s47-map-streaming/map-document-ownership/README.md)
 at `155f2ac0` binds samples and cleanup inventories to the actual shared owner.
 Root passes 90 focused tests and a raw-report replay with fourteen rejected
-mutations. Fresh merged-commit browser validation is pending; the original run
-remains failed.
+mutations. A [fresh native run at merged candidate `4b60f453`](performance-evidence/s47-map-streaming/native-v4-38420739560/README.md)
+passes both production map journeys and candidate capture validation, with zero
+missing or pending fixture requests. This is hosted Metal integration evidence;
+physical Windows qualification and rendered fault/recovery controls remain
+pending. The original run remains failed.
+
+An [S50 ownership audit](performance-evidence/s50-viewshed-retention-gap/README.md)
+finds unchanged viewshed volumes are still destroyed/reconstructed across hiding
+and re-enabling, despite wireframe reuse. Three production-factory CPU cycles
+reproduce this inherited behavior. Bounded volume retention/tint reuse and rendered
+validation remain implementation work; S50 stays partial.
 The three omitted browser identities remain unknown. Do not repeat the failed
 run unchanged or relax delivery checks.
 

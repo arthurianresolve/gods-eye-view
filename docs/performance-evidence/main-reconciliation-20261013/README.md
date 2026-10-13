@@ -19,14 +19,26 @@ passes published layer-token checks against both `fork/main` and `fork/dev`:
 for representative pull-request workflow evidence.
 
 The [preceding exact QA revision passes all seven standard CI jobs](../integration-f50565a0/README.md).
-The merged revision still needs its own Node 24/26, build, onboarding/recovery and
-browser integration run. The [separate native diagnostic failure](../s47-map-streaming/native-v4-38416400160/README.md)
+The merged candidate `4b60f453` has now completed its [standard integration run](../integration-4b60f453/README.md):
+six selected jobs pass, including both Node suites/builds and Street Level;
+Windows recovery fails before browser setup on a PowerShell readiness timeout.
+The helper and workflow are unchanged from the preceding green revision. The
+cause remains unresolved; the failed prerequisite still blocks promotion.
+The [separate native diagnostic failure](../s47-map-streaming/native-v4-38416400160/README.md)
 is a capture-report topology mismatch and remains failed. The
 [reviewed correction](../s47-map-streaming/map-document-ownership/README.md) passes
 90 root focused checks plus the original-report replay and fourteen negative
-mutations. It is not caused by the Street View merge, which that run predates.
+mutations. A [fresh native run at the merged candidate](../s47-map-streaming/native-v4-38420739560/README.md)
+passes both production map journeys and candidate capture validation. The prior
+failure is not caused by the Street View merge, which that run predates.
 Promotion to dev follows review
 and merged-candidate validation; no rebase or history discard is needed.
+
+A subsequent remote fetch still finds fork/main and origin/main at `9beadbda`.
+QA `4b60f453` contains both current main and dev: 820 commits ahead of main and
+zero behind. Local/remote dev remain `e8ccc268`, 697 ahead and fourteen behind
+main. No additional upstream reconciliation is needed beyond the reviewed merge
+already on QA. Dev and VM105 have not been promoted during this recheck.
 
 ## Original assessment before the merge
 

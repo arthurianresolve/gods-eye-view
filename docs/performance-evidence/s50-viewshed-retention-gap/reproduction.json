@@ -1,0 +1,30 @@
+{
+  "scope": "Production volume ownership CPU reproduction; no rendered evidence",
+  "status": "unchanged-visibility-rebuild-gap-confirmed",
+  "initialPrimitiveCount": 1,
+  "additionalPrimitiveConstructions": 3,
+  "cycles": [
+    {
+      "cycle": 1,
+      "oldPrimitiveDestroyed": true,
+      "replacementCreated": true,
+      "unchangedPositions": true,
+      "livePrimitivesAfterReenable": 1
+    },
+    {
+      "cycle": 2,
+      "oldPrimitiveDestroyed": true,
+      "replacementCreated": true,
+      "unchangedPositions": true,
+      "livePrimitivesAfterReenable": 1
+    },
+    {
+      "cycle": 3,
+      "oldPrimitiveDestroyed": true,
+      "replacementCreated": true,
+      "unchangedPositions": true,
+      "livePrimitivesAfterReenable": 1
+    }
+  ],
+  "ownedCollectionDestroyed": true
+}
