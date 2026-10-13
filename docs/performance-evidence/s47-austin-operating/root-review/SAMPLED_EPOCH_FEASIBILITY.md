@@ -547,3 +547,22 @@ changing rendering defaults, or increasing the 256 KiB failure-report cap.
 
 The infrastructure CLI integration also passes the complete 1,621-file formatting
 check and both package-boundary checks (1,010 modules, 80 portable entries).
+
+# Bounded installation predicate evidence
+
+Luna's diagnostic `f6c594c0` and test follow-up `64b25bdb` preserve the
+original installation predicate and its evaluation order. Rejections now attach
+input-derived reasons and bounded scalar observations through the existing
+error-actual/error-expected reporting path. Integration is
+`469ddc6d5b74ad6094a40776fafcc7f7ab918a07`. Loading/error state, declared and
+observed counts, identity-list validity, unique/unknown identity counts, and
+observed/recomputed digests are distinguished. No source payload or full catalog
+is attached; no deadline or readiness criterion changes.
+
+Root's [23-case old/candidate control](installation-population-control.json)
+confirms identical acceptance and verifies the failure details survive complete
+current-observation replacement under the unchanged 256 KiB cap. All
+[39 focused integration tests](installation-population-focused-tests.tap),
+the 17-file scope gate and changed-file formatting pass. These controls prove
+the diagnostic behavior, not the cause of run 38325432288. A fresh exact-revision
+hosted capture is needed to obtain that missing observation.

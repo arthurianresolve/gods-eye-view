@@ -1,0 +1,244 @@
+TAP version 13
+# Subtest: capture CLI recognizes an infrastructure workload before browser startup
+ok 1 - capture CLI recognizes an infrastructure workload before browser startup
+  ---
+  duration_ms: 2872.6656
+  type: 'test'
+  ...
+# Subtest: capture CLI rejects unsupported infrastructure names and mixed populations
+ok 2 - capture CLI rejects unsupported infrastructure names and mixed populations
+  ---
+  duration_ms: 696.1715
+  type: 'test'
+  ...
+# Subtest: invalid infrastructure CLI requests reject before importing Cesium
+ok 3 - invalid infrastructure CLI requests reject before importing Cesium
+  ---
+  duration_ms: 2880.748
+  type: 'test'
+  ...
+# Subtest: first-motion profiling rejects unsupported workload before browser startup
+ok 4 - first-motion profiling rejects unsupported workload before browser startup
+  ---
+  duration_ms: 824.5438
+  type: 'test'
+  ...
+# Subtest: shader program attribution is opt-in only for the dense capture fixture
+ok 5 - shader program attribution is opt-in only for the dense capture fixture
+  ---
+  duration_ms: 776.0072
+  type: 'test'
+  ...
+# Subtest: capture no-undef config accepts standard Node and browser globals
+ok 6 - capture no-undef config accepts standard Node and browser globals
+  ---
+  duration_ms: 460.1077
+  type: 'test'
+  ...
+# Subtest: capture no-undef config rejects an undeclared project identifier
+ok 7 - capture no-undef config rejects an undeclared project identifier
+  ---
+  duration_ms: 6.6997
+  type: 'test'
+  ...
+# Subtest: capture no-undef config does not allow inline suppression
+ok 8 - capture no-undef config does not allow inline suppression
+  ---
+  duration_ms: 6.4681
+  type: 'test'
+  ...
+# Subtest: Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+ok 9 - Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+  ---
+  duration_ms: 802.3977
+  type: 'test'
+  ...
+# Subtest: Austin rendering contract matches observed viewer defaults and labels changed AA settings
+ok 10 - Austin rendering contract matches observed viewer defaults and labels changed AA settings
+  ---
+  duration_ms: 691.9437
+  type: 'test'
+  ...
+# Subtest: Austin capture setting copies stay bound to the native visual observations
+ok 11 - Austin capture setting copies stay bound to the native visual observations
+  ---
+  duration_ms: 646.2631
+  type: 'test'
+  ...
+# Subtest: Austin measurement contract consumes the settled render-boundary producer result
+ok 12 - Austin measurement contract consumes the settled render-boundary producer result
+  ---
+  duration_ms: 624.8959
+  type: 'test'
+  ...
+# Subtest: Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+ok 13 - Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+  ---
+  duration_ms: 601.724
+  type: 'test'
+  ...
+# Subtest: Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+ok 14 - Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+  ---
+  duration_ms: 3604.4242
+  type: 'test'
+  ...
+# Subtest: paired Austin ingestion recomputes cleanup from producer-shaped drain records
+ok 15 - paired Austin ingestion recomputes cleanup from producer-shaped drain records
+  ---
+  duration_ms: 5156.4127
+  type: 'test'
+  ...
+# Subtest: paired Austin validation recomputes raw satellite rows against the pinned TLEs
+ok 16 - paired Austin validation recomputes raw satellite rows against the pinned TLEs
+  ---
+  duration_ms: 1904.0962
+  type: 'test'
+  ...
+# Subtest: paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+ok 17 - paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+  ---
+  duration_ms: 2027.4687
+  type: 'test'
+  ...
+# Subtest: Austin population evidence binds full catalogs and allows native viewport subsets
+ok 18 - Austin population evidence binds full catalogs and allows native viewport subsets
+  ---
+  duration_ms: 2.4591
+  type: 'test'
+  ...
+# Subtest: Austin population evidence rejects stable same-size identity substitutions
+ok 19 - Austin population evidence rejects stable same-size identity substitutions
+  ---
+  duration_ms: 0.5796
+  type: 'test'
+  ...
+# Subtest: Austin installation observations must be a unique subset of the declared catalog
+ok 20 - Austin installation observations must be a unique subset of the declared catalog
+  ---
+  duration_ms: 1.0017
+  type: 'test'
+  ...
+# Subtest: installation-subset failures retain reason codes and bounded observed predicates
+ok 21 - installation-subset failures retain reason codes and bounded observed predicates
+  ---
+  duration_ms: 7.3004
+  type: 'test'
+  ...
+# Subtest: installation failure predicates survive bounded report serialization when samples are trimmed
+ok 22 - installation failure predicates survive bounded report serialization when samples are trimmed
+  ---
+  duration_ms: 7.6912
+  type: 'test'
+  ...
+# Subtest: installation failure predicates survive whole-current replacement at the hard report cap
+ok 23 - installation failure predicates survive whole-current replacement at the hard report cap
+  ---
+  duration_ms: 12.167
+  type: 'test'
+  ...
+# Subtest: viewport counts are not inferred for whole-catalog or grid layers
+ok 24 - viewport counts are not inferred for whole-catalog or grid layers
+  ---
+  duration_ms: 0.5389
+  type: 'test'
+  ...
+# Subtest: capture provenance binds full application and harness SHAs to the receipt
+ok 25 - capture provenance binds full application and harness SHAs to the receipt
+  ---
+  duration_ms: 2.6023
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects wrong SHAs and changes between the two served checks
+ok 26 - capture provenance rejects wrong SHAs and changes between the two served checks
+  ---
+  duration_ms: 1.965
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects a different served root or harness checkout
+ok 27 - capture provenance rejects a different served root or harness checkout
+  ---
+  duration_ms: 1.5207
+  type: 'test'
+  ...
+# Subtest: failure artifact preserves bounded current and completed sample evidence without eligibility
+ok 28 - failure artifact preserves bounded current and completed sample evidence without eligibility
+  ---
+  duration_ms: 4.5017
+  type: 'test'
+  ...
+# Subtest: failure projection retains the bounded Austin source-readiness layer snapshot
+ok 29 - failure projection retains the bounded Austin source-readiness layer snapshot
+  ---
+  duration_ms: 1.5906
+  type: 'test'
+  ...
+# Subtest: failure projection retains flattened Austin readiness history through outer smoke compaction
+ok 30 - failure projection retains flattened Austin readiness history through outer smoke compaction
+  ---
+  duration_ms: 0.4611
+  type: 'test'
+  ...
+# Subtest: post-cleanup failure refresh is atomic and preserves the initial artifact on rejection
+ok 31 - post-cleanup failure refresh is atomic and preserves the initial artifact on rejection
+  ---
+  duration_ms: 14.1607
+  type: 'test'
+  ...
+# Subtest: failure artifact redacts secrets and stays within its hard byte cap
+ok 32 - failure artifact redacts secrets and stays within its hard byte cap
+  ---
+  duration_ms: 2.4766
+  type: 'test'
+  ...
+# Subtest: registered infrastructure workloads bind exact bundled bytes and populations
+ok 33 - registered infrastructure workloads bind exact bundled bytes and populations
+  ---
+  duration_ms: 61.0493
+  type: 'test'
+  ...
+# Subtest: fixed fixture clock uses Cesium JulianDate UTC-to-TAI conversion
+ok 34 - fixed fixture clock uses Cesium JulianDate UTC-to-TAI conversion
+  ---
+  duration_ms: 5.2887
+  type: 'test'
+  ...
+# Subtest: fixture rejects unknown workloads and noncanonical timestamps
+ok 35 - fixture rejects unknown workloads and noncanonical timestamps
+  ---
+  duration_ms: 0.5319
+  type: 'test'
+  ...
+# Subtest: receipt asset routing resolves hashed build names and rejects ambiguity
+ok 36 - receipt asset routing resolves hashed build names and rejects ambiguity
+  ---
+  duration_ms: 13.7006
+  type: 'test'
+  ...
+# Subtest: delivery observer binds matching served responses and before/after populations
+ok 37 - delivery observer binds matching served responses and before/after populations
+  ---
+  duration_ms: 21.2482
+  type: 'test'
+  ...
+# Subtest: delivery observer fails for missing, changed, failed, or count-drifted observations
+ok 38 - delivery observer fails for missing, changed, failed, or count-drifted observations
+  ---
+  duration_ms: 8.9146
+  type: 'test'
+  ...
+# Subtest: fixed Cesium clock observation rejects animate or epoch drift
+ok 39 - fixed Cesium clock observation rejects animate or epoch drift
+  ---
+  duration_ms: 28.359
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 39
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 35609.1947

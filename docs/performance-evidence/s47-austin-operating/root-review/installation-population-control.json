@@ -1,0 +1,255 @@
+{
+  "schema": "gev-installation-population-control/v1",
+  "oldCommit": "29b06390276bee67ea882d7e0393e7150ff109c8",
+  "candidateCommit": "f6c594c0450df93296ea32c2cc89c722e8bb73e4",
+  "sourceHashes": {
+    "old": "c64db48ae50019f4da6bf2e62d92b8c5e030ac576b056e0ba86f384fe8c32846",
+    "candidate": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d"
+  },
+  "cases": [
+    {
+      "name": "valid",
+      "oldAccepted": true,
+      "newAccepted": true,
+      "reasonCodes": []
+    },
+    {
+      "name": "missing layer",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "layer-missing",
+        "layer-disabled",
+        "declared-catalog-count-mismatch",
+        "count-not-safe-integer",
+        "population-truncated-or-unknown",
+        "identity-list-missing",
+        "identity-digest-invalid"
+      ]
+    },
+    {
+      "name": "enabled=false",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "layer-disabled"
+      ]
+    },
+    {
+      "name": "enabled=null",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "layer-disabled"
+      ]
+    },
+    {
+      "name": "loading=true",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "still-loading"
+      ]
+    },
+    {
+      "name": "error=failure https://sensitive.example/secret",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "layer-error"
+      ]
+    },
+    {
+      "name": "expectedSourceCatalogCount=-1",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "declared-catalog-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=-1",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-below-one",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=0",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-below-one",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=700",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-exceeds-declared-catalog",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=1.5",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-not-safe-integer",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=NaN",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-not-safe-integer",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=null",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-not-safe-integer",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "count=undefined",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "count-not-safe-integer",
+        "identity-count-mismatch"
+      ]
+    },
+    {
+      "name": "truncated=true",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "population-truncated-or-unknown"
+      ]
+    },
+    {
+      "name": "truncated=null",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "population-truncated-or-unknown"
+      ]
+    },
+    {
+      "name": "identityIds=null",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "identity-list-missing"
+      ]
+    },
+    {
+      "name": "identityIds=[]",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "identity-count-mismatch",
+        "identity-digest-mismatch"
+      ]
+    },
+    {
+      "name": "sha256=\"wrong\"",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "identity-digest-invalid"
+      ]
+    },
+    {
+      "name": "sha256=\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "identity-digest-mismatch"
+      ]
+    },
+    {
+      "name": "duplicate identity",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "duplicate-identities"
+      ]
+    },
+    {
+      "name": "unknown identity",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "unknown-identities"
+      ]
+    },
+    {
+      "name": "nonstring identity",
+      "oldAccepted": false,
+      "newAccepted": false,
+      "reasonCodes": [
+        "non-string-identities"
+      ]
+    }
+  ],
+  "currentTrimControl": {
+    "originalCurrentBytes": 263052,
+    "reportBytes": 2075,
+    "current": {
+      "phase": "measurement-boundary-render-wait",
+      "beforeAvailable": true,
+      "afterAvailable": true,
+      "measurementAvailable": true
+    },
+    "failureActual": {
+      "schema": "gev-austin-installation-population-diagnostic/v1",
+      "label": "scripted-motion run 2",
+      "reasonCodes": [
+        "still-loading"
+      ],
+      "layerPresent": true,
+      "enabled": true,
+      "expectedSourceCatalogCount": 699,
+      "loading": true,
+      "layerErrorPresent": false,
+      "layerError": null,
+      "count": 425,
+      "truncated": false,
+      "identityListPresent": true,
+      "identityLength": 425,
+      "identityUniqueCount": 425,
+      "identityAnalysisTruncated": false,
+      "unknownIdentityCount": 0,
+      "unknownIdentityExamples": [],
+      "nonStringIdentityCount": 0,
+      "nonStringIdentityTypes": [],
+      "identitySha256": "2498792c4e5d0831ac19eb2ad788a4bc15a1f87a440aefa84eb627ac1e847e68",
+      "identitySha256Valid": true,
+      "recomputedIdentitySha256": "2498792c4e5d0831ac19eb2ad788a4bc15a1f87a440aefa84eb627ac1e847e68",
+      "identitySha256Matches": true
+    }
+  },
+  "limitation": "Synthetic predicate controls using the pinned fixture catalog; not a reconstruction of the missing original after-observation.",
+  "independentFocusedValidation": {
+    "testedIntegrationCommit": "469ddc6d5b74ad6094a40776fafcc7f7ab918a07",
+    "tests": 39,
+    "passed": 39,
+    "failed": 0,
+    "scopeFiles": 17,
+    "scopeStatus": "passed",
+    "formatting": "changed files passed",
+    "artifact": "installation-population-focused-tests.tap"
+  }
+}
