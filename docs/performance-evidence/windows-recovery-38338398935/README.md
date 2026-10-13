@@ -38,3 +38,11 @@ but reveal that native Puppeteer timeout, unsupported-method and connection
 errors are all labelled generically. Correct that classification before the
 next hosted run. This control uses a fake transport and launches no browser;
 it does not explain the earlier Chrome shutdown failure.
+
+Correction `8c49b078` handles the installed Puppeteer error shapes without
+storing protocol text. Root independently passes all 75 recovery, shutdown
+control and capture CLI checks, plus capture-harness lint. The
+[correction review](diagnostic-correction-review.json) records ownership,
+timeout and output bounds. A new exact-commit hosted run is required to observe
+real recovery; the earlier failed run remains failed and no root cause is
+claimed from these controlled checks.

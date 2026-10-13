@@ -32,14 +32,15 @@ callback also time out, leaving process roles and exit unconfirmed. This
 candidate is not yet promoted to dev. Native Esri corpus proof through
 `f24b68ad` is now merged on QA and all five focused corpus/parser tests pass.
 Build-profile implementation through `05eefdcb` passes thirteen independent
-provenance tests and the capture harness lint check; a missing-value CLI
-control is being corrected. Full production map capture remains.
+provenance tests and the capture harness lint check. The missing-value CLI
+control is corrected at `4fc34337`; its six checks pass independently. Full
+production map capture remains.
 
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
 M3 actual application capture/validation, then M4 matched baseline/candidate
-runs. M1 corpus/parser implementation is complete; M2 is in progress, while
-M3-M4 remain pending. Preserve
+runs. M1 corpus/parser and M2 build-profile code are implemented with focused
+checks; profiled production builds and M3-M4 remain pending. Preserve
 current resolution, effects, feature populations and detail settings.
 
 After workload coverage, complete the remaining measured S48-S59 work and the
@@ -47,6 +48,13 @@ S60 candidate comparisons and retention soak. Primary Windows UHD 620
 foreground hardware validation remains required. Hosted paravirtual/software
 results, Linux VM checks and unavailable additional physical GPUs remain
 separate evidence categories. Do not turn a missing check into a pass.
+
+The Windows observation follow-up through `8c49b078` now reads process roles
+from the owned browser connection before close, with bounded native protocol
+timeouts and explicit error classification. Root passes 75 focused recovery,
+shutdown and CLI checks. Its [review](performance-evidence/windows-recovery-38338398935/diagnostic-correction-review.json)
+keeps the prior failure, five-second close gate and unresolved cause intact.
+Hosted validation of the changed diagnostic remains pending.
 
 ## Earlier integration evidence
 
