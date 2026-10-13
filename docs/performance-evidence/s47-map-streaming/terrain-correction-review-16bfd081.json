@@ -1,0 +1,446 @@
+{
+  "scope": "independent encoded terrain surface/native worker skirt offset/culling/coverage audit",
+  "commit": "16bfd081d7010c2649c05b7aed372eb5f2df295b",
+  "manifestSha256": "eb6a88b635fbd4f66d8bde3ad15901bb840cf781a3f36c42679bfd84d39f1058",
+  "tileCount": 20,
+  "route": {
+    "west": -97.82,
+    "south": 30.2,
+    "east": -97.58,
+    "north": 30.34
+  },
+  "rows": [
+    {
+      "path": "terrain/0/0/0.terrain",
+      "level": 0,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82525101474045,
+        "south": 30.199591051973027,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      }
+    },
+    {
+      "path": "terrain/1/0/1.terrain",
+      "level": 1,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.8225043488876,
+        "south": 30.19959105197302,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      }
+    },
+    {
+      "path": "terrain/10/467/683.terrain",
+      "level": 10,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/10/467/684.terrain",
+      "level": 10,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.34000361453597
+      }
+    },
+    {
+      "path": "terrain/10/468/683.terrain",
+      "level": 10,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.57999843115788,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/10/468/684.terrain",
+      "level": 10,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.57999843115788,
+        "north": 30.34000361453597
+      }
+    },
+    {
+      "path": "terrain/2/1/2.terrain",
+      "level": 2,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82113101596119,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.34104434339427
+      }
+    },
+    {
+      "path": "terrain/3/3/5.terrain",
+      "level": 3,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82044434949798,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.34035767693106
+      }
+    },
+    {
+      "path": "terrain/4/7/10.terrain",
+      "level": 4,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.57976775414289,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/5/14/21.terrain",
+      "level": 5,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699462
+      }
+    },
+    {
+      "path": "terrain/6/29/42.terrain",
+      "level": 6,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/7/58/85.terrain",
+      "level": 7,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 0,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.199977301858578,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/8/116/170.terrain",
+      "level": 8,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/8/116/171.terrain",
+      "level": 8,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/8/117/170.terrain",
+      "level": 8,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.57998233741264,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/8/117/171.terrain",
+      "level": 8,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/9/233/341.terrain",
+      "level": 9,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/9/233/342.terrain",
+      "level": 9,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.340003614535963
+      }
+    },
+    {
+      "path": "terrain/9/234/341.terrain",
+      "level": 9,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.57999306657614,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/9/234/342.terrain",
+      "level": 9,
+      "vertices": 289,
+      "surfaceFailures": 0,
+      "skirtFailures": 0,
+      "skirtVertices": 34,
+      "maxExcessMeters": 0,
+      "horizonVisible": true,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.57999306657614,
+        "north": 30.340003614535963
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "level": 0,
+      "actual": {
+        "west": -97.82525101474045,
+        "south": 30.199591051973027,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 1,
+      "actual": {
+        "west": -97.8225043488876,
+        "south": 30.19959105197302,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 2,
+      "actual": {
+        "west": -97.82113101596119,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.34104434339427
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 3,
+      "actual": {
+        "west": -97.82044434949798,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.34035767693106
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 4,
+      "actual": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.57976775414289,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 5,
+      "actual": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699462
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 6,
+      "actual": {
+        "west": -97.82001518295846,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 7,
+      "actual": {
+        "west": -97.82001518295846,
+        "south": 30.199977301858578,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 8,
+      "actual": {
+        "west": -97.82001518295846,
+        "south": 30.199998760185554,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 9,
+      "actual": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.57999306657614,
+        "north": 30.340003614535963
+      },
+      "containsDeclaredRectangle": true
+    },
+    {
+      "level": 10,
+      "actual": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.57999843115788,
+        "north": 30.34000361453597
+      },
+      "containsDeclaredRectangle": true
+    }
+  ]
+}

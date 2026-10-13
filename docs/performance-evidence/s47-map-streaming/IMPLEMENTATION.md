@@ -73,3 +73,21 @@ for an Austin camera above visibly exposed terrain. The
 [raw bounds audit](terrain-bounds-review-d8d2f17b.json) preserves this rejected
 candidate. Correction must use actual encoded geometry and verify culling,
 ancestor traversal and shared-edge continuity; parser success alone is insufficient.
+
+The follow-up `ca2d243e` fixes the root geometry and horizon point by encoding
+only the declared route patch, with continuous geographic height sampling.
+Independent review still finds seven skirt vertices outside bounds in five
+tiles, plus inward-rounded route edges at all eleven levels. The
+[skirt/coverage failure control](skirt-coverage-review-ca2d243e.json) preserves
+the omitted native worker offsets and incomplete coverage.
+
+Correction `16bfd081` includes each edge's actual Cesium horizontal skirt
+offset and rounds external route edges outward. The
+[independent encoded-byte audit](terrain-correction-review-16bfd081.json)
+passes all 5,780 surface vertices and 408 skirt vertices across twenty terrain
+tiles, with valid Austin culling and complete declared coverage at every level.
+The corpus is 1,881,234 bytes. Follow-up `d1658578` corrects a typed-array
+coercion error in the test decoder and adds actual per-level coverage checks.
+The four parser/corpus tests pass independently. Native Esri service metadata,
+browser rendering and full-application capture are still separate work; M1 is
+not yet the complete production map workload.

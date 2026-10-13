@@ -1,0 +1,385 @@
+{
+  "scope": "independent native-worker skirt offset and per-level declared terrain coverage audit",
+  "commit": "ca2d243ebeb13fc083564a5f0cda3a7a7b3bdb98",
+  "manifestSha256": "d01d2c00b4aa228188e517d2e25755963d25d702ece88557da1d49b6cb206e0e",
+  "route": {
+    "west": -97.82,
+    "south": 30.2,
+    "east": -97.58,
+    "north": 30.34
+  },
+  "rows": [
+    {
+      "path": "terrain/0/0/0.terrain",
+      "level": 0,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.81975768303475,
+        "south": 30.199591051973027,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      }
+    },
+    {
+      "path": "terrain/1/0/1.terrain",
+      "level": 1,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.81975768303475,
+        "south": 30.19959105197302,
+        "east": -97.58079775383771,
+        "north": 30.339671010467853
+      }
+    },
+    {
+      "path": "terrain/10/467/683.terrain",
+      "level": 10,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.81999908921323,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/10/467/684.terrain",
+      "level": 10,
+      "outsideSkirtVertices": 2,
+      "maxExcessMeters": 0.6571693589348797,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.81999908921323,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.339998249954228
+      }
+    },
+    {
+      "path": "terrain/10/468/683.terrain",
+      "level": 10,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.57999843115788,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/10/468/684.terrain",
+      "level": 10,
+      "outsideSkirtVertices": 2,
+      "maxExcessMeters": 0.7696097022198956,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.57999843115788,
+        "north": 30.339998249954228
+      }
+    },
+    {
+      "path": "terrain/2/1/2.terrain",
+      "level": 2,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.81975768303475,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.339671010467853
+      }
+    },
+    {
+      "path": "terrain/3/3/5.terrain",
+      "level": 3,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.81975768303475,
+        "south": 30.20027771843623,
+        "east": -97.58011108737449,
+        "north": 30.339671010467846
+      }
+    },
+    {
+      "path": "terrain/4/7/10.terrain",
+      "level": 4,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.58011108737449,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/5/14/21.terrain",
+      "level": 5,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.81992934965058,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699462
+      }
+    },
+    {
+      "path": "terrain/6/29/42.terrain",
+      "level": 6,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.20002021851253,
+        "east": -97.5800252540666,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/7/58/85.terrain",
+      "level": 7,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 0,
+      "bounds": {
+        "west": -97.82001518295846,
+        "south": 30.20002021851253,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      }
+    },
+    {
+      "path": "terrain/8/116/170.terrain",
+      "level": 8,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.81999372463149,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/8/116/171.terrain",
+      "level": 8,
+      "outsideSkirtVertices": 1,
+      "maxExcessMeters": 0.04313944260957214,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.81999372463149,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.339992885372478
+      }
+    },
+    {
+      "path": "terrain/8/117/170.terrain",
+      "level": 8,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.58000379573961,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/8/117/171.terrain",
+      "level": 8,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.58000379573961,
+        "north": 30.339992885372478
+      }
+    },
+    {
+      "path": "terrain/9/233/341.terrain",
+      "level": 9,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.734375,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/9/233/342.terrain",
+      "level": 9,
+      "outsideSkirtVertices": 1,
+      "maxExcessMeters": 0.12422123955002462,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.82000445379498,
+        "south": 30.234375,
+        "east": -97.734375,
+        "north": 30.340003614535963
+      }
+    },
+    {
+      "path": "terrain/9/234/341.terrain",
+      "level": 9,
+      "outsideSkirtVertices": 0,
+      "maxExcessMeters": 0,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.199998760185554,
+        "east": -97.58000379573961,
+        "north": 30.234375
+      }
+    },
+    {
+      "path": "terrain/9/234/342.terrain",
+      "level": 9,
+      "outsideSkirtVertices": 1,
+      "maxExcessMeters": 0.43879083799947693,
+      "skirtVertices": 34,
+      "bounds": {
+        "west": -97.734375,
+        "south": 30.234375,
+        "east": -97.58000379573961,
+        "north": 30.340003614535963
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "level": 0,
+      "actual": {
+        "west": -97.81975768303475,
+        "south": 30.199591051973027,
+        "east": -97.57805108798487,
+        "north": 30.34241767632069
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 1,
+      "actual": {
+        "west": -97.81975768303475,
+        "south": 30.19959105197302,
+        "east": -97.58079775383771,
+        "north": 30.339671010467853
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 2,
+      "actual": {
+        "west": -97.81975768303475,
+        "south": 30.19959105197302,
+        "east": -97.57942442091128,
+        "north": 30.339671010467853
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 3,
+      "actual": {
+        "west": -97.81975768303475,
+        "south": 30.20027771843623,
+        "east": -97.58011108737449,
+        "north": 30.339671010467846
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 4,
+      "actual": {
+        "west": -97.82010101626636,
+        "south": 30.199934385204628,
+        "east": -97.58011108737449,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 5,
+      "actual": {
+        "west": -97.81992934965058,
+        "south": 30.199934385204628,
+        "east": -97.57993942075869,
+        "north": 30.340014343699462
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 6,
+      "actual": {
+        "west": -97.82001518295846,
+        "south": 30.20002021851253,
+        "east": -97.5800252540666,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 7,
+      "actual": {
+        "west": -97.82001518295846,
+        "south": 30.20002021851253,
+        "east": -97.57998233741264,
+        "north": 30.340014343699455
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 8,
+      "actual": {
+        "west": -97.81999372463149,
+        "south": 30.199998760185554,
+        "east": -97.58000379573961,
+        "north": 30.339992885372478
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 9,
+      "actual": {
+        "west": -97.82000445379498,
+        "south": 30.199998760185554,
+        "east": -97.58000379573961,
+        "north": 30.340003614535963
+      },
+      "containsDeclaredRectangle": false
+    },
+    {
+      "level": 10,
+      "actual": {
+        "west": -97.81999908921323,
+        "south": 30.199998760185554,
+        "east": -97.57999843115788,
+        "north": 30.339998249954228
+      },
+      "containsDeclaredRectangle": false
+    }
+  ]
+}

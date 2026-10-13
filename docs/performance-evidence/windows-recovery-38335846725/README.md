@@ -18,6 +18,11 @@ regression. The same exact commit previously passed all seven standard jobs
 in [run 38334290706](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334290706).
 That pass does not override this failure.
 
+The original automatic run has now finished: six of seven standard jobs pass,
+including Node 24/26, Windows onboarding, macOS/Linux recovery and browser
+journeys. Windows recovery is the sole failure. The
+[final CI metadata](ci-final.json) is retained separately from its live observation.
+
 The [raw report](report.json) was extracted from the job's marked evidence
 record, with a single trailing newline: 10,580 bytes, SHA-256
 `7a2d54552d16072aa4e102dc579155fbee966f70620db6740551185f10804873`.
@@ -28,6 +33,18 @@ The [diagnostic follow-up](https://github.com/arthurianresolve/gods-eye-view/act
 uses the same immutable application/harness commit and renderer, with the
 existing bounded shutdown observations enabled. It can capture owned process
 roles before forced cleanup if the failure recurs. This changes observation,
-not the deadline or pass criteria. It is in progress at this checkpoint;
-[dispatch identity](diagnostic-dispatch.json) and the
-[original CI observation](ci-observation.json) retain their current states.
+not the deadline or pass criteria. It has now passed all five stages with
+natural exits in 309–475 ms, settings/workspace agreement and the original
+persisted asset hash. Before each close only the browser target remains;
+after disconnect target information correctly becomes unavailable.
+No timeout occurs, so the failure process snapshot is not exercised.
+The [raw diagnostic report](diagnostic-report.json) and
+[final diagnostic metadata](diagnostic-final.json) preserve this successful
+control separately. The [dispatch identity](diagnostic-dispatch.json) and
+[original CI observation](ci-observation.json) remain historical live snapshots.
+
+This control does not fix or explain the intermittent shutdown. The separate
+workflow correction `6942be8a` enables existing bounded observations for every
+Windows recovery CI job, so an automatic recurrence can retain the missing
+process evidence. Other platforms remain opt-in, and the deadline and failure
+criteria are unchanged. This is an evidence-collection correction only.
