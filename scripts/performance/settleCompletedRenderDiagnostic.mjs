@@ -56,6 +56,7 @@ export function settleCompletedRenderDiagnostic(
         renderRequestStarted: false,
         renderRequestCompleted: false,
         postRenderObserved: false,
+        postRenderElapsedMs: null,
         renderLoopRetirement: retireViewerRenderLoop
           ? {
               requested: true,
@@ -77,6 +78,8 @@ export function settleCompletedRenderDiagnostic(
               initialReady: null,
               ready: null,
               readyPostRenderCount: 0,
+              acceptedBoundaryObserved: false,
+              acceptedBoundaryElapsedMs: null,
               followupRenderRequested: false,
               followupRenderRequestStarted: false,
               followupRenderRequestCompleted: false,
@@ -130,6 +133,8 @@ export function settleCompletedRenderDiagnostic(
             initialReady: null,
             ready: null,
             readyPostRenderCount: 0,
+            acceptedBoundaryObserved: false,
+            acceptedBoundaryElapsedMs: null,
             followupRenderRequested: false,
             followupRenderRequestStarted: false,
             followupRenderRequestCompleted: false,
@@ -211,6 +216,14 @@ export function settleCompletedRenderDiagnostic(
     try {
       listener = () => {
         if (done) return;
+        if (!diagnostics.postRenderObserved) {
+          diagnostics.postRenderObserved = true;
+          diagnostics.postRenderElapsedMs = elapsed();
+          acknowledge('post-render', {
+            postRenderObserved: true,
+            pageElapsedMs: diagnostics.postRenderElapsedMs,
+          });
+        }
         if (typeof postRenderConditionFunction === 'function') {
           let ready;
           try {
@@ -268,14 +281,10 @@ export function settleCompletedRenderDiagnostic(
           } else {
             condition.followupRenderRequested = false;
             condition.acceptedAfterFollowupRender = true;
+            condition.acceptedBoundaryObserved = true;
+            condition.acceptedBoundaryElapsedMs = elapsed();
           }
         }
-        diagnostics.postRenderObserved = true;
-        diagnostics.postRenderElapsedMs = elapsed();
-        acknowledge('post-render', {
-          postRenderObserved: true,
-          pageElapsedMs: diagnostics.postRenderElapsedMs,
-        });
         let finalObservationError = null;
         if (typeof finalObservationFunction === 'function') {
           try {
