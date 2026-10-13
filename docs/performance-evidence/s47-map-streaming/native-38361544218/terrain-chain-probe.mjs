@@ -12,7 +12,7 @@ const sourceWorkerRoot = path.join(
 );
 const bundledWorkerRoot = path.join(
   root,
-  'node_modules/cesium/Build/CesiumUnminified/Workers',
+  'node_modules/cesium/Build/Cesium/Workers',
 );
 const workerNames = [
   'createVerticesFromQuantizedTerrainMesh',
@@ -151,6 +151,10 @@ if (process.env.GEV_TERRAIN_CHAIN_MODE) {
     console.log(
       JSON.stringify({
         mode,
+        workerArtifactPath:
+          mode === 'source'
+            ? 'node_modules/@cesium/engine/Source/Workers'
+            : 'node_modules/cesium/Build/Cesium/Workers (copied by production vite-plugin-cesium configuration)',
         fixtureId: fixture.id,
         fixtureManifestSha256: fixture.manifestSha256,
         fixtureTerrainAsset: {
@@ -179,7 +183,7 @@ if (process.env.GEV_TERRAIN_CHAIN_MODE) {
 }
 
 const loader = `export async function load(url, context, nextLoad) {
-  if (url.includes('/Build/CesiumUnminified/Workers/') && url.endsWith('.js')) {
+  if (url.includes('/Build/Cesium/Workers/') && url.endsWith('.js')) {
     return nextLoad(url, { ...context, format: 'module' });
   }
   return nextLoad(url, context);
@@ -221,6 +225,8 @@ const artifact = {
   schema: 'gev-map-terrain-ancestry-chain-probe/v1',
   generatedAt: new Date().toISOString(),
   cesiumVersion: '1.138.0',
+  sourceWorkerArtifactPath: source.workerArtifactPath,
+  bundledWorkerArtifactPath: bundled.workerArtifactPath,
   fixtureId: source.fixtureId,
   fixtureManifestSha256: source.fixtureManifestSha256,
   fixtureTerrainAsset: source.fixtureTerrainAsset,

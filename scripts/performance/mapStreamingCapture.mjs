@@ -1227,12 +1227,12 @@ export async function runNativeMapStreamingJourneyInPage({
           if (level !== 0) unsupportedFields.add('parent');
           break;
         }
-        if (rows.length === terrainAncestryLimit) {
-          truncated = true;
-          break;
-        }
         if (seen.has(parentValue)) {
           cycleDetected = true;
+          break;
+        }
+        if (rows.length === terrainAncestryLimit) {
+          truncated = true;
           break;
         }
         current = parentValue;

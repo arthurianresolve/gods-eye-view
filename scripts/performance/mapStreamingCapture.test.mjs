@@ -953,7 +953,7 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
   );
 });
 
-test('native map queue ancestry reports cycles and throwing parent getters explicitly', async () => {
+test('native map queue ancestry reports cycles and unsupported getters explicitly', async () => {
   const harness = createFakePage({
     notReadyGlobeStack: 'esri-imagery',
     advancePageClockOnRenderMs: 5_000,
@@ -1102,6 +1102,111 @@ test('native map queue ancestry reports cycles and throwing parent getters expli
       return true;
     },
   );
+
+  const rowAtLimit = [];
+  for (let level = 23; level >= 0; level -= 1) {
+    const child = rowAtLimit.at(-1);
+    rowAtLimit.push({
+      _x: child ? Math.floor(child._x / 2) : 2 ** 23 - 1,
+      _y: child ? Math.floor(child._y / 2) : 2 ** 22 - 1,
+      _level: level,
+      state: 1,
+      data: {
+        terrainState: 0,
+        mesh: null,
+        terrainData: { _mesh: null, canUpsample: false },
+      },
+    });
+  }
+  rowAtLimit.at(-1).parent = rowAtLimit[0];
+  for (let index = 0; index + 1 < rowAtLimit.length; index += 1)
+    rowAtLimit[index].parent = rowAtLimit[index + 1];
+  const boundaryCycleHarness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  boundaryCycleHarness.context.window.__godsEyeView.viewer.scene.globe._surface._tileLoadQueueHigh =
+    [rowAtLimit[0]];
+  await assert.rejects(
+    runNativeMapStreamingJourney(boundaryCycleHarness.page, {
+      durationMs: 60_000,
+      route: boundaryCycleHarness.route,
+    }),
+    (error) => {
+      const ancestry =
+        error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainAncestry;
+      assert.equal(ancestry.rows.length, 24);
+      assert.equal(ancestry.truncated, false);
+      assert.equal(ancestry.cycleDetected, true);
+      assert.equal(ancestry.rows.at(-1).level, 0);
+      assert.equal(ancestry.rows.at(-1).parentPresent, true);
+      return true;
+    },
+  );
+
+  const unsupportedTerrainDataCases = [
+    {
+      name: 'throwing mesh and missing canUpsample',
+      terrainData: {
+        get _mesh() {
+          throw new Error('controlled mesh getter failure');
+        },
+      },
+    },
+    {
+      name: 'missing mesh and throwing canUpsample',
+      terrainData: {
+        get canUpsample() {
+          throw new Error('controlled canUpsample getter failure');
+        },
+      },
+    },
+  ];
+  for (const testCase of unsupportedTerrainDataCases) {
+    const unsupportedTerrainDataHarness = createFakePage({
+      notReadyGlobeStack: 'esri-imagery',
+      advancePageClockOnRenderMs: 5_000,
+    });
+    const unsupportedSurface =
+      unsupportedTerrainDataHarness.context.window.__godsEyeView.viewer.scene
+        .globe._surface;
+    unsupportedSurface._tileLoadQueueHigh = [
+      {
+        _x: 7,
+        _y: 9,
+        _level: 0,
+        state: 1,
+        parent: null,
+        data: {
+          terrainState: 0,
+          mesh: null,
+          terrainData: testCase.terrainData,
+        },
+      },
+    ];
+    await assert.rejects(
+      runNativeMapStreamingJourney(unsupportedTerrainDataHarness.page, {
+        durationMs: 60_000,
+        route: unsupportedTerrainDataHarness.route,
+      }),
+      (error) => {
+        const ancestry =
+          error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+            .terrainAncestry;
+        assert.equal(ancestry.rows.length, 1, testCase.name);
+        assert.equal(ancestry.rows[0].terrainDataPresent, true, testCase.name);
+        assert.equal(ancestry.rows[0].terrainMeshPresent, null, testCase.name);
+        assert.equal(ancestry.rows[0].canUpsample, null, testCase.name);
+        assert.deepEqual(
+          ancestry.unsupportedFields,
+          ['canUpsample', 'terrainMesh'],
+          testCase.name,
+        );
+        return true;
+      },
+    );
+  }
 });
 
 test('Cesium queue diagnostic is explicitly unavailable when Globe surface internals are absent', async () => {

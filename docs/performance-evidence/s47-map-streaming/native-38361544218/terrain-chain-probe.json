@@ -1,7 +1,9 @@
 {
   "schema": "gev-map-terrain-ancestry-chain-probe/v1",
-  "generatedAt": "2026-10-13T07:46:06.028Z",
+  "generatedAt": "2026-10-13T07:54:39.709Z",
   "cesiumVersion": "1.138.0",
+  "sourceWorkerArtifactPath": "node_modules/@cesium/engine/Source/Workers",
+  "bundledWorkerArtifactPath": "node_modules/cesium/Build/Cesium/Workers (copied by production vite-plugin-cesium configuration)",
   "fixtureId": "austin-map-streaming-synthetic-v1",
   "fixtureManifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
   "fixtureTerrainAsset": {
@@ -31,12 +33,12 @@
   },
   "bundledWorkerHashes": {
     "createVerticesFromQuantizedTerrainMesh.js": {
-      "byteLength": 15537,
-      "sha256": "73a69de41650d83727b6073e5befb5e70755687269541031fd95e4dd5e5e1d60"
+      "byteLength": 5846,
+      "sha256": "4bae2da6cd4d8f3ed228efbfbf012a9f643788e02fe0c06e95ac7b4c5b8b7158"
     },
     "upsampleQuantizedTerrainMesh.js": {
-      "byteLength": 24683,
-      "sha256": "ede4e607638b09f4d7b865579e238358a58ca5b788b00b54dd3d5e6bb482d247"
+      "byteLength": 9693,
+      "sha256": "067080b2242f70b169ed76177e8f009a22365b2ddcb2fa7fc4440c8da0ad5727"
     }
   },
   "sourceRows": [
