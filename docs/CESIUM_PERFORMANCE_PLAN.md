@@ -17,11 +17,21 @@ Root independently passes 85 focused map/delivery/failure-report checks, 25-file
 capture lint, formatting and package boundaries. The actual CLI and outer smoke
 adapters retain all 192 ancestry rows; malformed and conflicting histories are
 rejected. Hosted integration and fresh native execution of this change remain
-pending. The prior Metal camera-pose failure still needs completed-journey failure
-evidence and bounded missing-asset identities before another native attempt.
+pending.
+
+Completed-journey failure evidence and bounded missing-asset identities are now
+implemented on QA at `fa4e1e04` (reviewed source `843a1bcf`). Strict validation
+still rejects the original failure. Its diagnostic envelope preserves observed
+route endpoints separately from readiness cameras, up to four transitions, and
+explicit unavailable observations. Missing native assets retain at most eight
+canonical paths, with bounded counts and explicit omissions. URLs and provider
+payloads are excluded. Root independently passes all 88 focused checks, including
+failure serialization, missing observations, repeated callbacks and saturation.
+This is diagnostic coverage; a successful native map journey is still pending.
 
 The [standard run at `d93f95b6`](performance-evidence/windows-recovery-38395686888/README.md)
-fails its Windows prerequisite test when a mocked PowerShell subprocess exceeds
+finishes with six of seven selected jobs passing. Windows recovery fails its
+prerequisite test when a mocked PowerShell subprocess exceeds
 five seconds, before browser installation. The same ownership test file passes
 all 41 checks locally; the hosted delay's cause remains unproven. This is separate
 from the older Chrome shutdown failure. Root also [reproduces startup camera

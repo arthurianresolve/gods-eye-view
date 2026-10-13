@@ -5,6 +5,12 @@ tests exact `d93f95b6285646169b241edfbf6af09b74f3d165`. The
 [Windows recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38395686888/job/115290194205)
 fails before browser installation and the real profile recovery journey.
 
+The run is terminal: six of seven selected jobs pass. Node 24.14.0, Node 26.x,
+Windows onboarding, Linux recovery, macOS recovery and Street Level browser
+validation pass; Windows recovery fails. The [run summary](run-summary.json)
+records each job URL and result. Optional native and soak jobs were not run.
+These results apply to the tested commit, not subsequent QA changes.
+
 The prerequisite test group passes 68 of 69 checks. The failed test is
 `PowerShell skips command-line queries when the owned root is absent` in
 `scripts/performance/profileRecoveryPageOwnership.test.mjs:332`.
