@@ -731,3 +731,10 @@ is still required before promotion.
 The combined packet also passes full formatting across 1,621 source files,
 import-direction checks (1,010 modules/80 portable entries), package boundaries
 and whitespace checks. No runtime rendering or source configuration changes.
+
+The combined report-contract candidate is frozen at
+`5368d54aac2fe01c8fd472615af9bc8bd4c4612d`. Fresh
+[native capture 38330061064](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330061064)
+and [standard CI 38330063486](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330063486)
+are verified against that exact head and were still running at the dispatch
+checkpoint. This records pending validation, not acceptance.
