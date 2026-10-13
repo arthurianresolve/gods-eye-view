@@ -551,6 +551,7 @@
   "src/layers/cctv/model.js",
   "src/layers/cctv/geometryQueue.js",
   "src/layers/cctv/geometryReuse.test.mjs",
+  "src/layers/cctv/workspaceRestore.integration.test.mjs",
   "src/layers/cctv/selection.js",
   "src/layers/cctv/calibration.js",
   "src/layers/cctv/frames.js",
