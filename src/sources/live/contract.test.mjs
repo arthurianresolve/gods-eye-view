@@ -53,6 +53,30 @@ test('civil observations retain identity, separate altitude datums and source ep
   assert.equal(missing.records[0].positionTimeMs, null);
 });
 
+test('empty military receipt timestamps advance with local receipt time at zero feed age', async () => {
+  const fixedPayload = { now: Math.floor(now / 1000), ac: [] };
+  let receiptNow = now;
+  const source = createMilitarySource({
+    fetchImpl: async () =>
+      response(fixedPayload, {
+        'x-feed-age-ms': '0',
+        'x-feed-source': 'deterministic-fixture',
+      }),
+    now: () => receiptNow,
+  });
+
+  const first = await source.getSnapshot();
+  receiptNow += 15_000;
+  const second = await source.getSnapshot();
+
+  assert.deepEqual(first.records, []);
+  assert.deepEqual(second.records, []);
+  assert.equal(first.observedAtMs, now);
+  assert.equal(second.observedAtMs, now + 15_000);
+  assert.equal(first.freshness, 'current');
+  assert.equal(second.freshness, 'current');
+});
+
 test('mixed-invalid and duplicate admissions are explicitly incomplete; all-invalid rejects', () => {
   const invalid = [...aircraft];
   invalid[5] = 181;

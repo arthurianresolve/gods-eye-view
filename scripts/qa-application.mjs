@@ -12,6 +12,7 @@ import {
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
   normalizeRenderDemandAngleDegrees,
+  assessRenderDemandSnapshotStability,
   classifyRenderDemandRequest,
   respondToRenderDemandApiFixture,
   createRenderDemandFailureReport,
@@ -504,6 +505,24 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           },
         ]),
       );
+      const surface = viewer.scene.globe?._surface;
+      const tileQueues = {
+        high: Array.isArray(surface?._tileLoadQueueHigh)
+          ? surface._tileLoadQueueHigh.length
+          : null,
+        medium: Array.isArray(surface?._tileLoadQueueMedium)
+          ? surface._tileLoadQueueMedium.length
+          : null,
+        low: Array.isArray(surface?._tileLoadQueueLow)
+          ? surface._tileLoadQueueLow.length
+          : null,
+      };
+      const tileQueueCount =
+        tileQueues.high === null ||
+        tileQueues.medium === null ||
+        tileQueues.low === null
+          ? null
+          : tileQueues.high + tileQueues.medium + tileQueues.low;
       const degrees = (radians) => (radians * 180) / Math.PI;
       const angleDegrees = (radians) => {
         const degreesValue = degrees(radians);
@@ -555,6 +574,14 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           status: app.mapStackController.getState().status,
           activeId: app.mapStackController.getActiveId(),
         },
+        mapDemand: {
+          globeTilesLoaded:
+            typeof viewer.scene.globe?.tilesLoaded === 'boolean'
+              ? viewer.scene.globe.tilesLoaded
+              : null,
+          tileQueues,
+          tileQueueCount,
+        },
         enabledLayerIds: app.dataManager
           .getAll()
           .filter((layer) => layer.enabled)
@@ -598,9 +625,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       state: {
         ...start,
         mapDemand: {
-          globeTilesLoaded: settled.sample?.globeTilesLoaded ?? null,
-          tileQueues: settled.sample?.tileQueues ?? null,
-          tileQueueCount: settled.sample?.tileQueueCount ?? null,
+          ...start.mapDemand,
           tileQueueStableSamples: settled.tileQueueStableSamples,
           observedProviderRequests: observedMapProviderRequestCount,
           interceptedProviderRequests: expectedBlockedMapProviderCount,
@@ -632,6 +657,21 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     assert.deepEqual(start.enabledLayerIds, ['flights', 'military']);
     assert.equal(start.map.status, 'ready');
     assert.ok(['esri-imagery', 'osm'].includes(start.map.activeId));
+    assert.equal(
+      start.mapDemand.tileQueueCount,
+      0,
+      'Globe tile work must remain drained at the actual start snapshot.',
+    );
+    assert.deepEqual(
+      start.mapDemand.tileQueues,
+      settled.sample?.tileQueues,
+      'The live start queue sample must match the settled queue observation.',
+    );
+    assert.equal(
+      start.mapDemand.globeTilesLoaded,
+      settled.sample?.globeTilesLoaded,
+      'The live start tile-loaded state must match the settled observation.',
+    );
     const expected = RENDER_DEMAND_PROFILE.expected;
     assert.deepEqual(start.enabledLayerIds, expected.enabledLayerIds);
     assert.equal(start.map.activeId, expected.mapStack);
@@ -1016,10 +1056,14 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         governor: app.getRenderGovernorDiagnostics(),
       };
     }, expectedCommit);
+    const statsStability = assessRenderDemandSnapshotStability(start, end, {
+      expectedFlightReceiptMs: flights.fixedTimeMs,
+    });
+    const endObservation = { ...end, statsStability };
     reportState.observations.push({
       stage: 'end-snapshot',
       state: {
-        ...end,
+        ...endObservation,
         mapDemand: {
           ...end.mapDemand,
           tileQueueStableSamples: settled.tileQueueStableSamples,
@@ -1032,7 +1076,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       },
     });
     assert.deepEqual(end.enabledLayerIds, start.enabledLayerIds);
-    assert.deepEqual(end.stats, start.stats);
+    assert.equal(statsStability.stableHealthAndPopulation, true);
+    assert.equal(statsStability.receiptTimestampsValid, true);
     assert.deepEqual(end.settings, start.settings);
     assert.deepEqual(end.map, start.map);
     assert.deepEqual(end.browser, start.browser);
@@ -1149,6 +1194,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         staticObservation.foregroundUninterrupted &&
         staticObservation.mapProviderTraffic.stable &&
         settled.settled &&
+        statsStability.stableHealthAndPopulation &&
+        statsStability.receiptTimestampsValid &&
         settled.sample?.tileQueueCount === 0 &&
         end.mapDemand.tileQueueCount === 0 &&
         end.mapDemand.globeTilesLoaded === settled.sample?.globeTilesLoaded &&
@@ -1232,6 +1279,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         pendingProviderRequests: pendingMapProviderRequests.size,
         requestTrackingOverflow: mapProviderRequestTrackingOverflow,
       },
+      statsStability,
       visibilityControl,
       teardown: {
         ...destroy,
@@ -1239,7 +1287,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       },
       pageErrors: errors.slice(0, 8),
       start,
-      end,
+      end: endObservation,
       observations: reportState.observations,
     };
     reportState.terminal = terminal;

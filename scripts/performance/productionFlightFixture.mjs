@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 
 export const DENSE_FLIGHT_FIXTURE_ID = 'opensky-dense-investigation-v1';
 export const DENSE_FLIGHT_FIXTURE_COUNT = 2500;
@@ -63,6 +64,11 @@ const RENDER_DEMAND_CONTROLLED_API_ROUTES = new Map([
   ],
   ['POST /api/realtime/debug-log', { status: 204, body: '' }],
 ]);
+
+// src/layers/military/queries.js polls every 15s; a receipt at the next poll
+// may move by the observation window plus one ordinary cadence.
+const RENDER_DEMAND_MILITARY_POLL_INTERVAL_MS = 15_000;
+
 const RENDER_DEMAND_BLOCKED_FONT_URLS = new Set([
   'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
@@ -176,11 +182,86 @@ function projectRenderDemandLayerStats(stats) {
               count: boundedRenderDemandCount(layer.count),
               status: boundedRenderDemandCount(layer.status),
               stale: typeof layer.stale === 'boolean' ? layer.stale : null,
+              lastUpdateMs: boundedRenderDemandTimestamp(layer.lastUpdate),
             }
           : null,
       ];
     }),
   );
+}
+
+function boundedRenderDemandTimestamp(value) {
+  return Number.isSafeInteger(value) && value >= 0 && value <= 4_102_444_800_000
+    ? value
+    : null;
+}
+
+/**
+ * Compare the stable health/population contract while allowing source receipt
+ * timestamps to advance on their normal poll cadence.
+ */
+export function assessRenderDemandSnapshotStability(
+  start,
+  end,
+  { expectedFlightReceiptMs } = {},
+) {
+  const layers = ['flights', 'military'];
+  const stableLayerStats = (stats) =>
+    Object.fromEntries(
+      layers.map((id) => {
+        const layer = stats?.[id];
+        if (!layer || typeof layer !== 'object') return [id, null];
+        const stable = { ...layer };
+        if (id === 'military') delete stable.lastUpdate;
+        return [id, stable];
+      }),
+    );
+  const stableHealthAndPopulation = isDeepStrictEqual(
+    stableLayerStats(start?.stats),
+    stableLayerStats(end?.stats),
+  );
+  const startEpochMs = start?.fixtureEpochMs;
+  const endEpochMs = end?.fixtureEpochMs;
+  const epochBoundsValid =
+    Number.isSafeInteger(startEpochMs) &&
+    Number.isSafeInteger(endEpochMs) &&
+    startEpochMs >= 0 &&
+    endEpochMs >= startEpochMs;
+  const receiptTimestamps = Object.fromEntries(
+    layers.map((id) => {
+      const startMs = boundedRenderDemandTimestamp(
+        start?.stats?.[id]?.lastUpdate,
+      );
+      const endMs = boundedRenderDemandTimestamp(end?.stats?.[id]?.lastUpdate);
+      const deltaMs =
+        startMs !== null && endMs !== null ? endMs - startMs : null;
+      const valid =
+        epochBoundsValid &&
+        startMs !== null &&
+        endMs !== null &&
+        startMs <= startEpochMs &&
+        endMs <= endEpochMs &&
+        (id === 'flights'
+          ? startMs === endMs &&
+            (!Number.isSafeInteger(expectedFlightReceiptMs) ||
+              startMs === expectedFlightReceiptMs)
+          : deltaMs >= 0 &&
+            startEpochMs - startMs <= RENDER_DEMAND_MILITARY_POLL_INTERVAL_MS &&
+            endEpochMs - endMs <= RENDER_DEMAND_MILITARY_POLL_INTERVAL_MS &&
+            deltaMs <=
+              endEpochMs -
+                startEpochMs +
+                RENDER_DEMAND_MILITARY_POLL_INTERVAL_MS);
+      return [id, { startMs, endMs, deltaMs, valid }];
+    }),
+  );
+  return {
+    stableHealthAndPopulation,
+    receiptTimestampsValid: Object.values(receiptTimestamps).every(
+      (entry) => entry.valid,
+    ),
+    receiptTimestamps,
+  };
 }
 
 function projectRenderDemandSnapshot(state) {
@@ -397,6 +478,34 @@ function projectRenderDemandTerminal(terminal) {
   if (!terminal || typeof terminal !== 'object') return null;
   return {
     status: terminal.status === 'passed' ? 'passed' : 'failed',
+    statsStability: terminal.statsStability
+      ? {
+          stableHealthAndPopulation:
+            terminal.statsStability.stableHealthAndPopulation === true,
+          receiptTimestampsValid:
+            terminal.statsStability.receiptTimestampsValid === true,
+          receiptTimestamps: Object.fromEntries(
+            ['flights', 'military'].map((id) => {
+              const entry = terminal.statsStability.receiptTimestamps?.[id];
+              return [
+                id,
+                entry && typeof entry === 'object'
+                  ? {
+                      startMs: boundedRenderDemandTimestamp(entry.startMs),
+                      endMs: boundedRenderDemandTimestamp(entry.endMs),
+                      deltaMs:
+                        Number.isSafeInteger(entry.deltaMs) &&
+                        Math.abs(entry.deltaMs) <= 2_147_483_647
+                          ? entry.deltaMs
+                          : null,
+                      valid: entry.valid === true,
+                    }
+                  : null,
+              ];
+            }),
+          ),
+        }
+      : null,
     foreground: {
       durationMs: Number.isFinite(terminal.foreground?.durationMs)
         ? terminal.foreground.durationMs

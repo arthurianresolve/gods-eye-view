@@ -7,6 +7,7 @@ import {
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
   normalizeRenderDemandAngleDegrees,
+  assessRenderDemandSnapshotStability,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   createProductionMilitaryFixture,
@@ -504,6 +505,179 @@ test('render-demand failure projection retains controlled start/end evidence and
   const serialized = JSON.stringify(report);
   assert.doesNotMatch(serialized, /provider response body|authorization|token/);
   assert.ok(Buffer.byteLength(serialized) < 24_000);
+});
+
+test('render-demand snapshots allow only bounded receipt-time movement while health and population stay fixed', () => {
+  const snapshot = (fixtureEpochMs, lastUpdate, overrides = {}) => ({
+    fixtureEpochMs,
+    stats: {
+      flights: {
+        enabled: true,
+        lifecycleState: 'enabled',
+        lifecycleUncertain: false,
+        count: 0,
+        status: 200,
+        stale: false,
+        lastUpdate: lastUpdate.flights,
+        retryInSec: 0,
+      },
+      military: {
+        enabled: true,
+        lifecycleState: 'enabled',
+        lifecycleUncertain: false,
+        count: 0,
+        status: 200,
+        stale: false,
+        lastUpdate: lastUpdate.military,
+      },
+      ...overrides,
+    },
+  });
+  const startEpochMs = 1_791_900_000_000;
+  const endEpochMs = startEpochMs + 10_000;
+  const assess = (start, end) =>
+    assessRenderDemandSnapshotStability(start, end, {
+      expectedFlightReceiptMs: startEpochMs,
+    });
+  const accepted = assess(
+    snapshot(startEpochMs, {
+      flights: startEpochMs,
+      military: startEpochMs - 5_000,
+    }),
+    snapshot(endEpochMs, {
+      flights: startEpochMs,
+      military: endEpochMs,
+    }),
+  );
+  assert.equal(accepted.stableHealthAndPopulation, true);
+  assert.equal(accepted.receiptTimestampsValid, true);
+  assert.deepEqual(accepted.receiptTimestamps.military, {
+    startMs: startEpochMs - 5_000,
+    endMs: endEpochMs,
+    deltaMs: 15_000,
+    valid: true,
+  });
+
+  const changedPopulation = snapshot(endEpochMs, {
+    flights: startEpochMs,
+    military: endEpochMs,
+  });
+  changedPopulation.stats.flights.count = 1;
+  assert.equal(
+    assess(
+      snapshot(startEpochMs, {
+        flights: startEpochMs,
+        military: startEpochMs - 5_000,
+      }),
+      changedPopulation,
+    ).stableHealthAndPopulation,
+    false,
+  );
+
+  const changedHealth = snapshot(endEpochMs, {
+    flights: startEpochMs,
+    military: endEpochMs,
+  });
+  changedHealth.stats.military.stale = true;
+  assert.equal(
+    assess(
+      snapshot(startEpochMs, {
+        flights: startEpochMs,
+        military: startEpochMs - 5_000,
+      }),
+      changedHealth,
+    ).stableHealthAndPopulation,
+    false,
+  );
+  changedHealth.stats.flights.status = 503;
+  assert.equal(
+    assess(
+      snapshot(startEpochMs, {
+        flights: startEpochMs,
+        military: startEpochMs - 5_000,
+      }),
+      changedHealth,
+    ).stableHealthAndPopulation,
+    false,
+  );
+
+  for (const lastUpdate of [
+    { flights: startEpochMs, military: startEpochMs - 1 },
+    { flights: startEpochMs + 1, military: endEpochMs },
+    { flights: startEpochMs, military: endEpochMs + 1 },
+    { flights: startEpochMs, military: startEpochMs - 15_001 },
+    { flights: startEpochMs, military: null },
+  ]) {
+    assert.equal(
+      assess(
+        snapshot(startEpochMs, {
+          flights: startEpochMs,
+          military: startEpochMs,
+        }),
+        snapshot(endEpochMs, lastUpdate),
+      ).receiptTimestampsValid,
+      false,
+    );
+  }
+});
+
+test('failed render-demand reports preserve bounded feed receipt timestamps in both endpoint snapshots', () => {
+  const sourceCommit = 'd'.repeat(40);
+  const timestamp = 1_791_900_000_000;
+  const endpoint = (fixtureEpochMs, lastUpdate) => ({
+    applicationStatus: 'ready',
+    source: {
+      appCommit: sourceCommit,
+      expectedCommit: sourceCommit,
+      matchesHarnessHead: true,
+    },
+    fixtureEpochMs,
+    stats: {
+      flights: {
+        enabled: true,
+        count: 0,
+        status: 200,
+        stale: false,
+        lastUpdate,
+      },
+      military: {
+        enabled: true,
+        count: 0,
+        status: 200,
+        stale: false,
+        lastUpdate,
+      },
+    },
+  });
+  const start = endpoint(timestamp, timestamp);
+  const end = endpoint(timestamp + 15_000, timestamp + 15_000);
+  const statsStability = assessRenderDemandSnapshotStability(start, end, {
+    expectedFlightReceiptMs: timestamp,
+  });
+  const report = createRenderDemandFailureReport({
+    stage: 'end-snapshot',
+    error: new Error('controlled endpoint check failed'),
+    observations: [
+      { stage: 'start-snapshot', state: start },
+      { stage: 'end-snapshot', state: { ...end, statsStability } },
+    ],
+    terminal: { status: 'failed', statsStability },
+  });
+  assert.equal(
+    report.observations[0].state.stats.military.lastUpdateMs,
+    timestamp,
+  );
+  assert.equal(
+    report.observations[1].state.stats.military.lastUpdateMs,
+    timestamp + 15_000,
+  );
+  assert.deepEqual(report.terminal.statsStability.receiptTimestamps.military, {
+    startMs: timestamp,
+    endMs: timestamp + 15_000,
+    deltaMs: 15_000,
+    valid: true,
+  });
+  assert.ok(JSON.stringify(report).length < 24_000);
 });
 
 test('render-demand failure projection rejects forged controlled-profile identity', () => {
