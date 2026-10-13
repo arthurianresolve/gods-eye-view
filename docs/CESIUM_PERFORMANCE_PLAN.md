@@ -104,6 +104,14 @@ the unchanged close deadline. This passing observation does not resolve the
 earlier intermittent shutdown cause. The unmerged M3 driver is not included,
 and no physical hardware or full map-streaming acceptance is claimed.
 
+The [optional exact-version Windows diagnostic](performance-evidence/windows-browser-version-diagnostic/README.md)
+through `4b6be47f`, integrated at `5070ebe2`, preserves the default Chrome
+version and all recovery/cleanup gates. Root passes 82 focused checks including
+native Windows metadata reads, formatting and capture lint. Its initial
+Windows-incompatible `--version` probe was corrected before dispatch. Hosted
+validation of explicitly selected Chrome 155 remains separate from the
+unresolved shutdown cause.
+
 ## Earlier integration evidence
 
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer
