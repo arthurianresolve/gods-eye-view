@@ -31,7 +31,9 @@ on the prior application. The bounded process snapshot and forced-cleanup
 callback also time out, leaving process roles and exit unconfirmed. This
 candidate is not yet promoted to dev. Native Esri corpus proof through
 `f24b68ad` is now merged on QA and all five focused corpus/parser tests pass.
-Build-profile and full-application map capture remain.
+Build-profile implementation through `05eefdcb` passes thirteen independent
+provenance tests and the capture harness lint check; a missing-value CLI
+control is being corrected. Full production map capture remains.
 
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,

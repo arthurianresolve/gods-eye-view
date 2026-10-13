@@ -8,7 +8,7 @@ The frozen comparison baseline remains eb8c682.
 | Packet | Deliverable | Current evidence and completion requirement |
 | --- | --- | --- |
 | M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Implemented through f24b68ad; five focused tests pass independently, including real Cesium parser traversal, encoded geometry bounds, Esri default discard-policy probe and a failed-decode control. Earlier rejected corpora remain recorded. Browser rendering and full-application coverage remain M3. |
-| M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | In progress on the isolated M2 branch. Unknown profiles, arbitrary values and mismatched profile/receipt must fail. Handle ignored dotenv inputs before/after building and during verification; do not modify ordinary application configuration. |
+| M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | Implemented through 05eefdcb; thirteen receipt/capture-provenance tests pass independently. Named profile and exact configuration digest are required on verification. Ignored dotenv inputs are rejected before/after build and verification. Explicit missing-value capture CLI handling remains under review; real production builds remain unvalidated. |
 | M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | Not implemented. Actual CLI and outer validator must both accept the same report. Include missing/corrupt assets, cancellation, supersession and late-response controls. |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
 
@@ -101,3 +101,53 @@ HTTP bytes are insufficient: the injected decode failure is rejected. Node
 uses a sharp-backed image seam; browser image decoding and actual application
 rendering remain M3 requirements. M1 corpus/parser implementation is complete
 within that scope, without declaring S47 or S57 complete.
+
+## M3 integration requirements from current source review
+
+Use the production capture CLI and its outer build-smoke validator. A standalone
+viewer or direct replacement of the map registry cannot complete this packet.
+Keep M4 comparisons separate from the short hosted diagnostic smoke.
+
+1. Pass the named M2 profile through both baseline and candidate builds, their
+   initial served checks, the child capture CLI and post-capture verification.
+   The ordinary dense smoke must not accidentally activate the inert Google
+   key without the same bounded fixture policy. The native startup path must
+   consume the generated root document before selecting any alternate stack.
+2. Bind exact native request routes to the M1 manifest. The Esri production
+   service path uses `ArcGIS` casing, while the logical corpus path uses
+   `arcgis`; map these explicitly. Preserve the single `f=json` metadata query
+   and the default discard-policy probe. Terrain uses native Re:Earth TMS
+   coordinates and the corpus layer metadata. Reject undeclared tile indices,
+   extra queries, methods, hosts and paths. Do not count generic offline
+   responses as fixture delivery.
+3. Resolve GLB content through the actual Cesium resource derived from the
+   Google root URL. Its relative `../tiles/` references resolve differently
+   from the loopback parser-test URL. Verify inherited query behavior with
+   the pinned Cesium resource implementation instead of guessing or rewriting
+   receipted fixture bytes. Add a bounded, declared synthetic credit-image
+   response for the helper's native credit request; keep provider attribution
+   and synthetic-data provenance explicit. Never use a real provider key.
+4. Drive the existing `photoreal`, `esri-imagery` and `osm` controls and read
+   native active-stack/provider state. Assert successful nonflat terrain and
+   actual ready tile/imagery delivery; a flat terrain fallback, an empty tile
+   set or a successful network response alone is insufficient. Use a declared
+   elapsed-time route within fixture coverage; verify real camera/frustum
+   coverage before freezing it. Preserve native SSE, cache budgets, collision,
+   drawing buffer, effects and Manual visual settings.
+5. Retain request outcomes, byte/hash identity, response coordinates, observed
+   tiles/providers, stalls and disposal checkpoints in bounded records. Cache
+   hits and request counts are measured outcomes, not required equal totals.
+   Optional baseline-only absent diagnostics remain unavailable. Polling and
+   teardown retain their existing deadlines and explicit failed states.
+6. Cover missing/corrupt bytes, aborted or superseded switches and late
+   delivery. Verify actual native state after each transition and drain owned
+   requests/listeners during teardown. Unhandled URLs and unexpected fallback
+   must fail the report, not silently make it pass.
+7. Bind the child report to the same build/profile/corpus, camera route and
+   visual observations in the outer validator. Exercise mutations of each
+   identity and readiness condition. A short hosted smoke remains
+   comparison/performance ineligible; only M4 supplies matched run evidence.
+
+The [M2 independent review](build-profile-review-05eefdcb.json) records the
+current source, profile digest and exact validation scope. Default and historical
+receipts remain readable without claiming the new dotenv checks.
