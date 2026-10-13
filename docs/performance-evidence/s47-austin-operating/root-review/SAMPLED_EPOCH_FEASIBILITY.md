@@ -798,3 +798,11 @@ GitHub runners. [Previous standard CI](ci-38330063486-failed.json) finished
 with all three OS recovery jobs, Windows onboarding and the browser gate
 passing, while both Node jobs retained their two test-double failures. New
 exact-commit standard and capture runs are required before dev promotion.
+
+Frozen cleanup candidate 78e0417244856a2a3d2905ab618d32b909507eb6 is pushed to
+the fork QA branch. [Austin capture 38332484324](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38332484324)
+and [standard CI 38332487577](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38332487577)
+are both in progress against that exact SHA, verified in the
+[run receipt](cleanup-candidate-78e04172-runs.json). No final result or dev
+promotion is implied. A [fresh remote comparison](main-reconciliation-78e04172.json)
+still finds dev 608 ahead/zero behind main and local/remote dev equal.
