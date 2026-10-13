@@ -508,3 +508,42 @@ At integration `a734071297f3cd6cc1cbee1d2c43b64412152149`, the full formatting
 check passes across 1,621 files and package-boundary validation passes for
 1,010 modules and 80 portable entries. A fresh fetch also confirms the same
 main/dev revisions and zero missing main commits recorded above.
+
+# Infrastructure CLI validation before fixture loading
+
+Luna's changes in `28e2b0a7`, `5cc7708d` and `6bfd6ab1` defer the
+Cesium-backed infrastructure producer until workload, flag and build-provenance
+checks permit a capture. Integration is `29b06390276bee67ea882d7e0393e7150ff109c8`.
+The same factory still verifies pinned asset bytes and constructs the Cesium
+JulianDate clock. No capture limit, application setting or fixture changes.
+
+Root's [actual CLI control](infrastructure-cli-import-control.json) uses an
+import hook that rejects Cesium resolution. The unchanged previous entrypoint
+hits that witness before rejecting missing provenance; the candidate produces
+the intended provenance error without importing Cesium. All [27 independent
+focused tests](infrastructure-cli-focused-tests.txt) and the 17-file scope gate
+pass. The malformed-receipt case was also checked during uncommitted development;
+it does not require a clean worktree merely to test early JSON rejection.
+This demonstrates removal of unnecessary early work. The earlier intermittent
+15-second startup delay remains unexplained.
+
+# Native capture exposes an unrecorded installation predicate
+
+Run [38325432288](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38325432288)
+at `6b675ff90ade278438ae6111ea2354463bfc01df` completes three short samples,
+then fails the installations population assertion at scripted-motion run 2's
+measurement end. The [independent review](native-38325432288-review.json)
+recomputes all six document cleanup records and confirms Apple paravirtual Metal.
+The measurement render boundary settled in 68.984 ms of host elapsed time.
+This is neither a timeout nor performance acceptance.
+
+The [unaltered capture](hosted-native-38325432288-cli-failed.json) and
+[outer report](hosted-native-38325432288-smoke-failed.json) are hash-bound in the
+review. The assertion throws before the failing after-observation is attached,
+and the report does not preserve its exact predicate or inputs. Completed-sample
+records were also dropped by the bounded serializer. A new compact diagnostic
+must preserve the real rejection reasons without relaxing population checks,
+changing rendering defaults, or increasing the 256 KiB failure-report cap.
+
+The infrastructure CLI integration also passes the complete 1,621-file formatting
+check and both package-boundary checks (1,010 modules, 80 portable entries).
