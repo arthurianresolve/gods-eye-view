@@ -40,7 +40,11 @@ The next independent delivery is the [production map-streaming workload](perform
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
 M3 actual application capture/validation, then M4 matched baseline/candidate
 runs. M1 corpus/parser and M2 build-profile code are implemented with focused
-checks; profiled production builds and M3-M4 remain pending. Preserve
+checks. M3 native delivery adapter `263f1e2d` now passes 24 independent focused
+checks and an actual interception-controller ownership check; its
+[review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json)
+records the exact fixture and limited scope. Profiled production builds,
+full application capture/outer validation and M4 remain pending. Preserve
 current resolution, effects, feature populations and detail settings.
 
 After workload coverage, complete the remaining measured S48-S59 work and the

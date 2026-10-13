@@ -1,0 +1,55 @@
+{
+  "reviewedAt": "2026-10-13T03:46:07.069Z",
+  "adapterCommit": "263f1e2d42f847998489a712cc80950b1d17ce32",
+  "integrationCommit": "9129d3adc6c84c967e373fcec5d133771cbfa5e7",
+  "scope": "M3 native delivery adapter, shared profile getter and synthetic credit-image corpus only",
+  "validation": {
+    "focusedTests": {
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "command": "node --test scripts/performance/mapStreamingFixtureDelivery.test.mjs scripts/performance/mapStreamingFixture.test.mjs scripts/performance/buildProvenance.test.mjs"
+    },
+    "formatting": {
+      "passed": true,
+      "sourceFiles": 1626
+    },
+    "importDirections": {
+      "passed": true,
+      "modules": 1010,
+      "portableEntries": 80
+    },
+    "packageBoundaries": {
+      "passed": true,
+      "packages": 127
+    },
+    "callbackAudit": {
+      "status": "passed",
+      "transport": "EventEmitter send acknowledgement seam; no browser",
+      "actualController": "interceptFixtureSession",
+      "unrelatedPostStatus": 503,
+      "localScriptContinues": true,
+      "ownedMapResponses": 1,
+      "releaseConfirmed": true,
+      "cleanupConfirmed": true,
+      "remainingFetchListeners": 0,
+      "errors": []
+    }
+  },
+  "fixture": {
+    "id": "austin-map-streaming-synthetic-v1",
+    "manifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
+    "assetCount": 72,
+    "totalBytes": 1949945
+  },
+  "browserDecodeObserved": false,
+  "renderedReadinessObserved": false,
+  "remaining": [
+    "Actual profiled production builds on baseline and candidate",
+    "Production capture CLI native startup and map controls",
+    "Outer report validation and mutation controls",
+    "Browser decoding/rendered coverage and lifecycle fault controls",
+    "Matched primary Windows hardware comparisons and final soak"
+  ],
+  "conclusion": "Adapter scope passes independent focused and callback ownership validation. This does not complete M3, S47 or S57 and does not establish a rendering/performance improvement."
+}
