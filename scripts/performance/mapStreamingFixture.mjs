@@ -14,8 +14,12 @@ const ROUTE = Object.freeze({
   east: -97.58,
   north: 30.34,
 });
-const IMAGERY_LEVELS = Object.freeze([10, 11, 12]);
-const TERRAIN_LEVELS = Object.freeze([8, 9, 10]);
+const IMAGERY_LEVELS = Object.freeze(
+  Array.from({ length: 13 }, (_, level) => level),
+);
+const TERRAIN_LEVELS = Object.freeze(
+  Array.from({ length: 11 }, (_, level) => level),
+);
 const TERRAIN_GRID_SIZE = 17;
 const TILESET_DEPTH = 2;
 const TILESET_LOCAL_TEXTURE_SIZE = 16;
@@ -273,15 +277,16 @@ function createTerrainTile(tile) {
           ),
         );
   const boundingSphere = Cesium.BoundingSphere.fromPoints(positions);
-  const horizonOcclusionPoint = new Cesium.EllipsoidalOccluder(
-    Cesium.Ellipsoid.WGS84,
-    Cesium.Cartesian3.ZERO,
-  ).computeHorizonCullingPointFromVertices(
-    boundingSphere.center,
-    positions.flatMap((position) => [position.x, position.y, position.z]),
-    3,
-    Cesium.Cartesian3.ZERO,
-  );
+  const horizonOcclusionPoint =
+    new Cesium.EllipsoidalOccluder(
+      Cesium.Ellipsoid.WGS84,
+      Cesium.Cartesian3.ZERO,
+    ).computeHorizonCullingPointFromVertices(
+      boundingSphere.center,
+      positions.flatMap((position) => [position.x, position.y, position.z]),
+      3,
+      Cesium.Cartesian3.ZERO,
+    ) ?? Cesium.Cartesian3.ZERO;
   const output = Buffer.allocUnsafe(
     92 + vertexBytes.length + 4 + encodedIndices.length * 2 + 16 + gridSize * 8,
   );
@@ -336,29 +341,39 @@ function createTerrainTile(tile) {
 }
 
 function createGlb(tile, bounds) {
-  const width = Cesium.Cartesian3.distance(
-    Cesium.Cartesian3.fromRadians(bounds.west, bounds.south, 0),
-    Cesium.Cartesian3.fromRadians(bounds.east, bounds.south, 0),
-  );
-  const heightMeters = Cesium.Cartesian3.distance(
-    Cesium.Cartesian3.fromRadians(bounds.west, bounds.south, 0),
-    Cesium.Cartesian3.fromRadians(bounds.west, bounds.north, 0),
-  );
   const gridSize = 5;
   const positions = [];
   const normals = [];
   const texcoords = [];
+  const worldTransform = Cesium.Matrix4.fromArray(localTransform(bounds));
+  const worldToLocal = Cesium.Matrix4.inverseTransformation(
+    worldTransform,
+    new Cesium.Matrix4(),
+  );
   for (let y = 0; y < gridSize; y += 1)
     for (let x = 0; x < gridSize; x += 1) {
       const wave = (x * 7 + y * 11 + tile.level * 13 + tile.x * 3 + tile.y) % 9;
-      positions.push(
-        (x / (gridSize - 1) - 0.5) * width,
-        (y / (gridSize - 1) - 0.5) * heightMeters,
+      const cartesian = Cesium.Cartesian3.fromDegrees(
+        Cesium.Math.lerp(bounds.west, bounds.east, x / (gridSize - 1)),
+        Cesium.Math.lerp(bounds.south, bounds.north, y / (gridSize - 1)),
         wave * 3,
       );
+      const local = Cesium.Matrix4.multiplyByPoint(
+        worldToLocal,
+        cartesian,
+        new Cesium.Cartesian3(),
+      );
+      positions.push(local.x, local.y, local.z);
       normals.push(0, 0, 1);
       texcoords.push(x / (gridSize - 1), y / (gridSize - 1));
     }
+  const encodedPositions = positions.map(Math.fround);
+  const positionMinimum = [0, 1, 2].map((component) =>
+    Math.min(...encodedPositions.filter((_, index) => index % 3 === component)),
+  );
+  const positionMaximum = [0, 1, 2].map((component) =>
+    Math.max(...encodedPositions.filter((_, index) => index % 3 === component)),
+  );
   const indices = [];
   for (let y = 0; y < gridSize - 1; y += 1)
     for (let x = 0; x < gridSize - 1; x += 1) {
@@ -405,7 +420,7 @@ function createGlb(tile, bounds) {
     }
     return bytes;
   };
-  const positionsView = append(toBytes(positions, Float32Array), 34962);
+  const positionsView = append(toBytes(encodedPositions, Float32Array), 34962);
   const normalsView = append(toBytes(normals, Float32Array), 34962);
   const texcoordView = append(toBytes(texcoords, Float32Array), 34962);
   const indexView = append(toBytes(indices, Uint16Array), 34963);
@@ -454,8 +469,8 @@ function createGlb(tile, bounds) {
         componentType: 5126,
         count: positions.length / 3,
         type: 'VEC3',
-        min: [-width / 2, -heightMeters / 2, 0],
-        max: [width / 2, heightMeters / 2, 24],
+        min: positionMinimum,
+        max: positionMaximum,
       },
       {
         bufferView: normalsView,
@@ -538,7 +553,7 @@ function childrenFor(bounds, level, x, y) {
   }));
 }
 
-function regionForBounds(bounds, minHeight = 0, maxHeight = 900) {
+function regionForBounds(bounds, minHeight = -10, maxHeight = 900) {
   return [
     Cesium.Math.toRadians(bounds.west),
     Cesium.Math.toRadians(bounds.south),
@@ -575,6 +590,27 @@ function localTransform(bounds) {
     center.z,
     1,
   ];
+}
+
+function assignRelativeTransforms(node, parentWorldTransform = undefined) {
+  const worldTransform = Cesium.Matrix4.fromArray(localTransform(node.bounds));
+  if (parentWorldTransform) {
+    const inverseParent = Cesium.Matrix4.inverseTransformation(
+      parentWorldTransform,
+      new Cesium.Matrix4(),
+    );
+    node.transform = Array.from(
+      Cesium.Matrix4.multiply(
+        inverseParent,
+        worldTransform,
+        new Cesium.Matrix4(),
+      ),
+    );
+  } else {
+    node.transform = Array.from(worldTransform);
+  }
+  for (const child of node.children ?? [])
+    assignRelativeTransforms(child, worldTransform);
 }
 
 function addAsset(assets, path, kind, bytes, identity) {
@@ -633,6 +669,41 @@ export async function createDeterministicMapStreamingFixture() {
     }
     return { level, tiles };
   });
+  const terrainAvailability = Array.from(
+    { length: TERRAIN_LEVELS.at(-1) + 1 },
+    () => [],
+  );
+  for (const row of assetRows) {
+    if (row.kind !== 'quantized-mesh-1.0') continue;
+    const { level, x, tmsY } = row.identity;
+    terrainAvailability[level].push({
+      startX: x,
+      endX: x,
+      startY: tmsY,
+      endY: tmsY,
+    });
+  }
+  assetRows.push(
+    addAsset(
+      assets,
+      'terrain/layer.json',
+      'quantized-mesh-layer-metadata',
+      stableJson({
+        format: 'quantized-mesh-1.0',
+        version: '1.0.0',
+        scheme: 'tms',
+        projection: 'EPSG:4326',
+        maxzoom: TERRAIN_LEVELS.at(-1),
+        tiles: ['{z}/{x}/{y}.terrain'],
+        available: terrainAvailability,
+      }),
+      {
+        minLevel: TERRAIN_LEVELS[0],
+        maxLevel: TERRAIN_LEVELS.at(-1),
+        availableLevelCount: terrainAvailability.length,
+      },
+    ),
+  );
   const rootNode = {
     level: 0,
     x: 0,
@@ -657,13 +728,13 @@ export async function createDeterministicMapStreamingFixture() {
     for (const child of parent.children) appendChildren(child);
   };
   appendChildren(rootNode);
+  assignRelativeTransforms(rootNode);
   for (const node of tileNodes) {
     const id = `${node.level}/${node.x}/${node.y}`;
     const path = `tiles/level-${node.level}/${node.x}-${node.y}.glb`;
     const glb = createGlb(node, node.bounds);
-    node.content = { uri: path };
+    node.content = { uri: `../${path}` };
     node.boundingVolume = { region: regionForBounds(node.bounds) };
-    node.transform = localTransform(node.bounds);
     assetRows.push(
       addAsset(assets, path, 'textured-glb', glb, {
         level: node.level,
@@ -676,7 +747,7 @@ export async function createDeterministicMapStreamingFixture() {
   const toTilesetJson = (node) => ({
     boundingVolume: node.boundingVolume,
     geometricError: node.geometricError,
-    refine: 'ADD',
+    refine: 'REPLACE',
     transform: node.transform,
     ...(node.content ? { content: node.content } : {}),
     ...(node.children?.length
