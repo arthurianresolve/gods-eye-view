@@ -87,6 +87,8 @@ The bounded absolute mutation audit is available as
 [`aircraftBillboardMutationAudit.mjs`](../../../scripts/performance/aircraftBillboardMutationAudit.mjs),
 with a registered producer-path regression in
 [`aircraftBillboardMutationAudit.test.mjs`](../../../scripts/performance/aircraftBillboardMutationAudit.test.mjs).
+The [root review at `14d24ca3`](root-14d24ca3/README.md) retains the clean-source
+report and eleven passing focused checks; it makes no fleet-tick or GPU claim.
 Run it with
 `node scripts/performance/aircraftBillboardMutationAudit.mjs`. The report
 binds Cesium 1.138.0, the installed Cesium package and lockfile digests, the
@@ -126,6 +128,14 @@ layer ownership and selected transitions, not a paired aircraft collection
 cost comparison.
 
 ## Remaining qualification evidence
+
+S53 engineering remains partial. The remaining bounded engineering audit is the
+actual flights/military `_fleetTick` path: count attempted position/presentation
+writes, identity changes and application-owned allocations across stationary,
+moving, selected, horizon, fading and model-handoff contacts at unchanged cadence.
+Existing snapshot counts do not cover that path. Use this measurement to decide
+whether a further change is justified; no arbitrary collection redesign is
+required after the supported split rejection.
 
 This current-path snapshot/record audit is not a population-scale timing run
 or before/after aircraft optimization comparison. It cannot establish WebGL
