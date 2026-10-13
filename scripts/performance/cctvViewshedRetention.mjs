@@ -152,8 +152,14 @@ export function validateCctvViewshedRetentionReport(
     !SHA1.test(report.harnessCommit || '')
   )
     fail('source identity is invalid');
-  if (expectedCommit && report.applicationCommit !== expectedCommit)
-    fail('application commit differs from the requested commit');
+  if (report.applicationCommit !== report.harnessCommit)
+    fail('application and harness commits differ');
+  if (
+    expectedCommit &&
+    (report.applicationCommit !== expectedCommit ||
+      report.harnessCommit !== expectedCommit)
+  )
+    fail('application or harness commit differs from the requested commit');
   if (
     typeof report.environment?.renderer !== 'string' ||
     report.environment.renderer.length < 1 ||

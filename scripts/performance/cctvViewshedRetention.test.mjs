@@ -163,6 +163,23 @@ test('accepts the bounded retained-versus-rebuild rendered control', () => {
   );
 });
 
+test('binds both component sources to the requested commit', () => {
+  const report = validReport();
+  report.harnessCommit = 'f'.repeat(40);
+  assert.throws(
+    () =>
+      validateCctvViewshedRetentionReport(report, { expectedCommit: commit }),
+    /application and harness commits differ/,
+  );
+
+  report.applicationCommit = report.harnessCommit;
+  assert.throws(
+    () =>
+      validateCctvViewshedRetentionReport(report, { expectedCommit: commit }),
+    /requested commit/,
+  );
+});
+
 test('pinned fixture descriptor digest is derived from its authoritative bytes', () => {
   const digest = createHash('sha256')
     .update(JSON.stringify(CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR))
