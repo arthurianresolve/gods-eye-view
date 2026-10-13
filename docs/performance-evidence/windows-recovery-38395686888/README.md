@@ -45,4 +45,6 @@ controls cover distinct startup/execution budgets, late readiness during cleanup
 hung execution, early/nonzero exits, spawn failure, output overflow, immediate
 close and unconfirmed cleanup. This repairs the test's conflation of startup and
 execution; it does not establish which stage caused the historical empty-output
-timeout. A fresh hosted recovery run is required.
+timeout. The subsequent [hosted run at `feb067d3`](../windows-recovery-38401057945/README.md)
+passes all prerequisites and all five actual profile recovery checks; its evidence
+is kept separately from this failed run.

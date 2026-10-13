@@ -8,6 +8,22 @@ requirement. The detailed slice ledger below remains the requirement inventory.
 No whole-plan code percentage or achieved performance target is inferred from
 partial components. Historical failed reports remain failed.
 
+Fresh main reconciliation finds fork/main and upstream/main at `8b8ccc9a`, fully
+contained in local and remote dev `e8ccc268` (697 ahead, zero behind). No upstream
+merge or rebase is required. Reviewed QA work is still separate from dev.
+
+The [exact-commit Windows recovery run at `feb067d3`](performance-evidence/windows-recovery-38401057945/README.md)
+now passes all prerequisites and all five persisted-profile recovery checks.
+Settings, workspace contents and saved assets survive interruption, rollback,
+upgrade and failed verification. All browser closes complete within the unchanged
+five-second deadline without forced termination. This is hosted SwiftShader
+functional evidence; the historical failures are retained independently.
+
+A [new primary Windows frame-delivery diagnostic](performance-evidence/windows-frame-delivery-20261013/README.md)
+on the existing `a92c6921` diagnostic build reports UHD 620/D3D11, 301 frames over
+five seconds and no context loss. It is short component evidence, not a current
+QA full-application capture, matched performance comparison or hardware soak.
+
 Terrain readiness history is implemented on QA at `c0666072` (reviewed source
 commit `ca892212`). It reuses completed-render observations, retaining the first
 and seven recent samples per readiness transition, with at most 24 ancestry rows
@@ -39,7 +55,7 @@ for an actual PowerShell readiness marker before sending the mocked script, with
 separate startup, execution and cleanup bounds and timing evidence. Root passes
 all 74 recovery/shutdown prerequisites, including both actual PowerShell cases
 and deterministic timeout/cleanup controls. Production deadlines are unchanged;
-hosted recovery validation is pending. Root also [reproduces startup camera
+the later hosted validation at `feb067d3` passes as recorded above. Root also [reproduces startup camera
 ownership interference](performance-evidence/s47-map-startup-flight/README.md)
 with actual Cesium camera/tween code: both an active startup flight and a delayed
 startup callback can overwrite the map driver's declared route pose. The source
