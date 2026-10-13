@@ -21,8 +21,11 @@ for representative pull-request workflow evidence.
 The [preceding exact QA revision passes all seven standard CI jobs](../integration-f50565a0/README.md).
 The merged revision still needs its own Node 24/26, build, onboarding/recovery and
 browser integration run. The [separate native diagnostic failure](../s47-map-streaming/native-v4-38416400160/README.md)
-is a capture-report topology mismatch and remains failed. It is not caused by
-the Street View merge, which that run predates. Promotion to dev follows review
+is a capture-report topology mismatch and remains failed. The
+[reviewed correction](../s47-map-streaming/map-document-ownership/README.md) passes
+90 root focused checks plus the original-report replay and fourteen negative
+mutations. It is not caused by the Street View merge, which that run predates.
+Promotion to dev follows review
 and merged-candidate validation; no rebase or history discard is needed.
 
 ## Original assessment before the merge

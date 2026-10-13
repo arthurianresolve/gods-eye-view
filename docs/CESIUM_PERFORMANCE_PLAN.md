@@ -60,8 +60,11 @@ at `ec71877a` supplies them, preserves all 578 previous asset buffers and passes
 passes its baseline variant, with zero missing paths on either revision. Its
 candidate CLI completes four samples, but outer validation fails because the
 generic topology expects separate provider documents for samples that reuse
-the measured map document. Fix that ownership contract before a fresh run;
-the original report remains failed.
+the measured map document. The [reviewed ownership correction](performance-evidence/s47-map-streaming/map-document-ownership/README.md)
+at `155f2ac0` binds samples and cleanup inventories to the actual shared owner.
+Root passes 90 focused tests and a raw-report replay with fourteen rejected
+mutations. Fresh merged-commit browser validation is pending; the original run
+remains failed.
 The three omitted browser identities remain unknown. Do not repeat the failed
 run unchanged or relax delivery checks.
 
