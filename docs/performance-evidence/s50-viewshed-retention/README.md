@@ -1,5 +1,12 @@
 # Bounded CCTV viewshed retention implementation
 
+The subsequent [engineering closure audit](../closure-audit-20261013/README.md)
+closes S50 after the metadata-only rebuild fix, the
+[passing rendered comparison](native-38439815077/README.md) and real-layer
+workspace restore integration. Root passes 183 affected tests. Full-application
+physical Windows qualification and the final soak remain pending. The dated
+implementation checkpoints below retain their original, narrower conclusions.
+
 Reviewed source `bef9481a83a6746f0fa084b9b2a6e5341d2ae805` is integrated as
 `2731162b9bf24cf3e8da7ccbb84903fa16744f99`. The eight changed files are identical
 between those revisions. This addresses the separately recorded

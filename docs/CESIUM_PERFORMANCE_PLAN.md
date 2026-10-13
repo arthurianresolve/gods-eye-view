@@ -26,8 +26,10 @@ frame boundary at `fe28df76` passes 100 affected root checks. Its
 [fresh rendered run](performance-evidence/s47-map-streaming/native-fault-38436364036/README.md)
 passes missing/corrupt recovery, then exposes an incorrect held-asset path.
 Strict manifest-based correction `e0710bd5` passes the same 100 affected tests
-and is under fresh native validation. These are harness corrections, not new
-hardware qualification.
+and its [fresh native validation](performance-evidence/s47-map-streaming/native-fault-38439382587/README.md):
+both healthy journeys and all three fault/recovery controls pass, including
+superseded response release and cleanup. These are hosted integration results,
+not physical Windows qualification.
 
 The [13 October acceptance amendment](CESIUM_ACCEPTANCE.md) is authoritative for
 remaining S47-S60 work. It separates engineering closure, automatic validation,
@@ -65,13 +67,19 @@ has exact pixel equivalence, zero builds across unchanged visibility cycles,
 and bounded teardown, but fails the strict rebuild-control count (15 versus 14).
 A production-factory reproduction finds metadata-only footprint resolution can
 rebuild identical vertices. Reviewed fix `641cdd3f` passes 30 focused tests and
-preserves genuine geometry/source invalidation; a fresh rendered check remains
-pending. S50 stays partial and no new slice is marked closed.
+preserves genuine geometry/source invalidation. The
+[fresh rendered check](performance-evidence/s50-viewshed-retention/native-38439815077/README.md)
+passes at `fa0e8a49`, with exactly fourteen control builds and complete teardown.
+The real coordinator/manager/CCTV workspace-restore test at `81a5cc79` waits for
+drained preparation, checks retained primitive identity and verifies teardown.
+All 183 affected root checks pass. The engineering audit now closes S50;
+primary Windows and final-candidate qualification remain pending.
 
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
-closes S52 engineering after rechecking its unchanged accepted renderer, 13
-artifact hashes and 90 focused tests, and retaining the supported paint-cache
-rejection. Counts: **1/14 engineering closed (7.1%)**, **13/14 partial**, and
+closes S50 and S52 engineering. S52 retains its unchanged accepted renderer, 13
+artifact hashes and 90 focused tests, and the supported paint-cache
+rejection. S50 adds the strict rendered retention and workspace-restore evidence
+above. Counts: **2/14 engineering closed (14.3%)**, **12/14 partial**, and
 **0/14 fully qualified**. The remaining rows still require their own audits;
 the amendment alone grants no pass. Historical failures remain failed.
 

@@ -1,0 +1,34 @@
+{
+  "schema": "gev-local-artifact-review/v1",
+  "sourceSha256": "5a8af98f3d10f69791239587495ee59a6efbcf646fb5e847717a289717b9b60c",
+  "applicationCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+  "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+  "strictValidatorPassed": true,
+  "constructionCounts": {
+    "startup": 14,
+    "handoff": 2,
+    "hiddenPoseEdit": 1,
+    "rebuildControl": 14,
+    "total": 31
+  },
+  "pixelHashMatch": true,
+  "pixelEvidenceScope": "in-page comparison and reported pixel hashes; raw successful PNGs are not retained",
+  "cleanup": {
+    "layerDestroyed": true,
+    "retainedLayerDestroyed": true,
+    "viewerDestroyed": true,
+    "wrappersRestored": true,
+    "worldOverlayDestroyed": true,
+    "governorUninstalled": true,
+    "liveVolumes": 0,
+    "createdVolumes": 31,
+    "removedVolumes": 31,
+    "destroyedVolumes": 31,
+    "postRenderListenersBefore": 3,
+    "postRenderListenersAfter": 3,
+    "postRenderListenersAfterLayer": 3,
+    "postRenderListenersAfterOwners": 2
+  },
+  "physicalWindowsQualified": false,
+  "performanceClaim": false
+}

@@ -1,10 +1,37 @@
 # Engineering closure audit under the amended criteria
 
-S52 is **engineering closed**, with current component checks passed and primary
-Windows qualification pending. All other S47-S60 rows remain partial until their
-own audit. Counts are therefore **1/14 engineering closed (7.1%)**, **13/14 partial**
+S50 and S52 are **engineering closed**, with scoped component checks passed and
+primary Windows qualification pending. Other S47-S60 rows remain partial until
+their own audit. Counts are **2/14 engineering closed (14.3%)**, **12/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S50 geometry construction and ownership
+
+The [S50 review](s50-review.json) binds the current source and 183 passing focused
+checks, including the new real-layer workspace integration. The captured
+[test output](s50-focused.log) has no failures or skipped tests. The workspace
+test passes through the actual layer coordinator, manager, CCTV factory and
+Cesium primitive collection. It waits for geometry/source work to drain, checks
+primitive identity after repeated and changed persisted coverage modes, and
+verifies primitive and listener teardown. It does not introduce calibration
+persistence or claim a browser-storage journey.
+
+| Required engineering behavior                                      | Disposition                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Source, exact pose, terrain and parameter revisions                | Current geometry/ground tests cover changes and stale replies, including rounded-key collisions and source-owner replacement at equal coordinates.                                                                             |
+| One authoritative queued build and bounded preparation             | Cursor-based queue retains reentrant edits, coalesces pending duplicates, prioritizes the active record and cancels obsolete generations; application batches retain the four-ms target.                                       |
+| Retain unchanged geometry across visibility and workspace restores | Real primitive identities survive mode and disable/enable cycles; the persisted layer-state integration checks repeated restores and OFF/re-entry.                                                                             |
+| Bounded ownership and immediate obsolete-result retirement         | Current fourteen-camera cohort is retained; outgoing/hidden stale volumes and readiness observers are retired. Source identities use weak tokens.                                                                              |
+| Tint and observation updates without geometry reconstruction       | Ready/pre-ready tint uses supported attributes; resolved footprint metadata refreshes without replacing identical vertices, while changed support heights rebuild.                                                             |
+| Rendered behavior and construction comparison                      | The [strict hosted comparison](../s50-viewshed-retention/native-38439815077/README.md) passes exact in-page pixel equality, fourteen rebuild-control constructions, zero visibility-cycle constructions and complete teardown. |
+
+This closes S50 engineering under the amended finite criteria. The final frozen
+candidate still needs full-application physical Windows visual, interaction,
+performance and retention qualification. Component construction savings are not
+a motion-p95 or GPU-time improvement claim.
+
+## S52 overlay projection and preparation
 
 The [S52 review](s52-review.json) binds the current source at `f8413015`, test
 output and reverified artifact hashes. Root reran 90 focused overlay, drawing,

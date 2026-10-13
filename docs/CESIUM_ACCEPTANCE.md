@@ -53,7 +53,9 @@ Do not invent a percentage of code written or weight commits/tests as progress.
 The original fourteen partial ledger entries require a packet-by-packet audit
 under these definitions; this amendment itself closes none of them. The separate
 [13 October engineering audit](performance-evidence/closure-audit-20261013/README.md)
-has since closed S52 engineering: 1/14 closed, 13/14 partial, 0/14 fully qualified.
+has since closed S50 and S52 engineering: 2/14 closed, 12/14 partial,
+0/14 fully qualified. S50 closure includes the reviewed rendered retention
+comparison and the real-layer workspace restore integration.
 
 ## Requirements that remain mandatory
 
