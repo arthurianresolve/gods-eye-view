@@ -49,6 +49,9 @@ async function runCaptureReleaseCase(
   const witnessPath = path.join(tempRoot, 'lifecycle.txt');
   const mockPuppeteerPath = path.join(tempRoot, 'mock-puppeteer.mjs');
   const mockProvenancePath = path.join(tempRoot, 'mock-provenance.mjs');
+  const publicProvenanceModule = pathToFileURL(
+    path.join(ROOT, 'scripts', 'performance', 'captureBuildProvenance.mjs'),
+  ).href;
   const mockWorkerContractPath = path.join(
     tempRoot,
     'mock-worker-contract.mjs',
@@ -87,7 +90,8 @@ async function runCaptureReleaseCase(
   );
   await writeFile(
     mockProvenancePath,
-    `export async function beginCaptureBuildProvenance(options) {
+    `export { projectPublicCaptureBuildProvenance } from ${JSON.stringify(publicProvenanceModule)};
+export async function beginCaptureBuildProvenance(options) {
   return {
     source: {
       appCommit: options.expectedAppCommit,
