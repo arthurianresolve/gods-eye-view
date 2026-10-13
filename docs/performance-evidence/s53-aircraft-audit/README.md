@@ -1,0 +1,109 @@
+# S53 retained behavior and aircraft audit boundary
+
+## Disposition
+
+S53 remains partial. Keep the current mixed point collection and satellite
+scratch/write suppression. Reject the tested natural-bounds collection split;
+do not override Cesium command bounds or claim GPU upload savings. The available
+evidence does not justify an opaque-only or frequency-based replacement. The
+aircraft snapshot path has stable billboard ownership and bounded absence
+retention, but no paired allocation/mutation measurement. A small current-path
+audit is the remaining finite engineering evidence; it must not be described as
+a before/after optimization comparison because no prior aircraft optimization
+has been identified.
+
+## Retained satellite behavior
+
+The current satellite propagation path uses one scratch Cartesian and avoids
+assigning an unchanged position. Core satellites propagate at the one-second
+idle cadence (`POSITION_UPDATE_MS`) or 200 ms while tracking; dense satellites
+advance by a bounded round-robin chunk with a 300-frame full-pass target
+(`DENSE_REFRESH_FRAMES`). See `src/layers/satellites/rendering.js`,
+`_propagateAll` and `_preRenderTick`, and `src/layers/satellites/catalog.js`,
+`_propagateDenseChunk`.
+
+The retained mutation audit compares actual Cesium 1.138 point primitives at
+840 core / 10 passes and 10,000 dense / 300 passes. For unchanged positions,
+returned Cartesian objects fell from 8,400 to 1 (core) and 10,200 to 1 (dense),
+with setter calls falling to zero. For moving positions, setter calls and
+Cesium dirty notifications were unchanged. Final coordinate hashes matched in
+all four cases. The report used no WebGL context; upload counts, uploaded bytes
+and latency remain unavailable. See
+[`s53-collection-audit`](../s53-collection-audit/README.md), report SHA-256
+`62805e4cad664a180d34c3700376f2ecc362b10035784716020521cbaaff3017`, and the
+source revisions recorded there (`510ed8d4` versus `75cf32fe`).
+
+## Rejected collection split and opacity specialization
+
+The mixed-versus-split image comparison is failed, not a candidate for relaxing
+the visual gate. The split with natural bounds changes 24 pixels (maximum
+channel difference 36); applying the original mixed collection's measured
+bounds to the split restores exact pixels, and restoring natural split bounds
+restores the difference. Positions, projected neighborhoods, OIT state,
+resolution, MSAA and settings are held constant. This attributes the difference
+to the command-bounds/fitted-frustum interaction in Cesium 1.138 for this
+fixture, without claiming a GPU arithmetic defect. Retain the existing one
+collection; private command-bound overrides are diagnostic controls only. See
+[`s53-bounds-attribution`](../s53-bounds-attribution/README.md), diagnostic
+commits `4d39fed` and `c5889ef`, runs `38107644255` and `38108076172`.
+
+An opaque-only specialization is not supported by the current visual inputs:
+satellite dense points use alpha 0.9, outlines use alpha 0.3, and focus updates
+point alpha. See `src/layers/satellites/policy.js` (`POINT_STYLES`,
+`POINT_OUTLINE`) and `src/layers/satellites/rendering.js`,
+`_updatePointFocus`. Aircraft presentation is also not a static opaque class:
+`src/data/aircraftRecession.js`, `applyAircraftBillboardTreatment`, composes
+freshness/base alpha, focus and limb-relative alpha; both
+`src/layers/flights/rendering.js` and `src/layers/military/rendering.js` call it
+from `_fleetTick`. Model colors retain their existing `colorBlendAmount`
+semantics (`applyAircraftModelTreatment`). An opaque-only split would therefore
+need a separately specified and visually verified representation. No such
+implementation or evidence exists, so do not add a specialization merely to
+complete a conversion quota.
+
+## Aircraft membership and write paths
+
+`src/layers/flights/snapshotRenderer.js`, `createFlightSnapshotRenderer`, and
+`src/layers/military/snapshotRenderer.js`, `createMilitarySnapshotRenderer`,
+look up existing contacts in `_billboards`; they add a billboard only when that
+identity is absent, then update the associated record. On absence they consult
+`FlightRecords.absence` or `MilitaryFlightRecords.absence` before removal. The
+records retain contacts across incomplete snapshots, mark stale contacts, and
+admit removal after the configured complete-miss policy. Snapshot teardown also
+releases models, histories, ground samples and related maps. Existing
+`src/layers/flights/records.test.mjs` and
+`src/layers/military/records.test.mjs` cover retention/removal semantics;
+`src/layers/flights/snapshotRenderer.test.mjs` covers repeated-fix history, not
+billboard identity/mutation counts. There is no
+`src/layers/military/snapshotRenderer.test.mjs` today.
+
+`src/layers/flights/rendering.js` and `src/layers/military/rendering.js`,
+`_fleetTick`, own the moving billboard position, horizon visibility, focus,
+freshness, limb scale/alpha and model handoff. Position writes are gated by
+actual movement thresholds; presentation is dynamically composed. The current
+tests in `src/data/aircraftRecession.test.mjs` check near/far writes, alpha
+composition and model blend semantics, but they are not a population-scale
+membership or allocation measurement. Existing tracking ownership tests cover
+layer ownership and selected transitions, not a paired aircraft collection
+cost comparison.
+
+## Remaining finite evidence
+
+Add one bounded, reproducible current-path report that feeds the real snapshot
+and record producers and creates real Cesium `BillboardCollection` / `Billboard`
+objects without a WebGL context. Record retained billboard identities,
+collection adds/removes, and attempted position/color writes for: an initial
+population; an equivalent repeated snapshot; changed positions with the same
+identities; incomplete and complete absence according to the real record
+policy; and reappearance. Include a deliberate identity-churn control that the
+report detects. Bind Cesium version, fixture input and source revision. This is
+an absolute current-behavior mutation audit; it cannot establish improvement
+versus an unmeasured prior aircraft implementation, GPU upload savings, or
+frame-time benefit. No runtime change is justified by the current evidence.
+
+The collection split is a finite rejected experiment. Reopen it only for a
+concrete supported representation that preserves mixed command bounds,
+selected-object identity, horizon behavior, focus/fading and exact visual
+output, with measured allocation or upload benefit. Until then, retaining the
+single collection is the reviewed disposition, not an open-ended request to
+try arbitrary alternatives.
