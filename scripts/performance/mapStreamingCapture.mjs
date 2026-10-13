@@ -221,6 +221,388 @@ const MAP_JOURNEY_FAILURE_CODES = new Set([
   'operation-start-failed',
   'unexpected-operation-state',
 ]);
+const MAP_TERRAIN_HISTORY_SAMPLE_LIMIT = 8;
+const MAP_TERRAIN_HISTORY_ANCESTRY_LIMIT = 24;
+
+function projectMapTerrainHistory(value) {
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
+  assert.equal(value.schema, 'gev-map-terrain-history/v1');
+  assert.equal(typeof value.finalized, 'boolean');
+  assert.ok(Array.isArray(value.samples));
+  assert.ok(Array.isArray(value.ancestryRows));
+  assert.ok(
+    ['photoreal', ...Object.keys(EXPECTED_IMAGERY_CLASS)].includes(
+      value.stackId,
+    ),
+  );
+  assert.ok(
+    ['initial-readiness', 'transition-readiness', 'final-readiness'].includes(
+      value.phase,
+    ),
+  );
+  for (const name of [
+    'completedObservationCount',
+    'recordedObservationCount',
+    'omittedObservationCount',
+  ])
+    assert.ok(Number.isSafeInteger(value[name]) && value[name] >= 0);
+  assert.ok(value.completedObservationCount >= value.recordedObservationCount);
+  assert.ok(value.recordedObservationCount <= value.completedObservationCount);
+  assert.equal(
+    value.omittedObservationCount,
+    value.recordedObservationCount - value.samples.length,
+  );
+  assert.ok(value.recordedObservationCount >= value.samples.length);
+  assert.ok(value.samples.length <= MAP_TERRAIN_HISTORY_SAMPLE_LIMIT);
+  assert.ok(
+    value.ancestryRows.length <=
+      MAP_TERRAIN_HISTORY_SAMPLE_LIMIT * MAP_TERRAIN_HISTORY_ANCESTRY_LIMIT,
+  );
+  assert.ok(
+    Number.isSafeInteger(value.omittedAncestryRowCount) &&
+      value.omittedAncestryRowCount >= 0,
+  );
+  assert.ok(
+    value.omittedAncestryRowCount <=
+      value.omittedObservationCount * MAP_TERRAIN_HISTORY_ANCESTRY_LIMIT,
+  );
+  assert.ok(
+    value.finalSequence === null || Number.isSafeInteger(value.finalSequence),
+  );
+  assert.ok(
+    value.finalized
+      ? value.samples.length === 0
+        ? value.finalSequence === null
+        : value.finalSequence === value.samples.at(-1).sequence
+      : value.finalSequence === null,
+  );
+  const sampleSequences = new Set();
+  const sampleBySequence = new Map();
+  const sampleKeys = [
+    'sequence',
+    'observedElapsedMs',
+    'routeElapsedMs',
+    'stackId',
+    'queueAvailable',
+    'queueHigh',
+    'queueMedium',
+    'queueLow',
+    'queueTotal',
+    'identityAvailable',
+    'identityQueue',
+    'identityX',
+    'identityY',
+    'identityLevel',
+    'identityStatus',
+    'ancestryStatus',
+    'ancestryRowCount',
+    'ancestryTruncated',
+    'ancestryCycleDetected',
+    'ancestryUnsupportedFields',
+    'final',
+  ];
+  let priorObservedElapsedMs = -1;
+  let priorRouteElapsedMs = -1;
+  let priorSequence = 0;
+  let priorSample = null;
+  let finalCount = 0;
+  const samples = value.samples.map((sample, index) => {
+    assert.ok(sample && typeof sample === 'object' && !Array.isArray(sample));
+    assert.deepEqual(Object.keys(sample).sort(), [...sampleKeys].sort());
+    assert.ok(
+      Number.isSafeInteger(sample.sequence) && sample.sequence > priorSequence,
+    );
+    assert.ok(sample.sequence <= value.completedObservationCount);
+    if (index === 0) assert.equal(sample.sequence, 1);
+    assert.ok(
+      Number.isFinite(sample.observedElapsedMs) &&
+        sample.observedElapsedMs >= 0 &&
+        sample.observedElapsedMs <= 240_000 &&
+        sample.observedElapsedMs >= priorObservedElapsedMs,
+    );
+    if (index > 0 && sample.final !== true)
+      assert.ok(sample.observedElapsedMs - priorObservedElapsedMs >= 2_000);
+    assert.ok(
+      Number.isFinite(sample.routeElapsedMs) &&
+        sample.routeElapsedMs >= 0 &&
+        sample.routeElapsedMs <= 240_000 &&
+        sample.routeElapsedMs >= priorRouteElapsedMs,
+    );
+    assert.equal(sample.stackId, value.stackId);
+    assert.ok(
+      sample.queueAvailable === null ||
+        typeof sample.queueAvailable === 'boolean',
+    );
+    const queueCounts = {
+      high: sample.queueHigh,
+      medium: sample.queueMedium,
+      low: sample.queueLow,
+      total: sample.queueTotal,
+    };
+    for (const count of Object.values(queueCounts))
+      assert.ok(count === null || (Number.isSafeInteger(count) && count >= 0));
+    if (sample.queueAvailable === true) {
+      for (const count of Object.values(queueCounts))
+        assert.ok(Number.isSafeInteger(count));
+      assert.equal(
+        queueCounts.total,
+        queueCounts.high + queueCounts.medium + queueCounts.low,
+      );
+    } else
+      assert.ok(Object.values(queueCounts).every((entry) => entry === null));
+    assert.equal(sample.identityAvailable, sample.identityQueue !== null);
+    if (sample.identityAvailable) {
+      assert.ok(['high', 'medium', 'low'].includes(sample.identityQueue));
+      for (const indexValue of [
+        sample.identityX,
+        sample.identityY,
+        sample.identityLevel,
+      ])
+        assert.ok(Number.isSafeInteger(indexValue) && indexValue >= 0);
+      if (sample.identityAvailable) {
+        assert.ok(sample.queueAvailable === true);
+        assert.ok(queueCounts[sample.identityQueue] > 0);
+      }
+    } else
+      assert.ok(
+        sample.identityX === null &&
+          sample.identityY === null &&
+          sample.identityLevel === null,
+      );
+    assert.ok(
+      ['first', 'same', 'changed', 'unavailable'].includes(
+        sample.identityStatus,
+      ),
+    );
+    if (index === 0)
+      assert.equal(
+        sample.identityStatus,
+        sample.identityAvailable ? 'first' : 'unavailable',
+      );
+    else if (!priorSample.identityAvailable || !sample.identityAvailable)
+      assert.equal(sample.identityStatus, 'unavailable');
+    else {
+      const changed =
+        priorSample.identityQueue !== sample.identityQueue ||
+        priorSample.identityX !== sample.identityX ||
+        priorSample.identityY !== sample.identityY ||
+        priorSample.identityLevel !== sample.identityLevel;
+      assert.equal(sample.identityStatus, changed ? 'changed' : 'same');
+    }
+    assert.ok(
+      [
+        'available',
+        'no-queued-sample',
+        'sample-identity-unavailable',
+        'queue-unavailable',
+        'not-observed',
+      ].includes(sample.ancestryStatus),
+    );
+    assert.ok(
+      Number.isSafeInteger(sample.ancestryRowCount) &&
+        sample.ancestryRowCount >= 0 &&
+        sample.ancestryRowCount <= MAP_TERRAIN_HISTORY_ANCESTRY_LIMIT,
+    );
+    assert.ok(
+      typeof sample.ancestryTruncated === 'boolean' &&
+        typeof sample.ancestryCycleDetected === 'boolean',
+    );
+    assert.ok(
+      typeof sample.ancestryUnsupportedFields === 'string' &&
+        sample.ancestryUnsupportedFields.length <= 128,
+    );
+    const ancestryUnsupportedFields = sample.ancestryUnsupportedFields
+      ? sample.ancestryUnsupportedFields.split(',')
+      : [];
+    assert.ok(
+      ancestryUnsupportedFields.length <= MAP_TERRAIN_ANCESTRY_FIELDS.length,
+    );
+    assert.equal(
+      new Set(ancestryUnsupportedFields).size,
+      ancestryUnsupportedFields.length,
+    );
+    for (const field of ancestryUnsupportedFields)
+      assert.ok(MAP_TERRAIN_ANCESTRY_FIELDS.includes(field));
+    assert.equal(
+      sample.ancestryStatus === 'available',
+      sample.ancestryRowCount > 0,
+    );
+    if (sample.ancestryStatus !== 'available') {
+      assert.equal(sample.ancestryRowCount, 0);
+      assert.equal(sample.ancestryTruncated, false);
+      assert.equal(sample.ancestryCycleDetected, false);
+    }
+    assert.equal(typeof sample.final, 'boolean');
+    if (sample.final) finalCount += 1;
+    sampleSequences.add(sample.sequence);
+    sampleBySequence.set(sample.sequence, sample);
+    priorSequence = sample.sequence;
+    priorObservedElapsedMs = sample.observedElapsedMs;
+    priorRouteElapsedMs = sample.routeElapsedMs;
+    priorSample = sample;
+    return {
+      sequence: sample.sequence,
+      observedElapsedMs: sample.observedElapsedMs,
+      routeElapsedMs: sample.routeElapsedMs,
+      stackId: sample.stackId,
+      queueAvailable: sample.queueAvailable,
+      queueHigh: sample.queueHigh,
+      queueMedium: sample.queueMedium,
+      queueLow: sample.queueLow,
+      queueTotal: sample.queueTotal,
+      identityAvailable: sample.identityAvailable,
+      identityQueue: sample.identityQueue,
+      identityX: sample.identityX,
+      identityY: sample.identityY,
+      identityLevel: sample.identityLevel,
+      identityStatus: sample.identityStatus,
+      ancestryStatus: sample.ancestryStatus,
+      ancestryRowCount: sample.ancestryRowCount,
+      ancestryTruncated: sample.ancestryTruncated,
+      ancestryCycleDetected: sample.ancestryCycleDetected,
+      ancestryUnsupportedFields: sample.ancestryUnsupportedFields,
+      final: sample.final,
+    };
+  });
+  assert.equal(finalCount, value.finalized && samples.length > 0 ? 1 : 0);
+  if (value.completedObservationCount > 0) assert.ok(samples.length > 0);
+  if (value.finalized && samples.length > 0) {
+    assert.equal(samples.at(-1).sequence, value.completedObservationCount);
+    assert.equal(
+      samples.filter((sample) => sample.final).at(-1),
+      samples.at(-1),
+    );
+  }
+  const ancestryRows = value.ancestryRows.map((row) => {
+    assert.ok(row && typeof row === 'object' && !Array.isArray(row));
+    assert.ok(sampleSequences.has(row.sampleSequence));
+    const sample = sampleBySequence.get(row.sampleSequence);
+    assert.ok(
+      Number.isSafeInteger(row.rowIndex) &&
+        row.rowIndex >= 0 &&
+        row.rowIndex < sample.ancestryRowCount,
+    );
+    assert.deepEqual(
+      Object.keys(row).sort(),
+      [
+        'sampleSequence',
+        'rowIndex',
+        'x',
+        'y',
+        'level',
+        'tileState',
+        'parentPresent',
+        'dataPresent',
+        'terrainState',
+        'dataMeshPresent',
+        'terrainDataPresent',
+        'terrainMeshPresent',
+        'canUpsample',
+      ].sort(),
+    );
+    for (const name of ['x', 'y', 'level'])
+      assert.ok(Number.isSafeInteger(row[name]) && row[name] >= 0);
+    assert.ok(
+      row.tileState === null ||
+        (Number.isSafeInteger(row.tileState) &&
+          row.tileState >= 0 &&
+          row.tileState <= 3),
+    );
+    assert.ok(
+      row.terrainState === null ||
+        (Number.isSafeInteger(row.terrainState) &&
+          row.terrainState >= 0 &&
+          row.terrainState <= 6),
+    );
+    for (const name of [
+      'parentPresent',
+      'dataPresent',
+      'dataMeshPresent',
+      'terrainDataPresent',
+      'terrainMeshPresent',
+      'canUpsample',
+    ])
+      assert.ok(typeof row[name] === 'boolean' || row[name] === null);
+    return { ...row };
+  });
+  for (const sample of samples) {
+    const rows = ancestryRows
+      .filter((row) => row.sampleSequence === sample.sequence)
+      .sort((a, b) => a.rowIndex - b.rowIndex);
+    assert.equal(rows.length, sample.ancestryRowCount);
+    assert.deepEqual(
+      rows.map((row) => row.rowIndex),
+      rows.map((_, index) => index),
+    );
+    if (rows.length > 0 && sample.identityAvailable)
+      assert.deepEqual(
+        {
+          queue: sample.identityQueue,
+          x: rows[0].x,
+          y: rows[0].y,
+          level: rows[0].level,
+        },
+        {
+          queue: sample.identityQueue,
+          x: sample.identityX,
+          y: sample.identityY,
+          level: sample.identityLevel,
+        },
+      );
+    for (let index = 0; index + 1 < rows.length; index += 1) {
+      assert.equal(rows[index].parentPresent, true);
+      assert.equal(rows[index + 1].level, rows[index].level - 1);
+      assert.equal(rows[index + 1].x, Math.floor(rows[index].x / 2));
+      assert.equal(rows[index + 1].y, Math.floor(rows[index].y / 2));
+    }
+    if (sample.ancestryStatus === 'available') {
+      const projected = projectMapTerrainQueueAncestry(
+        {
+          available: true,
+          unavailableReason: null,
+          sample: {
+            queue: sample.identityQueue,
+            x: sample.identityX,
+            y: sample.identityY,
+            level: sample.identityLevel,
+          },
+          rows: rows.map(
+            ({
+              rowIndex: _rowIndex,
+              sampleSequence: _sampleSequence,
+              ...row
+            }) => row,
+          ),
+          truncated: sample.ancestryTruncated,
+          cycleDetected: sample.ancestryCycleDetected,
+          unsupportedFields: sample.ancestryUnsupportedFields
+            ? sample.ancestryUnsupportedFields.split(',')
+            : [],
+        },
+        {
+          queue: sample.identityQueue,
+          x: sample.identityX,
+          y: sample.identityY,
+          level: sample.identityLevel,
+        },
+      );
+      assert.equal(projected.rows.length, sample.ancestryRowCount);
+    }
+  }
+  return {
+    schema: value.schema,
+    phase: value.phase,
+    stackId: value.stackId,
+    completedObservationCount: value.completedObservationCount,
+    recordedObservationCount: value.recordedObservationCount,
+    omittedObservationCount: value.omittedObservationCount,
+    omittedAncestryRowCount: value.omittedAncestryRowCount,
+    finalized: value.finalized,
+    finalSequence: value.finalSequence,
+    samples,
+    ancestryRows,
+  };
+}
 
 function projectMapJourneyCheckpoint(value) {
   if (value === null) return null;
@@ -242,6 +624,9 @@ function projectMapJourneyCheckpoint(value) {
       value.routeElapsedMs >= 0 &&
       value.routeElapsedMs <= 240_000,
   );
+  const historyCandidates = [];
+  if (value.terrainHistory !== undefined && value.terrainHistory !== null)
+    historyCandidates.push(projectMapTerrainHistory(value.terrainHistory));
   let latestObservation = null;
   if (value.latestObservation !== null) {
     const observation = value.latestObservation;
@@ -403,6 +788,11 @@ function projectMapJourneyCheckpoint(value) {
             sampledTiles.filter((tile) => tile.queue === queueName).length <=
               queue.queueCounts[queueName],
           );
+        const queueHistory =
+          queue.terrainHistory === undefined || queue.terrainHistory === null
+            ? null
+            : projectMapTerrainHistory(queue.terrainHistory);
+        if (queueHistory) historyCandidates.push(queueHistory);
         globeQueueDiagnostics = {
           available: true,
           unavailableReason: null,
@@ -415,6 +805,7 @@ function projectMapJourneyCheckpoint(value) {
           renderedTileCount: queue.renderedTileCount,
           sampledTiles,
           omittedSampledTileCount: queue.omittedSampledTileCount,
+          ...(queueHistory ? { terrainHistory: queueHistory } : {}),
         };
         assert.ok(
           Number.isSafeInteger(globeQueueDiagnostics.omittedSampledTileCount) &&
@@ -444,8 +835,14 @@ function projectMapJourneyCheckpoint(value) {
             (Number.isSafeInteger(queue.renderedTileCount) &&
               queue.renderedTileCount >= 0),
         );
-        assert.deepEqual(queue.sampledTiles, []);
+        assert.ok(Array.isArray(queue.sampledTiles));
+        assert.equal(queue.sampledTiles.length, 0);
         assert.equal(queue.omittedSampledTileCount, null);
+        const queueHistory =
+          queue.terrainHistory === undefined || queue.terrainHistory === null
+            ? null
+            : projectMapTerrainHistory(queue.terrainHistory);
+        if (queueHistory) historyCandidates.push(queueHistory);
         globeQueueDiagnostics = {
           available: false,
           unavailableReason: queue.unavailableReason,
@@ -453,6 +850,7 @@ function projectMapJourneyCheckpoint(value) {
           renderedTileCount: queue.renderedTileCount,
           sampledTiles: [],
           omittedSampledTileCount: null,
+          ...(queueHistory ? { terrainHistory: queueHistory } : {}),
         };
       }
     }
@@ -471,6 +869,17 @@ function projectMapJourneyCheckpoint(value) {
       photorealSelectedTiles: observation.photorealSelectedTiles,
       globeQueueDiagnostics,
     };
+  }
+  assert.ok(historyCandidates.length <= 2);
+  if (historyCandidates.length === 2)
+    assert.deepEqual(
+      historyCandidates[0],
+      historyCandidates[1],
+      'Duplicate terrain history projections must agree.',
+    );
+  const terrainHistory = historyCandidates[0] ?? null;
+  if (terrainHistory && latestObservation?.globeQueueDiagnostics) {
+    latestObservation.globeQueueDiagnostics.terrainHistory = terrainHistory;
   }
   return {
     phase: value.phase,
@@ -658,6 +1067,7 @@ export async function runNativeMapStreamingJourneyInPage({
         transitionCount: 0,
         targetStack: null,
         latestObservation: null,
+        terrainHistory: null,
       },
       result: null,
       failure: null,
@@ -1333,6 +1743,28 @@ export async function runNativeMapStreamingJourneyInPage({
     photorealSelectedTiles: state.photorealSelectedTiles,
     globeQueueDiagnostics: state.globeQueueDiagnostics,
   });
+  let currentTerrainHistory = null;
+  const terrainHistoryCheckpoint = () => {
+    if (!currentTerrainHistory) return null;
+    return {
+      schema: 'gev-map-terrain-history/v1',
+      phase: currentTerrainHistory.phase,
+      stackId: currentTerrainHistory.stackId,
+      completedObservationCount:
+        currentTerrainHistory.completedObservationCount,
+      recordedObservationCount: currentTerrainHistory.recordedObservationCount,
+      omittedObservationCount:
+        currentTerrainHistory.recordedObservationCount -
+        currentTerrainHistory.samples.length,
+      omittedAncestryRowCount: currentTerrainHistory.omittedAncestryRowCount,
+      finalized: currentTerrainHistory.finalized,
+      finalSequence: currentTerrainHistory.finalSequence,
+      samples: currentTerrainHistory.samples.map((sample) => ({ ...sample })),
+      ancestryRows: currentTerrainHistory.ancestryRows.map((row) => ({
+        ...row,
+      })),
+    };
+  };
   const updateProgress = (phase, targetStack = null, state = null) => {
     if (!operation) return;
     operation.checkpoint = {
@@ -1345,6 +1777,7 @@ export async function runNativeMapStreamingJourneyInPage({
           ? 0
           : Math.max(0, performance.now() - routeStartedAt),
       latestObservation: state ? progressObservation(state) : null,
+      terrainHistory: terrainHistoryCheckpoint(),
     };
   };
   let initialReadinessComplete = false;
@@ -1415,24 +1848,257 @@ export async function runNativeMapStreamingJourneyInPage({
   };
 
   const waitForReadyStack = async (stackId, phase = 'readiness') => {
+    const historyStartedAt = performance.now();
+    currentTerrainHistory = {
+      phase,
+      stackId,
+      completedObservationCount: 0,
+      recordedObservationCount: 0,
+      samples: [],
+      ancestryRows: [],
+      omittedAncestryRowCount: 0,
+      finalized: false,
+      finalSequence: null,
+      firstSample: null,
+      recentTail: [],
+      lastRecordedElapsedMs: null,
+      latest: null,
+    };
+    const compactObservation = (state, sequence, postRenderAt) => {
+      const queue = state?.globeQueueDiagnostics;
+      const queueAvailable =
+        typeof queue?.available === 'boolean' ? queue.available : null;
+      const sampled =
+        queueAvailable === true ? (queue.sampledTiles?.[0] ?? null) : null;
+      const identity =
+        sampled &&
+        ['high', 'medium', 'low'].includes(sampled.queue) &&
+        Number.isSafeInteger(sampled.x) &&
+        sampled.x >= 0 &&
+        Number.isSafeInteger(sampled.y) &&
+        sampled.y >= 0 &&
+        Number.isSafeInteger(sampled.level) &&
+        sampled.level >= 0
+          ? {
+              queue: sampled.queue,
+              x: sampled.x,
+              y: sampled.y,
+              level: sampled.level,
+            }
+          : null;
+      const ancestry = queue?.terrainAncestry;
+      const ancestryStatus =
+        queueAvailable !== true
+          ? 'queue-unavailable'
+          : ancestry?.available === true
+            ? 'available'
+            : ['no-queued-sample', 'sample-identity-unavailable'].includes(
+                  ancestry?.unavailableReason,
+                )
+              ? ancestry.unavailableReason
+              : 'not-observed';
+      const ancestryRows =
+        ancestryStatus === 'available' && Array.isArray(ancestry.rows)
+          ? ancestry.rows.slice(0, 24).map((row) => ({ ...row }))
+          : [];
+      const observedElapsedMs = Math.max(0, postRenderAt - historyStartedAt);
+      return {
+        sequence,
+        observedElapsedMs,
+        routeElapsedMs:
+          routeStartedAt === null
+            ? 0
+            : Math.max(0, postRenderAt - routeStartedAt),
+        stackId,
+        queueAvailable,
+        queueHigh: queueAvailable === true ? queue.queueCounts.high : null,
+        queueMedium: queueAvailable === true ? queue.queueCounts.medium : null,
+        queueLow: queueAvailable === true ? queue.queueCounts.low : null,
+        queueTotal: queueAvailable === true ? queue.queueCounts.total : null,
+        identityAvailable: identity !== null,
+        identityQueue: identity?.queue ?? null,
+        identityX: identity?.x ?? null,
+        identityY: identity?.y ?? null,
+        identityLevel: identity?.level ?? null,
+        ancestryStatus:
+          ancestryStatus === 'available' && ancestryRows.length === 0
+            ? 'not-observed'
+            : ancestryStatus,
+        ancestryRowCount:
+          ancestryStatus === 'available' ? ancestryRows.length : 0,
+        ancestryTruncated:
+          ancestryStatus === 'available' ? ancestry.truncated === true : false,
+        ancestryCycleDetected:
+          ancestryStatus === 'available'
+            ? ancestry.cycleDetected === true
+            : false,
+        ancestryUnsupportedFields:
+          ancestryStatus === 'available' &&
+          Array.isArray(ancestry.unsupportedFields)
+            ? ancestry.unsupportedFields.slice(0, 12).join(',')
+            : '',
+        ancestryRows: ancestryRows.map((row, rowIndex) => ({
+          rowIndex,
+          x: row.x,
+          y: row.y,
+          level: row.level,
+          tileState: row.tileState,
+          parentPresent: row.parentPresent,
+          dataPresent: row.dataPresent,
+          terrainState: row.terrainState,
+          dataMeshPresent: row.dataMeshPresent,
+          terrainDataPresent: row.terrainDataPresent,
+          terrainMeshPresent: row.terrainMeshPresent,
+          canUpsample: row.canUpsample,
+        })),
+        final: false,
+      };
+    };
+    const appendHistorySample = (sample) => {
+      const sourceRows = sample.ancestryRows;
+      delete sample.ancestryRows;
+      sample.final = false;
+      currentTerrainHistory.recordedObservationCount += 1;
+      currentTerrainHistory.ancestryRows.push(
+        ...sourceRows.map((row, rowIndex) => ({
+          sampleSequence: sample.sequence,
+          rowIndex,
+          x: row.x,
+          y: row.y,
+          level: row.level,
+          tileState: row.tileState,
+          parentPresent: row.parentPresent,
+          dataPresent: row.dataPresent,
+          terrainState: row.terrainState,
+          dataMeshPresent: row.dataMeshPresent,
+          terrainDataPresent: row.terrainDataPresent,
+          terrainMeshPresent: row.terrainMeshPresent,
+          canUpsample: row.canUpsample,
+        })),
+      );
+      currentTerrainHistory.omittedAncestryRowCount += Math.max(
+        0,
+        sourceRows.length - 24,
+      );
+      if (currentTerrainHistory.firstSample === null)
+        currentTerrainHistory.firstSample = sample;
+      else {
+        currentTerrainHistory.recentTail.push(sample);
+        if (currentTerrainHistory.recentTail.length > 7) {
+          const removed = currentTerrainHistory.recentTail.shift();
+          currentTerrainHistory.omittedAncestryRowCount +=
+            removed.ancestryRowCount;
+          currentTerrainHistory.ancestryRows =
+            currentTerrainHistory.ancestryRows.filter(
+              (row) => row.sampleSequence !== removed.sequence,
+            );
+        }
+      }
+      currentTerrainHistory.lastRecordedElapsedMs = sample.observedElapsedMs;
+      currentTerrainHistory.samples = [
+        currentTerrainHistory.firstSample,
+        ...currentTerrainHistory.recentTail,
+      ];
+      currentTerrainHistory.samples.forEach((retained, index) => {
+        const previous =
+          index === 0 ? null : currentTerrainHistory.samples[index - 1];
+        retained.identityStatus = !previous
+          ? retained.identityAvailable
+            ? 'first'
+            : 'unavailable'
+          : !previous.identityAvailable || !retained.identityAvailable
+            ? 'unavailable'
+            : previous.identityQueue === retained.identityQueue &&
+                previous.identityX === retained.identityX &&
+                previous.identityY === retained.identityY &&
+                previous.identityLevel === retained.identityLevel
+              ? 'same'
+              : 'changed';
+      });
+    };
+    const observeCompletedRender = (state, postRenderAt) => {
+      const history = currentTerrainHistory;
+      history.completedObservationCount += 1;
+      const sequence = history.completedObservationCount;
+      history.latest = compactObservation(state, sequence, postRenderAt);
+      if (
+        history.firstSample === null ||
+        history.latest.observedElapsedMs - history.lastRecordedElapsedMs >=
+          2_000
+      )
+        appendHistorySample({ ...history.latest });
+    };
+    const finalizeHistory = (lastState) => {
+      if (lastState && currentTerrainHistory.latest) {
+        const latest = currentTerrainHistory.latest;
+        if (
+          !currentTerrainHistory.samples.some(
+            (sample) => sample.sequence === latest.sequence,
+          )
+        )
+          appendHistorySample({ ...latest });
+      }
+      currentTerrainHistory.samples = [
+        ...(currentTerrainHistory.firstSample
+          ? [currentTerrainHistory.firstSample]
+          : []),
+        ...currentTerrainHistory.recentTail,
+      ];
+      for (const sample of currentTerrainHistory.samples) sample.final = false;
+      const finalSample = currentTerrainHistory.samples.at(-1);
+      if (finalSample) {
+        finalSample.final = true;
+        currentTerrainHistory.finalSequence = finalSample.sequence;
+      }
+      const retained = new Set(
+        currentTerrainHistory.samples.map((sample) => sample.sequence),
+      );
+      currentTerrainHistory.ancestryRows =
+        currentTerrainHistory.ancestryRows.filter((row) =>
+          retained.has(row.sampleSequence),
+        );
+      currentTerrainHistory.samples.forEach((sample, index) => {
+        const previous =
+          index === 0 ? null : currentTerrainHistory.samples[index - 1];
+        sample.identityStatus = !previous
+          ? sample.identityAvailable
+            ? 'first'
+            : 'unavailable'
+          : !previous.identityAvailable || !sample.identityAvailable
+            ? 'unavailable'
+            : previous.identityQueue === sample.identityQueue &&
+                previous.identityX === sample.identityX &&
+                previous.identityY === sample.identityY &&
+                previous.identityLevel === sample.identityLevel
+              ? 'same'
+              : 'changed';
+      });
+      currentTerrainHistory.finalized = true;
+    };
     updateProgress(phase, stackId);
     const deadline = performance.now() + readyTimeoutMs;
     let readyFrames = 0;
     let last = null;
-    while (performance.now() < deadline) {
-      const postRenderAt = await waitForPostRender(
-        Math.max(1, deadline - performance.now()),
-        journeyAbort.signal,
+    try {
+      while (performance.now() < deadline) {
+        const postRenderAt = await waitForPostRender(
+          Math.max(1, deadline - performance.now()),
+          journeyAbort.signal,
+        );
+        last = captureState(postRenderAt);
+        observeCompletedRender(last, postRenderAt);
+        updateProgress(phase, stackId, last);
+        if (isReady(last, stackId)) readyFrames += 1;
+        else readyFrames = 0;
+        if (readyFrames >= 2) return last;
+      }
+      throw new Error(
+        `Map stack ${stackId} lacked two completed ready renders: ${JSON.stringify(last)}`,
       );
-      last = captureState(postRenderAt);
+    } finally {
+      finalizeHistory(last);
       updateProgress(phase, stackId, last);
-      if (isReady(last, stackId)) readyFrames += 1;
-      else readyFrames = 0;
-      if (readyFrames >= 2) return last;
     }
-    throw new Error(
-      `Map stack ${stackId} lacked two completed ready renders: ${JSON.stringify(last)}`,
-    );
   };
 
   const initialStack = controller.getActiveId();

@@ -12,7 +12,11 @@ import {
   projectMapStreamingJourneyFailureEvidence,
 } from './mapStreamingCapture.mjs';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
-import { attachMapStreamingJourneyFailureEvidence } from '../qa-performance-build-smoke.mjs';
+import {
+  attachMapStreamingJourneyFailureEvidence,
+  compactCaptureCliFailure,
+  projectMapStreamingJourneyFailureForSmoke,
+} from '../qa-performance-build-smoke.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
 import {
@@ -418,6 +422,41 @@ function createFakePage({
         }
       : MAP_STREAMING_ROUTE,
   };
+}
+
+function makeTerrainChain(seed) {
+  const parity = seed % 2;
+  let parent = {
+    _x: parity,
+    _y: 0,
+    _level: 0,
+    state: 1,
+    parent: null,
+    data: {
+      terrainState: 0,
+      mesh: {},
+      terrainData: { _mesh: {}, canUpsample: true },
+    },
+  };
+  let x = parity;
+  let y = 0;
+  for (let level = 1; level <= 23; level += 1) {
+    x = x * 2 + parity;
+    y *= 2;
+    parent = {
+      _x: x,
+      _y: y,
+      _level: level,
+      state: 1,
+      parent,
+      data: {
+        terrainState: level % 7,
+        mesh: {},
+        terrainData: { _mesh: {}, canUpsample: true },
+      },
+    };
+  }
+  return parent;
 }
 
 test('map camera route stays inside the declared corpus footprint at 1-second checkpoints', () => {
@@ -947,6 +986,335 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
       assert.throws(
         () => projectMapStreamingJourneyFailureEvidence(falseTruncation),
         /unsupportedFields/,
+      );
+      return true;
+    },
+  );
+});
+
+test('native map failure retains bounded temporal terrain history through outer serialization', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 2_500,
+  });
+  const app = harness.context.window.__godsEyeView;
+  const surface = app.viewer.scene.globe._surface;
+  const originalRequestRender = app.viewer.scene.requestRender.bind(
+    app.viewer.scene,
+  );
+  let esriRenderCount = 0;
+  app.viewer.scene.requestRender = () => {
+    if (app.mapStackController.getActiveId() === 'esri-imagery') {
+      esriRenderCount += 1;
+      if (esriRenderCount === 1) surface._tileLoadQueueHigh = [];
+      else surface._tileLoadQueueHigh = [makeTerrainChain(esriRenderCount)];
+    }
+    originalRequestRender();
+  };
+
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const evidence = error.mapStreamingJourneyFailure;
+      const history = evidence.checkpointGlobeQueueDiagnostics?.terrainHistory;
+      assert.ok(
+        history,
+        JSON.stringify({ projected: evidence, raw: error.actual }),
+      );
+      assert.equal(history.finalized, true);
+      assert.ok(history.completedObservationCount > 8);
+      assert.equal(history.samples.length, 8);
+      assert.equal(history.samples[0].sequence, 1);
+      assert.equal(history.samples[0].identityStatus, 'unavailable');
+      assert.equal(history.samples[1].identityStatus, 'unavailable');
+      assert.ok(
+        history.samples
+          .slice(2)
+          .some((sample) => sample.identityStatus === 'changed'),
+      );
+      assert.equal(history.samples.at(-1).final, true);
+      assert.equal(
+        history.samples.at(-1).sequence,
+        history.completedObservationCount,
+      );
+      assert.ok(history.ancestryRows.length <= 8 * 24);
+      assert.equal(history.ancestryRows.length, 7 * 24);
+      assert.equal(
+        history.ancestryRows.filter((row) => row.sampleSequence === 1).length,
+        0,
+      );
+      assert.equal(
+        history.ancestryRows.filter(
+          (row) => row.sampleSequence === history.samples.at(-1).sequence,
+        ).length,
+        24,
+      );
+      assert.ok(
+        history.samples
+          .slice(1, -1)
+          .every(
+            (sample, index, rows) =>
+              sample.observedElapsedMs -
+                (index === 0
+                  ? history.samples[0].observedElapsedMs
+                  : rows[index - 1].observedElapsedMs) >=
+              2_000,
+          ),
+      );
+
+      const twiceProjected =
+        projectMapStreamingJourneyFailureEvidence(evidence);
+      assert.deepEqual(
+        twiceProjected,
+        evidence,
+        'Projection is idempotent for the shallow queue-history form.',
+      );
+      const inProgressCheckpoint = structuredClone(error.actual);
+      inProgressCheckpoint.terrainHistory.finalized = false;
+      inProgressCheckpoint.terrainHistory.finalSequence = null;
+      for (const sample of inProgressCheckpoint.terrainHistory.samples)
+        sample.final = false;
+      const inProgress = projectMapStreamingJourneyFailureEvidence({
+        schema: evidence.schema,
+        operationId: evidence.operationId,
+        failureCode: evidence.failureCode,
+        elapsedMs: evidence.elapsedMs,
+        checkpoint: inProgressCheckpoint,
+        expected: evidence.expected,
+        retirement: evidence.retirement,
+      });
+      assert.deepEqual(
+        projectMapStreamingJourneyFailureEvidence(inProgress),
+        inProgress,
+        'An in-progress history projection is idempotent.',
+      );
+      const malformed = structuredClone(evidence);
+      malformed.checkpointGlobeQueueDiagnostics.terrainHistory.samples[0].sequence = 0;
+      assert.throws(() => projectMapStreamingJourneyFailureEvidence(malformed));
+      const badCounts = structuredClone(evidence);
+      badCounts.checkpointGlobeQueueDiagnostics.terrainHistory.recordedObservationCount += 1;
+      assert.throws(() => projectMapStreamingJourneyFailureEvidence(badCounts));
+      const badFinalMarker = structuredClone(evidence);
+      badFinalMarker.checkpointGlobeQueueDiagnostics.terrainHistory.samples.at(
+        -1,
+      ).final = false;
+      assert.throws(() =>
+        projectMapStreamingJourneyFailureEvidence(badFinalMarker),
+      );
+      const badRowIndex = structuredClone(evidence);
+      badRowIndex.checkpointGlobeQueueDiagnostics.terrainHistory.ancestryRows[1].rowIndex = 0;
+      assert.throws(() =>
+        projectMapStreamingJourneyFailureEvidence(badRowIndex),
+      );
+      const badState = structuredClone(evidence);
+      badState.checkpointGlobeQueueDiagnostics.terrainHistory.ancestryRows[0].terrainState = 99;
+      assert.throws(() => projectMapStreamingJourneyFailureEvidence(badState));
+      const unknownField = structuredClone(evidence);
+      unknownField.checkpointGlobeQueueDiagnostics.terrainHistory.samples[1].ancestryUnsupportedFields =
+        'unknown-private-field';
+      assert.throws(() =>
+        projectMapStreamingJourneyFailureEvidence(unknownField),
+      );
+      const conflict = structuredClone(evidence);
+      conflict.checkpoint.terrainHistory = structuredClone(history);
+      conflict.checkpoint.terrainHistory.phase = 'initial-readiness';
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(conflict),
+        /Duplicate terrain history/,
+      );
+
+      const unavailableQueueConflictCheckpoint = structuredClone(error.actual);
+      const unavailableQueue =
+        unavailableQueueConflictCheckpoint.latestObservation
+          .globeQueueDiagnostics;
+      unavailableQueue.available = false;
+      unavailableQueue.unavailableReason = 'private-queue-fields-unavailable';
+      unavailableQueue.queueCounts = null;
+      unavailableQueue.renderedTileCount = null;
+      unavailableQueue.sampledTiles = [];
+      unavailableQueue.omittedSampledTileCount = null;
+      delete unavailableQueue.terrainAncestry;
+      unavailableQueue.terrainHistory = structuredClone(history);
+      unavailableQueueConflictCheckpoint.terrainHistory =
+        structuredClone(history);
+      unavailableQueueConflictCheckpoint.terrainHistory.phase =
+        'initial-readiness';
+      const unavailableConflict = {
+        ...evidence,
+        checkpoint: unavailableQueueConflictCheckpoint,
+      };
+      delete unavailableConflict.checkpointGlobeQueueDiagnostics;
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(unavailableConflict),
+        /Duplicate terrain history/,
+        'Unavailable queue histories must be compared with checkpoint history.',
+      );
+
+      for (const field of ['observedElapsedMs', 'routeElapsedMs']) {
+        const overElapsedBound = structuredClone(evidence);
+        const samples =
+          overElapsedBound.checkpointGlobeQueueDiagnostics.terrainHistory
+            .samples;
+        for (const sample of samples) sample[field] += 240_001;
+        assert.throws(
+          () => projectMapStreamingJourneyFailureEvidence(overElapsedBound),
+          `${field} must remain within the 240-second history bound.`,
+        );
+      }
+
+      const smokeFailure = new Error('temporal readiness failure');
+      attachMapStreamingJourneyFailureEvidence(smokeFailure, evidence);
+      const report = createCaptureFailureReport({
+        source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+        phase: 'native-map-transition-readiness',
+        error: smokeFailure,
+        errorActual: error.actual,
+        errorExpected: error.expected,
+        workload: smokeFailure.smokeDiagnostics,
+      });
+      const encoded = JSON.stringify(report);
+      assert.ok(Buffer.byteLength(encoded, 'utf8') <= 256 * 1024);
+      const replay = JSON.parse(encoded);
+      const retained =
+        replay.workload.mapStreamingJourneyFailure
+          .checkpointGlobeQueueDiagnostics.terrainHistory;
+      assert.deepEqual(retained, JSON.parse(JSON.stringify(history)));
+      assert.ok(esriRenderCount > 8);
+      return true;
+    },
+  );
+});
+
+test('final actual render inside the cadence interval is retained before readiness timeout', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 500,
+  });
+  const app = harness.context.window.__godsEyeView;
+  const originalRequestRender = app.viewer.scene.requestRender.bind(
+    app.viewer.scene,
+  );
+  let esriRenderCount = 0;
+  app.viewer.scene.requestRender = () => {
+    if (app.mapStackController.getActiveId() !== 'esri-imagery') {
+      originalRequestRender();
+      return;
+    }
+    esriRenderCount += 1;
+    if (esriRenderCount <= 56) originalRequestRender();
+  };
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const history =
+        error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          ?.terrainHistory;
+      assert.ok(history);
+      assert.equal(history.finalized, true);
+      assert.equal(history.finalSequence, history.completedObservationCount);
+      assert.equal(history.samples.length, 8);
+      assert.equal(history.samples.at(-1).observedElapsedMs, 28_000);
+      assert.ok(
+        history.samples.at(-1).observedElapsedMs -
+          history.samples.at(-2).observedElapsedMs <
+          2_000,
+      );
+      assert.equal(harness.listeners.size, 0);
+      assert.equal(harness.frames.size, 0);
+      return true;
+    },
+  );
+});
+
+test('full bounded terrain history survives actual CLI compaction and outer smoke projection', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 2_500,
+  });
+  const app = harness.context.window.__godsEyeView;
+  const surface = app.viewer.scene.globe._surface;
+  const originalRequestRender = app.viewer.scene.requestRender.bind(
+    app.viewer.scene,
+  );
+  let renderCount = 0;
+  app.viewer.scene.requestRender = () => {
+    if (app.mapStackController.getActiveId() === 'esri-imagery') {
+      renderCount += 1;
+      surface._tileLoadQueueHigh = [makeTerrainChain(renderCount)];
+    }
+    originalRequestRender();
+  };
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const evidence = error.mapStreamingJourneyFailure;
+      const history = evidence.checkpointGlobeQueueDiagnostics.terrainHistory;
+      assert.equal(history.samples.length, 8);
+      assert.equal(history.ancestryRows.length, 8 * 24);
+      assert.ok(
+        history.samples.every((sample) => sample.ancestryRowCount === 24),
+      );
+
+      const report = createCaptureFailureReport({
+        source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+        phase: 'native-map-transition-readiness',
+        error,
+        errorActual: error.actual,
+        errorExpected: error.expected,
+        workload: { mapStreamingJourneyFailure: evidence },
+      });
+      const compacted = compactCaptureCliFailure(report);
+      const outerProjection = projectMapStreamingJourneyFailureForSmoke(
+        { captureCliFailure: compacted },
+        { projectMapStreamingJourneyFailureEvidence },
+      );
+      assert.equal(outerProjection.status, undefined);
+      assert.equal(
+        outerProjection.checkpointGlobeQueueDiagnostics.terrainHistory
+          .ancestryRows.length,
+        8 * 24,
+      );
+      const outerFailure = new Error('bounded outer projection');
+      attachMapStreamingJourneyFailureEvidence(outerFailure, outerProjection);
+      const serialized = JSON.stringify(outerFailure.smokeDiagnostics);
+      assert.ok(Buffer.byteLength(serialized, 'utf8') < 256 * 1024);
+      const replay = JSON.parse(serialized);
+      assert.equal(
+        replay.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainHistory.ancestryRows.length,
+        8 * 24,
+      );
+      return true;
+    },
+  );
+});
+
+test('native map readiness timeout with no completed render does not invent queue history', async () => {
+  const harness = createFakePage({ blockFrames: true });
+  harness.context.window.__godsEyeView.viewer.scene.requestRender = () => {};
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const evidence = error.mapStreamingJourneyFailure;
+      assert.equal(evidence.checkpoint.phase, 'initial-readiness');
+      assert.equal(evidence.checkpoint.latestObservation, null);
+      assert.equal(evidence.checkpointGlobeQueueDiagnostics, undefined);
+      assert.equal(evidence.retirement.disposeStatus, 'confirmed');
+      assert.deepEqual(
+        projectMapStreamingJourneyFailureEvidence(evidence),
+        evidence,
       );
       return true;
     },
