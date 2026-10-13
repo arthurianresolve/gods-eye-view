@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   AIRCRAFT_BILLBOARD_AUDIT_SCHEMA,
+  aircraftBillboardFixtureSha256,
+  createAircraftBillboardFixtureDescriptor,
   createAircraftBillboardMutationAudit,
+  withDeterministicAuditReceiptClock,
 } from './aircraftBillboardMutationAudit.mjs';
 
 test('flight and military snapshot producers retain Billboard identity through absence policy', () => {
@@ -16,6 +19,20 @@ test('flight and military snapshot producers retain Billboard identity through a
     assert.match(sourceDigest, /^[a-f0-9]{64}$/);
   assert.match(report.scope, /no-webgl/);
   assert.equal(report.runs.length, 2);
+  assert.equal(report.clock.restoredAfterRun, true);
+  assert.equal(
+    report.clock.receiptClockMs,
+    report.fixture.descriptor.receiptClockMs,
+  );
+  assert.match(report.sourceIdentity.gitHead, /^[a-f0-9]{40}$/);
+  assert.equal(typeof report.sourceIdentity.workingTreeClean, 'boolean');
+  assert.match(report.sourceIdentity.statusSha256, /^[a-f0-9]{64}$/);
+  assert.match(report.lockfileSha256, /^[a-f0-9]{64}$/);
+  assert.match(report.installedCesiumPackageSha256, /^[a-f0-9]{64}$/);
+  assert.equal(
+    report.fixture.sha256,
+    aircraftBillboardFixtureSha256(report.fixture.descriptor),
+  );
 
   for (const run of report.runs) {
     const [
@@ -43,6 +60,10 @@ test('flight and military snapshot producers retain Billboard identity through a
     );
     assert.equal(initial.added, 3);
     assert.equal(initial.collectionLength, 3);
+    assert.deepEqual(
+      initial.observedRecordReceiptTimesMs,
+      Array(3).fill(report.fixture.descriptor.receiptClockMs),
+    );
     assert.equal(repeated.added, 0);
     assert.equal(repeated.removed, 0);
     assert.equal(repeated.identitySha256, initial.identitySha256);
@@ -84,4 +105,75 @@ test('flight and military snapshot producers retain Billboard identity through a
     report.limitations.join(' '),
     /no aircraft before\/after optimization/,
   );
+});
+
+test('complete aircraft fixture descriptor binds every stage and receipt-clock assumption', () => {
+  const descriptor = createAircraftBillboardFixtureDescriptor();
+  const baseline = aircraftBillboardFixtureSha256(descriptor);
+  const altitudeChanged = createAircraftBillboardFixtureDescriptor({
+    altitudeOffsetM: 250,
+  });
+  const completenessChanged = createAircraftBillboardFixtureDescriptor({
+    completeOverrides: { 'partial-absence-retained': true },
+  });
+  const orderChanged = createAircraftBillboardFixtureDescriptor({
+    stageOrder: [...descriptor.stages.map(({ label }) => label)].reverse(),
+  });
+  const clockChanged = createAircraftBillboardFixtureDescriptor({
+    receiptClockMs: descriptor.receiptClockMs + 1,
+  });
+
+  for (const changed of [
+    altitudeChanged,
+    completenessChanged,
+    orderChanged,
+    clockChanged,
+  ])
+    assert.notEqual(aircraftBillboardFixtureSha256(changed), baseline);
+  assert.equal(
+    descriptor.stages[0].snapshot.records.length,
+    3,
+    'the hashed descriptor contains the exact initial producer input',
+  );
+  assert.equal(
+    descriptor.stages[3].snapshot.complete,
+    false,
+    'partial-versus-complete coverage state is part of the descriptor',
+  );
+  assert.equal(descriptor.churnControl.repeatStage, 'equivalent-repeat');
+  assert.equal(
+    descriptor.collaboratorAssumptions.records.completeMissesBeforeRemoval,
+    3,
+  );
+});
+
+test('audit receipt clock instrumentation restores Date.now after success and failure', () => {
+  const originalNow = Date.now;
+  assert.equal(
+    withDeterministicAuditReceiptClock(1234, () => Date.now()),
+    1234,
+  );
+  assert.equal(Date.now, originalNow);
+  assert.throws(
+    () =>
+      withDeterministicAuditReceiptClock(5678, () => {
+        assert.equal(Date.now(), 5678);
+        throw new Error('controlled audit failure');
+      }),
+    /controlled audit failure/,
+  );
+  assert.equal(Date.now, originalNow);
+
+  const invalidDescriptor = {
+    ...createAircraftBillboardFixtureDescriptor(),
+    stages: [],
+  };
+  assert.throws(
+    () =>
+      createAircraftBillboardMutationAudit({
+        fixtureDescriptor: invalidDescriptor,
+      }),
+    /churn-control stages are missing/,
+  );
+  assert.equal(Date.now, originalNow);
 });

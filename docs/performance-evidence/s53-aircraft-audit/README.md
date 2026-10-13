@@ -89,11 +89,17 @@ with a registered producer-path regression in
 [`aircraftBillboardMutationAudit.test.mjs`](../../../scripts/performance/aircraftBillboardMutationAudit.test.mjs).
 Run it with
 `node scripts/performance/aircraftBillboardMutationAudit.mjs`. The report
-binds Cesium 1.138.0, a three-contact fixture digest, and SHA-256 digests for
-the audit implementation plus both snapshot renderers, record stores, and
-record policies. It feeds both real snapshot renderers and record classes,
-backed by real Cesium `BillboardCollection`/`Billboard` objects, with
-deterministic collaborators and no WebGL context.
+binds Cesium 1.138.0, the installed Cesium package and lockfile digests, the
+Git commit plus clean/dirty status digest, and SHA-256 digests for the audit
+implementation plus both snapshot renderers, record stores, and record
+policies. Its fixture digest covers the complete contact fields, exact
+snapshot records and sequence, completeness flags, fixed receipt clock,
+collaborator assumptions and churn-control steps. The real record stores use
+that fixed `Date.now`; the audit restores the original clock in a `finally`
+path and tests both success and failure restoration. It feeds both real
+snapshot renderers and record classes, backed by real Cesium
+`BillboardCollection`/`Billboard` objects, with deterministic collaborators
+and no WebGL context.
 
 On this source, both producers add three billboards initially, preserve all
 three object identities through an equivalent repeat and a changed-position
