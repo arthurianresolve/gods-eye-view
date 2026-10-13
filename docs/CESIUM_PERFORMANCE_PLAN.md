@@ -99,6 +99,13 @@ queue states and finalized partial/error delivery without changing acceptance
 rules. A separate pinned CPU probe reproduces failed child upsampling outside
 the clipped terrain patch; the hosted queue report must still determine whether
 this is the cause of the readiness stall. Neither result completes M3.
+The [run at `1b4c8dab`](performance-evidence/s47-map-streaming/native-38361544218/README.md)
+retains 51 acknowledged requests, complete delivery/owner cleanup and the
+actual pending globe queues. Eight sampled in-route level-17/18 tiles have
+ready imagery but no terrain mesh; their terrain state also permits waiting
+for parent upsampling and is not proof of a worker rejection. Source/bundled
+worker comparison and live ancestor readiness are the next diagnostic boundary.
+Do not substitute the unrelated off-route CPU failures for that missing proof.
 
 Next actions, in dependency order:
 
