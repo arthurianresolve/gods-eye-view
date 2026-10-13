@@ -78,6 +78,15 @@ the next complete suite must include the expanded inventory. The [S32-S46
 checkpoint](IMPLEMENTATION_PLAN_NEXT.md) records this gap separately from the
 unresolved Windows shutdown failure.
 
+[Standard run 38345739954](performance-evidence/windows-recovery-38345739954/README.md)
+now passes all seven selected jobs at QA `ae4de365`, including the expanded
+Node 24/26 test inventory, both production builds, browser journeys and recovery
+on all three operating systems. All five Windows stages preserve settings,
+workspace contents and the saved asset; every browser exits naturally within
+the unchanged close deadline. This passing observation does not resolve the
+earlier intermittent shutdown cause. The unmerged M3 driver is not included,
+and no physical hardware or full map-streaming acceptance is claimed.
+
 ## Earlier integration evidence
 
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer

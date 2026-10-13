@@ -11,11 +11,19 @@ at and after three declared intervals, or five minutes when cadence is unknown.
 Production expiry behavior is unchanged. Earlier full-suite results describe
 their historical test inventory; they do not cover these omitted tests.
 
-Current Windows recovery remains failed at `9dfff5b4`: four attempted persistence
+The earlier Windows recovery remains failed at `9dfff5b4`: four attempted persistence
 stages pass, but upgraded-application shutdown exceeds five seconds and prevents
 the fifth stage. The [preserved report](performance-evidence/windows-recovery-38341548120/README.md)
 records the successful close acknowledgement, remaining process and subsequent
 forced exit. The cause remains unresolved, and QA has not been promoted to dev.
+
+The [subsequent standard run at QA `ae4de365`](performance-evidence/windows-recovery-38345739954/README.md)
+passes all seven selected jobs, including the expanded server test inventory
+under Node 24/26 and real profile recovery on Windows, Linux and macOS. All
+five Windows persistence stages pass with natural browser exit within five
+seconds. This validates that exact run; it neither erases the prior failures
+nor establishes their cause. Final-candidate and physical hardware acceptance
+remain separate requirements.
 
 11 October checkpoint: [current dev `ba7c8738`](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
 passes all seven standard jobs, including full Node 24/26 validation and
