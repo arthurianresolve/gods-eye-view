@@ -55,3 +55,11 @@ build is required for M1.
 uses the actual Cesium parsed content resources and computed transforms. The
 four passing original tests did not cover these requirements. Commit 06f82b08
 is not integrated or accepted; preserve this failure as the correction control.
+
+The [encoded root geometry control](initial-geometry-review-06f82b08.json)
+also exposes degree/radian confusion in initial mesh dimension construction.
+Twenty-four of twenty-five root vertices fall outside their declared region;
+maximum measured height exceeds 21 km. Correction acceptance must evaluate
+every encoded vertex through the actual composed node transform and assert
+its geographic/height bounds, including children. An origin-only transform
+check would miss this defect.
