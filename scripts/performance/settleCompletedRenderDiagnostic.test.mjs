@@ -13,6 +13,7 @@ import {
   holdProviderWarmupBoundary,
   installPhasedMonotonicWallClock,
 } from './productionFlightFixture.mjs';
+import { observeAustinInstallationsReadyForRenderBoundary } from './austinOperatingReadinessHistory.mjs';
 
 class Event {
   handlers = new Set();
@@ -628,6 +629,275 @@ test('host progress preserves an atomic warmup snapshot when its page render tim
     assert.equal(failureRecord.warmupBoundary.runOrdinal, 1);
     assert.equal(observation.cleanup.progressBindingRemoved, true);
     assert.equal(subject.scene.postRender.handlers.size, 0);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('serialized Austin boundary waits for installation readiness and a later render before retirement', async () => {
+  const stats = { loading: true, error: null };
+  const order = [];
+  const subject = viewer({
+    renderLoop: true,
+    onRetirement: () => order.push('retired'),
+  });
+  let renderRequests = 0;
+  subject.scene.requestRender = () => {
+    renderRequests += 1;
+    order.push(`request-${renderRequests}`);
+  };
+  const app = {
+    viewer: subject,
+    dataManager: {
+      layers: new Map([
+        ['military-installations', { module: { getStats: () => stats } }],
+      ]),
+      isEnabled: (id) => id === 'military-installations',
+    },
+  };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  try {
+    const stages = [];
+    const ungatedSubject = viewer({ renderLoop: true });
+    const ungatedApp = {
+      viewer: ungatedSubject,
+      dataManager: {
+        layers: new Map([
+          ['military-installations', { module: { getStats: () => stats } }],
+        ]),
+        isEnabled: () => true,
+      },
+    };
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { __godsEyeView: ungatedApp },
+    });
+    Object.defineProperty(globalThis, '__godsEyeView', {
+      configurable: true,
+      value: ungatedApp,
+    });
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const serializedFunction = new Function(`return (${fn.toString()});`)();
+        return serializedFunction(...JSON.parse(JSON.stringify(args)));
+      },
+    };
+    const ungatedPromise = evaluateCompletedRenderDiagnostic(targetPage, 100, {
+      retireViewerRenderLoop: true,
+    });
+    ungatedSubject.scene.postRender.fire();
+    const ungatedResult = await ungatedPromise;
+    assert.equal(stats.loading, true);
+    assert.equal(ungatedResult.status, 'settled');
+    assert.equal(
+      ungatedResult.diagnostics.renderLoopRetirement.confirmed,
+      true,
+    );
+
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { __godsEyeView: app },
+    });
+    Object.defineProperty(globalThis, '__godsEyeView', {
+      configurable: true,
+      value: app,
+    });
+    globalThis.__test_austin_boundary_progress = (_id, stage) =>
+      stages.push(stage);
+    const resultPromise = evaluateCompletedRenderDiagnostic(targetPage, 200, {
+      progressFunctionName: '__test_austin_boundary_progress',
+      invocationId: 'austin-installation-boundary',
+      retireViewerRenderLoop: true,
+      postRenderConditionFunction:
+        observeAustinInstallationsReadyForRenderBoundary,
+    });
+    await Promise.resolve();
+    const retiredHandler = [...subject.scene.postRender.handlers][0];
+    assert.equal(typeof retiredHandler, 'function');
+    assert.equal(renderRequests, 1);
+    assert.equal(subject.useDefaultRenderLoop, true);
+
+    for (let index = 0; index < 10; index += 1) subject.scene.postRender.fire();
+    assert.equal(renderRequests, 1);
+    assert.equal(subject.useDefaultRenderLoop, true);
+
+    stats.loading = false;
+    subject.scene.postRender.fire();
+    assert.equal(renderRequests, 2);
+    assert.equal(subject.useDefaultRenderLoop, true);
+    assert.deepEqual(order, ['request-1', 'request-2']);
+
+    subject.scene.postRender.fire();
+    const result = await resultPromise;
+    await Promise.resolve();
+    assert.equal(result.status, 'settled');
+    assert.equal(result.diagnostics.postRenderCondition.initialReady, false);
+    assert.equal(result.diagnostics.postRenderCondition.observations, 13);
+    assert.equal(
+      result.diagnostics.postRenderCondition.readyPostRenderCount,
+      2,
+    );
+    assert.equal(
+      result.diagnostics.postRenderCondition.acceptedAfterFollowupRender,
+      true,
+    );
+    assert.equal(
+      result.diagnostics.postRenderCondition.followupRenderRequestCompleted,
+      true,
+    );
+    assert.equal(result.diagnostics.renderLoopRetirement.confirmed, true);
+    assert.deepEqual(order, ['request-1', 'request-2', 'retired']);
+    assert.equal(subject.scene.postRender.handlers.size, 0);
+    assert.equal(stages.filter((stage) => stage === 'post-render').length, 1);
+    assert.ok(stages.length <= 8, stages.join(','));
+
+    retiredHandler();
+    assert.equal(result.diagnostics.postRenderCondition.observations, 13);
+    assert.equal(renderRequests, 2);
+  } finally {
+    delete globalThis.__test_austin_boundary_progress;
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('Austin readiness boundary fails on missing or errored installation state without retiring', async () => {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  try {
+    for (const state of [
+      { entry: null, enabled: true },
+      {
+        entry: {
+          module: { getStats: () => ({ loading: false, error: null }) },
+        },
+        enabled: false,
+      },
+      {
+        entry: { module: { getStats: () => ({ error: null }) } },
+        enabled: true,
+      },
+      {
+        entry: {
+          module: { getStats: () => ({ loading: false, error: 'bad' }) },
+        },
+        enabled: true,
+      },
+    ]) {
+      const subject = viewer({ renderLoop: true });
+      const app = {
+        viewer: subject,
+        dataManager: {
+          layers: new Map(
+            state.entry ? [['military-installations', state.entry]] : [],
+          ),
+          isEnabled: () => state.enabled,
+        },
+      };
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: { __godsEyeView: app },
+      });
+      Object.defineProperty(globalThis, '__godsEyeView', {
+        configurable: true,
+        value: app,
+      });
+      const targetPage = {
+        evaluate: (fn, ...args) => {
+          const serializedFunction = new Function(
+            `return (${fn.toString()});`,
+          )();
+          return serializedFunction(...JSON.parse(JSON.stringify(args)));
+        },
+      };
+      const result = await evaluateCompletedRenderDiagnostic(targetPage, 100, {
+        retireViewerRenderLoop: true,
+        postRenderConditionFunction:
+          observeAustinInstallationsReadyForRenderBoundary,
+      });
+      assert.equal(result.status, 'page-error');
+      assert.match(result.error.message, /Austin installations/);
+      assert.equal(subject.useDefaultRenderLoop, true);
+      assert.equal(subject.scene.postRender.handlers.size, 0);
+      assert.equal(result.diagnostics.cleanup.timerCleared, true);
+      assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+    }
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('Austin readiness timeout stays within page boundary and removes its listener', async () => {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const stats = { loading: true, error: null };
+  const subject = viewer({ requestRender: false, renderLoop: true });
+  const app = {
+    viewer: subject,
+    dataManager: {
+      layers: new Map([
+        ['military-installations', { module: { getStats: () => stats } }],
+      ]),
+      isEnabled: () => true,
+    },
+  };
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: { __godsEyeView: app },
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: app,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const serializedFunction = new Function(`return (${fn.toString()});`)();
+        return serializedFunction(...JSON.parse(JSON.stringify(args)));
+      },
+    };
+    const resultPromise = evaluateCompletedRenderDiagnostic(targetPage, 10, {
+      retireViewerRenderLoop: true,
+      postRenderConditionFunction:
+        observeAustinInstallationsReadyForRenderBoundary,
+    });
+    await Promise.resolve();
+    const lateHandler = [...subject.scene.postRender.handlers][0];
+    assert.equal(typeof lateHandler, 'function');
+    const result = await resultPromise;
+    assert.equal(result.status, 'page-error');
+    assert.equal(result.diagnostics.pageTimerFired, true);
+    assert.equal(result.diagnostics.renderLoopRetirement.confirmed, false);
+    assert.equal(subject.useDefaultRenderLoop, true);
+    assert.equal(subject.scene.postRender.handlers.size, 0);
+    assert.equal(result.diagnostics.cleanup.timerCleared, true);
+    lateHandler();
+    assert.equal(subject.scene.postRender.handlers.size, 0);
+    assert.equal(result.diagnostics.postRenderCondition.observations, 1);
   } finally {
     if (previousWindow)
       Object.defineProperty(globalThis, 'window', previousWindow);
