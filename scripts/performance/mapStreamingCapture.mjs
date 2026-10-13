@@ -13,6 +13,8 @@ import { MAP_FIXTURE_BUILD_PROFILE_ID } from './buildProvenance.mjs';
 const SHA256 = /^[a-f0-9]{64}$/;
 const HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID =
   'austin-map-streaming-synthetic-v1';
+const PREVIOUS_MAP_STREAMING_FAILURE_FIXTURE_ID =
+  'austin-map-streaming-synthetic-v2';
 
 export const MAP_STREAMING_STACK_SEQUENCE = Object.freeze([
   'photoreal',
@@ -1143,7 +1145,10 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
   );
   if (value.fixtureId === MAP_STREAMING_FIXTURE_ID) {
     assert.match(value.manifestSha256, SHA256);
-  } else if (value.fixtureId === HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID) {
+  } else if (
+    value.fixtureId === HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID ||
+    value.fixtureId === PREVIOUS_MAP_STREAMING_FAILURE_FIXTURE_ID
+  ) {
     assert.match(value.manifestSha256, SHA256);
   } else {
     assert.fail('Failure projection requires a known fixture version.');

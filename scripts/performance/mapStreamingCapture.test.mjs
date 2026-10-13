@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import * as Cesium from 'cesium';
 import TweenCollection from '../../node_modules/@cesium/engine/Source/Scene/TweenCollection.js';
@@ -31,6 +32,10 @@ import {
   MAP_FIXTURE_BUILD_PROFILE_ID,
   resolveMapFixtureBuildProfile,
 } from './buildProvenance.mjs';
+
+function digest(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
 
 function routeViewUnion(route) {
   const scene = {
@@ -1073,43 +1078,61 @@ test('strict smoke journey rejection retains bounded observed route and transiti
     projectedHistoricalEnvelope,
     'Historical v1 failure envelopes remain stable after additive projection.',
   );
-  for (const historicalManifestSha256 of [
-    '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
-    '798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4',
+  for (const { fixtureId, manifestSha256 } of [
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v1',
+      manifestSha256:
+        '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
+    },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v1',
+      manifestSha256:
+        '798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4',
+    },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v1',
+      manifestSha256: 'f'.repeat(64),
+    },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v2',
+      manifestSha256:
+        '31f63be4f0d20864e909134f44a319c2af72e2e1f724ab4996bbd8f5a12fae7c',
+    },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v2',
+      manifestSha256: 'e'.repeat(64),
+    },
   ]) {
-    const v1Failure = structuredClone(projectedHistoricalEnvelope);
-    v1Failure.fixtureId = 'austin-map-streaming-synthetic-v1';
-    v1Failure.manifestSha256 = historicalManifestSha256;
-    const projectedV1Failure =
-      projectMapStreamingJourneyValidationFailureEvidence(v1Failure);
-    assert.equal(
-      projectedV1Failure.fixtureId,
-      'austin-map-streaming-synthetic-v1',
-    );
-    assert.equal(projectedV1Failure.manifestSha256, historicalManifestSha256);
-    assert.equal(projectedV1Failure.status, 'failed');
-    assert.equal(projectedV1Failure.performanceAcceptanceEligible, false);
+    const historicalFailure = structuredClone(projectedHistoricalEnvelope);
+    historicalFailure.fixtureId = fixtureId;
+    historicalFailure.manifestSha256 = manifestSha256;
+    const projectedFailure =
+      projectMapStreamingJourneyValidationFailureEvidence(historicalFailure);
+    assert.equal(projectedFailure.fixtureId, fixtureId);
+    assert.equal(projectedFailure.manifestSha256, manifestSha256);
+    assert.equal(projectedFailure.status, 'failed');
+    assert.equal(projectedFailure.performanceAcceptanceEligible, false);
     assert.deepEqual(
-      projectMapStreamingJourneyValidationFailureEvidence(projectedV1Failure),
-      projectedV1Failure,
-      'Known v1 failure evidence preserves its identity through reprojection.',
+      projectMapStreamingJourneyValidationFailureEvidence(projectedFailure),
+      projectedFailure,
+      'Historical failure evidence preserves its supported version and digest.',
     );
-    const v1FailureReport = createCaptureFailureReport({
+    const historicalFailureReport = createCaptureFailureReport({
       source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
-      phase: 'historical-v1-map-journey-validation',
+      phase: 'historical-map-journey-validation',
       error: rejection,
-      workload: { mapStreamingJourneyValidationFailure: v1Failure },
+      workload: { mapStreamingJourneyValidationFailure: historicalFailure },
     });
-    const v1Compacted = compactCaptureCliFailure(v1FailureReport);
-    const v1Outer = projectMapStreamingJourneyValidationFailureForSmoke(
-      { captureCliFailure: v1Compacted },
+    const compacted = compactCaptureCliFailure(historicalFailureReport);
+    const outer = projectMapStreamingJourneyValidationFailureForSmoke(
+      { captureCliFailure: compacted },
       mapStreamingCaptureModule,
     );
-    assert.deepEqual(v1Outer, projectedV1Failure);
+    assert.deepEqual(outer, projectedFailure);
     assert.equal(
-      v1Compacted.rawReport.workload.mapStreamingJourneyValidationFailure
+      compacted.rawReport.workload.mapStreamingJourneyValidationFailure
         .fixtureId,
-      'austin-map-streaming-synthetic-v1',
+      fixtureId,
     );
   }
   const unknownHistoricalFixture = structuredClone(projectedHistoricalEnvelope);
@@ -1134,22 +1157,21 @@ test('strict smoke journey rejection retains bounded observed route and transiti
     /64-character hexadecimal SHA-256/,
     'Known historical IDs still require a well-formed digest.',
   );
-  await assert.rejects(
-    runNativeMapJourneyForSmoke({
-      page: { revision: 'a'.repeat(40) },
-      revision: 'a'.repeat(40),
-      fixture: {
-        ...fixture,
-        id: 'austin-map-streaming-synthetic-v1',
-        manifestSha256:
-          '798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4',
-      },
-      buildProfile: profile,
-      mapStreamingCaptureModule,
-    }),
-    /austin-map-streaming-synthetic-v2/,
-    'The live smoke runner does not accept historical v1 as a passing fixture.',
-  );
+  for (const historicalFixtureId of [
+    'austin-map-streaming-synthetic-v1',
+    'austin-map-streaming-synthetic-v2',
+  ])
+    await assert.rejects(
+      runNativeMapJourneyForSmoke({
+        page: { revision: 'a'.repeat(40) },
+        revision: 'a'.repeat(40),
+        fixture: { ...fixture, id: historicalFixtureId },
+        buildProfile: profile,
+        mapStreamingCaptureModule,
+      }),
+      /austin-map-streaming-synthetic-v3/,
+      `Live smoke rejects historical ${historicalFixtureId} fixtures.`,
+    );
   for (const [field, invalidValue] of [
     ['startupFlightDelayMs', '500'],
     ['startupFlightPreparationElapsedMs', Number.NaN],
@@ -2308,7 +2330,11 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     appOrigin: 'http://127.0.0.1:4173/',
   });
   const key = getMapFixtureBuildProfileGoogleApiKey(profile.id);
-  const requiredAssets = fixture.manifest.assets;
+  const requiredAssets = [
+    ...new Map(
+      fixture.manifest.assets.map((asset) => [asset.kind, asset]),
+    ).values(),
+  ];
   for (const asset of requiredAssets) {
     let url;
     if (asset.path === 'tileset/tileset.json')
@@ -2343,6 +2369,12 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
       method: () => 'GET',
     });
     assert.ok(response, `Native request ${url} resolves to fixture bytes.`);
+    assert.equal(
+      response.body.length,
+      asset.byteLength,
+      `${asset.path} length`,
+    );
+    assert.equal(digest(response.body), asset.sha256, `${asset.path} SHA-256`);
     assert.equal(
       adapter.onFulfilled({
         url,
@@ -2421,10 +2453,7 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     'The actual finalizer projection is the workload shape serialized by capture CLI.',
   );
   assert.equal(report.performanceAcceptanceEligible, false);
-  assert.equal(
-    report.fixtureDelivery.assets.length,
-    fixture.manifest.assets.length,
-  );
+  assert.equal(report.fixtureDelivery.assets.length, requiredAssets.length);
   assert.ok(report.route.elapsedMs >= report.route.durationMs);
 
   const zeroCacheSettings = structuredClone(report);

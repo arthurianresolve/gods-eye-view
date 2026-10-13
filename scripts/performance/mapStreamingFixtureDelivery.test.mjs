@@ -91,71 +91,119 @@ async function issueRequest(delivery, url, method = 'GET') {
 
 test('native map URLs resolve every manifest asset through real interception callbacks', async () => {
   const pinned = await fixture();
-  const delivery = createMapStreamingFixtureDelivery(pinned, {
-    appOrigin: APP_ORIGIN,
+  const requiredKinds = [
+    '3d-tiles-1.1',
+    'textured-glb',
+    'synthetic-google-credit-placeholder-png',
+    'arcgis-mapserver-metadata-json',
+    'arcgis-missing-tile-probe-png',
+    'webmercator-imagery-png',
+    'quantized-mesh-layer-metadata',
+    'quantized-mesh-1.0',
+  ];
+  const requiredRows = requiredKinds.map((kind) => {
+    const row = pinned.manifest.assets.find((asset) => asset.kind === kind);
+    assert.ok(row, `fixture contains required kind ${kind}`);
+    return row;
   });
-  for (const row of pinned.manifest.assets) {
-    const url = nativeUrl(row);
-    const result = await issueRequest(delivery, url);
-    assert.equal(
-      result.command,
-      'Fetch.fulfillRequest',
-      `${row.path} is fulfilled`,
-    );
-    assert.equal(
-      result.acknowledged,
-      true,
-      `${row.path} has an owned acknowledgment`,
-    );
-    assert.equal(
-      Buffer.from(result.params.body, 'base64').length,
-      row.byteLength,
-    );
-    const deliveredBytes = Buffer.from(result.params.body, 'base64');
-    assert.deepEqual(deliveredBytes, pinned.assets.get(row.path));
-    if (row.kind === 'textured-glb' || row.kind === '3d-tiles-1.1')
+  const requiredPaths = new Set(requiredRows.map((row) => row.path));
+  const remainingRows = pinned.manifest.assets.filter(
+    (row) => !requiredPaths.has(row.path),
+  );
+  const firstCohort = [
+    ...requiredRows,
+    ...remainingRows.slice(
+      0,
+      MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT - requiredRows.length,
+    ),
+  ];
+  const secondCohort = [
+    ...requiredRows,
+    ...remainingRows.slice(firstCohort.length - requiredRows.length),
+  ];
+  const observedPaths = new Set();
+  const summaries = [];
+  for (const [cohortIndex, cohort] of [firstCohort, secondCohort].entries()) {
+    const delivery = createMapStreamingFixtureDelivery(pinned, {
+      appOrigin: APP_ORIGIN,
+    });
+    for (const row of cohort) {
+      const url = nativeUrl(row);
+      const result = await issueRequest(delivery, url);
+      assert.equal(
+        result.command,
+        'Fetch.fulfillRequest',
+        `${row.path} is fulfilled`,
+      );
+      assert.equal(
+        result.acknowledged,
+        true,
+        `${row.path} has an owned acknowledgment`,
+      );
+      assert.equal(
+        Buffer.from(result.params.body, 'base64').length,
+        row.byteLength,
+      );
+      const deliveredBytes = Buffer.from(result.params.body, 'base64');
+      assert.deepEqual(deliveredBytes, pinned.assets.get(row.path));
       assert.equal(
         createHash('sha256').update(deliveredBytes).digest('hex'),
         row.sha256,
-        `${row.path} serves the pinned canonical digest`,
+        `${row.path} serves its pinned digest`,
       );
-    assert.equal(result.params.responseCode, 200);
-    const headers = Object.fromEntries(
-      result.params.responseHeaders.map(({ name, value }) => [
-        name.toLowerCase(),
-        value,
-      ]),
+      assert.equal(result.params.responseCode, 200);
+      const headers = Object.fromEntries(
+        result.params.responseHeaders.map(({ name, value }) => [
+          name.toLowerCase(),
+          value,
+        ]),
+      );
+      assert.equal(headers['access-control-allow-origin'], APP_ORIGIN);
+      assert.equal(headers['content-type'], CONTENT_TYPES[row.kind]);
+      observedPaths.add(row.path);
+    }
+    assert.ok(cohort.length <= MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT);
+    const summary = delivery.dispose();
+    summaries.push(summary);
+    assert.equal(
+      validateMapStreamingSmokeDeliverySummary(summary, pinned),
+      true,
     );
-    assert.equal(headers['access-control-allow-origin'], APP_ORIGIN);
-    assert.equal(headers['content-type'], CONTENT_TYPES[row.kind]);
+    assert.equal(summary.cleanupConfirmed, true);
+    assert.equal(summary.requestedCount, cohort.length);
+    assert.equal(summary.fulfilledAckCount, cohort.length);
+    assert.equal(summary.pendingCount, 0);
+    assert.equal(summary.browserDecodeObserved, false);
+    assert.equal(summary.renderedReadinessObserved, false);
+    assert.ok(
+      summary.assets.every((row) => row.fulfilledAckCount === row.requests),
+    );
+    if (cohortIndex === 0) {
+      const corruptedSummary = structuredClone(summary);
+      corruptedSummary.assets[0].sha256 = '0'.repeat(64);
+      assert.throws(
+        () =>
+          validateMapStreamingSmokeDeliverySummary(corruptedSummary, pinned),
+        /strictly equal/,
+      );
+      const legacySummary = structuredClone(summary);
+      delete legacySummary.missingAssetPathEvidence;
+      assert.equal(
+        validateMapStreamingSmokeDeliverySummary(legacySummary, pinned),
+        true,
+      );
+      const missingPathOnSuccess = structuredClone(summary);
+      missingPathOnSuccess.missingAssetPathEvidence.observationCount = 1;
+      assert.throws(() =>
+        validateMapStreamingSmokeDeliverySummary(missingPathOnSuccess, pinned),
+      );
+    }
   }
-  const summary = delivery.dispose();
-  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
-  const corruptedSummary = structuredClone(summary);
-  corruptedSummary.assets[0].sha256 = '0'.repeat(64);
-  assert.throws(
-    () => validateMapStreamingSmokeDeliverySummary(corruptedSummary, pinned),
-    /strictly equal/,
-  );
-  assert.equal(summary.cleanupConfirmed, true);
-  assert.equal(summary.requestedCount, pinned.manifest.assets.length);
-  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
-  assert.equal(summary.pendingCount, 0);
-  assert.equal(summary.browserDecodeObserved, false);
-  assert.equal(summary.renderedReadinessObserved, false);
-  assert.ok(
-    summary.assets.every((row) => row.fulfilledAckCount === row.requests),
-  );
-  const legacySummary = structuredClone(summary);
-  delete legacySummary.missingAssetPathEvidence;
+  assert.equal(observedPaths.size, pinned.manifest.assets.length);
+  assert.equal(summaries.length, 2);
   assert.equal(
-    validateMapStreamingSmokeDeliverySummary(legacySummary, pinned),
-    true,
-  );
-  const missingPathOnSuccess = structuredClone(summary);
-  missingPathOnSuccess.missingAssetPathEvidence.observationCount = 1;
-  assert.throws(() =>
-    validateMapStreamingSmokeDeliverySummary(missingPathOnSuccess, pinned),
+    summaries.reduce((sum, summary) => sum + summary.requestedCount, 0),
+    pinned.manifest.assets.length + requiredRows.length,
   );
 });
 
@@ -312,7 +360,30 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
   const delivery = createMapStreamingFixtureDelivery(pinned, {
     appOrigin: APP_ORIGIN,
   });
-  for (const row of pinned.manifest.assets) {
+  const requiredKinds = [
+    '3d-tiles-1.1',
+    'textured-glb',
+    'synthetic-google-credit-placeholder-png',
+    'arcgis-mapserver-metadata-json',
+    'arcgis-missing-tile-probe-png',
+    'webmercator-imagery-png',
+    'quantized-mesh-layer-metadata',
+    'quantized-mesh-1.0',
+  ];
+  const requiredRows = requiredKinds.map((kind) =>
+    pinned.manifest.assets.find((row) => row.kind === kind),
+  );
+  const requiredPaths = new Set(requiredRows.map((row) => row.path));
+  const acknowledgedRows = [
+    ...requiredRows,
+    ...pinned.manifest.assets
+      .filter((row) => !requiredPaths.has(row.path))
+      .slice(
+        0,
+        MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT - requiredRows.length - 1,
+      ),
+  ];
+  for (const row of acknowledgedRows) {
     const result = await issueRequest(delivery, nativeUrl(row));
     assert.equal(result.acknowledged, true);
   }
@@ -326,8 +397,8 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
   });
   abort.abort();
   const summary = delivery.dispose();
-  assert.equal(summary.requestedCount, pinned.manifest.assets.length + 1);
-  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
+  assert.equal(summary.requestedCount, MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT);
+  assert.equal(summary.fulfilledAckCount, acknowledgedRows.length);
   assert.equal(summary.cancelledCount, 1);
   assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
 
@@ -348,7 +419,19 @@ test('cancelled-only required map kinds do not count as delivered', async () => 
   const delivery = createMapStreamingFixtureDelivery(pinned, {
     appOrigin: APP_ORIGIN,
   });
-  for (const row of pinned.manifest.assets) {
+  const requiredKinds = [
+    '3d-tiles-1.1',
+    'textured-glb',
+    'synthetic-google-credit-placeholder-png',
+    'arcgis-mapserver-metadata-json',
+    'arcgis-missing-tile-probe-png',
+    'webmercator-imagery-png',
+    'quantized-mesh-layer-metadata',
+    'quantized-mesh-1.0',
+  ];
+  for (const kind of requiredKinds) {
+    const row = pinned.manifest.assets.find((asset) => asset.kind === kind);
+    assert.ok(row);
     if (row === cancelledAsset) continue;
     const result = await issueRequest(delivery, nativeUrl(row));
     assert.equal(result.acknowledged, true);
@@ -390,9 +473,6 @@ test('unrelated offline API fulfillments are not counted as native map assets', 
 
 test('native OSM XYZ tiles map to the same hash-bound imagery corpus', async () => {
   const pinned = await fixture();
-  const delivery = createMapStreamingFixtureDelivery(pinned, {
-    appOrigin: APP_ORIGIN,
-  });
   const originalLoadImage = Cesium.ImageryProvider.loadImage;
   const nativeUrls = [];
   Cesium.ImageryProvider.loadImage = (_provider, resource) => {
@@ -418,17 +498,26 @@ test('native OSM XYZ tiles map to the same hash-bound imagery corpus', async () 
     Cesium.ImageryProvider.loadImage = originalLoadImage;
   }
   assert.equal(nativeUrls.length, imageryRows.length);
-  for (let index = 0; index < imageryRows.length; index += 1) {
-    const row = imageryRows[index];
-    const result = await issueRequest(delivery, nativeUrls[index]);
-    assert.equal(result.command, 'Fetch.fulfillRequest');
-    assert.equal(result.acknowledged, true);
-    assert.deepEqual(
-      Buffer.from(result.params.body, 'base64'),
-      pinned.assets.get(row.path),
-    );
+  let acknowledgedCount = 0;
+  for (let offset = 0; offset < imageryRows.length; offset += 512) {
+    const delivery = createMapStreamingFixtureDelivery(pinned, {
+      appOrigin: APP_ORIGIN,
+    });
+    const rows = imageryRows.slice(offset, offset + 512);
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      const result = await issueRequest(delivery, nativeUrls[offset + index]);
+      assert.equal(result.command, 'Fetch.fulfillRequest');
+      assert.equal(result.acknowledged, true);
+      assert.deepEqual(
+        Buffer.from(result.params.body, 'base64'),
+        pinned.assets.get(row.path),
+      );
+      acknowledgedCount += 1;
+    }
+    assert.equal(delivery.dispose().cleanupConfirmed, true);
   }
-  assert.equal(delivery.dispose().cleanupConfirmed, true);
+  assert.equal(acknowledgedCount, imageryRows.length);
 });
 
 test('foreign lookalike hosts are blocked instead of routed as native providers', async () => {

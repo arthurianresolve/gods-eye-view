@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { createHash } from 'node:crypto';
@@ -10,10 +11,46 @@ import {
   loadPinnedMapTilesetAssets,
   MAP_STREAMING_CANONICAL_TILE_ORIGIN,
   MAP_STREAMING_FIXTURE_ID,
+  MAP_STREAMING_MAX_ASSETS,
   MAP_STREAMING_MAX_BYTES,
   validatePinnedMapTileRows,
+  validatePinnedMapImageryTemplateCorpus,
   validateDeterministicMapStreamingFixture,
 } from './mapStreamingFixture.mjs';
+
+const LEGACY_IMAGERY_ROWS_SHA256 =
+  '5e4d6bfc426ff87a860f6f9e3babf15c5ebc81d391da078471d2bc3a0c38d006';
+const IMAGERY_TEMPLATE_INDEX_SHA256 =
+  'd7c9b77091f1ac6daff16542fcd972f95cb47ab6f858e650208d0406b28fa764';
+const IMAGERY_TEMPLATE_CORPUS_SHA256 =
+  'f2de5cbdd02f5dfd91de10bedabf55511aceb81538aa083d9908ea3cd9271025';
+const IMAGERY_PALETTE = [
+  [17, 32, 57],
+  [28, 55, 76],
+  [42, 78, 92],
+  [57, 101, 102],
+  [76, 119, 96],
+  [105, 135, 83],
+  [143, 146, 79],
+  [180, 155, 91],
+  [204, 173, 119],
+  [221, 198, 151],
+  [232, 218, 184],
+  [129, 89, 72],
+  [109, 72, 65],
+  [85, 68, 70],
+  [57, 60, 74],
+  [239, 239, 226],
+];
+
+function seedFromId(id) {
+  let seed = 0x811c9dc5;
+  for (const character of id) {
+    seed ^= character.charCodeAt(0);
+    seed = Math.imul(seed, 0x01000193) >>> 0;
+  }
+  return seed;
+}
 
 function digest(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -223,9 +260,22 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifestSha256, second.manifestSha256);
   assert.deepEqual(first.manifestBytes, second.manifestBytes);
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
-  assert.ok(first.manifest.totalBytes < 2 * 1024 * 1024);
+  assert.ok(first.manifest.totalBytes < 3 * 1024 * 1024);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 72);
+  assert.equal(first.manifest.assetCount, 578);
+  assert.ok(first.manifest.assetCount <= MAP_STREAMING_MAX_ASSETS);
+  const legacyImageryRows = first.manifest.assets
+    .filter(
+      (row) =>
+        row.kind === 'webmercator-imagery-png' && row.identity.level <= 12,
+    )
+    .map(({ path, sha256, byteLength }) => ({ path, sha256, byteLength }));
+  assert.equal(legacyImageryRows.length, 26);
+  assert.equal(
+    digest(Buffer.from(`${JSON.stringify(legacyImageryRows)}\n`)),
+    LEGACY_IMAGERY_ROWS_SHA256,
+    'Existing level 0–12 imagery bytes remain identical to the v2 fixture.',
+  );
   assert.equal(first.manifest.geometry.tilesetNodeCount, 21);
   const terrainBounds = first.manifest.geometry.terrainMeshBoundsDegrees;
   assert.ok(terrainBounds.west <= first.manifest.routeBoundsDegrees.west);
@@ -237,10 +287,9 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
       level,
       tiles.length,
     ]),
-    Array.from({ length: 13 }, (_, level) => [
-      level,
-      level < 9 ? 1 : level === 9 || level === 10 ? 2 : level === 11 ? 4 : 9,
-    ]),
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368].map(
+      (count, level) => [level, count],
+    ),
   );
   assert.deepEqual(
     first.manifest.coverage.terrain.map(({ level, tiles }) => [
@@ -270,9 +319,9 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   const rows = fixture.manifest.assets.filter((row) =>
     ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
   );
-  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v2');
-  assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v2');
-  assert.equal(fixture.manifest.generatorVersion, '2.0.0');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v3');
+  assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v3');
+  assert.equal(fixture.manifest.generatorVersion, '3.0.0');
   assert.equal(
     MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256,
     '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
@@ -285,7 +334,7 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   );
   assert.equal(
     fixture.manifestSha256,
-    '31f63be4f0d20864e909134f44a319c2af72e2e1f724ab4996bbd8f5a12fae7c',
+    'fdd277b9107d59a8efd96a151b5f9770e646bbe6598f73ef862b6c5a50cbd6ac',
   );
   assert.equal(validatePinnedMapTileRows(rows), true);
 
@@ -373,6 +422,189 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   assert.equal(validateDeterministicMapStreamingFixture(fixture), true);
 });
 
+test('pinned high-LOD PNG templates preserve every route pixel and identity', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const templateRoot = new URL(
+    './fixtures/austin-map-streaming-v3/',
+    import.meta.url,
+  );
+  const [indexBytes, corpusBytes] = await Promise.all([
+    readFile(new URL('imagery-png-templates.json', templateRoot)),
+    readFile(new URL('imagery-png-templates.bin', templateRoot)),
+  ]);
+  assert.equal(digest(indexBytes), IMAGERY_TEMPLATE_INDEX_SHA256);
+  assert.equal(digest(corpusBytes), IMAGERY_TEMPLATE_CORPUS_SHA256);
+  const index = JSON.parse(indexBytes.toString('utf8'));
+  const templatesBySeed = validatePinnedMapImageryTemplateCorpus(
+    indexBytes,
+    corpusBytes,
+  );
+  assert.equal(index.seedCount, 232);
+  assert.equal(index.patternCount, 168);
+  assert.equal(templatesBySeed.size, 232);
+  assert.equal(new Set([...templatesBySeed.values()].map(digest)).size, 168);
+  assert.deepEqual(fixture.manifest.imageryTemplateCorpus, {
+    schema: index.schema,
+    version: index.version,
+    indexSha256: IMAGERY_TEMPLATE_INDEX_SHA256,
+    corpusSha256: IMAGERY_TEMPLATE_CORPUS_SHA256,
+    corpusByteLength: corpusBytes.length,
+    seedCount: 232,
+    patternCount: 168,
+    levels: [13, 14, 15],
+    pixelPatternVersion: index.pixelPatternVersion,
+  });
+  const highRows = fixture.manifest.assets.filter(
+    (row) => row.kind === 'webmercator-imagery-png' && row.identity.level >= 13,
+  );
+  assert.deepEqual(
+    [13, 14, 15].map(
+      (level) => highRows.filter((row) => row.identity.level === level).length,
+    ),
+    [30, 108, 368],
+  );
+  assert.equal(highRows.length, 506);
+  for (const row of highRows) {
+    const seed =
+      seedFromId(
+        `imagery/${row.identity.level}/${row.identity.x}/${row.identity.y}`,
+      ) & 0xff;
+    const bytes = templatesBySeed.get(seed);
+    assert.ok(bytes, `${row.path} maps to a pinned seed template`);
+    assert.deepEqual(fixture.assets.get(row.path), bytes);
+    assert.equal(row.byteLength, bytes.length);
+    assert.equal(row.sha256, digest(bytes));
+  }
+
+  for (const template of index.templates) {
+    const pngBytes = corpusBytes.subarray(
+      template.offset,
+      template.offset + template.byteLength,
+    );
+    const { data: decoded, info } = await sharp(pngBytes)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    assert.deepEqual([info.width, info.height, info.channels], [256, 256, 4]);
+    const expected = Buffer.alloc(256 * 256 * 4);
+    for (let y = 0; y < 256; y += 1)
+      for (let x = 0; x < 256; x += 1) {
+        const paletteIndex =
+          (Math.floor((x + y + template.patternId) / 11) +
+            Math.floor(x / 32) * 3 +
+            Math.floor(y / 32) * 5) &
+          0x0f;
+        const color = IMAGERY_PALETTE[paletteIndex];
+        const offset = (y * 256 + x) * 4;
+        expected[offset] = color[0];
+        expected[offset + 1] = color[1];
+        expected[offset + 2] = color[2];
+        expected[offset + 3] = 255;
+      }
+    assert.deepEqual(
+      decoded,
+      expected,
+      `template ${template.patternId} pixels`,
+    );
+  }
+  const patternIdsBySeed = new Map(
+    index.seedMappings.map(({ seed, patternId }) => [seed, patternId]),
+  );
+  assert.equal(patternIdsBySeed.size, 232);
+  for (const [seed, patternId] of patternIdsBySeed) {
+    assert.equal(patternId, seed % 176);
+    assert.equal((seed - patternId) % 176, 0);
+    assert.ok(
+      templatesBySeed.get(seed),
+      `Every original low-byte seed ${seed} maps to its decoded pinned pattern.`,
+    );
+    for (const [x, y] of [
+      [0, 0],
+      [31, 63],
+      [127, 128],
+      [255, 255],
+    ])
+      assert.equal(
+        (Math.floor((x + y + seed) / 11) +
+          Math.floor(x / 32) * 3 +
+          Math.floor(y / 32) * 5) &
+          0x0f,
+        (Math.floor((x + y + patternId) / 11) +
+          Math.floor(x / 32) * 3 +
+          Math.floor(y / 32) * 5) &
+          0x0f,
+        `Seed ${seed} retains its original pixel formula.`,
+      );
+  }
+
+  assert.ok(
+    fixture.manifest.totalBytes +
+      fixture.manifestBytes.length +
+      indexBytes.length +
+      corpusBytes.length <=
+      MAP_STREAMING_MAX_BYTES,
+    'served assets, manifest, and pinned source templates fit within 5 MiB',
+  );
+  assert.throws(
+    () =>
+      validatePinnedMapImageryTemplateCorpus(
+        indexBytes,
+        corpusBytes.subarray(1),
+      ),
+    /identity mismatch/,
+    'truncated template corpus fails closed',
+  );
+  const modifiedCorpus = Buffer.from(corpusBytes);
+  modifiedCorpus[modifiedCorpus.length - 1] ^= 0x01;
+  assert.throws(
+    () => validatePinnedMapImageryTemplateCorpus(indexBytes, modifiedCorpus),
+    /identity mismatch/,
+    'modified template corpus fails closed',
+  );
+  assert.throws(
+    () =>
+      validatePinnedMapImageryTemplateCorpus(
+        Buffer.concat([indexBytes, Buffer.from([0x20])]),
+        corpusBytes,
+      ),
+    /identity mismatch/,
+    'extra index bytes fail closed',
+  );
+
+  const sharedPatternRows = highRows.filter(
+    (row) => row.sha256 === highRows[0].sha256,
+  );
+  assert.ok(sharedPatternRows.length > 1);
+  const firstTileBytes = fixture.assets.get(sharedPatternRows[0].path);
+  const siblingTileBytes = fixture.assets.get(sharedPatternRows[1].path);
+  assert.notStrictEqual(firstTileBytes, siblingTileBytes);
+  firstTileBytes[firstTileBytes.length - 1] ^= 0x01;
+  assert.deepEqual(
+    siblingTileBytes,
+    templatesBySeed.get(
+      seedFromId(
+        `imagery/${sharedPatternRows[1].identity.level}/${sharedPatternRows[1].identity.x}/${sharedPatternRows[1].identity.y}`,
+      ) & 0xff,
+    ),
+    'Mutating one served tile cannot alter a sibling or the cached template authority.',
+  );
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(fixture),
+    /SHA-256 mismatch/,
+    'The validator checks tile bytes against its independent pinned template inventory.',
+  );
+  const subsequentFixture = await createDeterministicMapStreamingFixture();
+  assert.deepEqual(
+    subsequentFixture.assets.get(sharedPatternRows[0].path),
+    templatesBySeed.get(
+      seedFromId(
+        `imagery/${sharedPatternRows[0].identity.level}/${sharedPatternRows[0].identity.x}/${sharedPatternRows[0].identity.y}`,
+      ) & 0xff,
+    ),
+    'A mutable returned fixture cannot poison subsequent materializations.',
+  );
+});
+
 test('map streaming fixture rejects truncated, modified, missing, and unbounded assets', async () => {
   const fixture = await createDeterministicMapStreamingFixture();
   const assetRow = fixture.manifest.assets.find(
@@ -419,6 +651,63 @@ test('map streaming fixture rejects truncated, modified, missing, and unbounded 
     () => validateDeterministicMapStreamingFixture(oversized),
     /byte and asset bounds/,
   );
+  const overAssetLimitRows = Array.from({ length: 641 }, (_, index) => ({
+    path: `overflow/${index}.bin`,
+    kind: 'test-only-overflow',
+    identity: { index },
+    byteLength: 1,
+    sha256: 'a'.repeat(64),
+  }));
+  assert.throws(
+    () =>
+      validateDeterministicMapStreamingFixture({
+        ...fixture,
+        manifest: { ...fixture.manifest, assets: overAssetLimitRows },
+        assets: new Map(
+          overAssetLimitRows.map((row) => [row.path, Buffer.from([0])]),
+        ),
+      }),
+    /asset inventory is invalid/,
+    'The v3 manifest inventory stays within its explicit 640-row cap.',
+  );
+
+  const forgedImagery = {
+    ...fixture,
+    assets: new Map(fixture.assets),
+    manifest: structuredClone(fixture.manifest),
+  };
+  const highRow = forgedImagery.manifest.assets.find(
+    (row) =>
+      row.kind === 'webmercator-imagery-png' && row.identity.level === 15,
+  );
+  const forgedBytes = Buffer.from(forgedImagery.assets.get(highRow.path));
+  forgedBytes[forgedBytes.length - 1] ^= 0x01;
+  forgedImagery.assets.set(highRow.path, forgedBytes);
+  highRow.sha256 = digest(forgedBytes);
+  forgedImagery.manifestBytes = Buffer.from(
+    `${JSON.stringify(forgedImagery.manifest)}\n`,
+  );
+  forgedImagery.manifestSha256 = digest(forgedImagery.manifestBytes);
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(forgedImagery),
+    /high-level imagery inventory/,
+    'A changed high-LOD tile cannot become authoritative by resealing the manifest.',
+  );
+
+  const wrongTemplateDescriptor = {
+    ...fixture,
+    manifest: {
+      ...fixture.manifest,
+      imageryTemplateCorpus: {
+        ...fixture.manifest.imageryTemplateCorpus,
+        corpusSha256: 'f'.repeat(64),
+      },
+    },
+  };
+  assert.throws(
+    () => validateDeterministicMapStreamingFixture(wrongTemplateDescriptor),
+    /imagery template descriptor/,
+  );
 });
 
 test('Cesium terrain and tileset parsers accept the generated local route corpus', async () => {
@@ -432,14 +721,14 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
   await withFixtureServer(fixture, {}, async (baseUrl, server) => {
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: `${baseUrl}imagery/{z}/{x}/{y}.png`,
-      maximumLevel: 12,
+      maximumLevel: 15,
       tileWidth: 256,
       tileHeight: 256,
     });
     assert.equal(imageryProvider.tileWidth, 256);
     assert.equal(imageryProvider.tileHeight, 256);
     assert.equal(imageryProvider.minimumLevel, 0);
-    assert.equal(imageryProvider.maximumLevel, 12);
+    assert.equal(imageryProvider.maximumLevel, 15);
     const arcgisMetadataRow = fixture.manifest.assets.find(
       (row) => row.kind === 'arcgis-mapserver-metadata-json',
     );
@@ -467,7 +756,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       assert.equal(arcgisProvider.usingPrecachedTiles, true);
       assert.equal(arcgisProvider.tileWidth, 256);
       assert.equal(arcgisProvider.tileHeight, 256);
-      assert.equal(arcgisProvider.maximumLevel, 12);
+      assert.equal(arcgisProvider.maximumLevel, 15);
       assert.ok(
         arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
       );

@@ -1,12 +1,35 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 
-export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v2';
-export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v2';
-export const MAP_STREAMING_GENERATOR_VERSION = '2.0.0';
+export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v3';
+export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v3';
+export const MAP_STREAMING_GENERATOR_VERSION = '3.0.0';
 export const MAP_STREAMING_MAX_BYTES = 5 * 1024 * 1024;
+export const MAP_STREAMING_MAX_ASSETS = 640;
+
+const IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH = 28_370;
+const IMAGERY_TEMPLATE_INDEX_SHA256 =
+  'd7c9b77091f1ac6daff16542fcd972f95cb47ab6f858e650208d0406b28fa764';
+const IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH = 225_583;
+const IMAGERY_TEMPLATE_CORPUS_SHA256 =
+  'f2de5cbdd02f5dfd91de10bedabf55511aceb81538aa083d9908ea3cd9271025';
+const IMAGERY_TEMPLATE_SEED_COUNT = 232;
+const IMAGERY_TEMPLATE_PATTERN_COUNT = 168;
+const IMAGERY_TEMPLATE_PERIOD = 176;
+const IMAGERY_TEMPLATE_DESCRIPTOR = Object.freeze({
+  schema: 'gev-map-png-template-index/v1',
+  version: 'austin-map-high-imagery-templates-v1',
+  indexSha256: IMAGERY_TEMPLATE_INDEX_SHA256,
+  corpusSha256: IMAGERY_TEMPLATE_CORPUS_SHA256,
+  corpusByteLength: IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH,
+  seedCount: IMAGERY_TEMPLATE_SEED_COUNT,
+  patternCount: IMAGERY_TEMPLATE_PATTERN_COUNT,
+  levels: Object.freeze([13, 14, 15]),
+  pixelPatternVersion: 'contour-period-176-v1',
+});
 
 export const MAP_STREAMING_CANONICAL_TILE_ORIGIN = Object.freeze({
   sourceRevision: '7fbbf1fa56fe3d9c746827be0b501b7b31cfb87e',
@@ -257,7 +280,7 @@ const ROUTE = Object.freeze({
   north: 30.34,
 });
 const IMAGERY_LEVELS = Object.freeze(
-  Array.from({ length: 13 }, (_, level) => level),
+  Array.from({ length: 16 }, (_, level) => level),
 );
 const TERRAIN_LEVELS = Object.freeze(
   Array.from({ length: 11 }, (_, level) => level),
@@ -381,6 +404,174 @@ function seedFromId(id) {
     seed = Math.imul(seed, 0x01000193) >>> 0;
   }
   return seed;
+}
+
+function requiredHighImagerySeeds() {
+  const seeds = new Set();
+  for (const level of [13, 14, 15])
+    for (const tile of tileCoordinates(
+      new Cesium.WebMercatorTilingScheme(),
+      ROUTE,
+      level,
+    ))
+      seeds.add(seedFromId(`imagery/${level}/${tile.x}/${tile.y}`) & 0xff);
+  return [...seeds].sort((left, right) => left - right);
+}
+
+/** Validate immutable pre-encoded PNG templates used for native high LODs. */
+export function validatePinnedMapImageryTemplateCorpus(
+  indexBytes,
+  corpusBytes,
+) {
+  if (
+    !Buffer.isBuffer(indexBytes) ||
+    indexBytes.length !== IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH ||
+    sha256(indexBytes) !== IMAGERY_TEMPLATE_INDEX_SHA256 ||
+    !Buffer.isBuffer(corpusBytes) ||
+    corpusBytes.length !== IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH ||
+    sha256(corpusBytes) !== IMAGERY_TEMPLATE_CORPUS_SHA256
+  )
+    throw new Error(
+      'Pinned map imagery template index or corpus identity mismatch.',
+    );
+
+  let index;
+  try {
+    index = JSON.parse(indexBytes.toString('utf8'));
+  } catch {
+    throw new TypeError('Pinned map imagery template index is malformed.');
+  }
+  if (
+    !stableJson(index).equals(indexBytes) ||
+    index.schema !== 'gev-map-png-template-index/v1' ||
+    index.version !== 'austin-map-high-imagery-templates-v1' ||
+    !stableJson(index.routeBoundsDegrees).equals(stableJson(ROUTE)) ||
+    !stableJson(index.levels).equals(stableJson([13, 14, 15])) ||
+    index.width !== 256 ||
+    index.height !== 256 ||
+    index.bitDepth !== 8 ||
+    index.colorType !== 3 ||
+    index.filter !== 0 ||
+    index.paletteSha256 !== sha256(Buffer.from(PALETTE.flat())) ||
+    index.pixelPatternVersion !== 'contour-period-176-v1' ||
+    index.encoding !== 'indexed-png; pinned pre-encoded deflate bytes' ||
+    index.corpusByteLength !== corpusBytes.length ||
+    index.corpusSha256 !== IMAGERY_TEMPLATE_CORPUS_SHA256 ||
+    index.seedCount !== IMAGERY_TEMPLATE_SEED_COUNT ||
+    index.patternCount !== IMAGERY_TEMPLATE_PATTERN_COUNT ||
+    !Array.isArray(index.seedMappings) ||
+    index.seedMappings.length !== IMAGERY_TEMPLATE_SEED_COUNT ||
+    !Array.isArray(index.templates) ||
+    index.templates.length !== IMAGERY_TEMPLATE_PATTERN_COUNT
+  )
+    throw new Error('Pinned map imagery template index metadata is invalid.');
+
+  const requiredSeeds = requiredHighImagerySeeds();
+  const expectedPatterns = [
+    ...new Set(requiredSeeds.map((seed) => seed % IMAGERY_TEMPLATE_PERIOD)),
+  ].sort((left, right) => left - right);
+  if (
+    requiredSeeds.length !== IMAGERY_TEMPLATE_SEED_COUNT ||
+    expectedPatterns.length !== IMAGERY_TEMPLATE_PATTERN_COUNT
+  )
+    throw new Error('Pinned high-level imagery seed inventory changed.');
+
+  const seedMappings = new Map();
+  for (
+    let indexInRows = 0;
+    indexInRows < requiredSeeds.length;
+    indexInRows += 1
+  ) {
+    const row = index.seedMappings[indexInRows];
+    if (
+      !row ||
+      Object.keys(row).sort().join(',') !== 'patternId,seed' ||
+      row.seed !== requiredSeeds[indexInRows] ||
+      row.patternId !== row.seed % IMAGERY_TEMPLATE_PERIOD ||
+      seedMappings.has(row.seed)
+    )
+      throw new Error('Pinned map imagery seed mapping is invalid.');
+    seedMappings.set(row.seed, row.patternId);
+  }
+
+  const templates = new Map();
+  const digests = new Set();
+  let expectedOffset = 0;
+  for (let rowIndex = 0; rowIndex < expectedPatterns.length; rowIndex += 1) {
+    const row = index.templates[rowIndex];
+    if (
+      !row ||
+      Object.keys(row).sort().join(',') !==
+        'byteLength,offset,patternId,sha256' ||
+      row.patternId !== expectedPatterns[rowIndex] ||
+      !Number.isSafeInteger(row.offset) ||
+      row.offset !== expectedOffset ||
+      !Number.isSafeInteger(row.byteLength) ||
+      row.byteLength < 1 ||
+      row.byteLength > 2_048 ||
+      !/^[a-f0-9]{64}$/.test(row.sha256) ||
+      digests.has(row.sha256)
+    )
+      throw new Error(
+        'Pinned map imagery template range or identity is invalid.',
+      );
+    const endOffset = row.offset + row.byteLength;
+    if (endOffset > corpusBytes.length)
+      throw new Error('Pinned map imagery template range exceeds its corpus.');
+    const pngBytes = corpusBytes.subarray(row.offset, endOffset);
+    if (
+      sha256(pngBytes) !== row.sha256 ||
+      !pngBytes
+        .subarray(0, 8)
+        .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ||
+      pngBytes.readUInt32BE(16) !== 256 ||
+      pngBytes.readUInt32BE(20) !== 256 ||
+      pngBytes[24] !== 8 ||
+      pngBytes[25] !== 3
+    )
+      throw new Error('Pinned map imagery PNG template bytes are invalid.');
+    expectedOffset = endOffset;
+    digests.add(row.sha256);
+    templates.set(row.patternId, pngBytes);
+  }
+  if (expectedOffset !== corpusBytes.length)
+    throw new Error('Pinned map imagery template corpus has trailing bytes.');
+  const bySeed = new Map();
+  for (const [seed, patternId] of seedMappings)
+    bySeed.set(seed, templates.get(patternId));
+  return bySeed;
+}
+
+let cachedPinnedImageryTemplates;
+
+function loadPinnedMapImageryTemplatesSync() {
+  if (cachedPinnedImageryTemplates) return cachedPinnedImageryTemplates;
+  const base = new URL('./fixtures/austin-map-streaming-v3/', import.meta.url);
+  const indexBytes = readFileSync(
+    fileURLToPath(new URL('imagery-png-templates.json', base)),
+  );
+  const corpusBytes = readFileSync(
+    fileURLToPath(new URL('imagery-png-templates.bin', base)),
+  );
+  cachedPinnedImageryTemplates = validatePinnedMapImageryTemplateCorpus(
+    indexBytes,
+    corpusBytes,
+  );
+  return cachedPinnedImageryTemplates;
+}
+
+async function loadPinnedMapImageryTemplates() {
+  if (cachedPinnedImageryTemplates) return cachedPinnedImageryTemplates;
+  const base = new URL('./fixtures/austin-map-streaming-v3/', import.meta.url);
+  const [indexBytes, corpusBytes] = await Promise.all([
+    readFile(new URL('imagery-png-templates.json', base)),
+    readFile(new URL('imagery-png-templates.bin', base)),
+  ]);
+  cachedPinnedImageryTemplates = validatePinnedMapImageryTemplateCorpus(
+    indexBytes,
+    corpusBytes,
+  );
+  return cachedPinnedImageryTemplates;
 }
 
 function tileCoordinates(scheme, bounds, level) {
@@ -1050,7 +1241,10 @@ function addAsset(assets, path, kind, bytes, identity) {
 export async function createDeterministicMapStreamingFixture() {
   const assets = new Map();
   const assetRows = [];
-  const pinnedTiles = await loadPinnedMapTilesetAssets();
+  const [pinnedTiles, imageryTemplates] = await Promise.all([
+    loadPinnedMapTilesetAssets(),
+    loadPinnedMapImageryTemplates(),
+  ]);
   const imageryScheme = new Cesium.WebMercatorTilingScheme();
   const terrainScheme = new Cesium.GeographicTilingScheme({
     ellipsoid: Cesium.Ellipsoid.WGS84,
@@ -1060,15 +1254,22 @@ export async function createDeterministicMapStreamingFixture() {
     for (const tile of tiles) {
       const id = `imagery/${tile.level}/${tile.x}/${tile.y}`;
       const seed = seedFromId(id);
-      const bytes = deterministicPng({
-        width: 256,
-        height: 256,
-        seed,
-        pixel(x, y, tileSeed) {
-          const contour = Math.floor((x + y + (tileSeed & 0xff)) / 11);
-          return contour + Math.floor(x / 32) * 3 + Math.floor(y / 32) * 5;
-        },
-      });
+      const bytes =
+        tile.level >= 13
+          ? Buffer.from(imageryTemplates.get(seed & 0xff) ?? [])
+          : deterministicPng({
+              width: 256,
+              height: 256,
+              seed,
+              pixel(x, y, tileSeed) {
+                const contour = Math.floor((x + y + (tileSeed & 0xff)) / 11);
+                return (
+                  contour + Math.floor(x / 32) * 3 + Math.floor(y / 32) * 5
+                );
+              },
+            });
+      if (!bytes || bytes.length === 0)
+        throw new Error(`Pinned high-level imagery pattern is missing: ${id}`);
       assetRows.push(
         addAsset(assets, `${id}.png`, 'webmercator-imagery-png', bytes, tile),
       );
@@ -1354,6 +1555,7 @@ export async function createDeterministicMapStreamingFixture() {
       ),
     },
     routeBoundsDegrees: ROUTE,
+    imageryTemplateCorpus: IMAGERY_TEMPLATE_DESCRIPTOR,
     geometry: {
       terrainFormat: 'quantized-mesh-1.0',
       terrainTilingScheme: 'EPSG:4326 geographic with Cesium TMS URL y',
@@ -1411,7 +1613,7 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     fixture.manifest?.scope !==
       'deterministic synthetic Austin route fixture; no live provider or credential inputs' ||
     !Array.isArray(fixture.manifest.assets) ||
-    fixture.manifest.assets.length > 128 ||
+    fixture.manifest.assets.length > MAP_STREAMING_MAX_ASSETS ||
     !(fixture.assets instanceof Map) ||
     fixture.assets.size !== fixture.manifest.assets.length
   )
@@ -1447,6 +1649,75 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     )
   )
     throw new Error('Map streaming canonical tile descriptor is invalid.');
+  if (
+    !stableJson(fixture.manifest.imageryTemplateCorpus).equals(
+      stableJson(IMAGERY_TEMPLATE_DESCRIPTOR),
+    )
+  )
+    throw new Error('Map streaming imagery template descriptor is invalid.');
+  if (
+    !stableJson(fixture.manifest.routeBoundsDegrees).equals(
+      stableJson(ROUTE),
+    ) ||
+    !stableJson(fixture.manifest.geometry?.imageryLevels).equals(
+      stableJson(IMAGERY_LEVELS),
+    ) ||
+    fixture.manifest.geometry?.imageryFormat !== 'PNG indexed-color 256x256' ||
+    fixture.manifest.geometry?.imageryTilingScheme !== 'WebMercator XYZ'
+  )
+    throw new Error('Map streaming imagery route or geometry is invalid.');
+  const expectedImageryCoverage = IMAGERY_LEVELS.map((level) => ({
+    level,
+    tiles: tileCoordinates(new Cesium.WebMercatorTilingScheme(), ROUTE, level),
+  }));
+  if (
+    !stableJson(fixture.manifest.coverage?.imagery).equals(
+      stableJson(expectedImageryCoverage),
+    )
+  )
+    throw new Error('Map streaming imagery route coverage is invalid.');
+  const pinnedImagery = loadPinnedMapImageryTemplatesSync();
+  const expectedHighImagery = [];
+  for (const level of [13, 14, 15])
+    for (const tile of tileCoordinates(
+      new Cesium.WebMercatorTilingScheme(),
+      ROUTE,
+      level,
+    )) {
+      const path = `imagery/${level}/${tile.x}/${tile.y}.png`;
+      const bytes = pinnedImagery.get(
+        seedFromId(`imagery/${level}/${tile.x}/${tile.y}`) & 0xff,
+      );
+      if (!bytes)
+        throw new Error(`Pinned imagery template is missing for ${path}.`);
+      expectedHighImagery.push({
+        path,
+        kind: 'webmercator-imagery-png',
+        identity: tile,
+        byteLength: bytes.length,
+        sha256: sha256(bytes),
+      });
+    }
+  const actualHighImagery = fixture.manifest.assets
+    .filter(
+      (row) =>
+        row.kind === 'webmercator-imagery-png' && row.identity?.level >= 13,
+    )
+    .map(({ path, kind, identity, byteLength, sha256: digestValue }) => ({
+      path,
+      kind,
+      identity,
+      byteLength,
+      sha256: digestValue,
+    }))
+    .sort((left, right) =>
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+    );
+  expectedHighImagery.sort((left, right) =>
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+  );
+  if (!stableJson(actualHighImagery).equals(stableJson(expectedHighImagery)))
+    throw new Error('Map streaming high-level imagery inventory is invalid.');
   if (
     !Number.isSafeInteger(fixture.manifest.totalBytes) ||
     fixture.manifest.totalBytes < 1 ||

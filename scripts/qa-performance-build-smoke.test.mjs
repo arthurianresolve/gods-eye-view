@@ -118,7 +118,11 @@ function nativeMapSmokeAssetUrl(row) {
 }
 
 async function acknowledgeNativeMapSmokeFixture(delivery, fixture) {
-  for (const asset of fixture.manifest.assets) {
+  const assetsByKind = new Map();
+  for (const asset of fixture.manifest.assets)
+    if (!assetsByKind.has(asset.kind)) assetsByKind.set(asset.kind, asset);
+  const assets = [...assetsByKind.values()];
+  for (const asset of assets) {
     const url = nativeMapSmokeAssetUrl(asset);
     const response = await delivery.respond(new URL(url), {
       url: () => url,
@@ -135,6 +139,7 @@ async function acknowledgeNativeMapSmokeFixture(delivery, fixture) {
       true,
     );
   }
+  return assets.length;
 }
 function producerFixtureClock(fixedTime) {
   let time = 0;
@@ -938,7 +943,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
   );
 
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v2',
+    id: 'austin-map-streaming-synthetic-v3',
     manifestSha256: 'a'.repeat(64),
   };
   const buildProfile = {
@@ -1266,7 +1271,10 @@ test('baseline and candidate map orchestration finalize delivery after target re
     const delivery = createMapStreamingFixtureDelivery(fixture, {
       appOrigin: MAP_SMOKE_APP_ORIGIN,
     });
-    await acknowledgeNativeMapSmokeFixture(delivery, fixture);
+    const acknowledgedAssetCount = await acknowledgeNativeMapSmokeFixture(
+      delivery,
+      fixture,
+    );
 
     const client = new EventEmitter();
     let resolveFulfill;
@@ -1361,7 +1369,7 @@ test('baseline and candidate map orchestration finalize delivery after target re
     ]);
     assert.equal(
       finalized.deliveryEvidence.fulfilledAckCount,
-      fixture.manifest.assets.length,
+      acknowledgedAssetCount,
     );
     assert.equal(finalized.deliveryEvidence.cleanupConfirmed, true);
     const failedSmoke = new Error('controlled post-journey failure');
@@ -1379,7 +1387,7 @@ test('baseline and candidate map orchestration finalize delivery after target re
     );
     assert.equal(
       serializedFailure.mapStreamingFixtureSetup.delivery.fulfilledAckCount,
-      fixture.manifest.assets.length,
+      acknowledgedAssetCount,
     );
     assert.equal(
       serializedFailure.mapStreamingFixtureSetup.delivery.cleanupConfirmed,
