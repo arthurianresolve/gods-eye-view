@@ -1,0 +1,1031 @@
+{
+  "schema": "gev-application-render-demand-diagnostic/v1",
+  "status": "passed",
+  "scope": "full application with enabled-empty civil and military source layers and fixture-blocked OSM content; diagnostic, not content or hardware qualification",
+  "fixture": {
+    "profileId": "empty-sources-austin-manual-osm-v2",
+    "profileSha256": "ffdc7747e400e18bf6e44df33eb6ee329773b64d5b3730daaf5fd933ead74d48",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "wallElapsedAtObservationMs": 29991,
+    "flightsId": "opensky-dense-investigation-v1",
+    "flightsSha256": "1abd6482cc12eb7bfa25b08c73d3a07f4a88e5e84b3882bfaea6341ab3bd2e5f",
+    "flightsBytes": 31,
+    "militaryId": "readsb-empty-render-demand-v1",
+    "militarySha256": "51bbff9bf5050e52eacfefd729da0d098f7eb7641377a8a7932a905f32529da9",
+    "militaryBytes": 26,
+    "populations": {
+      "flights": 0,
+      "military": 0
+    }
+  },
+  "delivery": {
+    "routeAttempts": {
+      "flights": 2,
+      "military": 3
+    },
+    "acknowledged": {
+      "flights": 2,
+      "military": 3
+    }
+  },
+  "otherApiPaths": [],
+  "expectedBootstrapApiCount": 1,
+  "expectedRenderDemandApiCount": 6,
+  "expectedBlockedStaticFontCount": 2,
+  "expectedBlockedMapProviderCount": 185,
+  "unexpectedApiCount": 0,
+  "unexpectedExternalCount": 0,
+  "otherApiPathOverflow": false,
+  "invalidFixtureRouteCount": 0,
+  "networkProbe": {
+    "status": "passed",
+    "interceptedWorkerRequests": 3
+  },
+  "foreground": {
+    "durationMs": 10000.199999999953,
+    "before": {
+      "visibilityState": "visible",
+      "focused": true,
+      "frameNumber": 49
+    },
+    "after": {
+      "visibilityState": "visible",
+      "focused": true,
+      "frameNumber": 50
+    },
+    "completedPostRenderCount": 1,
+    "eventOverflow": false,
+    "foregroundUninterrupted": true,
+    "events": [],
+    "mapProviderTraffic": {
+      "observedBefore": 185,
+      "observedAfter": 185,
+      "interceptedBefore": 185,
+      "interceptedAfter": 185,
+      "pendingAfter": 0,
+      "trackingOverflow": false,
+      "stable": true
+    }
+  },
+  "foregroundFrameMaximum": 2,
+  "mapDemand": {
+    "settled": true,
+    "contentReadiness": "blocked-by-fixture",
+    "meaning": "no queued globe tile work; tilesLoaded state and queue counts stable across consecutive samples",
+    "globeTilesLoaded": true,
+    "settledGlobeTilesLoaded": true,
+    "pendingTileQueueCount": 0,
+    "settledPendingTileQueueCount": 0,
+    "tileQueueStableSamples": 4,
+    "providerRequestsBefore": 185,
+    "providerRequestsAfter": 185,
+    "interceptedProviderRequests": 185,
+    "pendingProviderRequests": 0,
+    "requestTrackingOverflow": false
+  },
+  "statsStability": {
+    "stableHealthAndPopulation": true,
+    "receiptTimestampsValid": true,
+    "receiptTimestamps": {
+      "flights": {
+        "startMs": 1791460800000,
+        "endMs": 1791460800000,
+        "deltaMs": 0,
+        "valid": true
+      },
+      "military": {
+        "startMs": 1791460821358,
+        "endMs": 1791460836350,
+        "deltaMs": 14992,
+        "valid": true
+      }
+    }
+  },
+  "visibilityControl": {
+    "mode": "simulated-document-hidden-property",
+    "loopStopped": true,
+    "resumedFrame": 51,
+    "resumedFrameAfterPrior": true
+  },
+  "teardown": {
+    "status": "destroyed",
+    "viewerDestroyed": true,
+    "layers": 0,
+    "productionHandlesRemoved": true,
+    "testAliasRemoved": true,
+    "resourcesBefore": {
+      "postRenderListeners": 7,
+      "primitives": 5,
+      "imageryLayers": 1,
+      "viewerCanvasPresent": true,
+      "worldOverlayCanvasPresent": true,
+      "hostCctvMarkupMatches": true,
+      "canvasInventory": {
+        "count": 8,
+        "truncated": false,
+        "entries": [
+          {
+            "role": "viewer-scene",
+            "width": 1440,
+            "height": 1000,
+            "hidden": false
+          },
+          {
+            "role": "other",
+            "width": 300,
+            "height": 150,
+            "hidden": false
+          },
+          {
+            "role": "other",
+            "width": 300,
+            "height": 150,
+            "hidden": false
+          },
+          {
+            "role": "other",
+            "width": 1440,
+            "height": 1000,
+            "hidden": false
+          },
+          {
+            "role": "other",
+            "width": 300,
+            "height": 150,
+            "hidden": false
+          },
+          {
+            "role": "world-overlay-host",
+            "width": 1440,
+            "height": 1000,
+            "hidden": false
+          },
+          {
+            "role": "cctv-template-host",
+            "width": 300,
+            "height": 150,
+            "hidden": true
+          },
+          {
+            "role": "other",
+            "width": 300,
+            "height": 150,
+            "hidden": false
+          }
+        ]
+      }
+    },
+    "resourcesAfter": {
+      "canvasInventory": {
+        "count": 1,
+        "truncated": false,
+        "entries": [
+          {
+            "role": "cctv-template-host",
+            "width": 300,
+            "height": 150,
+            "hidden": true
+          }
+        ]
+      },
+      "viewerCanvasRemoved": true,
+      "worldOverlayCanvasRemoved": true,
+      "hostCctvMarkupMatches": true,
+      "hostCctvReferenceRetained": true,
+      "hostCctvDimensionsUnchanged": true,
+      "onlyHostCctvCanvasRemains": true,
+      "credits": 0,
+      "dataLayers": 0,
+      "postRenderListeners": 0
+    },
+    "governor": {
+      "installed": false,
+      "mode": "idle",
+      "holds": [],
+      "recentRequests": [],
+      "scheduledUpdates": []
+    },
+    "applicationRenderOwnersReleased": true,
+    "teardownErrors": 0,
+    "interceptionRelease": {
+      "schema": "gev-fixture-interception-drain/v1",
+      "confirmed": true,
+      "listenerRemovalConfirmed": true,
+      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+      "listenerRemovalErrorKind": null,
+      "pendingAtStop": 0,
+      "pendingPreparationAtStop": 0,
+      "pendingAbortSubscriptionsAtStop": 0,
+      "pendingCommandsAtStop": 0,
+      "pendingCommandsAfterDrain": 0,
+      "pendingPreparationsAfterDrain": 0,
+      "pendingAbortSubscriptionsAfterDrain": 0,
+      "rejectedDrainOperations": 0,
+      "drainCommandFailures": 0,
+      "cancelledPreparationCount": 0,
+      "unexpectedLateRequestCount": 0
+    }
+  },
+  "pageErrors": [],
+  "start": {
+    "applicationStatus": "ready",
+    "source": {
+      "appCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+      "expectedCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+      "matchesHarnessHead": true
+    },
+    "browser": {
+      "family": "chromium",
+      "version": "152.0.0.0",
+      "rendererClass": "swiftshader",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    "fixtureEpochMs": 1791460829991,
+    "camera": {
+      "latitude": 30.267199999999992,
+      "longitude": -97.74309999999998,
+      "altitudeMeters": 799.999999999007,
+      "headingDegrees": 15,
+      "pitchDegrees": -30,
+      "rollDegrees": 0
+    },
+    "visibilityState": "visible",
+    "focused": true,
+    "frameNumber": 49,
+    "stats": {
+      "flights": {
+        "enabled": true,
+        "lifecycleState": "enabled",
+        "lifecycleUncertain": false,
+        "count": 0,
+        "lastUpdate": 1791460800000,
+        "stale": false,
+        "error": null,
+        "status": 200,
+        "retryInSec": 0,
+        "source": "fixture-opensky-v1",
+        "coverage": "fixed deterministic Austin test grid"
+      },
+      "military": {
+        "enabled": true,
+        "lifecycleState": "enabled",
+        "lifecycleUncertain": false,
+        "count": 0,
+        "lastUpdate": 1791460821358,
+        "stale": false,
+        "error": null,
+        "status": 200,
+        "retryInSec": 0,
+        "source": "fixture-readsb-v1",
+        "fallback": false
+      }
+    },
+    "map": {
+      "status": "ready",
+      "activeId": "osm"
+    },
+    "mapDemand": {
+      "globeTilesLoaded": true,
+      "tileQueues": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "tileQueueCount": 0
+    },
+    "enabledLayerIds": [
+      "flights",
+      "military"
+    ],
+    "settings": {
+      "msaaSamples": 4,
+      "preserveDrawingBuffer": true,
+      "antialias": true,
+      "fxaaEnabled": false,
+      "resolutionScale": 1,
+      "canvasWidth": 1440,
+      "canvasHeight": 1000,
+      "bloomIntensity": 50,
+      "bloomEnabled": false,
+      "bloomVersion": 2,
+      "sharpenIntensity": 49,
+      "sharpenEnabled": false,
+      "style": "normal",
+      "hudVisible": false,
+      "hudVariant": "tactical",
+      "detectionMode": "OFF",
+      "allocation": "ELASTIC",
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "visualDensityPct": 75
+    },
+    "governor": {
+      "installed": true,
+      "mode": "idle",
+      "holds": [],
+      "recentRequests": [
+        {
+          "reason": "visibility-restore",
+          "at": 1791460808470
+        },
+        {
+          "reason": "layer-tick:military",
+          "at": 1791460821358
+        }
+      ],
+      "scheduledUpdates": []
+    }
+  },
+  "end": {
+    "applicationStatus": "ready",
+    "source": {
+      "appCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+      "expectedCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+      "matchesHarnessHead": true
+    },
+    "browser": {
+      "family": "chromium",
+      "version": "152.0.0.0",
+      "rendererClass": "swiftshader",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    "fixtureEpochMs": 1791460840022,
+    "camera": {
+      "latitude": 30.267199999999992,
+      "longitude": -97.74309999999998,
+      "altitudeMeters": 799.999999999007,
+      "headingDegrees": 15,
+      "pitchDegrees": -30,
+      "rollDegrees": 0
+    },
+    "visibilityState": "visible",
+    "focused": true,
+    "frameNumber": 51,
+    "stats": {
+      "flights": {
+        "enabled": true,
+        "lifecycleState": "enabled",
+        "lifecycleUncertain": false,
+        "count": 0,
+        "lastUpdate": 1791460800000,
+        "stale": false,
+        "error": null,
+        "status": 200,
+        "retryInSec": 0,
+        "source": "fixture-opensky-v1",
+        "coverage": "fixed deterministic Austin test grid"
+      },
+      "military": {
+        "enabled": true,
+        "lifecycleState": "enabled",
+        "lifecycleUncertain": false,
+        "count": 0,
+        "lastUpdate": 1791460836350,
+        "stale": false,
+        "error": null,
+        "status": 200,
+        "retryInSec": 0,
+        "source": "fixture-readsb-v1",
+        "fallback": false
+      }
+    },
+    "enabledLayerIds": [
+      "flights",
+      "military"
+    ],
+    "map": {
+      "status": "ready",
+      "activeId": "osm"
+    },
+    "mapDemand": {
+      "globeTilesLoaded": true,
+      "tileQueues": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "tileQueueCount": 0
+    },
+    "settings": {
+      "msaaSamples": 4,
+      "preserveDrawingBuffer": true,
+      "antialias": true,
+      "fxaaEnabled": false,
+      "resolutionScale": 1,
+      "canvasWidth": 1440,
+      "canvasHeight": 1000,
+      "bloomIntensity": 50,
+      "bloomEnabled": false,
+      "bloomVersion": 2,
+      "sharpenIntensity": 49,
+      "sharpenEnabled": false,
+      "style": "normal",
+      "hudVisible": false,
+      "hudVariant": "tactical",
+      "detectionMode": "OFF",
+      "allocation": "ELASTIC",
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "visualDensityPct": 75
+    },
+    "governor": {
+      "installed": true,
+      "mode": "idle",
+      "holds": [],
+      "recentRequests": [
+        {
+          "reason": "visibility-restore",
+          "at": 1791460808470
+        },
+        {
+          "reason": "layer-tick:military",
+          "at": 1791460821358
+        },
+        {
+          "reason": "layer-tick:flights",
+          "at": 1791460836349
+        },
+        {
+          "reason": "layer-tick:military",
+          "at": 1791460836350
+        },
+        {
+          "reason": "visibility-restore",
+          "at": 1791460839997
+        },
+        {
+          "reason": "visibility-restore",
+          "at": 1791460840015
+        }
+      ],
+      "scheduledUpdates": []
+    },
+    "statsStability": {
+      "stableHealthAndPopulation": true,
+      "receiptTimestampsValid": true,
+      "receiptTimestamps": {
+        "flights": {
+          "startMs": 1791460800000,
+          "endMs": 1791460800000,
+          "deltaMs": 0,
+          "valid": true
+        },
+        "military": {
+          "startMs": 1791460821358,
+          "endMs": 1791460836350,
+          "deltaMs": 14992,
+          "valid": true
+        }
+      }
+    }
+  },
+  "observations": [
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "sourceCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+        "sourceDirtyAtStart": false,
+        "sourceIdentityValid": true
+      }
+    },
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "networkProbePassed": true,
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "application-start",
+      "state": {
+        "applicationStartResolved": true,
+        "environment": {
+          "appCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+          "browser": {
+            "family": "chromium",
+            "version": "152.0.0.0",
+            "rendererClass": "swiftshader",
+            "viewport": {
+              "width": 1440,
+              "height": 1000,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 1000
+            }
+          }
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "fixture-delivery",
+      "state": {
+        "routeAttempts": {
+          "flights": 1,
+          "military": 1
+        },
+        "acknowledged": {
+          "flights": 1,
+          "military": 1
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "scene-settle",
+      "state": {
+        "settled": true,
+        "demandMeaning": "no queued globe tile work; tilesLoaded state and queue counts stable across consecutive samples",
+        "elapsedMs": 14832.399999999965,
+        "tileQueueStableSamples": 4,
+        "sample": {
+          "mapStatus": "ready",
+          "activeMapId": "osm",
+          "camera": {
+            "longitude": -97.74309999999998,
+            "latitude": 30.267199999999992,
+            "height": 799.999999999007,
+            "heading": 15,
+            "pitch": -30,
+            "roll": 0
+          },
+          "enabledLayerIds": [
+            "flights",
+            "military"
+          ],
+          "globeTilesLoaded": true,
+          "tileQueues": {
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "tileQueueCount": 0,
+          "stableTileDemandCount": 4
+        }
+      }
+    },
+    {
+      "stage": "start-snapshot",
+      "state": {
+        "applicationStatus": "ready",
+        "source": {
+          "appCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+          "expectedCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+          "matchesHarnessHead": true
+        },
+        "browser": {
+          "family": "chromium",
+          "version": "152.0.0.0",
+          "rendererClass": "swiftshader",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "viewport": {
+            "width": 1440,
+            "height": 1000,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        "fixtureEpochMs": 1791460829991,
+        "camera": {
+          "latitude": 30.267199999999992,
+          "longitude": -97.74309999999998,
+          "altitudeMeters": 799.999999999007,
+          "headingDegrees": 15,
+          "pitchDegrees": -30,
+          "rollDegrees": 0
+        },
+        "visibilityState": "visible",
+        "focused": true,
+        "frameNumber": 49,
+        "stats": {
+          "flights": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "lastUpdate": 1791460800000,
+            "stale": false,
+            "error": null,
+            "status": 200,
+            "retryInSec": 0,
+            "source": "fixture-opensky-v1",
+            "coverage": "fixed deterministic Austin test grid"
+          },
+          "military": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "lastUpdate": 1791460821358,
+            "stale": false,
+            "error": null,
+            "status": 200,
+            "retryInSec": 0,
+            "source": "fixture-readsb-v1",
+            "fallback": false
+          }
+        },
+        "map": {
+          "status": "ready",
+          "activeId": "osm"
+        },
+        "mapDemand": {
+          "globeTilesLoaded": true,
+          "tileQueues": {
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "tileQueueCount": 0,
+          "tileQueueStableSamples": 4,
+          "observedProviderRequests": 185,
+          "interceptedProviderRequests": 185,
+          "pendingProviderRequests": 0,
+          "requestTrackingOverflow": false
+        },
+        "enabledLayerIds": [
+          "flights",
+          "military"
+        ],
+        "settings": {
+          "msaaSamples": 4,
+          "preserveDrawingBuffer": true,
+          "antialias": true,
+          "fxaaEnabled": false,
+          "resolutionScale": 1,
+          "canvasWidth": 1440,
+          "canvasHeight": 1000,
+          "bloomIntensity": 50,
+          "bloomEnabled": false,
+          "bloomVersion": 2,
+          "sharpenIntensity": 49,
+          "sharpenEnabled": false,
+          "style": "normal",
+          "hudVisible": false,
+          "hudVariant": "tactical",
+          "detectionMode": "OFF",
+          "allocation": "ELASTIC",
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "visualDensityPct": 75
+        },
+        "governor": {
+          "installed": true,
+          "mode": "idle",
+          "holds": [],
+          "recentRequests": [
+            {
+              "reason": "visibility-restore",
+              "at": 1791460808470
+            },
+            {
+              "reason": "layer-tick:military",
+              "at": 1791460821358
+            }
+          ],
+          "scheduledUpdates": []
+        },
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "foreground-observation",
+      "state": {
+        "durationMs": 10000.199999999953,
+        "before": {
+          "visibilityState": "visible",
+          "focused": true,
+          "frameNumber": 49
+        },
+        "after": {
+          "visibilityState": "visible",
+          "focused": true,
+          "frameNumber": 50
+        },
+        "completedPostRenderCount": 1,
+        "eventOverflow": false,
+        "foregroundUninterrupted": true,
+        "events": [],
+        "mapProviderTraffic": {
+          "observedBefore": 185,
+          "observedAfter": 185,
+          "interceptedBefore": 185,
+          "interceptedAfter": 185,
+          "pendingAfter": 0,
+          "trackingOverflow": false,
+          "stable": true
+        },
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "visibility-control",
+      "state": {
+        "mode": "simulated-document-hidden-property",
+        "loopStopped": true,
+        "resumedFrame": 51,
+        "resumedFrameAfterPrior": true,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "end-snapshot",
+      "state": {
+        "applicationStatus": "ready",
+        "source": {
+          "appCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+          "expectedCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+          "matchesHarnessHead": true
+        },
+        "browser": {
+          "family": "chromium",
+          "version": "152.0.0.0",
+          "rendererClass": "swiftshader",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "viewport": {
+            "width": 1440,
+            "height": 1000,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        "fixtureEpochMs": 1791460840022,
+        "camera": {
+          "latitude": 30.267199999999992,
+          "longitude": -97.74309999999998,
+          "altitudeMeters": 799.999999999007,
+          "headingDegrees": 15,
+          "pitchDegrees": -30,
+          "rollDegrees": 0
+        },
+        "visibilityState": "visible",
+        "focused": true,
+        "frameNumber": 51,
+        "stats": {
+          "flights": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "lastUpdate": 1791460800000,
+            "stale": false,
+            "error": null,
+            "status": 200,
+            "retryInSec": 0,
+            "source": "fixture-opensky-v1",
+            "coverage": "fixed deterministic Austin test grid"
+          },
+          "military": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "lastUpdate": 1791460836350,
+            "stale": false,
+            "error": null,
+            "status": 200,
+            "retryInSec": 0,
+            "source": "fixture-readsb-v1",
+            "fallback": false
+          }
+        },
+        "enabledLayerIds": [
+          "flights",
+          "military"
+        ],
+        "map": {
+          "status": "ready",
+          "activeId": "osm"
+        },
+        "mapDemand": {
+          "globeTilesLoaded": true,
+          "tileQueues": {
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "tileQueueCount": 0,
+          "tileQueueStableSamples": 4,
+          "observedProviderRequests": 185,
+          "interceptedProviderRequests": 185,
+          "pendingProviderRequests": 0,
+          "requestTrackingOverflow": false
+        },
+        "settings": {
+          "msaaSamples": 4,
+          "preserveDrawingBuffer": true,
+          "antialias": true,
+          "fxaaEnabled": false,
+          "resolutionScale": 1,
+          "canvasWidth": 1440,
+          "canvasHeight": 1000,
+          "bloomIntensity": 50,
+          "bloomEnabled": false,
+          "bloomVersion": 2,
+          "sharpenIntensity": 49,
+          "sharpenEnabled": false,
+          "style": "normal",
+          "hudVisible": false,
+          "hudVariant": "tactical",
+          "detectionMode": "OFF",
+          "allocation": "ELASTIC",
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "visualDensityPct": 75
+        },
+        "governor": {
+          "installed": true,
+          "mode": "idle",
+          "holds": [],
+          "recentRequests": [
+            {
+              "reason": "visibility-restore",
+              "at": 1791460808470
+            },
+            {
+              "reason": "layer-tick:military",
+              "at": 1791460821358
+            },
+            {
+              "reason": "layer-tick:flights",
+              "at": 1791460836349
+            },
+            {
+              "reason": "layer-tick:military",
+              "at": 1791460836350
+            },
+            {
+              "reason": "visibility-restore",
+              "at": 1791460839997
+            },
+            {
+              "reason": "visibility-restore",
+              "at": 1791460840015
+            }
+          ],
+          "scheduledUpdates": []
+        },
+        "statsStability": {
+          "stableHealthAndPopulation": true,
+          "receiptTimestampsValid": true,
+          "receiptTimestamps": {
+            "flights": {
+              "startMs": 1791460800000,
+              "endMs": 1791460800000,
+              "deltaMs": 0,
+              "valid": true
+            },
+            "military": {
+              "startMs": 1791460821358,
+              "endMs": 1791460836350,
+              "deltaMs": 14992,
+              "valid": true
+            }
+          }
+        },
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "end-snapshot",
+      "state": {
+        "sourceChangedDuringRun": false,
+        "sourceIdentityError": null
+      }
+    },
+    {
+      "stage": "application-destroy",
+      "state": {
+        "status": "destroyed",
+        "viewerDestroyed": true,
+        "layers": 0,
+        "productionHandlesRemoved": true,
+        "testAliasRemoved": true,
+        "resourcesBefore": {
+          "postRenderListeners": 7,
+          "primitives": 5,
+          "imageryLayers": 1,
+          "viewerCanvasPresent": true,
+          "worldOverlayCanvasPresent": true,
+          "hostCctvMarkupMatches": true,
+          "canvasInventory": {
+            "count": 8,
+            "truncated": false,
+            "entries": [
+              {
+                "role": "viewer-scene",
+                "width": 1440,
+                "height": 1000,
+                "hidden": false
+              },
+              {
+                "role": "other",
+                "width": 300,
+                "height": 150,
+                "hidden": false
+              },
+              {
+                "role": "other",
+                "width": 300,
+                "height": 150,
+                "hidden": false
+              },
+              {
+                "role": "other",
+                "width": 1440,
+                "height": 1000,
+                "hidden": false
+              },
+              {
+                "role": "other",
+                "width": 300,
+                "height": 150,
+                "hidden": false
+              },
+              {
+                "role": "world-overlay-host",
+                "width": 1440,
+                "height": 1000,
+                "hidden": false
+              },
+              {
+                "role": "cctv-template-host",
+                "width": 300,
+                "height": 150,
+                "hidden": true
+              },
+              {
+                "role": "other",
+                "width": 300,
+                "height": 150,
+                "hidden": false
+              }
+            ]
+          }
+        },
+        "resourcesAfter": {
+          "canvasInventory": {
+            "count": 1,
+            "truncated": false,
+            "entries": [
+              {
+                "role": "cctv-template-host",
+                "width": 300,
+                "height": 150,
+                "hidden": true
+              }
+            ]
+          },
+          "viewerCanvasRemoved": true,
+          "worldOverlayCanvasRemoved": true,
+          "hostCctvMarkupMatches": true,
+          "hostCctvReferenceRetained": true,
+          "hostCctvDimensionsUnchanged": true,
+          "onlyHostCctvCanvasRemains": true,
+          "credits": 0,
+          "dataLayers": 0,
+          "postRenderListeners": 0
+        },
+        "governor": {
+          "installed": false,
+          "mode": "idle",
+          "holds": [],
+          "recentRequests": [],
+          "scheduledUpdates": []
+        },
+        "applicationRenderOwnersReleased": true,
+        "teardownErrors": 0,
+        "pageErrors": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "gev-s51-empty-fleet-comparison-review/v1",
+  "commits": {
+    "before": "6786f8ddb146636c08631eeb36cf75c42942a87f",
+    "after": "106918ee94666545e8727cc938d09599f59e0a20"
+  },
+  "runs": {
+    "before": "38458160500",
+    "after": "38458245470"
+  },
+  "harnessAndLockfileHashes": {
+    "scripts/qa-application.mjs": "aeaa2121611016e21ecc92a004caeb4ca47c096fd16071ccc2a8b6fcf77b8687",
+    "scripts/qa-application-fixtures.mjs": "e6f511cb5307a6eae4a6d1a3e77c088c2e6b2e698300159873b9c7254192b915",
+    "scripts/performance/productionFlightFixture.mjs": "d4dfcb1be35d6c5f8a273e214e9e4c4fe1c1162d099847d13b081d4b010548e5",
+    ".github/workflows/ci.yml": "3943db138534b588b33457aeefa3b80140a7382676d6115630266dd8ba3949f5",
+    "package-lock.json": "632eab4fec411920456fe4da43a3564d5cdfe0eb0bfa6b66e862c1465217fd36"
+  },
+  "changedPaths": [
+    "scripts/format-scope.json",
+    "scripts/package-boundaries.json",
+    "src/layers/fleetRenderDemand.js",
+    "src/layers/fleetRenderDemand.test.mjs",
+    "src/layers/flights/index.js",
+    "src/layers/flights/ingestion.js",
+    "src/layers/flights/ingestion.test.mjs",
+    "src/layers/flights/lifecycle.js",
+    "src/layers/flights/tracking.js",
+    "src/layers/flights/trackingRenderDemand.test.mjs",
+    "src/layers/military/index.js",
+    "src/layers/military/ingestion.js",
+    "src/layers/military/ingestion.test.mjs",
+    "src/layers/military/lifecycle.js",
+    "src/layers/military/tracking.js"
+  ],
+  "actualEnvironment": {
+    "family": "chromium",
+    "version": "152.0.0.0",
+    "rendererClass": "swiftshader",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 1000
+    }
+  },
+  "matchingProfile": "ffdc7747e400e18bf6e44df33eb6ee329773b64d5b3730daaf5fd933ead74d48",
+  "checks": {
+    "cleanExactSources": true,
+    "sameHarness": true,
+    "sameReportedBrowserRendererViewport": true,
+    "sameCamera": true,
+    "sameProjectedSettings": true,
+    "sameFixtureContent": true,
+    "zeroPopulationsAtEndpoints": true,
+    "stable185BlockedMapRequests": true,
+    "noPendingTileOrProviderRequests": true,
+    "validSeparateReceiptTimes": true,
+    "sameIdentifiedHostCanvasAfterDestroy": true,
+    "viewerOverlayAndApplicationOwnersDisposed": true
+  },
+  "foregroundFrames": {
+    "before": 18,
+    "after": 1,
+    "durationMs": 10000,
+    "maximum": 2
+  },
+  "localRuntimeTests": {
+    "passed": 79,
+    "failed": 0,
+    "files": 15,
+    "sourceCommit": "106918ee94666545e8727cc938d09599f59e0a20"
+  },
+  "localBoundaries": "passed",
+  "localFormatting": {
+    "passed": true,
+    "checkedFiles": 1654
+  },
+  "limitations": [
+    "One matched functional diagnostic pair; not five-pair motion or allocation measurements.",
+    "Hosted Linux SwiftShader, not physical Windows GPU.",
+    "OSM imagery deliberately blocked: no content or screenshot equivalence claim.",
+    "Visibility control overrides document.hidden: no OS/browser tab occlusion claim.",
+    "Before is a bounded failure projection; absent fields are not independently validated.",
+    "Full-candidate physical Windows qualification is separately required."
+  ],
+  "tracking": {
+    "run": "38458251714",
+    "sourceCommit": "106918ee94666545e8727cc938d09599f59e0a20",
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0,
+    "bundledImageryTilesServed": 18,
+    "browserCloseCompleted": true,
+    "forcedProcessTermination": false
+  },
+  "localPeriodicTests": {
+    "passed": 27,
+    "failed": 0,
+    "sourceCommit": "73a2cb7d1f0e443ac9650d2de01be3937aa8385c",
+    "newTestCommit": "67912ed141d4fe5664db7aee8d8986585012b256"
+  }
+}

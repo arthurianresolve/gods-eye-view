@@ -8,15 +8,17 @@ now closes the tracking slice's implementation requirements. The current
 passes 83 focused checks and a negative mutation control. Final rendered
 transitions and Windows performance qualification remain pending.
 
-The [latest completed empty-fleet probe](performance-evidence/s51-render-demand/38454796341/README.md)
-records 22 renders over ten settled foreground seconds with empty civil and
-military layers. Its endpoint validator fails on normal military receipt-time
-advancement, before teardown. Correction `ed825bd3` preserves all stable-field
-checks, separately validates the timestamps and captures live start map demand;
-42 root tests and replay of the original timestamp pair pass. The conditional
-fleet-hold runtime candidate remains separate pending complete before/after
-browser checks; S51 is still partial. The [owner audit](performance-evidence/s51-render-demand/owner-audit.md)
-records why the remaining animated owners need their existing cadence.
+The [matched empty-fleet diagnostic](performance-evidence/s51-render-demand/paired-6786-1069/README.md)
+records 18 renders before (`6786f8dd`) and one after (`106918ee`) over ten
+foreground seconds. The candidate passes the unchanged two-frame gate, matched
+conditions, receipt-time and identified-canvas ownership checks. Both mixed-use
+and durable workspace journeys pass; the separate tracking browser run passes
+111 checks. Root passes 79 affected tests and 27 periodic-owner tests. A repeat
+of the successful candidate is underway; S51 remains partial. Hosted SwiftShader
+with blocked OSM content does not qualify physical Windows or imagery delivery.
+The [owner audit](performance-evidence/s51-render-demand/owner-audit.md) records
+the remaining animated owners and periodic lifecycle coverage. Earlier failed
+reports retain their original outcomes.
 
 The [S49 stale rollback fix](performance-evidence/s49-stale-rollback/README.md)
 at `673349bc` prevents older rollback completion from overwriting a newer workspace

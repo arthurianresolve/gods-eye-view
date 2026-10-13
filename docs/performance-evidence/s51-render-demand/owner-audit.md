@@ -3,8 +3,12 @@
 This is a source-and-test inventory for the finite S51 render-demand slice. It
 does not qualify the app's GPU, settle a measured idle-frame target, or close
 S51. The empty-flight/military conditional-hold change is committed at
-`85020ccb520dbc0b0068ea856e60560db3a02ad0`; its real-app BEFORE measurement
-and paired AFTER result are still required.
+`85020ccb520dbc0b0068ea856e60560db3a02ad0`, integrated as `106918ee`.
+The [matched application diagnostic](paired-6786-1069/README.md) now observes
+18 completed frames before and one after in ten foreground seconds. The
+candidate passes ownership, source and endpoint checks; its separate tracking
+browser run passes 111 checks. One successful-candidate repeat is underway.
+Blocked imagery and simulated visibility keep the qualification scope narrow.
 
 ## Governor behavior and app wake/disposal
 
@@ -20,8 +24,8 @@ clears scheduled timers/updates, drops holds, and detaches the viewer.
 the document is hidden and calls `governorRequestRender('visibility-restore')`
 when shown; teardown removes the document listener and releases the tracked
 entity hold. Unit coverage exists for governor and layer ownership, but the
-S51 app diagnostic has not yet established a successful real-browser
-visibility-away/return, final-frame, and combined owner teardown observation.
+S51 app diagnostic establishes simulated visibility-away/return, a fresh resume
+frame and combined owner teardown, but not actual browser-tab occlusion.
 Any simulated `document.hidden` control must remain labeled simulated; it is
 not evidence of OS/browser tab occlusion.
 

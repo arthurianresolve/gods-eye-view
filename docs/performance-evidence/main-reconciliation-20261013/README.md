@@ -11,9 +11,12 @@ passes all seven standard jobs and downloaded-release verification against both
 bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token
 checks and all 30 recovery records pass. Direct REST artifact retrieval now
 passes with exact source/merge binding; the earlier discovery failure remains
-historical. Later S49 rollback changes pass the scoped mixed-use and durable workspace
-browser journeys at `7d4a52a8` and `c4a4e97c`; their subsequent S51 diagnostic
-failures remain recorded separately. Final candidate qualification is pending.
+historical. Later S49 rollback and S51 fleet changes pass scoped mixed-use and
+durable workspace journeys at `106918ee`; its separate tracking browser run
+passes 111 checks. The [matched S51 diagnostic](../s51-render-demand/paired-6786-1069/README.md)
+passes the candidate idle/ownership gate while preserving the failed baseline.
+These scoped results do not replace full current-candidate integration or
+physical Windows qualification, which remain pending.
 PR #4 remains validation-only; no stable release has been published.
 
 ## Earlier checkpoints
