@@ -84,7 +84,25 @@ async function withFixtureServer(fixture, options, callback) {
   }
 }
 
-function installCesiumNodeImageDecodeSeam(baseUrl) {
+function assertSuccessfulProbeDecode(observation, probeRow) {
+  if (observation?.decoded !== true)
+    throw new Error('ArcGIS probe image did not decode successfully.');
+  assert.equal(observation?.httpStatus, 200);
+  assert.equal(observation?.responseBytes, probeRow.byteLength);
+  assert.equal(observation?.responseSha256, probeRow.sha256);
+  assert.equal(observation?.decoded, true);
+  assert.deepEqual(
+    [observation?.width, observation?.height, observation?.channels],
+    [probeRow.identity.width, probeRow.identity.height, 4],
+  );
+  assert.equal(observation?.transparentPixelCount, 256 * 256);
+  assert.equal(observation?.firstPixel?.[3], 0);
+}
+
+function installCesiumNodeImageDecodeSeam(
+  baseUrl,
+  { failDecode = false } = {},
+) {
   // Decode actual fixture responses with sharp in Node, then expose those RGBA
   // bytes through the minimum canvas surface Cesium's discard policy reads.
   // This tests the production policy input, not browser image-decoder behavior.
@@ -93,6 +111,7 @@ function installCesiumNodeImageDecodeSeam(baseUrl) {
   const previousCreateImage = Cesium.Resource._Implementations.createImage;
   const imageRequests = [];
   const pendingDecodes = [];
+  const decodeObservations = [];
   let drawnImage = null;
   globalThis.document = {
     location: { href: baseUrl },
@@ -145,10 +164,29 @@ function installCesiumNodeImageDecodeSeam(baseUrl) {
         if (!response.ok)
           throw new Error(`Fixture image request failed: ${response.status}`);
         const bytes = Buffer.from(await response.arrayBuffer());
+        const observation = {
+          httpStatus: response.status,
+          responseBytes: bytes.byteLength,
+          responseSha256: digest(bytes),
+          decoded: false,
+        };
+        decodeObservations.push(observation);
+        if (failDecode) throw new Error('Injected image decode failure.');
         const decoded = await sharp(bytes)
           .ensureAlpha()
           .raw()
           .toBuffer({ resolveWithObject: true });
+        let transparentPixelCount = 0;
+        for (let offset = 3; offset < decoded.data.length; offset += 4)
+          if (decoded.data[offset] === 0) transparentPixelCount += 1;
+        Object.assign(observation, {
+          decoded: true,
+          width: decoded.info.width,
+          height: decoded.info.height,
+          channels: decoded.info.channels,
+          firstPixel: [...decoded.data.subarray(0, 4)],
+          transparentPixelCount,
+        });
         return {
           width: decoded.info.width,
           height: decoded.info.height,
@@ -164,6 +202,7 @@ function installCesiumNodeImageDecodeSeam(baseUrl) {
   return {
     imageRequests,
     pendingDecodes,
+    decodeObservations,
     restore() {
       Cesium.Resource._Implementations.createImage = previousCreateImage;
       if (previousDocument === undefined) delete globalThis.document;
@@ -341,6 +380,11 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         'default ArcGIS missing-tile probe must be hash-bound',
       );
       assert.equal(probeRow.identity.intendedAlpha, 0);
+      assert.equal(
+        probeRow.byteLength,
+        fixture.assets.get(probeRow.path).byteLength,
+      );
+      assert.match(probeRow.sha256, /^[a-f0-9]{64}$/);
       assert.equal(nodeImageSeam.imageRequests.length, 1);
       const probeRequest = new URL(nodeImageSeam.imageRequests[0]);
       const probePath = `${arcgisServicePath}/tile/${probeRow.identity.level}/${probeRow.identity.row}/${probeRow.identity.column}`;
@@ -350,6 +394,10 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         'default native discard policy must request the declared out-of-route calibration tile',
       );
       assert.equal(probeRequest.search, '');
+      assertSuccessfulProbeDecode(
+        nodeImageSeam.decodeObservations[0],
+        probeRow,
+      );
       assert.ok(
         server.observedRequests.some(
           (request) => request.path === probePath && request.query === '',
@@ -406,6 +454,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         'transparent probe disables tile rejection for native fixture imagery',
       );
     } finally {
+      await Promise.allSettled(nodeImageSeam.pendingDecodes);
       nodeImageSeam.restore();
     }
     const arcgisTile = fixture.manifest.coverage.imagery.at(-1).tiles[0];
@@ -995,6 +1044,45 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       `Cesium parser flow must not mutate owned fixture bytes: ${row.path}`,
     );
   assert.equal(validateDeterministicMapStreamingFixture(fixture), true);
+});
+
+test('ArcGIS probe proof rejects successful HTTP bytes when image decoding fails', async (t) => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const metadataRow = fixture.manifest.assets.find(
+    (row) => row.kind === 'arcgis-mapserver-metadata-json',
+  );
+  const probeRow = fixture.manifest.assets.find(
+    (row) => row.kind === 'arcgis-missing-tile-probe-png',
+  );
+  await withFixtureServer(fixture, {}, async (baseUrl) => {
+    const imageSeam = installCesiumNodeImageDecodeSeam(baseUrl, {
+      failDecode: true,
+    });
+    try {
+      await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+        `${baseUrl}${metadataRow.identity.servicePath}`,
+        { enablePickFeatures: false },
+      );
+      await Promise.allSettled(imageSeam.pendingDecodes);
+      assert.equal(imageSeam.decodeObservations.length, 1);
+      assert.equal(imageSeam.decodeObservations[0].httpStatus, 200);
+      assert.equal(
+        imageSeam.decodeObservations[0].responseSha256,
+        probeRow.sha256,
+      );
+      assert.throws(
+        () =>
+          assertSuccessfulProbeDecode(
+            imageSeam.decodeObservations[0],
+            probeRow,
+          ),
+        /did not decode successfully/,
+      );
+    } finally {
+      await Promise.allSettled(imageSeam.pendingDecodes);
+      imageSeam.restore();
+    }
+  });
 });
 
 test('Cesium rejects truncated quantized-mesh and GLB HTTP responses', async () => {
