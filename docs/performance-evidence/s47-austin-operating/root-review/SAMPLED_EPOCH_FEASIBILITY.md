@@ -846,3 +846,10 @@ checks and formatting for 1,622 files](projection-checks-a753faa7.json) pass.
 No runtime rendering, provider data, measurement timeout or performance gate
 changed. Fresh hosted validation is still required; no slice acceptance or
 physical hardware performance claim is made.
+
+Projection correction candidate e8ccc268608fbece8b6d87a0b6db86e1800ddf90
+is pushed. [Native capture 38334288585](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334288585)
+and [standard CI 38334290706](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334290706)
+were dispatched and their exact head SHAs verified in the
+[run receipt](projection-candidate-e8ccc268-runs.json). Both remain pending at
+this checkpoint. This does not revise the previous failed capture result.
