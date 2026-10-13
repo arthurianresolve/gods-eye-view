@@ -1,4 +1,3 @@
-import { readLayerSource } from '../testSupport/readLayerSource.mjs';
 // src/data/detectionRenderDemand.test.mjs
 //
 // Detection must not hold the render loop open — and must not drop work on the
