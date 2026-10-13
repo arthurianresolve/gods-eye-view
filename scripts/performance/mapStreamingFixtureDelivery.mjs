@@ -806,6 +806,7 @@ export function validateMapStreamingFaultDeliverySummary(
   assert.equal(summary.errorObservationCount, 0);
   assert.equal(summary.omittedErrorObservationCount, 0);
   assert.equal(summary.omittedErrorKindCount, 0);
+  assert.deepEqual(summary.errors, []);
   assert.deepEqual(summary.missingAssetPathEvidence, {
     observationCount: 0,
     uniquePathCount: 0,
@@ -841,6 +842,16 @@ export function validateMapStreamingFaultDeliverySummary(
   ]);
   assert.ok(Number.isSafeInteger(summary.requestedCount));
   assert.ok(summary.requestedCount > 0);
+  assert.ok(
+    Number.isSafeInteger(summary.limits?.maxRequests) &&
+      summary.limits.maxRequests > 0 &&
+      summary.limits.maxRequests <= MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
+    'Fault delivery reports a bounded per-document request limit.',
+  );
+  assert.ok(
+    summary.requestedCount <= summary.limits.maxRequests,
+    'Fault delivery does not exceed its declared request limit.',
+  );
   assert.ok(
     Number.isSafeInteger(summary.fulfilledAckCount) &&
       summary.fulfilledAckCount >= 0,

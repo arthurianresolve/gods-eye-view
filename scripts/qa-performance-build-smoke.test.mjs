@@ -122,15 +122,19 @@ async function acknowledgeNativeMapSmokeFixture(delivery, fixture) {
   for (const asset of fixture.manifest.assets)
     if (!assetsByKind.has(asset.kind)) assetsByKind.set(asset.kind, asset);
   const assets = [...assetsByKind.values()];
+  let requestSequence = 0;
   for (const asset of assets) {
     const url = nativeMapSmokeAssetUrl(asset);
+    const requestId = `smoke-map-${++requestSequence}`;
     const response = await delivery.respond(new URL(url), {
+      requestId,
       url: () => url,
       method: () => 'GET',
     });
     assert.ok(response, `Native route resolves ${asset.path}.`);
     assert.equal(
       delivery.onFulfilled({
+        requestId,
         url,
         method: 'GET',
         status: response.status,
@@ -1467,6 +1471,7 @@ test('baseline and candidate map orchestration finalize delivery after target re
     await partialDelivery.respond(
       new URL('https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json'),
       {
+        requestId: 'partial-layer-json',
         url: () =>
           'https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json',
         method: () => 'GET',

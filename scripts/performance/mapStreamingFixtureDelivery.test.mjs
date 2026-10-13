@@ -304,6 +304,26 @@ test('declared Esri missing and corrupt metadata responses are isolated fault ob
         ),
       /strictly equal/,
     );
+    for (const mutate of [
+      (copy) => {
+        copy.limits.maxRequests = 513;
+      },
+      (copy) => {
+        copy.requestedCount = 513;
+      },
+      (copy) => {
+        copy.errors.push({ code: 'unexpected', count: 1 });
+      },
+      (copy) => {
+        delete copy.limits;
+      },
+    ]) {
+      const overBound = structuredClone(summary);
+      mutate(overBound);
+      assert.throws(() =>
+        validateMapStreamingFaultDeliverySummary(overBound, pinned, scenarioId),
+      );
+    }
   }
 });
 
