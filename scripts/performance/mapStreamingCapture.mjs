@@ -52,9 +52,211 @@ const EXPECTED_IMAGERY_CLASS = Object.freeze({
 });
 const MAP_JOURNEY_POLL_INTERVAL_MS = 250;
 const MAP_JOURNEY_MAX_POLL_COUNT = 720;
-const MAP_JOURNEY_CANCEL_DRAIN_POLL_COUNT = 12;
-const MAP_JOURNEY_CANCEL_DRAIN_INTERVAL_MS = 50;
+const MAP_JOURNEY_HOST_DEADLINE_MS = 150_000;
 let nextMapJourneyOperationId = 0;
+
+const MAP_JOURNEY_PHASES = new Set([
+  'starting',
+  'initial-readiness',
+  'transition',
+  'transition-readiness',
+  'route',
+  'final-readiness',
+  'completed',
+]);
+const MAP_JOURNEY_FAILURE_CODES = new Set([
+  'page-operation-failed',
+  'host-deadline',
+  'poll-count-limit',
+  'protocol-call-failed',
+  'operation-disposal-failed',
+  'operation-start-failed',
+  'unexpected-operation-state',
+]);
+
+function projectMapJourneyCheckpoint(value) {
+  if (value === null) return null;
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
+  assert.ok(MAP_JOURNEY_PHASES.has(value.phase));
+  assert.equal(typeof value.initialReadinessComplete, 'boolean');
+  assert.ok(
+    Number.isSafeInteger(value.transitionCount) &&
+      value.transitionCount >= 0 &&
+      value.transitionCount <= 3,
+  );
+  assert.ok(
+    value.targetStack === null ||
+      EXPECTED_IMAGERY_CLASS[value.targetStack] !== undefined ||
+      value.targetStack === 'photoreal',
+  );
+  assert.ok(
+    Number.isFinite(value.routeElapsedMs) &&
+      value.routeElapsedMs >= 0 &&
+      value.routeElapsedMs <= 240_000,
+  );
+  let latestObservation = null;
+  if (value.latestObservation !== null) {
+    const observation = value.latestObservation;
+    assert.ok(
+      observation &&
+        typeof observation === 'object' &&
+        !Array.isArray(observation),
+    );
+    for (const name of [
+      'activeStack',
+      'controllerStatus',
+      'switchOrigin',
+      'terrainProviderClass',
+      'imageryProviderClass',
+    ])
+      assert.ok(
+        observation[name] === null ||
+          (typeof observation[name] === 'string' &&
+            observation[name].length <= 96),
+      );
+    for (const name of [
+      'hasError',
+      'stackAvailable',
+      'globeTilesLoaded',
+      'photorealTilesLoaded',
+    ])
+      assert.ok(
+        observation[name] === null || typeof observation[name] === 'boolean',
+      );
+    for (const name of [
+      'imageryLayerCount',
+      'photorealReadyContentTiles',
+      'photorealSelectedTiles',
+    ])
+      assert.ok(
+        observation[name] === null ||
+          (Number.isSafeInteger(observation[name]) && observation[name] >= 0),
+      );
+    latestObservation = {
+      activeStack: observation.activeStack,
+      controllerStatus: observation.controllerStatus,
+      switchOrigin: observation.switchOrigin,
+      hasError: observation.hasError,
+      stackAvailable: observation.stackAvailable,
+      globeTilesLoaded: observation.globeTilesLoaded,
+      terrainProviderClass: observation.terrainProviderClass,
+      imageryLayerCount: observation.imageryLayerCount,
+      imageryProviderClass: observation.imageryProviderClass,
+      photorealTilesLoaded: observation.photorealTilesLoaded,
+      photorealReadyContentTiles: observation.photorealReadyContentTiles,
+      photorealSelectedTiles: observation.photorealSelectedTiles,
+    };
+  }
+  return {
+    phase: value.phase,
+    initialReadinessComplete: value.initialReadinessComplete,
+    transitionCount: value.transitionCount,
+    targetStack: value.targetStack,
+    routeElapsedMs: value.routeElapsedMs,
+    latestObservation,
+  };
+}
+
+/** Validate and project the deliberately small map-journey failure record. */
+export function projectMapStreamingJourneyFailureEvidence(value) {
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
+  assert.equal(value.schema, 'gev-map-streaming-journey-failure/v1');
+  assert.ok(
+    typeof value.operationId === 'string' &&
+      /^[a-z0-9-]{1,96}$/i.test(value.operationId),
+  );
+  assert.ok(MAP_JOURNEY_FAILURE_CODES.has(value.failureCode));
+  assert.ok(
+    Number.isFinite(value.elapsedMs) &&
+      value.elapsedMs >= 0 &&
+      value.elapsedMs <= 240_000,
+  );
+  assert.ok(
+    value.checkpoint === null ||
+      (typeof value.checkpoint === 'object' &&
+        !Array.isArray(value.checkpoint)),
+  );
+  let expected = null;
+  if (value.expected !== null) {
+    assert.ok(value.expected && typeof value.expected === 'object');
+    expected = {};
+    if (value.expected.operationId !== undefined) {
+      assert.ok(
+        typeof value.expected.operationId === 'string' &&
+          /^[a-z0-9-]{1,96}$/i.test(value.expected.operationId),
+      );
+      expected.operationId = value.expected.operationId;
+    }
+    if (value.expected.status !== undefined) {
+      assert.ok(value.expected.status === 'completed');
+      expected.status = value.expected.status;
+    }
+    if (value.expected.maxElapsedMs !== undefined) {
+      assert.ok(
+        Number.isSafeInteger(value.expected.maxElapsedMs) &&
+          value.expected.maxElapsedMs > 0 &&
+          value.expected.maxElapsedMs <= MAP_JOURNEY_HOST_DEADLINE_MS,
+      );
+      expected.maxElapsedMs = value.expected.maxElapsedMs;
+    }
+    if (value.expected.maxPollCount !== undefined) {
+      assert.ok(value.expected.maxPollCount === MAP_JOURNEY_MAX_POLL_COUNT);
+      expected.maxPollCount = value.expected.maxPollCount;
+    }
+    if (value.expected.pollIntervalMs !== undefined) {
+      assert.ok(value.expected.pollIntervalMs === MAP_JOURNEY_POLL_INTERVAL_MS);
+      expected.pollIntervalMs = value.expected.pollIntervalMs;
+    }
+    assert.ok(Object.keys(expected).length > 0);
+  }
+  const retirement = value.retirement;
+  assert.ok(retirement && typeof retirement === 'object');
+  assert.ok(
+    ['not-attempted', 'acknowledged', 'missing', 'failed'].includes(
+      retirement.cancelStatus,
+    ),
+  );
+  assert.ok(
+    ['not-needed', 'drained', 'timed-out', 'failed', 'not-attempted'].includes(
+      retirement.drainStatus,
+    ),
+  );
+  assert.ok(
+    ['unknown', 'running', 'completed', 'failed', 'missing'].includes(
+      retirement.terminalStatus,
+    ),
+  );
+  assert.ok(
+    ['not-attempted', 'confirmed', 'failed', 'not-owned'].includes(
+      retirement.disposeStatus,
+    ),
+  );
+  assert.ok(
+    Number.isSafeInteger(retirement.drainWaitMs) && retirement.drainWaitMs >= 0,
+  );
+  for (const name of ['cancelErrorKind', 'disposeErrorKind'])
+    assert.ok(
+      retirement[name] === null ||
+        ['protocol-timeout', 'evaluation-failed'].includes(retirement[name]),
+    );
+  return {
+    schema: value.schema,
+    operationId: value.operationId,
+    failureCode: value.failureCode,
+    elapsedMs: value.elapsedMs,
+    checkpoint: projectMapJourneyCheckpoint(value.checkpoint),
+    expected,
+    retirement: {
+      cancelStatus: retirement.cancelStatus,
+      drainStatus: retirement.drainStatus,
+      drainWaitMs: retirement.drainWaitMs,
+      terminalStatus: retirement.terminalStatus,
+      disposeStatus: retirement.disposeStatus,
+      cancelErrorKind: retirement.cancelErrorKind,
+      disposeErrorKind: retirement.disposeErrorKind,
+    },
+  };
+}
 
 /** Browser-serialized driver. Keep all helpers inside this function. */
 export async function runNativeMapStreamingJourneyInPage({
@@ -63,6 +265,7 @@ export async function runNativeMapStreamingJourneyInPage({
   command = 'run',
   operationId = null,
 }) {
+  const cancelDrainTimeoutMs = 5_000;
   const operationKey = '__gevMapStreamingJourneyV1';
   const operations = () => {
     const current = window[operationKey];
@@ -115,7 +318,7 @@ export async function runNativeMapStreamingJourneyInPage({
             ...operation.checkpoint,
             phase: 'completed',
             routeElapsedMs: result.route.elapsedMs,
-            transitionCount: result.transitions.length,
+            transitionCount: Math.max(0, result.transitions.length - 1),
             targetStack: result.finalState.activeStack,
           };
         },
@@ -141,10 +344,37 @@ export async function runNativeMapStreamingJourneyInPage({
       typeof operationId === 'string' ? store?.[operationId] : null;
     if (!operation) return { operationId, status: 'missing' };
     if (command === 'cancel') {
-      if (operation.status === 'running') operation.cancel?.();
+      let drainStatus = 'not-needed';
+      let drainWaitMs = 0;
+      if (operation.status === 'running') {
+        drainStatus = 'timed-out';
+        const drainStartedAt = performance.now();
+        operation.cancel?.();
+        let drainTimer = null;
+        try {
+          const drained = await Promise.race([
+            operation.completion.then(() => true),
+            new Promise((resolve) => {
+              drainTimer = setTimeout(
+                () => resolve(false),
+                cancelDrainTimeoutMs,
+              );
+            }),
+          ]);
+          if (drained) drainStatus = 'drained';
+        } finally {
+          if (drainTimer !== null) clearTimeout(drainTimer);
+          drainWaitMs = Math.max(
+            0,
+            Math.round(performance.now() - drainStartedAt),
+          );
+        }
+      }
       return {
         operationId,
         status: operation.status,
+        drainStatus,
+        drainWaitMs,
         checkpoint: operation.checkpoint,
       };
     }
@@ -833,12 +1063,22 @@ export async function runNativeMapStreamingJourneyInPage({
 export async function runNativeMapStreamingJourney(page, options) {
   assert.ok(page && typeof page.evaluate === 'function');
   assert.ok(options && typeof options === 'object');
+  const { hostDeadlineMs = MAP_JOURNEY_HOST_DEADLINE_MS, ...journeyOptions } =
+    options;
+  assert.ok(
+    Number.isSafeInteger(hostDeadlineMs) &&
+      hostDeadlineMs > 0 &&
+      hostDeadlineMs <= MAP_JOURNEY_HOST_DEADLINE_MS,
+    'Map journey host deadline must be a positive value within its fixed cap.',
+  );
   const operationId = `map-${Date.now().toString(36)}-${(++nextMapJourneyOperationId).toString(
     36,
   )}`;
+  const startedAt = performance.now();
+  const deadline = startedAt + hostDeadlineMs;
   const evaluate = (command) =>
     page.evaluate(runNativeMapStreamingJourneyInPage, {
-      ...options,
+      ...journeyOptions,
       command,
       operationId,
     });
@@ -846,28 +1086,55 @@ export async function runNativeMapStreamingJourney(page, options) {
   let terminal = false;
   let result = null;
   let primaryError = null;
+  let failureCode = null;
   let lastCheckpoint = null;
+  const retirement = {
+    cancelStatus: 'not-attempted',
+    drainStatus: 'not-needed',
+    drainWaitMs: 0,
+    terminalStatus: 'unknown',
+    disposeStatus: 'not-attempted',
+    cancelErrorKind: null,
+    disposeErrorKind: null,
+  };
+  const deadlineError = () => {
+    const error = new Error(
+      'Native map journey exceeded its monotonic host deadline.',
+    );
+    error.actual = lastCheckpoint;
+    error.expected = { maxElapsedMs: hostDeadlineMs };
+    return error;
+  };
   try {
     startAttempted = true;
     const start = await evaluate('start');
     if (start?.operationId !== operationId || start.status !== 'running')
       throw new Error('Native map journey operation did not start.');
+    if (performance.now() >= deadline) throw deadlineError();
     for (
       let pollCount = 0;
       pollCount < MAP_JOURNEY_MAX_POLL_COUNT;
       pollCount += 1
     ) {
+      if (performance.now() >= deadline) throw deadlineError();
       const state = await evaluate('poll');
+      if (performance.now() >= deadline) {
+        lastCheckpoint = state?.checkpoint || lastCheckpoint;
+        throw deadlineError();
+      }
       if (state?.operationId !== operationId)
         throw new Error('Native map journey poll identity changed.');
       lastCheckpoint = state.checkpoint || lastCheckpoint;
       if (state.status === 'completed') {
         terminal = true;
+        retirement.terminalStatus = 'completed';
         result = state.result;
         break;
       }
       if (state.status === 'failed') {
         terminal = true;
+        retirement.terminalStatus = 'failed';
+        failureCode = 'page-operation-failed';
         const error = new Error(
           `Native map journey failed during ${state.checkpoint?.phase || 'unknown phase'}: ${state.failure?.message || 'page operation failed.'}`,
         );
@@ -880,13 +1147,18 @@ export async function runNativeMapStreamingJourney(page, options) {
       }
       if (state.status !== 'running')
         throw new Error(`Native map journey operation became ${state.status}.`);
+      const remainingMs = Math.max(0, deadline - performance.now());
+      if (remainingMs === 0) throw deadlineError();
       await new Promise((resolve) =>
-        setTimeout(resolve, MAP_JOURNEY_POLL_INTERVAL_MS),
+        setTimeout(
+          resolve,
+          Math.min(MAP_JOURNEY_POLL_INTERVAL_MS, remainingMs),
+        ),
       );
     }
     if (!terminal) {
       const error = new Error(
-        'Native map journey exceeded its bounded host polling limit.',
+        'Native map journey exceeded its bounded host poll-count limit.',
       );
       error.actual = lastCheckpoint;
       error.expected = {
@@ -894,34 +1166,59 @@ export async function runNativeMapStreamingJourney(page, options) {
         maxPollCount: MAP_JOURNEY_MAX_POLL_COUNT,
         pollIntervalMs: MAP_JOURNEY_POLL_INTERVAL_MS,
       };
+      failureCode = 'poll-count-limit';
       throw error;
     }
   } catch (error) {
     primaryError = error;
+    failureCode ||=
+      error?.message ===
+      'Native map journey exceeded its monotonic host deadline.'
+        ? 'host-deadline'
+        : error?.message === 'Native map journey operation did not start.'
+          ? 'operation-start-failed'
+          : error?.message?.startsWith(
+                'Native map journey operation became ',
+              ) ||
+              error?.message === 'Native map journey poll identity changed.'
+            ? 'unexpected-operation-state'
+            : 'protocol-call-failed';
     if (startAttempted && !terminal) {
       try {
         let cancelled = await evaluate('cancel');
+        if (cancelled?.operationId !== operationId)
+          throw new Error('Map journey cancellation identity changed.');
         lastCheckpoint = cancelled?.checkpoint || lastCheckpoint;
-        for (
-          let drainCount = 0;
-          cancelled?.status === 'running' &&
-          drainCount < MAP_JOURNEY_CANCEL_DRAIN_POLL_COUNT;
-          drainCount += 1
-        ) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, MAP_JOURNEY_CANCEL_DRAIN_INTERVAL_MS),
-          );
-          cancelled = await evaluate('poll');
-          lastCheckpoint = cancelled?.checkpoint || lastCheckpoint;
-        }
+        retirement.cancelStatus =
+          cancelled.status === 'missing' ? 'missing' : 'acknowledged';
+        retirement.drainStatus = cancelled?.drainStatus || 'not-needed';
+        retirement.drainWaitMs = Number.isSafeInteger(cancelled?.drainWaitMs)
+          ? cancelled.drainWaitMs
+          : 0;
+        retirement.terminalStatus = [
+          'running',
+          'completed',
+          'failed',
+          'missing',
+        ].includes(cancelled?.status)
+          ? cancelled.status
+          : 'unknown';
         if (
           cancelled?.status &&
           cancelled.status !== 'running' &&
           cancelled.status !== 'missing'
         )
           terminal = true;
-      } catch {
-        // The owning page/context close is the fallback operation retirement boundary.
+        else if (cancelled?.status === 'missing') terminal = false;
+      } catch (cancelError) {
+        retirement.cancelStatus = 'failed';
+        retirement.drainStatus = 'failed';
+        retirement.terminalStatus = 'unknown';
+        if (primaryError && typeof primaryError === 'object')
+          retirement.cancelErrorKind =
+            cancelError?.name === 'TimeoutError'
+              ? 'protocol-timeout'
+              : 'evaluation-failed';
       }
       if (!primaryError.actual && lastCheckpoint)
         primaryError.actual = lastCheckpoint;
@@ -930,13 +1227,60 @@ export async function runNativeMapStreamingJourney(page, options) {
   if (startAttempted && terminal) {
     try {
       const disposed = await evaluate('dispose');
-      if (disposed?.status !== 'disposed')
+      if (
+        disposed?.operationId !== operationId ||
+        disposed?.status !== 'disposed'
+      )
         throw new Error(
-          'Native map journey operation disposal was not confirmed.',
+          'Native map journey operation disposal identity or status was not confirmed.',
         );
+      retirement.disposeStatus = 'confirmed';
     } catch (error) {
-      if (primaryError) primaryError.disposeError = error.message;
-      else primaryError = error;
+      retirement.disposeStatus = 'failed';
+      if (primaryError && typeof primaryError === 'object')
+        retirement.disposeErrorKind =
+          error?.name === 'TimeoutError'
+            ? 'protocol-timeout'
+            : 'evaluation-failed';
+      else {
+        primaryError = error;
+        failureCode = 'operation-disposal-failed';
+      }
+    }
+  }
+  if (primaryError) {
+    if (retirement.terminalStatus === 'unknown' && terminal)
+      retirement.terminalStatus = 'failed';
+    const failureEvidence = {
+      schema: 'gev-map-streaming-journey-failure/v1',
+      operationId,
+      failureCode: failureCode || 'protocol-call-failed',
+      elapsedMs: Math.max(0, Math.round(performance.now() - startedAt)),
+      checkpoint: lastCheckpoint,
+      expected: primaryError?.expected || null,
+      retirement,
+    };
+    try {
+      primaryError.mapStreamingJourneyFailure =
+        projectMapStreamingJourneyFailureEvidence(failureEvidence);
+    } catch {
+      primaryError.mapStreamingJourneyFailure = {
+        schema: 'gev-map-streaming-journey-failure/v1',
+        operationId,
+        failureCode: failureCode || 'protocol-call-failed',
+        elapsedMs: Math.max(0, Math.round(performance.now() - startedAt)),
+        checkpoint: null,
+        expected: null,
+        retirement: {
+          cancelStatus: retirement.cancelStatus,
+          drainStatus: retirement.drainStatus,
+          drainWaitMs: retirement.drainWaitMs,
+          terminalStatus: retirement.terminalStatus,
+          disposeStatus: retirement.disposeStatus,
+          cancelErrorKind: retirement.cancelErrorKind,
+          disposeErrorKind: retirement.disposeErrorKind,
+        },
+      };
     }
   }
   if (primaryError) throw primaryError;

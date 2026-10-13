@@ -9,7 +9,9 @@ import {
   runNativeMapStreamingJourney,
   runNativeMapStreamingJourneyInPage,
   validateMapStreamingCaptureReport,
+  projectMapStreamingJourneyFailureEvidence,
 } from './mapStreamingCapture.mjs';
+import { createCaptureFailureReport } from './captureFailureReport.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
 import {
@@ -129,6 +131,13 @@ function createFakePage({
   scheduleAtZero = true,
   failPollCount = 0,
   failStartResponse = false,
+  failCancel = false,
+  failDispose = false,
+  wrongCancelIdentity = false,
+  wrongDisposeIdentity = false,
+  blockFrames = false,
+  pollDelayMs = 0,
+  timerOvershootMs = 0,
 } = {}) {
   const listeners = new Set();
   const frames = new Map();
@@ -305,7 +314,7 @@ function createFakePage({
         const timer = { cancelled: false, real: null };
         timer.real = setTimeout(() => {
           if (timer.cancelled) return;
-          pageClock += delay;
+          pageClock += delay + timerOvershootMs;
           callback();
         }, 0);
         return timer;
@@ -320,6 +329,10 @@ function createFakePage({
     },
     requestAnimationFrame(callback) {
       const id = ++nextFrame;
+      if (blockFrames) {
+        frames.set(id, null);
+        return id;
+      }
       const timer = setTimeout(() => {
         frames.delete(id);
         pageClock += 5_000;
@@ -343,13 +356,23 @@ function createFakePage({
   let startResponseFailed = false;
   const page = {
     async evaluate(fn, args) {
+      if (args?.command === 'cancel' && failCancel)
+        throw new Error('simulated cancellation protocol failure');
+      if (args?.command === 'dispose' && failDispose)
+        throw new Error('simulated disposal protocol failure');
       if (args?.command === 'poll' && remainingPollFailures > 0) {
         remainingPollFailures -= 1;
         throw new Error('simulated per-command protocol timeout');
       }
+      if (args?.command === 'poll' && pollDelayMs > 0)
+        await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
       const startedAt = Date.now();
       const pageFunction = vm.runInContext(`(${fn.toString()})`, context);
-      const value = await pageFunction(args);
+      let value = await pageFunction(args);
+      if (args?.command === 'cancel' && wrongCancelIdentity)
+        value = { ...value, operationId: 'foreign-operation' };
+      if (args?.command === 'dispose' && wrongDisposeIdentity)
+        value = { ...value, operationId: 'foreign-operation' };
       if (
         args?.command === 'start' &&
         failStartResponse &&
@@ -487,6 +510,49 @@ test('host protocol failure cancels and drains the page operation without losing
   assert.equal(harness.frames.size, 0);
 });
 
+test('host journey uses a monotonic elapsed deadline when individual polls are slow', async () => {
+  const harness = createFakePage({ blockFrames: true, pollDelayMs: 45 });
+  const startedAt = performance.now();
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+      hostDeadlineMs: 120,
+    }),
+    (error) => {
+      assert.match(error.message, /monotonic host deadline/);
+      assert.equal(
+        error.mapStreamingJourneyFailure?.failureCode,
+        'host-deadline',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure?.retirement?.drainStatus,
+        'drained',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure?.retirement?.disposeStatus,
+        'confirmed',
+      );
+      assert.ok(error.mapStreamingJourneyFailure.elapsedMs >= 100);
+      assert.ok(error.mapStreamingJourneyFailure.elapsedMs < 1_000);
+      assert.ok(
+        [
+          'initial-readiness',
+          'transition',
+          'transition-readiness',
+          'route',
+          'final-readiness',
+        ].includes(error.mapStreamingJourneyFailure.checkpoint.phase),
+      );
+      return true;
+    },
+  );
+  assert.ok(performance.now() - startedAt < 1_000);
+  assert.equal(harness.context.window.__gevMapStreamingJourneyV1, undefined);
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
 test('host start response failure retires an operation that was accepted by the page', async () => {
   const harness = createFakePage({ failStartResponse: true });
   await assert.rejects(
@@ -503,6 +569,67 @@ test('host start response failure retires an operation that was accepted by the 
   assert.equal(harness.frames.size, 0);
 });
 
+test('host failure report records unconfirmed cancellation and leaves ownership to page close', async () => {
+  const harness = createFakePage({ failPollCount: 1, failCancel: true });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.cancelStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.drainStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeStatus,
+        'not-attempted',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.cancelErrorKind,
+        'evaluation-failed',
+      );
+      return true;
+    },
+  );
+  assert.equal(
+    harness.pageCalls.some((call) => call.command === 'dispose'),
+    false,
+  );
+});
+
+test('host cancellation rejects a response owned by another operation', async () => {
+  const harness = createFakePage({
+    failPollCount: 1,
+    wrongCancelIdentity: true,
+  });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.cancelStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.terminalStatus,
+        'unknown',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeStatus,
+        'not-attempted',
+      );
+      return true;
+    },
+  );
+});
+
 test('host operation failures report the transition checkpoint and dispose after sibling cleanup', async () => {
   const harness = createFakePage({ failStack: 'esri-imagery' });
   await assert.rejects(
@@ -515,6 +642,43 @@ test('host operation failures report the transition checkpoint and dispose after
       assert.equal(error.actual?.phase, 'transition');
       assert.equal(error.actual?.targetStack, 'esri-imagery');
       assert.equal(error.expected?.status, 'completed');
+      const projected = projectMapStreamingJourneyFailureEvidence({
+        ...error.mapStreamingJourneyFailure,
+        unexpected: { payload: 'must be discarded' },
+      });
+      assert.equal(projected.unexpected, undefined);
+      const report = createCaptureFailureReport({
+        source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+        phase: 'austin-map-streaming-route',
+        error,
+        errorActual: error.actual,
+        errorExpected: error.expected,
+        workload: { mapStreamingJourneyFailure: projected },
+        completedSamples: Array.from({ length: 30 }, (_, run) => ({
+          scenario: 'scripted-motion',
+          run,
+          measurements: Array.from({ length: 20 }, () => 'x'.repeat(1_000)),
+        })),
+      });
+      const serialized = JSON.stringify(report);
+      assert.ok(Buffer.byteLength(serialized, 'utf8') <= 256 * 1024);
+      const replay = JSON.parse(serialized);
+      assert.equal(replay.progress.completedSampleCount, 30);
+      assert.ok(replay.progress.completedSamplesRetained < 30);
+      assert.equal(
+        replay.workload.mapStreamingJourneyFailure.checkpoint.phase,
+        'transition',
+      );
+      assert.equal(
+        replay.workload.mapStreamingJourneyFailure.retirement.disposeStatus,
+        'confirmed',
+      );
+      assert.deepEqual(
+        replay.workload.mapStreamingJourneyFailure.expected,
+        error.expected,
+      );
+      assert.equal(replay.failure.actual.phase, 'transition');
+      assert.equal(replay.failure.expected.status, 'completed');
       return true;
     },
   );
@@ -522,6 +686,168 @@ test('host operation failures report the transition checkpoint and dispose after
   assert.equal(harness.context.window.__gevMapStreamingJourneyV1, undefined);
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
+});
+
+test('host failure report retains terminal state when disposal is unconfirmed', async () => {
+  const harness = createFakePage({
+    failStack: 'esri-imagery',
+    failDispose: true,
+  });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.terminalStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeErrorKind,
+        'evaluation-failed',
+      );
+      return true;
+    },
+  );
+});
+
+test('page cancellation evidence retains late timer scheduling beyond its deadline', async () => {
+  const harness = createFakePage({ timerOvershootMs: 2_000 });
+  const operationId = 'map-late-drain';
+  harness.context.window.__gevMapStreamingJourneyV1 = {
+    [operationId]: {
+      status: 'running',
+      checkpoint: {
+        phase: 'route',
+        initialReadinessComplete: true,
+        transitionCount: 3,
+        targetStack: null,
+        routeElapsedMs: 3_000,
+        latestObservation: null,
+      },
+      completion: new Promise(() => {}),
+      cancel() {},
+    },
+  };
+
+  const cancelled = await harness.serializedDriver({
+    command: 'cancel',
+    operationId,
+  });
+  assert.equal(cancelled.drainStatus, 'timed-out');
+  assert.equal(cancelled.drainWaitMs, 7_000);
+  const projected = projectMapStreamingJourneyFailureEvidence({
+    schema: 'gev-map-streaming-journey-failure/v1',
+    operationId,
+    failureCode: 'host-deadline',
+    elapsedMs: 8_000,
+    checkpoint: cancelled.checkpoint,
+    expected: { maxElapsedMs: 60_000 },
+    retirement: {
+      cancelStatus: 'acknowledged',
+      drainStatus: cancelled.drainStatus,
+      drainWaitMs: cancelled.drainWaitMs,
+      terminalStatus: cancelled.status,
+      disposeStatus: 'not-attempted',
+      cancelErrorKind: null,
+      disposeErrorKind: null,
+    },
+  });
+  assert.equal(projected.retirement.drainWaitMs, 7_000);
+  assert.equal(projected.retirement.drainStatus, 'timed-out');
+});
+
+test('completed route checkpoint survives a failed disposal with measured tile counts', async () => {
+  const harness = createFakePage({ failDispose: true });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const evidence = error.mapStreamingJourneyFailure;
+      assert.equal(evidence.failureCode, 'operation-disposal-failed');
+      assert.equal(evidence.checkpoint.phase, 'completed');
+      assert.equal(evidence.checkpoint.transitionCount, 3);
+      assert.equal(
+        evidence.checkpoint.latestObservation.photorealReadyContentTiles,
+        7,
+      );
+      assert.equal(
+        evidence.checkpoint.latestObservation.photorealSelectedTiles,
+        4,
+      );
+      assert.equal(evidence.retirement.terminalStatus, 'completed');
+      assert.equal(evidence.retirement.disposeStatus, 'failed');
+
+      const report = createCaptureFailureReport({
+        source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+        phase: 'austin-map-streaming-route',
+        error,
+        errorActual: error.actual,
+        errorExpected: error.expected,
+        workload: { mapStreamingJourneyFailure: evidence },
+      });
+      const serialized = JSON.stringify(report);
+      assert.ok(Buffer.byteLength(serialized, 'utf8') <= 256 * 1024);
+      const replay = JSON.parse(serialized);
+      const retained = replay.workload.mapStreamingJourneyFailure;
+      assert.equal(retained.checkpoint.phase, 'completed');
+      assert.equal(retained.checkpoint.transitionCount, 3);
+      assert.equal(
+        retained.checkpoint.latestObservation.photorealReadyContentTiles,
+        7,
+      );
+      assert.equal(
+        retained.checkpoint.latestObservation.photorealSelectedTiles,
+        4,
+      );
+      assert.equal(retained.retirement.terminalStatus, 'completed');
+      assert.equal(retained.retirement.disposeStatus, 'failed');
+      return true;
+    },
+  );
+  assert.equal(
+    Object.values(harness.context.window.__gevMapStreamingJourneyV1 || {})[0]
+      ?.status,
+    'completed',
+    'The completed operation remains owned when disposal is unconfirmed.',
+  );
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
+test('host disposal requires the same operation identity it started', async () => {
+  const harness = createFakePage({
+    failStack: 'esri-imagery',
+    wrongDisposeIdentity: true,
+  });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeStatus,
+        'failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.disposeErrorKind,
+        'evaluation-failed',
+      );
+      assert.equal(
+        error.mapStreamingJourneyFailure.retirement.terminalStatus,
+        'failed',
+      );
+      return true;
+    },
+  );
 });
 
 test('serialized native journey reads bloom and sharpen from the common visual snapshot', async () => {

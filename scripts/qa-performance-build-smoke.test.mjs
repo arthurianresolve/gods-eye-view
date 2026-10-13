@@ -32,6 +32,7 @@ import {
   runBoundedChild,
   validateCaptureCliReport,
   validateRendererBackendEvidence,
+  projectMapStreamingJourneyFailureForSmoke,
 } from './qa-performance-build-smoke.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -61,7 +62,10 @@ import {
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
 import { createDeterministicMapStreamingFixture } from './performance/mapStreamingFixture.mjs';
 import { createMapStreamingFixtureDelivery } from './performance/mapStreamingFixtureDelivery.mjs';
-import { validateMapStreamingSmokeDeliverySummary } from './performance/mapStreamingCapture.mjs';
+import {
+  projectMapStreamingJourneyFailureEvidence,
+  validateMapStreamingSmokeDeliverySummary,
+} from './performance/mapStreamingCapture.mjs';
 import {
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsFixtureLifecycle,
@@ -998,6 +1002,95 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
       mapStreamingCaptureModule,
     }),
     /strictly equal/,
+  );
+});
+
+test('outer smoke projects only validated CLI map-journey failure evidence', () => {
+  const producerEvidence = projectMapStreamingJourneyFailureEvidence({
+    schema: 'gev-map-streaming-journey-failure/v1',
+    operationId: 'map-test-1',
+    failureCode: 'host-deadline',
+    elapsedMs: 151_234,
+    expected: { maxElapsedMs: 150_000 },
+    checkpoint: {
+      phase: 'final-readiness',
+      initialReadinessComplete: true,
+      transitionCount: 3,
+      targetStack: 'photoreal',
+      routeElapsedMs: 61_234,
+      latestObservation: {
+        activeStack: 'photoreal',
+        controllerStatus: 'ready',
+        switchOrigin: 'manual',
+        hasError: false,
+        stackAvailable: true,
+        globeTilesLoaded: true,
+        terrainProviderClass: 'CesiumTerrainProvider',
+        imageryLayerCount: 1,
+        imageryProviderClass: 'ArcGisMapServerImageryProvider',
+        photorealTilesLoaded: true,
+        photorealReadyContentTiles: 12,
+        photorealSelectedTiles: 9,
+      },
+    },
+    retirement: {
+      cancelStatus: 'acknowledged',
+      drainStatus: 'drained',
+      drainWaitMs: 4,
+      terminalStatus: 'failed',
+      disposeStatus: 'confirmed',
+      cancelErrorKind: null,
+      disposeErrorKind: null,
+    },
+    extra: { body: 'must not survive projection' },
+  });
+  const cliFailure = compactCaptureCliFailure({
+    schema: 'gev-performance-capture-failure/v1',
+    status: 'failed',
+    failure: {
+      phase: 'austin-map-streaming-route',
+      message: 'Map route timed out.',
+      actual: producerEvidence.checkpoint,
+      expected: { maxElapsedMs: 150_000 },
+    },
+    workload: { mapStreamingJourneyFailure: producerEvidence },
+    progress: {},
+  });
+  const projected = projectMapStreamingJourneyFailureForSmoke(
+    { captureCliFailure: cliFailure },
+    { projectMapStreamingJourneyFailureEvidence },
+  );
+  assert.deepEqual(projected, producerEvidence);
+  assert.equal(projected.extra, undefined);
+  assert.equal(projected.checkpoint.routeElapsedMs, 61_234);
+  assert.deepEqual(projected.expected, { maxElapsedMs: 150_000 });
+  assert.equal(
+    projected.checkpoint.latestObservation.photorealSelectedTiles,
+    9,
+  );
+  assert.equal(projected.retirement.disposeStatus, 'confirmed');
+  assert.deepEqual(
+    projectMapStreamingJourneyFailureForSmoke(
+      {
+        captureCliFailure: {
+          rawReport: {
+            workload: {
+              mapStreamingJourneyFailure: {
+                schema: 'gev-map-streaming-journey-failure/v1',
+                status: 'failed',
+                body: 'unvalidated payload',
+              },
+            },
+          },
+        },
+      },
+      { projectMapStreamingJourneyFailureEvidence },
+    ),
+    {
+      schema: 'gev-map-streaming-journey-failure/v1',
+      status: 'invalid',
+      reasonCode: 'invalid-envelope',
+    },
   );
 });
 

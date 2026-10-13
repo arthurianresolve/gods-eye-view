@@ -3174,6 +3174,37 @@ export function compactCaptureCliFailure(report) {
   };
 }
 
+export function projectMapStreamingJourneyFailureForSmoke(
+  error,
+  mapStreamingCaptureModule,
+) {
+  const candidate =
+    error?.mapStreamingJourneyFailure ||
+    error?.captureCliFailure?.rawReport?.workload?.mapStreamingJourneyFailure ||
+    null;
+  if (!candidate) return null;
+  if (
+    typeof mapStreamingCaptureModule?.projectMapStreamingJourneyFailureEvidence !==
+    'function'
+  )
+    return {
+      schema: 'gev-map-streaming-journey-failure/v1',
+      status: 'invalid',
+      reasonCode: 'projector-unavailable',
+    };
+  try {
+    return mapStreamingCaptureModule.projectMapStreamingJourneyFailureEvidence(
+      candidate,
+    );
+  } catch {
+    return {
+      schema: 'gev-map-streaming-journey-failure/v1',
+      status: 'invalid',
+      reasonCode: 'invalid-envelope',
+    };
+  }
+}
+
 export async function preserveCaptureCliReportArtifact(
   sourcePath,
   artifactPath,
@@ -4882,6 +4913,11 @@ async function runRevision({
       durationMs: Date.now() - startedAt,
     };
   } catch (error) {
+    const mapStreamingJourneyFailure =
+      projectMapStreamingJourneyFailureForSmoke(
+        error,
+        mapStreamingCaptureModule,
+      );
     error.smokeDiagnostics = {
       phase,
       pageErrors: pageErrors.slice(0, 4),
@@ -4895,6 +4931,7 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
+      ...(mapStreamingJourneyFailure ? { mapStreamingJourneyFailure } : {}),
       ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
       terminalRenderLoopRetirement,
       rendererProbeCleanup,
