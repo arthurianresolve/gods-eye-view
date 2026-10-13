@@ -84,6 +84,16 @@ The exact-path correction `88e5266c`, integrated at `8c7f1204`, passes
 the actual Cesium provider's metadata request and real delivery callbacks.
 Complete rendered journeys remain unproven until the next browser gate passes.
 
+The [run at `0cae3037`](performance-evidence/s47-map-streaming/native-38358638098/README.md)
+confirms the Esri metadata correction: the provider and map controller become
+ready without page or interception errors. It fails later at transition
+readiness because the globe load queues do not empty within the existing
+deadline. Operation, probe and interception cleanup are confirmed. The failed
+report lacks the finalized fixture delivery summary and individual queue
+states; the next diagnostic preserves those bounded observations before
+attributing a cause. No completed baseline/candidate journey, performance
+improvement or hardware acceptance is claimed.
+
 Next actions, in dependency order:
 
 1. Exercise the corrected M3 map-workload setup and post-retirement evidence
