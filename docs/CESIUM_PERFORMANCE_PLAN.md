@@ -54,7 +54,13 @@ from the owned browser connection before close, with bounded native protocol
 timeouts and explicit error classification. Root passes 75 focused recovery,
 shutdown and CLI checks. Its [review](performance-evidence/windows-recovery-38338398935/diagnostic-correction-review.json)
 keeps the prior failure, five-second close gate and unresolved cause intact.
-Hosted validation of the changed diagnostic remains pending.
+[Hosted run 38341548120](performance-evidence/windows-recovery-38341548120/README.md)
+now validates the new process observation, but Windows recovery still fails:
+four attempted stages preserve settings/workspace/assets, while upgraded-app
+shutdown exceeds the unchanged five-second gate. Process roles are available
+before close; the parent PID is present at timeout and forced cleanup confirms
+exit code 1. This improves attribution without establishing the shutdown cause
+or a fix. The fifth recovery stage is not reached; QA is not promoted.
 
 ## Earlier integration evidence
 
