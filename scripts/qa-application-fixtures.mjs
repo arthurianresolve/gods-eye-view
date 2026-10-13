@@ -128,14 +128,19 @@ export async function prepareFixturePage(
   // waiting for a Network event that never arrives. The page target receives
   // worker Fetch events too; Chromium worker targets do not expose Fetch.enable.
   // The soak preflight checks local/external worker interception before use.
-  await interceptFixtureSession(
+  const interception = await interceptFixtureSession(
     await page.createCDPSession(),
     base,
     (url, request) => networkProbe.respond(url) ?? respond?.(url, request),
     onError,
     onFulfilled ? { onFulfilled } : undefined,
   );
-  return { page, errors, verifyNetwork: () => networkProbe.verify(page) };
+  return {
+    page,
+    errors,
+    interception,
+    verifyNetwork: () => networkProbe.verify(page),
+  };
 }
 
 export async function cleanupFixturePageDiagnostics(page) {

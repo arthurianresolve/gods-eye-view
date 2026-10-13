@@ -121,6 +121,70 @@ export function smokeProviderPreparationMode(providerFixture) {
     : 'dense-provider-fixture';
 }
 
+export function observeSmokeLayerPopulationInPage() {
+  const manager = window.__godsEyeView?.dataManager;
+  if (!manager || typeof manager.getAll !== 'function')
+    throw new Error('Application layer manager is unavailable.');
+  const layers = manager.getAll();
+  if (!Array.isArray(layers) || layers.length > 256)
+    throw new Error('Application layer inventory is invalid or oversized.');
+  return layers
+    .map((layer) => {
+      if (typeof layer?.id !== 'string' || !layer.id || layer.id.length > 96)
+        throw new Error('Application layer identity is invalid.');
+      const count = layer.stats?.count;
+      if (count !== undefined && (!Number.isSafeInteger(count) || count < 0))
+        throw new Error(`Application layer count is invalid for ${layer.id}.`);
+      return {
+        id: layer.id,
+        enabled:
+          typeof manager.isEnabled === 'function'
+            ? manager.isEnabled(layer.id) === true
+            : layer.enabled === true,
+        count: count ?? null,
+      };
+    })
+    .sort((left, right) =>
+      left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+    );
+}
+
+export function validateMapSmokeLayerPopulation(before, after) {
+  for (const [label, layers] of [
+    ['before', before],
+    ['after', after],
+  ]) {
+    assert.ok(Array.isArray(layers) && layers.length <= 256);
+    const ids = new Set();
+    for (const layer of layers) {
+      assert.equal(typeof layer?.id, 'string');
+      assert.ok(layer.id.length > 0 && layer.id.length <= 96);
+      assert.equal(ids.has(layer.id), false, `Duplicate ${label} layer ID.`);
+      ids.add(layer.id);
+      assert.equal(typeof layer.enabled, 'boolean');
+      assert.ok(
+        layer.count === null ||
+          (Number.isSafeInteger(layer.count) && layer.count >= 0),
+      );
+    }
+  }
+  assert.deepEqual(
+    before.map(({ id, enabled }) => [id, enabled]),
+    after.map(({ id, enabled }) => [id, enabled]),
+    'Map smoke must preserve the application’s observed layer selection.',
+  );
+  return {
+    schema: 'gev-map-smoke-layer-population/v1',
+    scope:
+      'Observed application layer enabled states and source counts; map smoke leaves defaults unchanged and does not assume all non-map layers are disabled.',
+    before,
+    after,
+    enabledLayerIds: before
+      .filter((layer) => layer.enabled)
+      .map(({ id }) => id),
+  };
+}
+
 export async function runNativeMapJourneyForSmoke({
   page,
   revision,
@@ -164,6 +228,101 @@ export async function runNativeMapJourneyForSmoke({
     journey,
   };
 }
+
+export function validateMapSmokeInterceptionRelease(evidence, identity) {
+  assert.equal(evidence?.schema, 'gev-map-smoke-interception-release/v1');
+  assert.equal(evidence.documentRole, identity?.documentRole);
+  assert.equal(evidence.documentId, identity?.documentId);
+  assert.equal(evidence.contextCloseStatus, 'closed');
+  assert.equal(evidence.targetClosed, true);
+  const release = evidence.release;
+  assert.equal(release?.schema, 'gev-fixture-interception-release/v1');
+  assert.equal(release.fetchDisable, 'target-closed');
+  assert.equal(release.detach, 'target-closed');
+  const drain = release.interception;
+  assert.equal(drain?.schema, 'gev-fixture-interception-drain/v1');
+  assert.equal(drain.listenerRemovalConfirmed, true);
+  for (const name of [
+    'pendingAtStop',
+    'pendingPreparationAtStop',
+    'pendingAbortSubscriptionsAtStop',
+    'pendingCommandsAtStop',
+    'pendingCommandsAfterDrain',
+    'pendingPreparationsAfterDrain',
+    'pendingAbortSubscriptionsAfterDrain',
+    'rejectedDrainOperations',
+    'drainCommandFailures',
+    'cancelledPreparationCount',
+    'unexpectedLateRequestCount',
+  ])
+    assert.ok(Number.isSafeInteger(drain[name]) && drain[name] >= 0);
+  for (const name of [
+    'pendingCommandsAfterDrain',
+    'pendingPreparationsAfterDrain',
+    'pendingAbortSubscriptionsAfterDrain',
+    'rejectedDrainOperations',
+    'drainCommandFailures',
+    'unexpectedLateRequestCount',
+  ])
+    assert.equal(
+      drain[name],
+      0,
+      `Map smoke interception ${name} must be zero.`,
+    );
+  assert.equal(drain.confirmed, true);
+  assert.equal(release.confirmed, true);
+  assert.equal(evidence.confirmed, true);
+  return true;
+}
+
+/** Close the owning target before stopping, draining, and releasing Fetch. */
+export async function closeMapSmokeFixtureOwner({
+  context,
+  page,
+  fixturePage,
+  documentRole,
+  documentId,
+}) {
+  let contextCloseStatus = 'closed';
+  let contextCloseError = null;
+  try {
+    await withTimeout(context.close(), 5_000, 'Map smoke context cleanup');
+  } catch (error) {
+    contextCloseStatus = 'failed';
+    contextCloseError = sanitizeError(error);
+  }
+  let targetClosed = false;
+  try {
+    targetClosed = page?.isClosed?.() === true;
+  } catch {
+    targetClosed = false;
+  }
+  let release = null;
+  let releaseError = null;
+  try {
+    release = await fixturePage?.interception?.releaseSession?.({
+      targetClosed,
+    });
+  } catch (error) {
+    releaseError = sanitizeError(error);
+  }
+  return {
+    schema: 'gev-map-smoke-interception-release/v1',
+    documentRole,
+    documentId,
+    contextCloseStatus,
+    ...(contextCloseError ? { contextCloseError } : {}),
+    targetClosed,
+    release,
+    ...(releaseError ? { releaseError } : {}),
+    confirmed:
+      contextCloseStatus === 'closed' &&
+      targetClosed &&
+      release?.confirmed === true &&
+      releaseError === null,
+  };
+}
+
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -4029,6 +4188,8 @@ async function runRevision({
   let mapStreamingSmokeDelivery = null;
   let mapStreamingSmokeEvidence = null;
   let mapStreamingNativeJourney = null;
+  let mapStreamingInterceptionRelease = null;
+  let mapLayerPopulationBefore = null;
   try {
     const captureUrl = served.baseUrl;
     phase = 'verify-served-assets-before';
@@ -4215,6 +4376,9 @@ async function runRevision({
     const smokeWorkloadMode = smokeProviderPreparationMode(providerFixture);
     if (smokeWorkloadMode === 'native-map-streaming') {
       phase = 'native-map-streaming-selected-workload';
+      mapLayerPopulationBefore = await page.evaluate(
+        observeSmokeLayerPopulationInPage,
+      );
     } else {
       phase = 'production-provider-fixture-population';
       expectedLayerCounts = {
@@ -4292,6 +4456,11 @@ async function runRevision({
         buildProfile: build.receipt.buildRecipe?.mapFixtureProfile,
         mapStreamingCaptureModule,
       });
+      mapStreamingNativeJourney.layerPopulation =
+        validateMapSmokeLayerPopulation(
+          mapLayerPopulationBefore,
+          await page.evaluate(observeSmokeLayerPopulationInPage),
+        );
       after = await page.evaluate(observeCommonScene, { appCommit: commit });
       route = mapStreamingNativeJourney.journey.route;
       fixtureClockEnd = await page.evaluate(() => ({
@@ -4500,14 +4669,39 @@ async function runRevision({
         3000,
         'Page diagnostic cleanup before capture CLI',
       );
-      await withTimeout(
-        context.close(),
-        5000,
-        'Smoke browser context cleanup before capture CLI',
-      );
-      context = null;
-      page = null;
-      fixturePage = null;
+      if (
+        smokeProviderPreparationMode(providerFixture) === 'native-map-streaming'
+      ) {
+        mapStreamingInterceptionRelease = await closeMapSmokeFixtureOwner({
+          context,
+          page,
+          fixturePage,
+          documentRole: 'smoke-variant',
+          documentId: `${label}-${commit}`,
+        });
+        if (mapStreamingInterceptionRelease.targetClosed) {
+          context = null;
+          page = null;
+          fixturePage = null;
+        }
+        if (mapStreamingInterceptionRelease.confirmed !== true)
+          throw new Error(
+            'Map smoke target/interception retirement was not confirmed before fixture disposal.',
+          );
+        validateMapSmokeInterceptionRelease(mapStreamingInterceptionRelease, {
+          documentRole: 'smoke-variant',
+          documentId: `${label}-${commit}`,
+        });
+      } else {
+        await withTimeout(
+          context.close(),
+          5000,
+          'Smoke browser context cleanup before capture CLI',
+        );
+        context = null;
+        page = null;
+        fixturePage = null;
+      }
       if (mapStreamingSmokeDelivery) {
         mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
         mapStreamingSmokeDelivery = null;
@@ -4521,6 +4715,8 @@ async function runRevision({
         );
         if (mapStreamingNativeJourney) {
           mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
+          mapStreamingNativeJourney.interceptionRelease =
+            mapStreamingInterceptionRelease;
           mapStreamingNativeJourney.rendering = {
             observedRenderer: after.environment.renderer,
             observedVendor: after.environment.vendor,
@@ -4736,10 +4932,40 @@ async function runRevision({
       }
     }
     if (context) {
-      try {
-        await withTimeout(context.close(), 5000, 'Browser context cleanup');
-      } catch (error) {
-        cleanupErrors.push(sanitizeError(error));
+      if (
+        smokeProviderPreparationMode(providerFixture) ===
+          'native-map-streaming' &&
+        fixturePage?.interception
+      ) {
+        mapStreamingInterceptionRelease = await closeMapSmokeFixtureOwner({
+          context,
+          page,
+          fixturePage,
+          documentRole: 'smoke-variant',
+          documentId: `${label}-${commit}`,
+        });
+        if (mapStreamingInterceptionRelease.targetClosed) {
+          context = null;
+          page = null;
+          fixturePage = null;
+        }
+        try {
+          validateMapSmokeInterceptionRelease(mapStreamingInterceptionRelease, {
+            documentRole: 'smoke-variant',
+            documentId: `${label}-${commit}`,
+          });
+        } catch (error) {
+          cleanupErrors.push(sanitizeError(error));
+        }
+        if (mapStreamingNativeJourney)
+          mapStreamingNativeJourney.interceptionRelease =
+            mapStreamingInterceptionRelease;
+      } else {
+        try {
+          await withTimeout(context.close(), 5000, 'Browser context cleanup');
+        } catch (error) {
+          cleanupErrors.push(sanitizeError(error));
+        }
       }
     }
     if (mapStreamingSmokeDelivery) {
@@ -4967,6 +5193,29 @@ async function main() {
           createMapStreamingFixtureDelivery,
         });
         Object.assign(variant, result);
+        if (providerFixture === MAP_STREAMING_WORKLOAD_ID && index === 1) {
+          const baselineLayerPopulation =
+            report.variants[0]?.mapStreamingNativeJourney?.layerPopulation;
+          const candidateLayerPopulation =
+            variant.mapStreamingNativeJourney?.layerPopulation;
+          assert.ok(baselineLayerPopulation && candidateLayerPopulation);
+          assert.deepEqual(
+            baselineLayerPopulation.enabledLayerIds,
+            candidateLayerPopulation.enabledLayerIds,
+            'Baseline and candidate map smokes must preserve the same observed application layer selection.',
+          );
+          assert.deepEqual(
+            baselineLayerPopulation.before.map(({ id, enabled }) => [
+              id,
+              enabled,
+            ]),
+            candidateLayerPopulation.before.map(({ id, enabled }) => [
+              id,
+              enabled,
+            ]),
+            'Baseline and candidate map smokes must start from the same observed layer states.',
+          );
+        }
       } catch (error) {
         variant.status = 'failed';
         if (error.captureCliReportArtifact)
@@ -5021,6 +5270,11 @@ async function main() {
       } catch (error) {
         cleanupErrors.push(sanitizeError(error));
       }
+    }
+    if (failure && mapStreamingInterceptionRelease) {
+      failure.smokeDiagnostics ||= {};
+      failure.smokeDiagnostics.mapStreamingInterceptionRelease =
+        mapStreamingInterceptionRelease;
     }
     if (temporary) {
       try {

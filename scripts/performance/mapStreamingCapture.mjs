@@ -748,12 +748,20 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
   assert.equal(summary.status, 'disposed');
   assert.equal(summary.cleanupConfirmed, true);
   assert.equal(summary.pendingCount, 0);
-  assert.equal(summary.cancelledCount, 0);
   assert.equal(summary.unexpectedFulfillmentCount, 0);
   assert.equal(summary.errorObservationCount, 0);
+  assert.equal(summary.omittedErrorObservationCount, 0);
+  assert.equal(summary.omittedErrorKindCount, 0);
   assert.ok(Number.isSafeInteger(summary.requestedCount));
   assert.ok(summary.requestedCount > 0);
-  assert.equal(summary.fulfilledAckCount, summary.requestedCount);
+  assert.ok(Number.isSafeInteger(summary.fulfilledAckCount));
+  assert.ok(summary.fulfilledAckCount >= 0);
+  assert.ok(Number.isSafeInteger(summary.cancelledCount));
+  assert.ok(summary.cancelledCount >= 0);
+  assert.equal(
+    summary.fulfilledAckCount + summary.cancelledCount,
+    summary.requestedCount,
+  );
   assert.ok(Array.isArray(summary.assets));
   const expectedAssets = new Map(
     fixture.manifest.assets.map((asset) => [asset.path, asset]),
@@ -761,6 +769,7 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
   const observedPaths = new Set();
   const observedKinds = new Set();
   let acknowledgedCount = 0;
+  let cancelledCount = 0;
   for (const row of summary.assets) {
     const expected = expectedAssets.get(row.path);
     assert.ok(expected, `Smoke-delivered map asset ${row.path} is declared.`);
@@ -769,12 +778,17 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
     assert.equal(row.sha256, expected.sha256);
     assert.equal(row.byteLength, expected.byteLength);
     assert.ok(Number.isSafeInteger(row.requests) && row.requests > 0);
-    assert.equal(row.fulfilledAckCount, row.requests);
-    assert.equal(row.cancelledCount, 0);
+    assert.ok(Number.isSafeInteger(row.fulfilledAckCount));
+    assert.ok(row.fulfilledAckCount >= 0);
+    assert.ok(Number.isSafeInteger(row.cancelledCount));
+    assert.ok(row.cancelledCount >= 0);
+    assert.equal(row.fulfilledAckCount + row.cancelledCount, row.requests);
     acknowledgedCount += row.fulfilledAckCount;
+    cancelledCount += row.cancelledCount;
     observedKinds.add(expected.kind);
   }
   assert.equal(acknowledgedCount, summary.fulfilledAckCount);
+  assert.equal(cancelledCount, summary.cancelledCount);
   for (const kind of [
     '3d-tiles-1.1',
     'textured-glb',

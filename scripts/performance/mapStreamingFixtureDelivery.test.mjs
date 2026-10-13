@@ -138,6 +138,38 @@ test('native map URLs resolve every manifest asset through real interception cal
   );
 });
 
+test('smoke summary accepts observed cancellations but rejects unbalanced counts', async () => {
+  const pinned = await fixture();
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  const [cancelledAsset, ...fulfilledAssets] = pinned.manifest.assets;
+  for (const row of fulfilledAssets) {
+    const result = await issueRequest(delivery, nativeUrl(row));
+    assert.equal(result.acknowledged, true);
+  }
+  const cancelledUrl = nativeUrl(cancelledAsset);
+  const abort = new AbortController();
+  await delivery.respond(new URL(cancelledUrl), {
+    url: () => cancelledUrl,
+    method: () => 'GET',
+    signal: abort.signal,
+  });
+  abort.abort();
+  const summary = delivery.dispose();
+  assert.equal(summary.requestedCount, pinned.manifest.assets.length);
+  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length - 1);
+  assert.equal(summary.cancelledCount, 1);
+  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
+
+  const unbalanced = structuredClone(summary);
+  unbalanced.cancelledCount -= 1;
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(unbalanced, pinned),
+    /strictly equal/,
+  );
+});
+
 test('unrelated offline API fulfillments are not counted as native map assets', async () => {
   const delivery = createMapStreamingFixtureDelivery(await fixture(), {
     appOrigin: APP_ORIGIN,
