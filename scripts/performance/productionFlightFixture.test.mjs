@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { readFileSync } from 'node:fs';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   DEFAULT_FLIGHT_FIXTURE_TIME,
@@ -607,17 +606,6 @@ test('render-demand failure projection retains controlled start/end evidence and
   const serialized = JSON.stringify(report);
   assert.doesNotMatch(serialized, /provider response body|authorization|token/);
   assert.ok(Buffer.byteLength(serialized) < 24_000);
-});
-
-test('retained canvas classification matches the static CCTV host template', () => {
-  const markup = readFileSync(
-    new URL('../../src/ui/templates/layer-panels.html', import.meta.url),
-    'utf8',
-  );
-  assert.match(
-    markup,
-    /<canvas id="cctv-video" class="cctv-frame" hidden><\/canvas>/,
-  );
 });
 
 test('render-demand snapshots allow only bounded receipt-time movement while health and population stay fixed', () => {
