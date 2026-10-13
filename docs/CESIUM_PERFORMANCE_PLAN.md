@@ -2,6 +2,14 @@
 
 ## Current execution checkpoint - 13 October 2026
 
+The [S49 stale rollback fix](performance-evidence/s49-stale-rollback/README.md)
+at `673349bc` prevents older rollback completion from overwriting a newer workspace
+and keeps delayed layer restores with their original owner. Root passes 258
+affected checks and the original before/after reproduction. The corrected UI
+regression at `7c9f65dd` also passes its full 20-test suite and rejects a missing
+guard in a narrow negative control. Its rendered workspace journey and final
+Windows retention qualification remain pending; S49 is still partial.
+
 The [current representative PR matrix](performance-evidence/representative-pr-d6a97e46/README.md)
 tests frozen QA head `d6a97e46` against current dev and main. Both synthetic merge
 trees match that head, pass the published layer-token checks and pass all seven
