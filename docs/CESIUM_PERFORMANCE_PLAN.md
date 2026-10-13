@@ -12,6 +12,13 @@ The candidate evaluator now separates target outcome at `6f635ecd`; root passes
 73 focused candidate/comparison/retention checks. Standard integration now passes
 all seven selected jobs at containing revision `f50565a0`.
 
+The [fresh-document map fault runner](performance-evidence/s47-map-streaming/fault-outer-control/README.md)
+at `cc3328e1` is implemented with independent candidate contexts, bounded stages,
+owned cleanup and exact build/fixture/scenario binding. Root passes all 98 focused
+page, delivery and outer runner checks plus lint, boundaries and formatting.
+Rendered missing/corrupt/delayed metadata journeys remain pending; M3, S47 and
+S57 are not closed by these local checks.
+
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
 closes S52 engineering after rechecking its unchanged accepted renderer, 13
 artifact hashes and 90 focused tests, and retaining the supported paint-cache

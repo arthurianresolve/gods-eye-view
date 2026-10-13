@@ -1,5 +1,12 @@
 # Current main reconciliation
 
+The latest fetch before the `cc3328e1` integration check again confirms both main
+refs at `9beadbda6333b83f79aa03047e2d851830f01f6b` and fork/dev at
+`e8ccc268608fbece8b6d87a0b6db86e1800ddf90`. Dev remains fourteen commits behind
+main. Both are already ancestors of the current QA branch; no additional merge
+or rebase is needed on QA. The reviewed reconciliation still awaits current
+integration validation before promotion to dev. VM105 is unchanged.
+
 ## Reviewed merge prepared
 
 Merge `8b84a2e0de1393d183c54e50d28d468468fa53f9` now combines reviewed QA
