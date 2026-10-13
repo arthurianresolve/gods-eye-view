@@ -157,6 +157,36 @@ test('installation-subset failures retain reason codes and bounded observed pred
       'count-below-one',
     ],
     [
+      'unsafe-count',
+      (state) => {
+        installationRow(state).sourcePopulation.count =
+          Number.MAX_SAFE_INTEGER + 1;
+      },
+      'count-not-safe-integer',
+    ],
+    [
+      'count-above-catalog',
+      (state) => {
+        installationRow(state).sourcePopulation.count =
+          fixture.sourcePopulationIds['military-installations'].length + 1;
+      },
+      'count-exceeds-declared-catalog',
+    ],
+    [
+      'declared-catalog-count',
+      (state) => {
+        installationRow(state).expectedSourceCatalogCount -= 1;
+      },
+      'declared-catalog-count-mismatch',
+    ],
+    [
+      'missing-identity-list',
+      (state) => {
+        installationRow(state).sourcePopulation.identityIds = undefined;
+      },
+      'identity-list-missing',
+    ],
+    [
       'identity-length',
       (state) => {
         installationRow(state).sourcePopulation.identityIds.pop();
@@ -273,6 +303,45 @@ test('installation failure predicates survive bounded report serialization when 
   assert.equal(report.failure.expected.sha256MustMatchSortedIdentityIds, true);
   assert.equal(report.evidenceTruncated, true);
   assert.doesNotMatch(json, /private\.example/);
+});
+
+test('installation failure predicates survive whole-current replacement at the hard report cap', () => {
+  const state = validState();
+  installationRow(state).sourcePopulation.sha256 = 'f'.repeat(64);
+  const error = installationFailure(state);
+  const oversizedCurrent = {
+    phase: 'validate-sample-integrity',
+    before: Array.from({ length: 256 }, () => 'before'.repeat(170)),
+    after: Array.from({ length: 256 }, () => 'after'.repeat(170)),
+    measurement: Array.from({ length: 256 }, () => 'measurement'.repeat(170)),
+  };
+  const report = createCaptureFailureReport({
+    phase: 'validate-sample-integrity',
+    scenario: 'scripted-motion',
+    run: 2,
+    error,
+    errorActual: error.actual,
+    errorExpected: error.expected,
+    current: oversizedCurrent,
+  });
+  const json = `${JSON.stringify(report, null, 2)}\n`;
+
+  assert.ok(
+    Buffer.byteLength(json, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
+  assert.deepEqual(report.progress.current, {
+    phase: 'validate-sample-integrity',
+    beforeAvailable: true,
+    afterAvailable: true,
+    measurementAvailable: true,
+  });
+  assert.equal(report.failure.actual.label, 'scripted-motion run 2');
+  assert.ok(
+    report.failure.actual.reasonCodes.includes('identity-digest-mismatch'),
+  );
+  assert.equal(report.failure.actual.recomputedIdentitySha256?.length, 64);
+  assert.equal(report.failure.expected.sha256MustMatchSortedIdentityIds, true);
+  assert.equal(report.evidenceTruncated, true);
 });
 
 test('viewport counts are not inferred for whole-catalog or grid layers', () => {
