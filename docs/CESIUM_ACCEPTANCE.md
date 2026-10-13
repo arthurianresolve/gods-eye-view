@@ -167,12 +167,15 @@ evidence; do not relabel old artifacts with a new SHA.
 | Free standard GitHub runners        | Node 24/26, builds, onboarding, OS recovery and bounded browser/fixture integration            | Software and hosted Metal remain explicitly labeled supplemental rendering evidence |
 | Physical Mac / discrete Windows GPU | Unavailable in this milestone; record unverified coverage                                      | Does not block primary-machine completion and must not be called passed             |
 
-Finish the current native imagery dependency correction and its baseline/candidate
-delivery check. In parallel with independent work, merge current main into an
-isolated integration branch, preserve both sides of the picking tests, review
-automatic merges and run the affected gates. The 13 October recheck finds fork
-and upstream main at `9beadbda`, fourteen commits ahead of the common base with
-dev `e8ccc268`; see [the reconciliation record](performance-evidence/main-reconciliation-20261013/README.md).
+The native imagery correction and strict production map/fault journeys are
+validated in the S57 closure packet. Current main has been merged into isolated
+QA at `8b84a2e0`, preserving both sides of the picking tests. The 13 October
+recheck finds fork and upstream main at `9beadbda`, already contained in QA;
+dev `e8ccc268` remains fourteen commits behind main. Both-base standard CI and
+release-artifact verification pass at `175f2cf3`; later Windows harness changes
+pass the full local suite at `688619f5`. See
+[the reconciliation record](performance-evidence/main-reconciliation-20261013/README.md).
+These revision-specific results do not replace the final candidate matrix.
 
 Then audit the fourteen closure rows against actual code/evidence, close only
 supported decisions, implement remaining required behavior, and run the shared

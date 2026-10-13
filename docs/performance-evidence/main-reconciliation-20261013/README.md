@@ -6,6 +6,19 @@ The latest 13 October fetch confirms fork/main and upstream/main at
 QA already contains both through reviewed merge `8b84a2e0`. No additional merge,
 rebase or history discard is needed. Dev promotion and VM105 remain unchanged.
 
+The final 13 October recheck at local QA `688619f5` confirms both refs are
+ancestors of QA. [Representative validation at `175f2cf3`](../representative-pr-175f2cf3/README.md)
+now passes all seven selected CI jobs and downloaded-release verification on
+each base. Both tested merge trees equal the source tree. All thirty hosted
+recovery records pass; published-token checks report 29 existing allocations
+and no new tokens. The [local Windows suite at `688619f5`](../windows-cleanup-688619f5/README.md)
+also passes: 7,809 ordinary tests, ten skips, and fourteen serialized allocation
+checks. These results supersede the pending integration status below for their
+exact revisions; full physical Windows qualification and dev promotion remain
+pending. No further main reconciliation is needed on QA.
+
+## Prior validation checkpoints
+
 The [earlier representative PR evidence](../representative-pr-8c0b6f64/README.md)
 passes all seven standard jobs and downloaded-release verification against both
 bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token
