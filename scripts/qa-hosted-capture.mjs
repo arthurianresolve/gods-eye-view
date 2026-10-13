@@ -12,6 +12,7 @@ import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
+import { validateCctvViewshedRetentionReport } from './performance/cctvViewshedRetention.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -37,6 +38,8 @@ let vesselPage;
 let vesselSession;
 let calibrationPage;
 let calibrationSession;
+let viewshedPage;
+let viewshedSession;
 const closeOwnedBrowser = (ownedBrowser) =>
   closeRecoveryBrowser(ownedBrowser, {
     timeoutMs: 5000,
@@ -125,6 +128,8 @@ try {
   if (!report.webglAvailable) {
     report.reason =
       'Standard runner exposes no WebGL 2 context; hardware evidence remains pending.';
+    if (process.argv.includes('--viewshed-retention'))
+      throw new Error('Viewshed retention requires a working WebGL 2 context.');
   } else {
     await page.click('#run');
     await page.waitForFunction(
@@ -160,6 +165,13 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
+    if (
+      process.argv.includes('--viewshed-retention') &&
+      !report.hardwareRenderingAvailable
+    )
+      throw new Error(
+        'Viewshed retention requires verified accelerated rendering.',
+      );
     const importUrl = new URL(
       url.replace('capture-matrix.html', 'import-batches.html'),
     );
@@ -454,6 +466,88 @@ try {
         expectedCommit: commit,
       });
     }
+    if (
+      process.argv.includes('--viewshed-retention') &&
+      report.hardwareRenderingAvailable
+    ) {
+      await page.goto('about:blank', { waitUntil: 'load' });
+      report.viewshedRetentionPageErrors = [];
+      report.viewshedRetentionInterceptionErrors = [];
+      report.viewshedRetentionExternalRequestCount = 0;
+      viewshedPage = await browser.newPage();
+      viewshedPage.on('pageerror', (error) => {
+        if (report.viewshedRetentionPageErrors.length < 20)
+          report.viewshedRetentionPageErrors.push(
+            String(error.message).slice(0, 400),
+          );
+      });
+      const viewport = { width: 1200, height: 960, deviceScaleFactor: 1 };
+      await viewshedPage.setViewport(viewport);
+      viewshedSession = await viewshedPage.createCDPSession();
+      await interceptFixtureSession(
+        viewshedSession,
+        new URL(url).origin,
+        (requestUrl) => {
+          if (
+            ['http:', 'https:'].includes(requestUrl.protocol) &&
+            requestUrl.origin !== new URL(url).origin
+          )
+            report.viewshedRetentionExternalRequestCount += 1;
+        },
+        (error) => {
+          if (report.viewshedRetentionInterceptionErrors.length < 20)
+            report.viewshedRetentionInterceptionErrors.push(
+              String(error.message).slice(0, 400),
+            );
+        },
+      );
+      const viewshedUrl = new URL(
+        url.replace('capture-matrix.html', 'cctv-calibration-demand.html'),
+      );
+      viewshedUrl.searchParams.set('mode', 'viewshed-retention');
+      await viewshedPage.goto(viewshedUrl.href, { waitUntil: 'networkidle0' });
+      await viewshedPage.click('#run');
+      const viewshedDeadline = Date.now() + 240_000;
+      for (;;) {
+        const result = await viewshedPage.$eval('#result', (element) =>
+          element.textContent.trim() ? JSON.parse(element.textContent) : null,
+        );
+        if (result) {
+          report.viewshedRetention = result;
+          break;
+        }
+        if (Date.now() >= viewshedDeadline)
+          throw new Error('Viewshed retention fixture timed out.');
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      report.viewshedRetentionGraphics = await readBrowserGraphicsInfo(browser);
+      report.viewshedRetentionRenderingEvidence = classifyRenderer(
+        report.viewshedRetention.environment?.renderer,
+        report.viewshedRetentionGraphics,
+      );
+      if (!report.viewshedRetentionRenderingEvidence.accelerationVerified)
+        throw new Error(
+          'Viewshed viewer did not retain verified acceleration.',
+        );
+      if (
+        report.viewshedRetentionPageErrors.length ||
+        report.viewshedRetentionInterceptionErrors.length ||
+        report.viewshedRetentionExternalRequestCount
+      )
+        throw new Error(
+          'Viewshed fixture emitted page or external-request errors.',
+        );
+      validateCctvViewshedRetentionReport(report.viewshedRetention, {
+        expectedCommit: commit,
+      });
+    }
+    if (
+      process.argv.includes('--viewshed-retention') &&
+      !report.hardwareRenderingAvailable
+    )
+      throw new Error(
+        'Viewshed retention requires a hardware-rendering capture session.',
+      );
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       const probeBrowser = browser;
       browser = null;
@@ -477,6 +571,11 @@ try {
       .evaluate(() => window.__cctvCalibrationDemandResult || null)
       .catch(() => null);
   }
+  if (viewshedPage && !report.viewshedRetention) {
+    report.viewshedRetention = await viewshedPage
+      .evaluate(() => window.__cctvViewshedRetentionResult || null)
+      .catch(() => null);
+  }
   if (vesselPage && !report.vesselRenderDemand) {
     report.vesselRenderDemand = await vesselPage
       .evaluate(() => window.__vesselRenderDemandResult || null)
@@ -490,6 +589,13 @@ try {
     await calibrationSession.detach().catch((error) => {
       report.status = 'failed';
       report.calibrationDetachError = error.message;
+      process.exitCode = 1;
+    });
+  }
+  if (viewshedSession) {
+    await viewshedSession.detach().catch((error) => {
+      report.status = 'failed';
+      report.viewshedRetentionDetachError = error.message;
       process.exitCode = 1;
     });
   }
@@ -552,6 +658,7 @@ try {
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
+    process.argv.includes('--viewshed-retention') ||
     process.argv.includes('--import-point-entity') ||
     process.argv.includes('--import-point-collection') ||
     process.argv.includes('--soak')

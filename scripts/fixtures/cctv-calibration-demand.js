@@ -3,6 +3,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { createApplicationViewer } from '../../src/app/viewer.js';
 import { createApplicationCctv } from '../../src/app/layers/cctv.js';
+import { cameraHue, viewshedColors } from '../../src/data/cctvViewshed.js';
 import {
   destroyWorldOverlay,
   initWorldOverlay,
@@ -24,12 +25,22 @@ import {
   createSceneFrameTimingDiagnostics,
   observeImportFrameHealth,
 } from '../performance/importFrameDiagnostics.mjs';
+import {
+  CCTV_VIEWSHED_RETENTION_CAMERA_COUNT,
+  CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR,
+  CCTV_VIEWSHED_RETENTION_FIXTURE_ID,
+  CCTV_VIEWSHED_RETENTION_FIXTURE_SHA256,
+  CCTV_VIEWSHED_RETENTION_LIMIT,
+  CCTV_VIEWSHED_RETENTION_MODES,
+  validateCctvViewshedRetentionReport,
+} from '../performance/cctvViewshedRetention.mjs';
 
 const FIXTURE_ID = 'cctv-calibration-native-drag/v1';
 const CAMERA_ID = 'qa-cctv-calibration-camera-001';
 const PAIRS = 5;
 const IDLE_MS = 10_000;
 const MAX_FAILURE_PNG_DATA_URL_CHARS = 1_500_000;
+const MAX_VIEWSHED_FAILURE_PNG_CHARS = 300_000;
 const FIXTURE_EPOCH_MS = Date.UTC(2026, 9, 8, 12, 0, 0);
 const OWNER = 'qa-cctv-adjust-legacy-control';
 const COMMIT =
@@ -56,7 +67,26 @@ const CAMERA = Object.freeze({
 });
 const CAMERA_SOURCE = {
   async getCatalog() {
-    return { sources: [{ ...CAMERA }] };
+    const viewshedMode =
+      new URLSearchParams(location.search).get('mode') === 'viewshed-retention';
+    const descriptor = CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR;
+    const layout = descriptor.cameraLayout;
+    return {
+      sources: viewshedMode
+        ? Array.from({ length: descriptor.cameraIds.length }, (_, index) => ({
+            ...CAMERA,
+            id: descriptor.cameraIds[index],
+            name: `Viewshed retention camera ${index + 1}`,
+            lat:
+              CAMERA.lat +
+              (Math.floor(index / layout.gridColumns) - 1.5) *
+                layout.stepDegrees,
+            lon:
+              CAMERA.lon +
+              ((index % layout.gridColumns) - 1.5) * layout.stepDegrees,
+          }))
+        : [{ ...CAMERA }],
+    };
   },
   async getHealth() {
     return { cameras: [] };
@@ -1026,6 +1056,805 @@ function createViewer() {
   return viewer;
 }
 
+function installViewshedPrimitiveObserver(viewer) {
+  const collection = viewer.scene.primitives;
+  const ownAdd = Object.getOwnPropertyDescriptor(collection, 'add');
+  const ownRemove = Object.getOwnPropertyDescriptor(collection, 'remove');
+  const originalAdd = collection.add;
+  const originalRemove = collection.remove;
+  const live = new Map();
+  const livePrimitives = new Set();
+  let created = 0;
+  let removed = 0;
+  let destroyed = 0;
+  let peakLive = 0;
+  let duplicateCameraIds = 0;
+  function observedAdd(primitive) {
+    const result = originalAdd.call(this, primitive);
+    if (typeof primitive?._gevViewshed === 'string') {
+      if (live.has(primitive._gevViewshed)) duplicateCameraIds++;
+      live.set(primitive._gevViewshed, primitive);
+      livePrimitives.add(primitive);
+      created++;
+      peakLive = Math.max(peakLive, livePrimitives.size);
+    }
+    return result;
+  }
+  function observedRemove(primitive, destroyPrimitives) {
+    const result = originalRemove.call(this, primitive, destroyPrimitives);
+    const id = primitive?._gevViewshed;
+    if (result && typeof id === 'string' && livePrimitives.has(primitive)) {
+      if (live.get(id) === primitive) live.delete(id);
+      livePrimitives.delete(primitive);
+      removed++;
+      if (primitive.isDestroyed?.() === true) destroyed++;
+    }
+    return result;
+  }
+  collection.add = observedAdd;
+  collection.remove = observedRemove;
+  return {
+    live,
+    counts: () => ({
+      created,
+      removed,
+      destroyed,
+      live: livePrimitives.size,
+      peakLive,
+      duplicateCameraIds,
+    }),
+    restore() {
+      if (ownAdd) Object.defineProperty(collection, 'add', ownAdd);
+      else delete collection.add;
+      if (ownRemove) Object.defineProperty(collection, 'remove', ownRemove);
+      else delete collection.remove;
+      return (
+        collection.add === originalAdd && collection.remove === originalRemove
+      );
+    },
+  };
+}
+
+function viewshedCameraPose(viewer) {
+  const cartographic = viewer.camera.positionCartographic;
+  return {
+    longitude: Cesium.Math.toDegrees(cartographic.longitude),
+    latitude: Cesium.Math.toDegrees(cartographic.latitude),
+    height: cartographic.height,
+    heading: viewer.camera.heading,
+    pitch: viewer.camera.pitch,
+  };
+}
+
+function viewshedSettings(viewer, layer, attrs) {
+  const params = layer?.getParams?.() || {};
+  return {
+    coverageMode: params.coverageMode ?? null,
+    showProjection: params.showProjection ?? null,
+    autoHop: params.autoHop ?? null,
+    requestRenderMode: viewer.scene.requestRenderMode,
+    globeShown: viewer.scene.globe.show,
+    clockEpochMs: Date.parse(viewer.clock.currentTime.toString()),
+    drawingBufferWidth: viewer.scene.drawingBufferWidth,
+    drawingBufferHeight: viewer.scene.drawingBufferHeight,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    msaaSamples: viewer.scene.msaaSamples,
+    antialias: attrs?.antialias ?? null,
+    preserveDrawingBuffer: attrs?.preserveDrawingBuffer ?? null,
+    camera: viewshedCameraPose(viewer),
+  };
+}
+
+async function viewshedPixelSummary(viewer, { includeRgba = false } = {}) {
+  const frameBefore = viewer.scene.frameState.frameNumber;
+  const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
+  check(canvas, 'Viewshed comparison did not produce a fresh frame.');
+  try {
+    const frameAfter = viewer.scene.frameState.frameNumber;
+    check(
+      frameAfter > frameBefore,
+      'Viewshed comparison reused a stale frame.',
+    );
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    check(context, 'Viewshed comparison pixel reader is unavailable.');
+    const { width, height } = canvas;
+    const rgba = context.getImageData(0, 0, width, height).data;
+    const distinct = new Set();
+    let nonBackgroundPixels = 0;
+    for (let index = 0; index < rgba.length; index += 4) {
+      const red = rgba[index];
+      const green = rgba[index + 1];
+      const blue = rgba[index + 2];
+      if (Math.abs(red - 9) + Math.abs(green - 20) + Math.abs(blue - 31) > 12)
+        nonBackgroundPixels++;
+      if (distinct.size < 32) distinct.add(`${red},${green},${blue}`);
+    }
+    check(
+      nonBackgroundPixels >= 50 && distinct.size >= 2,
+      'Viewshed comparison produced a black or empty frame.',
+    );
+    const summary = {
+      width,
+      height,
+      frameBefore,
+      frameAfter,
+      rgbaSha256: await sha256(rgba),
+      nonBackgroundPixels,
+      distinctRgbSamples: distinct.size,
+    };
+    return includeRgba
+      ? { summary, rgba: new Uint8ClampedArray(rgba) }
+      : summary;
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
+async function waitForViewshedLayer(
+  viewer,
+  layer,
+  observer,
+  expectedCount = 14,
+) {
+  const startedAt = performance.now();
+  let completedFrames = 0;
+  while (performance.now() - startedAt < 20_000) {
+    const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+      completedFrames++;
+    }
+    const stats = layer.getStats();
+    const diagnostics = layer.getPerformanceDiagnostics();
+    const primitives = [...observer.live.values()];
+    const ownership = observer.counts();
+    if (
+      ownership.live > CCTV_VIEWSHED_RETENTION_LIMIT ||
+      ownership.duplicateCameraIds !== 0
+    )
+      throw new Error('Viewshed cohort exceeded its production ownership cap.');
+    if (
+      stats.count === CCTV_VIEWSHED_RETENTION_CAMERA_COUNT &&
+      stats.loading === false &&
+      diagnostics.pendingJobs === 0 &&
+      completedFrames >= 3 &&
+      primitives.length === expectedCount &&
+      primitives.every((primitive) => primitive.ready === true)
+    )
+      return { elapsedMs: performance.now() - startedAt, completedFrames };
+    await wait(25);
+  }
+  throw new Error(
+    'Viewshed layer did not settle within its bounded setup window.',
+  );
+}
+
+async function waitForViewshedCatalog(viewer, layer) {
+  const startedAt = performance.now();
+  let completedFrames = 0;
+  while (performance.now() - startedAt < 20_000) {
+    const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+      completedFrames++;
+    }
+    const stats = layer.getStats();
+    const diagnostics = layer.getPerformanceDiagnostics();
+    if (
+      stats.count === CCTV_VIEWSHED_RETENTION_CAMERA_COUNT &&
+      stats.loading === false &&
+      diagnostics.pendingJobs === 0 &&
+      completedFrames >= 3
+    )
+      return;
+    await wait(25);
+  }
+  throw new Error(
+    'Viewshed source catalog did not settle within its bounded setup window.',
+  );
+}
+
+function observedVolumeColor(observer, cameraId, active) {
+  const primitive = observer.live.get(cameraId);
+  check(primitive?.ready === true, `Viewshed volume ${cameraId} is not ready.`);
+  check(
+    primitive.show === true,
+    'Viewshed volume is not visible in its active mode.',
+  );
+  check(primitive.allowPicking === false, 'Viewshed volume became pickable.');
+  check(
+    primitive.appearance?.translucent === true,
+    'Viewshed volume is not translucent.',
+  );
+  const instanceId = `gev-viewshed:${cameraId}`;
+  const actual = primitive.getGeometryInstanceAttributes(instanceId)?.color;
+  check(actual?.length === 4, 'Viewshed volume tint is unavailable.');
+  const orderedIds = Array.from(
+    { length: CCTV_VIEWSHED_RETENTION_CAMERA_COUNT },
+    (_, index) => `qa-viewshed-camera-${String(index).padStart(2, '0')}`,
+  ).sort();
+  const colorSet = viewshedColors(cameraHue(orderedIds.indexOf(cameraId)));
+  const expected = Cesium.ColorGeometryInstanceAttribute.fromColor(
+    active ? colorSet.fillActive : colorSet.fill,
+  ).value;
+  return {
+    expectedRgba: Array.from(expected),
+    observedRgba: Array.from(actual),
+    translucent: primitive.appearance.translucent,
+    allowPicking: primitive.allowPicking,
+  };
+}
+
+function snapshotSettings(viewer, layer, attrs) {
+  const settings = viewshedSettings(viewer, layer, attrs);
+  return JSON.parse(JSON.stringify(settings));
+}
+
+function countDifferentRgbaPixels(left, right) {
+  check(
+    left != null &&
+      right != null &&
+      Number.isSafeInteger(left.length) &&
+      left.length === right.length &&
+      left.length % 4 === 0,
+    'CCTV pixel comparison buffers are incomplete.',
+  );
+  let changedPixels = 0;
+  for (let index = 0; index < left.length; index += 4) {
+    if (
+      left[index] !== right[index] ||
+      left[index + 1] !== right[index + 1] ||
+      left[index + 2] !== right[index + 2]
+    )
+      changedPixels++;
+  }
+  return changedPixels;
+}
+
+function smallViewshedFailurePng(rgba, width, height) {
+  check(
+    rgba != null && rgba.length === width * height * 4,
+    'CCTV mismatch image source is incomplete.',
+  );
+  const scaledWidth = Math.max(
+    1,
+    Math.round((width * 320) / Math.max(width, height)),
+  );
+  const scaledHeight = Math.max(
+    1,
+    Math.round((height * 320) / Math.max(width, height)),
+  );
+  const source = document.createElement('canvas');
+  const preview = document.createElement('canvas');
+  source.width = width;
+  source.height = height;
+  preview.width = scaledWidth;
+  preview.height = scaledHeight;
+  try {
+    const sourceContext = source.getContext('2d');
+    const previewContext = preview.getContext('2d');
+    check(
+      sourceContext && previewContext,
+      'CCTV mismatch image canvas is unavailable.',
+    );
+    const image = sourceContext.createImageData(width, height);
+    image.data.set(rgba);
+    sourceContext.putImageData(image, 0, 0);
+    previewContext.drawImage(source, 0, 0, scaledWidth, scaledHeight);
+    const dataUrl = preview.toDataURL('image/png');
+    if (
+      !dataUrl.startsWith('data:image/png;base64,') ||
+      dataUrl.length > MAX_VIEWSHED_FAILURE_PNG_CHARS
+    )
+      return null;
+    return dataUrl.slice('data:image/png;base64,'.length);
+  } finally {
+    source.width = 0;
+    source.height = 0;
+    preview.width = 0;
+    preview.height = 0;
+  }
+}
+
+function viewshedMismatchEvidence(left, right, width, height) {
+  const encode = (rgba) => {
+    try {
+      return smallViewshedFailurePng(rgba, width, height);
+    } catch {
+      return null;
+    }
+  };
+  const leftPng = encode(left);
+  const rightPng = encode(right);
+  return {
+    width,
+    height,
+    previewMaxDimension: 320,
+    retainedPngBase64: leftPng,
+    comparisonPngBase64: rightPng,
+    omitted: leftPng === null || rightPng === null,
+  };
+}
+
+async function runViewshedRetentionFixture() {
+  runButton.disabled = true;
+  downloadButton.disabled = true;
+  terminalReportText = null;
+  resultNode.textContent = '';
+  const fixtureDescriptor = CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR;
+  const cameraIds = [...fixtureDescriptor.cameraIds];
+  const sourcePayload = JSON.stringify(fixtureDescriptor);
+  const report = {
+    schema: 'gev-cctv-viewshed-retention/v2',
+    status: 'running',
+    scope: 'rendered CCTV component retention comparison',
+    performanceAcceptanceEligible: false,
+    applicationCommit: COMMIT,
+    harnessCommit: COMMIT,
+    environment: {
+      renderer: null,
+      maskedRenderer: null,
+      rendererIdentity: 'unavailable',
+      userAgent: navigator.userAgent.slice(0, 240),
+    },
+    fixture: {
+      id: CCTV_VIEWSHED_RETENTION_FIXTURE_ID,
+      sha256: null,
+      descriptor: fixtureDescriptor,
+      cameraCount: cameraIds.length,
+      cameraIds,
+    },
+    settings: null,
+    cohort: {
+      limit: CCTV_VIEWSHED_RETENTION_LIMIT,
+      peakLiveVolumes: 0,
+      initialVolumeCount: 0,
+      retainedModeToggleBuilds: 0,
+      disableEnableCycles: 2,
+      disableEnableBuilds: 0,
+      disableEnableIdentitiesPreserved: false,
+      disableEnableCameraId: null,
+      beforeHandoffIds: [],
+      afterHandoffIds: [],
+      modeSequence: [],
+      preReadyTintFlipObserved: false,
+      duplicateCameraIdCount: 0,
+    },
+    hiddenPoseEdit: null,
+    activeTint: null,
+    preReadyTint: null,
+    retained: null,
+    rebuildControl: null,
+    pixelFailureEvidence: null,
+    cleanup: {
+      layerDestroyed: false,
+      retainedLayerDestroyed: false,
+      viewerDestroyed: false,
+      wrappersRestored: false,
+      worldOverlayDestroyed: false,
+      governorUninstalled: false,
+      liveVolumes: 0,
+      createdVolumes: 0,
+      removedVolumes: 0,
+      destroyedVolumes: 0,
+      postRenderListenersBefore: 0,
+      postRenderListenersAfter: 0,
+      postRenderListenersAfterLayer: 0,
+      postRenderListenersAfterOwners: 0,
+    },
+    phase: 'startup',
+    error: null,
+  };
+  window.__cctvViewshedRetentionResult = report;
+  let viewer = null;
+  let layer = null;
+  let observer = null;
+  let attrs = null;
+  let retainedPixelSummary = null;
+  let retainedPixelRgba = null;
+  let rebuildPixelRgba = null;
+  let viewshedOnRgba = null;
+  let wireframeRgba = null;
+  let retainedPose = null;
+  let retainedSettings = null;
+  let failure = null;
+  try {
+    check(
+      (await sha256(new TextEncoder().encode(FRAME_DATA_URI))) ===
+        fixtureDescriptor.frameDataSha256,
+      'Viewshed fixture frame differs from its pinned descriptor.',
+    );
+    check(
+      JSON.stringify(CAMERA) === JSON.stringify(fixtureDescriptor.camera) &&
+        FIXTURE_EPOCH_MS === fixtureDescriptor.epochMs &&
+        cameraIds.length === CCTV_VIEWSHED_RETENTION_CAMERA_COUNT,
+      'Viewshed camera or clock inputs differ from their pinned descriptor.',
+    );
+    report.fixture.sha256 = await sha256(
+      new TextEncoder().encode(sourcePayload),
+    );
+    check(
+      report.fixture.sha256 === CCTV_VIEWSHED_RETENTION_FIXTURE_SHA256,
+      'Viewshed fixture descriptor digest differs from its pinned identity.',
+    );
+    check(
+      /^[a-f0-9]{40}$/.test(COMMIT || ''),
+      'Fixture requires an application commit.',
+    );
+    viewer = createViewer();
+    observer = installViewshedPrimitiveObserver(viewer);
+    Object.assign(report.environment, rendererName(viewer));
+    report.cleanup.postRenderListenersBefore =
+      viewer.scene.postRender.numberOfListeners;
+    const gl =
+      viewer.scene.context?._originalGLContext || viewer.scene.context?._gl;
+    attrs = gl?.getContextAttributes?.() || null;
+    layer = createApplicationCctv({
+      surface: FIXTURE_SURFACE,
+      source: CAMERA_SOURCE,
+    });
+    await layer.init(viewer);
+    layer.setParams({
+      autoHop: false,
+      showProjection: false,
+      coverageMode: 'off',
+    });
+    layer.enable();
+    check(
+      layer.selectCamera(cameraIds[0]),
+      'Initial synthetic CCTV camera was not selected.',
+    );
+    await waitForViewshedCatalog(viewer, layer);
+    layer.setParams({ coverageMode: 'viewshed' });
+    report.phase = 'pre-ready-tint';
+    const initialLive = [...observer.live.values()];
+    check(
+      initialLive.length === CCTV_VIEWSHED_RETENTION_LIMIT,
+      'Initial viewshed cohort is incomplete.',
+    );
+    check(
+      initialLive.some((primitive) => primitive._gevViewshed === cameraIds[0]),
+      'Initial active volume was not created.',
+    );
+    layer.setParams({ selectedCameraId: cameraIds[1] });
+    report.cohort.preReadyTintFlipObserved =
+      initialLive.every((primitive) => primitive.ready !== true) &&
+      layer.getParams().selectedCameraId === cameraIds[1];
+    check(
+      report.cohort.preReadyTintFlipObserved,
+      'Active tint did not change before primitive readiness.',
+    );
+    await waitForViewshedLayer(viewer, layer, observer);
+    report.cohort.initialVolumeCount = observer.counts().live;
+    report.cohort.peakLiveVolumes = observer.counts().peakLive;
+    report.cohort.beforeHandoffIds = [...observer.live.keys()].sort();
+    const tint = observedVolumeColor(observer, cameraIds[1], true);
+    report.preReadyTint = {
+      cameraId: cameraIds[1],
+      readyAtSwitch: false,
+      ...tint,
+    };
+
+    let buildsBeforeToggles = observer.counts().created;
+    for (const mode of CCTV_VIEWSHED_RETENTION_MODES.slice(1)) {
+      report.phase = `coverage-${mode}`;
+      layer.setParams({ coverageMode: mode });
+      report.cohort.modeSequence.push(mode);
+      check(
+        layer.getParams().coverageMode === mode,
+        `CCTV layer did not apply the ${mode} coverage mode.`,
+      );
+      if (mode === 'off')
+        check(
+          [...observer.live.values()].every(
+            (primitive) => primitive.show === false,
+          ),
+          'Off mode left a viewshed visible.',
+        );
+      if (mode === 'on')
+        check(
+          [...observer.live.values()].every(
+            (primitive) => primitive.show === false,
+          ),
+          'Wireframe mode left a viewshed visible.',
+        );
+      await waitForViewshedLayer(viewer, layer, observer);
+    }
+    report.cohort.modeSequence.unshift('viewshed');
+    report.cohort.retainedModeToggleBuilds =
+      observer.counts().created - buildsBeforeToggles;
+
+    report.phase = 'disable-enable-retention';
+    const buildsBeforeLifecycleToggles = observer.counts().created;
+    const primitivesBeforeLifecycleToggles = new Map(observer.live);
+    for (let cycle = 0; cycle < report.cohort.disableEnableCycles; cycle++) {
+      layer.disable();
+      check(
+        [...observer.live.values()].every(
+          (primitive) => primitive.show === false,
+        ),
+        'Disabled CCTV layer left a viewshed visible.',
+      );
+      layer.enable();
+      await waitForViewshedLayer(viewer, layer, observer);
+    }
+    report.cohort.disableEnableBuilds =
+      observer.counts().created - buildsBeforeLifecycleToggles;
+    report.cohort.disableEnableIdentitiesPreserved =
+      observer.live.size === primitivesBeforeLifecycleToggles.size &&
+      [...primitivesBeforeLifecycleToggles].every(
+        ([id, primitive]) => observer.live.get(id) === primitive,
+      );
+    report.cohort.disableEnableCameraId = layer.getParams().selectedCameraId;
+    check(
+      report.cohort.disableEnableBuilds === 0 &&
+        report.cohort.disableEnableIdentitiesPreserved,
+      'CCTV disable/enable rebuilt retained viewshed volumes.',
+    );
+
+    report.phase = 'camera-handoff';
+    layer.setParams({ selectedCameraId: cameraIds.at(-1) });
+    await waitForViewshedLayer(viewer, layer, observer);
+    report.cohort.afterHandoffIds = [...observer.live.keys()].sort();
+    report.cohort.peakLiveVolumes = observer.counts().peakLive;
+    report.cohort.duplicateCameraIdCount = observer.counts().duplicateCameraIds;
+    check(
+      observer.counts().live <= CCTV_VIEWSHED_RETENTION_LIMIT,
+      'Viewshed cohort exceeded its production cap.',
+    );
+    check(
+      observer.live.has(cameraIds.at(-1)),
+      'Selected handoff camera volume is absent.',
+    );
+
+    report.phase = 'hidden-pose-edit';
+    layer.setParams({ coverageMode: 'off' });
+    check(
+      [...observer.live.values()].every(
+        (primitive) => primitive.show === false,
+      ),
+      'Hidden pose edit began with a visible volume.',
+    );
+    const beforeOffset = layer.getParams()?.calibration?.values?.offsetEastM;
+    layer.setParams({
+      calibration: {
+        cameraId: cameraIds.at(-1),
+        patch: { offsetEastM: beforeOffset + 18 },
+      },
+    });
+    const afterOffset = layer.getParams()?.calibration?.values?.offsetEastM;
+    check(
+      Number.isFinite(beforeOffset) &&
+        Number.isFinite(afterOffset) &&
+        beforeOffset !== afterOffset,
+      'Hidden pose edit did not apply.',
+    );
+    const buildsBeforeReentry = observer.counts().created;
+    layer.setParams({ coverageMode: 'viewshed' });
+    await waitForViewshedLayer(viewer, layer, observer);
+    report.hiddenPoseEdit = {
+      coverageHidden: true,
+      calibrationChanged: true,
+      beforeOffsetEastM: beforeOffset,
+      afterOffsetEastM: afterOffset,
+      reentryBuildCount: observer.counts().created - buildsBeforeReentry,
+    };
+    report.activeTint = {
+      cameraId: cameraIds.at(-1),
+      ...observedVolumeColor(observer, cameraIds.at(-1), true),
+    };
+    report.phase = 'rendered-visibility-check';
+    const viewshedPixels = await viewshedPixelSummary(viewer, {
+      includeRgba: true,
+    });
+    viewshedOnRgba = viewshedPixels.rgba;
+    layer.setParams({ coverageMode: 'on' });
+    check(
+      [...observer.live.values()].every(
+        (primitive) => primitive.show === false,
+      ),
+      'Wireframe-only mode left a viewshed volume visible.',
+    );
+    const wireframePixels = await viewshedPixelSummary(viewer, {
+      includeRgba: true,
+    });
+    wireframeRgba = wireframePixels.rgba;
+    const changedPixels = countDifferentRgbaPixels(
+      viewshedOnRgba,
+      wireframeRgba,
+    );
+    if (changedPixels === 0)
+      report.pixelFailureEvidence = viewshedMismatchEvidence(
+        viewshedOnRgba,
+        wireframeRgba,
+        viewshedPixels.summary.width,
+        viewshedPixels.summary.height,
+      );
+    viewshedOnRgba.fill(0);
+    wireframeRgba.fill(0);
+    viewshedOnRgba = null;
+    wireframeRgba = null;
+    check(changedPixels > 0, 'Viewshed volume did not change rendered pixels.');
+    layer.setParams({ coverageMode: 'viewshed' });
+    await waitForViewshedLayer(viewer, layer, observer);
+    report.viewshedVisibility = {
+      changedPixels,
+      viewshedOn: viewshedPixels.summary,
+      viewshedOff: wireframePixels.summary,
+    };
+    report.settings = snapshotSettings(viewer, layer, attrs);
+    retainedSettings = JSON.parse(JSON.stringify(report.settings));
+    retainedPose = viewshedCameraPose(viewer);
+    report.retained = {
+      cameraId: cameraIds.at(-1),
+      camera: retainedPose,
+      settings: retainedSettings,
+      liveVolumes: observer.counts().live,
+      pixels: null,
+    };
+    const retainedCapture = await viewshedPixelSummary(viewer, {
+      includeRgba: true,
+    });
+    report.retained.pixels = retainedCapture.summary;
+    retainedPixelRgba = retainedCapture.rgba;
+    retainedPixelSummary = report.retained.pixels;
+
+    report.phase = 'full-layer-rebuild-control';
+    const beforeControlBuilds = observer.counts().created;
+    layer.disable();
+    layer.destroy(viewer);
+    report.cleanup.retainedLayerDestroyed = true;
+    layer = createApplicationCctv({
+      surface: FIXTURE_SURFACE,
+      source: CAMERA_SOURCE,
+    });
+    await layer.init(viewer);
+    layer.setParams({
+      autoHop: false,
+      showProjection: false,
+      coverageMode: 'off',
+    });
+    layer.enable();
+    check(
+      layer.selectCamera(cameraIds.at(-1)),
+      'Rebuild-control camera was not selected.',
+    );
+    await waitForViewshedCatalog(viewer, layer);
+    layer.setParams({
+      calibration: {
+        cameraId: cameraIds.at(-1),
+        patch: { offsetEastM: afterOffset },
+      },
+    });
+    layer.setParams({ coverageMode: 'viewshed' });
+    await waitForViewshedLayer(viewer, layer, observer);
+    const rebuildSettings = snapshotSettings(viewer, layer, attrs);
+    const rebuildPose = viewshedCameraPose(viewer);
+    const rebuildCapture = await viewshedPixelSummary(viewer, {
+      includeRgba: true,
+    });
+    rebuildPixelRgba = rebuildCapture.rgba;
+    const rebuildPixels = rebuildCapture.summary;
+    const changedOutputPixels = countDifferentRgbaPixels(
+      retainedPixelRgba,
+      rebuildPixelRgba,
+    );
+    if (changedOutputPixels !== 0)
+      report.pixelFailureEvidence = viewshedMismatchEvidence(
+        retainedPixelRgba,
+        rebuildPixelRgba,
+        retainedCapture.summary.width,
+        retainedCapture.summary.height,
+      );
+    report.rebuildControl = {
+      label: 'full-layer-rebuild-control',
+      cameraId: cameraIds.at(-1),
+      camera: rebuildPose,
+      settings: rebuildSettings,
+      buildCount: observer.counts().created - beforeControlBuilds,
+      pixels: rebuildPixels,
+      pixelComparison: {
+        exactMatch: changedOutputPixels === 0,
+        changedPixels: changedOutputPixels,
+      },
+    };
+    retainedPixelRgba.fill(0);
+    rebuildPixelRgba.fill(0);
+    retainedPixelRgba = null;
+    rebuildPixelRgba = null;
+    report.phase = 'complete';
+  } catch (error) {
+    failure = error;
+    report.status = 'failed';
+    report.error = String(error?.message || error).slice(0, 400);
+  } finally {
+    retainedPixelRgba?.fill(0);
+    rebuildPixelRgba?.fill(0);
+    viewshedOnRgba?.fill(0);
+    wireframeRgba?.fill(0);
+    try {
+      if (layer) {
+        layer.disable();
+        layer.destroy(viewer);
+        report.cleanup.layerDestroyed = true;
+      }
+    } catch (error) {
+      report.cleanup.error = String(error?.message || error).slice(0, 200);
+      report.status = 'failed';
+      report.error ||= report.cleanup.error;
+    }
+    if (viewer) {
+      report.cleanup.postRenderListenersAfterLayer =
+        viewer.scene.postRender.numberOfListeners;
+      report.cleanup.postRenderListenersAfter =
+        report.cleanup.postRenderListenersAfterLayer;
+    }
+    if (observer) {
+      const counts = observer.counts();
+      report.cohort.peakLiveVolumes = counts.peakLive;
+      report.cohort.duplicateCameraIdCount = counts.duplicateCameraIds;
+      report.cleanup.createdVolumes = counts.created;
+      report.cleanup.removedVolumes = counts.removed;
+      report.cleanup.destroyedVolumes = counts.destroyed;
+      report.cleanup.liveVolumes = counts.live;
+      report.cleanup.wrappersRestored = observer.restore();
+    }
+    if (viewer) {
+      try {
+        destroyWorldOverlay();
+        report.cleanup.worldOverlayDestroyed = true;
+      } catch (error) {
+        report.cleanup.error ||= String(error?.message || error).slice(0, 200);
+      }
+      try {
+        const diagnostics = getRenderGovernorDiagnostics();
+        if (diagnostics.holds.includes('cctv-adjust'))
+          releaseContinuousRender('cctv-adjust');
+        uninstallRenderGovernor(viewer);
+        report.cleanup.governorUninstalled = true;
+      } catch (error) {
+        report.cleanup.error ||= String(error?.message || error).slice(0, 200);
+      }
+      report.cleanup.postRenderListenersAfterOwners =
+        viewer.scene.postRender.numberOfListeners;
+      try {
+        if (!viewer.isDestroyed()) viewer.destroy();
+        report.cleanup.viewerDestroyed = viewer.isDestroyed();
+      } catch (error) {
+        report.cleanup.error ||= String(error?.message || error).slice(0, 200);
+      }
+    }
+    if (report.cleanup.error) {
+      report.status = 'failed';
+      report.error ||= report.cleanup.error;
+    }
+    if (failure) report.phase ||= 'unknown';
+    if (!failure && report.status !== 'failed') {
+      report.status = 'passed';
+      try {
+        validateCctvViewshedRetentionReport(report, { expectedCommit: COMMIT });
+      } catch (error) {
+        report.status = 'failed';
+        report.error = String(error?.message || error).slice(0, 400);
+      }
+    }
+    window.__cctvViewshedRetentionResult = report;
+    resultNode.textContent = JSON.stringify(report);
+    terminalReportText = resultNode.textContent;
+    enableTerminalDownload(terminalReportText);
+    updateStatus(
+      report.status === 'passed'
+        ? 'Viewshed retention completed.'
+        : `Viewshed retention failed: ${report.error || 'incomplete evidence'}`,
+    );
+    runButton.disabled = false;
+  }
+}
+
 async function waitForLayerReady(layer, viewer, timeoutMs = 20_000) {
   const start = performance.now();
   let priorSignature = null;
@@ -1893,6 +2722,8 @@ async function runFixture() {
 }
 
 runButton.addEventListener('click', () => {
-  void runFixture();
+  if (new URLSearchParams(location.search).get('mode') === 'viewshed-retention')
+    void runViewshedRetentionFixture();
+  else void runFixture();
 });
 downloadButton.addEventListener('click', downloadTerminalReport);

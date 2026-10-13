@@ -1100,6 +1100,8 @@
   "scripts/performance/nativePointerFixture.test.mjs",
   "scripts/performance/cctvCalibrationDemand.mjs",
   "scripts/performance/cctvCalibrationDemand.test.mjs",
+  "scripts/performance/cctvViewshedRetention.mjs",
+  "scripts/performance/cctvViewshedRetention.test.mjs",
   "scripts/fixtures/cctv-calibration-demand.html",
   "scripts/fixtures/cctv-calibration-demand.js",
   "src/layers/cctv/calibrationRenderDemand.test.mjs",
