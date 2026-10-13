@@ -1,0 +1,13 @@
+{
+  "scope": "Root independent asset and decoded pixel review; no browser acceptance",
+  "baselineFixture": "austin-map-streaming-synthetic-v3",
+  "candidateFixture": "austin-map-streaming-synthetic-v4",
+  "priorAssetsByteIdentical": 578,
+  "addedAssets": 21,
+  "addedPathsMatchActualCesiumReplay": true,
+  "decodedPixels": 1376256,
+  "terrainAndRouteUnchanged": true,
+  "totalBytes": 4013691,
+  "manifestSha256": "0d739d9e4830faff2751d40945870eb7b56b9b76dc65e8cd64cb7deb5cb9b033",
+  "generatorSourceSha256": "55a6270abae383e82d31277c149484fb0b69e844a2a6441211fa647dc5c669c2"
+}

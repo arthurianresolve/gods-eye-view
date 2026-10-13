@@ -20,10 +20,13 @@ release, accessibility, user-study or attestation requirements.
 | Old intermittent frame failures could leave an indefinite root-cause requirement                            | Require the affected current full-application journeys and final candidate gates to pass; disclose any unresolved historical cause | A historical failure is not erased, but it need not block a later passing revision forever                       |
 | Every slice appeared to need independent full hardware qualification                                        | Reuse one final frozen-candidate qualification matrix across its applicable slices                                                 | Component checks plus one integrated matrix establish different facts without redundant soaks                    |
 
-The evaluator's existing 20% hard failure and target-dependent tracking coverage
-must be corrected in a separate reviewed code packet with regression tests.
-Until that packet lands, its old output remains stricter than this policy. Do
-not override an old result manually or label the runner aligned before testing it.
+The evaluator correction is implemented at `6f635ecd` (reviewed Luna source
+`4e4127f5`). It emits this policy ID, reports each target's actual percentage and
+achieved/missed/unassessed outcome, and derives tracking coverage from measured
+tracking rather than target achievement. Root passes 73 focused candidate,
+comparison and retention tests. Exact-commit full integration remains pending;
+historical results retain their original policy and outcome. See the
+[implementation evidence](performance-evidence/acceptance-policy-20261013/README.md).
 
 ## Status and counting
 

@@ -12,6 +12,12 @@ The frozen comparison baseline remains eb8c682.
 | M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | CLI and outer validation are integrated. Root passes 107 focused checks at b91dafa8. Native baseline run 38409997486 completes all four stack states, the 60-second route, settings checks and owner retirement, but fails strict delivery on the lower-level inventory gap. Complete candidate execution and rendered missing/corrupt/superseded-switch recovery controls remain open. |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
 
+V4 follow-up `ec71877a` supplies the finite native OSM skeleton/ancestor image
+set while retaining the v3 route imagery. Its 599 assets preserve all 578 prior
+asset bytes; 108 root focused checks and the independent pixel comparison pass.
+The [review](imagery-dependencies-v4/README.md) leaves cross-platform and actual
+both-revision delivery pending. Earlier v3 failure remains failed.
+
 ## Existing application boundaries
 
 The baseline and candidate already feed Google's native 3D Tiles startup result

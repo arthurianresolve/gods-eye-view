@@ -8,7 +8,8 @@ primary Windows qualification and the 20% performance objective. Rejected design
 may receive a supported no-change disposition; unavailable physical Mac/discrete
 GPU coverage is explicitly unverified and does not block the primary milestone.
 Visual, integrity, interaction, regression and 60-minute retention gates remain.
-The candidate evaluator's 20% hard-failure mismatch needs a reviewed correction.
+The candidate evaluator now separates target outcome at `6f635ecd`; root passes
+73 focused candidate/comparison/retention checks. Full integration is pending.
 
 The existing fourteen slice rows still report partial implementation. This
 amendment alone changes no slice to closed or passed. Reaudit engineering closure
@@ -48,7 +49,10 @@ are retained and three explicitly omitted. The fixture acknowledges all 217
 matched requests; context, interception and probe retirement complete. The
 candidate never runs. A [CPU replay of native imagery dependencies](performance-evidence/s47-map-streaming/native-imagery-dependencies-v3/README.md)
 reproduces all eight retained missing paths. The complete dependency set for the
-fixture terrain tiles contains 21 absent OSM images; correction is in progress.
+fixture terrain tiles contains 21 absent OSM images. The reviewed
+[v4 correction](performance-evidence/s47-map-streaming/imagery-dependencies-v4/README.md)
+at `ec71877a` supplies them, preserves all 578 previous asset buffers and passes
+108 root focused checks; both-revision rendered validation is still pending.
 The three omitted browser identities remain unknown. Do not repeat the failed
 run unchanged or relax delivery checks.
 
