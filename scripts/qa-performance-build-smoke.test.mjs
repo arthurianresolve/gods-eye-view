@@ -1505,7 +1505,7 @@ test('fault-control build projection uses the local build receipt asset and prof
 test('outer fault document retains a real held delivery failure and closes its owned context', async () => {
   const fixture = await createDeterministicMapStreamingFixture();
   const scenarioId = 'esri-metadata-superseded-v1';
-  const baseUrl = MAP_SMOKE_APP_ORIGIN;
+  const baseUrl = `${MAP_SMOKE_APP_ORIGIN}/`;
   const revision = 'a'.repeat(40);
   const harnessCommit = 'b'.repeat(40);
   const buildEvidence = {
@@ -1531,7 +1531,11 @@ test('outer fault document retains a real held delivery failure and closes its o
   page.setCacheEnabled = async () => {};
   page.setBypassServiceWorker = async () => {};
   page.evaluateOnNewDocument = async () => {};
-  page.goto = async () => ({ status: () => 200 });
+  let navigatedUrl = null;
+  page.goto = async (url) => {
+    navigatedUrl = url;
+    return { status: () => 200 };
+  };
   page.waitForFunction = async () => {};
   page.workers = () => [];
   page.evaluate = async () => ({
@@ -1662,6 +1666,11 @@ test('outer fault document retains a real held delivery failure and closes its o
       assert.match(error.message, /Held Esri response was retired/);
       return true;
     },
+  );
+  assert.equal(
+    navigatedUrl,
+    `${MAP_SMOKE_APP_ORIGIN}/?welcome=0`,
+    'a trailing-slash server base URL must produce a single-slash root path',
   );
   await pendingDelivery.catch(() => {});
   assert.equal(closed, true);

@@ -654,17 +654,20 @@ export async function runMapStreamingFaultControlDocument({
       45_000,
       Math.max(1, remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS),
     );
+    const navigationUrl = new URL('/?welcome=0', baseUrl).href;
     const response = await runWithinBudget(
       'Map fault application navigation',
       navigationTimeout,
       () =>
-        page.goto(`${baseUrl}/?welcome=0`, {
+        page.goto(navigationUrl, {
           waitUntil: 'domcontentloaded',
           timeout: navigationTimeout,
         }),
     );
     if (response && response.status() >= 400)
-      throw new Error('Fault-control application entry failed.');
+      throw new Error(
+        `Fault-control application entry returned HTTP ${response.status()}.`,
+      );
     const readinessTimeout = Math.min(
       60_000,
       Math.max(1, remainingBudgetMs() - MAP_FAULT_CLEANUP_RESERVE_MS),
