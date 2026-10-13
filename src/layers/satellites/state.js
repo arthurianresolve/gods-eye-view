@@ -48,9 +48,9 @@ export function createState({ services }) {
 
   state._preRenderListener = null;
 
-  // One-shot governor timer used for the one-second untracked cadence. A
-  // tracked satellite uses a continuous hold because its position, label, and
-  // follow camera are evaluated every rendered frame.
+  // One-shot governor timer used for the one-second static cadence. Tracking
+  // and visible dense points use the continuous hold because their positions
+  // are evaluated by the scene preRender producer.
   state._periodicRenderDisposer = null;
 
   state._lastPropagation = 0;

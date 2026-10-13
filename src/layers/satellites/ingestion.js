@@ -94,6 +94,7 @@ export function createIngestion({
         layerState._denseLoadController = null;
         layerState._denseLoadToken++; // cancel any in-flight dense load against the old catalog
         parts.labels._syncIssOverlay();
+        parts.lifecycle?.methods?.syncRenderDemand?.();
 
         const now = new Date();
 

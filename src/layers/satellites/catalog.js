@@ -112,6 +112,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       let added = 0;
 
       for (let start = 0; start < entries.length; start += DENSE_CREATE_CHUNK) {
+        const addedBeforeChunk = added;
         loadSignal.throwIfAborted();
         if (
           token !== layerState._denseLoadToken ||
@@ -154,6 +155,8 @@ export function createCatalog({ state: layerState, services, parts, source }) {
           layerState._denseIds.push(noradId);
           added++;
         }
+        if (added > addedBeforeChunk)
+          parts.lifecycle?.methods?.syncRenderDemand?.();
         // Yield to the event loop between chunks.
         await new Promise((resolve) => setTimeout(resolve, 0));
         loadSignal.throwIfAborted();
@@ -242,6 +245,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
     layerState._denseCursor = 0;
     layerState._count = layerState._points.size;
     layerState._catalogRevision++;
+    parts.lifecycle?.methods?.syncRenderDemand?.();
   }
   return {
     _abortActiveUpdates,

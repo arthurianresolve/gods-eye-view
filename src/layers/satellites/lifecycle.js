@@ -40,7 +40,17 @@ export function createLifecycle({
   }
 
   function syncRenderDemand() {
+    if (!layerState._enabled) {
+      stopPeriodicRenderDemand();
+      releaseContinuousRender('satellites');
+      return;
+    }
     if (layerState._trackedNorad !== null) {
+      stopPeriodicRenderDemand();
+      holdContinuousRender('satellites');
+      return;
+    }
+    if (layerState._params.showPoints && layerState._denseIds.length > 0) {
       stopPeriodicRenderDemand();
       holdContinuousRender('satellites');
       return;
