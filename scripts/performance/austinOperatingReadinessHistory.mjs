@@ -1,6 +1,95 @@
 const MAX_SELECTED_LAYERS = 8;
 const MAX_HISTORY_ENTRIES = 16;
 const MAX_TEXT = 160;
+const HISTORY_INTERVAL_MS = 1000;
+const HISTORY_ATTACH_TIMEOUT_MS = 1000;
+const HISTORY_COMMAND_TIMEOUT_MS = 1500;
+
+export function createAustinOperatingReadinessHistoryEnvelope() {
+  return {
+    enabled: true,
+    schema: 'gev-austin-operating-readiness-history/v1',
+    scope:
+      'host-retained Runtime.evaluate snapshots at no more than 1 Hz during Austin setup readiness waits only; no measurement-window polling; host command elapsed time is diagnostic and not CPU/GPU time',
+    intervalMs: HISTORY_INTERVAL_MS,
+    entryLimit: MAX_HISTORY_ENTRIES,
+    attachTimeoutMs: HISTORY_ATTACH_TIMEOUT_MS,
+    commandTimeoutMs: HISTORY_COMMAND_TIMEOUT_MS,
+    omittedCount: 0,
+    documentOmittedCount: 0,
+    documents: [],
+    samples: [],
+    performanceAcceptanceEligible: false,
+  };
+}
+
+/** Append one real per-document sampler snapshot to the bounded capture envelope. */
+export function appendAustinOperatingReadinessHistory(envelope, history) {
+  if (
+    envelope?.enabled !== true ||
+    envelope.schema !== 'gev-austin-operating-readiness-history/v1' ||
+    history?.schema !== envelope.schema ||
+    history.intervalMs !== envelope.intervalMs ||
+    history.attachTimeoutMs !== envelope.attachTimeoutMs ||
+    history.commandTimeoutMs !== envelope.commandTimeoutMs ||
+    !Array.isArray(history.samples)
+  )
+    throw new TypeError('Austin readiness history snapshot is incompatible.');
+  const documentRecord = {
+    documentRole: history.documentRole,
+    documentId: history.documentId,
+    phase: history.phase,
+    status: history.status,
+    stopReason: history.stopReason,
+    intervalMs: history.intervalMs,
+    attachTimeoutMs: history.attachTimeoutMs,
+    commandTimeoutMs: history.commandTimeoutMs,
+    omittedCount: history.omittedCount,
+    session: history.session,
+  };
+  validateIdentity(
+    documentRecord.documentRole,
+    documentRecord.documentId,
+    documentRecord.phase,
+  );
+  if (!Array.isArray(envelope.documents) || !Array.isArray(envelope.samples))
+    throw new TypeError('Austin readiness history envelope is malformed.');
+  for (const sample of history.samples) {
+    validateIdentity(sample.documentRole, sample.documentId, sample.phase);
+    if (
+      sample.documentRole !== documentRecord.documentRole ||
+      sample.documentId !== documentRecord.documentId ||
+      sample.phase !== documentRecord.phase
+    )
+      throw new TypeError(
+        'Austin readiness sample identity does not match its document.',
+      );
+  }
+  if (envelope.documents.length < 40) envelope.documents.push(documentRecord);
+  else envelope.documentOmittedCount += 1;
+  for (const sample of history.samples) {
+    if (envelope.samples.length === envelope.entryLimit) {
+      envelope.samples.shift();
+      envelope.omittedCount += 1;
+    }
+    const { snapshot, ...sampleMetadata } = sample;
+    const snapshotJson = snapshot
+      ? encodeAustinOperatingReadinessSnapshot(snapshot)
+      : null;
+    const invalidSnapshot = Boolean(snapshot) && snapshotJson === null;
+    envelope.samples.push({
+      ...sampleMetadata,
+      status: invalidSnapshot ? 'invalid-snapshot' : sample.status,
+      errorKind: invalidSnapshot
+        ? 'snapshot-exceeds-bounded-report-size'
+        : sample.errorKind,
+      snapshotEncoding: snapshotJson ? 'austin-layer-tuples-v1' : null,
+      snapshotJson,
+    });
+  }
+  envelope.omittedCount += history.omittedCount || 0;
+  return envelope;
+}
 
 /** Browser-serializable gate for the final Austin source/render boundary. */
 export function observeAustinInstallationsReadyForRenderBoundary(
@@ -152,9 +241,9 @@ export function createAustinOperatingReadinessHistory(
     disconnectedEvent,
     now = () => performance.now(),
     timers = globalThis,
-    intervalMs = 1000,
-    attachTimeoutMs = 1000,
-    commandTimeoutMs = 1500,
+    intervalMs = HISTORY_INTERVAL_MS,
+    attachTimeoutMs = HISTORY_ATTACH_TIMEOUT_MS,
+    commandTimeoutMs = HISTORY_COMMAND_TIMEOUT_MS,
     detachTimeoutMs = 250,
   } = {},
 ) {
@@ -175,7 +264,7 @@ export function createAustinOperatingReadinessHistory(
   )
     throw new TypeError('Readiness history layer selection is invalid.');
   if (
-    intervalMs !== 1000 ||
+    intervalMs !== HISTORY_INTERVAL_MS ||
     !Number.isSafeInteger(attachTimeoutMs) ||
     attachTimeoutMs < 1 ||
     attachTimeoutMs > 1000 ||
