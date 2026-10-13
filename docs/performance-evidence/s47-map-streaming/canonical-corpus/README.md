@@ -8,7 +8,7 @@ v1 corpus exactly. Their source revision is
 `36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f`.
 The old raw reports and macOS corpus identity remain historical evidence.
 
-Current generation is explicitly `austin-map-streaming-synthetic-v2`, schema
+This checkpoint's generation is `austin-map-streaming-synthetic-v2`, schema
 `gev-map-streaming-fixture/v2`, generator version `2.0.0`. The canonical asset
 directory retains its v1 name to identify the pinned bytes' origin. The v2
 descriptor includes that origin and the exact pinned inventory. Missing files,
@@ -35,10 +35,13 @@ to the actual v2 fixture and does not accept v1 as a current pass.
 The existing installation/recovery jobs now run the fixture suite on Windows,
 macOS and Linux Node 24.14. The normal Node 24/26 Linux suites also include it.
 Those checks assert the same full expected manifest hash; no new runner or paid
-hardware is required. Cross-platform results for this exact implementation are
-pending, and the original floating-point difference's cause is not claimed to
-be established.
+hardware is required. [Run 38406794863](../../integration-b4a9ac81/README.md)
+at `b4a9ac81` passes all seven standard jobs, including the canonical fixture
+checks on Windows, macOS and Linux and the Node 24/26 suites. The original
+floating-point difference's cause is not claimed to be established.
 
 This fixes corpus reproducibility by construction; it does not fix the separate
 [level-15 imagery coverage failure](../native-38404611321/README.md). Native
 baseline/candidate completion, physical Windows and S47/S60 acceptance remain open.
+The separate [v3 imagery packet](../imagery-coverage-v3/README.md) adds the missing
+coverage while retaining these canonical 3D Tiles bytes.

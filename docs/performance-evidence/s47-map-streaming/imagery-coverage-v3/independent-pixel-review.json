@@ -1,0 +1,36 @@
+{
+  "schema": "gev-independent-imagery-review/v1",
+  "checkedAt": "2026-10-13T13:57:42.273Z",
+  "previousFixture": {
+    "id": "austin-map-streaming-synthetic-v2",
+    "manifestSha256": "31f63be4f0d20864e909134f44a319c2af72e2e1f724ab4996bbd8f5a12fae7c",
+    "assets": 72,
+    "bytes": 1949945
+  },
+  "candidateFixture": {
+    "id": "austin-map-streaming-synthetic-v3",
+    "manifestSha256": "fdd277b9107d59a8efd96a151b5f9770e646bbe6598f73ef862b6c5a50cbd6ac",
+    "assets": 578,
+    "bytes": 2629266,
+    "generatorSourceSha256": "6c5c3445288ac83ffe577c97024ba91438a2278bd7932fda80df6902ed977c67"
+  },
+  "unchangedAssetCount": 70,
+  "changedAssetPaths": [
+    "arcgis/rest/services/World_Imagery/MapServer/metadata.json"
+  ],
+  "removedAssetPaths": [
+    "arcgis/rest/services/World_Imagery/MapServer/missing-tile-probe/12/0/0.png"
+  ],
+  "addedAssetCount": 507,
+  "newHighImageryTiles": 506,
+  "distinctLowByteSeeds": 232,
+  "originalFormulaPixelsChecked": 33161216,
+  "originalPaletteAndAlphaMatch": true,
+  "oldLevelsUnchanged": true,
+  "geometryAndTerrainUnchanged": true,
+  "routeBoundsUnchanged": true,
+  "metadataOnlyAddsThreeLods": true,
+  "probePixelsUnchanged": true,
+  "maxBytesUnchanged": true,
+  "scope": "Independent CPU asset/pixel and compatibility review; no rendered journey, hardware or performance acceptance"
+}

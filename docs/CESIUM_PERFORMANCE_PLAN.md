@@ -12,11 +12,21 @@ Fresh main reconciliation finds fork/main and upstream/main at `8b8ccc9a`, fully
 contained in local and remote dev `e8ccc268` (697 ahead, zero behind). No upstream
 merge or rebase is required. Reviewed QA work is still separate from dev.
 
-[Standard integration at `af821c5c`](performance-evidence/integration-af821c5c/README.md)
+[Standard integration at `b4a9ac81`](performance-evidence/integration-b4a9ac81/README.md)
 passes all seven selected jobs, including full Node 24/26 suites and builds,
 Windows onboarding, Windows/macOS/Linux persisted-profile recovery and browser
-journeys. The separately recorded native map failure remains failed; these passes
+journeys. The canonical v2 map corpus also passes its fixed-hash/parser checks
+on all three operating systems. The separately recorded native map failure remains failed; these passes
 do not establish matched performance, a hardware soak or complete slice acceptance.
+
+The reviewed [v3 imagery coverage packet](performance-evidence/s47-map-streaming/imagery-coverage-v3/README.md)
+at `b91dafa8` (source `223eb55b`) adds 506 level-13-through-15 tile identities.
+The 578-asset fixture preserves existing pixels, terrain, geometry and route
+bounds and remains below the unchanged 5 MiB limit. Root passes 107 focused
+checks and independently compares all 33,161,216 new tile pixels to the original
+formula. Buffer isolation and pinned inventory checks prevent fixture mutation
+from changing its authority. Complete native baseline/candidate journeys and
+cross-platform v3 results remain pending; the old failure is retained.
 
 The [exact-commit Windows recovery run at `feb067d3`](performance-evidence/windows-recovery-38401057945/README.md)
 now passes all prerequisites and all five persisted-profile recovery checks.
@@ -47,8 +57,8 @@ The reviewed [canonical 3D Tiles corpus](performance-evidence/s47-map-streaming/
 at `da75e90c` (source `7b0387b9`) pins 22 files with fixed hashes/lengths and
 explicit v2 fixture provenance. Root verifies all 72 produced asset buffers,
 geometry and coverage remain identical to the old Windows/Linux fixture and
-passes 106 distinct focused checks. Existing cross-platform jobs now verify the
-same complete manifest hash; their fresh result remains pending. This does not
+passes 106 distinct focused checks. Existing cross-platform jobs verify the
+same complete manifest hash and all pass at `b4a9ac81`. This does not
 resolve the separate missing level-15 imagery coverage or hardware acceptance.
 
 Terrain readiness history is implemented on QA at `c0666072` (reviewed source
@@ -98,7 +108,7 @@ deployed to VM105.
 | Work item | Implemented scope | Automatic evidence | Remaining acceptance |
 | --- | --- | --- | --- |
 | Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
-| Native map corpus and build profile (M1-M2) | Deterministic 72-asset corpus, native provider adapter and receipt-bound inert fixture profile | [Parser/adapter review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json), [build-profile review](performance-evidence/s47-map-streaming/build-profile-review-05eefdcb.json) and focused checks pass | Complete rendered delivery in both application revisions |
+| Native map corpus and build profile (M1-M2) | Deterministic 578-asset v3 corpus, native provider adapter and receipt-bound inert fixture profile | Canonical v2 bytes pass on three operating systems; [v3 imagery review](performance-evidence/s47-map-streaming/imagery-coverage-v3/README.md), parser/adapter and build-profile checks pass | Complete rendered delivery in both application revisions and cross-platform v3 checks |
 | Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected map-specific setup/finalization are in QA | [58 focused checks and finalization review](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json); earlier standard CI passes, but the first native browser attempt fails | Validate the corrected native journeys on baseline and candidate, including rendered fault controls |
 | Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `495f0a71`](performance-evidence/windows-recovery-38353898669/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
 | Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
