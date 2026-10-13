@@ -27,3 +27,8 @@ at `2026-10-12T20:23:08.979Z` identifies stable `155.0.8059.39`, revision
 `1697595`. A separate explicitly selected run is still needed. A passing run
 on this version alone cannot establish the cause of earlier intermittent
 Chrome 152 shutdown failures, or demonstrate hardware rendering acceptance.
+
+The [first selected-version attempt](run-38350501407.md) stops before browser
+installation on a Windows scratch-path test assumption. The test correction
+through `974b3f86` passes 28 independent checks without weakening production
+cleanup. Its hosted follow-up remains required.
