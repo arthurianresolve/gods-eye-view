@@ -114,6 +114,56 @@ export async function respondToSmokeFixtureRequest(
 
   return respondToProductionFlightFixture(url, request, flightFixture, baseUrl);
 }
+
+export function smokeProviderPreparationMode(providerFixture) {
+  return providerFixture === MAP_STREAMING_WORKLOAD_ID
+    ? 'native-map-streaming'
+    : 'dense-provider-fixture';
+}
+
+export async function runNativeMapJourneyForSmoke({
+  page,
+  revision,
+  fixture,
+  buildProfile,
+  mapStreamingCaptureModule,
+}) {
+  assertSha(revision, 'Map smoke revision');
+  assert.ok(fixture && typeof fixture === 'object');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v1');
+  assert.match(fixture.manifestSha256 || '', /^[a-f0-9]{64}$/);
+  assert.equal(
+    typeof mapStreamingCaptureModule?.runNativeMapStreamingJourney,
+    'function',
+  );
+  assert.equal(
+    typeof mapStreamingCaptureModule?.validateMapStreamingJourneyEvidence,
+    'function',
+  );
+  assert.ok(buildProfile && typeof buildProfile === 'object');
+  assert.equal(buildProfile.id, MAP_FIXTURE_BUILD_PROFILE_ID);
+  assert.match(buildProfile.configurationSha256 || '', /^[a-f0-9]{64}$/);
+  const route = mapStreamingCaptureModule.MAP_STREAMING_ROUTE;
+  assert.ok(route && Number.isSafeInteger(route.durationLimitMs));
+  const journey = await mapStreamingCaptureModule.runNativeMapStreamingJourney(
+    page,
+    { durationMs: route.durationLimitMs, route },
+  );
+  mapStreamingCaptureModule.validateMapStreamingJourneyEvidence(
+    journey,
+    fixture,
+  );
+  return {
+    schema: 'gev-map-streaming-native-smoke/v1',
+    revision,
+    fixtureId: fixture.id,
+    manifestSha256: fixture.manifestSha256,
+    buildProfile,
+    routeId: route.id,
+    performanceAcceptanceEligible: false,
+    journey,
+  };
+}
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -3959,6 +4009,7 @@ async function runRevision({
   let densePopulationObservations = [];
   let finalDenseLayerPopulation = null;
   let terminalRenderLoopRetirement = null;
+  let terminalMapObservation = null;
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
@@ -3977,6 +4028,7 @@ async function runRevision({
   let nativeRendererEvidence = null;
   let mapStreamingSmokeDelivery = null;
   let mapStreamingSmokeEvidence = null;
+  let mapStreamingNativeJourney = null;
   try {
     const captureUrl = served.baseUrl;
     phase = 'verify-served-assets-before';
@@ -4001,7 +4053,11 @@ async function runRevision({
 
     context = await browser.createBrowserContext();
     page = await context.newPage();
-    await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
+    await page.setViewport(
+      providerFixture === MAP_STREAMING_WORKLOAD_ID
+        ? { width: 1440, height: 900, deviceScaleFactor: 1 }
+        : { width: 1280, height: 900, deviceScaleFactor: 1 },
+    );
     await page.setCacheEnabled(false);
     await page.setBypassServiceWorker(true);
     page.setDefaultTimeout(30_000);
@@ -4040,7 +4096,10 @@ async function runRevision({
       : null;
     fixturePage = await prepareFixturePage(browser, served.baseUrl, {
       page,
-      viewport: { width: 1280, height: 900 },
+      viewport:
+        providerFixture === MAP_STREAMING_WORKLOAD_ID
+          ? { width: 1440, height: 900 }
+          : { width: 1280, height: 900 },
       respond: (url, request) =>
         respondToSmokeFixtureRequest(url, request, {
           baseUrl: served.baseUrl,
@@ -4151,47 +4210,55 @@ async function runRevision({
         'Application unexpectedly has a controlling service worker.',
       );
 
-    phase = 'production-provider-fixture-population';
-    const expectedLayerCounts = {
-      flights: flightFixture.count,
-      'local-datacenters': 4362,
-      'local-dams': 716,
-    };
-    await page.evaluate(async (layerIds) => {
-      const manager = window.__godsEyeView?.dataManager;
-      if (!manager) throw new Error('Application data manager is unavailable.');
-      for (const id of layerIds) {
-        if (!manager.layers?.has(id))
-          throw new Error(`Dense fixture layer is missing: ${id}`);
-        if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
-      }
-    }, Object.keys(expectedLayerCounts));
-    await page.waitForFunction(
-      (counts) =>
-        Object.entries(counts).every(([id, expected]) => {
-          const layer = window.__godsEyeView?.dataManager
-            ?.getAll?.()
-            ?.find((entry) => entry.id === id);
-          return layer?.enabled === true && layer?.stats?.count === expected;
-        }),
-      { timeout: 90_000, polling: 100 },
-      expectedLayerCounts,
-    );
-    const readDenseLayerPopulation = () =>
-      page.evaluate((layerIds) => {
-        const layers = window.__godsEyeView.dataManager.getAll();
-        return Object.fromEntries(
-          layerIds.map((id) => {
-            const layer = layers.find((entry) => entry.id === id);
-            return [id, { enabled: layer.enabled, count: layer.stats.count }];
-          }),
-        );
+    let expectedLayerCounts = null;
+    let denseLayerPopulation = null;
+    const smokeWorkloadMode = smokeProviderPreparationMode(providerFixture);
+    if (smokeWorkloadMode === 'native-map-streaming') {
+      phase = 'native-map-streaming-selected-workload';
+    } else {
+      phase = 'production-provider-fixture-population';
+      expectedLayerCounts = {
+        flights: flightFixture.count,
+        'local-datacenters': 4362,
+        'local-dams': 716,
+      };
+      await page.evaluate(async (layerIds) => {
+        const manager = window.__godsEyeView?.dataManager;
+        if (!manager)
+          throw new Error('Application data manager is unavailable.');
+        for (const id of layerIds) {
+          if (!manager.layers?.has(id))
+            throw new Error(`Dense fixture layer is missing: ${id}`);
+          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+        }
       }, Object.keys(expectedLayerCounts));
-    const denseLayerPopulation = await readDenseLayerPopulation();
-    densePopulationObservations.push({
-      checkpoint: 'initial',
-      layers: denseLayerPopulation,
-    });
+      await page.waitForFunction(
+        (counts) =>
+          Object.entries(counts).every(([id, expected]) => {
+            const layer = window.__godsEyeView?.dataManager
+              ?.getAll?.()
+              ?.find((entry) => entry.id === id);
+            return layer?.enabled === true && layer?.stats?.count === expected;
+          }),
+        { timeout: 90_000, polling: 100 },
+        expectedLayerCounts,
+      );
+      const readDenseLayerPopulation = () =>
+        page.evaluate((layerIds) => {
+          const layers = window.__godsEyeView.dataManager.getAll();
+          return Object.fromEntries(
+            layerIds.map((id) => {
+              const layer = layers.find((entry) => entry.id === id);
+              return [id, { enabled: layer.enabled, count: layer.stats.count }];
+            }),
+          );
+        }, Object.keys(expectedLayerCounts));
+      denseLayerPopulation = await readDenseLayerPopulation();
+      densePopulationObservations.push({
+        checkpoint: 'initial',
+        layers: denseLayerPopulation,
+      });
+    }
 
     phase = 'provider-fixture-clock-start';
     const fixtureClockStart = await page.evaluate(() => {
@@ -4212,12 +4279,73 @@ async function runRevision({
       throw new Error(
         'Smoke scene renderer differs from its early native diagnostic observation.',
       );
-    const routeStart = before.camera;
-    const routeStartMs = await page.evaluate(() => performance.now());
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    const after = await page.evaluate(observeCommonScene, {
-      appCommit: commit,
-    });
+    let after;
+    let route;
+    let fixtureClockEnd;
+    let fixtureAgeMs;
+    if (smokeWorkloadMode === 'native-map-streaming') {
+      phase = 'native-map-streaming-journey';
+      mapStreamingNativeJourney = await runNativeMapJourneyForSmoke({
+        page,
+        revision: commit,
+        fixture: mapStreamingCaptureFixture,
+        buildProfile: build.receipt.buildRecipe?.mapFixtureProfile,
+        mapStreamingCaptureModule,
+      });
+      after = await page.evaluate(observeCommonScene, { appCommit: commit });
+      route = mapStreamingNativeJourney.journey.route;
+      fixtureClockEnd = await page.evaluate(() => ({
+        clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+        wallTimeMs: Date.now(),
+      }));
+      fixtureAgeMs = fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
+      if (
+        !fixtureClockEnd.clock?.started ||
+        fixtureClockEnd.clock.startCount !== 1 ||
+        fixtureClockEnd.clock.elapsedMs < route.elapsedMs ||
+        fixtureAgeMs < 0 ||
+        fixtureAgeMs > 120_000
+      )
+        throw new Error(
+          `Native map fixture clock check failed: ${JSON.stringify({ clock: fixtureClockEnd.clock, fixtureAgeMs, routeElapsedMs: route.elapsedMs })}`,
+        );
+    } else {
+      const routeStart = before.camera;
+      const routeStartMs = await page.evaluate(() => performance.now());
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      after = await page.evaluate(observeCommonScene, {
+        appCommit: commit,
+      });
+      const routeEndMs = await page.evaluate(() => performance.now());
+      fixtureClockEnd = await page.evaluate(() => ({
+        clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+        wallTimeMs: Date.now(),
+        flightStats:
+          window.__godsEyeView?.dataManager?.layers
+            ?.get('flights')
+            ?.module?.getStats?.() ?? null,
+      }));
+      fixtureAgeMs = fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
+      if (
+        !fixtureClockEnd.clock?.started ||
+        fixtureClockEnd.clock.startCount !== 1 ||
+        fixtureClockEnd.clock.elapsedMs < routeEndMs - routeStartMs ||
+        fixtureAgeMs < 0 ||
+        fixtureAgeMs > 120_000 ||
+        fixtureClockEnd.flightStats?.lastUpdate !== flightFixture.fixedTimeMs ||
+        fixtureClockEnd.flightStats?.stale !== false ||
+        fixtureClockEnd.flightStats?.count !== flightFixture.count
+      )
+        throw new Error(
+          `Provider fixture clock/freshness check failed: ${JSON.stringify({ clock: fixtureClockEnd.clock, fixtureAgeMs, flightStats: fixtureClockEnd.flightStats })}`,
+        );
+      route = describeObservedRoute({
+        scenario: 'idle',
+        start: routeStart,
+        durationMs: routeEndMs - routeStartMs,
+        measurement: { cameraPath: { id: 'integration-smoke-idle' } },
+      });
+    }
     if (
       nativeRendererEvidence &&
       (after.environment?.renderer !==
@@ -4228,35 +4356,6 @@ async function runRevision({
       throw new Error(
         'Observed renderer changed during the hosted native diagnostic.',
       );
-    const routeEndMs = await page.evaluate(() => performance.now());
-    const fixtureClockEnd = await page.evaluate(() => ({
-      clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
-      wallTimeMs: Date.now(),
-      flightStats:
-        window.__godsEyeView?.dataManager?.layers
-          ?.get('flights')
-          ?.module?.getStats?.() ?? null,
-    }));
-    const fixtureAgeMs = fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
-    if (
-      !fixtureClockEnd.clock?.started ||
-      fixtureClockEnd.clock.startCount !== 1 ||
-      fixtureClockEnd.clock.elapsedMs < routeEndMs - routeStartMs ||
-      fixtureAgeMs < 0 ||
-      fixtureAgeMs > 120_000 ||
-      fixtureClockEnd.flightStats?.lastUpdate !== flightFixture.fixedTimeMs ||
-      fixtureClockEnd.flightStats?.stale !== false ||
-      fixtureClockEnd.flightStats?.count !== flightFixture.count
-    )
-      throw new Error(
-        `Provider fixture clock/freshness check failed: ${JSON.stringify({ clock: fixtureClockEnd.clock, fixtureAgeMs, flightStats: fixtureClockEnd.flightStats })}`,
-      );
-    const route = describeObservedRoute({
-      scenario: 'idle',
-      start: routeStart,
-      durationMs: routeEndMs - routeStartMs,
-      measurement: { cameraPath: { id: 'integration-smoke-idle' } },
-    });
     const renderer = after.environment.renderer.toLowerCase();
     if (captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
       assertVerifiedNativeRendererEvidence(
@@ -4288,20 +4387,26 @@ async function runRevision({
       );
     const terminalPopulation = await page.evaluate(
       observeTerminalViewerState,
-      'layer-population',
-      Object.keys(expectedLayerCounts),
+      expectedLayerCounts ? 'layer-population' : 'startup-details',
+      expectedLayerCounts ? Object.keys(expectedLayerCounts) : [],
     );
-    finalDenseLayerPopulation = terminalPopulation.observation;
+    finalDenseLayerPopulation = expectedLayerCounts
+      ? terminalPopulation.observation
+      : null;
+    terminalMapObservation = expectedLayerCounts
+      ? null
+      : terminalPopulation.observation;
     terminalRenderLoopRetirement = terminalPopulation.renderLoopRetirement;
     if (terminalRenderLoopRetirement.confirmed !== true)
       throw new Error(
         'Smoke viewer render loop retirement at final population observation was not confirmed.',
       );
-    densePopulationObservations.push({
-      checkpoint: 'final-before-code-validation',
-      layers: finalDenseLayerPopulation,
-      renderLoopRetirement: terminalRenderLoopRetirement,
-    });
+    if (expectedLayerCounts)
+      densePopulationObservations.push({
+        checkpoint: 'final-before-code-validation',
+        layers: finalDenseLayerPopulation,
+        renderLoopRetirement: terminalRenderLoopRetirement,
+      });
     const blobCodeRequests = finalAuditSnapshot.requests
       .filter((request) => request.url.startsWith('blob:'))
       .map((request) => request.url);
@@ -4354,18 +4459,19 @@ async function runRevision({
       throw new Error(
         `Fixture interception reported ${fixturePage.errors.length} errors.`,
       );
-    for (const [id, expected] of Object.entries(expectedLayerCounts)) {
-      if (
-        denseLayerPopulation[id]?.enabled !== true ||
-        denseLayerPopulation[id]?.count !== expected ||
-        finalDenseLayerPopulation[id]?.enabled !== true ||
-        finalDenseLayerPopulation[id]?.count !== expected
-      )
-        throw new Error(`Dense fixture population changed for ${id}.`);
-    }
-    const flightFixtureObservation = flightFixtureDelivery.summarize(
-      finalDenseLayerPopulation.flights.count,
-    );
+    if (expectedLayerCounts)
+      for (const [id, expected] of Object.entries(expectedLayerCounts)) {
+        if (
+          denseLayerPopulation[id]?.enabled !== true ||
+          denseLayerPopulation[id]?.count !== expected ||
+          finalDenseLayerPopulation[id]?.enabled !== true ||
+          finalDenseLayerPopulation[id]?.count !== expected
+        )
+          throw new Error(`Dense fixture population changed for ${id}.`);
+      }
+    const flightFixtureObservation = expectedLayerCounts
+      ? flightFixtureDelivery.summarize(finalDenseLayerPopulation.flights.count)
+      : null;
     let captureCliDiagnostic = null;
     if (label === 'candidate') {
       phase = 'capture-cli-preparation-cleanup';
@@ -4409,6 +4515,22 @@ async function runRevision({
           throw new Error(
             'Map fixture setup interception cleanup was not confirmed.',
           );
+        mapStreamingCaptureModule.validateMapStreamingSmokeDeliverySummary(
+          mapStreamingSmokeEvidence,
+          mapStreamingCaptureFixture,
+        );
+        if (mapStreamingNativeJourney) {
+          mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
+          mapStreamingNativeJourney.rendering = {
+            observedRenderer: after.environment.renderer,
+            observedVendor: after.environment.vendor,
+            nativeRendererDiagnostic: nativeRendererEvidence,
+          };
+          mapStreamingNativeJourney.renderLoopRetirement =
+            terminalRenderLoopRetirement;
+          mapStreamingNativeJourney.terminalObservation =
+            terminalMapObservation;
+        }
       }
       phase = 'candidate-capture-cli-integration';
       captureCliDiagnostic = await runCandidateCaptureCli({
@@ -4439,6 +4561,29 @@ async function runRevision({
         budgetMs,
       });
     }
+    if (mapStreamingSmokeDelivery) {
+      mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
+      mapStreamingSmokeDelivery = null;
+      if (mapStreamingSmokeEvidence.cleanupConfirmed !== true)
+        throw new Error(
+          'Map fixture setup interception cleanup was not confirmed.',
+        );
+      mapStreamingCaptureModule.validateMapStreamingSmokeDeliverySummary(
+        mapStreamingSmokeEvidence,
+        mapStreamingCaptureFixture,
+      );
+      if (mapStreamingNativeJourney) {
+        mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
+        mapStreamingNativeJourney.rendering = {
+          observedRenderer: after.environment.renderer,
+          observedVendor: after.environment.vendor,
+          nativeRendererDiagnostic: nativeRendererEvidence,
+        };
+        mapStreamingNativeJourney.renderLoopRetirement =
+          terminalRenderLoopRetirement;
+        mapStreamingNativeJourney.terminalObservation = terminalMapObservation;
+      }
+    }
     result = {
       revision: commit,
       status: 'passed',
@@ -4462,27 +4607,32 @@ async function runRevision({
         preflight: workerNetworkPreflight,
         sameOriginOnlyStaticServer: true,
       },
-      denseProviderFixture: {
-        scope:
-          'real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence',
-        expectedLayerCounts,
-        observedLayerPopulation: finalDenseLayerPopulation,
-        flightFixture: flightFixtureObservation,
-        captureClock: {
-          schema: 'gev-provider-fixture-capture-clock/v1',
-          scope:
-            'hosted integration smoke only; one short route check, not a performance measurement',
-          fixedTime: flightFixture.fixedTime,
-          start: fixtureClockStart,
-          end: fixtureClockEnd.clock,
-          ageAtEndMs: fixtureAgeMs,
-          freshnessWindowMs: 120_000,
-          sourceFreshness: 'current',
-        },
-        comparisonEligible: false,
-        comparisonIneligibilityReason:
-          'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
-      },
+      ...(expectedLayerCounts
+        ? {
+            denseProviderFixture: {
+              scope:
+                'real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence',
+              expectedLayerCounts,
+              observedLayerPopulation: finalDenseLayerPopulation,
+              flightFixture: flightFixtureObservation,
+              captureClock: {
+                schema: 'gev-provider-fixture-capture-clock/v1',
+                scope:
+                  'hosted integration smoke only; one short route check, not a performance measurement',
+                fixedTime: flightFixture.fixedTime,
+                start: fixtureClockStart,
+                end: fixtureClockEnd.clock,
+                ageAtEndMs: fixtureAgeMs,
+                freshnessWindowMs: 120_000,
+                sourceFreshness: 'current',
+              },
+              comparisonEligible: false,
+              comparisonIneligibilityReason:
+                'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
+            },
+          }
+        : {}),
+      ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
       ...(mapStreamingSmokeEvidence
         ? {
             mapStreamingFixtureSetup: {
@@ -4529,6 +4679,7 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
+      ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
       terminalRenderLoopRetirement,
       rendererProbeCleanup,
       rendererProbeCleanupOmittedCount,
@@ -4721,8 +4872,12 @@ async function main() {
     limitations: [
       'Local build receipts are unsigned and do not attest hardware or release provenance.',
       'The browser request audit records code paths; it does not independently attest response bytes.',
-      'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
-      'The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.',
+      providerFixture === MAP_STREAMING_WORKLOAD_ID
+        ? 'The map fixture runs its native journey on both exact revisions; the candidate also runs the full capture CLI. This hosted smoke is diagnostic only, not paired timing evidence.'
+        : 'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
+      providerFixture === MAP_STREAMING_WORKLOAD_ID
+        ? 'Map-only preparation skips the unrelated dense aircraft, infrastructure and dam populations; other provider-fixture selections retain the dense integration checks.'
+        : 'The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.',
       captureRendererBackend === DEFAULT_CAPTURE_RENDERER_BACKEND
         ? 'Software rendering is explicit SwiftShader and cannot support hardware performance claims.'
         : 'Native rendering on a hosted macOS runner is a reachability diagnostic; Metal may be paravirtualized and is not physical desktop or paired performance evidence.',

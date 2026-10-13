@@ -19,6 +19,8 @@ import {
   parseSmokeArguments,
   preserveCaptureCliReportArtifact,
   respondToSmokeFixtureRequest,
+  runNativeMapJourneyForSmoke,
+  smokeProviderPreparationMode,
   readProviderCpuProfileIndexSet,
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
@@ -850,6 +852,91 @@ test('smoke fixture responder awaits the native map classifier before flight fal
   assert.equal(response?.body, flightFixture.body);
   assert.equal(mapDelivery.summary().requestedCount, 0);
   mapDelivery.dispose();
+});
+
+test('map smoke uses native-only preparation for both exact revisions', async () => {
+  assert.equal(
+    smokeProviderPreparationMode(MAP_STREAMING_WORKLOAD_ID),
+    'native-map-streaming',
+  );
+  assert.equal(
+    smokeProviderPreparationMode('dense-investigation'),
+    'dense-provider-fixture',
+  );
+  assert.equal(
+    smokeProviderPreparationMode('weather-effects-v1'),
+    'dense-provider-fixture',
+  );
+
+  const fixture = {
+    id: 'austin-map-streaming-synthetic-v1',
+    manifestSha256: 'a'.repeat(64),
+  };
+  const buildProfile = {
+    id: MAP_FIXTURE_BUILD_PROFILE_ID,
+    configurationSha256: 'b'.repeat(64),
+  };
+  const route = { id: 'declared-route', durationLimitMs: 60_000 };
+  const calls = [];
+  const journey = { route: { id: route.id, elapsedMs: route.durationLimitMs } };
+  const mapStreamingCaptureModule = {
+    MAP_STREAMING_ROUTE: route,
+    async runNativeMapStreamingJourney(page, options) {
+      calls.push({ page, options });
+      return journey;
+    },
+    validateMapStreamingJourneyEvidence(actual, actualFixture) {
+      assert.equal(actual, journey);
+      assert.equal(actualFixture, fixture);
+    },
+  };
+  for (const revision of ['a'.repeat(40), 'c'.repeat(40)]) {
+    const page = { revision };
+    const report = await runNativeMapJourneyForSmoke({
+      page,
+      revision,
+      fixture,
+      buildProfile,
+      mapStreamingCaptureModule,
+    });
+    assert.equal(report.revision, revision);
+    assert.equal(report.fixtureId, fixture.id);
+    assert.equal(report.manifestSha256, fixture.manifestSha256);
+    assert.equal(report.routeId, route.id);
+    assert.deepEqual(report.buildProfile, buildProfile);
+    assert.equal(report.performanceAcceptanceEligible, false);
+  }
+  assert.deepEqual(
+    calls.map(({ page, options }) => ({
+      revision: page.revision,
+      durationMs: options.durationMs,
+      route: options.route,
+    })),
+    [
+      { revision: 'a'.repeat(40), durationMs: 60_000, route },
+      { revision: 'c'.repeat(40), durationMs: 60_000, route },
+    ],
+  );
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: {},
+      revision: 'invalid',
+      fixture,
+      buildProfile,
+      mapStreamingCaptureModule,
+    }),
+    /SHA/i,
+  );
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: {},
+      revision: 'a'.repeat(40),
+      fixture,
+      buildProfile: { ...buildProfile, id: 'unreceipted-profile' },
+      mapStreamingCaptureModule,
+    }),
+    /strictly equal/,
+  );
 });
 
 test('Austin readiness-history smoke contract rejects unbounded or mismatched host samples', () => {

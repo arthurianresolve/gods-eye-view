@@ -7,6 +7,7 @@ import {
   MAP_FIXTURE_BUILD_PROFILE_ID,
 } from './buildProvenance.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
+import { validateMapStreamingSmokeDeliverySummary } from './mapStreamingCapture.mjs';
 import {
   createMapStreamingFixtureDelivery,
   MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
@@ -119,6 +120,13 @@ test('native map URLs resolve every manifest asset through real interception cal
     assert.equal(headers['content-type'], CONTENT_TYPES[row.kind]);
   }
   const summary = delivery.dispose();
+  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
+  const corruptedSummary = structuredClone(summary);
+  corruptedSummary.assets[0].sha256 = '0'.repeat(64);
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(corruptedSummary, pinned),
+    /strictly equal/,
+  );
   assert.equal(summary.cleanupConfirmed, true);
   assert.equal(summary.requestedCount, pinned.manifest.assets.length);
   assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
