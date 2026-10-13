@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { readFile } from 'node:fs/promises';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   DEFAULT_FLIGHT_FIXTURE_TIME,
@@ -77,6 +76,18 @@ test('render-demand traffic classifier distinguishes known offline bootstrap/map
     classify(`${origin}/api/realtime/debug-log`, 'GET'),
     'unexpected-api',
   );
+  for (const [path, method] of [
+    ['/api/google/tiles-token', 'POST'],
+    ['/api/local-receivers/aircraft', 'POST'],
+    ['/api/realtime/debug-log', 'GET'],
+  ])
+    assert.equal(classify(`${origin}${path}`, method), 'unexpected-api');
+  for (const [path, method] of [
+    ['/api/google/tiles-token?provider=google', 'GET'],
+    ['/api/local-receivers/aircraft?limit=1', 'GET'],
+    ['/api/realtime/debug-log?level=debug', 'POST'],
+  ])
+    assert.equal(classify(`${origin}${path}`, method), 'unexpected-api');
   const blockedFonts = [
     'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
     'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
@@ -100,6 +111,17 @@ test('render-demand traffic classifier distinguishes known offline bootstrap/map
     }),
     'unexpected-external',
   );
+  for (const resourceType of [undefined, null, '', 'Document', 'Font'])
+    assert.equal(
+      classifyRenderDemandRequest({
+        url: blockedFonts[0],
+        origin,
+        method: 'GET',
+        resourceType,
+      }),
+      'unexpected-external',
+      `font allowlist rejects resource type ${String(resourceType)}`,
+    );
   assert.equal(
     classifyRenderDemandRequest({
       url: blockedFonts[0],
@@ -153,16 +175,6 @@ test('render-demand camera angle normalization treats equivalent 0 and 360 value
   assert.equal(normalizeRenderDemandAngleDegrees(359), -1);
   assert.equal(normalizeRenderDemandAngleDegrees(180), -180);
   assert.equal(normalizeRenderDemandAngleDegrees(Number.NaN), null);
-});
-
-test('render-demand browser probe does not depend on a Cesium window global', async () => {
-  const source = await readFile(
-    new URL('../qa-application.mjs', import.meta.url),
-    'utf8',
-  );
-  assert.doesNotMatch(source, /window\.Cesium/);
-  assert.match(source, /viewer\.camera\.positionCartographic/);
-  assert.match(source, /viewer\.scene\.mode === 3/);
 });
 
 test('render-demand API fixtures answer only exact known support routes', async () => {

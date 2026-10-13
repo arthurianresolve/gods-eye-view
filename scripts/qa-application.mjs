@@ -11,6 +11,7 @@ import {
   DEFAULT_FLIGHT_FIXTURE_TIME,
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
+  normalizeRenderDemandAngleDegrees,
   classifyRenderDemandRequest,
   respondToRenderDemandApiFixture,
   createRenderDemandFailureReport,
@@ -685,12 +686,21 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       ['headingDegrees', expected.camera.headingDegrees, 0.2],
       ['pitchDegrees', expected.camera.pitchDegrees, 0.2],
       ['rollDegrees', expected.camera.rollDegrees, 0.2],
-    ])
+    ]) {
+      const difference = [
+        'headingDegrees',
+        'pitchDegrees',
+        'rollDegrees',
+      ].includes(field)
+        ? normalizeRenderDemandAngleDegrees(start.camera[field] - expectedValue)
+        : start.camera[field] - expectedValue;
       assert.ok(
         Number.isFinite(start.camera[field]) &&
-          Math.abs(start.camera[field] - expectedValue) <= tolerance,
+          Number.isFinite(difference) &&
+          Math.abs(difference) <= tolerance,
         `Render-demand start camera ${field} differs from the controlled profile.`,
       );
+    }
     assert.equal(
       delivered.flights > 0,
       true,
