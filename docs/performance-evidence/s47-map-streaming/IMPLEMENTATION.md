@@ -63,3 +63,13 @@ maximum measured height exceeds 21 km. Correction acceptance must evaluate
 every encoded vertex through the actual composed node transform and assert
 its geographic/height bounds, including children. An origin-only transform
 check would miss this defect.
+
+The `d8d2f17b` correction repairs content URLs, relative transforms and GLB
+coordinates, but independent encoded-terrain review finds another failure:
+255 of 289 level-zero vertices are outside the header bounding sphere, by up
+to 21,282.701 metres. The corner-only bound collapses at the poles. Its zero
+horizon fallback is also rejected as visible by Cesium's ellipsoid occluder
+for an Austin camera above visibly exposed terrain. The
+[raw bounds audit](terrain-bounds-review-d8d2f17b.json) preserves this rejected
+candidate. Correction must use actual encoded geometry and verify culling,
+ancestor traversal and shared-edge continuity; parser success alone is insufficient.

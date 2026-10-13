@@ -16,6 +16,13 @@ All 84 focused checks and [all seven exact-candidate standard jobs](performance-
 Local and remote dev were fast-forwarded to this exact tested commit. The
 previous failed reports remain failed.
 
+The subsequent automatic dev run `38335846725` has a new Windows recovery
+failure on the same commit: all five settings/workspace checks match, but the
+last browser process does not exit within the unchanged five-second gate after
+acknowledging shutdown. The [retained failure and diagnostic follow-up](performance-evidence/windows-recovery-38335846725/README.md)
+remain separate from the earlier passing run. This does not establish a source
+regression or resolve the intermittent shutdown cause.
+
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
 M3 actual application capture/validation, then M4 matched baseline/candidate
