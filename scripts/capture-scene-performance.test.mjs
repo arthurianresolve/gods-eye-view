@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -128,6 +129,58 @@ test('invalid infrastructure CLI requests reject before importing Cesium', async
     );
     assert.doesNotMatch(
       missingProvenance.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const partialProvenance = invoke(
+      [
+        '--provider-fixture',
+        'infrastructure-datacenters',
+        '--build-receipt',
+        path.join(ROOT, 'package.json'),
+      ],
+      { loaderPath },
+    );
+    assert.equal(partialProvenance.status, 1, partialProvenance.stderr);
+    assert.match(
+      partialProvenance.stderr,
+      /Verified capture requires .* together/,
+    );
+    assert.doesNotMatch(
+      partialProvenance.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const currentHarnessSha = execFileSync(
+      'git',
+      ['-C', ROOT, 'rev-parse', 'HEAD'],
+      { encoding: 'utf8' },
+    ).trim();
+    const invalidReceipt = invoke(
+      [
+        '--provider-fixture',
+        'infrastructure-datacenters',
+        '--build-receipt',
+        path.join(ROOT, 'package.json'),
+        '--app-checkout',
+        ROOT,
+        '--harness-checkout',
+        ROOT,
+        '--build-root',
+        ROOT,
+        '--expected-app-sha',
+        'a'.repeat(40),
+        '--expected-harness-sha',
+        currentHarnessSha,
+        '--served-base-url',
+        'http://127.0.0.1:4173',
+      ],
+      { loaderPath },
+    );
+    assert.equal(invalidReceipt.status, 1, invalidReceipt.stderr);
+    assert.match(invalidReceipt.stderr, /AssertionError/);
+    assert.doesNotMatch(
+      invalidReceipt.stderr,
       /forbidden Cesium import witness/,
     );
 
