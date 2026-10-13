@@ -9,6 +9,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+  assertCaptureCleanupEvidence,
   assertRendererLoopRetirementEvidence,
   assertProviderFixtureCaptureClock,
   buildCaptureCliValidationExpectations,
@@ -2518,6 +2519,92 @@ test('Austin renderer retirements exactly match startup and provider sample boun
       }),
     /must include its observed render-loop retirement/,
   );
+});
+
+test('full cleanup validator replays a raw Austin report and rejects release mutations', async () => {
+  const replay = JSON.parse(
+    await readFile(
+      new URL(
+        './performance/fixtures/austin-cleanup-replay-38330061064.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  );
+  assert.equal(replay.schema, 'gev-austin-capture-cleanup-replay/v1');
+  assert.equal(
+    replay.sourceReportSha256,
+    'b9762d40eb00428077677758269e06d37ebb2b7d2a61214698715eec012bcbc6',
+  );
+  const topology = createCaptureDocumentTopology({
+    startupRuns: 1,
+    captureCount: replay.captures.length,
+  });
+  const validate = (candidate) =>
+    assertCaptureCleanupEvidence(candidate.workload, topology, {
+      captures: candidate.captures,
+    });
+  assert.equal(replay.workload.rendererProbeCleanup.length, 6);
+  assert.equal(replay.workload.rendererLoopRetirements.length, 5);
+  assert.equal(replay.workload.fixtureInterceptionReleases.length, 6);
+  assert.doesNotThrow(() => validate(replay));
+
+  const mutations = [
+    [
+      'missing startup release',
+      (copy) => copy.workload.fixtureInterceptionReleases.splice(0, 1),
+    ],
+    [
+      'missing sample release',
+      (copy) => copy.workload.fixtureInterceptionReleases.pop(),
+    ],
+    [
+      'duplicate release',
+      (copy) =>
+        copy.workload.fixtureInterceptionReleases.push(
+          structuredClone(copy.workload.fixtureInterceptionReleases[0]),
+        ),
+    ],
+    [
+      'unknown release owner',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].documentId =
+          'unknown-document'),
+    ],
+    [
+      'unconfirmed release',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].confirmed = false),
+    ],
+    [
+      'target not closed',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].targetClosed = false),
+    ],
+    [
+      'undrained command',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].stop.pendingCommandsAfterDrain = 1),
+    ],
+    [
+      'nested drain failure',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].interception.interception.drainCommandFailures = 1),
+    ],
+    [
+      'unconfirmed renderer cleanup',
+      (copy) => (copy.workload.rendererProbeCleanup[0].confirmed = false),
+    ],
+    [
+      'missing retirement',
+      (copy) => copy.workload.rendererLoopRetirements.pop(),
+    ],
+  ];
+  for (const [label, mutate] of mutations) {
+    const invalid = structuredClone(replay);
+    mutate(invalid);
+    assert.throws(() => validate(invalid), undefined, label);
+  }
 });
 
 test('capture CLI validates the actual weather fixture manifest, timeline, states and worker topology', async () => {

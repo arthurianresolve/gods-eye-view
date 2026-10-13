@@ -1261,6 +1261,7 @@
   "scripts/performance/austinOperatingWorkloadFixture.mjs",
   "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
   "scripts/performance/austinOperatingComparisonContract.test.mjs",
+  "scripts/performance/fixtures/austin-cleanup-replay-38330061064.json",
   "scripts/performance/austinSatelliteSampledEpoch.mjs",
   "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
   "scripts/performance/receiptOnlyWorkerAudit.mjs",

@@ -2054,7 +2054,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   };
 }
 
-function assertCaptureCleanupEvidence(
+export function assertCaptureCleanupEvidence(
   workload,
   topology,
   { captures = null } = {},
@@ -2122,6 +2122,8 @@ function assertCaptureCleanupEvidence(
       topology.samples.map((entry) => [entry.documentId, entry]),
     ).values(),
   ];
+  const expectedReleaseDocuments =
+    captures === null ? measuredDocuments : topology.workerAudits;
   const releases = workload.fixtureInterceptionReleases;
   assert.ok(
     Array.isArray(releases),
@@ -2131,12 +2133,12 @@ function assertCaptureCleanupEvidence(
     releases
       .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
       .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
-    measuredDocuments
+    expectedReleaseDocuments
       .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
       .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
-    'Each measured fixture document must release its owned interception session.',
+    'Fixture interception releases must exactly cover the owned documents for this workload.',
   );
-  for (const expectedDocument of measuredDocuments) {
+  for (const expectedDocument of expectedReleaseDocuments) {
     const release = releases.find(
       (entry) =>
         entry.documentRole === expectedDocument.documentRole &&
