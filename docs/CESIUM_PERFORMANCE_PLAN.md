@@ -43,6 +43,14 @@ level 15 while the corpus includes levels 0-12. The candidate does not run. Fixi
 that fixture coverage is separate from pinning cross-platform 3D Tiles bytes;
 strict settings, route, readiness and timeout gates remain unchanged.
 
+The reviewed [canonical 3D Tiles corpus](performance-evidence/s47-map-streaming/canonical-corpus/README.md)
+at `da75e90c` (source `7b0387b9`) pins 22 files with fixed hashes/lengths and
+explicit v2 fixture provenance. Root verifies all 72 produced asset buffers,
+geometry and coverage remain identical to the old Windows/Linux fixture and
+passes 106 distinct focused checks. Existing cross-platform jobs now verify the
+same complete manifest hash; their fresh result remains pending. This does not
+resolve the separate missing level-15 imagery coverage or hardware acceptance.
+
 Terrain readiness history is implemented on QA at `c0666072` (reviewed source
 commit `ca892212`). It reuses completed-render observations, retaining the first
 and seven recent samples per readiness transition, with at most 24 ancestry rows
