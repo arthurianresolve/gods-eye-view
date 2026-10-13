@@ -7,7 +7,7 @@ S51. The empty-flight/military conditional-hold change is committed at
 The [matched application diagnostic](paired-6786-1069/README.md) now observes
 18 completed frames before and one after in ten foreground seconds. The
 candidate passes ownership, source and endpoint checks; its separate tracking
-browser run passes 111 checks. One successful-candidate repeat is underway.
+browser run passes 111 checks. A same-candidate repeat passes with zero frames.
 Blocked imagery and simulated visibility keep the qualification scope narrow.
 
 ## Governor behavior and app wake/disposal
@@ -94,8 +94,19 @@ callback, verifies tracking switches from periodic scheduling to a continuous
 hold and back, and checks repeated enable plus disable/destroy stale callbacks
 do not duplicate or re-arm ownership. These tests cover lifecycle scheduling;
 they do not measure real SGP4 propagation cadence or the rendered populated
-satellite/vessel layers. The empty-owner app probe remains the evidence for
-whether those scheduled owners affect settled-empty demand.
+satellite/vessel layers. The empty-fleet app probe enables only civil and
+military layers, so it does not validate populated satellite scheduling.
+
+The subsequent producer audit found a concrete remaining defect: satellite
+`catalog.js` propagates `ceil(denseIds / 300)` entries per rendered frame, but
+the one-second untracked schedule introduced by `379fca0a` treats core and dense
+catalogs alike. With 10,000 dense entries and no other continuous owner, only 34
+entries update per scheduled second, rather than per frame. Current main
+`9beadbda` retains its unconditional satellite hold; this gap belongs to the
+earlier dev scheduler, not the latest main reconciliation. The initial lifecycle
+test verifies scheduling ownership with a simulated callback and does not catch
+this real producer cadence. A bounded correction and producer-path regression
+are in progress. No S51 closure is claimed until that defect is addressed.
 
 ## Additional owner and callback dispositions
 

@@ -2,8 +2,8 @@
 
 The matched application diagnostic observes **18 completed frames before and
 one after** over ten foreground seconds. The candidate passes the unchanged
-maximum of two; the baseline remains failed evidence. This is one functional
-comparison on hosted Linux SwiftShader, not a motion-p95 or physical GPU claim.
+maximum of two; the baseline remains failed evidence. This is a functional
+comparison plus a same-candidate repeat on hosted Linux SwiftShader, not a motion-p95 or physical GPU claim.
 
 | Run | Exact application/harness revision | Result |
 | --- | --- | --- |
@@ -56,7 +56,17 @@ SHA-256 digests verified before selecting exact known filenames:
 [files.json](files.json) binds retained reports, raw logs and run metadata.
 The baseline is the harness's bounded failure projection; fields absent from
 that projection are not independently revalidated. The successful raw candidate
-report is retained. A separate repeat at the same candidate is underway at
-[38459358679](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38459358679).
-S51 remains partial pending that review and final owner disposition; full
-candidate qualification and physical Windows coverage remain pending.
+report is retained. The independent same-candidate repeat
+[38459358679](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38459358679)
+passes with **zero** completed frames in ten seconds. Its source, browser,
+renderer, settings, camera and fixture identities match the first candidate;
+visibility resume and identified-canvas teardown pass again. Artifact
+11845875144 has verified ZIP SHA-256
+`d55351ca0b87b0aafb4875ac8686e8ad7fd3a2a05cf98bc2d6d63a7ad1af81b0`.
+
+This accepts the narrow enabled-empty fleet ownership change. S51 remains
+partial: a separate source audit found that the earlier one-second satellite
+scheduler can throttle the dense catalog's per-frame round-robin updates.
+The lifecycle test above covers scheduler ownership, not that real dense
+producer. A producer-path regression/fix is in progress. Full candidate
+qualification and physical Windows coverage remain pending.

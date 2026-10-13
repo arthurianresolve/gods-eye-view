@@ -14,7 +14,9 @@ foreground seconds. The candidate passes the unchanged two-frame gate, matched
 conditions, receipt-time and identified-canvas ownership checks. Both mixed-use
 and durable workspace journeys pass; the separate tracking browser run passes
 111 checks. Root passes 79 affected tests and 27 periodic-owner tests. A repeat
-of the successful candidate is underway; S51 remains partial. Hosted SwiftShader
+passes with zero idle frames. S51 remains partial: a further producer-path audit
+found that the older one-second satellite schedule slows the dense catalog's
+per-frame round-robin work; a focused correction is in progress. Hosted SwiftShader
 with blocked OSM content does not qualify physical Windows or imagery delivery.
 The [owner audit](performance-evidence/s51-render-demand/owner-audit.md) records
 the remaining animated owners and periodic lifecycle coverage. Earlier failed

@@ -80,7 +80,7 @@
     "checkedFiles": 1654
   },
   "limitations": [
-    "One matched functional diagnostic pair; not five-pair motion or allocation measurements.",
+    "One matched functional diagnostic pair plus a same-candidate repeat; not five-pair motion or allocation measurements.",
     "Hosted Linux SwiftShader, not physical Windows GPU.",
     "OSM imagery deliberately blocked: no content or screenshot equivalence claim.",
     "Visibility control overrides document.hidden: no OS/browser tab occlusion claim.",
@@ -102,5 +102,13 @@
     "failed": 0,
     "sourceCommit": "73a2cb7d1f0e443ac9650d2de01be3937aa8385c",
     "newTestCommit": "67912ed141d4fe5664db7aee8d8986585012b256"
+  },
+  "repeat": {
+    "run": "38459358679",
+    "commit": "106918ee94666545e8727cc938d09599f59e0a20",
+    "status": "passed",
+    "frames": 0,
+    "matchesInitialCandidateConditions": true,
+    "teardownAndSimulatedVisibilityPass": true
   }
 }

@@ -130,9 +130,67 @@
     "rawSha256": "c792e0d14418da7f1c76f237afb9649d74d4002b74eea091cd6fa87034c0ad8d"
   },
   {
+    "file": "repeat/artifacts.json",
+    "bytes": 769,
+    "sha256": "41db73c3bec21716cdcf13301c1afd38f498a95d55e6b482af5fbfdeb7683ab0"
+  },
+  {
+    "file": "repeat/job.log.gz",
+    "bytes": 25933,
+    "sha256": "97bdf9bcc8f9af989ae57e415284d6188e96df20125b3fb0cbcbd19387a9bc12",
+    "rawBytes": 138088,
+    "rawSha256": "118c783c717f80e83be0a2663277eddef74b2c0e36aade4794d69f2d0ceeb23e"
+  },
+  {
+    "file": "repeat/mixed-use-render-demand.log.gz",
+    "bytes": 3982,
+    "sha256": "21cf72893e9b9e60acee0f09ea75608394300f88c59ab2a59fc612a742d25b28",
+    "rawBytes": 27607,
+    "rawSha256": "5024bc3d596ee391e115faef76af981b3657334ba106d52a4ed84e893812686b"
+  },
+  {
+    "file": "repeat/mixed-use-server.log.gz",
+    "bytes": 133,
+    "sha256": "6dd864e9c6547d047c59c841fb20399d2d5b6b9a39dc4fd94fc450b288ffcc31",
+    "rawBytes": 159,
+    "rawSha256": "af79d92348444736ebd3feb7776099b4df5f4d38065f4be018f76bb28487f2af"
+  },
+  {
+    "file": "repeat/mixed-use-smoke.json",
+    "bytes": 26206,
+    "sha256": "0b2fccedd7ddc8ff039b912bb63c4ff0f20d4b5130f1a88103f19c4f303712d4"
+  },
+  {
+    "file": "repeat/mixed-use-smoke.log.gz",
+    "bytes": 3601,
+    "sha256": "22b81a437f65299473b260987f818f8ad4e8f1932e26c8470317b93bfc2d25d6",
+    "rawBytes": 29136,
+    "rawSha256": "09586558ba403ef07852714fface299ad555383b16fc1200f59684e7c317c806"
+  },
+  {
+    "file": "repeat/mixed-use-source-status.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "repeat/mixed-use-source.txt",
+    "bytes": 41,
+    "sha256": "297b2b38c83c88ffc5665872936b905a5e53fa4f1882d043605cb9475646e089"
+  },
+  {
+    "file": "repeat/report.json",
+    "bytes": 27490,
+    "sha256": "8169b5dba05bc9430ecfd1ed26363553d86dff8142cf28874ab005fc41bcfc6f"
+  },
+  {
+    "file": "repeat/run.json",
+    "bytes": 7186,
+    "sha256": "ca2df5f437d937564a7a78bb002285a27c8734b1085fe099f935f66a74d24860"
+  },
+  {
     "file": "review.json",
-    "bytes": 3768,
-    "sha256": "374b84fbcd283b34f891981720f1231fe3cd4a5ea1e2e59e41a5f62330083573"
+    "bytes": 4035,
+    "sha256": "59a164973e1501e0eaa83edd00fa84b5bfa6e5ac5623005dfa1b6a9908375ae7"
   },
   {
     "file": "tracking/artifacts.json",
