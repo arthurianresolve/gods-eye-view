@@ -26,8 +26,11 @@ retains measured satellite scratch/write reuse and rejects the split/opaque-only
 experiments with their documented reasons. No GPU-upload or aircraft speedup
 claim is made. Physical visual/performance qualification remains pending.
 
-Main reconciliation is already included in QA; dev promotion and VM105 rollout
-still follow final candidate qualification. The [acceptance policy](CESIUM_ACCEPTANCE.md)
+[The 14 October upstream update](performance-evidence/main-reconciliation-20261014/README.md)
+is merged into QA at `b6d30c37`: localized GBFS names, 23 focused passes and
+1,656-file formatting pass. This later merge needs fresh full integration;
+the c5802408 results remain bound to their original source. Dev promotion and
+VM105 rollout still follow final candidate qualification. The [acceptance policy](CESIUM_ACCEPTANCE.md)
 keeps the physical Windows comparison, full-application visual/interaction
 checks and sixty-minute retention run mandatory. Earlier checkpoints below
 retain their original revisions and outcomes.

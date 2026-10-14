@@ -1,0 +1,31 @@
+✔ GBFS v2 station names remain trimmed strings (2.4909ms)
+✔ GBFS v3 station names prefer English over the first translation (0.3414ms)
+✔ English preference accepts case differences and regional language tags (0.2767ms)
+✔ without usable English text the first usable translation wins (0.2087ms)
+✔ malformed language fields cannot abort translation selection (0.3398ms)
+✔ a usable name takes precedence over an English short name (0.3336ms)
+✔ missing, empty and malformed names fall back to localized short_name (0.3044ms)
+✔ localized names can fall back to legacy short_name strings (0.1759ms)
+✔ no usable name leaves the station available with an empty name (0.4353ms)
+✔ name shape is normalized even when a feed omits or misstates its version (0.4145ms)
+✔ bad names do not lose valid stations or their metadata (1.1443ms)
+✔ normalizing a localized name leaves the feed document unchanged (0.2914ms)
+✔ bike share joins station information with live status inside the area (5.5641ms)
+✔ bike share returns localized names without losing stations with malformed names (0.8922ms)
+✔ bike share reports uncovered areas and failed systems honestly (1.776ms)
+✔ transit vehicles come from nearby feeds and can be limited to a route (1.4651ms)
+✔ transit reports uncovered areas and unavailable feeds (0.4492ms)
+✔ traffic flow aggregates speed, congestion and closures by road length (1.4324ms)
+✔ traffic reports a missing key, empty areas and areas that are too wide (0.8663ms)
+✔ transit marks stale feeds and drops expired positions (27.8213ms)
+✔ bike share names the systems it did not search (0.8941ms)
+✔ traffic counts only roads inside a radius area and reports missing tiles (1.172ms)
+✔ a whole-world bike-share search names every system it skipped (0.3354ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 615.0748

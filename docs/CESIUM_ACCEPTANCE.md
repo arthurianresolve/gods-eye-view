@@ -190,3 +190,8 @@ VM, HTTPS configuration, secrets, workspaces and rollback path.
 The next status report must identify closed/partial slices, available-environment
 passes/failures/pending results, objective achievement and unsupported platforms.
 Neither this policy amendment nor a green subset of CI means all work is done.
+
+The [14 October reconciliation](performance-evidence/main-reconciliation-20261014/README.md)
+adds upstream GBFS name parsing at merge `b6d30c37`. Focused checks pass; full
+integration for that later merge remains pending. Prior refs/results above remain
+historical and do not validate the new source.

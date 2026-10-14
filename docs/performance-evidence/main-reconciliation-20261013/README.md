@@ -1,4 +1,8 @@
-# Current main reconciliation
+# Main reconciliation history
+
+The [14 October update](../main-reconciliation-20261014/README.md) supersedes
+this checkpoint: upstream GBFS changes are merged into QA at `b6d30c37`.
+The dated observations below retain their original refs and outcomes.
 
 The latest 13 October fetch confirms fork/main and upstream/main at
 `9beadbda6333b83f79aa03047e2d851830f01f6b`; remote dev is still
