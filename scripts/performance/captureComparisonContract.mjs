@@ -421,32 +421,7 @@ export function createObservedInfrastructureComparisonContract({
       expectedPopulations,
     );
     assert.deepEqual(sample.layers, after.environment.layers);
-    assert.equal(
-      sample.fixtureDelivery?.assets?.length,
-      fixtureDelivery.assets.length,
-    );
-    for (const [assetIndex, asset] of fixtureDelivery.assets.entries()) {
-      const sampleAsset = sample.fixtureDelivery.assets[assetIndex];
-      assert.deepEqual(
-        {
-          id: sampleAsset?.id,
-          sha256: sampleAsset?.sha256,
-          byteLength: sampleAsset?.byteLength,
-          contentType: sampleAsset?.contentType,
-        },
-        {
-          id: asset.id,
-          sha256: asset.sha256,
-          byteLength: asset.byteLength,
-          contentType: asset.contentType,
-        },
-      );
-      assert.ok(
-        Number.isInteger(sampleAsset.responseCount) &&
-          sampleAsset.responseCount > 0 &&
-          sampleAsset.responseCount <= asset.responseCount,
-      );
-    }
+    assert.deepEqual(sample.fixtureDelivery?.assets, fixtureDelivery.assets);
     assert.deepEqual(
       sample.fixtureDelivery?.populationsBefore,
       expectedPopulations,
@@ -692,6 +667,7 @@ export function createObservedWeatherEffectsComparisonContract({
     75,
   );
 
+  let priorWeatherResponseCounts = null;
   for (const [index, sample] of captures.entries()) {
     const label = `weather capture ${index + 1}`;
     assert.ok(scenarios.includes(sample.scenario));
@@ -778,7 +754,48 @@ export function createObservedWeatherEffectsComparisonContract({
     assert.equal(sample.fixtureDelivery?.schema, fixtureDelivery.schema);
     assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
     assert.equal(sample.fixtureDelivery?.method, fixtureDelivery.method);
-    assert.deepEqual(sample.fixtureDelivery?.assets, fixtureDelivery.assets);
+    assert.equal(
+      sample.fixtureDelivery?.assets?.length,
+      fixtureDelivery.assets.length,
+    );
+    const sampleResponseCounts = [];
+    for (const [assetIndex, asset] of fixtureDelivery.assets.entries()) {
+      const sampleAsset = sample.fixtureDelivery.assets[assetIndex];
+      assert.deepEqual(
+        {
+          id: sampleAsset?.id,
+          sha256: sampleAsset?.sha256,
+          byteLength: sampleAsset?.byteLength,
+          contentType: sampleAsset?.contentType,
+        },
+        {
+          id: asset.id,
+          sha256: asset.sha256,
+          byteLength: asset.byteLength,
+          contentType: asset.contentType,
+        },
+      );
+      assert.ok(
+        Number.isSafeInteger(sampleAsset.responseCount) &&
+          sampleAsset.responseCount > 0 &&
+          sampleAsset.responseCount <= asset.responseCount,
+      );
+      if (priorWeatherResponseCounts)
+        assert.ok(
+          sampleAsset.responseCount >= priorWeatherResponseCounts[assetIndex],
+          `${label}: cumulative response count went backwards for ${asset.id}`,
+        );
+      sampleResponseCounts.push(sampleAsset.responseCount);
+    }
+    assert.equal(
+      sample.fixtureDelivery.fulfilledResponseCount,
+      sampleResponseCounts.reduce((sum, count) => sum + count, 0),
+    );
+    assert.ok(
+      sample.fixtureDelivery.fulfilledResponseCount <=
+        fixtureDelivery.fulfilledResponseCount,
+    );
+    priorWeatherResponseCounts = sampleResponseCounts;
     assert.deepEqual(
       sample.fixtureDelivery?.populationsBefore,
       expectedPopulations,

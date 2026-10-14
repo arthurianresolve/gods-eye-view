@@ -14,6 +14,8 @@ import {
 import { createWindSource } from '../../src/layers/wind/source.js';
 import { createWindLayer } from '../../src/layers/wind/index.js';
 import { createWeatherClock } from '../../src/layers/weather/clock.js';
+import { createWeatherPanel } from '../../src/ui/weatherPanel.js';
+import { railFixture } from '../../src/ui/railTestFixture.mjs';
 import { createInvestigationWeatherAdapter } from '../../src/time/weatherAdapter.js';
 import {
   createFixtureInterceptionErrorRecorder,
@@ -25,6 +27,7 @@ import {
   assertWeatherEffectsClock,
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsWorkloadFixture,
+  runWeatherEffectsPhaseSchedule,
   selectWeatherEffectsPhaseInPage,
   waitForWeatherEffectsReadiness,
   WEATHER_EFFECTS_FIXED_TIME,
@@ -165,7 +168,7 @@ test('phased weather CLI rejects short runs before launch and accepts only the r
     '5',
   ]);
   assert.equal(shortWarmup.status, 1);
-  assert.match(shortWarmup.stderr, /30-second warmup, 60-second samples/);
+  assert.match(shortWarmup.stderr, /exact 30s\/60s\/5-run comparison contract/);
   assert.doesNotMatch(shortWarmup.stderr, /Comparison fixtures require/);
 
   const shortSample = run([
@@ -177,7 +180,28 @@ test('phased weather CLI rejects short runs before launch and accepts only the r
     '5',
   ]);
   assert.equal(shortSample.status, 1);
-  assert.match(shortSample.stderr, /30-second warmup, 60-second samples/);
+  assert.match(shortSample.stderr, /exact 30s\/60s\/5-run comparison contract/);
+
+  const incompleteDiagnostic = run([
+    '--warmup-ms',
+    '1000',
+    '--seconds',
+    '60',
+    '--runs',
+    '1',
+    '--weather-phase-diagnostic',
+    '--worker-audit-mode',
+    'receipt-only',
+  ]);
+  assert.equal(incompleteDiagnostic.status, 1);
+  assert.match(
+    incompleteDiagnostic.stderr,
+    /Comparison fixtures require verified build provenance options/,
+  );
+  assert.doesNotMatch(
+    incompleteDiagnostic.stderr,
+    /exact 30s\/60s\/5-run comparison contract/,
+  );
 
   const unprovenancedValidProfile = run([
     '--warmup-ms',
@@ -240,42 +264,68 @@ test('weather phase observations bind every scheduled source, elapsed time and p
   );
 });
 
-test('serialized weather phase driver selects the requested source through visible timeline controls', async () => {
+test('serialized weather phase driver selects every source through the real clock-backed timeline slider', async () => {
   const fixture = createWeatherEffectsWorkloadFixture();
+  const clock = createWeatherClock();
   const modules = new Map();
-  let index = 2;
-  let mode = 'latest';
-  const syncStats = () => {
-    for (const module of modules.values())
-      module.stats.observedAt = fixture.timeline[index];
-  };
-  for (const id of ['weather-radar', 'weather-satellite', 'weather-lightning'])
+  const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
+  const unregister = ids.map((id) => {
+    let shown = null;
+    const product = {
+      id,
+      maxGapMs: 24 * 60 * 60_000,
+      getTimes: () => fixture.timeline,
+      getShownTime: () => shown,
+      isSuspended: () => false,
+      async apply(time) {
+        shown = time;
+        return true;
+      },
+    };
+    const remove = clock.register(product);
     modules.set(id, {
-      stats: { observedAt: fixture.timeline[index] },
-      getStats() {
-        return this.stats;
-      },
-      getDiagnostics: () => ({ clock: { mode, playing: false } }),
+      getStats: () => ({ observedAt: shown, loading: false }),
+      getDiagnostics: () => ({ clock: clock.getState() }),
     });
-  const buttons = {
-    latest: {
-      click() {
-        index = 2;
-        mode = 'latest';
-        syncStats();
-      },
-    },
-    previous: {
-      get disabled() {
-        return index <= 0;
-      },
-      click() {
-        index -= 1;
-        mode = 'history';
-        syncStats();
-      },
-    },
-    play: { getAttribute: () => 'false' },
+    return remove;
+  });
+  const f = railFixture();
+  const view = createWeatherPanel({ container: f.container, clock });
+  view.update(
+    ids.map((id) => ({
+      id,
+      summary: { label: id, coverage: 'pinned source fixture' },
+    })),
+  );
+  const root = f.find((node) => node.className === 'weather-readout');
+  root.querySelector = (selector) => {
+    if (selector === 'input[aria-label="Observed history"]')
+      return f.find(
+        (node) =>
+          node.tagName === 'INPUT' &&
+          node.getAttribute('aria-label') === 'Observed history',
+        root,
+      );
+    if (selector.includes('Earlier observation'))
+      return f.find(
+        (node) =>
+          node.tagName === 'BUTTON' && node.title === 'Earlier observation',
+        root,
+      );
+    if (selector.includes('Newest frame per product'))
+      return f.find(
+        (node) =>
+          node.tagName === 'BUTTON' &&
+          node.title === 'Newest frame per product',
+        root,
+      );
+    if (selector.includes('Replay observed history'))
+      return f.find(
+        (node) =>
+          node.tagName === 'BUTTON' && node.title === 'Replay observed history',
+        root,
+      );
+    return null;
   };
   const window = {
     __gevWeatherMeasurementStartedAt: 100,
@@ -286,39 +336,124 @@ test('serialized weather phase driver selects the requested source through visib
     },
   };
   const document = {
-    querySelector: () => ({
-      querySelector(selector) {
-        if (selector.includes('Earlier observation')) return buttons.previous;
-        if (selector.includes('Newest frame per product'))
-          return buttons.latest;
-        if (selector.includes('Replay observed history')) return buttons.play;
-        return null;
-      },
-    }),
+    querySelector: () => root,
   };
   let now = 100;
   const performance = { now: () => now };
   const setTimeout = (resolve, delay) => {
     now += delay;
-    resolve();
+    queueMicrotask(resolve);
     return 1;
   };
-  const phase = fixture.phaseSchedule.phases[0];
-  const result = await runInNewContext(
-    `(${selectWeatherEffectsPhaseInPage.toString()})(${JSON.stringify({
-      phase,
-      fixtureSha256: fixture.sha256,
-      maximumLatenessMs: fixture.phaseSchedule.maximumLatenessMs,
-    })})`,
-    { window, document, performance, setTimeout },
-  );
-  assert.equal(result.id, 'early-history');
+  try {
+    const observations = [];
+    for (const phase of fixture.phaseSchedule.phases) {
+      const result = await runInNewContext(
+        `(${selectWeatherEffectsPhaseInPage.toString()})(${JSON.stringify({
+          phase,
+          fixtureSha256: fixture.sha256,
+          maximumLatenessMs: fixture.phaseSchedule.maximumLatenessMs,
+          measurementStartedAt: 100,
+        })})`,
+        {
+          window,
+          document,
+          performance,
+          setTimeout,
+          clearTimeout: () => {},
+          Event,
+        },
+      );
+      observations.push(result);
+      assert.equal(result.id, phase.id);
+      assert.equal(result.clock.mode, 'history');
+      assert.equal(result.clock.playing, false);
+      assert.deepEqual(
+        Array.from(result.sourceObservationTimes),
+        Array(3).fill(phase.sourceTime),
+      );
+    }
+    assert.deepEqual(
+      observations.map(({ id }) => id),
+      ['early-history', 'middle-history', 'latest-history'],
+    );
+    assert.equal(clock.getState().mode, 'history');
+    assert.equal(clock.getState().target, fixture.timeline.at(-1));
+    const slider = root.querySelector('input[aria-label="Observed history"]');
+    window.__gevWeatherMeasurementStartedAt = 101;
+    await assert.rejects(
+      runInNewContext(
+        `(${selectWeatherEffectsPhaseInPage.toString()})(${JSON.stringify({
+          phase: fixture.phaseSchedule.phases[1],
+          fixtureSha256: fixture.sha256,
+          maximumLatenessMs: fixture.phaseSchedule.maximumLatenessMs,
+          measurementStartedAt: 100,
+        })})`,
+        {
+          window,
+          document,
+          performance,
+          setTimeout,
+          clearTimeout: () => {},
+          Event,
+        },
+      ),
+      /outlived its measurement owner/,
+    );
+    assert.equal(slider.value, '2');
+  } finally {
+    view.destroy();
+    clock.destroy();
+    for (const remove of unregister) remove();
+  }
+});
+
+test('weather phase driver cancels pending phase work when capture fails early', async () => {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  let rejectSample;
+  const samplePromise = new Promise((_, reject) => {
+    rejectSample = reject;
+  });
+  const selectedPhases = [];
+  const scheduled = [];
+  const canceled = [];
+  let abortCount = 0;
+  const failure = new Error('capture rejected during phase schedule');
+  const page = {
+    waitForFunction: async () => true,
+    evaluate: async (fn, value) => {
+      if (value?.phase) {
+        selectedPhases.push(value.phase.id);
+        return { id: value.phase.id };
+      }
+      if (fn.toString().includes('__gevWeatherMeasurementAbort')) {
+        abortCount += 1;
+        return undefined;
+      }
+      return 100;
+    },
+  };
+  const run = runWeatherEffectsPhaseSchedule({
+    page,
+    fixture,
+    samplePromise,
+    now: () => 0,
+    schedule: (_callback, delayMs) => {
+      const handle = { delayMs };
+      scheduled.push(handle);
+      rejectSample(failure);
+      return handle;
+    },
+    cancel: (handle) => canceled.push(handle),
+  });
+  await assert.rejects(run, (error) => error === failure);
+  assert.deepEqual(selectedPhases, ['early-history']);
   assert.deepEqual(
-    Array.from(result.sourceObservationTimes),
-    Array(3).fill(phase.sourceTime),
+    scheduled.map(({ delayMs }) => delayMs),
+    [20_000],
   );
-  assert.equal(result.clock.playing, false);
-  assert.equal(index, 0);
+  assert.deepEqual(canceled, scheduled);
+  assert.equal(abortCount, 1);
 });
 
 test('real weather and wind source adapters consume the pinned manifests and grid', async () => {

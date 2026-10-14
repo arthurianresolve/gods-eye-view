@@ -140,6 +140,22 @@ export function smokeProviderPreparationMode(providerFixture) {
     : 'dense-provider-fixture';
 }
 
+export function smokeCaptureSchedule(providerFixture) {
+  return providerFixture === WEATHER_EFFECTS_WORKLOAD_ID
+    ? {
+        runs: 1,
+        warmupMs: 1000,
+        seconds: 60,
+        weatherPhaseDiagnostic: true,
+      }
+    : {
+        runs: 2,
+        warmupMs: 1000,
+        seconds: 1,
+        weatherPhaseDiagnostic: false,
+      };
+}
+
 export function observeSmokeLayerPopulationInPage() {
   const manager = window.__godsEyeView?.dataManager;
   if (!manager || typeof manager.getAll !== 'function')
@@ -1401,7 +1417,7 @@ const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
   { scenario: 'idle', run: 2 },
   { scenario: 'scripted-motion', run: 1 },
 ]);
-const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
+const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 
 function providerCpuProfileKey(target) {
   return target.scenario === 'idle'
@@ -3200,7 +3216,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
   assert.equal(report.workerAuditMode, 'diagnostic');
   assert.equal(report.comparisonEligible, false);
-  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 2 });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
   assert.equal(
@@ -3211,15 +3227,20 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     report.source?.buildProvenance?.receiptSha256,
     expected.receiptSha256,
   );
-  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v1');
+  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
   assert.equal(fixture?.workloadId, WEATHER_EFFECTS_WORKLOAD_ID);
   assert.equal(fixture?.fixedTime, expected.fixedTime);
   assert.equal(report.workload?.providerFixture, WEATHER_EFFECTS_WORKLOAD_ID);
   assert.equal(report.workload?.fixtureId, fixture.id);
   assert.deepEqual(report.workload?.fixture, fixture);
+  assert.equal(
+    report.workload?.weatherEffectsCaptureMode,
+    'phase-producer-diagnostic',
+  );
+  assert.equal(report.workload?.performanceAcceptanceEligible, false);
   assert.equal(report.workload?.warmupMs, 1000);
-  assert.equal(report.workload?.durationPerSampleMs, 1000);
-  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.durationPerSampleMs, 60_000);
+  assert.equal(report.workload?.runsPerScenario, 1);
   assert.equal(report.workload?.startupRuns, 1);
   assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
   assert.equal(report.workload?.performanceAcceptanceEligible, false);
@@ -3231,9 +3252,8 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   assertCaptureCleanupEvidence(report.workload, captureTopology);
   const lifecycle = report.workload?.weatherEffectsFixtureLifecycle;
   assert.equal(lifecycle?.freshBrowserContextPerSample, false);
-  assert.equal(lifecycle?.performanceAcceptanceEligible, false);
-  assert.equal(lifecycle?.playback?.mode, 'history');
-  assert.equal(lifecycle?.playback?.playing, true);
+  assert.equal(lifecycle?.playback?.mode, 'latest');
+  assert.equal(lifecycle?.playback?.playing, false);
   assert.deepEqual(
     lifecycle?.observedCamera,
     report.fixtureDelivery?.cameraObservation,
@@ -3264,6 +3284,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     windPaused: false,
   });
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.equal(report.comparisonContract ?? null, null);
   assert.ok(
     report.comparisonReadiness?.reasons?.includes(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
@@ -3296,7 +3317,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   );
   assert.deepEqual(report.fixtureDelivery, {
     ...report.fixtureDelivery,
-    schema: 'gev-weather-effects-fixture-delivery/v1',
+    schema: 'gev-weather-effects-fixture-delivery/v2',
     status: 'observed',
     workloadId: fixture.workloadId,
     fixtureSha256: fixture.sha256,
@@ -3344,14 +3365,12 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     report.fixtureDelivery.populationsAfter,
     report.fixtureDelivery.populationsBefore,
   );
-  assert.equal(report.captures?.length, 4);
+  assert.equal(report.captures?.length, 2);
   assert.deepEqual(
     report.captures.map(({ scenario, run }) => [scenario, run]),
     [
       ['idle', 1],
-      ['idle', 2],
       ['scripted-motion', 1],
-      ['scripted-motion', 2],
     ],
   );
   const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
@@ -3440,6 +3459,66 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     assert.equal(sample.settings?.before?.qualityMode, 'manual');
     assert.equal(sample.settings?.before?.densityPct, 75);
     assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateBefore?.clock?.mode,
+      'latest',
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateBefore?.clock?.playing,
+      false,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateAfter?.clock?.mode,
+      'history',
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateAfter?.clock?.playing,
+      false,
+    );
+    assert.equal(sample.durationMs, 60_000);
+    const phaseObservations = sample.weatherEffectsClock?.phaseObservations;
+    assert.equal(
+      phaseObservations?.schema,
+      'gev-weather-phase-observations/v1',
+    );
+    assert.equal(phaseObservations?.durationMs, 60_000);
+    assert.equal(phaseObservations?.fixtureSha256, fixture.sha256);
+    assert.equal(
+      phaseObservations?.phases?.length,
+      fixture.phaseSchedule.phases.length,
+    );
+    assert.deepEqual(
+      phaseObservations.phases.map(
+        ({ id, expectedSourceTime, scheduledAtMs }) => ({
+          id,
+          expectedSourceTime,
+          scheduledAtMs,
+        }),
+      ),
+      fixture.phaseSchedule.phases.map(({ id, sourceTime, offsetMs }) => ({
+        id,
+        expectedSourceTime: sourceTime,
+        scheduledAtMs: offsetMs,
+      })),
+    );
+    for (const [phaseIndex, phase] of fixture.phaseSchedule.phases.entries()) {
+      const observation = phaseObservations.phases[phaseIndex];
+      assert.equal(observation.fixtureSha256, fixture.sha256);
+      assert.deepEqual(
+        observation.sourceObservationTimes,
+        Array(3).fill(phase.sourceTime),
+      );
+      assert.ok(
+        Number.isFinite(observation.observedAtElapsedMs) &&
+          observation.observedAtElapsedMs >= phase.offsetMs &&
+          observation.observedAtElapsedMs <=
+            phase.offsetMs + fixture.phaseSchedule.maximumLatenessMs,
+      );
+      assert.deepEqual(observation.clock, {
+        mode: 'history',
+        playing: false,
+      });
+    }
     for (const clock of [
       sample.weatherEffectsClock?.cesiumBefore,
       sample.weatherEffectsClock?.cesiumAfter,
@@ -3488,8 +3567,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
           fixture.timeline.includes(time),
         ),
       );
-      assert.equal(weatherState?.clock?.mode, 'history');
-      assert.equal(weatherState?.clock?.playing, true);
+      assert.equal(weatherState?.clock?.playing, false);
       assert.deepEqual(
         weatherState?.visualState,
         lifecycle.playback.visualState,
@@ -3549,6 +3627,12 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
       );
       previousSampleCounts.set(asset.id, asset.responseCount);
     }
+    assert.deepEqual(
+      sample.weatherEffectsClock?.phaseObservations?.phases?.map(
+        ({ id }) => id,
+      ),
+      ['early-history', 'middle-history', 'latest-history'],
+    );
     assertCaptureFrameAndSettingsEvidence(sample, sample.scenario);
   }
   return {
@@ -3565,7 +3649,7 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
       expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
         ? 'Hosted short native-renderer weather/effects fixture diagnostic only; not physical desktop or paired performance evidence.'
         : 'Hosted short software-rendering weather/effects fixture diagnostic only; not hardware or paired performance evidence.',
-      'The preflight exercises the three fixed weather frames and starts the weather clock playback; it does not complete the full 90-second performance acceptance workload.',
+      'The producer diagnostic selects all three pinned history phases during one 60-second sample per scenario; it does not complete the five-run paired comparison workload.',
     ],
   };
 }
@@ -4957,12 +5041,19 @@ export function buildCaptureCliValidationExpectations({
   validateMapStreamingCapture,
   receiptOnlyWorkerContract,
 }) {
+  const weatherEffectsDiagnostic =
+    providerFixture === WEATHER_EFFECTS_WORKLOAD_ID;
   return {
     appSha: commit,
     harnessSha: harnessCommit,
     receiptSha256: build.receipt.receiptSha256,
     fixtureSha256: fixture?.sha256 || fixture?.manifestSha256 || null,
     providerFixture,
+    warmupMs: weatherEffectsDiagnostic ? 1000 : warmupMs,
+    durationPerSampleMs: weatherEffectsDiagnostic
+      ? 60_000
+      : durationPerSampleMs,
+    runsPerScenario: weatherEffectsDiagnostic ? 1 : 2,
     fixedTime: fixture?.fixedTime || null,
     ...(providerFixture.startsWith('infrastructure')
       ? { infrastructureFixture: fixture }
@@ -5048,6 +5139,7 @@ async function runCandidateCaptureCli({
     'scripts',
     'capture-scene-performance.mjs',
   );
+  const captureSchedule = smokeCaptureSchedule(providerFixture);
   const args = [
     scriptPath,
     '--url',
@@ -5065,13 +5157,13 @@ async function runCandidateCaptureCli({
     '--expected-density',
     '75',
     '--runs',
-    '2',
+    String(captureSchedule.runs),
     '--startup-runs',
     '1',
     '--warmup-ms',
-    '1000',
+    String(captureSchedule.warmupMs),
     '--seconds',
-    '1',
+    String(captureSchedule.seconds),
     '--fixture-timeout-ms',
     '60000',
     '--protocol-timeout-ms',
@@ -5096,6 +5188,9 @@ async function runCandidateCaptureCli({
     served.baseUrl,
     '--out',
     reportPath,
+    ...(captureSchedule.weatherPhaseDiagnostic
+      ? ['--weather-phase-diagnostic']
+      : []),
   ];
   if (providerFixture === MAP_STREAMING_WORKLOAD_ID)
     args.push('--build-profile', MAP_FIXTURE_BUILD_PROFILE_ID);

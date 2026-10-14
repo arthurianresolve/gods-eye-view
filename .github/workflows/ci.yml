@@ -60,7 +60,7 @@ on:
         options: [diagnostic, prewarm, receipt-only]
         default: diagnostic
       capture_provider_fixture:
-        description: Candidate capture workload inside the build smoke (short provider captures are diagnostic only)
+        description: Candidate capture workload inside the build smoke (weather uses a 2-sample 60-second phase-producer diagnostic; comparison runs remain separate)
         type: choice
         options:
           [
@@ -69,7 +69,7 @@ on:
             infrastructure-dams,
             infrastructure-cables,
             infrastructure,
-            austin-weather-effects-v1,
+            austin-weather-effects-phased-v2,
             austin-operating-v1,
             austin-map-streaming-v1,
           ]

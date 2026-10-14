@@ -965,20 +965,19 @@ export async function selectWeatherEffectsPhaseInPage({
   phase,
   fixtureSha256,
   maximumLatenessMs,
+  measurementStartedAt,
 } = {}) {
-  const startedAt = window.__gevWeatherMeasurementStartedAt;
+  const startedAt = measurementStartedAt;
   const app = window.__godsEyeView;
   const root = document.querySelector('.weather-readout');
-  const previous = root?.querySelector('button[title="Earlier observation"]');
-  const latest = root?.querySelector(
-    'button[title="Newest frame per product"]',
-  );
+  const slider = root?.querySelector('input[aria-label="Observed history"]');
   const play = root?.querySelector('button[title="Replay observed history"]');
+  if (window.__gevWeatherMeasurementStartedAt !== startedAt)
+    throw new Error('Weather phase selection outlived its measurement owner.');
   if (
     !Number.isFinite(startedAt) ||
     !app?.dataManager?.layers?.get ||
-    !previous ||
-    !latest ||
+    !slider ||
     !play ||
     !phase ||
     !Number.isInteger(phase.timelineIndex) ||
@@ -1000,6 +999,12 @@ export async function selectWeatherEffectsPhaseInPage({
   const readClock = () =>
     app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
       ?.clock;
+  const assertMeasurementOwner = () => {
+    if (window.__gevWeatherMeasurementStartedAt !== startedAt)
+      throw new Error(
+        'Weather phase selection outlived its measurement owner.',
+      );
+  };
   if (play.getAttribute('aria-pressed') === 'true')
     throw new Error('Native weather playback must remain paused.');
   const targetElapsedMs = startedAt + phase.offsetMs;
@@ -1007,21 +1012,23 @@ export async function selectWeatherEffectsPhaseInPage({
     await new Promise((resolve) =>
       setTimeout(resolve, targetElapsedMs - performance.now()),
     );
-  latest.click();
-  for (let index = 2; index > phase.timelineIndex; index -= 1) {
-    if (previous.disabled)
-      throw new Error('Weather timeline ended before the requested phase.');
-    previous.click();
-  }
+  assertMeasurementOwner();
+  if (Number(slider.max) !== 2)
+    throw new Error('Weather timeline no longer has the three pinned phases.');
+  slider.value = String(phase.timelineIndex);
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
   const deadline = targetElapsedMs + maximumLatenessMs;
   let sourceObservationTimes = readTimes();
   while (
     !sourceObservationTimes.every((time) => time === phase.sourceTime) &&
     performance.now() < deadline
   ) {
+    assertMeasurementOwner();
     await new Promise((resolve) => setTimeout(resolve, 25));
+    assertMeasurementOwner();
     sourceObservationTimes = readTimes();
   }
+  assertMeasurementOwner();
   const observedAtElapsedMs = performance.now() - startedAt;
   const clock = readClock();
   if (
@@ -1029,6 +1036,7 @@ export async function selectWeatherEffectsPhaseInPage({
     observedAtElapsedMs < phase.offsetMs ||
     observedAtElapsedMs > phase.offsetMs + maximumLatenessMs ||
     clock?.mode !== 'history' ||
+    clock?.target !== phase.sourceTime ||
     clock?.playing !== false
   )
     throw new Error(`Weather phase ${phase.id} was missing, late or wrong.`);
@@ -1041,4 +1049,113 @@ export async function selectWeatherEffectsPhaseInPage({
     clock: { mode: clock.mode, playing: clock.playing },
     fixtureSha256,
   };
+}
+
+/** Run the host-owned weather phase schedule while observing capture settlement. */
+export async function runWeatherEffectsPhaseSchedule({
+  page,
+  fixture,
+  samplePromise,
+  now = () => performance.now(),
+  schedule = (callback, delayMs) => setTimeout(callback, delayMs),
+  cancel = (handle) => clearTimeout(handle),
+} = {}) {
+  if (
+    !page?.waitForFunction ||
+    !page?.evaluate ||
+    fixture?.schema !== 'gev-weather-effects-fixture/v2' ||
+    !samplePromise ||
+    typeof now !== 'function' ||
+    typeof schedule !== 'function' ||
+    typeof cancel !== 'function'
+  )
+    throw new TypeError('Weather phase schedule inputs are invalid.');
+
+  const sampleSettlement = Promise.resolve(samplePromise).then(
+    (value) => ({ status: 'fulfilled', value }),
+    (error) => ({ status: 'rejected', error }),
+  );
+  let pendingEvaluation = null;
+  const beforeSampleSettles = async (operation, label) => {
+    const winner = await Promise.race([
+      Promise.resolve(operation).then(
+        (value) => ({ source: 'operation', status: 'fulfilled', value }),
+        (error) => ({ source: 'operation', status: 'rejected', error }),
+      ),
+      sampleSettlement.then((settlement) => ({
+        source: 'sample',
+        ...settlement,
+      })),
+    ]);
+    if (winner.source === 'sample') {
+      if (winner.status === 'rejected') throw winner.error;
+      throw new Error(`Capture completed before ${label}.`);
+    }
+    if (winner.status === 'rejected') throw winner.error;
+    return winner.value;
+  };
+
+  try {
+    await beforeSampleSettles(
+      page.waitForFunction(
+        () => Number.isFinite(window.__gevWeatherMeasurementStartedAt),
+        { timeout: 5_000, polling: 20 },
+      ),
+      'weather measurement start',
+    );
+    const measurementStartedAt = await beforeSampleSettles(
+      page.evaluate(() => window.__gevWeatherMeasurementStartedAt),
+      'weather measurement owner capture',
+    );
+    if (!Number.isFinite(measurementStartedAt))
+      throw new Error('Weather measurement owner is unavailable.');
+    const scheduleStartedAt = now();
+    const phases = [];
+    for (const phase of fixture.phaseSchedule.phases) {
+      const delayMs = scheduleStartedAt + phase.offsetMs - now();
+      if (delayMs > 0) {
+        let timer = null;
+        try {
+          await beforeSampleSettles(
+            new Promise((resolve) => {
+              timer = schedule(resolve, delayMs);
+            }),
+            `weather phase ${phase.id}`,
+          );
+        } finally {
+          if (timer !== null) cancel(timer);
+        }
+      }
+      pendingEvaluation = page.evaluate(selectWeatherEffectsPhaseInPage, {
+        phase,
+        fixtureSha256: fixture.sha256,
+        maximumLatenessMs: fixture.phaseSchedule.maximumLatenessMs,
+        measurementStartedAt,
+      });
+      const phaseEvaluation = pendingEvaluation;
+      void phaseEvaluation.then(
+        () => {
+          if (pendingEvaluation === phaseEvaluation) pendingEvaluation = null;
+        },
+        () => {
+          if (pendingEvaluation === phaseEvaluation) pendingEvaluation = null;
+        },
+      );
+      phases.push(
+        await beforeSampleSettles(phaseEvaluation, `weather phase ${phase.id}`),
+      );
+    }
+    return {
+      schema: 'gev-weather-phase-observations/v1',
+      durationMs: fixture.phaseSchedule.measurementMs,
+      fixtureSha256: fixture.sha256,
+      phases,
+    };
+  } catch (error) {
+    await page
+      .evaluate(() => window.__gevWeatherMeasurementAbort?.())
+      .catch(() => {});
+    await pendingEvaluation?.catch(() => {});
+    throw error;
+  }
 }

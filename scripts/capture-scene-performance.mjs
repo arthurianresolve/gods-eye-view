@@ -160,6 +160,7 @@ const providerFixtureMode = option('--provider-fixture', null);
 const infrastructureWorkloadSelected =
   INFRASTRUCTURE_WORKLOAD_IDS.includes(providerFixtureMode);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
+const weatherPhaseDiagnostic = args.includes('--weather-phase-diagnostic');
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 const mapStreamingWorkloadSelected =
@@ -207,10 +208,16 @@ if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
     weatherEffectsModule.createWeatherEffectsWorkloadFixture(
       providerFixtureTime,
     );
-  if (warmupMs !== 30_000 || seconds !== 60 || runs !== 5)
+  const comparisonRun = warmupMs === 30_000 && seconds === 60 && runs === 5;
+  const diagnosticRun = warmupMs === 1_000 && seconds === 60 && runs === 1;
+  if (weatherPhaseDiagnostic ? !diagnosticRun : !comparisonRun)
     throw new TypeError(
-      'The phased weather/effects comparison requires 30-second warmup, 60-second samples and five runs per scenario.',
+      'Phased weather/effects requires either the exact 30s/60s/5-run comparison contract or the explicit 1s/60s/1-run producer diagnostic.',
     );
+} else if (weatherPhaseDiagnostic) {
+  throw new TypeError(
+    '--weather-phase-diagnostic requires the phased weather/effects fixture.',
+  );
 }
 if (!['diagnostic', 'prewarm', 'receipt-only'].includes(workerAuditMode))
   throw new Error(
@@ -4650,37 +4657,12 @@ try {
       let sample;
       try {
         if (weatherEffectsWorkload) {
-          await page.waitForFunction(
-            () => Number.isFinite(window.__gevWeatherMeasurementStartedAt),
-            { timeout: 5_000, polling: 20 },
-          );
-          const hostScheduleStart = performance.now();
-          const phases = [];
-          for (const phase of weatherEffectsWorkload.phaseSchedule.phases) {
-            const delayUntilPhase =
-              hostScheduleStart + phase.offsetMs - performance.now();
-            if (delayUntilPhase > 0)
-              await new Promise((resolve) =>
-                setTimeout(resolve, delayUntilPhase),
-              );
-            phases.push(
-              await page.evaluate(
-                weatherEffectsModule.selectWeatherEffectsPhaseInPage,
-                {
-                  phase,
-                  fixtureSha256: weatherEffectsWorkload.sha256,
-                  maximumLatenessMs:
-                    weatherEffectsWorkload.phaseSchedule.maximumLatenessMs,
-                },
-              ),
-            );
-          }
-          weatherPhaseObservations = {
-            schema: 'gev-weather-phase-observations/v1',
-            durationMs: seconds * 1000,
-            fixtureSha256: weatherEffectsWorkload.sha256,
-            phases,
-          };
+          weatherPhaseObservations =
+            await weatherEffectsModule.runWeatherEffectsPhaseSchedule({
+              page,
+              fixture: weatherEffectsWorkload,
+              samplePromise,
+            });
         }
         sample = await samplePromise;
       } catch (error) {
@@ -5474,6 +5456,11 @@ try {
     infrastructureWorkload ||
     weatherEffectsWorkload ||
     austinOperatingWorkload;
+  const weatherEffectsComparisonRun =
+    weatherEffectsWorkload &&
+    warmupMs === 30_000 &&
+    seconds === 60 &&
+    runs === 5;
   const comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
@@ -5490,7 +5477,7 @@ try {
           captures,
           scenarios,
         })
-      : weatherEffectsWorkload
+      : weatherEffectsComparisonRun
         ? createObservedWeatherEffectsComparisonContract({
             fixture: weatherEffectsWorkload,
             fixtureDelivery,
@@ -5681,6 +5668,10 @@ try {
       : {}),
     ...(weatherEffectsWorkload
       ? {
+          weatherEffectsCaptureMode: weatherEffectsComparisonRun
+            ? 'comparison'
+            : 'phase-producer-diagnostic',
+          performanceAcceptanceEligible: Boolean(weatherEffectsComparisonRun),
           weatherEffectsFixtureLifecycle:
             weatherEffectsModule.createWeatherEffectsFixtureLifecycle({
               fixture: weatherEffectsWorkload,
@@ -5783,6 +5774,10 @@ try {
   if (shaderProgramAttributionEnabled)
     comparisonReadinessReasons.push(
       'shader-program-attribution-instrumentation-is-enabled',
+    );
+  if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
+    comparisonReadinessReasons.push(
+      'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
     );
   if (nativeRenderingDiagnostic)
     comparisonReadinessReasons.push(

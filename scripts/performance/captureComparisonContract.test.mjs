@@ -447,12 +447,16 @@ function makeWeatherEffectsObservation() {
     fixtureSha256: fixture.sha256,
     fixedTime: fixture.fixedTime,
     phaseSchedule: structuredClone(fixture.phaseSchedule),
-    assets,
+    assets: assets.map((asset) => ({ ...asset, responseCount: 10 })),
     populationsBefore: populations,
     populationsAfter: populations,
     fulfilledResponseCount: assets.length,
     routeErrors: [],
   };
+  fixtureDelivery.fulfilledResponseCount = fixtureDelivery.assets.reduce(
+    (sum, asset) => sum + asset.responseCount,
+    0,
+  );
   const environment = {
     userAgent: 'Mozilla/5.0 Chrome/154.0.0.0 Safari/537.36',
     layers: populations,
@@ -484,6 +488,7 @@ function makeWeatherEffectsObservation() {
     },
   };
   const captures = [];
+  let captureOrdinal = 0;
   for (const scenario of Object.keys(routes)) {
     for (let run = 1; run <= 5; run += 1) {
       const phaseObservations = {
@@ -521,7 +526,15 @@ function makeWeatherEffectsObservation() {
           before: structuredClone(visualSettings),
           after: structuredClone(visualSettings),
         },
-        fixtureDelivery: structuredClone(fixtureDelivery),
+        fixtureDelivery: {
+          ...structuredClone(fixtureDelivery),
+          assets: fixtureDelivery.assets.map((asset) => ({
+            ...asset,
+            responseCount: captureOrdinal + 1,
+          })),
+          fulfilledResponseCount:
+            fixtureDelivery.assets.length * (captureOrdinal + 1),
+        },
         conditions: {
           before: {
             settings: structuredClone(visualSettings),
@@ -550,6 +563,7 @@ function makeWeatherEffectsObservation() {
         },
       };
       captures.push(sample);
+      captureOrdinal += 1;
     }
   }
   return {
@@ -575,6 +589,17 @@ test('infrastructure comparison exports observed workloads without dense objecti
   assert.equal(contract.workloadId, 'infrastructure-datacenters');
   assert.deepEqual(contract.populations, observed.populations);
   assert.deepEqual(contract.objectiveScenarios, []);
+  const alteredSampleDelivery = structuredClone(observed);
+  alteredSampleDelivery.captures[0].fixtureDelivery = structuredClone(
+    alteredSampleDelivery.fixtureDelivery,
+  );
+  alteredSampleDelivery.captures[0].fixtureDelivery.assets[0].responseCount += 1;
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract({
+      ...alteredSampleDelivery,
+      scenarios: ['idle', 'scripted-motion'],
+    }),
+  );
 });
 
 test('weather comparison contract binds phase source, settings, populations and display geometry', () => {
@@ -607,6 +632,18 @@ test('weather comparison contract binds phase source, settings, populations and 
         ...value.captures[0].settings.after,
         resolutionScale: 0.5,
       };
+    },
+    (value) => {
+      value.captures[1].fixtureDelivery.assets[0].responseCount = 0;
+    },
+    (value) => {
+      value.captures[2].fixtureDelivery.assets[0].responseCount = 11;
+    },
+    (value) => {
+      value.captures[3].fixtureDelivery.fulfilledResponseCount += 1;
+    },
+    (value) => {
+      value.captures[4].fixtureDelivery.assets[0].responseCount = 3;
     },
   ]) {
     const invalid = structuredClone(observed);

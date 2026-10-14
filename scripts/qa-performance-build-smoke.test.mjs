@@ -30,6 +30,7 @@ import {
   observeSmokeLayerPopulationInPage,
   runNativeMapJourneyForSmoke,
   smokeProviderPreparationMode,
+  smokeCaptureSchedule,
   validateMapSmokeInterceptionRelease,
   validateMapStreamingFaultControlSet,
   validateMapStreamingFaultControlDocument,
@@ -1008,7 +1009,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
     'dense-provider-fixture',
   );
   assert.equal(
-    smokeProviderPreparationMode('weather-effects-v1'),
+    smokeProviderPreparationMode('austin-weather-effects-phased-v2'),
     'dense-provider-fixture',
   );
 
@@ -1081,6 +1082,21 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
     }),
     /strictly equal/,
   );
+});
+
+test('weather smoke uses a bounded phased diagnostic without changing the default smoke schedule', () => {
+  assert.deepEqual(smokeCaptureSchedule(WEATHER_EFFECTS_WORKLOAD_ID), {
+    runs: 1,
+    warmupMs: 1000,
+    seconds: 60,
+    weatherPhaseDiagnostic: true,
+  });
+  assert.deepEqual(smokeCaptureSchedule(''), {
+    runs: 2,
+    warmupMs: 1000,
+    seconds: 1,
+    weatherPhaseDiagnostic: false,
+  });
 });
 
 test('outer smoke projects only validated CLI map-journey failure evidence', () => {
@@ -3087,11 +3103,12 @@ function validInfrastructureCaptureCliReport(
 
 async function validWeatherEffectsCaptureCliReport() {
   const report = validInfrastructureCaptureCliReport();
+  report.captures = [report.captures[0], report.captures[2]];
   const fixture = createWeatherEffectsWorkloadFixture();
   const topology = createCaptureDocumentTopology({
     infrastructure: true,
     startupRuns: 1,
-    captureCount: 4,
+    captureCount: report.captures.length,
   });
   const layers = Object.entries(fixture.expectedLayerCounts)
     .map(([id, count]) => ({ id, enabled: true, count }))
@@ -3139,8 +3156,8 @@ async function validWeatherEffectsCaptureCliReport() {
     windPaused: false,
   };
   const playback = {
-    mode: 'history',
-    playing: true,
+    mode: 'latest',
+    playing: false,
     intervalMs: 2000,
     displayedAtStart: [fixture.fixedTime, fixture.fixedTime, fixture.fixedTime],
     visualState,
@@ -3154,6 +3171,20 @@ async function validWeatherEffectsCaptureCliReport() {
     ],
     playback,
   };
+  const phaseObservationsBySample = report.captures.map(() => ({
+    schema: 'gev-weather-phase-observations/v1',
+    durationMs: 60_000,
+    fixtureSha256: fixture.sha256,
+    phases: fixture.phaseSchedule.phases.map((phase) => ({
+      id: phase.id,
+      expectedSourceTime: phase.sourceTime,
+      scheduledAtMs: phase.offsetMs,
+      observedAtElapsedMs: phase.offsetMs + 100,
+      sourceObservationTimes: Array(3).fill(phase.sourceTime),
+      clock: { mode: 'history', playing: false },
+      fixtureSha256: fixture.sha256,
+    })),
+  }));
   const fixtureDelivery = {
     ...rawDelivery,
     assets: rawDelivery.assets.map((asset) => ({
@@ -3174,10 +3205,14 @@ async function validWeatherEffectsCaptureCliReport() {
     shouldAnimate: false,
     multiplier: 0,
   };
-  report.integrity.sampleCount = 4;
+  report.integrity.sampleCount = report.captures.length;
   report.workload.providerFixture = WEATHER_EFFECTS_WORKLOAD_ID;
   report.workload.fixture = fixture;
   report.workload.fixtureId = fixture.id;
+  report.workload.weatherEffectsCaptureMode = 'phase-producer-diagnostic';
+  report.workload.warmupMs = 1000;
+  report.workload.durationPerSampleMs = 60_000;
+  report.workload.runsPerScenario = 1;
   report.workload.performanceAcceptanceEligible = false;
   delete report.workload.infrastructureFixtureLifecycle;
   report.workload.weatherEffectsFixtureLifecycle =
@@ -3193,6 +3228,12 @@ async function validWeatherEffectsCaptureCliReport() {
         ],
         playback,
       },
+      workload: {
+        warmupMs: 1000,
+        durationPerSampleMs: 60_000,
+        runsPerScenario: 1,
+      },
+      phaseObservationsBySample,
     });
   report.workload.rendererProbeCleanup = [
     {
@@ -3353,6 +3394,7 @@ async function validWeatherEffectsCaptureCliReport() {
     const sourceTimes = fixture.timeline.at(-1);
     sample.documentRole = 'main-measured';
     sample.documentId = topology.samples[0].documentId;
+    sample.durationMs = 60_000;
     sample.layers = layers;
     sample.settings.before = {
       ...sample.settings.before,
@@ -3368,6 +3410,11 @@ async function validWeatherEffectsCaptureCliReport() {
         responseCount: asset.responseCount - report.captures.length + 1 + index,
       })),
     };
+    sample.fixtureDelivery.fulfilledResponseCount =
+      sample.fixtureDelivery.assets.reduce(
+        (sum, asset) => sum + asset.responseCount,
+        0,
+      );
     sample.weatherEffectsClock = {
       fixedHarnessTime: fixture.fixedTime,
       wallClockBeforeMs: Date.parse(fixture.fixedTime),
@@ -3377,17 +3424,18 @@ async function validWeatherEffectsCaptureCliReport() {
       weatherPlayback: playback,
       selectedTimesPreflight: timeline,
       weatherStateBefore: {
-        clock: { mode: 'history', playing: true },
+        clock: { mode: 'latest', playing: false },
         sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
         visualState,
         wind: { model: 'gfs', overlay: 'speed', paused: false },
       },
       weatherStateAfter: {
-        clock: { mode: 'history', playing: true },
+        clock: { mode: 'history', playing: false },
         sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
         visualState,
         wind: { model: 'gfs', overlay: 'speed', paused: false },
       },
+      phaseObservations: phaseObservationsBySample[index],
     };
     sample.cameraPath = { id: `${sample.scenario}-v1` };
   }
@@ -4526,6 +4574,9 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
     receiptSha256: report.source.buildProvenance.receiptSha256,
     fixtureSha256: fixture.sha256,
     providerFixture: WEATHER_EFFECTS_WORKLOAD_ID,
+    warmupMs: 1000,
+    durationPerSampleMs: 60_000,
+    runsPerScenario: 1,
     fixedTime: fixture.fixedTime,
     weatherEffectsFixture: fixture,
     workerAuditMode: 'diagnostic',
@@ -4551,7 +4602,7 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   );
   const result = validateCaptureCliReport(report, expected);
   assert.equal(result.status, 'passed');
-  assert.equal(result.captureCount, 4);
+  assert.equal(result.captureCount, 2);
   assert.equal(result.comparisonEligible, false);
   const inFlightAtShutdown = structuredClone(report);
   inFlightAtShutdown.workload.fixtureInterceptionReleases[0].stop.pendingAtStop = 2;
@@ -4674,9 +4725,8 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   assert.throws(() => validateCaptureCliReport(unpausedWind, expected));
 
   const decreasingResponseCount = structuredClone(report);
-  decreasingResponseCount.captures[2].fixtureDelivery.assets[0].responseCount =
-    decreasingResponseCount.captures[1].fixtureDelivery.assets[0]
-      .responseCount - 1;
+  decreasingResponseCount.captures[0].fixtureDelivery.assets[0].responseCount = 2;
+  decreasingResponseCount.captures[1].fixtureDelivery.assets[0].responseCount = 1;
   assert.throws(
     () => validateCaptureCliReport(decreasingResponseCount, expected),
     /decreased in capture order/,
@@ -4699,7 +4749,8 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   );
 
   const repeatedSampleTuple = structuredClone(report);
-  repeatedSampleTuple.captures[1].run = 1;
+  repeatedSampleTuple.captures[1].scenario =
+    repeatedSampleTuple.captures[0].scenario;
   assert.throws(
     () => validateCaptureCliReport(repeatedSampleTuple, expected),
     /deep-equal|deepStrictEqual/,
