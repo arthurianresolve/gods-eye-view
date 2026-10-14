@@ -1,0 +1,66 @@
+{
+  "schema": "gev-qa-correction-validation/v1",
+  "checkedAt": "2026-10-13T01:29:49.768Z",
+  "integrationCommit": "051366507e31eed4a6e6334e61a24f144188bb2b",
+  "implementationCommits": [
+    "fbe5f1f11898e6ea400661aa85068f421cb835e1",
+    "62b19539a47949a24a0715b042a480440a90c46e",
+    "97b08a604948830acb6dee9d76d7bfa3ffaf31c8",
+    "746188712a73ea35476de2f20bf1aae75979fd9c"
+  ],
+  "executor": "GPT-6 Luna; root independent review and validation",
+  "focused": {
+    "passed": 83,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": [
+    {
+      "command": [
+        "node",
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "status": 0,
+      "output": "Capture harness no-undef: 17 files passed.\n"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "status": 0,
+      "output": "Checked 1622 source files.\n"
+    }
+  ],
+  "earlierChecks": {
+    "commit": "fd9ca2d42c8a330b121830cc0c73a257a8b4cf4e",
+    "importDirections": "passed:1010 modules/80 portable entries",
+    "packageBoundaries": "passed"
+  },
+  "fullLocalSuite": {
+    "commit": "fd9ca2d42c8a330b121830cc0c73a257a8b4cf4e",
+    "runtime": "v24.16.0",
+    "tests": 7523,
+    "passed": 7512,
+    "failed": 1,
+    "skipped": 10,
+    "status": "failed",
+    "failure": "ENOSPC while writing temporary Cesium distribution",
+    "rawLogSha256": "c0c41d0dfe65f8ee896a6a6fac1c519499c76b644a27b9a1b46e8e2524f41490",
+    "rawLogBytes": 754748,
+    "isolatedRecovery": {
+      "commit": "051366507e31eed4a6e6334e61a24f144188bb2b",
+      "passed": 1,
+      "failed": 0
+    },
+    "limitation": "The full local run remains failed; its allocation phase was not reached. A fresh hosted full-suite result is required."
+  },
+  "cleanupAttempt": {
+    "action": "Remove three Git-ignored dependency directories from older clean task worktrees",
+    "result": "automatic approval review rejected: blocked by policy",
+    "deleted": false
+  },
+  "promotion": "pending new exact-commit hosted standard and Austin capture runs",
+  "performanceAcceptance": false
+}

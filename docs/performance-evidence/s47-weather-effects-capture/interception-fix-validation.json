@@ -1,0 +1,34 @@
+{
+  "schema": "gev-weather-interception-fix-validation/v1",
+  "node": "v24.16.0",
+  "startedAt": "2026-10-12T17:05:40.068Z",
+  "finishedAt": "2026-10-12T17:05:54.246Z",
+  "baseCommit": "580cac115f00ef94264f686ea2a80fa209881b09",
+  "command": [
+    "node",
+    "--test",
+    "scripts/capture-scene-performance.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs",
+    "scripts/qa-performance-build-smoke.test.mjs"
+  ],
+  "sourceSha256": {
+    "scripts/capture-scene-performance.mjs": "97c4c9f81e678e9872a7d1775f576298c2918aaacceca01f632a0001bcda651c",
+    "scripts/performance/weatherEffectsWorkloadFixture.mjs": "231df50b556898ecbcfc775788a875b57d91475e16446c2252d8f6ad05648f43",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs": "c035ad7647d27724298a54177e71ea530c22d21bfedc2996163795b866fff6b4"
+  },
+  "exitCode": 0,
+  "logSha256": "0ae969ddac5edea7ba456bc72b43a880bcb8c7158f2b243b41f70ef5eced9d0c",
+  "outputTail": [
+    "ℹ tests 76",
+    "ℹ suites 0",
+    "ℹ pass 76",
+    "ℹ fail 0",
+    "ℹ cancelled 0",
+    "ℹ skipped 0",
+    "ℹ todo 0",
+    "ℹ duration_ms 14103.5926"
+  ]
+}

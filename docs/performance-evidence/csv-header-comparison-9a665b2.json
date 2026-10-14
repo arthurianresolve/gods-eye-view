@@ -1,0 +1,304 @@
+{
+  "schema": "gev-csv-header-comparison/v1",
+  "baseline": "2b269e368efd92a39ef3f4128ea7d1d6684c8f62",
+  "candidate": "9a665b2bcbd17c081544ccd21b1d4ea2591e68ee",
+  "capturedAt": "2026-10-10T15:51:35.387Z",
+  "scope": "Local Node CPU comparison of exact production parser exports; not browser interaction, GPU, or full document cooperative parsing acceptance.",
+  "sources": {
+    "baseline": "a74e5b053da46b1782f7fa28259d891861e45d6f89943446984b9e505f29f99b",
+    "candidate": "aa6eafbf49d4365fce8dd3dd829330721811a6c158e83de38d90611217c67b38"
+  },
+  "harnessSha256": "5233ff694d80309addb67c7dc8f1a4df6f5d460bfcbcca06f2231e09611c8d43",
+  "fixture": {
+    "sha256": "84fa703c7248a31b63b4270f9a1543750bc87af5a40ce9c748124ec7012eb8a3",
+    "bytes": 2892263,
+    "rows": 50000
+  },
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "memoryBytes": 16907538432
+  },
+  "conditions": {
+    "warmupsPerVariantPerWorkload": 2,
+    "alternatingPairs": 5,
+    "forcedGC": false,
+    "profiling": false
+  },
+  "workloads": [
+    {
+      "name": "mappingHeaders",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "durationMs": 63.20889999999997,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "durationMs": 0.037599999999997635,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "durationMs": 0.024400000000014188,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "durationMs": 118.58209999999997,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "durationMs": 95.09230000000002,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "durationMs": 0.020800000000008367,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "durationMs": 0.007899999999949614,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "durationMs": 87.76670000000001,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "durationMs": 83.97780000000012,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "durationMs": 0.03449999999997999,
+          "outputSha256": "1e0300689c30a79c6405622265420c8e757595a1c5ab885a1d930e142e240fee"
+        }
+      ],
+      "baselineMedianMs": 87.76670000000001,
+      "candidateMedianMs": 0.024400000000014188,
+      "changeRatio": -0.9997219902309189
+    },
+    {
+      "name": "mappingAndPreview",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "durationMs": 426.8856999999998,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "durationMs": 344.2359999999999,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "durationMs": 327.26600000000053,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "durationMs": 445.83620000000064,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "durationMs": 433.14949999999953,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "durationMs": 327.28569999999945,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "durationMs": 319.21519999999964,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "durationMs": 454.3028999999997,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "durationMs": 387.9983999999995,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "durationMs": 353.64480000000003,
+          "outputSha256": "ec404d105658e01454f408f5ca808d29f847b72caab68e8376125e4e884fdb60"
+        }
+      ],
+      "baselineMedianMs": 433.14949999999953,
+      "candidateMedianMs": 327.28569999999945,
+      "changeRatio": -0.24440476094281582
+    },
+    {
+      "name": "previewOnly",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "durationMs": 346.2605000000003,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "durationMs": 339.47609999999986,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "durationMs": 339.03819999999905,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "durationMs": 403.16539999999986,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "durationMs": 319.3705000000009,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "durationMs": 323.52870000000075,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "durationMs": 428.21360000000095,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "durationMs": 715.1489000000001,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "durationMs": 337.83339999999953,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "durationMs": 366.9965000000011,
+          "outputSha256": "31325b982e5784510c7a1a5604fae8707bb8f95918c86c04b8a3f776ee1b835d"
+        }
+      ],
+      "baselineMedianMs": 346.2605000000003,
+      "candidateMedianMs": 339.47609999999986,
+      "changeRatio": -0.0195933408517589
+    },
+    {
+      "name": "fullDecode",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "durationMs": 86.04669999999896,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "durationMs": 103.5667999999987,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "durationMs": 74.0676999999996,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "durationMs": 83.5544000000009,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "durationMs": 66.19360000000052,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "durationMs": 79.42740000000049,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "durationMs": 79.46050000000105,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "durationMs": 61.259799999999814,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "durationMs": 74.61670000000231,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "durationMs": 72.40710000000036,
+          "outputSha256": "00fbb2a964b96821d35101dcd4c237e543b02a9f9d6e172644ca8083d009a75f"
+        }
+      ],
+      "baselineMedianMs": 74.61670000000231,
+      "candidateMedianMs": 79.42740000000049,
+      "changeRatio": 0.0644721623979354
+    }
+  ]
+}

@@ -1,0 +1,304 @@
+✔ a copied frame uses completed-render dimensions and owns no pending handlers (3.9414ms)
+✔ timeout cancels capture and releases listeners, signal handlers and temporary pixels (1.3774ms)
+✔ abort cancels capture and releases listeners, signal handlers and temporary pixels (1.3515ms)
+✔ hidden cancels capture and releases listeners, signal handlers and temporary pixels (1.5792ms)
+✔ destroy cancels capture and releases listeners, signal handlers and temporary pixels (1.1312ms)
+✔ request-error cancels capture and releases listeners, signal handlers and temporary pixels (0.5429ms)
+✔ draw-error cancels capture and releases listeners, signal handlers and temporary pixels (0.5515ms)
+✔ viewer destruction settles concurrent copies and pixel-free waits together (2.7006ms)
+✔ missing source canvas cancels the completed-frame copy cleanly (0.7266ms)
+✔ zero width source canvas cancels the completed-frame copy cleanly (0.5084ms)
+✔ zero height source canvas cancels the completed-frame copy cleanly (0.2238ms)
+✔ a null copy context returns no pixels and releases the temporary surface (0.2871ms)
+✔ a visibility change immediately after render invalidates and releases the copy (0.2558ms)
+[GEV Voice] Skipped black Cesium viewport capture
+[GEV Voice] Skipped oversized viewport capture { bytes: 230400, limit: 204800 }
+✖ viewport capture copies a real postRender frame, encodes it and releases its owned canvases (8.8588ms)
+✔ viewport capture rejects null output context and clears copied/output canvases (0.7116ms)
+✔ viewport capture rejects caller draw exception and clears copied/output canvases (0.5517ms)
+✖ viewport capture rejects encoder exception and clears copied/output canvases (1.3565ms)
+✖ viewport capture rejects black frame and clears copied/output canvases (4.3683ms)
+✖ viewport capture rejects oversized encoding and clears copied/output canvases (1.7054ms)
+✖ viewport capture preserves the existing non-black result when sample context is unavailable and releases it (0.9689ms)
+✖ viewport capture rejects sample draw exception and releases the sample canvas (0.6579ms)
+✖ viewport capture rejects sample readback exception and releases the sample canvas (0.9086ms)
+✖ pointer capture copies a real postRender frame, encodes it and releases its owned canvases (1.2104ms)
+✔ pointer capture rejects null output context and clears copied/output canvases (0.3779ms)
+✔ pointer capture rejects caller draw exception and clears copied/output canvases (0.2514ms)
+✖ pointer capture rejects encoder exception and clears copied/output canvases (0.8715ms)
+✖ pointer capture rejects black frame and clears copied/output canvases (0.7654ms)
+✖ pointer capture rejects oversized encoding and clears copied/output canvases (0.6453ms)
+✖ pointer capture preserves the existing non-black result when sample context is unavailable and releases it (0.4084ms)
+✖ pointer capture rejects sample draw exception and releases the sample canvas (0.4215ms)
+✖ pointer capture rejects sample readback exception and releases the sample canvas (0.4402ms)
+✔ viewport capture uses resized completed-frame dimensions before applying its pixel cap (0.7868ms)
+✔ pointer capture scales its crop against resized postRender pixels (0.5815ms)
+✔ crop: a square around the pointer, clamped inside the canvas, in buffer pixels (1.3588ms)
+✔ crop: a slow render gets one bounded fresh-frame recovery request (412.9618ms)
+✔ crop: a hidden document never starts the recovery request (0.2856ms)
+✔ crop: sent once per snapshot, only at local/city scale, into the one retained slot (1.3876ms)
+✔ crop: a camera move before or during capture drops it; pixels only name their own pose (0.2788ms)
+✔ crop: a snapshot that expires during capture is not published (0.2372ms)
+✔ crop: an older capture that finishes last never replaces the newer image (0.4054ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 26
+ℹ fail 14
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 592.9432
+
+✖ failing tests:
+
+test at src\voice\pointerCrop.test.mjs:123:3
+✖ viewport capture copies a real postRender frame, encodes it and releases its owned canvases (8.8588ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:137:5)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ viewport capture rejects encoder exception and clears copied/output canvases (1.3565ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ viewport capture rejects black frame and clears copied/output canvases (4.3683ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ viewport capture rejects oversized encoding and clears copied/output canvases (1.7054ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:158:3
+✖ viewport capture preserves the existing non-black result when sample context is unavailable and releases it (0.9689ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:167:5)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:174:5
+✖ viewport capture rejects sample draw exception and releases the sample canvas (0.6579ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:178:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:174:5
+✖ viewport capture rejects sample readback exception and releases the sample canvas (0.9086ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:178:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:123:3
+✖ pointer capture copies a real postRender frame, encodes it and releases its owned canvases (1.2104ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:137:5)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ pointer capture rejects encoder exception and clears copied/output canvases (0.8715ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ pointer capture rejects black frame and clears copied/output canvases (0.7654ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:150:5
+✖ pointer capture rejects oversized encoding and clears copied/output canvases (0.6453ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:154:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:158:3
+✖ pointer capture preserves the existing non-black result when sample context is unavailable and releases it (0.4084ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:167:5)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:174:5
+✖ pointer capture rejects sample draw exception and releases the sample canvas (0.4215ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:178:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\voice\pointerCrop.test.mjs:174:5
+✖ pointer capture rejects sample readback exception and releases the sample canvas (0.4402ms)
+  AssertionError [ERR_ASSERTION]: temporary canvas 3 was released
+  
+  1536 !== 0
+  
+      at assertCaptureCanvasesReleased (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:110:12)
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/src/voice/pointerCrop.test.mjs:178:7)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1536,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

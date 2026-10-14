@@ -1,0 +1,3 @@
+*.json -text
+*.mjs -text
+*.gz binary

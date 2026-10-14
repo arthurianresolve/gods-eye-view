@@ -132,6 +132,10 @@ export function createWeatherClock({
       };
     },
     getTimeline,
+    getProductTimes(id) {
+      const product = registry.get(String(id))?.product;
+      return product ? timesFor(product) : [];
+    },
     selectFor,
     setTarget(time) {
       if (destroyed) return Promise.resolve(false);

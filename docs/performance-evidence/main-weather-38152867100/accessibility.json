@@ -1,0 +1,331 @@
+{
+  "scope": "automated-keyboard-ax-reflow",
+  "browser": "Chrome/152.0.7977.75",
+  "timestamp": "2026-10-11T15:56:04.404Z",
+  "checks": [
+    "palette-keyboard-discovery",
+    "palette-focus-restoration",
+    "inspector-focus-restoration",
+    "visible-control-accessible-names",
+    "scoped-status-announcements",
+    "720-css-pixel-reflow"
+  ],
+  "accessibleControls": [
+    {
+      "surface": "#evidence-panel",
+      "role": "button",
+      "name": "Collapse panel"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "button",
+      "name": "Close evidence inspector"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "button",
+      "name": "Find archived copy"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "textbox",
+      "name": "Public reference URL"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "button",
+      "name": "Attach public reference"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "textbox",
+      "name": "PeeringDB facility URL"
+    },
+    {
+      "surface": "#evidence-panel",
+      "role": "button",
+      "name": "Attach facility"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Saved investigation"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "SAVE"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "SAVE AS"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "OPEN"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "DUPLICATE"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "EXPORT"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "RECOVER"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "DELETE"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "SHOW SYNTHETIC OFFLINE DEMO"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "Undo authored change"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "Redo authored change"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Prior complete revision"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "Import backup"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "textbox",
+      "name": "Name"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "listbox",
+      "name": "Query data layers"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Query geographic scope"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Optional filter field"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Filter operator"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "textbox",
+      "name": "Filter value"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Result ordering"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Direction"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "spinbutton",
+      "name": "Maximum listed"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "combobox",
+      "name": "Saved query"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "SAVE QUERY"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "LOAD QUERY"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "RUN AT SELECTED TIME"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "PIN RESULT"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "File"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "textbox",
+      "name": "Attribution"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "PIN AS A"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "PIN AS B"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "COMPARE A / B"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "JSON"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "CSV"
+    },
+    {
+      "surface": ".workspace-library",
+      "role": "button",
+      "name": "MARKDOWN"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "spinbutton",
+      "name": "Latitude"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "spinbutton",
+      "name": "Longitude"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "spinbutton",
+      "name": "Radius (km)"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Start aircraft capture"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Stop aircraft capture"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Start vessel capture"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Stop vessel capture"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "combobox",
+      "name": "Saved aircraft recording"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "combobox",
+      "name": "Saved vessel recording"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "‹"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "slider",
+      "name": "Observed history"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "›"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Latest"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Play"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "combobox",
+      "name": "Replay speed"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Export"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Import bundle"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Delete"
+    },
+    {
+      "surface": ".investigation-timeline",
+      "role": "button",
+      "name": "Return live"
+    }
+  ],
+  "announcements": 9,
+  "reflow": {
+    "width": 620,
+    "left": 50,
+    "right": 670,
+    "viewport": 720,
+    "contentWidth": 618,
+    "clientWidth": 618
+  },
+  "humanReviewValidated": false,
+  "limitation": "720 CSS pixels at DPR 2 checks layout equivalent to 200% of a 1440px viewport; it is not a human browser-zoom, contrast or screen-reader review."
+}

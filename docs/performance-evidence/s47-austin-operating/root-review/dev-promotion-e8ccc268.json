@@ -1,0 +1,20 @@
+{
+  "schema": "gev-tested-dev-promotion/v1",
+  "checkedAt": "2026-10-13T02:14:07.342Z",
+  "testedCandidate": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "nativeRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334288585",
+  "standardRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334290706",
+  "native": "passed",
+  "standard": "all-seven-passed",
+  "localDev": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "remoteDev": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "devWorkingTree": "",
+  "main": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+  "devAheadBehindMain": [
+    697,
+    0
+  ],
+  "runtimeChangeScope": "No changes to src outside src/data/fixtures; capture scripts, tests, workflow, development lint dependencies and evidence integrated.",
+  "performanceAcceptance": false,
+  "remaining": "Map fixture corrections/profile/production capture; remaining S47-S60 measurements and physical Windows acceptance."
+}

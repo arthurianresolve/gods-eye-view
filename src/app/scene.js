@@ -7,13 +7,12 @@ import {
 import { registerDataCredits } from '../data/dataCredits.js';
 import { configureCreditKeyboardAccess } from '../creditKeyboard.js';
 import { MapStackController } from '../mapStackController.js';
+import { createMapStackEventBridge } from './mapStackEvents.js';
 import { loadPhotorealisticTileset } from '../mapStartup.js';
 import { initLogoGaze } from '../logoGaze.js';
-import {
-  uninstallRenderGovernor,
-  governorRequestRender,
-} from '../renderGovernor.js';
+import { governorRequestRender } from '../renderGovernor.js';
 import { describeError } from './errors.js';
+import { destroyApplicationSceneViewer } from './sceneViewerLifecycle.js';
 
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
@@ -52,10 +51,7 @@ export async function createApplicationScene({
     container: 'cesiumContainer',
     creditContainer,
   });
-  defer(() => {
-    uninstallRenderGovernor(viewer);
-    if (!viewer.isDestroyed()) viewer.destroy();
-  });
+  defer(() => destroyApplicationSceneViewer(viewer));
   defer(installTrackpadPinchZoom(viewer));
   registerDataCredits(viewer, credits);
   configureCreditKeyboardAccess(document);
@@ -97,6 +93,7 @@ export async function createApplicationScene({
 
   loaderStatus.textContent = 'Initializing systems...';
 
+  const mapStackEvents = createMapStackEventBridge(window);
   const mapStackController = new MapController(viewer, {
     requestRender: governorRequestRender,
     ...mapOptions,
@@ -104,18 +101,14 @@ export async function createApplicationScene({
     cesiumToken,
     initialStack: tileset ? 'photoreal' : 'esri-imagery',
     // Task 5 (height-datum fix): rebroadcast stack changes as a window
-    // CustomEvent so data layers (CCTV per-regime ground resolution) can
-    // react without coupling MapStackController to layer modules. Fires on
-    // 'switching'/'ready'/'error'; listeners derive the surface regime from
-    // live scene state, so intermediate emissions are harmless.
-    onChange: (state) => {
-      window.dispatchEvent(
-        new CustomEvent('gev:map-stack-changed', { detail: state }),
-      );
-    },
+    // CustomEvent so data layers can react without coupling the controller
+    // to layer modules. The settled subscription also covers silent switches
+    // and publishes the actual shown tileset identity to shared cache owners.
+    onChange: mapStackEvents.onChange,
     onError: (message) => console.warn('[MapStack]', message),
   });
   defer(() => mapStackController.destroy());
+  defer(mapStackEvents.connect(mapStackController));
   await mapStackController.setStack(tileset ? 'photoreal' : 'esri-imagery', {
     silent: true,
   });

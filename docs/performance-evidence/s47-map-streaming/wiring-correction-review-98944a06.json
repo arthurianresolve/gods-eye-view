@@ -1,0 +1,64 @@
+{
+  "schema": "gev-map-streaming-wiring-correction-review/v1",
+  "reviewedAt": "2026-10-13T05:03:08.079Z",
+  "implementationCommit": "98944a0666d91bf6dcf09d6ecec28bae23411f99",
+  "integrationCommit": "17f47d0533414283d8846df294742cd5cad818c3",
+  "status": "component-correction-validated-browser-pending",
+  "rejectedControl": "wiring-review-3f4cad81.json",
+  "corrections": [
+    "Await native map classification before invoking the existing flight fixture fallback.",
+    "Publish finalized map capture, document deliveries and aggregate delivery in the actual post-cleanup success envelope.",
+    "Validate exact app/harness/receipt identities, clean source provenance, renderer class, sample integrity, cleanup topology and map delivery/release binding."
+  ],
+  "validation": {
+    "focused": {
+      "command": "node --test scripts/qa-performance-build-smoke.test.mjs scripts/capture-scene-performance.test.mjs scripts/performance/mapStreamingCapture.test.mjs scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+      "passed": 59,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 12113.2871
+    },
+    "lint": {
+      "command": "npm run check:capture-no-undef",
+      "passed": true,
+      "files": 24
+    },
+    "boundaries": {
+      "command": "npm run check:boundaries",
+      "passed": true,
+      "modules": 1010,
+      "portableEntries": 80,
+      "packages": 127
+    },
+    "format": {
+      "command": "npm run format:check",
+      "passed": true,
+      "files": 1630
+    },
+    "diff": {
+      "command": "git diff --check",
+      "passed": true
+    },
+    "environment": {
+      "node": "v24.16.0",
+      "platform": "win32",
+      "browserLaunched": false
+    }
+  },
+  "limitations": [
+    "No production build or actual browser delivery/readiness result is established by the focused tests.",
+    "Both revisions receive the fixture build profile, but the additional native map capture currently runs only on the candidate.",
+    "Baseline native-journey proof, fault controls and M4 matched hardware comparisons remain.",
+    "The short hosted smoke remains performance-acceptance ineligible."
+  ],
+  "mainReconciliation": {
+    "checkedAt": "2026-10-13T05:03:08.080Z",
+    "forkMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "upstreamMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "localDev": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+    "remoteDev": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+    "devAheadOfMain": 697,
+    "devBehindMain": 0,
+    "reconciliationRequired": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "reviewedAt": "2026-10-13T03:13:13.705Z",
+  "sourceCommit": "05eefdcb2e3a19db9759107a53d982f028d53e7d",
+  "integrationCommit": "61dd8493dd1202ded1001a0667090e1d30586878",
+  "profile": {
+    "id": "austin-map-streaming-v1",
+    "configurationSha256": "81844cda2a913e69012c1b6dad6d154475f5092ba555f8feec248233d8af1bdd"
+  },
+  "focusedTests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "captureHarnessNoUndef": {
+    "files": 17,
+    "passed": true
+  },
+  "scope": "Node receipt creation, pinned Vite dotenv input controls and served/capture identity verification with disposable test repositories",
+  "remaining": [
+    "reject an explicitly supplied capture --build-profile flag without a value",
+    "real baseline/candidate production builds using named profile",
+    "actual application map capture and renderer acceptance"
+  ],
+  "defaultReceiptScope": "Existing default and historical receipts do not retroactively attest dotenv input absence"
+}

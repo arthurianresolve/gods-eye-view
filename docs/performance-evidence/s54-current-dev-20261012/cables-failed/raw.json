@@ -1,0 +1,1136 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+  "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+  "platform": "darwin",
+  "timestamp": "2026-10-12T00:08:52.878Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "capturedAt": "2026-10-12T00:09:06.534Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+        "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+        "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "sourceDirtyAtStart": false,
+  "harnessDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessChangedDuringRun": false,
+  "importPageErrors": [],
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Cable collection rendered comparison failed.",
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "capturedAt": "2026-10-12T00:09:09.669Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "pointRepresentation": "entity",
+    "featureLimit": 5000,
+    "mixedGeometryParityRequested": false,
+    "pointBenefitDiagnosticsRequested": false,
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 148.09999999997672,
+        "maxHeartbeatGapMs": 285.20000000001164,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 25,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 25,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 234525276,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 459.29999999998836,
+        "maxHeartbeatGapMs": 67.60000000003492,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 18.29999999998836,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 18.29999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 363384704,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 282.5,
+        "maxHeartbeatGapMs": 43.09999999997672,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 51.79999999998836,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 18.400000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 109452464,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 94.20000000001164,
+        "maxHeartbeatGapMs": 226.40000000002328,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 18.29999999998836,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 12.799999999988358,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 109461844,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 102.19999999995343,
+        "maxHeartbeatGapMs": 202.19999999995343,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 7.899999999965075,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 7.899999999965075,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 239906376,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 258.20000000001164,
+        "maxHeartbeatGapMs": 28.900000000023283,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 45.09999999997672,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 22.599999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 363623268,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 260.29999999998836,
+        "maxHeartbeatGapMs": 19.100000000034925,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 22.399999999965075,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 22.399999999965075,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 109088928,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 91.19999999995343,
+        "maxHeartbeatGapMs": 161,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 10.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 10.5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 232104896,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 95.79999999998836,
+        "maxHeartbeatGapMs": 211.89999999996508,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 4.7000000000116415,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 4.7000000000116415,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 236014160,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 306.5999999999767,
+        "maxHeartbeatGapMs": 37.09999999997672,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 8,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 8,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 360964900,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+      "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "renderConfiguration": {
+      "viewerConstruction": "application-wrapper",
+      "pointRepresentation": "entity",
+      "preserveDrawingBuffer": true,
+      "captureMode": "pixels",
+      "renderDemand": true,
+      "msaaSamplesRequested": 4,
+      "antialias": true,
+      "msaaSupported": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      },
+      "sceneMode": 3,
+      "canvas": {
+        "cssWidth": 640,
+        "cssHeight": 360,
+        "drawingBufferWidth": 640,
+        "drawingBufferHeight": 360
+      },
+      "camera": {
+        "position": [
+          6463137,
+          0,
+          0
+        ],
+        "direction": [
+          -1,
+          0,
+          2.220446049250313e-16
+        ],
+        "up": [
+          2.220446049250313e-16,
+          2.220446049250313e-16,
+          1
+        ],
+        "frustumNear": 0.1,
+        "frustumFar": 10000000000,
+        "frustumFov": 1.0471975511965976
+      }
+    },
+    "coldActivationMs": 798.7999999999884,
+    "warmedResources": {
+      "heapBytes": 108332265,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "importedFeatureCount": 5000,
+      "entities": 5000,
+      "pointPrimitiveCount": 5000,
+      "entityPointCensus": {
+        "available": true,
+        "version": "1.138.0",
+        "activeEntityCount": 5000,
+        "pointCount": 5000
+      },
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        },
+        {
+          "type": "EntityClusterPointPrimitiveCollection",
+          "count": 5000,
+          "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+        }
+      ]
+    },
+    "cancellation": {
+      "attempted": 12,
+      "abortErrors": 12,
+      "pendingJobsAfter": 0,
+      "featureCountAfter": 0,
+      "pointPrimitiveCountAfter": 0,
+      "ownershipReleased": true
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "cableReferencePageErrors": [],
+  "cableReferenceInterceptionErrors": [],
+  "cableReferenceExternalRequestCount": 0,
+  "cableReferenceCollections": {
+    "schema": "gev-cable-reference-collections-render/v1",
+    "samplingContract": "owned-primitives-ready/v1",
+    "applicationCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+    "status": "failed",
+    "failedPhase": "entities-lifetime",
+    "error": "Error: Cable scene did not reach three stable completed frames.\n    at waitForStableScene (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:487:9)\n    at async mapStackWitness (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1024:3)\n    at async runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:219:31)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:730:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:875:16)",
+    "source": {
+      "population": {
+        "cableFeatures": 712,
+        "cableSegments": 1913,
+        "landingFeatures": 1917,
+        "landingBillboards": 1917,
+        "referenceRecords": 2629
+      },
+      "cableGeoSha256": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+      "landingGeoSha256": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+      "identitySha256": "3a8862bfe1504b935817d4581e27f9710a14ddf6829ddacc5751d5ba853e1984"
+    },
+    "renderClock": {
+      "iso": "2026-10-11T12:34:56.000Z",
+      "shouldAnimate": false
+    },
+    "viewer": {
+      "baselineDataSources": 0,
+      "sceneMode": "SCENE3D",
+      "globeShown": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "lifetimeCount": 2
+    },
+    "settings": {
+      "sceneMode": "SCENE3D",
+      "globeShown": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "requestRenderMode": false,
+      "resolutionScale": 1,
+      "msaaSamples": 4,
+      "preserveDrawingBuffer": true,
+      "antialias": true,
+      "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "environment": {
+      "appCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+      "harnessCommit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 1200,
+        "height": 1000,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 960,
+        "height": 640
+      },
+      "layers": []
+    },
+    "lifetimes": [
+      {
+        "mode": "entities",
+        "activationOrder": 0,
+        "status": "failed",
+        "population": {
+          "cableFeatures": 712,
+          "cableSegments": 1913,
+          "landingFeatures": 1917,
+          "landingBillboards": 1917,
+          "referenceRecords": 2629
+        },
+        "sourceIdentitySha256": null,
+        "sourceManifestSha256": "3a8862bfe1504b935817d4581e27f9710a14ddf6829ddacc5751d5ba853e1984",
+        "viewerSettingsSha256": null,
+        "viewerEnvironmentSha256": null,
+        "geometrySha256": null,
+        "styleSha256": null,
+        "overlaySha256": null,
+        "ownership": {
+          "baselineDataSources": 0,
+          "activeDataSources": 3,
+          "referenceGraphics": 5258,
+          "referenceCollections": 0,
+          "referencePoints": 0,
+          "referenceStems": 0
+        },
+        "teardown": null,
+        "samples": [],
+        "error": "Error: Cable scene did not reach three stable completed frames.\n    at waitForStableScene (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:487:9)\n    at async mapStackWitness (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1024:3)\n    at async runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:219:31)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:730:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:875:16)"
+      }
+    ],
+    "comparisons": []
+  },
+  "cableReferenceGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "cableReferenceRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 46414.118792,
+      "closeSettledHostMs": 47009.274542,
+      "closeElapsedMs": 595.1557499999981,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 550.5262079999957
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

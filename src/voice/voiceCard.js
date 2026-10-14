@@ -177,9 +177,25 @@ export class VoiceCardControls {
       node.textContent = line;
     });
     setHidden(el.referents, view.result.referents.length === 0);
-    fillList(el.referents, view.result.referents, (node, ref) => {
+    fillList(el.referents, view.result.referents, (node, ref, doc) => {
       node.value = ref.n;
-      node.textContent = ref.label;
+      node.append(doc.createTextNode(ref.label));
+      if (!ref.evidence) return;
+      const inspect = doc.createElement('button');
+      inspect.type = 'button';
+      inspect.className = 'gev-voice-card-referent-inspect';
+      inspect.textContent = 'Inspect evidence';
+      inspect.setAttribute('aria-label', `Inspect evidence for ${ref.label}`);
+      inspect.addEventListener('click', () => {
+        const view = doc.defaultView;
+        if (!view?.dispatchEvent || !view.CustomEvent) return;
+        view.dispatchEvent(
+          new view.CustomEvent('gev:evidence-result-pinned', {
+            detail: { label: ref.label, evidence: ref.evidence },
+          }),
+        );
+      });
+      node.append(inspect);
     });
     setHidden(el.notes, view.result.notes.length === 0);
     fillList(el.noteList, view.result.notes, (node, note) => {

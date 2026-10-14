@@ -1,0 +1,143 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-13T00:25:50.476Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326601285",
+  "testedCommit": "f9413507bf66a1734e4abb59c6db756c30a232f3",
+  "status": "failed",
+  "comparisonEligible": false,
+  "completedSampleCount": 2,
+  "retainedCompleteSampleCount": 0,
+  "evidenceTruncated": true,
+  "failure": {
+    "phase": "measurement-boundary-render-wait",
+    "scenario": "scripted-motion",
+    "run": 1,
+    "message": "Austin scripted-motion run 1 measurement end installations population is not a valid observed subset of the delivered synthetic catalog.",
+    "operator": null,
+    "actual": {
+      "schema": "gev-austin-installation-population-diagnostic/v1",
+      "label": "scripted-motion run 1 measurement end",
+      "reasonCodes": [
+        "still-loading"
+      ],
+      "layerPresent": true,
+      "enabled": true,
+      "expectedSourceCatalogCount": 699,
+      "loading": true,
+      "layerErrorPresent": false,
+      "layerError": null,
+      "count": 357,
+      "truncated": false,
+      "identityListPresent": true,
+      "identityLength": 357,
+      "identityUniqueCount": 357,
+      "identityAnalysisTruncated": false,
+      "unknownIdentityCount": 0,
+      "unknownIdentityExamples": [],
+      "nonStringIdentityCount": 0,
+      "nonStringIdentityTypes": [],
+      "identitySha256": "94d47ca42a7a9f87d017b9a3525395df8164b86157cbe0a5945e1b8a7a6f25d5",
+      "identitySha256Valid": true,
+      "recomputedIdentitySha256": "94d47ca42a7a9f87d017b9a3525395df8164b86157cbe0a5945e1b8a7a6f25d5",
+      "identitySha256Matches": true
+    },
+    "expected": {
+      "enabled": true,
+      "expectedSourceCatalogCount": 699,
+      "loadingMustNotBeTrue": true,
+      "errorMustBeAbsent": true,
+      "countRange": {
+        "minimum": 1,
+        "maximum": 699
+      },
+      "truncated": false,
+      "identityLengthMustEqualCount": true,
+      "identitiesMustBeUniqueStringsInCatalog": true,
+      "sha256MustMatchSortedIdentityIds": true
+    }
+  },
+  "verifiedRenderer": {
+    "schema": "gev-hosted-renderer-diagnostic/v1",
+    "requestedBackend": "macos-native-diagnostic",
+    "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "observedWebglVendor": "Google Inc. (Apple)",
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "status": "verified",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "physicalDesktopCoverage": false,
+    "hostedEnvironment": "github-actions-macos",
+    "comparisonEligible": false,
+    "performanceAcceptanceEligible": false
+  },
+  "cleanupRecomputed": [
+    {
+      "documentRole": "startup-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "measurementBoundary": {
+    "status": "settled",
+    "hostElapsedMs": 56.64241700001003,
+    "pageSettleElapsedMs": 53.5
+  },
+  "finding": "The new input-derived diagnostic identifies still-loading as the sole installation-population rejection in this run. A completed-render boundary did not establish installation ingestion completion.",
+  "limitations": [
+    "The earlier run38325432288 did not retain its after-state; this new result does not retrospectively prove its exact predicate.",
+    "Identity scalar/hash consistency is rechecked from the captured diagnostic. Full observed identity arrays were not included, so this is not an independent rebuild of those identities.",
+    "No final-integrity, post-capture asset verification, performance or physical-desktop acceptance."
+  ],
+  "artifacts": [
+    {
+      "file": "hosted-native-38326601285-smoke-failed.json",
+      "bytes": 299197,
+      "sha256": "10b9fe16115586b85b82f9ccb5859d10e372b4eda9c285ac685315e8a1188801"
+    },
+    {
+      "file": "hosted-native-38326601285-cli-failed.json",
+      "bytes": 206243,
+      "sha256": "7eb16da20f137e853ddf29eb7a03e302952560e880d819c9e581054497ae06f7"
+    }
+  ]
+}

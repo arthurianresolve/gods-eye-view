@@ -1,0 +1,2967 @@
+{
+  "schema": "gev-aircraft-fleet-tick-audit/v2",
+  "fixture": {
+    "descriptor": {
+      "schema": "gev-aircraft-fleet-tick-fixture/v2",
+      "receiptClockMs": 1790000123456,
+      "camera": {
+        "longitude": -97.7,
+        "latitude": 30.2,
+        "heightM": 20000
+      },
+      "stageOrder": [
+        "stationary",
+        "moving",
+        "selected",
+        "suppressed",
+        "horizon-hidden",
+        "fading",
+        "model-handoff"
+      ],
+      "contacts": [
+        {
+          "id": "a10001",
+          "role": "stationary",
+          "latitude": 30.2,
+          "longitude": -97.7,
+          "altitudeM": 10000,
+          "motionOffset": [
+            0,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": true,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": true,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10002",
+          "role": "moving",
+          "latitude": 30.2001,
+          "longitude": -97.7,
+          "altitudeM": 10000,
+          "motionOffset": [
+            40,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": true,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": true,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10003",
+          "role": "selected",
+          "latitude": 30.1999,
+          "longitude": -97.7,
+          "altitudeM": 10000,
+          "motionOffset": [
+            80,
+            0,
+            0
+          ],
+          "tracked": true,
+          "billboard": true,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": false,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10004",
+          "role": "suppressed",
+          "latitude": 30.2002,
+          "longitude": -97.7,
+          "altitudeM": 10000,
+          "motionOffset": [
+            0,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": false,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": false,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10005",
+          "role": "horizon-hidden",
+          "latitude": -30.2,
+          "longitude": 82.3,
+          "altitudeM": 10000,
+          "motionOffset": [
+            0,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": true,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": false,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10006",
+          "role": "fading",
+          "latitude": 30.2,
+          "longitude": -97.6998,
+          "altitudeM": 10000,
+          "motionOffset": [
+            0,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": true,
+          "focusFactor": 0.4,
+          "missingPolls": 0,
+          "model": {
+            "present": true,
+            "ready": false,
+            "show": false
+          },
+          "snapshotComplete": true
+        },
+        {
+          "id": "a10007",
+          "role": "model-handoff",
+          "latitude": 30.2,
+          "longitude": -97.70020000000001,
+          "altitudeM": 10000,
+          "motionOffset": [
+            0,
+            0,
+            0
+          ],
+          "tracked": false,
+          "billboard": true,
+          "focusFactor": 1,
+          "missingPolls": 0,
+          "model": {
+            "present": true,
+            "ready": true,
+            "show": false
+          },
+          "snapshotComplete": true
+        }
+      ],
+      "cadenceMs": 80,
+      "militaryCadenceMs": 80,
+      "tickSequence": [
+        {
+          "name": "cold-due",
+          "offsetMs": 0,
+          "movingDeltaM": 0
+        },
+        {
+          "name": "sub-cadence-skip",
+          "offsetMs": 40,
+          "movingDeltaM": 0
+        },
+        {
+          "name": "next-due",
+          "offsetMs": 80,
+          "movingDeltaM": 0
+        },
+        {
+          "name": "warmed-repeat",
+          "offsetMs": 160,
+          "movingDeltaM": 0
+        },
+        {
+          "name": "changed-moving-input",
+          "offsetMs": 240,
+          "movingDeltaM": 10
+        }
+      ],
+      "collaboratorAssumptions": {
+        "deadReckoning": "fixed-per-contact-cartesian-offset-into-provided-scratch",
+        "focus": "fixed-factor-by-contact-role",
+        "groundFloor": "airborne-fixture-returns-input-position",
+        "modelLoader": "preloaded-in-memory-objects-only-no-asset-io",
+        "registry": "no-military-classification-or-civil-suppression",
+        "camera": "Cesium.Camera-1.138-real-frustum-and-ellipsoid-horizon",
+        "collection": "real-Cesium.BillboardCollection-no-WebGL-context",
+        "snapshotCompleteness": true
+      },
+      "churnControl": {
+        "operation": "remove-owned-billboard-clear-id-entry-readd-same-contact",
+        "role": "stationary"
+      }
+    },
+    "sha256": "dad71af75e22b686aacbf87425dd463e5fb8afa5d98bbcc5a714455371798eac"
+  },
+  "source": {
+    "gitHead": "510334331a5c2c6b40694beb5808ad7b2395d262",
+    "workingTreeClean": true,
+    "statusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sourceSha256": {
+      "scripts/performance/aircraftFleetTickAudit.mjs": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01",
+      "scripts/performance/aircraftFleetTickAudit.test.mjs": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5",
+      "src/layers/flights/rendering.js": "0f1c2abc8b9f2e4e6976566219eb4b030c8180bb261294183e7bbf881ff42ac7",
+      "src/layers/military/rendering.js": "34cc6115b96589c16cc9196a43b89761a801940dba659720ff1c48354274d2d6",
+      "src/layers/flights/records.js": "fd75e46e7fe70deaf7dbf75325d3c5535b6b68ef5516ad84fccc36e5a3c66fc4",
+      "src/layers/military/records.js": "97ed6650377030908a44b5b8b1051564932c2231bae25ebd070d271d3b649117",
+      "src/layers/flights/policy.js": "da0949ceb6dedc3ee78511ac714ffc0b36ca8a81dd7d772a3fbff9dc830ea49a",
+      "src/layers/military/policy.js": "4b25a1a73b582c4f1897f15d611ae1ea0f8556a35d66b6d5a72c98c9c9da7b2c",
+      "src/data/aircraftRecession.js": "ae548896e26ba2d70a06ae28ac651bbbe38c32b22de0ba027b3578198b0a9fd3",
+      "src/data/iconOrientation.js": "827ace4ca6ebb4f8c15e501c09826cac7cb25701c0d16464e68881dd8341bb69"
+    },
+    "lockfileSha256": "632eab4fec411920456fe4da43a3564d5cdfe0eb0bfa6b66e862c1465217fd36",
+    "installedCesiumPackageSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+    "cesiumVersion": "1.138.0"
+  },
+  "runs": [
+    {
+      "kind": "flights",
+      "initialIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+      "tick": {
+        "label": "cold-due",
+        "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+        "billboardCount": 6,
+        "writes": [
+          {
+            "id": "a10001",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10002",
+            "position": 1,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10003",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 0,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10005",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10006",
+            "position": 0,
+            "color": 1,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10007",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          }
+        ],
+        "visibility": [
+          [
+            "a10001",
+            true
+          ],
+          [
+            "a10002",
+            true
+          ],
+          [
+            "a10003",
+            true
+          ],
+          [
+            "a10005",
+            false
+          ],
+          [
+            "a10006",
+            true
+          ],
+          [
+            "a10007",
+            false
+          ]
+        ],
+        "colors": [
+          [
+            "a10001",
+            1
+          ],
+          [
+            "a10002",
+            1
+          ],
+          [
+            "a10003",
+            1
+          ],
+          [
+            "a10005",
+            1
+          ],
+          [
+            "a10006",
+            0.4
+          ],
+          [
+            "a10007",
+            1
+          ]
+        ],
+        "modelHandoffs": [
+          {
+            "id": "a10001",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10002",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10006",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10007",
+            "ready": true,
+            "modelShown": true,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          }
+        ],
+        "collectionAdds": 6,
+        "collectionRemoves": 0,
+        "name": "cold-due",
+        "offsetMs": 0,
+        "movingDeltaM": 0,
+        "executed": true,
+        "lastFleetTickMsBefore": 0,
+        "lastFleetTickMsAfter": 1790000123456,
+        "tickAdds": 0,
+        "tickRemoves": 0,
+        "identityPreserved": true,
+        "writeDeltas": [
+          {
+            "id": "a10001",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10002",
+            "position": 1,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10003",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 0,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10005",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10006",
+            "position": 0,
+            "color": 1,
+            "scale": 0,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10007",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          }
+        ],
+        "deadReckonCalls": 5,
+        "uniqueScratchArguments": 1,
+        "suppressedRecordAbsent": true,
+        "witnesses": {
+          "stationaryNoPositionWrite": true,
+          "movingPositionWrite": true,
+          "selectedSkipped": true,
+          "suppressedNotInCollection": true,
+          "horizonHidden": true,
+          "focusFadeApplied": true,
+          "modelHandoffCommitted": true
+        }
+      },
+      "stages": [
+        {
+          "label": "cold-due",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "cold-due",
+          "offsetMs": 0,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 0,
+          "lastFleetTickMsAfter": 1790000123456,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1,
+          "suppressedRecordAbsent": true,
+          "witnesses": {
+            "stationaryNoPositionWrite": true,
+            "movingPositionWrite": true,
+            "selectedSkipped": true,
+            "suppressedNotInCollection": true,
+            "horizonHidden": true,
+            "focusFadeApplied": true,
+            "modelHandoffCommitted": true
+          }
+        },
+        {
+          "label": "sub-cadence-skip",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "sub-cadence-skip",
+          "offsetMs": 40,
+          "movingDeltaM": 0,
+          "executed": false,
+          "lastFleetTickMsBefore": 1790000123456,
+          "lastFleetTickMsAfter": 1790000123456,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 0,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "next-due",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 3,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "next-due",
+          "offsetMs": 80,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123456,
+          "lastFleetTickMsAfter": 1790000123536,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "warmed-repeat",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 5,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "warmed-repeat",
+          "offsetMs": 160,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123536,
+          "lastFleetTickMsAfter": 1790000123616,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "changed-moving-input",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 2,
+              "color": 0,
+              "scale": 0,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 0,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 7,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "changed-moving-input",
+          "offsetMs": 240,
+          "movingDeltaM": 10,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123616,
+          "lastFleetTickMsAfter": 1790000123696,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        }
+      ],
+      "churn": {
+        "role": "stationary",
+        "removed": true,
+        "removeCount": 1,
+        "addCount": 7,
+        "cardinalityBefore": 6,
+        "cardinalityAfter": 6,
+        "identityChanged": true,
+        "detectsChurn": true
+      },
+      "cleanup": {
+        "modelMapEntriesBefore": 4,
+        "cleanup": {
+          "removedAtCleanup": 6,
+          "lengthAfterCleanup": 0,
+          "destroyed": true,
+          "prototypeInstrumentationInstalled": false
+        },
+        "recordsCleared": true,
+        "collectionDestroyed": true
+      },
+      "scratchArgumentUse": {
+        "deadReckonCalls": 20,
+        "uniqueScratchArguments": 1,
+        "scope": "arguments supplied to the deterministic _deadReckon collaborator only"
+      },
+      "allocations": {
+        "billboardCollectionAddsDuringFleetTick": 0,
+        "billboardIdentityChurnDuringFleetTick": false,
+        "cesiumCartesianAllocations": null,
+        "applicationHeapAllocations": null,
+        "gpuUploads": null,
+        "uploadedBytes": null
+      }
+    },
+    {
+      "kind": "military",
+      "initialIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+      "tick": {
+        "label": "cold-due",
+        "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+        "billboardCount": 6,
+        "writes": [
+          {
+            "id": "a10001",
+            "position": 0,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10002",
+            "position": 1,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10003",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 0,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10005",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10006",
+            "position": 0,
+            "color": 1,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10007",
+            "position": 0,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          }
+        ],
+        "visibility": [
+          [
+            "a10001",
+            true
+          ],
+          [
+            "a10002",
+            true
+          ],
+          [
+            "a10003",
+            true
+          ],
+          [
+            "a10005",
+            false
+          ],
+          [
+            "a10006",
+            true
+          ],
+          [
+            "a10007",
+            false
+          ]
+        ],
+        "colors": [
+          [
+            "a10001",
+            1
+          ],
+          [
+            "a10002",
+            1
+          ],
+          [
+            "a10003",
+            1
+          ],
+          [
+            "a10005",
+            1
+          ],
+          [
+            "a10006",
+            0.4
+          ],
+          [
+            "a10007",
+            1
+          ]
+        ],
+        "modelHandoffs": [
+          {
+            "id": "a10001",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10002",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10006",
+            "ready": false,
+            "modelShown": false,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          },
+          {
+            "id": "a10007",
+            "ready": true,
+            "modelShown": true,
+            "showWrites": 1,
+            "colorWrites": 0,
+            "matrixWrites": 32
+          }
+        ],
+        "collectionAdds": 6,
+        "collectionRemoves": 0,
+        "name": "cold-due",
+        "offsetMs": 0,
+        "movingDeltaM": 0,
+        "executed": true,
+        "lastFleetTickMsBefore": 0,
+        "lastFleetTickMsAfter": 1790000123456,
+        "tickAdds": 0,
+        "tickRemoves": 0,
+        "identityPreserved": true,
+        "writeDeltas": [
+          {
+            "id": "a10001",
+            "position": 0,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10002",
+            "position": 1,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10003",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 0,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10005",
+            "position": 0,
+            "color": 0,
+            "scale": 0,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          },
+          {
+            "id": "a10006",
+            "position": 0,
+            "color": 1,
+            "scale": 1,
+            "show": 1,
+            "rotation": 1,
+            "image": 0
+          },
+          {
+            "id": "a10007",
+            "position": 0,
+            "color": 0,
+            "scale": 1,
+            "show": 1,
+            "rotation": 0,
+            "image": 0
+          }
+        ],
+        "deadReckonCalls": 5,
+        "uniqueScratchArguments": 1,
+        "suppressedRecordAbsent": true,
+        "witnesses": {
+          "stationaryNoPositionWrite": true,
+          "movingPositionWrite": true,
+          "selectedSkipped": true,
+          "suppressedNotInCollection": true,
+          "horizonHidden": true,
+          "focusFadeApplied": true,
+          "modelHandoffCommitted": true
+        }
+      },
+      "stages": [
+        {
+          "label": "cold-due",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "cold-due",
+          "offsetMs": 0,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 0,
+          "lastFleetTickMsAfter": 1790000123456,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1,
+          "suppressedRecordAbsent": true,
+          "witnesses": {
+            "stationaryNoPositionWrite": true,
+            "movingPositionWrite": true,
+            "selectedSkipped": true,
+            "suppressedNotInCollection": true,
+            "horizonHidden": true,
+            "focusFadeApplied": true,
+            "modelHandoffCommitted": true
+          }
+        },
+        {
+          "label": "sub-cadence-skip",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 1,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 32
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "sub-cadence-skip",
+          "offsetMs": 40,
+          "movingDeltaM": 0,
+          "executed": false,
+          "lastFleetTickMsBefore": 1790000123456,
+          "lastFleetTickMsAfter": 1790000123456,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 0,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "next-due",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 1,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 2,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 3,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 2,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 64
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "next-due",
+          "offsetMs": 80,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123456,
+          "lastFleetTickMsAfter": 1790000123536,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "warmed-repeat",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 1,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 3,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 5,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 3,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 96
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "warmed-repeat",
+          "offsetMs": 160,
+          "movingDeltaM": 0,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123536,
+          "lastFleetTickMsAfter": 1790000123616,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        },
+        {
+          "label": "changed-moving-input",
+          "billboardIdentitySha256": "7468b3340b4897217e1536e34cc15855ab511e56a4d1b56bb992c5368f60e88f",
+          "billboardCount": 6,
+          "writes": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 2,
+              "color": 0,
+              "scale": 1,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 1,
+              "scale": 1,
+              "show": 4,
+              "rotation": 1,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 1,
+              "show": 7,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "visibility": [
+            [
+              "a10001",
+              true
+            ],
+            [
+              "a10002",
+              true
+            ],
+            [
+              "a10003",
+              true
+            ],
+            [
+              "a10005",
+              false
+            ],
+            [
+              "a10006",
+              true
+            ],
+            [
+              "a10007",
+              false
+            ]
+          ],
+          "colors": [
+            [
+              "a10001",
+              1
+            ],
+            [
+              "a10002",
+              1
+            ],
+            [
+              "a10003",
+              1
+            ],
+            [
+              "a10005",
+              1
+            ],
+            [
+              "a10006",
+              0.4
+            ],
+            [
+              "a10007",
+              1
+            ]
+          ],
+          "modelHandoffs": [
+            {
+              "id": "a10001",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10002",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10006",
+              "ready": false,
+              "modelShown": false,
+              "showWrites": 4,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            },
+            {
+              "id": "a10007",
+              "ready": true,
+              "modelShown": true,
+              "showWrites": 1,
+              "colorWrites": 0,
+              "matrixWrites": 128
+            }
+          ],
+          "collectionAdds": 6,
+          "collectionRemoves": 0,
+          "name": "changed-moving-input",
+          "offsetMs": 240,
+          "movingDeltaM": 10,
+          "executed": true,
+          "lastFleetTickMsBefore": 1790000123616,
+          "lastFleetTickMsAfter": 1790000123696,
+          "tickAdds": 0,
+          "tickRemoves": 0,
+          "identityPreserved": true,
+          "writeDeltas": [
+            {
+              "id": "a10001",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10002",
+              "position": 1,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10003",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10005",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 0,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10006",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 1,
+              "rotation": 0,
+              "image": 0
+            },
+            {
+              "id": "a10007",
+              "position": 0,
+              "color": 0,
+              "scale": 0,
+              "show": 2,
+              "rotation": 0,
+              "image": 0
+            }
+          ],
+          "deadReckonCalls": 5,
+          "uniqueScratchArguments": 1
+        }
+      ],
+      "churn": {
+        "role": "stationary",
+        "removed": true,
+        "removeCount": 1,
+        "addCount": 7,
+        "cardinalityBefore": 6,
+        "cardinalityAfter": 6,
+        "identityChanged": true,
+        "detectsChurn": true
+      },
+      "cleanup": {
+        "modelMapEntriesBefore": 4,
+        "cleanup": {
+          "removedAtCleanup": 6,
+          "lengthAfterCleanup": 0,
+          "destroyed": true,
+          "prototypeInstrumentationInstalled": false
+        },
+        "recordsCleared": true,
+        "collectionDestroyed": true
+      },
+      "scratchArgumentUse": {
+        "deadReckonCalls": 20,
+        "uniqueScratchArguments": 1,
+        "scope": "arguments supplied to the deterministic _deadReckon collaborator only"
+      },
+      "allocations": {
+        "billboardCollectionAddsDuringFleetTick": 0,
+        "billboardIdentityChurnDuringFleetTick": false,
+        "cesiumCartesianAllocations": null,
+        "applicationHeapAllocations": null,
+        "gpuUploads": null,
+        "uploadedBytes": null
+      }
+    }
+  ],
+  "limitations": [
+    "Deterministic producer-path audit only; no WebGL context or rendered image comparison.",
+    "Only explicit Cesium BillboardCollection membership/add/remove and billboard setter attempts are counted.",
+    "Scratch reuse describes only result objects supplied to the deterministic dead-reckoning collaborator; general JavaScript allocation, Cesium Cartesian3 allocation, GPU upload count, uploaded bytes and frame time are unavailable.",
+    "The synthetic contact set is not a fleet-scale or external-feed population."
+  ],
+  "clock": {
+    "receiptClockMs": 1790000123456,
+    "restoredAfterRun": true
+  }
+}

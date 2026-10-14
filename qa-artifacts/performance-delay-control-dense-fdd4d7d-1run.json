@@ -1,0 +1,642 @@
+{
+  "schema": "gev-performance-capture/v1",
+  "capturedAt": "2026-10-08T14:58:43.485Z",
+  "source": {
+    "harnessCommit": "fdd4d7de245ca50d11544574d22553accc01c10f",
+    "harnessDirtyWorktree": false,
+    "appCommit": "0171b697128b7ae83abbdfc7aebb5cdcb78b973f",
+    "appWorktreeState": "clean",
+    "reason": null
+  },
+  "url": "http://127.0.0.1:4175",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    },
+    "focused": true,
+    "visible": true,
+    "layers": [
+      {
+        "id": "bhote-koshi-2026",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bhote-koshi-locator",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "flights",
+        "enabled": true,
+        "count": 2500
+      },
+      {
+        "id": "military",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-adsb",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "earthquakes",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "fire-perimeters",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "alpr-cameras",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "street-level",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "satellites",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "rocket-launches",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "traffic",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "cctv",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "radio",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "transit",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bikeshare",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "directions",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "recent-imagery",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "ais-live-vessels",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-installations",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-awareness",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "wind",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-radar",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-lightning",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-cyclones",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-datacenters",
+        "enabled": true,
+        "count": 4362
+      },
+      {
+        "id": "local-dams",
+        "enabled": true,
+        "count": 716
+      },
+      {
+        "id": "telegeography-submarine-cables",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-firms",
+        "enabled": false,
+        "count": 0
+      }
+    ],
+    "totalObjects": 7578,
+    "startup": {
+      "runs": [
+        {
+          "run": 1,
+          "cacheDisabled": true,
+          "appReadyMs": 4239,
+          "initialSettleMs": 5247,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 1
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 3176.5,
+          "memory": {
+            "usedJsHeapBytes": 122741192,
+            "reason": null
+          }
+        }
+      ],
+      "runCount": 1,
+      "measurement": "cache-disabled fresh browser contexts",
+      "performancePageInitialSettleMs": 1001
+    },
+    "hardwareEligible": true
+  },
+  "workload": {
+    "warmupMs": 5000,
+    "durationPerSampleMs": 5000,
+    "runsPerScenario": 1,
+    "startupRuns": 1,
+    "scenarios": [
+      "idle",
+      "scripted-motion"
+    ],
+    "fixture": {
+      "id": "synthetic-aircraft-ring-v1",
+      "count": 2500,
+      "center": {
+        "latitude": 30.2672,
+        "longitude": -97.7431
+      },
+      "cameraPath": {
+        "id": "austin-overhead-v1",
+        "altitudeM": 130000,
+        "headingDeg": 0,
+        "pitchDeg": -90
+      },
+      "seed": 1,
+      "detectionMode": "DENSE"
+    },
+    "mixedLayers": [
+      "local-datacenters",
+      "local-dams"
+    ],
+    "qualityMode": "manual",
+    "detectionMode": "DENSE",
+    "injectedDelayMs": 200,
+    "populationStableAcrossSamples": true,
+    "note": "Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state."
+  },
+  "motionBudget": {
+    "maxP95FrameMs": 200,
+    "status": "failed",
+    "failures": [
+      {
+        "run": 1,
+        "p95FrameMs": 266.89999997615814,
+        "reason": "budget-exceeded"
+      }
+    ],
+    "note": "Idle rendering is intentionally sparse and is excluded from motion frame budgets."
+  },
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 5324,
+      "frameCount": 29,
+      "frameIntervalMs": {
+        "p50": 76,
+        "p95": 624.5,
+        "max": 944.8999999761581,
+        "samples": 29,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 21,
+        "maxMs": 930
+      },
+      "memory": {
+        "usedJsHeapBytes": 434209009
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": true,
+          "count": 2500
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-radar",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": true,
+          "count": 4362
+        },
+        {
+          "id": "local-dams",
+          "enabled": true,
+          "count": 716
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 7578,
+      "focused": true,
+      "visible": true,
+      "injectedDelayMs": 200,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": "DENSE",
+        "densityPct": 75,
+        "observationCount": 2500,
+        "candidateCount": 120,
+        "selectedCount": 30,
+        "visibleCount": 2500,
+        "protectedVisibleCount": 0,
+        "labelsByLayer": {
+          "flights": 30
+        }
+      }
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "durationMs": 5373.899999976158,
+      "frameCount": 52,
+      "frameIntervalMs": {
+        "p50": 86.60000002384186,
+        "p95": 266.89999997615814,
+        "max": 277,
+        "samples": 52,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 48,
+        "maxMs": 200
+      },
+      "memory": {
+        "usedJsHeapBytes": 438914860
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": true,
+          "count": 2500
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-radar",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": true,
+          "count": 4362
+        },
+        {
+          "id": "local-dams",
+          "enabled": true,
+          "count": 716
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 7578,
+      "focused": true,
+      "visible": true,
+      "injectedDelayMs": 200,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": "DENSE",
+        "densityPct": 75,
+        "observationCount": 2500,
+        "candidateCount": 120,
+        "selectedCount": 30,
+        "visibleCount": 2500,
+        "protectedVisibleCount": 0,
+        "labelsByLayer": {
+          "flights": 30
+        }
+      }
+    }
+  ]
+}

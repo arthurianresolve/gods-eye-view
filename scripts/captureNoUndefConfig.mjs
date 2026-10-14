@@ -1,0 +1,97 @@
+import globals from 'globals';
+
+export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
+  'scripts/capture-scene-performance.mjs',
+  'scripts/qa-performance-build-smoke.mjs',
+  'scripts/qa-performance-build-smoke.test.mjs',
+  'scripts/qa-application.mjs',
+  'scripts/performance/austinOperatingComparisonContract.test.mjs',
+  'scripts/performance/austinOperatingDocumentEvidence.mjs',
+  'scripts/performance/austinOperatingDocumentEvidence.test.mjs',
+  'scripts/performance/austinOperatingPopulationEvidence.mjs',
+  'scripts/performance/austinOperatingPopulationEvidence.test.mjs',
+  'scripts/performance/austinOperatingReadinessHistory.mjs',
+  'scripts/performance/austinOperatingReadinessHistory.test.mjs',
+  'scripts/performance/austinOperatingWorkloadContract.mjs',
+  'scripts/performance/austinOperatingWorkloadFixture.mjs',
+  'scripts/performance/austinOperatingWorkloadFixture.test.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
+  'scripts/performance/productionFlightFixture.mjs',
+  'scripts/performance/productionFlightFixture.test.mjs',
+  'scripts/performance/austinSatelliteSampledEpoch.mjs',
+  'scripts/performance/austinSatelliteSampledEpoch.test.mjs',
+  'scripts/performance/aircraftFleetTickAudit.mjs',
+  'scripts/performance/aircraftFleetTickAudit.test.mjs',
+  'scripts/performance/mapStreamingCapture.mjs',
+  'scripts/performance/mapStreamingCapture.test.mjs',
+  'scripts/performance/mapStreamingFixture.mjs',
+  'scripts/performance/mapStreamingFixture.test.mjs',
+  'scripts/performance/mapStreamingFixtureDelivery.mjs',
+  'scripts/performance/mapStreamingFixtureDelivery.test.mjs',
+  'scripts/performance/cctvViewshedRetention.mjs',
+  'scripts/performance/cctvViewshedRetention.test.mjs',
+  'scripts/performance/s58PostProcessStageCensus.mjs',
+  'scripts/performance/s58PostProcessStageCensus.test.mjs',
+  'scripts/fixtures/cctv-calibration-demand.js',
+  'scripts/qa-hosted-capture.mjs',
+  'scripts/performance/hostedNavigationDiagnostics.mjs',
+  'scripts/performance/hostedNavigationDiagnostics.test.mjs',
+  'scripts/fixtures/infrastructure-runtime-collections.mjs',
+  'scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs',
+  'scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs',
+  'scripts/fixtures/infrastructureFixtureCamera.mjs',
+  'scripts/fixtures/infrastructureFixtureCamera.test.mjs',
+  'scripts/fixtures/infrastructureFixtureLayer.mjs',
+  'scripts/fixtures/infrastructureNativePickOwnership.mjs',
+  'scripts/fixtures/infrastructureNativePickOwnership.test.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs',
+  'scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs',
+  'scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs',
+  'scripts/performance/infrastructureRuntimeComparison.mjs',
+  'scripts/performance/infrastructureRuntimeComparison.test.mjs',
+  'scripts/performance/mapStreamingWorkloadContract.mjs',
+  'scripts/performance/captureComparisonContract.mjs',
+  'scripts/performance/pairedReport.mjs',
+  'scripts/performance/pairedReport.test.mjs',
+  'scripts/performance/hostedRendererBackend.mjs',
+  'scripts/performance/renderBoundaryObservation.mjs',
+  'scripts/performance/overlayAttribution.mjs',
+  'scripts/performance/overlayAttributionContract.mjs',
+  'scripts/performance/overlayAttribution.test.mjs',
+  'src/overlays/worldOverlayAllocation.worker.mjs',
+]);
+
+export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
+  files: [...CAPTURE_NO_UNDEF_FILES],
+  linterOptions: {
+    noInlineConfig: true,
+  },
+  languageOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    globals: {
+      ...globals.es2021,
+      ...globals.browser,
+      ...globals.node,
+    },
+  },
+  rules: {
+    'no-undef': 'error',
+  },
+});
+
+// Vite replaces this identifier in the listed browser fixture builds only.
+// Other capture files must still catch missing commit variables.
+export const CAPTURE_NO_UNDEF_FIXTURE_CONFIG = Object.freeze({
+  files: [
+    'scripts/fixtures/cctv-calibration-demand.js',
+    'scripts/fixtures/infrastructure-runtime-collections.mjs',
+  ],
+  languageOptions: {
+    globals: {
+      __GEV_APP_COMMIT__: 'readonly',
+    },
+  },
+});

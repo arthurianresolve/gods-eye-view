@@ -1,0 +1,1 @@
+{"schemaVersion":1,"product":"radar","bounds":{"west":-130,"south":20,"east":-60,"north":55},"times":["2026-10-08T11:50:00.000Z","2026-10-08T11:55:00.000Z","2026-10-08T12:00:00.000Z"],"latest":"2026-10-08T12:00:00.000Z","tileSize":256,"maxLevel":6,"tilingScheme":"geographic"}

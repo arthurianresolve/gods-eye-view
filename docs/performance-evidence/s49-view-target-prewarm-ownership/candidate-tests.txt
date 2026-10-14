@@ -1,0 +1,622 @@
+TAP version 13
+# Subtest: every live basemap is reachable by its own id — no enum value without a voice alias
+ok 1 - every live basemap is reachable by its own id — no enum value without a voice alias
+  ---
+  duration_ms: 4.9504
+  type: 'test'
+  ...
+# Subtest: track_entity narration names aircraft callsign → registration → icao24
+ok 2 - track_entity narration names aircraft callsign → registration → icao24
+  ---
+  duration_ms: 0.4007
+  type: 'test'
+  ...
+# Subtest: track_entity runner narrates a callsign-less aircraft by its registration
+ok 3 - track_entity runner narrates a callsign-less aircraft by its registration
+  ---
+  duration_ms: 4.0616
+  type: 'test'
+  ...
+# Subtest: zoom to globe adopts the shared visible reset route and returns its result
+ok 4 - zoom to globe adopts the shared visible reset route and returns its result
+  ---
+  duration_ms: 0.4632
+  type: 'test'
+  ...
+# Subtest: dependent voice navigation waits for the destination viewport to arrive
+ok 5 - dependent voice navigation waits for the destination viewport to arrive
+  ---
+  duration_ms: 2.1853
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+ok 6 - nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+  ---
+  duration_ms: 26.5113
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+ok 7 - nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+  ---
+  duration_ms: 3.7227
+  type: 'test'
+  ...
+# Subtest: fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+ok 8 - fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+  ---
+  duration_ms: 1.7908
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action rejects a missing destination without changing the map or layer
+ok 9 - nearest-aircraft voice action rejects a missing destination without changing the map or layer
+  ---
+  duration_ms: 0.5685
+  type: 'test'
+  ...
+# Subtest: successful voice tracking stamps and releases the old owner before layer takeover
+ok 10 - successful voice tracking stamps and releases the old owner before layer takeover
+  ---
+  duration_ms: 0.8511
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking clears all durable tracker IDs even without active trackers
+ok 11 - voice Stop Tracking clears all durable tracker IDs even without active trackers
+  ---
+  duration_ms: 0.8478
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking reports exact layers whose active or durable clear failed
+ok 12 - voice Stop Tracking reports exact layers whose active or durable clear failed
+  ---
+  duration_ms: 0.4476
+  type: 'test'
+  ...
+# Subtest: successful voice overhead framing stamps and releases the old owner before flight
+ok 13 - successful voice overhead framing stamps and releases the old owner before flight
+  ---
+  duration_ms: 1.4833
+  type: 'test'
+  ...
+# Subtest: tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+ok 14 - tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+  ---
+  duration_ms: 1.0653
+  type: 'test'
+  ...
+# Subtest: move_camera and fly_route validate first, then use the shared camera authority seam
+ok 15 - move_camera and fly_route validate first, then use the shared camera authority seam
+  ---
+  duration_ms: 55.2528
+  type: 'test'
+  ...
+# Subtest: a chained orbit preserves its current destination flight while still stamping authority
+ok 16 - a chained orbit preserves its current destination flight while still stamping authority
+  ---
+  duration_ms: 79.668
+  type: 'test'
+  ...
+# Subtest: invalid named voice navigation never releases the current camera owner
+ok 17 - invalid named voice navigation never releases the current camera owner
+  ---
+  duration_ms: 1.8529
+  type: 'test'
+  ...
+# Subtest: Cockpit refuses every named voice camera route before camera or selection mutation
+ok 18 - Cockpit refuses every named voice camera route before camera or selection mutation
+  ---
+  duration_ms: 1.0621
+  type: 'test'
+  ...
+# Subtest: a newer voice action makes an older deferred navigation authority inert
+ok 19 - a newer voice action makes an older deferred navigation authority inert
+  ---
+  duration_ms: 0.4063
+  type: 'test'
+  ...
+# Subtest: Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+ok 20 - Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+  ---
+  duration_ms: 1.6298
+  type: 'test'
+  ...
+# Subtest: generic layer visibility forwards cancellation and reports semantic failure
+ok 21 - generic layer visibility forwards cancellation and reports semantic failure
+  ---
+  duration_ms: 0.8337
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves a manager resource-cancellation envelope
+ok 22 - generic voice visibility preserves a manager resource-cancellation envelope
+  ---
+  duration_ms: 0.4623
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves caller-abort phase before the stale-turn fallback
+ok 23 - generic voice visibility preserves caller-abort phase before the stale-turn fallback
+  ---
+  duration_ms: 0.484
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+ok 24 - generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+  ---
+  duration_ms: 0.5673
+  type: 'test'
+  ...
+# Subtest: late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+ok 25 - late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+  ---
+  duration_ms: 4.0621
+  type: 'test'
+  ...
+# Subtest: generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+ok 26 - generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+  ---
+  duration_ms: 1.9747
+  type: 'test'
+  ...
+# Subtest: generic voice visibility maps Space Missions to the explicit mission layer
+ok 27 - generic voice visibility maps Space Missions to the explicit mission layer
+  ---
+  duration_ms: 0.7169
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports tracking ownership separately from no active camera
+ok 28 - voice CCTV focus reports tracking ownership separately from no active camera
+  ---
+  duration_ms: 0.3889
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports cockpit ownership
+ok 29 - voice CCTV focus reports cockpit ownership
+  ---
+  duration_ms: 0.2064
+  type: 'test'
+  ...
+# Subtest: control_cockpit forwards schema-valid navigation filters
+ok 30 - control_cockpit forwards schema-valid navigation filters
+  ---
+  duration_ms: 0.8852
+  type: 'test'
+  ...
+# Subtest: control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+ok 31 - control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+  ---
+  duration_ms: 0.9642
+  type: 'test'
+  ...
+# Subtest: control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+ok 32 - control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+  ---
+  duration_ms: 1.0244
+  type: 'test'
+  ...
+# Subtest: control_cockpit does not mutate selection when Contacts entry fails
+ok 33 - control_cockpit does not mutate selection when Contacts entry fails
+  ---
+  duration_ms: 0.4307
+  type: 'test'
+  ...
+# Subtest: control_cockpit cancellation is inert when Contacts is already active
+ok 34 - control_cockpit cancellation is inert when Contacts is already active
+  ---
+  duration_ms: 0.3487
+  type: 'test'
+  ...
+# Subtest: control_cockpit rolls Contacts back when the turn becomes stale at commit
+ok 35 - control_cockpit rolls Contacts back when the turn becomes stale at commit
+  ---
+  duration_ms: 0.5217
+  type: 'test'
+  ...
+# Subtest: control_cockpit adopts the newest selection after Contacts settles
+ok 36 - control_cockpit adopts the newest selection after Contacts settles
+  ---
+  duration_ms: 0.4669
+  type: 'test'
+  ...
+# Subtest: control_cockpit restores the prior Context mode after Cockpit entry fails
+ok 37 - control_cockpit restores the prior Context mode after Cockpit entry fails
+  ---
+  duration_ms: 0.4403
+  type: 'test'
+  ...
+# Subtest: control_cockpit contains entry exceptions and still restores the prior Context mode
+ok 38 - control_cockpit contains entry exceptions and still restores the prior Context mode
+  ---
+  duration_ms: 0.5971
+  type: 'test'
+  ...
+# Subtest: set_context_mode forwards cancellation authority and reports a stale turn
+ok 39 - set_context_mode forwards cancellation authority and reports a stale turn
+  ---
+  duration_ms: 0.5259
+  type: 'test'
+  ...
+# Subtest: opening Contacts expands Context before activation and returns its settled aircraft window
+ok 40 - opening Contacts expands Context before activation and returns its settled aircraft window
+  ---
+  duration_ms: 0.3841
+  type: 'test'
+  ...
+# Subtest: set_context_mode pre-dispatch cancellation includes authoritative Context state
+ok 41 - set_context_mode pre-dispatch cancellation includes authoritative Context state
+  ---
+  duration_ms: 0.3871
+  type: 'test'
+  ...
+# Subtest: control_cockpit enter skips selected non-flight context
+ok 42 - control_cockpit enter skips selected non-flight context
+  ---
+  duration_ms: 0.4338
+  type: 'test'
+  ...
+# Subtest: voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+ok 43 - voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+  ---
+  duration_ms: 0.8923
+  type: 'test'
+  ...
+# Subtest: voice CCTV coverage writes the canonical durable coverage mode
+ok 44 - voice CCTV coverage writes the canonical durable coverage mode
+  ---
+  duration_ms: 0.3178
+  type: 'test'
+  ...
+# Subtest: voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+ok 45 - voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+  ---
+  duration_ms: 3.0107
+  type: 'test'
+  ...
+# Subtest: community Radio names remain untrusted data and cannot redirect model-visible routing
+ok 46 - community Radio names remain untrusted data and cannot redirect model-visible routing
+  ---
+  duration_ms: 2.2919
+  type: 'test'
+  ...
+# Subtest: Radio country validation fails closed before enable or selection side effects
+ok 47 - Radio country validation fails closed before enable or selection side effects
+  ---
+  duration_ms: 0.4483
+  type: 'test'
+  ...
+# Subtest: voice Radio status exposes authoritative four-state lifecycle without side effects
+ok 48 - voice Radio status exposes authoritative four-state lifecycle without side effects
+  ---
+  duration_ms: 0.673
+  type: 'test'
+  ...
+# Subtest: voice Radio reports a rejected Stop without claiming stopped state
+ok 49 - voice Radio reports a rejected Stop without claiming stopped state
+  ---
+  duration_ms: 0.2475
+  type: 'test'
+  ...
+# Subtest: voice Radio rejects a fulfilled-false Pause without claiming authority
+ok 50 - voice Radio rejects a fulfilled-false Pause without claiming authority
+  ---
+  duration_ms: 0.2082
+  type: 'test'
+  ...
+# Subtest: voice Radio Stop rechecks ownership after an awaited player boundary
+ok 51 - voice Radio Stop rechecks ownership after an awaited player boundary
+  ---
+  duration_ms: 0.3304
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio geocoding causes no enable or selection side effects
+ok 52 - interrupting delayed Radio geocoding causes no enable or selection side effects
+  ---
+  duration_ms: 2.3654
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio disable forwards cancellation and retains enabled state
+ok 53 - interrupting delayed Radio disable forwards cancellation and retains enabled state
+  ---
+  duration_ms: 0.4785
+  type: 'test'
+  ...
+# Subtest: voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+ok 54 - voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+  ---
+  duration_ms: 0.4108
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciles uncertain lifecycle authority before direct selection
+ok 55 - voice Radio reconciles uncertain lifecycle authority before direct selection
+  ---
+  duration_ms: 0.3793
+  type: 'test'
+  ...
+# Subtest: voice Radio Volume waits for settled certain lifecycle authority
+ok 56 - voice Radio Volume waits for settled certain lifecycle authority
+  ---
+  duration_ms: 0.5675
+  type: 'test'
+  ...
+# Subtest: voice Radio settled OFF blocks Volume without enabling
+ok 57 - voice Radio settled OFF blocks Volume without enabling
+  ---
+  duration_ms: 0.2948
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciliation failures leave gated player state unchanged
+ok 58 - voice Radio reconciliation failures leave gated player state unchanged
+  ---
+  duration_ms: 0.9117
+  type: 'test'
+  ...
+# Subtest: voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+ok 59 - voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+  ---
+  duration_ms: 0.3868
+  type: 'test'
+  ...
+# Subtest: voice Radio Pause while disabled is a truthful playback-only no-op
+ok 60 - voice Radio Pause while disabled is a truthful playback-only no-op
+  ---
+  duration_ms: 0.2333
+  type: 'test'
+  ...
+# Subtest: Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+ok 61 - Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+  ---
+  duration_ms: 0.5373
+  type: 'test'
+  ...
+# Subtest: Cockpit entry rollback also stays inert on the visual lane
+ok 62 - Cockpit entry rollback also stays inert on the visual lane
+  ---
+  duration_ms: 0.5049
+  type: 'test'
+  ...
+# Subtest: a genuine set_context_mode request DOES claim the visual lane
+ok 63 - a genuine set_context_mode request DOES claim the visual lane
+  ---
+  duration_ms: 0.3114
+  type: 'test'
+  ...
+# Subtest: disposing a runner removes the moveEnd listener and cancels a pending debounce
+ok 64 - disposing a runner removes the moveEnd listener and cancels a pending debounce
+  ---
+  duration_ms: 1.1319
+  type: 'test'
+  ...
+# Subtest: a retired debounce delivery cannot replace newer moveEnd work
+ok 65 - a retired debounce delivery cannot replace newer moveEnd work
+  ---
+  duration_ms: 0.7463
+  type: 'test'
+  ...
+# Subtest: disposing cancels a queued idle prewarm and stale delivery cannot pick
+ok 66 - disposing cancels a queued idle prewarm and stale delivery cannot pick
+  ---
+  duration_ms: 0.5457
+  type: 'test'
+  ...
+# Subtest: a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+ok 67 - a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+  ---
+  duration_ms: 0.4706
+  type: 'test'
+  ...
+# Subtest: shared runners keep one viewer lease until the final disposer releases it
+ok 68 - shared runners keep one viewer lease until the final disposer releases it
+  ---
+  duration_ms: 0.3378
+  type: 'test'
+  ...
+# Subtest: prewarm leases are independent per viewer and can be reinitialized safely
+ok 69 - prewarm leases are independent per viewer and can be reinitialized safely
+  ---
+  duration_ms: 0.8179
+  type: 'test'
+  ...
+# Subtest: the no-requestIdleCallback fallback still runs after the 120 ms debounce
+ok 70 - the no-requestIdleCallback fallback still runs after the 120 ms debounce
+  ---
+  duration_ms: 0.5442
+  type: 'test'
+  ...
+# Subtest: a degenerate depth pick does not escape the view-target prewarm
+ok 71 - a degenerate depth pick does not escape the view-target prewarm
+  ---
+  duration_ms: 0.8979
+  type: 'test'
+  ...
+# Subtest: an unexpected prewarm failure is logged once at debug level, never thrown
+ok 72 - an unexpected prewarm failure is logged once at debug level, never thrown
+  ---
+  duration_ms: 0.4514
+  type: 'test'
+  ...
+# Subtest: a lost cross-mode switch reports every mode field in the shared vocabulary
+ok 73 - a lost cross-mode switch reports every mode field in the shared vocabulary
+  ---
+  duration_ms: 0.4927
+  type: 'test'
+  ...
+# Subtest: an absent secondary mode stays absent instead of claiming to be off
+ok 74 - an absent secondary mode stays absent instead of claiming to be off
+  ---
+  duration_ms: 0.5325
+  type: 'test'
+  ...
+# Subtest: a nested Cockpit rollback result is translated too
+ok 75 - a nested Cockpit rollback result is translated too
+  ---
+  duration_ms: 0.6073
+  type: 'test'
+  ...
+# Subtest: front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+ok 76 - front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+  ---
+  duration_ms: 340.8235
+  type: 'test'
+  ...
+# Subtest: front5: the spoken count and the panel window are ONE number by construction
+ok 77 - front5: the spoken count and the panel window are ONE number by construction
+  ---
+  duration_ms: 1.8029
+  type: 'test'
+  ...
+# Subtest: front5: Contacts active with NO subject falls back to the view, not an empty panel
+ok 78 - front5: Contacts active with NO subject falls back to the view, not an empty panel
+  ---
+  duration_ms: 1.2978
+  type: 'test'
+  ...
+# Subtest: front5: an explicit region still uses the region engine while Contacts is active
+ok 79 - front5: an explicit region still uses the region engine while Contacts is active
+  ---
+  duration_ms: 306.7822
+  type: 'test'
+  ...
+# Subtest: front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+ok 80 - front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+  ---
+  duration_ms: 2.4508
+  type: 'test'
+  ...
+# Subtest: front5: 0.99 km due EAST is the subject, though a degree box rejects it
+ok 81 - front5: 0.99 km due EAST is the subject, though a degree box rejects it
+  ---
+  duration_ms: 1.3659
+  type: 'test'
+  ...
+# Subtest: voice Radio: a key that geocodes to nothing still places the station, keylessly
+ok 82 - voice Radio: a key that geocodes to nothing still places the station, keylessly
+  ---
+  duration_ms: 3.2476
+  type: 'test'
+  ...
+# Subtest: voice Radio: the keyless path applies no country filter the keyed path would not
+ok 83 - voice Radio: the keyless path applies no country filter the keyed path would not
+  ---
+  duration_ms: 1.167
+  type: 'test'
+  ...
+# Subtest: ALPR common names toggle only the registered camera layer through the normal voice action
+ok 84 - ALPR common names toggle only the registered camera layer through the normal voice action
+  ---
+  duration_ms: 0.8854
+  type: 'test'
+  ...
+# Subtest: Local ADS-B common names toggle only the receiver layer through the normal voice action
+ok 85 - Local ADS-B common names toggle only the receiver layer through the normal voice action
+  ---
+  duration_ms: 0.6789
+  type: 'test'
+  ...
+# Subtest: ISS voice lookup uses the registered satellite instance
+ok 86 - ISS voice lookup uses the registered satellite instance
+  ---
+  duration_ms: 0.5129
+  type: 'test'
+  ...
+# Subtest: analyst_query and get_current_view_state carry stale feed provenance
+ok 87 - analyst_query and get_current_view_state carry stale feed provenance
+  ---
+  duration_ms: 1.3217
+  type: 'test'
+  ...
+# Subtest: analyst age uses the selected investigation time
+ok 88 - analyst age uses the selected investigation time
+  ---
+  duration_ms: 0.8655
+  type: 'test'
+  ...
+# Subtest: general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+ok 89 - general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+  ---
+  duration_ms: 0.9293
+  type: 'test'
+  ...
+# Subtest: analyst_query counts the whole loaded set, not a 2,000-record slice
+ok 90 - analyst_query counts the whole loaded set, not a 2,000-record slice
+  ---
+  duration_ms: 6.744
+  type: 'test'
+  ...
+# Subtest: analyst aircraft results carry pinned source evidence from the query snapshot
+ok 91 - analyst aircraft results carry pinned source evidence from the query snapshot
+  ---
+  duration_ms: 1.6678
+  type: 'test'
+  ...
+# Subtest: analyst_query refusals carry their code and the allowed values
+ok 92 - analyst_query refusals carry their code and the allowed values
+  ---
+  duration_ms: 1.4876
+  type: 'test'
+  ...
+# Subtest: spoken layer names from the manifest reach the newer layers
+ok 93 - spoken layer names from the manifest reach the newer layers
+  ---
+  duration_ms: 0.6126
+  type: 'test'
+  ...
+# Subtest: the Contacts window ranks, filters and formats like any analyst answer
+ok 94 - the Contacts window ranks, filters and formats like any analyst answer
+  ---
+  duration_ms: 3.2142
+  type: 'test'
+  ...
+# Subtest: a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+ok 95 - a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+  ---
+  duration_ms: 5.6833
+  type: 'test'
+  ...
+# Subtest: overlapping analyst siblings from one response complete independently
+ok 96 - overlapping analyst siblings from one response complete independently
+  ---
+  duration_ms: 49.5446
+  type: 'test'
+  ...
+# Subtest: a capped Contacts snapshot is a lower bound from one immutable cohort
+ok 97 - a capped Contacts snapshot is a lower bound from one immutable cohort
+  ---
+  duration_ms: 62.3107
+  type: 'test'
+  ...
+# Subtest: Contacts follow-ups filter the cohort that was actually displayed
+ok 98 - Contacts follow-ups filter the cohort that was actually displayed
+  ---
+  duration_ms: 3.3485
+  type: 'test'
+  ...
+# Subtest: point-and-ask: the runner resolves pointer and referent targets
+ok 99 - point-and-ask: the runner resolves pointer and referent targets
+  ---
+  duration_ms: 1.4849
+  type: 'test'
+  ...
+# Subtest: point-and-ask: only accepted, current results become the referent list
+ok 100 - point-and-ask: only accepted, current results become the referent list
+  ---
+  duration_ms: 0.921
+  type: 'test'
+  ...
+# Subtest: numbered analyst records navigate using the current layer accessor
+ok 101 - numbered analyst records navigate using the current layer accessor
+  ---
+  duration_ms: 1.6045
+  type: 'test'
+  ...
+# Subtest: analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+ok 102 - analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+  ---
+  duration_ms: 1.3691
+  type: 'test'
+  ...
+1..102
+# tests 102
+# suites 0
+# pass 102
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4134.2706

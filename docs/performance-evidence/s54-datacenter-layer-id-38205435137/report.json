@@ -1,0 +1,1255 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+  "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+  "platform": "darwin",
+  "timestamp": "2026-10-12T04:51:26.729Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "capturedAt": "2026-10-12T04:51:39.396Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+        "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+        "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "sourceDirtyAtStart": false,
+  "harnessDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessChangedDuringRun": false,
+  "importPageErrors": [],
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Infrastructure runtime comparison did not pass.",
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "capturedAt": "2026-10-12T04:51:42.650Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "pointRepresentation": "entity",
+    "featureLimit": 5000,
+    "mixedGeometryParityRequested": false,
+    "pointBenefitDiagnosticsRequested": false,
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 111.69999999995343,
+        "maxHeartbeatGapMs": 255.39999999996508,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 108,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 49.20000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 235029093,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 386.30000000004657,
+        "maxHeartbeatGapMs": 50.40000000002328,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 46.199999999953434,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 46.09999999997672,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 360761489,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 475.5999999999767,
+        "maxHeartbeatGapMs": 50.40000000002328,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 11,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 11,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 113412965,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 76,
+        "maxHeartbeatGapMs": 145.5,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 126.60000000003492,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 29.70000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 106039609,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 86.90000000002328,
+        "maxHeartbeatGapMs": 170.90000000002328,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 12.799999999988358,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 12.799999999988358,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 235506737,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 323.8999999999651,
+        "maxHeartbeatGapMs": 47.09999999997672,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 6.2999999999883585,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 6.2999999999883585,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 362987445,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 357.20000000001164,
+        "maxHeartbeatGapMs": 35.399999999965075,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 70.39999999996508,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 56.899999999965075,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 112913353,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 81.79999999998836,
+        "maxHeartbeatGapMs": 192.09999999997672,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 73.39999999996508,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 65.39999999996508,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 226877089,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 68.70000000001164,
+        "maxHeartbeatGapMs": 125.70000000001164,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 72.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 40.40000000002328,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 152723737,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 232.90000000002328,
+        "maxHeartbeatGapMs": 42.70000000001164,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 20,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 20,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 109539325,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+      "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "renderConfiguration": {
+      "viewerConstruction": "application-wrapper",
+      "pointRepresentation": "entity",
+      "preserveDrawingBuffer": true,
+      "captureMode": "pixels",
+      "renderDemand": true,
+      "msaaSamplesRequested": 4,
+      "antialias": true,
+      "msaaSupported": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      },
+      "sceneMode": 3,
+      "canvas": {
+        "cssWidth": 640,
+        "cssHeight": 360,
+        "drawingBufferWidth": 640,
+        "drawingBufferHeight": 360
+      },
+      "camera": {
+        "position": [
+          6463137,
+          0,
+          0
+        ],
+        "direction": [
+          -1,
+          0,
+          2.220446049250313e-16
+        ],
+        "up": [
+          2.220446049250313e-16,
+          2.220446049250313e-16,
+          1
+        ],
+        "frustumNear": 0.1,
+        "frustumFar": 10000000000,
+        "frustumFov": 1.0471975511965976
+      }
+    },
+    "coldActivationMs": 642.4000000000233,
+    "warmedResources": {
+      "heapBytes": 114976906,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "importedFeatureCount": 5000,
+      "entities": 5000,
+      "pointPrimitiveCount": 5000,
+      "entityPointCensus": {
+        "available": true,
+        "version": "1.138.0",
+        "activeEntityCount": 5000,
+        "pointCount": 5000
+      },
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        },
+        {
+          "type": "EntityClusterPointPrimitiveCollection",
+          "count": 5000,
+          "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+        }
+      ]
+    },
+    "cancellation": {
+      "attempted": 12,
+      "abortErrors": 12,
+      "pendingJobsAfter": 0,
+      "featureCountAfter": 0,
+      "pointPrimitiveCountAfter": 0,
+      "ownershipReleased": true
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "infrastructureDatacenters": {
+    "schema": "gev-infrastructure-runtime-renderers/v4",
+    "applicationCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+    "source": {
+      "layerId": "local-datacenters",
+      "payloadSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+      "payloadBytes": 2561978,
+      "featureCount": 4351,
+      "geometryKinds": {
+        "Polygon": 3509,
+        "Point": 834,
+        "MultiPolygon": 8
+      }
+    },
+    "candidateRepresentation": {
+      "id": "production-local-infrastructure-primitive-collections/rgba8/v1",
+      "stemColorEncoding": "entity-color-attribute-byte"
+    },
+    "environment": {
+      "appCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+      "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 1200,
+        "height": 960,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 960,
+        "height": 640
+      },
+      "layers": []
+    },
+    "samplingScope": "five-correctness-snapshots-per-case-not-alternating-performance-runs",
+    "renderClock": {
+      "iso": "2026-10-12T04:51:52.085Z",
+      "julianDayNumber": 2461325,
+      "secondsOfDay": 60749.085,
+      "shouldAnimate": false
+    },
+    "status": "failed",
+    "lifetimes": [
+      {
+        "mode": "entities",
+        "activationOrder": 0,
+        "activationContext": "first layer lifetime in a fresh fixture viewer",
+        "status": "failed",
+        "samples": [],
+        "sceneBaseline": {
+          "dataSources": 0,
+          "scenePrimitives": 1,
+          "groundPrimitives": 1,
+          "rendererOwners": 0
+        },
+        "initialOwnership": {
+          "dataSources": 0,
+          "scenePrimitives": 1,
+          "groundPrimitives": 1,
+          "rendererOwners": 0
+        },
+        "renderClock": {
+          "iso": "2026-10-12T04:51:52.085Z",
+          "julianDayNumber": 2461325,
+          "secondsOfDay": 60749.085,
+          "shouldAnimate": false
+        },
+        "teardown": {
+          "layerDestroyed": true,
+          "dataSourceRemoved": true,
+          "rendererOwnersRemoved": true,
+          "viewerKeptForNextLifetime": true,
+          "instrumentationRestored": true,
+          "ownerCountAfterDestroy": 0,
+          "dataSourceCountAfterDestroy": 0,
+          "scenePrimitiveCountAfterDestroy": 1,
+          "groundPrimitiveCountAfterDestroy": 1
+        },
+        "activationDiagnosticMs": 552.6999999999534,
+        "activationTimingScope": "single-layer-activation-diagnostic-not-performance-evidence",
+        "cameraContract": {
+          "layerId": "local-datacenters",
+          "kind": "lookAt-world-frame",
+          "targetCartographic": [
+            -1.236567286826375,
+            -0.924014956174621,
+            2000.0000000006846
+          ],
+          "headingRadians": 0,
+          "pitchRadians": -1.0471975511965976,
+          "sampleRangesMeters": [
+            140000,
+            170000
+          ],
+          "restoredTransform": "IDENTITY"
+        },
+        "failedSample": {
+          "caseId": "default-style",
+          "pair": 0,
+          "stableFrames": 1,
+          "completedCaptures": 21,
+          "pickSearches": 1,
+          "pickDiagnostics": {
+            "examined": 4362,
+            "hidden": 4360,
+            "offscreen": 0,
+            "coincident": 0,
+            "pointMisses": 0,
+            "stemMisses": 2,
+            "rejections": [
+              {
+                "kind": "stem",
+                "reason": "picked-owner-kind-or-layer-mismatch",
+                "expectedEntityId": "1176042553",
+                "actualEntityId": null,
+                "primitiveType": null,
+                "appearanceType": null
+              },
+              {
+                "kind": "stem",
+                "reason": "picked-owner-kind-or-layer-mismatch",
+                "expectedEntityId": "1182624646",
+                "actualEntityId": null,
+                "primitiveType": null,
+                "appearanceType": null
+              }
+            ]
+          },
+          "geometryReady": true,
+          "observedGeometry": "b3aa411fe8907e9961fc8454221545af43ee0ea2ea60a2fa1362db9ef654f77f",
+          "changedGeometryFrom": null,
+          "lodDiagnostics": {
+            "total": 4362,
+            "active": 2,
+            "budgetLimit": 420,
+            "computed": true,
+            "geometryDirty": false,
+            "cameraPosition": [
+              1269592.603032521,
+              -3656060.9769391217,
+              -5207202.216888088
+            ]
+          },
+          "cameraPosition": [
+            1269592.603032521,
+            -3656060.9769391217,
+            -5207202.216888088
+          ],
+          "sceneReadiness": {
+            "dataSourcesReady": true,
+            "globeTilesLoaded": true
+          },
+          "pointPick": null,
+          "stemPick": null,
+          "surfaceCount": 4362,
+          "visibleSurfaces": 2,
+          "sourceReady": true,
+          "ownership": {
+            "renderer": "entities",
+            "datasourcePresent": true,
+            "entityCount": 4362,
+            "surfaceEntityCount": 4362,
+            "entitySurfaceGraphics": 4362,
+            "preservedGraphics": {
+              "points": 0,
+              "polylines": 0,
+              "polygons": 3528
+            },
+            "rendererOwners": 0,
+            "rendererOwnerChildren": []
+          },
+          "clock": {
+            "iso": "2026-10-12T04:51:52.085Z",
+            "julianDayNumber": 2461325,
+            "secondsOfDay": 60749.085,
+            "shouldAnimate": false
+          },
+          "lastFrame": {
+            "width": 960,
+            "height": 640,
+            "pixelSha256": "a62c412b818c2375bdfae66dfefe6ab17398f0aec94f33a4b0fa4314e617db70",
+            "pngBase64": "iVBORw0KGgoAAAANSUhEUgAAA8AAAAKACAYAAABT+RFDAAAQAElEQVR4AezdTch1a1kH8PsUlWZJHxRI1ERpIBwToUQIpJkgGEpJhA4aKaSOHOhAGjvViaADSRTDQQgSCBkmhSYI0SGpQXAggz6wIisJ0dPa7/u8530+9sdae90f133fv5e93mc/e69139f1u/bhnD/n2fv5oZT+4AUHA68BrwGvAa8BrwGvAa8BrwGvAa8BrwGvgdFfA0sAThP/0ToBAgQIECBAgAABAgQIzCIgAM8y6WN9eowAAQIECBAgQIAAAQITCQjAEw1bq3cFfEeAAAECBAgQIECAwFwCAvBc89YtgScCvhIgQIAAAQIECBCYTkAAnm7kGiZAICUGBAgQIECAAAECMwoIwDNOXc8ECMwtoHsCBAgQIECAwKQCAvCkg9c2AQIEZhXQNwECBAgQIDCvgAA87+x1ToAAAQLzCeiYAAECBAhMLSAATz1+zRMgQIAAgZkE9EqAAAECswsIwLO/AvRPgAABAgQIzCGgSwIECBBIArAXAQECBAgQIECAwPACGiRAgMBBQAA+KDgIECBAgAABAgQIjCugMwIEbgQE4BsIXwgQIECAAAECBAgQGFFATwSeCgjATy3cI0CAAAECBAgQIECAwFgCurkjIADf4fANAQIECBAgQIAAAQIECIwicL8PAfi+iO8JECBAgAABAgQIECBAYEiByQLwkDPUFAECBAgQIECAAAECBAisEBCAVyANc4pGCBAgQIAAAQIECBAgMLGAADzx8GdrXb8ECBAgQIAAAQIECMwtIADPPX/dzyOgUwIECBAgQIAAAQLTCwjA078EABCYQUCPBAgQIECAAAECBFISgL0KCBAgMLqA/ggQIECAAAECBB4JCMCPGPxFgAABAqMK6IsAAQIECBAg8ERAAH4i4SsBAgQIEBhPQEcECBAgQIDALQEB+BaGuwQIECBAgMBIAnohQIAAAQJ3BQTgux6+I0CAAAECBAiMIaALAgQIEHggIAA/IPEAAQIECBAgQIBA7wLqJ0CAwDEBAfiYiscIECBAgAABAgQI9CugcgIETggIwCdgPEyAAAECBAgQIECAQI8CaiZwWkAAPm3jGQIECBAgQIAAAQIECPQloNqzAgLwWR5PEiBAgAABAgQIECBAgEAvApfqFIAvCXmeAAECBAgQIECA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AQIECIQQEIBDjEERBAgQGFdAZwQIECBAgACBKAICcJRJqIMAAQIERhTQEwECBAgQIBBIQAAONAylECBAgACBsQR0Q4AAAQIEYgkIwLHmoRoCBAgQIEBgFAF9ECBAgEA4AQE43EgURIAAAQIECBDoX0AHBAgQiCggAEecipoIECBAgAABAgR6FlA7AQJBBQTgoINRFgECBAgQIECAAIE+BVRNIK6AABx3NiojQIAAAQIECBAgQKA3AfWGFhCAQ49HcQQIECBAgAABAgQIEOhHIHqlAnD0CamPAAECBAgQIECAAAECBLIIFA7AWWq0CAECBAgQIECAAAECBAgQ2C0gAO8mPLOApwgQIECAAAECBAgQIEAgjIAAHGYU4xWiIwIECBAgQIAAAQIECEQSEIAjTUMtIwnohQABAgQIECBAgACBYAICcLCBKIfAGAK6IECAAAECBAgQIBBPQACONxMVESDQu4D6CRAgQIAAAQIEQgoIwCHHoigCBAj0K6ByAgQIECBAgEBUAQE46mTURYAAAQI9CqiZAAECBAgQCCwgAAcejtIIECBAgEBfAqolQIAAAQKxBQTg2PNRHQECBAgQINCLgDoJECBAILyAABx+RAokQIAAAQIECMQXUCEBAgR6EBCAe5iSGgkQIECAAAECBCILqI0AgU4EBOBOBqVMAgQIECBAgAABAjEFVEWgHwEBuJ9ZqZQAAQIEgdNaxQAAEABJREFUCBAgQIAAgWgC6ulKQADualyKJUCAAAECBAgQIECAQByB3ioRgHubmHoJECBAgAABAgQIECBA4CqBzAH4qhpcRIAAAQIECBAgQIAAAQIEigsIwDmJrUWAAAECBAgQIECAAAECYQUE4LCj6a8wFRMgQIAAAQIECBAgQCCygAAceTpq60lArQQIECBAgAABAgQIBBcQgIMPSHkE+hBQJQECBAgQIECAAIH4AgJw/BmpkACB6ALqI0CAAAECBAgQ6EJAAO5iTIokQIBAXAGVESBAgAABAgR6ERCAe5mUOgkQIEAgooCaCBAgQIAAgY4EBOCOhqVUAgQIECAQS0A1BAgQIECgLwEBuK95qZYAAQIECBCIIqAOAgQIEOhOQADubmQKJkCAAAECBAi0F1ABAQIEehQQgHucmpoJECBAgAABAgRaCtibAIFOBQTgTgenbAIECBAgQIAAAQJtBOxKoF8B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"
+          }
+        },
+        "error": {
+          "name": "Error",
+          "message": "entities default-style did not settle with native point/stem picks."
+        }
+      }
+    ],
+    "comparisons": [],
+    "cleanup": {
+      "viewerDestroyed": true
+    },
+    "error": {
+      "name": "Error",
+      "message": "entities default-style did not settle with native point/stem picks."
+    },
+    "viewerOwnedDisplayWarmup": {
+      "completedFrames": 2,
+      "temporaryDataSourceRemoved": true,
+      "dataSourcesBefore": 0,
+      "dataSourcesAfter": 0,
+      "primitiveCountsBefore": {
+        "scenePrimitives": 0,
+        "groundPrimitives": 0
+      },
+      "primitiveCountsAfter": {
+        "scenePrimitives": 1,
+        "groundPrimitives": 1
+      }
+    }
+  },
+  "infrastructureDatacentersGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "infrastructureDatacentersRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 35807.79925,
+      "closeSettledHostMs": 36307.244917,
+      "closeElapsedMs": 499.44566700000723,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 479.3054170000032
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

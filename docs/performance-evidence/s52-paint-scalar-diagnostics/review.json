@@ -1,0 +1,120 @@
+{
+  "schema": "gev-s52-scalar-diagnostic-review/v1",
+  "reviewedAt": "2026-10-11T02:11:18.731Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "sourceGraphFilesComparedPerVariant": 296,
+  "currentRuntimeSha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+  "currentTestSha256": "b972a67efe142d372caac0d5c56708deb1d65b4f038a8e9ce0dd9db29c046320",
+  "focused": {
+    "tests": 88,
+    "pass": 88,
+    "fail": 0,
+    "skipped": 0
+  },
+  "attributionRows": [
+    {
+      "name": "full-no-reuse-0",
+      "medianBytesPerFrame": 21198.666666666668,
+      "sourceSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396"
+    },
+    {
+      "name": "omit-scalarPresentation",
+      "medianBytesPerFrame": 17846,
+      "sourceSha256": "7fff7629e5fbc59187543c399a04c6c26ef0a6f6d1f3fe5a3744d77e78f529fa"
+    },
+    {
+      "name": "omit-details",
+      "medianBytesPerFrame": 21198.666666666668,
+      "sourceSha256": "06195d20d290ee6e44365d6c63d67f49fa1404983fd793cd298bc6b85604716a"
+    },
+    {
+      "name": "omit-entryIdentityAndFields",
+      "medianBytesPerFrame": 19662.666666666668,
+      "sourceSha256": "06a994937b4d67de0d63ba2231dcc94624bc2acd742f72548e35b31a6b13a6d5"
+    },
+    {
+      "name": "omit-placement",
+      "medianBytesPerFrame": 21198.666666666668,
+      "sourceSha256": "f5a4412d242760dabb6c5f8a54588a9fc28db03fb24606ba68a1a7a7ee422801"
+    },
+    {
+      "name": "omit-layoutAndRect",
+      "medianBytesPerFrame": 20055.833333333332,
+      "sourceSha256": "04f682ab22cc201a7447cab88e2c6ee9fbd17c4821715730ec56db22bf5d803e"
+    },
+    {
+      "name": "full-no-reuse-1",
+      "medianBytesPerFrame": 21198.666666666668,
+      "sourceSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396"
+    }
+  ],
+  "scalarRows": [
+    {
+      "name": "local-infrastructure-reference",
+      "medianBytesPerFrame": 43984,
+      "sourceSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2"
+    },
+    {
+      "name": "local-infrastructure-candidate",
+      "medianBytesPerFrame": 44548,
+      "sourceSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302"
+    },
+    {
+      "name": "submarine-cables-candidate",
+      "medianBytesPerFrame": 21792,
+      "sourceSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302"
+    },
+    {
+      "name": "submarine-cables-reference",
+      "medianBytesPerFrame": 21398.666666666668,
+      "sourceSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2"
+    }
+  ],
+  "diagnosis": "Scalar buffer prototype removes keyholeAlpha object field, but cached publication still reads it. NaN bypasses the 0.001 threshold and publishes invisible hits/actions on its second stable frame.",
+  "disposition": "Reject scalar buffer prototype for allocation regression and a reproduced invisible-hit correctness failure. No experimental runtime is promoted.",
+  "limits": [
+    "Node heap-delta diagnostics only; no browser, GPU or full-scene benefit claim.",
+    "Omission controls are diagnostic-only and never proposed as production code.",
+    "Removing the combined scalar group identifies an allocation contribution, not its engine mechanism."
+  ],
+  "artifactSha256": {
+    ".gitattributes": "09518f741b318afc3a3cee29798b548a273535adf2cc19aa53e98a221f0f8bbb",
+    "attribution-report.json": "bf920b802858cf9c8f5c75faad2a242a90de87270dac06586976746084ab41a5",
+    "scalar-report.json": "fa576d93be7b860d494a22c787f140b1da771b8b90b32654a90b819907bf00f9",
+    "reference-worldOverlay.js.txt": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+    "rejected-scalar-worldOverlay.js.txt": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302",
+    "attribution-runner.mjs.txt": "5a24695df533cc6f84fda154aba058003b1eaaa0e3f4fedc05081212c53ad909",
+    "scalar-runner.mjs.txt": "e82f524ce9381e2ae441da863b9bea3ad8f71c484c278a104767934c60926c6e",
+    "attribution-full-no-reuse-0.stdout.txt": "9376ddf2ad8ec34cb9c178c7fd8633292dd02ca5c12bde641a6293ac86a90688",
+    "attribution-full-no-reuse-0.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-omit-scalarPresentation.stdout.txt": "e3d9bf003390544d77a6052a9d759c5d33e1c1a1d31da180ed2363a297fbe9a8",
+    "attribution-omit-scalarPresentation.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-omit-details.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "attribution-omit-details.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-omit-entryIdentityAndFields.stdout.txt": "246f728cf715c1269720c77ad1a1b3936c50dbf4419e210f8de14321a30b16c4",
+    "attribution-omit-entryIdentityAndFields.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-omit-placement.stdout.txt": "9376ddf2ad8ec34cb9c178c7fd8633292dd02ca5c12bde641a6293ac86a90688",
+    "attribution-omit-placement.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-omit-layoutAndRect.stdout.txt": "989701b18a631e0c6e5b98d67357208b74dc09b941274f390b68732fd3bee955",
+    "attribution-omit-layoutAndRect.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attribution-full-no-reuse-1.stdout.txt": "9376ddf2ad8ec34cb9c178c7fd8633292dd02ca5c12bde641a6293ac86a90688",
+    "attribution-full-no-reuse-1.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scalar-local-infrastructure-reference.stdout.txt": "ccf64fd5121fc8ba9fd4cd1b06e6b04fed9af8e02374045f615b8eab2368d486",
+    "scalar-local-infrastructure-reference.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scalar-local-infrastructure-candidate.stdout.txt": "1723a71ba91a5ae8e63235bd1e95ce6b2a8ad6aca166491f2e3f589a422750d7",
+    "scalar-local-infrastructure-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scalar-submarine-cables-candidate.stdout.txt": "c9ce5a150b6b6da237e95d3ab8b5dc2836ce53a6965971189889d6ee8a7f6468",
+    "scalar-submarine-cables-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scalar-submarine-cables-reference.stdout.txt": "97b954df154e01032c8cefaf935e32a4ac5b4bb16843c9ad57cd116f62632935",
+    "scalar-submarine-cables-reference.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "low-alpha-review.json": "12b497e735e4744c95bfef8162bb91ad0228809e380f3be509741d077a8832cc",
+    "low-alpha-regression.append.mjs.txt": "63fc0d8eba6838353835358225c2f23d60e7f26d7d54f6628bdfbff716626953",
+    "low-alpha-full-test.mjs.txt": "3f988992e3dcadc6aeebb84d7aea09c0088c363e92b70d969699a7531c44ec29",
+    "low-alpha-named-reference.stdout.txt": "8f52b9b1e08219a1c9b0d03b645a988c2d18f4574587f11d4082219b3acfc396",
+    "low-alpha-named-reference.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "low-alpha-rejected-scalar.stdout.txt": "897114ba96aa5ac161f3a6f38b7724a96633a9d8d3014e04138bbaa7554bef9c",
+    "low-alpha-rejected-scalar.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "dev-focused.stdout.txt": "35334dc655aa94d4a82818fb522de738d0e532dd41f2bb12c40f93ce5dc7341d"
+  }
+}

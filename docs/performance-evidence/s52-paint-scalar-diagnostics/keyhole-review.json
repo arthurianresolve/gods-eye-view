@@ -1,0 +1,64 @@
+{
+  "schema": "gev-s52-keyhole-attribution-review/v1",
+  "reviewedAt": "2026-10-11T02:15:35.086Z",
+  "reportSha256": "355f89dd0226103d6be97d14fde72e741cd45cc5c49ecce96b17904f3e270751",
+  "exactOmissionSourceReconstructed": true,
+  "workerAndRawHashesVerified": true,
+  "populationsAndConditionsVerified": true,
+  "summary": [
+    {
+      "name": "full-no-reuse-0",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    },
+    {
+      "name": "omit-keyhole-capture",
+      "medianBytesPerFrame": 17846,
+      "maximumBytesPerFrame": 18120.666666666668
+    },
+    {
+      "name": "full-no-reuse-1",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    },
+    {
+      "name": "omit-other-seven-numeric",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    },
+    {
+      "name": "full-no-reuse-2",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    },
+    {
+      "name": "omit-key-lane-selection-corner",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    },
+    {
+      "name": "full-no-reuse-3",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maximumBytesPerFrame": 21496
+    }
+  ],
+  "artifactSha256": {
+    "keyhole-full-no-reuse-0.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "keyhole-full-no-reuse-0.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-omit-keyhole-capture.stdout.txt": "a77bc35892831ed93cc3fa9d263bd8dbb12e833fc55264119ccbca4e9a11e88e",
+    "keyhole-omit-keyhole-capture.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-full-no-reuse-1.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "keyhole-full-no-reuse-1.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-omit-other-seven-numeric.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "keyhole-omit-other-seven-numeric.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-full-no-reuse-2.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "keyhole-full-no-reuse-2.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-omit-key-lane-selection-corner.stdout.txt": "9376ddf2ad8ec34cb9c178c7fd8633292dd02ca5c12bde641a6293ac86a90688",
+    "keyhole-omit-key-lane-selection-corner.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-full-no-reuse-3.stdout.txt": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+    "keyhole-full-no-reuse-3.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "keyhole-report.json": "355f89dd0226103d6be97d14fde72e741cd45cc5c49ecce96b17904f3e270751",
+    "keyhole-runner.mjs.txt": "4ad9546471b8e87e779170b491817668eb7545e5b42296626ccadd9e3619c553"
+  },
+  "interpretation": "The combined scalar capture cost is localized to the keyhole helper invocation and stored result. These omissions cannot be used as a correct paint-cache implementation. No engine-level boxing mechanism is claimed."
+}

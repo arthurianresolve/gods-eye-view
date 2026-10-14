@@ -6,10 +6,16 @@ import {
 } from './data/detectionPolicy.js';
 import { clampScopeTerminusPct } from './scopeMask.js';
 import {
+  createDefaultLayerState,
   decodeLayerStateParams,
   encodeLayerStateParams,
 } from './data/layerState.js';
-import { STYLE_URL_NAMES } from './view/index.js';
+import {
+  STYLE_URL_NAMES,
+  temporalFromViewParams,
+  viewFromParams,
+  viewToParams,
+} from './view/index.js';
 
 /**
  * Share Links — URL Hash State Management
@@ -20,6 +26,45 @@ import { STYLE_URL_NAMES } from './view/index.js';
 
 const DEBOUNCE_MS = 500;
 const LEGACY_BLOOM_FALLBACK = 50;
+
+const CAMERA_POSITION_EPSILON_METERS = 0.5;
+const CAMERA_ANGLE_EPSILON_RADIANS = 1e-6;
+
+function cameraPoseMatches(camera, view) {
+  if (!camera?.position || !view?.destination || !view.orientation)
+    return false;
+
+  const position = camera.position;
+  const destination = view.destination;
+  const dx = position.x - destination.x;
+  const dy = position.y - destination.y;
+  const dz = position.z - destination.z;
+  if (
+    !Number.isFinite(dx) ||
+    !Number.isFinite(dy) ||
+    !Number.isFinite(dz) ||
+    dx * dx + dy * dy + dz * dz >
+      CAMERA_POSITION_EPSILON_METERS * CAMERA_POSITION_EPSILON_METERS
+  ) {
+    return false;
+  }
+
+  const orientation = view.orientation;
+  return [
+    [camera.heading, orientation.heading],
+    [camera.pitch, orientation.pitch],
+    [camera.roll, orientation.roll],
+  ].every(
+    ([current, expected]) =>
+      Number.isFinite(current) &&
+      Cesium.Math.equalsEpsilon(
+        current,
+        expected,
+        CAMERA_ANGLE_EPSILON_RADIANS,
+        CAMERA_ANGLE_EPSILON_RADIANS,
+      ),
+  );
+}
 
 // Style name mapping: internal → URL-friendly, shared with views.
 const STYLE_TO_URL = STYLE_URL_NAMES;
@@ -87,10 +132,23 @@ const SHARE_STYLE_PARAM_REGISTRY = Object.freeze({
 export class ShareLinkManager {
   constructor(
     viewer,
-    { onRestore, isNavigationCurrent, cancelOwnedNavigation } = {},
+    {
+      onRestore,
+      isNavigationCurrent,
+      cancelOwnedNavigation,
+      investigationTime = null,
+      workspaceStorage = null,
+      aircraftSource = null,
+      vesselSource = null,
+    } = {},
   ) {
     this.viewer = viewer;
     this._onRestore = onRestore; // callback: ({ style, bloom, sharpen }) => void
+    this._investigationTime = investigationTime;
+    this._workspaceStorage = workspaceStorage;
+    this._aircraftSource = aircraftSource;
+    this._vesselSource = vesselSource;
+    this._dataManager = null;
     this._debounceTimer = null;
     this._currentStyle = 'normal';
     this._bloomEnabled = false;
@@ -130,6 +188,7 @@ export class ShareLinkManager {
       panels: new Map(),
     };
     this._destroyed = false;
+    this._viewListeners = new Set();
     this._restoreGeneration = 0;
     this._activeCameraFlight = null;
     this._isNavigationCurrent =
@@ -147,6 +206,99 @@ export class ShareLinkManager {
         this._scheduleUpdate();
       },
     );
+    this._removeTemporalChanged =
+      this._investigationTime?.subscribe?.(() => this._scheduleUpdate()) ||
+      null;
+  }
+
+  setDataManager(dataManager) {
+    this._dataManager = dataManager || null;
+  }
+
+  /** Read the current canonical view for durable workspace snapshots. */
+  getCurrentView() {
+    const params = this._buildHashParams();
+    return params ? viewFromParams(params) : null;
+  }
+
+  /**
+   * Return the small temporal portion needed by UI affordances that explain
+   * local recording links. Recording observations stay in browser storage and
+   * are never copied into a share URL.
+   */
+  getTemporalContext() {
+    if (this._destroyed) return null;
+    const temporal = this._investigationTime?.getTemporalContext?.();
+    if (!temporal || typeof temporal !== 'object') return null;
+    return Object.freeze({
+      source: typeof temporal.source === 'string' ? temporal.source : null,
+      targetMs: Number.isSafeInteger(temporal.targetMs)
+        ? temporal.targetMs
+        : null,
+      recordingId:
+        typeof temporal.recordingId === 'string' ? temporal.recordingId : null,
+    });
+  }
+
+  /** Subscribe to settled share-state changes, coalesced with URL updates. */
+  subscribeViewChanges(listener) {
+    if (typeof listener !== 'function')
+      throw new TypeError('A listener is required.');
+    if (this._destroyed) return () => {};
+    this._viewListeners.add(listener);
+    return () => this._viewListeners.delete(listener);
+  }
+
+  /** Apply a validated workspace view without changing the browser URL. */
+  async applyView(
+    view,
+    { applyCamera = true, navigationToken = null, animateCamera = false } = {},
+  ) {
+    const params = viewToParams(view);
+    const number = (key, fallback) => {
+      const value = Number(params.get(key));
+      return Number.isFinite(value) ? value : fallback;
+    };
+    const styleName = params.get('style') || 'normal';
+    const state = {
+      lat: number('lat', 0),
+      lon: number('lon', 0),
+      alt: number('alt', 800_000),
+      heading: number('heading', 0),
+      pitch: number('pitch', -90),
+      roll: 0,
+      style: URL_TO_STYLE[styleName] || 'normal',
+      styleParams: decodeStyleParamState(
+        params,
+        URL_TO_STYLE[styleName] || 'normal',
+      ),
+      bloom: false,
+      sharpen: false,
+      bloomIntensity: BLOOM_INTENSITY_DEFAULT,
+      bloomVersion: BLOOM_SCALE_VERSION,
+      sharpenIntensity: 49,
+      hudVariant: 'tactical',
+      hudVisible: false,
+      detectionMode: view.detection?.mode ?? 'OFF',
+      detectionDensity: view.detection?.densityPct ?? 50,
+      detectionAllocation: 'ELASTIC',
+      detectionFadePct: 16,
+      detectionOutsideOpacityPct: 5,
+      celestialRing: false,
+      scopeEnabled: true,
+      scopeFeatherPct: 35,
+      scopeTerminusPct: null,
+      mapStack: view.map || 'photoreal',
+      layerState: decodeLayerStateParams(params) || createDefaultLayerState(),
+      panelState: null,
+      temporal: view.temporal,
+      temporalInvalid: false,
+    };
+    return this.applyState(state, {
+      applyCamera,
+      navigationToken,
+      cameraDuration: animateCamera ? 3.0 : 0,
+    });
   }
 
   /**
@@ -157,6 +309,7 @@ export class ShareLinkManager {
     if (!hash) return null;
 
     const params = new URLSearchParams(hash);
+    const decodedTemporal = temporalFromViewParams(params);
     const lat = parseFloat(params.get('lat'));
     const lon = parseFloat(params.get('lon'));
 
@@ -244,6 +397,8 @@ export class ShareLinkManager {
         decodedLayerState === null,
       panelState: decodePanelStateParams(params),
       sharedAtMs: decodeShareCreatedAtMs(params),
+      temporal: decodedTemporal.temporal,
+      temporalInvalid: decodedTemporal.invalid,
     };
     state.restoreAuthority = {
       visual: this._restoreAuthority.visual,
@@ -259,7 +414,10 @@ export class ShareLinkManager {
   /**
    * Apply a parsed state to the viewer + style manager.
    */
-  async applyState(state, { applyCamera = true, navigationToken = null } = {}) {
+  async applyState(
+    state,
+    { applyCamera = true, navigationToken = null, cameraDuration = 3.0 } = {},
+  ) {
     if (this._destroyed || !state)
       return { succeeded: false, reason: 'unavailable' };
     const view = {
@@ -274,10 +432,23 @@ export class ShareLinkManager {
         roll: Cesium.Math.toRadians(state.roll),
       },
     };
+    const cameraAlreadyAtView =
+      applyCamera &&
+      !this._activeCameraFlight &&
+      this._isNavigationCurrent(navigationToken) &&
+      cameraPoseMatches(this.viewer.camera, view);
     let cameraPromise = Promise.resolve({
-      status: applyCamera ? 'superseded' : 'skipped',
+      status: applyCamera
+        ? cameraAlreadyAtView
+          ? 'already-applied'
+          : 'superseded'
+        : 'skipped',
     });
-    if (applyCamera && this._isNavigationCurrent(navigationToken)) {
+    if (
+      applyCamera &&
+      !cameraAlreadyAtView &&
+      this._isNavigationCurrent(navigationToken)
+    ) {
       const restoreGeneration = ++this._restoreGeneration;
       let settleCamera;
       cameraPromise = new Promise((resolve) => {
@@ -294,28 +465,41 @@ export class ShareLinkManager {
         navigationToken,
         settle: releaseOwnedFlight,
       };
-      // Re-apply the final pose only while this share restoration still owns
-      // navigation. A later user or voice command wins over delayed restore.
-      this.viewer.camera.flyTo({
-        ...view,
-        duration: 3.0,
-        easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
-        complete: () => {
-          if (
-            this._destroyed ||
-            restoreGeneration !== this._restoreGeneration ||
-            !this._isNavigationCurrent(navigationToken)
-          ) {
-            releaseOwnedFlight('superseded');
-            return;
-          }
-          this.viewer.camera.setView(view);
-          this.viewer.scene?.requestRender?.();
-          releaseOwnedFlight('applied');
-        },
-        cancel: () => releaseOwnedFlight('cancelled'),
-      });
+      const applyFinalPose = () => {
+        if (
+          this._destroyed ||
+          restoreGeneration !== this._restoreGeneration ||
+          !this._isNavigationCurrent(navigationToken)
+        ) {
+          releaseOwnedFlight('superseded');
+          return;
+        }
+        this.viewer.camera.setView(view);
+        this.viewer.scene?.requestRender?.();
+        releaseOwnedFlight('applied');
+      };
+      if (!(cameraDuration > 0)) {
+        // Workspace and settings restores already have a validated local view;
+        // an instant pose avoids building terrain for an unnecessary flight
+        // path while retaining the share-link handoff's mesh-friendly delay.
+        applyFinalPose();
+      } else {
+        // Re-apply the final pose only while this share restoration still owns
+        // navigation. A later user or voice command wins over delayed restore.
+        this.viewer.camera.flyTo({
+          ...view,
+          duration: cameraDuration,
+          easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+          complete: applyFinalPose,
+          cancel: () => releaseOwnedFlight('cancelled'),
+        });
+      }
     }
+
+    const temporal = await this._restoreTemporalState(
+      state.temporal,
+      state.temporalInvalid,
+    );
 
     // Notify the style manager via callback
     const reserved = state.restoreAuthority || null;
@@ -374,7 +558,67 @@ export class ShareLinkManager {
         : state.panelState
           ? 'superseded'
           : 'skipped',
+      temporal: temporal.status,
     };
+  }
+
+  async _restoreTemporalState(temporal, invalid = false) {
+    if (invalid) return { status: 'invalid' };
+    if (!temporal) return { status: 'not-requested' };
+    const clock = this._investigationTime;
+    if (!clock?.returnLive || !clock?.seek) return { status: 'unsupported' };
+    if (temporal.source === 'live') {
+      clock.returnLive();
+      this._aircraftSource?.returnLive?.();
+      this._vesselSource?.returnLive?.();
+      await this._refreshTemporalLayers(['flights', 'ais-live-vessels']);
+      return { status: 'live' };
+    }
+    if (temporal.source === 'provider-history') {
+      clock.setTemporalSource?.('provider-history');
+      clock.seek(temporal.targetMs);
+      return { status: 'history' };
+    }
+    if (temporal.source !== 'recording' || !temporal.recordingId)
+      return { status: 'invalid' };
+    let workspace;
+    try {
+      workspace = await this._workspaceStorage?.getWorkspace?.(
+        temporal.recordingId,
+      );
+    } catch {
+      return { status: 'recording-unavailable' };
+    }
+    if (
+      !workspace ||
+      !['aircraft-recording', 'vessel-recording'].includes(
+        workspace.document?.kind,
+      )
+    )
+      return { status: 'recording-unavailable' };
+    const aircraft = workspace.document.kind === 'aircraft-recording';
+    const source = aircraft ? this._aircraftSource : this._vesselSource;
+    const layerId = aircraft ? 'flights' : 'ais-live-vessels';
+    let selection;
+    try {
+      selection = await source?.selectRecording?.(temporal.recordingId);
+    } catch {
+      return { status: 'recording-unavailable' };
+    }
+    if (!['selected', 'empty-recording'].includes(selection?.status))
+      return { status: 'recording-unavailable' };
+    clock.setTemporalSource?.('recording', temporal.recordingId);
+    clock.seek(temporal.targetMs);
+    await this._refreshTemporalLayers([layerId]);
+    return { status: 'recording' };
+  }
+
+  async _refreshTemporalLayers(layerIds) {
+    if (!this._dataManager?.refreshLayer) return;
+    const enabled = layerIds.filter((id) => this._dataManager.isEnabled?.(id));
+    await Promise.allSettled(
+      enabled.map((id) => this._dataManager.refreshLayer(id)),
+    );
   }
 
   /** Release initial hash suppression only after every restore owner settles. */
@@ -520,6 +764,28 @@ export class ShareLinkManager {
     }
   }
 
+  /** Return a URL that restores the current view after a deliberate reload. */
+  createRecoveryUrl() {
+    if (
+      this._destroyed ||
+      typeof window === 'undefined' ||
+      typeof window.location?.href !== 'string'
+    )
+      return null;
+    try {
+      const url = new URL(window.location.href);
+      // Before the initial share restore finishes, preserve its incoming state
+      // verbatim. The live manager still contains defaults at this point.
+      if (this._initialRestorePending) return url.href;
+      const params = this._buildHashParams();
+      if (!params) return url.href;
+      url.hash = params.toString();
+      return url.href;
+    } catch {
+      return null;
+    }
+  }
+
   _scheduleUpdate() {
     if (this._destroyed || this._initialRestorePending) return;
     clearTimeout(this._debounceTimer);
@@ -537,6 +803,15 @@ export class ShareLinkManager {
       '',
       new URL(`#${params.toString()}`, window.location.href).href,
     );
+    const view = viewFromParams(params);
+    if (view)
+      for (const listener of [...this._viewListeners]) {
+        try {
+          listener(view);
+        } catch {
+          /* observers cannot block URL updates */
+        }
+      }
   }
 
   /** Build a deterministic snapshot without mutating history. */
@@ -586,6 +861,18 @@ export class ShareLinkManager {
     const terminusPct = clampScopeTerminusPct(this._scopeTerminusPct);
     if (terminusPct != null) params.set('sce', String(terminusPct));
     params.set('map', this._mapStack);
+    const temporal = this._investigationTime?.getTemporalContext?.();
+    if (
+      temporal &&
+      temporal.source !== 'live' &&
+      Number.isSafeInteger(temporal.targetMs) &&
+      temporal.targetMs >= 0
+    ) {
+      params.set('is', temporal.source);
+      params.set('it', String(temporal.targetMs));
+      if (temporal.source === 'recording' && temporal.recordingId)
+        params.set('ir', temporal.recordingId);
+    }
     const layerState = this._layerStateProvider?.();
     if (layerState) encodeLayerStateParams(params, layerState);
     this._encodePanelStateParam(params, this._panelStateProvider?.());
@@ -619,6 +906,14 @@ export class ShareLinkManager {
     this._debounceTimer = null;
     this._removeCameraChanged?.();
     this._removeCameraChanged = null;
+    this._removeTemporalChanged?.();
+    this._viewListeners.clear();
+    this._removeTemporalChanged = null;
+    this._investigationTime = null;
+    this._workspaceStorage = null;
+    this._aircraftSource = null;
+    this._vesselSource = null;
+    this._dataManager = null;
     this._layerStateProvider = null;
     this._panelStateProvider = null;
     this._styleParamStateProvider = null;

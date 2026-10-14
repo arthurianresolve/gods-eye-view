@@ -1,0 +1,34 @@
+{
+  "schema": "gev-map-fault-outer-review/v1",
+  "reviewedCommit": "cc3328e13acf6e056e876d8c844e22ad54fcf769",
+  "sourceCommits": [
+    "187ef40ba5cd44c012ab9a3e4faa4194a86cd4d0",
+    "c1f5b26d613a7adf89b5a017fd98e39f67745235"
+  ],
+  "focusedTests": {
+    "tests": 98,
+    "pass": 98,
+    "fail": 0,
+    "skipped": 0,
+    "suites": [
+      "scripts/performance/mapStreamingCapture.test.mjs",
+      "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+      "scripts/qa-performance-build-smoke.test.mjs"
+    ]
+  },
+  "captureLintFiles": 25,
+  "packageBoundaries": "passed",
+  "importDirections": { "modules": 1015, "portableEntries": 80 },
+  "changedJavaScriptFormatting": "passed",
+  "diffWhitespace": "passed",
+  "outerFaultDocumentOrchestration": "implemented; local tests passed",
+  "hungEvaluationContextCloseControl": "local regression passed",
+  "renderedFaultControls": "pending",
+  "performanceAcceptanceEligible": false,
+  "artifacts": {
+    "focused-tests.log": {
+      "bytes": 9607,
+      "sha256": "862fc14a22accd1fca85215d59bfebfdc6b99ff9babe17b6c898e9a61836ec07"
+    }
+  }
+}

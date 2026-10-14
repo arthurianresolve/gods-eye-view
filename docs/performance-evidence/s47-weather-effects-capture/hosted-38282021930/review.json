@@ -1,0 +1,487 @@
+{
+  "schema": "gev-weather-effects-hosted-review/v1",
+  "status": "passed-integration-diagnostic",
+  "commit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38282021930",
+  "rawValidatorReplay": "passed",
+  "validatorSourceSha256": "56e7bd835aee6ab91659eed6f826d054cdfa2fb7c6ff3c59a4958017d87bd767",
+  "receiptSha256": "dd02edd3b26d53b981358d84380c8c70b277095da3686b568d99373c82bacd53",
+  "files": [
+    {
+      "fileName": "performance-build-smoke.json",
+      "byteLength": 287391,
+      "sha256": "ddc2dbecb47cda8355477c856c660a62423275224dde620d3ed01f99fa33d3e4"
+    },
+    {
+      "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+      "byteLength": 190644,
+      "sha256": "b3f6e809991e83893dd4c84518abe26703a928375140cf0d79b4dacc8bef60c6"
+    },
+    {
+      "fileName": "run.json",
+      "byteLength": 9238,
+      "sha256": "95539cdeeac345811f12535622af41b38cbd5d9f1b2fb43911afdd3b11d4ea36"
+    },
+    {
+      "fileName": "review.mjs",
+      "byteLength": 7845,
+      "sha256": "2b9f60e524291ad63be51d74dcd4e3a6c9c67e6250345651622676282856ffe9"
+    }
+  ],
+  "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+  "fixtureAssetsObserved": 14,
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "settings": {
+    "qualityMode": "manual",
+    "densityPct": 75,
+    "detectionMode": "DENSE",
+    "resolutionScale": 1,
+    "antialias": true,
+    "msaaSamples": 4,
+    "fxaa": false,
+    "bloom": false,
+    "sharpen": true,
+    "style": "normal",
+    "map": "osm",
+    "visualState": {
+      "style": "normal",
+      "bloom": {
+        "enabled": false,
+        "intensity": 0,
+        "version": 2
+      },
+      "sharpen": {
+        "enabled": true,
+        "intensity": 49
+      },
+      "hud": {
+        "visible": true,
+        "variant": "tactical"
+      },
+      "detection": {
+        "mode": "DENSE",
+        "density": 75,
+        "allocation": "ELASTIC",
+        "fadePct": 7,
+        "outsideOpacityPct": 1
+      },
+      "scope": {
+        "enabled": true,
+        "featherPct": 11
+      },
+      "mapStack": "osm",
+      "styleParams": {
+        "retro": {
+          "pixelation": 5,
+          "distortion": 0,
+          "instability": 0.4
+        },
+        "surveillance": {
+          "gain": 0.55,
+          "bloom": 0.3,
+          "scanlineStr": 1,
+          "pixelation": 2.5
+        },
+        "thermal": {
+          "sensitivity": 0.75,
+          "bloom": 0.65,
+          "mode": 0,
+          "pixelation": 1.5,
+          "palette": 0
+        },
+        "anime": {
+          "saturation": 1,
+          "edgeThick": 0.5
+        },
+        "noir": {
+          "contrastAmt": 1.2,
+          "grainAmt": 0.5,
+          "vignetteAmt": 0.5
+        },
+        "snow": {
+          "density": 0.6,
+          "wind": 0.5
+        }
+      }
+    }
+  },
+  "selectedPopulations": [
+    {
+      "id": "weather-lightning",
+      "enabled": true,
+      "count": 1
+    },
+    {
+      "id": "weather-radar",
+      "enabled": true,
+      "count": 1
+    },
+    {
+      "id": "weather-satellite",
+      "enabled": true,
+      "count": 1
+    },
+    {
+      "id": "wind",
+      "enabled": true,
+      "count": 65160
+    }
+  ],
+  "samples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 1346,
+      "renderedFrameCount": 2,
+      "frameCount": 1,
+      "fixedWallClockMs": 1791460800000,
+      "before": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T12:00:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      },
+      "after": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:50:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      }
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "durationMs": 2360.399999999994,
+      "renderedFrameCount": 2,
+      "frameCount": 1,
+      "fixedWallClockMs": 1791460800000,
+      "before": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:50:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      },
+      "after": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:50:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      }
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "durationMs": 1880,
+      "renderedFrameCount": 3,
+      "frameCount": 2,
+      "fixedWallClockMs": 1791460800000,
+      "before": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:55:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      },
+      "after": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:55:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      }
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "durationMs": 2529,
+      "renderedFrameCount": 3,
+      "frameCount": 2,
+      "fixedWallClockMs": 1791460800000,
+      "before": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T11:55:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      },
+      "after": {
+        "clock": {
+          "mode": "history",
+          "target": "2026-10-08T12:00:00.000Z",
+          "playing": true
+        },
+        "sourceObservationTimes": [
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        },
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        }
+      }
+    }
+  ],
+  "rendererCleanup": [
+    {
+      "documentRole": "startup-1",
+      "confirmed": true
+    },
+    {
+      "documentRole": "main-measured",
+      "confirmed": true
+    }
+  ],
+  "fixtureRelease": [
+    {
+      "documentRole": "main-measured",
+      "confirmed": true,
+      "targetClosed": true,
+      "stop": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      }
+    }
+  ],
+  "negativeControls": [
+    {
+      "name": "wrong application commit",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '0000000000000000000000000000000000000000'\n- '1e6f6f9874d09a3b13a4e140da3c904834500db1'\n"
+    },
+    {
+      "name": "wrong served fixture hash",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    assets: [\n      {\n        byteLength: 277,\n        contentType: 'application/json',\n...\n    fixedTime: '2026-10-08T12:00:00.000Z',\n+   fixtureSha256: '0000000000000000000000000000000000000000000000000000000000000000',\n-   fixtureSha256: '708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e',\n    populationsAfter: [\n      {\n        count: 1,\n        enabled: true,\n        id: 'weather-lightning'\n"
+    },
+    {
+      "name": "missing sample",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n\n3 !== 4\n"
+    },
+    {
+      "name": "wrong wall clock",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 1791460800001\n- 1791460800000\n              ^\n"
+    },
+    {
+      "name": "empty source observation timestamps",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n\n0 !== 3\n"
+    },
+    {
+      "name": "unconfirmed renderer cleanup",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n\nfalse !== true\n"
+    },
+    {
+      "name": "missing renderer cleanup",
+      "outcome": "rejected",
+      "reason": "Every owned weather capture document must have exactly one cleanup record.\n+ actual - expected\n\n+ []\n- [\n-   {\n-     documentId: 'main-measured-document',\n-     documentRole: 'main-measured'\n-   },\n-   {\n-     documentId: 'startup-document-1',\n-     documentRole: 'startup-1'\n-   }\n- ]\n"
+    },
+    {
+      "name": "unconfirmed interception release",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n\nfalse !== true\n"
+    },
+    {
+      "name": "missing interception release",
+      "outcome": "rejected",
+      "reason": "Each measured fixture document must release its owned interception session.\n+ actual - expected\n\n+ []\n- [\n-   {\n-     documentId: 'main-measured-document',\n-     documentRole: 'main-measured'\n-   }\n- ]\n"
+    },
+    {
+      "name": "missing startup retirement",
+      "outcome": "rejected",
+      "reason": "Expected values to be strictly equal:\n\n0 !== 1\n"
+    }
+  ],
+  "limitations": [
+    "Software-rendered short integration diagnostic, not hardware or latency acceptance.",
+    "One-second warmup and one-second samples; two runs each for idle and motion.",
+    "Native weather playback may still display a previous source time while its next requested target loads.",
+    "No five-run matched comparison, full effects matrix, full soak, or Windows performance result.",
+    "S47, S48, S58 and S60 remain partial; historical failed reports remain failed."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "commit": "26f383edc0a960a58db94e7abcbb24c795fe8a83",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38154279746",
+  "standardJobsPassed": 7,
+  "windowsRecoveryChecks": 5,
+  "windowsGracefulCloseMs": {
+    "min": 324.96389999997336,
+    "max": 612.3243999999831
+  },
+  "sourceClean": true,
+  "sourceUnchanged": true,
+  "artifacts": [
+    {
+      "file": "dev-26f383ed-ci.json",
+      "sha256": "346bab23bc037783dffcc1bd0283f350d9ea99df786f65aba19aa8d144ff6273"
+    },
+    {
+      "file": "dev-26f383ed-windows-recovery.json",
+      "sha256": "4c32c3045ecfc0dc521b06c7fb693cf6aa86f9f163d654ec94ccdf558378fd34"
+    }
+  ],
+  "physicalHardwareValidated": false,
+  "windowsShutdownRootCauseResolved": false,
+  "limitations": [
+    "Windows raw JSON extracted unchanged from completed job log markers; runner prefixes removed.",
+    "PR-only token and optional performance/soak jobs skipped.",
+    "Later success does not resolve earlier intermittent native shutdown failures."
+  ]
+}

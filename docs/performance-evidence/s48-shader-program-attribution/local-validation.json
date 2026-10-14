@@ -1,0 +1,111 @@
+{
+  "schema": "gev-local-source-validation/v1",
+  "baseCommit": "5bbcd0de305759ab2671d4564a03ecfbc4cabb05",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=tap",
+    "scripts/capture-scene-performance.test.mjs",
+    "scripts/qa-performance-build-smoke.test.mjs",
+    "scripts/performance/pairedRendererExperiment.test.mjs",
+    "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
+    "scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/captureDiagnosticsControl.test.mjs",
+    "scripts/performance/captureFailureReport.test.mjs",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs",
+    "scripts/performance/depthPickAttribution.test.mjs",
+    "scripts/performance/providerDocumentRetirement.test.mjs",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+    "scripts/performance/commonSceneObserver.test.mjs",
+    "scripts/performance/boundedCpuProfile.test.mjs"
+  ],
+  "startedAt": "2026-10-12T18:05:46.493Z",
+  "finishedAt": "2026-10-12T18:06:25.099Z",
+  "status": 0,
+  "error": null,
+  "signal": null,
+  "counts": {
+    "tests": 151,
+    "pass": 151,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "sourceHashesBefore": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "cecbf20f775e60f86917422e3a068f0f8a619570089b23ffead1f8d4d382ff70"
+    },
+    {
+      "path": "scripts/capture-scene-performance.mjs",
+      "sha256": "bcaa1f9857ab85748d3084c22dee38258d2a342cbb19721e3f89ace2071f1a48"
+    },
+    {
+      "path": "scripts/capture-scene-performance.test.mjs",
+      "sha256": "5004e46e39b4608e8862b09b6f449aa100f0ec41e4d527fddd9c04c8cfb8d4e2"
+    },
+    {
+      "path": "scripts/performance/earlyCesiumRendererProbe.mjs",
+      "sha256": "328320599170d8accd9e00b5640db0346829efa3aba0d1def69598a0c0a0601a"
+    },
+    {
+      "path": "scripts/performance/pairedRendererExperiment.test.mjs",
+      "sha256": "32367f4f1b5b6625e1b83c258b66de9bcf8fea9b5ffbb0c8111fb1a2f493a82e"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.mjs",
+      "sha256": "01881b80d14a9ca87fb5f1f4aab30198f2e713bf628e28be2d49c3186b7a5676"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.test.mjs",
+      "sha256": "d88d43a023416824464af1941f8a49e8180a4221af61a918a39a77c1bbe12b5e"
+    }
+  ],
+  "sourceHashesAfter": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "cecbf20f775e60f86917422e3a068f0f8a619570089b23ffead1f8d4d382ff70"
+    },
+    {
+      "path": "scripts/capture-scene-performance.mjs",
+      "sha256": "bcaa1f9857ab85748d3084c22dee38258d2a342cbb19721e3f89ace2071f1a48"
+    },
+    {
+      "path": "scripts/capture-scene-performance.test.mjs",
+      "sha256": "5004e46e39b4608e8862b09b6f449aa100f0ec41e4d527fddd9c04c8cfb8d4e2"
+    },
+    {
+      "path": "scripts/performance/earlyCesiumRendererProbe.mjs",
+      "sha256": "328320599170d8accd9e00b5640db0346829efa3aba0d1def69598a0c0a0601a"
+    },
+    {
+      "path": "scripts/performance/pairedRendererExperiment.test.mjs",
+      "sha256": "32367f4f1b5b6625e1b83c258b66de9bcf8fea9b5ffbb0c8111fb1a2f493a82e"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.mjs",
+      "sha256": "01881b80d14a9ca87fb5f1f4aab30198f2e713bf628e28be2d49c3186b7a5676"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.test.mjs",
+      "sha256": "d88d43a023416824464af1941f8a49e8180a4221af61a918a39a77c1bbe12b5e"
+    }
+  ],
+  "sourceUnchanged": true,
+  "stdout": {
+    "path": "local-validation.log.gz",
+    "uncompressedBytes": 34044,
+    "uncompressedSha256": "02980cace73ed1c3a182558d34180ca8c787d19916ced89977a071f4bd027cf3"
+  },
+  "stderr": {
+    "path": null,
+    "uncompressedBytes": 0,
+    "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "validation": {
+    "status": "passed",
+    "pairCount": 5,
+    "legacyIdleFrames": 1449,
+    "candidateIdleFrames": 0
+  },
+  "applicationCommit": "61c050caf84415dafd844e5524f1a91d09ef1a70",
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderer": {
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "desktopForegroundVerification": "unavailable",
+    "maskedRenderer": "WebKit WebGL",
+    "rendererIdentity": "unmasked-extension"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "comparisons": [
+    {
+      "schema": "gev-cctv-calibration-pair/v1",
+      "status": "passed",
+      "pair": 0,
+      "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "controlIdleFrames": 266,
+      "candidateIdleFrames": 0,
+      "idleFrameReduction": 1
+    },
+    {
+      "schema": "gev-cctv-calibration-pair/v1",
+      "status": "passed",
+      "pair": 1,
+      "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "controlIdleFrames": 313,
+      "candidateIdleFrames": 0,
+      "idleFrameReduction": 1
+    },
+    {
+      "schema": "gev-cctv-calibration-pair/v1",
+      "status": "passed",
+      "pair": 2,
+      "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "controlIdleFrames": 284,
+      "candidateIdleFrames": 0,
+      "idleFrameReduction": 1
+    },
+    {
+      "schema": "gev-cctv-calibration-pair/v1",
+      "status": "passed",
+      "pair": 3,
+      "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "controlIdleFrames": 290,
+      "candidateIdleFrames": 0,
+      "idleFrameReduction": 1
+    },
+    {
+      "schema": "gev-cctv-calibration-pair/v1",
+      "status": "passed",
+      "pair": 4,
+      "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "controlIdleFrames": 296,
+      "candidateIdleFrames": 0,
+      "idleFrameReduction": 1
+    }
+  ],
+  "cleanup": {
+    "trials": 10,
+    "allTrialsReleased": true,
+    "viewerDestroyedCount": 10,
+    "governorUninstalledCount": 10
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 159606.935584,
+      "closeSettledHostMs": 160184.264375,
+      "closeElapsedMs": 577.3287910000072,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 507.86395800000173
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "bytes": 424234,
+  "sha256": "23542cc0da18da634eef32a73d2f6b01e143fd03d2ba3e6196c9c364bb24aacf",
+  "scope": "Native input and same-build scheduler control comparison; recorded endpoint hashes match. Not a cross-commit comparison, full terrain-height visual matrix, physical Windows run, or full S50 acceptance."
+}

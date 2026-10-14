@@ -1,0 +1,31 @@
+{
+  "schema": "gev-prewarm-ownership-review/v1",
+  "date": "2026-10-12T13:22:29.955Z",
+  "parent": "84004e110f5233c869e9b6f9d51a8900fcfd307b",
+  "isolatedCandidate": "3907df04e78c7937ad5b60b13d2f1374d7648bf0",
+  "integratedCodeCommit": "92e449ae06f407c3fda94351683a3ec6eb3900d2",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.16.0"
+  },
+  "negative": {
+    "tests": 102,
+    "passed": 95,
+    "failed": 7
+  },
+  "candidate": {
+    "tests": 102,
+    "passed": 102,
+    "failed": 0
+  },
+  "sourceHash": "92759c0771eb3c7d9650a2fae9c397ddc5fd3fbc8d7e86a8f015795f1c5ee75e",
+  "testHash": "d5c1ea4d705720044239b2b9b7e303e998d87ee8cd4e5656d555d391e77abaa8",
+  "artifacts": {
+    "original.json": "6e5ced8feb49bf8b6192b60646e509348ac778d90f841b73b672479fda7be636",
+    "candidate.json": "765cd117d7d1c9bcb8493f44edf051c333438d8b5e5de74f770b2d6dac1c691a",
+    "negative-tests.txt": "f333273cda2d6e9770181839a9208b24ee74fe3521ad51236fcb0753c963e021",
+    "candidate-tests.txt": "09e2904099449d17bd7f5b83332f007bb2b0f25bb40b7d601638ce9d8afa7bf7",
+    "reproduce.mjs": "61e638d26c7cf0f4a8d471e106447915f96a2bcbac5315deeaf44b3e99053e68"
+  },
+  "scope": "Deterministic real action runner/Cesium.Event ownership regressions. No browser timing, hardware rendering, or full-soak acceptance."
+}

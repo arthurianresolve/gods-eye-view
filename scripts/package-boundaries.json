@@ -11,7 +11,8 @@
       "src/data/localGeojsonLod.js",
       "src/data/inputOwnership.js",
       "src/data/infrastructureOverlayEntry.js",
-      "src/sources/infrastructureData.js"
+      "src/sources/infrastructureData.js",
+      "src/evidence/evidence.js"
     ],
     "external": ["cesium"]
   },
@@ -20,9 +21,94 @@
     "modules": ["src/app/application.js"],
     "external": []
   },
+  "investigation-time": {
+    "exports": ["./time"],
+    "modules": [
+      "src/time/index.js",
+      "src/time/clock.js",
+      "src/time/capabilities.js",
+      "src/time/timelineArbiter.js",
+      "src/time/weatherAdapter.js"
+    ],
+    "external": []
+  },
+  "workspace-storage": {
+    "exports": ["./storage"],
+    "modules": [
+      "src/storage/index.js",
+      "src/storage/indexedDb.js",
+      "src/storage/codec.js"
+    ],
+    "external": []
+  },
+  "workspace-documents": {
+    "exports": ["./workspaces"],
+    "modules": [
+      "src/workspaces/index.js",
+      "src/workspaces/document.js",
+      "src/workspaces/restore.js",
+      "src/workspaces/library.js",
+      "src/workspaces/history.js",
+      "src/workspaces/portable.js",
+      "src/storage/codec.js",
+      "src/view/index.js",
+      "src/data/layerState.js",
+      "src/data/idSwitches.js",
+      "src/data/layerStateTokenReservations.json",
+      "src/evidence/evidence.js",
+      "src/data/detectionPolicy.js"
+    ],
+    "external": []
+  },
+  "geographic-imports": {
+    "exports": ["./imports"],
+    "modules": [
+      "src/imports/index.js",
+      "src/imports/geojsonCsv.js",
+      "src/imports/kmlGpx.js",
+      "src/imports/cooperative.js",
+      "src/director/packs/geojson.js",
+      "src/director/packs/manifest.js",
+      "src/director/documentFields.js"
+    ],
+    "external": []
+  },
+  "source-adapter-starter": {
+    "exports": ["./sources/adapter-starter"],
+    "modules": [
+      "src/sources/adapterStarter.js",
+      "src/sources/adapterContract.js",
+      "src/sources/syntheticAdapter.js",
+      "src/evidence/evidence.js"
+    ],
+    "external": []
+  },
+  "regional-recording": {
+    "exports": ["./recording"],
+    "modules": [
+      "src/recording/index.js",
+      "src/recording/capture.js",
+      "src/recording/aircraft.js",
+      "src/recording/bundle.js",
+      "src/recording/regions.js",
+      "src/recording/syntheticFixture.js",
+      "src/recording/replaySource.js",
+      "src/recording/sourceRouter.js",
+      "src/recording/vessels.js",
+      "src/recording/vesselReplaySource.js",
+      "src/recording/vesselSourceRouter.js",
+      "src/storage/codec.js"
+    ],
+    "external": []
+  },
   "viewer": {
     "exports": ["./application/viewer"],
-    "modules": ["src/app/viewer.js", "src/app/atmosphereCompat.js"],
+    "modules": [
+      "src/app/viewer.js",
+      "src/app/cameraAnglesCompat.js",
+      "src/app/atmosphereCompat.js",
+      "src/freshFrame.js"
+    ],
     "external": ["cesium"]
   },
   "vite-build": {
@@ -30,6 +116,7 @@
     "exports": ["./build/vite", "./build/html"],
     "modules": [
       "build/vite.js",
+      "build/cesium-dependencies.js",
       "build/application-html.js",
       "build/allowedHosts.js",
       "build/embed-framing.js",
@@ -163,6 +250,8 @@
     "exports": ["./server/providers/cctv"],
     "modules": [
       "server/providers/cctv.js",
+      "server/providers/cctv/placeholders.js",
+      "src/evidence/evidence.js",
       "server/providers/cctv/cap.js",
       "server/providers/cctv/groundHeights.js",
       "server/providers/cctv/catalog.js",
@@ -439,7 +528,12 @@
       "src/keySetupCore.mjs",
       "src/localRequestGate.mjs",
       "src/data/feedState.js",
-      "src/data/layerSnapshot.js"
+      "src/data/layerSnapshot.js",
+      "src/ui/investigationTimeline.js",
+      "src/ui/investigationTimelineController.js",
+      "src/ui/textUpdate.js",
+      "src/recording/bundle.js",
+      "src/storage/codec.js"
     ],
     "external": []
   },
@@ -556,6 +650,7 @@
       "src/data/layerState.js",
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
+      "src/view/index.js",
       "src/data/militaryAwarenessEngine.js",
       "src/data/scenePick.js",
       "src/keySetupCore.mjs",
@@ -574,6 +669,11 @@
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/ui/applicationShell.js",
+      "src/app/webglRecovery.js",
+      "src/ui/evidencePanel.js",
+      "src/performance/adaptiveQuality.js",
+      "src/evidence/evidence.js",
+      "src/evidence/archiveLookup.js",
       "src/ui/cyberSonarControls.js",
       "src/ui/locationNavigation.js",
       "src/ui/cockpitCoordinator.js",
@@ -613,6 +713,7 @@
       "src/ui/effects.js",
       "src/ui/frameRateMonitor.js",
       "src/ui/layerPanel.js",
+      "src/ui/textUpdate.js",
       "src/ui/weatherPanel.js",
       "src/ui/railCards.js",
       "src/ui/railCardBlocks.js",
@@ -668,7 +769,11 @@
       "src/ui/localSdrControls.js",
       "src/layers/localAdsb/feedNames.js",
       "src/ui/localSdrPresentation.js",
-      "src/data/cameraArrival.js"
+      "src/data/cameraArrival.js",
+      "src/ui/investigationTimeline.js",
+      "src/ui/investigationTimelineController.js",
+      "src/recording/bundle.js",
+      "src/storage/codec.js"
     ],
     "external": ["cesium"]
   },
@@ -735,6 +840,7 @@
       "src/data/bhoteKoshiFloodPath.js",
       "src/maps/catalog.js",
       "src/scenes/director.js",
+      "src/scenes/persistence.js",
       "src/scenes/playbackAdapter.js",
       "src/director/playback.js",
       "src/scenes/recipes.js",
@@ -772,6 +878,8 @@
       "src/director/sharing/preview.js",
       "src/director/sharing/lifetime.js",
       "src/director/authoring.js",
+      "src/workspaces/history.js",
+      "src/storage/codec.js",
       "src/scenes/sharing.js",
       "src/ui/sceneSharing.js",
       "src/data/cameraArrival.js"
@@ -823,9 +931,11 @@
       "src/layers/flights/state.js",
       "src/layers/flights/testing.js",
       "src/layers/flights/tracking.js",
+      "src/evidence/evidence.js",
       "src/layers/flights/records.js",
       "src/layers/flights/recordPolicy.js",
       "src/layers/flights/snapshotRenderer.js",
+      "src/layers/fleetRenderDemand.js",
       "src/layers/flights/modelSpec.js",
       "src/data/inputOwnership.js",
       "src/data/modelEligibility.js"
@@ -863,9 +973,11 @@
       "src/layers/military/state.js",
       "src/layers/military/testing.js",
       "src/layers/military/tracking.js",
+      "src/evidence/evidence.js",
       "src/layers/military/records.js",
       "src/layers/military/recordPolicy.js",
       "src/layers/military/snapshotRenderer.js",
+      "src/layers/fleetRenderDemand.js",
       "src/data/inputOwnership.js",
       "src/data/modelEligibility.js"
     ],
@@ -920,7 +1032,11 @@
       "src/layers/vessels/records.js",
       "src/layers/vessels/recordPolicy.js",
       "src/layers/vessels/snapshotRenderer.js",
-      "src/data/inputOwnership.js"
+      "src/data/inputOwnership.js",
+      "src/evidence/evidence.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
+      "src/data/installationFeedback.js"
     ],
     "external": ["cesium"]
   },
@@ -930,7 +1046,9 @@
       "src/layers/earthquakes/index.js",
       "src/layers/earthquakes/model.js",
       "src/layers/earthquakes/source.js",
-      "src/layers/earthquakes/records.js"
+      "src/layers/earthquakes/records.js",
+      "src/layers/earthquakes/evidence.js",
+      "src/evidence/evidence.js"
     ],
     "external": ["cesium"]
   },
@@ -950,6 +1068,7 @@
   "fire-layer": {
     "exports": ["./layers/firms"],
     "modules": [
+      "src/data/firmsCsv.js",
       "src/data/firmsAdapt.js",
       "src/data/firmsLabels.js",
       "src/data/iconOrientation.js",
@@ -966,6 +1085,8 @@
       "src/layers/firms/source.js",
       "src/layers/firms/state.js",
       "src/layers/firms/viewport.js",
+      "src/layers/firms/evidence.js",
+      "src/evidence/evidence.js",
       "src/data/inputOwnership.js"
     ],
     "external": ["cesium"]
@@ -976,9 +1097,14 @@
       "src/data/issPass.js",
       "src/data/satelliteClass.js",
       "src/data/satellitePass.js",
+      "src/data/feedState.js",
+      "src/data/installationFeedback.js",
+      "src/evidence/evidence.js",
+      "src/loadingFeedback.js",
       "src/sources/tle.js",
       "src/layers/satellites/catalog.js",
       "src/layers/satellites/controls.js",
+      "src/layers/satellites/evidence.js",
       "src/layers/satellites/index.js",
       "src/layers/satellites/ingestion.js",
       "src/layers/satellites/interaction.js",
@@ -1013,6 +1139,7 @@
       "src/layers/launches/paths.js",
       "src/layers/launches/policy.js",
       "src/layers/launches/policyHelpers.js",
+      "src/layers/launches/renderDemand.js",
       "src/layers/launches/rendering.js",
       "src/layers/launches/replay.js",
       "src/layers/launches/selection.js",
@@ -1168,6 +1295,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -1186,7 +1314,9 @@
       "src/overlays/worldOverlayTokens.js",
       "src/data/cctvFootprint.js",
       "src/data/inputOwnership.js",
-      "src/layers/cctv/sourcePolicy.js"
+      "src/layers/cctv/sourcePolicy.js",
+      "src/evidence/evidence.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1229,6 +1359,14 @@
       "src/layers/streetLevel/providers/google/policy.js",
       "src/layers/streetLevel/providers/google/viewer.js",
       "src/layers/streetLevel/providers/google/mapsLoader.js",
+      "src/layers/streetLevel/providers/kartaview/index.js",
+      "src/layers/streetLevel/providers/kartaview/policy.js",
+      "src/layers/streetLevel/providers/kartaview/source.js",
+      "src/layers/streetLevel/providers/kartaview/decode.js",
+      "src/layers/streetLevel/providers/kartaview/viewer.js",
+      "src/layers/streetLevel/providers/kartaview/panorama.js",
+      "src/layers/streetLevel/lineCoverage.js",
+      "src/layers/streetLevel/sequenceCones.js",
       "src/layers/streetLevel/providers/mapillary/source.js",
       "scripts/qa-street-level.mjs"
     ],
@@ -1400,7 +1538,9 @@
       "src/voice/narration.js",
       "src/voice/earcon.js",
       "src/voice/pointerContext.js",
-      "src/voice/pointerReticle.js"
+      "src/voice/pointerReticle.js",
+      "src/evidence/evidence.js",
+      "src/freshFrame.js"
     ],
     "external": []
   },
@@ -1433,6 +1573,30 @@
       "src/scenes/nepalEvidencePack.js",
       "src/data/bhoteKoshiEvent.js",
       "src/ui/imagerySplit.js",
+      "src/ui/workspaceLibrary.js",
+      "src/ui/textUpdate.js",
+      "src/ui/workspaceImportRead.js",
+      "src/ui/diagnosticsPanel.js",
+      "src/diagnostics/portable.js",
+      "src/voice/realtimeDiagnostics.js",
+      "src/data/savedQueries.js",
+      "src/imports/index.js",
+      "src/imports/geojsonCsv.js",
+      "src/imports/kmlGpx.js",
+      "src/imports/cooperative.js",
+      "src/imports/runtimeLayer.js",
+      "src/imports/renderRecords.js",
+      "src/ui/commandPalette.js",
+      "src/ui/styles/commandPalette.css",
+      "src/ui/styles/workspaceLibrary.css",
+      "src/ui/styles/diagnostics.css",
+      "src/evidence/comparison.js",
+      "src/evidence/archiveLookup.js",
+      "src/workspaces/restore.js",
+      "src/workspaces/library.js",
+      "src/workspaces/history.js",
+      "src/workspaces/portable.js",
+      "src/workspaces/document.js",
       "src/data/bhoteKoshiEmbeddedMedia.js",
       "src/data/bhoteKoshiLocator.js",
       "src/data/bhoteKoshiIncidentPlaces.js",
@@ -1447,6 +1611,22 @@
       "src/annotations/worldAnnotationRenderer.js",
       "src/app/catalog.js",
       "src/app/constructCatalog.js",
+      "src/time/index.js",
+      "src/time/clock.js",
+      "src/time/capabilities.js",
+      "src/time/timelineArbiter.js",
+      "src/storage/index.js",
+      "src/storage/indexedDb.js",
+      "src/storage/codec.js",
+      "src/recording/index.js",
+      "src/recording/capture.js",
+      "src/time/weatherAdapter.js",
+      "src/recording/aircraft.js",
+      "src/recording/bundle.js",
+      "src/recording/regions.js",
+      "src/recording/syntheticFixture.js",
+      "src/recording/replaySource.js",
+      "src/recording/sourceRouter.js",
       "src/app/sourceComposition.js",
       "src/app/controls.js",
       "src/app/data.js",
@@ -1457,8 +1637,11 @@
       "src/app/layers/bikeshare.js",
       "src/app/layers/cctv.js",
       "src/app/layers/earthquakes.js",
+      "src/layers/earthquakes/evidence.js",
       "src/app/layers/firms.js",
+      "src/layers/firms/evidence.js",
       "src/app/layers/flights.js",
+      "src/layers/fleetRenderDemand.js",
       "src/app/layers/militaryAwareness.js",
       "src/app/layers/militaryFlights.js",
       "src/app/layers/militaryInstallations.js",
@@ -1470,13 +1653,17 @@
       "src/app/layers/traffic.js",
       "src/app/operations.js",
       "src/app/scene.js",
+      "src/app/sceneViewerLifecycle.js",
+      "src/app/mapStackEvents.js",
       "src/sources/sourceSlot.js",
       "src/app/sources.js",
       "src/app/startupChrome.js",
       "src/app/stateChannel.js",
       "src/app/surfaceServices.js",
       "src/app/tools.js",
+      "src/performance/performanceSnapshot.js",
       "src/app/viewer.js",
+      "src/app/cameraAnglesCompat.js",
       "src/app/atmosphereCompat.js",
       "src/bloom.js",
       "src/camera.js",
@@ -1522,6 +1709,8 @@
       "src/layers/wind/gpuRendering.js",
       "src/layers/wind/relief.js",
       "src/layers/wind/inspection.js",
+      "src/layers/wind/evidence.js",
+      "src/evidence/regionalWeather.js",
       "src/layers/wind/presentation.js",
       "src/layers/wind/rendering.js",
       "src/layers/weather/rasterTiles.js",
@@ -1535,6 +1724,7 @@
       "src/data/detectionRenderDemand.js",
       "src/data/earthquakes.js",
       "src/data/fireAnchors.js",
+      "src/data/firmsCsv.js",
       "src/data/firmsAdapt.js",
       "src/data/firmsHeatmap.js",
       "src/data/firmsLabels.js",
@@ -1547,6 +1737,8 @@
       "src/data/iconOrientation.js",
       "src/data/infrastructure.js",
       "src/data/installationFeedback.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
       "src/data/issPass.js",
       "src/data/labelArbiter.js",
       "src/data/idSwitches.js",
@@ -1611,6 +1803,7 @@
       "src/firstRunExperience.js",
       "src/hud.js",
       "src/hudLocality.js",
+      "src/hudSummaryContext.js",
       "src/hudSummaryResponse.js",
       "src/keySetup.js",
       "src/keySetupCore.mjs",
@@ -1665,6 +1858,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -1681,10 +1875,12 @@
       "src/layers/cctv/state.js",
       "src/layers/cctv/testing.js",
       "src/layers/earthquakes/index.js",
+      "src/layers/earthquakes/evidence.js",
       "src/layers/earthquakes/model.js",
       "src/layers/earthquakes/source.js",
       "src/layers/firms/anchors.js",
       "src/layers/firms/cards.js",
+      "src/layers/firms/evidence.js",
       "src/layers/firms/index.js",
       "src/layers/firms/ingestion.js",
       "src/layers/firms/lifecycle.js",
@@ -1709,6 +1905,7 @@
       "src/layers/flights/state.js",
       "src/layers/flights/testing.js",
       "src/layers/flights/tracking.js",
+      "src/layers/fleetRenderDemand.js",
       "src/layers/installations/controls.js",
       "src/layers/installations/index.js",
       "src/layers/installations/ingestion.js",
@@ -1733,6 +1930,7 @@
       "src/layers/launches/paths.js",
       "src/layers/launches/policy.js",
       "src/layers/launches/policyHelpers.js",
+      "src/layers/launches/renderDemand.js",
       "src/layers/launches/rendering.js",
       "src/layers/launches/replay.js",
       "src/layers/launches/selection.js",
@@ -1780,6 +1978,7 @@
       "src/layers/satellites/labels.js",
       "src/layers/satellites/lifecycle.js",
       "src/layers/satellites/orbits.js",
+      "src/layers/satellites/evidence.js",
       "src/sources/tle.js",
       "src/layers/satellites/records.js",
       "src/layers/satellites/policy.js",
@@ -1860,6 +2059,7 @@
       "src/renderGovernor.js",
       "src/rightRailPolicy.js",
       "src/scenes/director.js",
+      "src/scenes/persistence.js",
       "src/scenes/playbackAdapter.js",
       "src/director/playback.js",
       "src/scenes/recipes.js",
@@ -1892,6 +2092,10 @@
       "src/styles/surveillance.js",
       "src/styles/thermal.js",
       "src/ui/applicationShell.js",
+      "src/app/webglRecovery.js",
+      "src/ui/evidencePanel.js",
+      "src/performance/adaptiveQuality.js",
+      "src/evidence/evidence.js",
       "src/ui/cyberSonarControls.js",
       "src/ui/locationNavigation.js",
       "src/ui/cockpitCoordinator.js",
@@ -2121,6 +2325,7 @@
       "src/layers/weather/imageryOrder.js",
       "src/layers/weather/imageryHost.js",
       "src/layers/cyclones/index.js",
+      "src/layers/cyclones/evidence.js",
       "src/layers/cyclones/rendering.js",
       "src/layers/cyclones/labels.js",
       "src/layers/cyclones/source.js",
@@ -2189,6 +2394,14 @@
       "src/layers/streetLevel/providers/google/policy.js",
       "src/layers/streetLevel/providers/google/viewer.js",
       "src/layers/streetLevel/providers/google/mapsLoader.js",
+      "src/layers/streetLevel/providers/kartaview/index.js",
+      "src/layers/streetLevel/providers/kartaview/policy.js",
+      "src/layers/streetLevel/providers/kartaview/source.js",
+      "src/layers/streetLevel/providers/kartaview/decode.js",
+      "src/layers/streetLevel/providers/kartaview/viewer.js",
+      "src/layers/streetLevel/providers/kartaview/panorama.js",
+      "src/layers/streetLevel/lineCoverage.js",
+      "src/layers/streetLevel/sequenceCones.js",
       "src/layers/streetLevel/providers/mapillary/source.js",
       "src/app/layers/streetLevel.js",
       "src/layers/alpr/tileRecords.js",
@@ -2209,7 +2422,15 @@
       "src/tools/functions.js",
       "src/voice/actionSchemas.js",
       "src/view/index.js",
-      "src/app/embed.js"
+      "src/app/embed.js",
+      "src/ui/investigationTimeline.js",
+      "src/ui/investigationTimelineController.js",
+      "src/time/weatherAdapter.js",
+      "src/recording/vessels.js",
+      "src/recording/vesselReplaySource.js",
+      "src/recording/vesselSourceRouter.js",
+      "src/freshFrame.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": [
       "hls.js",
@@ -2244,6 +2465,25 @@
       "src/annotations/resolver.js",
       "src/app/catalog.js",
       "src/app/constructCatalog.js",
+      "src/time/index.js",
+      "src/time/clock.js",
+      "src/time/capabilities.js",
+      "src/time/timelineArbiter.js",
+      "src/time/weatherAdapter.js",
+      "src/storage/index.js",
+      "src/storage/indexedDb.js",
+      "src/storage/codec.js",
+      "src/recording/index.js",
+      "src/recording/capture.js",
+      "src/recording/aircraft.js",
+      "src/recording/bundle.js",
+      "src/recording/regions.js",
+      "src/recording/syntheticFixture.js",
+      "src/recording/replaySource.js",
+      "src/recording/sourceRouter.js",
+      "src/recording/vessels.js",
+      "src/recording/vesselReplaySource.js",
+      "src/recording/vesselSourceRouter.js",
       "src/app/sourceComposition.js",
       "src/layers/wind/index.js",
       "src/layers/wind/model.js",
@@ -2252,6 +2492,7 @@
       "src/layers/wind/gpuRendering.js",
       "src/layers/wind/relief.js",
       "src/layers/wind/inspection.js",
+      "src/layers/wind/evidence.js",
       "src/layers/wind/presentation.js",
       "src/layers/wind/rendering.js",
       "src/layers/weather/rasterTiles.js",
@@ -2260,8 +2501,11 @@
       "src/app/layers/bikeshare.js",
       "src/app/layers/cctv.js",
       "src/app/layers/earthquakes.js",
+      "src/layers/earthquakes/evidence.js",
       "src/app/layers/firms.js",
+      "src/layers/firms/evidence.js",
       "src/app/layers/flights.js",
+      "src/layers/fleetRenderDemand.js",
       "src/app/layers/militaryAwareness.js",
       "src/app/layers/militaryFlights.js",
       "src/app/layers/militaryInstallations.js",
@@ -2290,9 +2534,11 @@
       "src/data/contactMatch.js",
       "src/data/contextStore.js",
       "src/data/dataCredits.js",
+      "src/evidence/evidence.js",
       "src/data/detectionCohort.js",
       "src/data/detectionDraw.js",
       "src/data/detectionPolicy.js",
+      "src/data/firmsCsv.js",
       "src/data/firmsAdapt.js",
       "src/data/firmsLabels.js",
       "src/data/flowMatch.js",
@@ -2301,6 +2547,8 @@
       "src/data/iconOrientation.js",
       "src/data/infrastructure.js",
       "src/data/installationFeedback.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
       "src/data/issPass.js",
       "src/data/satellitePass.js",
       "src/data/labelArbiter.js",
@@ -2394,6 +2642,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -2462,6 +2711,7 @@
       "src/layers/launches/paths.js",
       "src/layers/launches/policy.js",
       "src/layers/launches/policyHelpers.js",
+      "src/layers/launches/renderDemand.js",
       "src/layers/launches/rendering.js",
       "src/layers/launches/replay.js",
       "src/layers/launches/selection.js",
@@ -2509,6 +2759,7 @@
       "src/layers/satellites/labels.js",
       "src/layers/satellites/lifecycle.js",
       "src/layers/satellites/orbits.js",
+      "src/layers/satellites/evidence.js",
       "src/sources/tle.js",
       "src/layers/satellites/records.js",
       "src/layers/satellites/policy.js",
@@ -2660,6 +2911,7 @@
       "src/layers/weather/imageryOrder.js",
       "src/layers/weather/imageryHost.js",
       "src/layers/cyclones/index.js",
+      "src/layers/cyclones/evidence.js",
       "src/layers/cyclones/rendering.js",
       "src/layers/cyclones/labels.js",
       "src/layers/cyclones/source.js",
@@ -2720,6 +2972,14 @@
       "src/layers/streetLevel/providers/google/policy.js",
       "src/layers/streetLevel/providers/google/viewer.js",
       "src/layers/streetLevel/providers/google/mapsLoader.js",
+      "src/layers/streetLevel/providers/kartaview/index.js",
+      "src/layers/streetLevel/providers/kartaview/policy.js",
+      "src/layers/streetLevel/providers/kartaview/source.js",
+      "src/layers/streetLevel/providers/kartaview/decode.js",
+      "src/layers/streetLevel/providers/kartaview/viewer.js",
+      "src/layers/streetLevel/providers/kartaview/panorama.js",
+      "src/layers/streetLevel/lineCoverage.js",
+      "src/layers/streetLevel/sequenceCones.js",
       "src/layers/streetLevel/providers/mapillary/source.js",
       "src/app/layers/streetLevel.js",
       "src/layers/alpr/tileRecords.js",
@@ -2736,7 +2996,8 @@
       "src/data/local_data/osm_military_names/names.json",
       "src/layers/installations/namedMarkers.js",
       "src/data/infrastructureOverlayEntry.js",
-      "src/sources/infrastructureData.js"
+      "src/sources/infrastructureData.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": [
       "hls.js",
@@ -2814,7 +3075,11 @@
   },
   "layer-lifecycle": {
     "exports": ["./data/lifecycle"],
-    "modules": ["src/data/lifecycle.js", "src/data/cameraArrival.js"],
+    "modules": [
+      "src/data/lifecycle.js",
+      "src/data/cameraArrival.js",
+      "src/performance/cpuTimings.js"
+    ],
     "external": []
   },
   "ui-navigation": {
@@ -2838,7 +3103,9 @@
       "src/loadingFeedback.js",
       "src/navigationPolicy.js",
       "src/ui/shareRestoration.js",
-      "src/ui/uiLifetime.js"
+      "src/view/index.js",
+      "src/ui/uiLifetime.js",
+      "src/data/detectionPolicy.js"
     ],
     "external": []
   },
@@ -3009,7 +3276,8 @@
       "src/voice/referents.js",
       "src/voice/layerManifest.js",
       "src/voice/speech.js",
-      "src/voice/pointerReticle.js"
+      "src/voice/pointerReticle.js",
+      "src/evidence/evidence.js"
     ],
     "external": []
   },
@@ -3047,7 +3315,7 @@
   },
   "firms-source": {
     "exports": ["./layers/firms/source"],
-    "modules": ["src/layers/firms/source.js"],
+    "modules": ["src/layers/firms/source.js", "src/data/firmsCsv.js"],
     "external": []
   },
   "installations-source": {
@@ -3238,7 +3506,8 @@
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
-      "src/sources/capability.js"
+      "src/sources/capability.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -3345,6 +3614,9 @@
       "src/tools/queries/hazards.js",
       "src/tools/queries/space.js",
       "src/tools/queries/aviation.js",
+      "src/evidence/regionalWeather.js",
+      "src/layers/cyclones/evidence.js",
+      "src/evidence/evidence.js",
       "src/tools/queries/media.js",
       "src/tools/queries/places.js",
       "src/tools/queries/mobility.js",
@@ -3359,6 +3631,7 @@
       "src/sources/tle.js",
       "src/data/satellitePass.js",
       "src/tools/queries/atmosphere.js",
+      "src/layers/wind/evidence.js",
       "src/layers/wind/inspection.js",
       "src/layers/wind/model.js",
       "src/layers/wind/fields.js",
@@ -3381,7 +3654,8 @@
       "src/view/index.js",
       "src/tools/views.js",
       "src/tools/globePanel.js",
-      "src/tools/queries/panelRequest.js"
+      "src/tools/queries/panelRequest.js",
+      "src/data/detectionPolicy.js"
     ],
     "external": ["satellite.js"]
   },
@@ -3418,6 +3692,7 @@
       "src/layers/earthquakes/source.js",
       "src/layers/earthquakes/records.js",
       "src/layers/firms/source.js",
+      "src/data/firmsCsv.js",
       "src/layers/installations/source.js",
       "src/sources/requestDeadline.js",
       "src/data/militaryNames.js",
@@ -3467,6 +3742,7 @@
       "src/layers/alpr/records.js",
       "src/layers/alpr/tileRecords.js",
       "src/sources/infrastructureData.js",
+      "src/evidence/evidence.js",
       "src/sources/eventPacks.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]
@@ -3477,7 +3753,8 @@
       "src/view/index.js",
       "src/data/idSwitches.js",
       "src/data/layerState.js",
-      "src/data/layerStateTokenReservations.json"
+      "src/data/layerStateTokenReservations.json",
+      "src/data/detectionPolicy.js"
     ],
     "external": []
   }

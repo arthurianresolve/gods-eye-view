@@ -69,6 +69,88 @@ function fixture(registry, options = {}) {
 const settle = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
 };
+
+test('equivalent map-switch cycles retain bounded providers, imagery and listeners', async () => {
+  const env = publicFixture();
+  for (let i = 0; i < 30; i++) {
+    for (const id of ['esri-imagery', 'osm', 'photoreal'])
+      await env.controller.setStack(id);
+    const state = env.controller.getPerformanceDiagnostics();
+    assert.equal(
+      state.cacheEntries,
+      3,
+      'two imagery providers and one terrain provider',
+    );
+    assert.equal(state.providerLoadsStarted, 3);
+    assert.equal(state.pendingJobs, 0);
+    assert.equal(
+      state.imageryLayers,
+      0,
+      'photoreal hides and releases imagery layers',
+    );
+    assert.equal(state.listeners, 0);
+    assert.equal(
+      state.estimatedTileBytes,
+      null,
+      'unknown memory must not become zero',
+    );
+  }
+  assert.equal(
+    env.controller.getPerformanceDiagnostics().providerCacheReuses,
+    58,
+  );
+  env.controller.destroy();
+  await settle();
+  const final = env.controller.getPerformanceDiagnostics();
+  assert.equal(final.cacheEntries, 0);
+  assert.equal(final.pendingJobs, 0);
+  assert.equal(final.primitives, 0);
+});
+
+test('pending map ownership drains on failure, retry and late completion after destruction', async () => {
+  let resolve, reject;
+  const env = fixture({
+    defaultId: 'slow',
+    sources: [
+      {
+        descriptor: { id: 'slow' },
+        createTileset: () =>
+          new Promise((yes, no) => {
+            resolve = yes;
+            reject = no;
+          }),
+      },
+    ],
+  });
+  const first = env.controller.setStack('slow');
+  await settle();
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 1);
+  reject(new Error('fixture failure'));
+  await first;
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 0);
+  assert.equal(env.controller.getPerformanceDiagnostics().cacheEntries, 0);
+  const second = env.controller.setStack('slow');
+  await settle();
+  env.controller.destroy();
+  assert.equal(
+    env.controller.getPerformanceDiagnostics().pendingJobs,
+    1,
+    'uncancellable provider remains pending until it actually settles',
+  );
+  let disposed = 0;
+  resolve({
+    destroy() {
+      disposed++;
+    },
+  });
+  await second;
+  await settle();
+  assert.equal(disposed, 1);
+  const final = env.controller.getPerformanceDiagnostics();
+  assert.equal(final.pendingJobs, 0);
+  assert.equal(final.providerLoadsStarted, 2);
+  assert.equal(final.providerLoadFailures, 1);
+});
 const descriptor = (id) => ({ id, label: id, kind: 'imagery' });
 function publicFixture() {
   const tileset = { show: true };
@@ -269,6 +351,105 @@ test('Esri construction fallback reports and attributes the source actually rend
   assert.equal(env.imagery[0].provider, env.providers.get('osm'));
   assert.equal(env.credits.size, 0);
   env.controller.destroy();
+});
+
+test('a later explicit Esri selection retries after construction fallback', async () => {
+  const env = publicFixture();
+  const esri = env.registry.sources.find(
+    (source) => source.descriptor.id === 'esri-imagery',
+  );
+  let attempts = 0,
+    osmDestroyed = 0;
+  env.providers.get('osm').destroy = () => osmDestroyed++;
+  esri.imagery = async () => {
+    attempts++;
+    if (attempts < 3) throw new Error('metadata temporarily unavailable');
+    return env.providers.get('esri-imagery');
+  };
+
+  const concurrentSelections = [
+    env.controller.setStack('esri-imagery'),
+    env.controller.setStack('esri-imagery'),
+  ];
+  await Promise.all(concurrentSelections);
+  assert.equal(env.controller.getActiveId(), 'osm');
+  assert.equal(env.imagery[0].provider, env.providers.get('osm'));
+  assert.equal(
+    env.controller.getState().lastError,
+    'Esri Satellite is unavailable; using OSM',
+  );
+  assert.equal(attempts, 1);
+  assert.equal(osmDestroyed, 0);
+
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 2);
+  assert.equal(env.controller.getActiveId(), 'osm');
+  assert.equal(env.imagery[0].provider, env.providers.get('osm'));
+  assert.equal(osmDestroyed, 0, 'the shared fallback remains controller-owned');
+
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 3);
+  assert.equal(env.controller.getActiveId(), 'esri-imagery');
+  assert.equal(env.imagery[0].provider, env.providers.get('esri-imagery'));
+  assert.equal(env.credits.size, 1);
+  assert.equal(env.controller.getState().lastError, null);
+  assert.equal(
+    osmDestroyed,
+    0,
+    'switching away does not dispose a cached provider',
+  );
+
+  await env.controller.setStack('osm');
+  await env.controller.setStack('esri-imagery');
+  assert.equal(attempts, 3, 'a healthy Esri provider remains cached');
+  assert.equal(env.imagery[0].provider, env.providers.get('esri-imagery'));
+  env.controller.destroy();
+  await settle();
+  assert.equal(
+    osmDestroyed,
+    1,
+    'the shared fallback is disposed once on destroy',
+  );
+});
+
+test('destroy drains a held construction fallback without activating it late', async () => {
+  let resolveOsm,
+    destroyed = 0;
+  const env = publicFixture();
+  const esri = env.registry.sources.find(
+    (source) => source.descriptor.id === 'esri-imagery',
+  );
+  const osm = env.registry.sources.find(
+    (source) => source.descriptor.id === 'osm',
+  );
+  esri.imagery = async () => {
+    throw new Error('metadata unavailable');
+  };
+  osm.imagery = () =>
+    new Promise((resolve) => {
+      resolveOsm = resolve;
+    });
+
+  const loading = env.controller.setStack('esri-imagery');
+  await settle();
+  assert.equal(typeof resolveOsm, 'function');
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 2);
+
+  env.controller.destroy();
+  resolveOsm({
+    id: 'late-osm',
+    errorEvent: event(),
+    destroy() {
+      destroyed++;
+    },
+  });
+  await loading;
+  await settle();
+
+  assert.equal(destroyed, 1);
+  assert.equal(env.imagery.length, 0);
+  assert.notEqual(env.controller.getActiveId(), 'osm');
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 0);
 });
 
 test('one Esri tile failure stays put, two fall back, and stale errors cannot replace a selection', async () => {

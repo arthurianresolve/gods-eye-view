@@ -1,0 +1,31 @@
+{
+  "schema": "gev-direct-filter-independent-review/v1",
+  "reviewedAt": "2026-10-11T01:24:38.545Z",
+  "sourceSha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+  "rawWorkReportSha256": "5e02e1e5658e8083ccd49910b79f04142795198ed463166d1ce5b23a79c305ad",
+  "checks": {
+    "focused": {
+      "tests": 87,
+      "pass": 87,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "8a58d6be7d3a27a06c26c992ac9ee50742d2dc7224b3f95764b2d6eb648f75db",
+      "encoding": "UTF-16LE with BOM"
+    },
+    "allocation": {
+      "tests": 13,
+      "pass": 13,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "d28875655bfe597bd697194a9448a1e4ebc2056313f7ebdf7c1b42e79b563918",
+      "encoding": "UTF-16LE with BOM"
+    }
+  },
+  "verified": {
+    "candidateSourceMatches": true,
+    "sharedDependenciesIdentical": true,
+    "dependenciesUnchanged": true,
+    "outputParity": true
+  },
+  "disposition": "QA candidate only; hosted exact-commit CPU/visual comparisons still required. Local 18-run timing control varied widely and is diagnostic only, not performance acceptance."
+}

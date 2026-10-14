@@ -174,6 +174,7 @@ export class VisualSettings {
     readContextMode,
     readContextChanging,
     readDisplayPortalActive,
+    onDensityChanged = () => {},
   }) {
     Object.assign(this, elements, operations, {
       viewer,
@@ -187,6 +188,7 @@ export class VisualSettings {
       readContextMode,
       readContextChanging,
       readDisplayPortalActive,
+      onDensityChanged,
     });
     this._lifetime = new UiLifetime();
     this._visualEffects = new VisualEffects({
@@ -514,6 +516,7 @@ export class VisualSettings {
       this._detectionDensityValue.textContent = `${pct}%`;
     setDetectionTuning({ densityPct: pct });
     this._updateDetectionButton(getDetectionMode());
+    this.onDensityChanged?.(pct);
   }
 
   _applyDetectionFadeFromUi() {
@@ -596,6 +599,7 @@ export class VisualSettings {
     }
     this._applyDetectionFadeFromUi();
     this._updateDetectionButton(getDetectionMode());
+    this.onDensityChanged?.(tuning.densityPct);
   }
 
   _setDetectionMode(modeLabel) {

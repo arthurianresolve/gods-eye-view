@@ -77,6 +77,18 @@ function analystCard(result) {
   const display = result.display || {};
   const unanswered = Array.isArray(result.unanswered) ? result.unanswered : [];
   const provenance = result.feedProvenance || result.coverage?.feedProvenance;
+  const metadata = result.resultMetadata || {};
+  const resultCounts = metadata.records || {};
+  const metadataNotes = [];
+  if (metadata.sourceMode && metadata.investigationTime?.timeMs) {
+    metadataNotes.push(
+      `Captured in ${metadata.sourceMode} mode at ${new Date(metadata.investigationTime.timeMs).toISOString()} UTC.`,
+    );
+  }
+  if (resultCounts.truncated)
+    metadataNotes.push(
+      'The source record set was truncated; this result may be incomplete.',
+    );
   const sources = [
     ...new Set(
       [...(provenance?.layers || []), ...(result.coverage?.layersQueried || [])]
@@ -108,6 +120,7 @@ function analystCard(result) {
       preserveNotes: true,
       notes: [
         ...notesOf(result.coverage?.note, display.caveat),
+        ...metadataNotes,
         ...(unanswered.length
           ? [`Not answered: ${unanswered.join(', ')}`]
           : []),

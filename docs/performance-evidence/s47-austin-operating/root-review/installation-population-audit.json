@@ -1,0 +1,110 @@
+{
+  "schema": "gev-independent-austin-installation-population-audit/v1",
+  "checkedAt": "2026-10-12T20:28:05.010Z",
+  "scope": "Native source normalization, ingestion, controls and viewport filtering at previously sampled Cesium Camera poses. Rendering and ground services are no-op fixtures; no browser delivery, rendered population, or performance acceptance.",
+  "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+  "sourceCatalogCount": 699,
+  "sourceHashesBefore": {
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "fa5b3860b8caddc9eb6e7f7451c0dfa75db41f1b6faaf3c5761f1e623d7af953",
+    "src/layers/installations/source.js": "9c74f8ac1e8b024153fae03f145d279891118f78cb15f776dd61b1b674274e7a",
+    "src/layers/installations/model.js": "774830adfc89bd643836147b88f977b39c8e7d927320f222f41d0f2d20a50d76",
+    "src/layers/installations/viewport.js": "dcb5d82cd6e3740380b9574640e21a943b9b9f0e00d69038532bf7ad73053ceb",
+    "src/layers/installations/ingestion.js": "00c6e390f2b94e0384b0f8a1005b37d700ac2bda461743b3c70240ac0404e244",
+    "src/layers/installations/controls.js": "a68021d82df0df9d685264a2e780cc063183a489aefc106fea4258a008b84090"
+  },
+  "sourceHashesAfter": {
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "fa5b3860b8caddc9eb6e7f7451c0dfa75db41f1b6faaf3c5761f1e623d7af953",
+    "src/layers/installations/source.js": "9c74f8ac1e8b024153fae03f145d279891118f78cb15f776dd61b1b674274e7a",
+    "src/layers/installations/model.js": "774830adfc89bd643836147b88f977b39c8e7d927320f222f41d0f2d20a50d76",
+    "src/layers/installations/viewport.js": "dcb5d82cd6e3740380b9574640e21a943b9b9f0e00d69038532bf7ad73053ceb",
+    "src/layers/installations/ingestion.js": "00c6e390f2b94e0384b0f8a1005b37d700ac2bda461743b3c70240ac0404e244",
+    "src/layers/installations/controls.js": "a68021d82df0df9d685264a2e780cc063183a489aefc106fea4258a008b84090"
+  },
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "viewport": {
+        "south": 30.29274385989874,
+        "west": -97.80249445084847,
+        "north": 30.53260132239697,
+        "east": -97.50075985704429
+      },
+      "normalizedResponseCount": 425,
+      "nativeViewportCount": 357,
+      "sortedIdsSha256": "550b19099319f5b4c44a2408086b29cdaf232d0b66cec56bb9cb04bfc1cd3db9",
+      "nativeAnalystCount": 357,
+      "nativeStatsCount": 357,
+      "nativeAnalystIdsSha256": "94d47ca42a7a9f87d017b9a3525395df8164b86157cbe0a5945e1b8a7a6f25d5",
+      "sourceIdsSha256": "0169aa08ba992bb17b076bddf037051dfd84deeb2df45b9f3800cb8f7155ebca",
+      "nativeAnalystIdProjection": "record.name || record.id",
+      "response": {
+        "sha256": "41ce0040d7f0ebe0a9295708eddcc5d99ea7986a85d1f9e2ce96c59e29aea501",
+        "byteLength": 66567
+      }
+    },
+    {
+      "elapsedMs": 1000,
+      "viewport": {
+        "south": 30.291755178814434,
+        "west": -97.79935666423113,
+        "north": 30.531598396568064,
+        "east": -97.49761610672962
+      },
+      "normalizedResponseCount": 475,
+      "nativeViewportCount": 357,
+      "sortedIdsSha256": "550b19099319f5b4c44a2408086b29cdaf232d0b66cec56bb9cb04bfc1cd3db9",
+      "nativeAnalystCount": 357,
+      "nativeStatsCount": 357,
+      "nativeAnalystIdsSha256": "94d47ca42a7a9f87d017b9a3525395df8164b86157cbe0a5945e1b8a7a6f25d5",
+      "sourceIdsSha256": "0169aa08ba992bb17b076bddf037051dfd84deeb2df45b9f3800cb8f7155ebca",
+      "nativeAnalystIdProjection": "record.name || record.id",
+      "response": {
+        "sha256": "0499bf646890b59db846cb8a80abe3c6101eccb299045c229b11e98936d278db",
+        "byteLength": 74402
+      }
+    },
+    {
+      "elapsedMs": 30000,
+      "viewport": {
+        "south": 30.263065738603697,
+        "west": -97.70842377394692,
+        "north": 30.502636922005603,
+        "east": -97.40633113550923
+      },
+      "normalizedResponseCount": 475,
+      "nativeViewportCount": 340,
+      "sortedIdsSha256": "6af8455403619d85f6715a1b859a94a148bc0aaf0bc1b99bc6c621c85e505c39",
+      "nativeAnalystCount": 340,
+      "nativeStatsCount": 340,
+      "nativeAnalystIdsSha256": "05eef0d1a3d134f8fe0be3cb56bcf9fcf73742a7bc3eba60b8501673d2bcb00f",
+      "sourceIdsSha256": "23e3765b3de7b6315f46538cd638ce6cfb513e68f507c580634d9fb1bbe178c7",
+      "nativeAnalystIdProjection": "record.name || record.id",
+      "response": {
+        "sha256": "ad8e638d4da2147b29da8cc09c11ba44faf9de7f17c1708c770b95066f8be84c",
+        "byteLength": 74405
+      }
+    },
+    {
+      "elapsedMs": 60000,
+      "viewport": {
+        "south": 30.2333509546811,
+        "west": -97.61448222613946,
+        "north": 30.472926675863093,
+        "east": -97.3116604733377
+      },
+      "normalizedResponseCount": 437,
+      "nativeViewportCount": 357,
+      "sortedIdsSha256": "b395e18c86903a31cecdbcbfc0999ef12f4d0bb0b748c83490a98cc57baede6a",
+      "nativeAnalystCount": 357,
+      "nativeStatsCount": 357,
+      "nativeAnalystIdsSha256": "d38944d6863f051644c36fcdeeb4e0c812c3df3a9f534a52f76e1f8384900700",
+      "sourceIdsSha256": "c214846227cbd4a2093886cba9e2d09240973381b39c968abd18b2684b53412f",
+      "nativeAnalystIdProjection": "record.name || record.id",
+      "response": {
+        "sha256": "0b2f3508a44b643b7eddce667c749070737bb9bc8feca3ac30b7598db0eb6a76",
+        "byteLength": 68530
+      }
+    }
+  ],
+  "limitation": "Browser must independently confirm the same pose, viewport, completed native load, and IDs. Camera-change debounce can temporarily retain the preceding source population."
+}

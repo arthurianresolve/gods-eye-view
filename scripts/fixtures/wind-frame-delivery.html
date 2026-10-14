@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Wind frame-delivery diagnostic</title>
+  <style>
+    body {
+      font:
+        13px system-ui,
+        sans-serif;
+      margin: 8px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 4px;
+    }
+    p {
+      margin: 4px 0;
+      max-width: 860px;
+    }
+    label,
+    button {
+      font: inherit;
+      margin: 2px 6px 2px 0;
+    }
+    #viewer {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      margin-top: 4px;
+    }
+    pre {
+      max-width: 80rem;
+      white-space: pre-wrap;
+    }
+  </style>
+  <body>
+    <h1>Wind frame-delivery diagnostic</h1>
+    <p>
+      One selected control per fresh viewer. Each control makes up to three
+      bounded requests and stops on the first missing frame. No retry is used to
+      turn a failed result into a pass.
+    </p>
+    <p>
+      Keep Chrome foreground and uncovered during a run. Page focus, visibility
+      and canvas bounds cannot verify desktop occlusion. The report leaves that
+      condition unavailable.
+    </p>
+    <label>
+      Scene load
+      <select id="scene-mode">
+        <option value="globe-only">Globe only, no wind layer</option>
+        <option value="paused-wind">Paused synthetic wind layer</option>
+      </select>
+    </label>
+    <label>
+      Capture path
+      <select id="capture-mode">
+        <option value="no-copy">Completed frame only, no canvas copy</option>
+        <option value="copy">Copy frame, read pixels and hash</option>
+      </select>
+    </label>
+    <button id="run" type="button">Run selected control</button>
+    <button id="download" type="button" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./wind-frame-delivery.js"></script>
+  </body>
+</html>

@@ -1,0 +1,424 @@
+TAP version 13
+# Subtest: destroying before the first init leaves pre-init buffering intact
+ok 1 - destroying before the first init leaves pre-init buffering intact
+  ---
+  duration_ms: 16.3822
+  type: 'test'
+  ...
+# Subtest: lifecycle is idempotent and teardown removes listeners, observers, and DOM
+ok 2 - lifecycle is idempotent and teardown removes listeners, observers, and DOM
+  ---
+  duration_ms: 37.7432
+  type: 'test'
+  ...
+# Subtest: no ancestor isolates the detection surface, so `screen` reaches the scene
+ok 3 - no ancestor isolates the detection surface, so `screen` reaches the scene
+  ---
+  duration_ms: 46.3043
+  type: 'test'
+  ...
+# Subtest: canvas backing store tracks CSS size and live DPR
+ok 4 - canvas backing store tracks CSS size and live DPR
+  ---
+  duration_ms: 2.2084
+  type: 'test'
+  ...
+# Subtest: shared fade tuning reaches a host-painted card on the next rendered frame
+ok 5 - shared fade tuning reaches a host-painted card on the next rendered frame
+  ---
+  duration_ms: 2.6487
+  type: 'test'
+  ...
+# Subtest: inlined host alpha binding matches combinedOverlayAlpha across channel ranges
+ok 6 - inlined host alpha binding matches combinedOverlayAlpha across channel ranges
+  ---
+  duration_ms: 3.4485
+  type: 'test'
+  ...
+# Subtest: a host dormant since init holds no canvas backing store
+ok 7 - a host dormant since init holds no canvas backing store
+  ---
+  duration_ms: 1.5454
+  type: 'test'
+  ...
+# Subtest: empty postRender stays inert through production mutation, resize, and clock noise
+ok 8 - empty postRender stays inert through production mutation, resize, and clock noise
+  ---
+  duration_ms: 0.9505
+  type: 'test'
+  ...
+# Subtest: HUD mutations defer occluder selector scans until overlay paint work exists
+ok 9 - HUD mutations defer occluder selector scans until overlay paint work exists
+  ---
+  duration_ms: 1.474
+  type: 'test'
+  ...
+# Subtest: ticking chrome churn (text swaps, non-chrome nodes) never invalidates a live host
+ok 10 - ticking chrome churn (text swaps, non-chrome nodes) never invalidates a live host
+  ---
+  duration_ms: 10.761
+  type: 'test'
+  ...
+# Subtest: genuine chrome changes still invalidate: add, remove, and own-attribute flips
+ok 11 - genuine chrome changes still invalidate: add, remove, and own-attribute flips
+  ---
+  duration_ms: 6.1513
+  type: 'test'
+  ...
+# Subtest: chrome observers scope: body is childList discovery; occluder attributes are element-only
+ok 12 - chrome observers scope: body is childList discovery; occluder attributes are element-only
+  ---
+  duration_ms: 14.8501
+  type: 'test'
+  ...
+# Subtest: stable projection inputs reuse actual visibility work while callbacks stay live
+ok 13 - stable projection inputs reuse actual visibility work while callbacks stay live
+  ---
+  duration_ms: 4.6225
+  type: 'test'
+  ...
+# Subtest: cached negative projection decisions retry after their owning input changes
+ok 14 - cached negative projection decisions retry after their owning input changes
+  ---
+  duration_ms: 1.8413
+  type: 'test'
+  ...
+# Subtest: invalid dynamic position samples do not poison a later valid sample
+ok 15 - invalid dynamic position samples do not poison a later valid sample
+  ---
+  duration_ms: 0.9367
+  type: 'test'
+  ...
+# Subtest: projection cache isolates duplicate identities and clears across remove/re-add and visibility changes
+ok 16 - projection cache isolates duplicate identities and clears across remove/re-add and visibility changes
+  ---
+  duration_ms: 1.723
+  type: 'test'
+  ...
+# Subtest: an out-of-view position can become visible without changing entry identity
+ok 17 - an out-of-view position can become visible without changing entry identity
+  ---
+  duration_ms: 0.8004
+  type: 'test'
+  ...
+# Subtest: projection records never retain keys for entries that are no longer live
+ok 18 - projection records never retain keys for entries that are no longer live
+  ---
+  duration_ms: 44.3159
+  type: 'test'
+  ...
+# Subtest: the per-domain candidate index stays bounded while identities churn
+ok 19 - the per-domain candidate index stays bounded while identities churn
+  ---
+  duration_ms: 148.2382
+  type: 'test'
+  ...
+# Subtest: entry normalization validates required fields and source lifecycle is stable
+ok 20 - entry normalization validates required fields and source lifecycle is stable
+  ---
+  duration_ms: 2.179
+  type: 'test'
+  ...
+# Subtest: accessible actions announce only accepted focus and expose selected state
+ok 21 - accessible actions announce only accepted focus and expose selected state
+  ---
+  duration_ms: 1.3835
+  type: 'test'
+  ...
+# Subtest: viewport and horizon culling obey explicit policy inputs
+ok 22 - viewport and horizon culling obey explicit policy inputs
+  ---
+  duration_ms: 0.2731
+  type: 'test'
+  ...
+# Subtest: paint lanes are deterministic across all seven binding lanes
+ok 23 - paint lanes are deterministic across all seven binding lanes
+  ---
+  duration_ms: 1.7377
+  type: 'test'
+  ...
+# Subtest: custom detection lane receives the shared host frame and paints below ordinary entries
+ok 24 - custom detection lane receives the shared host frame and paints below ordinary entries
+  ---
+  duration_ms: 6.2634
+  type: 'test'
+  ...
+# Subtest: custom-lane painter state is bracketed by host save/restore
+ok 25 - custom-lane painter state is bracketed by host save/restore
+  ---
+  duration_ms: 0.8789
+  type: 'test'
+  ...
+# Subtest: custom lanes without the detection target paint on the shared canvas
+ok 26 - custom lanes without the detection target paint on the shared canvas
+  ---
+  duration_ms: 0.7328
+  type: 'test'
+  ...
+# Subtest: UI exclusions stay per-rect: overlapping chrome never merges into a bounding union
+ok 27 - UI exclusions stay per-rect: overlapping chrome never merges into a bounding union
+  ---
+  duration_ms: 8.0608
+  type: 'test'
+  ...
+# Subtest: UI exclusions ignore chrome the user cannot see
+ok 28 - UI exclusions ignore chrome the user cannot see
+  ---
+  duration_ms: 15.8817
+  type: 'test'
+  ...
+# Subtest: chrome that fills the viewport suppresses neither cards nor the detection lane
+ok 29 - chrome that fills the viewport suppresses neither cards nor the detection lane
+  ---
+  duration_ms: 4.3536
+  type: 'test'
+  ...
+# Subtest: a placement is only ever kept under chrome that composites ABOVE the host
+ok 30 - a placement is only ever kept under chrome that composites ABOVE the host
+  ---
+  duration_ms: 20.346
+  type: 'test'
+  ...
+# Subtest: cockpit keeps its cards and its detection lane, and hides only the tracked readout
+ok 31 - cockpit keeps its cards and its detection lane, and hides only the tracked readout
+  ---
+  duration_ms: 30.2607
+  type: 'test'
+  ...
+# Subtest: opt-in anchor separation thins a co-located cohort before the arbiter sees it
+ok 32 - opt-in anchor separation thins a co-located cohort before the arbiter sees it
+  ---
+  duration_ms: 3.2175
+  type: 'test'
+  ...
+# Subtest: the occluder inventory carries no cockpit line-art chrome
+ok 33 - the occluder inventory carries no cockpit line-art chrome
+  ---
+  duration_ms: 0.4146
+  type: 'test'
+  ...
+# Subtest: position getters snapshot once per frame and cockpit-gated sources disappear
+ok 34 - position getters snapshot once per frame and cockpit-gated sources disappear
+  ---
+  duration_ms: 1.5472
+  type: 'test'
+  ...
+# Subtest: bounded per-source cohorts feed the domain arbiter without universal selection
+ok 35 - bounded per-source cohorts feed the domain arbiter without universal selection
+  ---
+  duration_ms: 1.4824
+  type: 'test'
+  ...
+# Subtest: FIRMS and vessels enlarge the ambient-card lane under an explicit aggregate budget
+ok 36 - FIRMS and vessels enlarge the ambient-card lane under an explicit aggregate budget
+  ---
+  duration_ms: 199.9767
+  type: 'test'
+  ...
+# Subtest: paint rectangles publish from a pool and topmost interactive lookup wins
+ok 37 - paint rectangles publish from a pool and topmost interactive lookup wins
+  ---
+  duration_ms: 1.3944
+  type: 'test'
+  ...
+# Subtest: CCTV stable frame slots gate ambient chrome and wire the exact host hit rectangle
+ok 38 - CCTV stable frame slots gate ambient chrome and wire the exact host hit rectangle
+  ---
+  duration_ms: 2.9216
+  type: 'test'
+  ...
+# Subtest: pinned CCTV chrome may paint before frame one while ordinary safe-top policy still yields
+ok 39 - pinned CCTV chrome may paint before frame one while ordinary safe-top policy still yields
+  ---
+  duration_ms: 1.0771
+  type: 'test'
+  ...
+# Subtest: safe-top yield culls an uncontested ambient entry at projection, with a below-band control
+ok 40 - safe-top yield culls an uncontested ambient entry at projection, with a below-band control
+  ---
+  duration_ms: 1.1182
+  type: 'test'
+  ...
+# Subtest: CCTV host binding preserves the smoothstep scale and 0.45/0.35 fade curve
+ok 41 - CCTV host binding preserves the smoothstep scale and 0.45/0.35 fade curve
+  ---
+  duration_ms: 2.0372
+  type: 'test'
+  ...
+# Subtest: scene presentation samples once per frame and recovers after a callback failure
+ok 42 - scene presentation samples once per frame and recovers after a callback failure
+  ---
+  duration_ms: 3.2097
+  type: 'test'
+  ...
+# Subtest: CCTV leader remains one CSS pixel at the 0.35 altitude scale point
+ok 43 - CCTV leader remains one CSS pixel at the 0.35 altitude scale point
+  ---
+  duration_ms: 1.9049
+  type: 'test'
+  ...
+# Subtest: active CCTV thumbnail is protected outside the ambient quota and excludes ambient footprint
+ok 44 - active CCTV thumbnail is protected outside the ambient quota and excludes ambient footprint
+  ---
+  duration_ms: 1.5489
+  type: 'test'
+  ...
+# Subtest: protected tracked entry bypasses ambient quota and excludes its paint footprint
+ok 45 - protected tracked entry bypasses ambient quota and excludes its paint footprint
+  ---
+  duration_ms: 1.1481
+  type: 'test'
+  ...
+# Subtest: three clustered protected cards fall back to the least-overlapping placement
+ok 46 - three clustered protected cards fall back to the least-overlapping placement
+  ---
+  duration_ms: 1.4943
+  type: 'test'
+  ...
+# Subtest: steady frames reuse paint-item and paint-rectangle pool identities
+ok 47 - steady frames reuse paint-item and paint-rectangle pool identities
+  ---
+  duration_ms: 1.9898
+  type: 'test'
+  ...
+# Subtest: destroy empties paint pools and releases pooled record and entry payloads
+ok 48 - destroy empties paint pools and releases pooled record and entry payloads
+  ---
+  duration_ms: 1.0589
+  type: 'test'
+  ...
+# Subtest: a candidate that is not projected this frame stops painting immediately
+ok 49 - a candidate that is not projected this frame stops painting immediately
+  ---
+  duration_ms: 1.0059
+  type: 'test'
+  ...
+# Subtest: published paint rectangles are scoped to the publishing key and frame
+ok 50 - published paint rectangles are scoped to the publishing key and frame
+  ---
+  duration_ms: 0.9865
+  type: 'test'
+  ...
+# Subtest: every exported entry point is inert after destroy
+ok 51 - every exported entry point is inert after destroy
+  ---
+  duration_ms: 1.283
+  type: 'test'
+  ...
+# Subtest: diagnostics facade preserves the complete binding shape
+ok 52 - diagnostics facade preserves the complete binding shape
+  ---
+  duration_ms: 0.1795
+  type: 'test'
+  ...
+# Subtest: installation titles share persistent card arbitration and retain a bounded Contacts cohort
+ok 53 - installation titles share persistent card arbitration and retain a bounded Contacts cohort
+  ---
+  duration_ms: 144.1858
+  type: 'test'
+  ...
+# Subtest: promoting and demoting a selected entry preserves painted, hit, and accessible output
+ok 54 - promoting and demoting a selected entry preserves painted, hit, and accessible output
+  ---
+  duration_ms: 2.1026
+  type: 'test'
+  ...
+# Subtest: destroyed host font events cannot wake its replacement viewer
+ok 55 - destroyed host font events cannot wake its replacement viewer
+  ---
+  duration_ms: 1.4736
+  type: 'test'
+  ...
+# Subtest: font loading wakes a parked static overlay to recompute layout and hit bounds
+ok 56 - font loading wakes a parked static overlay to recompute layout and hit bounds
+  ---
+  duration_ms: 1.3005
+  type: 'test'
+  ...
+# Subtest: stable entry layout avoids repeated measurement while moving presentation stays live
+ok 57 - stable entry layout avoids repeated measurement while moving presentation stays live
+  ---
+  duration_ms: 2.4246
+  type: 'test'
+  ...
+# Subtest: replacement and visibility preserve complete layout geometry for every card variant
+ok 58 - replacement and visibility preserve complete layout geometry for every card variant
+  ---
+  duration_ms: 6.7557
+  type: 'test'
+  ...
+# Subtest: S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes
+ok 59 - S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes
+  ---
+  duration_ms: 5.7051
+  type: 'test'
+  ...
+# Subtest: S52 placement behavior restores ambient eligibility after a protected footprint moves
+ok 60 - S52 placement behavior restores ambient eligibility after a protected footprint moves
+  ---
+  duration_ms: 2.4064
+  type: 'test'
+  ...
+# Subtest: S52 placement signature rebuilds moved configuration before returning to an older pose
+ok 61 - S52 placement signature rebuilds moved configuration before returning to an older pose
+  ---
+  duration_ms: 1.7955
+  type: 'test'
+  ...
+# Subtest: numeric layout snapshot distinguishes undefined, zero, and nonnumeric transitions
+ok 62 - numeric layout snapshot distinguishes undefined, zero, and nonnumeric transitions
+  ---
+  duration_ms: 1.7122
+  type: 'test'
+  ...
+# Subtest: split numeric entry snapshot preserves invalid, zero, and object identity transitions
+ok 63 - split numeric entry snapshot preserves invalid, zero, and object identity transitions
+  ---
+  duration_ms: 2.7633
+  type: 'test'
+  ...
+# Subtest: keyhole cached-paint outcome tracks low alpha and recovers
+ok 64 - keyhole cached-paint outcome tracks low alpha and recovers
+  ---
+  duration_ms: 1.8627
+  type: 'test'
+  ...
+# Subtest: shared reuse signature invalidates on same-geometry keyhole tuning and edgeFade mutation
+ok 65 - shared reuse signature invalidates on same-geometry keyhole tuning and edgeFade mutation
+  ---
+  duration_ms: 1.7481
+  type: 'test'
+  ...
+# Subtest: early detection callback keyhole geometry and tuning mutation rejects reuse
+ok 66 - early detection callback keyhole geometry and tuning mutation rejects reuse
+  ---
+  duration_ms: 1.5673
+  type: 'test'
+  ...
+# Subtest: root cached-paint low-alpha output remains absent on consecutive stable frames
+ok 67 - root cached-paint low-alpha output remains absent on consecutive stable frames
+  ---
+  duration_ms: 1.2432
+  type: 'test'
+  ...
+# Subtest: self-unregistering shared painter cannot seed reusable shared pixels
+ok 68 - self-unregistering shared painter cannot seed reusable shared pixels
+  ---
+  duration_ms: 1.2697
+  type: 'test'
+  ...
+# Subtest: late detection shouldPaint self-unregistration cannot cache pre-mutation label pixels
+ok 69 - late detection shouldPaint self-unregistration cannot cache pre-mutation label pixels
+  ---
+  duration_ms: 1.3926
+  type: 'test'
+  ...
+1..69
+# tests 69
+# suites 0
+# pass 69
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4661.0175

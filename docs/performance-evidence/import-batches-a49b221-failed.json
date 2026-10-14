@@ -1,0 +1,191 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "a49b2218d92578b93147629f2bfb6529d7170850",
+  "harnessCommit": "a49b2218d92578b93147629f2bfb6529d7170850",
+  "capturedAt": "2026-10-09T17:39:16.635Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "workload": "paired",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 138.5,
+      "maxHeartbeatGapMs": 247.59999990463257,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 259652493,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 8.700000047683716,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 0,
+      "mode": "cooperative",
+      "elapsedMs": 320.39999997615814,
+      "maxHeartbeatGapMs": 29.399999976158142,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 235114629,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 26.09999990463257,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 1,
+      "mode": "cooperative",
+      "elapsedMs": 1592.6000000238419,
+      "maxHeartbeatGapMs": 911.3000000715256,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 332311214,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 410.89999997615814,
+        "renderedFrames": 0,
+        "updates": 0,
+        "animationFrames": 0,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": false
+      }
+    }
+  ],
+  "renderErrors": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "a49b2218d92578b93147629f2bfb6529d7170850",
+    "harnessCommit": "a49b2218d92578b93147629f2bfb6529d7170850",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 622.2000000476837,
+  "warmedResources": {
+    "heapBytes": 144740063,
+    "heapScope": "Unforced heap sample; not retained-memory acceptance",
+    "entities": 5000,
+    "collections": [
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "EntityCluster",
+        "count": null
+      }
+    ]
+  },
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true
+}

@@ -416,8 +416,14 @@ export function createGroundFloor({ terrain, signal }) {
   // reported here by meshFloorSampler.js. Design principle (owner): NEVER
   // below the visible surface; slightly above is always fine. The DEM stays
   // the instant global prior/fallback and the sanity gate for samples.
-  /** @type {Map<string, number>} coarse cell key -> rendered-surface height (m, ellipsoidal). */
-  const _meshCells = new Map();
+  /** @type {WeakMap<object, Map<string, number>>} Tileset owner -> sampled cells. */
+  let _meshCellsBySource = new WeakMap();
+  /** Samples made by legacy/test callers before an owner is supplied. */
+  const _unscopedMeshCells = new Map();
+  const _noSourceMeshCells = new Map();
+  let _meshSource = null;
+  let _meshSourceKnown = false;
+  let _meshSourcePending = false;
   /** @type {boolean} Whether mesh cells apply — true only in the google-3d
    *  regime (photoreal stack). On globe stacks the rendered surface IS the
    *  terrain provider (Re:Earth on keyless), so the DEM is already correct
@@ -436,11 +442,53 @@ export function createGroundFloor({ terrain, signal }) {
   }
 
   /**
+   * Bind mesh-floor reads/writes to the actual rendered tileset owner. A new
+   * tileset gets a fresh cell namespace; returning to the same tileset reuses
+   * its still-valid samples. Re:Earth DEM cells are stored separately and are
+   * never invalidated by this operation.
+   * @param {object|null} source Visible tileset, or null when none is active.
+   * @returns {boolean} Whether the rendered-surface owner changed.
+   */
+  function setMeshFloorSource(source) {
+    const next = source && typeof source === 'object' ? source : null;
+    if (_meshSourceKnown && _meshSource === next) {
+      _meshSourcePending = false;
+      return false;
+    }
+    _meshSource = next;
+    _meshSourceKnown = true;
+    _meshSourcePending = false;
+    return true;
+  }
+
+  /**
+   * Temporarily suppress mesh reads while the map controller is between
+   * settled owners. This preserves the previous owner's cache for a possible
+   * return, while preventing consumers from observing it during a switch.
+   * @param {boolean} pending
+   */
+  function setMeshFloorSourcePending(pending) {
+    _meshSourcePending = !!pending;
+  }
+
+  function activeMeshCells(create = false) {
+    if (!_meshSourceKnown) return _unscopedMeshCells;
+    if (!_meshSource) return _noSourceMeshCells;
+    let cells = _meshCellsBySource.get(_meshSource);
+    if (!cells && create) {
+      cells = new Map();
+      _meshCellsBySource.set(_meshSource, cells);
+    }
+    return cells || null;
+  }
+
+  /**
    * Records a sampled rendered-surface height for the cell containing the
    * coordinate (one-shot latch — first accepted sample wins).
    * @param {number} lat @param {number} lon @param {number} heightM
    */
   function reportMeshFloorCell(lat, lon, heightM) {
+    if (_meshSourcePending) return;
     if (
       !Number.isFinite(lat) ||
       !Number.isFinite(lon) ||
@@ -449,7 +497,8 @@ export function createGroundFloor({ terrain, signal }) {
       return;
     const c = coarseFloorCoord(lat, lon);
     const key = `${c.lat},${c.lon}`;
-    if (!_meshCells.has(key)) _meshCells.set(key, heightM);
+    const cells = activeMeshCells(true);
+    if (!cells.has(key)) cells.set(key, heightM);
   }
 
   /** Return whether a rendered-mesh sample is plausible against a real DEM prior. */
@@ -470,7 +519,8 @@ export function createGroundFloor({ terrain, signal }) {
    * @returns {boolean} Whether the sample passed and was reported.
    */
   function reportValidatedMeshFloorCell(lat, lon, heightM) {
-    if (![lat, lon, heightM].every(Number.isFinite)) return false;
+    if (_meshSourcePending || ![lat, lon, heightM].every(Number.isFinite))
+      return false;
     const cell = coarseFloorCoord(lat, lon);
     const prior = cachedRealEllipsoidalGround(cell.lat, cell.lon);
     if (!meshFloorSampleWithinPrior(heightM, prior)) return false;
@@ -485,16 +535,21 @@ export function createGroundFloor({ terrain, signal }) {
    * @returns {number|null}
    */
   function cachedMeshFloor(lat, lon) {
-    if (!_meshPreferred) return null;
+    if (!_meshPreferred || _meshSourcePending) return null;
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
     const c = coarseFloorCoord(lat, lon);
-    const h = _meshCells.get(`${c.lat},${c.lon}`);
+    const h = activeMeshCells()?.get(`${c.lat},${c.lon}`);
     return h != null ? h : null;
   }
 
   /** Test hook: clears mesh cells (never called at runtime — cells are valid all session). */
   function _clearMeshFloorCellsForTest() {
-    _meshCells.clear();
+    _meshCellsBySource = new WeakMap();
+    _unscopedMeshCells.clear();
+    _noSourceMeshCells.clear();
+    _meshSource = null;
+    _meshSourceKnown = false;
+    _meshSourcePending = false;
   }
 
   /**
@@ -629,7 +684,12 @@ export function createGroundFloor({ terrain, signal }) {
   signal?.addEventListener(
     'abort',
     () => {
-      _meshCells.clear();
+      _meshCellsBySource = new WeakMap();
+      _unscopedMeshCells.clear();
+      _noSourceMeshCells.clear();
+      _meshSource = null;
+      _meshSourceKnown = false;
+      _meshSourcePending = false;
       _pendingFloorCells.clear();
     },
     { once: true },
@@ -652,6 +712,8 @@ export function createGroundFloor({ terrain, signal }) {
     allocateCorridorCells,
     setMeshFloorPreferred,
     meshFloorPreferred,
+    setMeshFloorSource,
+    setMeshFloorSourcePending,
     reportMeshFloorCell,
     meshFloorSampleWithinPrior,
     reportValidatedMeshFloorCell,

@@ -1,0 +1,38 @@
+{
+  "schema": "gev-s47-atomic-audit-review/v1",
+  "status": "failed-before-observer-installation",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38202268223",
+  "applicationCommit": "6ca6373ed5b37e728bd197955b2b36dbc7bfa312",
+  "harnessCommit": "6ca6373ed5b37e728bd197955b2b36dbc7bfa312",
+  "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "rawBytes": 36713,
+  "rawSha256": "27abcacd562a13f82edc3537b7be7400c30b03b8d8e8ee3737cc746b17876019",
+  "baselineBuildInspection": "passed",
+  "candidateFailure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Worker targets or blob requests arrived after the frozen audit boundary.",
+    "operator": null
+  },
+  "completedSamples": 0,
+  "evidenceTruncated": false,
+  "sceneFrameObserverInstalled": false,
+  "workerAuditRestoration": {
+    "nativeCreateObjectURLRestored": true,
+    "registryEmpty": true,
+    "createdScriptBlobCountAtRestore": 14,
+    "overflowCountAtRestore": 0,
+    "auditedCreatedScriptBlobCount": 14,
+    "auditedOverflowCount": 0,
+    "validatedCreatedScriptBlobCount": null,
+    "observedWorkerTargetCount": 6,
+    "observedBlobRequestCount": 7,
+    "lateWorkerTargetCount": 1,
+    "lateBlobRequestCount": 0,
+    "workerUrlOverflowAtCompletion": 0,
+    "blobUrlOverflowAtCompletion": 0
+  },
+  "scope": "Hosted SwiftShader integration failure; not physical Windows or performance acceptance.",
+  "analysis": "The frozen snapshot and restoration both count 14 blobs. The native wrapper is restored and its registry empty. One worker target is observed after the frozen boundary. Validation has not completed: validatedCreatedScriptBlobCount is null. The artifact does not identify whether that late target uses a frozen wrapper or new executable code. Delayed target publication must be distinguished from an unaudited target before changing the strict guard."
+}

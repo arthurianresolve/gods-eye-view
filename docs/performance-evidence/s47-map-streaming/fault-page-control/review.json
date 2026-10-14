@@ -1,0 +1,34 @@
+{
+  "schema": "gev-map-fault-page-review/v1",
+  "reviewedCommit": "b7dcd673c34743f5eddec47cac7b61612445c8c5",
+  "sourceCommits": [
+    "c3da65f2a7273ee688d737fde2007caf8786884c",
+    "fe54e1b70ee90b9e0bb26bbdfdc29c894ecf0238"
+  ],
+  "scope": "Serialized page-control producer, fixture delivery, report validation and existing outer smoke unit checks; no rendered fault journey",
+  "focusedTests": {
+    "tests": 94,
+    "pass": 94,
+    "fail": 0,
+    "skipped": 0,
+    "suites": [
+      "scripts/performance/mapStreamingCapture.test.mjs",
+      "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+      "scripts/qa-performance-build-smoke.test.mjs"
+    ]
+  },
+  "logCaptureNote": "Node output was saved in full before the Python console wrapper failed to print Unicode under cp1252. The saved runner summary reports 94 passes and zero failures; the wrapper printing failure is not a Node test failure.",
+  "captureLintFiles": 25,
+  "packageBoundaries": "passed",
+  "changedJavaScriptFormatting": "passed",
+  "outerFaultDocumentOrchestration": "pending",
+  "hungEvaluationContextCloseControl": "pending",
+  "renderedFaultControls": "pending",
+  "performanceAcceptanceEligible": false,
+  "artifacts": {
+    "focused-tests.log": {
+      "bytes": 9211,
+      "sha256": "b45707b7ab7476accc0a1a659817922f20efb1ac6c1ae3f0ff8eca4f5865bc7b"
+    }
+  }
+}

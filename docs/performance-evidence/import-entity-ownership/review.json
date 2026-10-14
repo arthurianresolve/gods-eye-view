@@ -1,0 +1,71 @@
+{
+  "candidateCommit": "82e2b0b1da8ac517710cdbdd8468cc3b502330c4",
+  "baselineCommit": "031b7e8269652fc5c1afb55bbd1fb8f6541971d9",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38156256415",
+  "standardJobsPassed": 7,
+  "recoveryChecks": [
+    {
+      "platform": "windows",
+      "checks": 5,
+      "sourceClean": true,
+      "sourceUnchanged": true,
+      "settingsAndWorkspacesPreserved": true,
+      "closeMs": [
+        740.0960999999952, 1421.1843999999983, 711.0981000000029,
+        587.0301000000909, 435.81380000000354
+      ]
+    },
+    {
+      "platform": "ubuntu",
+      "checks": 5,
+      "sourceClean": true,
+      "sourceUnchanged": true,
+      "settingsAndWorkspacesPreserved": true,
+      "closeMs": [
+        361.9822039999999, 550.6780059999946, 570.8948899999959,
+        535.9167140000063, 251.63046899999608
+      ]
+    },
+    {
+      "platform": "macos",
+      "checks": 5,
+      "sourceClean": true,
+      "sourceUnchanged": true,
+      "settingsAndWorkspacesPreserved": true,
+      "closeMs": [
+        1021.804833000002, 1006.1522499999992, 917.5824580000044,
+        901.234999999986, 786.2920840000152
+      ]
+    }
+  ],
+  "focusedTests": 15,
+  "productionBuildPassed": true,
+  "packageBoundariesPassed": true,
+  "hardwareValidated": false,
+  "performanceTargetAchieved": false,
+  "windowsShutdownRootCauseResolved": false,
+  "artifacts": [
+    {
+      "file": "ci-run.json",
+      "sha256": "ebe371f5bb17988ec4eecf0f4a8ae259c1649fab29ed57c4d2b004471c773fc1"
+    },
+    {
+      "file": "windows-recovery.json",
+      "sha256": "215554fbb4971835488cbfc186ff64b3cece3f0dbd5f8851dd23a3553886cb60"
+    },
+    {
+      "file": "ubuntu-recovery.json",
+      "sha256": "8f6d46367a465078cbe70b9a00164f13ff4f70e75d355d6c136e8e4a2929c056"
+    },
+    {
+      "file": "macos-recovery.json",
+      "sha256": "2e1e77751cd63cbc69a9390991588d875b6b948a9ffaf7adbf792b6d3e584f52"
+    }
+  ],
+  "limitations": [
+    "Correctness repair only: no imported point renderer or scheduler change.",
+    "Recovery runs use hosted software rendering and do not validate the physical Windows GPU.",
+    "Later normal browser exits do not establish the cause of earlier intermittent shutdown failures.",
+    "PR-only token and optional soak/performance jobs are not covered by this standard CI run."
+  ]
+}

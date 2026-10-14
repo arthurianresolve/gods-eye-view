@@ -1,0 +1,27 @@
+{
+  "schema": "gev-map-fixture-geometry-review/v1",
+  "checkedAt": "2026-10-13T02:18:01.416Z",
+  "sourceCommit": "06f82b08c53a48d5b5b400aa904f1cab4b7ceef9",
+  "scope": "Root mesh POSITION accessor decoded from generated GLB, transformed by its declared root matrix through Cesium WGS84 functions; no browser rendering.",
+  "sourceError": "createGlb passes degree-valued bounds to Cartesian3.fromRadians for width and height",
+  "vertices": 25,
+  "outsideDeclaredRegion": 24,
+  "declaredLongitudeDegrees": [
+    -97.82,
+    -97.58
+  ],
+  "actualLongitudeDegrees": [
+    -100.58066870078312,
+    -94.81932002661405
+  ],
+  "declaredLatitudeDegrees": [
+    30.2,
+    30.340000000000003
+  ],
+  "actualLatitudeDegrees": [
+    26.220184358464415,
+    34.292815743591554
+  ],
+  "maximumHeightMeters": 21247.10807307668,
+  "disposition": "reject incorrect units and require encoded-position geographic bounds regression for every node"
+}

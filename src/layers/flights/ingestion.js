@@ -5,8 +5,11 @@ export function createIngestion({
   feed,
   getQuery,
   applySnapshot,
+  syncRenderDemand = () => {},
   setSourceLabel,
   applyPendingTrackingRestore,
+  onAcceptedSnapshot,
+  onSourceUnavailable,
 }) {
   const methods = {
     async update(viewer, { signal = null } = {}) {
@@ -50,6 +53,9 @@ export function createIngestion({
         feed._lastCoverage = snapshot.coverage;
         setSourceLabel(feed._lastSource);
         const accepted = applySnapshot(snapshot, viewer);
+        // Collection membership is authoritative at this point. Reconcile
+        // before optional recording/tracking work can yield or fail.
+        syncRenderDemand();
         feed._count = accepted.count;
         // Freshness belongs to the source snapshot, not the moment this browser
         // received a cached 200 response.
@@ -61,6 +67,11 @@ export function createIngestion({
           source: feed._lastSource,
           coverage: feed._lastCoverage,
         };
+        try {
+          await onAcceptedSnapshot?.(snapshot);
+        } catch (error) {
+          console.warn('[Recording:Flights] Snapshot was not recorded:', error);
+        }
         console.log(`[Data:Flights] Updated: ${feed._count} aircraft`);
         applyPendingTrackingRestore();
       } catch (e) {
@@ -78,8 +89,17 @@ export function createIngestion({
         }
         feed._lastError =
           e?.name === 'LiveSourceError' ? e.message : 'Live data unavailable';
+        try {
+          await onSourceUnavailable?.(e?.status || 'provider-unavailable');
+        } catch (recordingError) {
+          console.warn(
+            '[Recording:Flights] Gap could not be recorded:',
+            recordingError,
+          );
+        }
       } finally {
         feed._activeUpdateControllers.delete(resourceController);
+        syncRenderDemand();
       }
     },
   };

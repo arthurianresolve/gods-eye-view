@@ -1,0 +1,71 @@
+{
+  "schema": "gev-renderer-retirement-review/v1",
+  "sourceCommit": "7f4f5e07bdbbf6387f5ac267a41842b55a9cf5ec",
+  "status": "failed",
+  "failure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Provider fixture interception reported 1 bounded errors.",
+    "operator": null
+  },
+  "interceptionErrors": [
+    {
+      "message": "Protocol error (Fetch.continueRequest): Fetch domain is not enabled",
+      "phase": "command-send",
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 2,
+      "lifecycleStage": "releasing"
+    }
+  ],
+  "completedSamples": 0,
+  "rawArtifact": {
+    "schema": "gev-smoke-capture-cli-report-artifact/v1",
+    "status": "preserved",
+    "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+    "byteLength": 20878,
+    "sha256": "21ad706539120e02462e9b9465415c6c9f927a74f0ddb4e14aa20098bca17c71",
+    "limitBytes": 8388608,
+    "childStatus": "failed",
+    "bytesIndependentlyVerified": true
+  },
+  "rendererCleanup": [
+    {
+      "phase": "startup-document-retirement",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "elapsedMs": 5.9628650000013295,
+      "documentMs": 4.5842890000003536,
+      "pageMs": 0.20000000001164153,
+      "registrationStatus": "confirmed",
+      "registrationMs": 0.8463539999993372
+    },
+    {
+      "phase": "provider-document-retirement",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "elapsedMs": 12.35236900000018,
+      "documentMs": 8.9092270000001,
+      "pageMs": 0.20000000001164153,
+      "registrationStatus": "confirmed",
+      "registrationMs": 3.3460890000023937
+    },
+    {
+      "phase": "capture-final-document-retirement",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "elapsedMs": 6.5503610000014305,
+      "documentMs": 2.183554000002914,
+      "pageMs": 0.10000000000582077,
+      "registrationStatus": "confirmed",
+      "registrationMs": 4.319307999998273
+    }
+  ],
+  "focusedTests": {
+    "passed": 68,
+    "failed": 0
+  },
+  "oldCliNegativeControl": "failed on actual removal ordering",
+  "limitations": "Reached cleanup checks pass at unchanged deadline; no samples or CPU profiles completed. Overall diagnostic remains failed. No performance or Windows hardware acceptance."
+}

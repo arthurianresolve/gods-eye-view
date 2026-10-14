@@ -168,6 +168,49 @@
     0 0 18px rgba(0, 212, 255, 0.12);
 }
 
+#webgl-recovery-status {
+  position: fixed;
+  top: 112px;
+  left: 50%;
+  z-index: 280;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 157, 111, 0.6);
+  border-radius: 8px;
+  background: rgba(18, 11, 12, 0.94);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  color: #ffd1b7;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  transform: translateX(-50%);
+}
+#webgl-recovery-status[hidden] {
+  display: none;
+}
+#webgl-recovery-reload {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 177, 130, 0.6);
+  border-radius: 5px;
+  background: rgba(255, 144, 91, 0.14);
+  color: #ffe2d1;
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+#webgl-recovery-reload:hover,
+#webgl-recovery-reload:focus-visible {
+  background: rgba(255, 144, 91, 0.28);
+  outline: 2px solid rgba(255, 210, 183, 0.85);
+  outline-offset: 2px;
+}
+
 .share-icon {
   font-size: 16px;
   line-height: 1;

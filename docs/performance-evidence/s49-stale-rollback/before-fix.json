@@ -1,0 +1,67 @@
+{
+  "newerStatus": "applied",
+  "oldStatus": "failed",
+  "beforeLate": {
+    "status": "applied",
+    "workspaceId": "newer",
+    "error": null
+  },
+  "afterLate": {
+    "status": "failed",
+    "workspaceId": "newer",
+    "error": "older workspace failed"
+  },
+  "events": [
+    {
+      "status": "idle",
+      "workspaceId": null,
+      "error": null
+    },
+    {
+      "status": "loading",
+      "workspaceId": "slow",
+      "error": null
+    },
+    {
+      "status": "inspecting",
+      "workspaceId": "slow",
+      "error": null
+    },
+    {
+      "status": "applying",
+      "workspaceId": "slow",
+      "error": null
+    },
+    {
+      "status": "cancelled",
+      "workspaceId": "slow",
+      "error": null
+    },
+    {
+      "status": "loading",
+      "workspaceId": "newer",
+      "error": null
+    },
+    {
+      "status": "inspecting",
+      "workspaceId": "newer",
+      "error": null
+    },
+    {
+      "status": "applying",
+      "workspaceId": "newer",
+      "error": null
+    },
+    {
+      "status": "applied",
+      "workspaceId": "newer",
+      "error": null
+    },
+    {
+      "status": "failed",
+      "workspaceId": "newer",
+      "error": "older workspace failed"
+    }
+  ],
+  "staleStatusOverwrite": true
+}

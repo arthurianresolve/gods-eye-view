@@ -1,0 +1,124 @@
+{
+  "schema": "gev-shader-program-source-attribution/v1",
+  "testedCaptureCommit": "73018ec58d578401789de49ecb29cfec41a8bf72",
+  "captureRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38270552137",
+  "captureStatus": "failed",
+  "packageLock": {
+    "path": "package-lock.json",
+    "byteLength": 112908,
+    "sha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+  },
+  "versions": {
+    "cesium": "1.138.0",
+    "engine": "22.3.0"
+  },
+  "profiles": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "profile": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-idle-1-cpu-profile.json",
+        "byteLength": 371022,
+        "sha256": "4d36f27b7d09e0ab2bb2660adf5548c181df66f4163c54c91865c0a61a5c7b12"
+      },
+      "index": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-idle-1-cpu-profile-ref.json",
+        "byteLength": 804,
+        "sha256": "565df11bc573a17531a0dedd0eed907b969f32edf1a8abae96afd34cefbb0580"
+      },
+      "profileWindowMs": 20539.521,
+      "sampledGetProgramParameterMs": 6914.735,
+      "sampleCount": 16973
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "profile": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-idle-2-cpu-profile.json",
+        "byteLength": 366731,
+        "sha256": "d0227b5f57707030db4847fa6c7562f96816c06c6ba7740d6d30a15a8fc66784"
+      },
+      "index": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-idle-2-cpu-profile-ref.json",
+        "byteLength": 804,
+        "sha256": "3f9acbb04b3720d22581ccd9608de5ea23ffe549106180ab6e057434896499d7"
+      },
+      "profileWindowMs": 18667.636,
+      "sampledGetProgramParameterMs": 6974.395,
+      "sampleCount": 15207
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "profile": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-scripted-motion-1-cpu-profile.json",
+        "byteLength": 405965,
+        "sha256": "6fb560e7c1e252ba0884ccaf5b111de9481bb40ca5a4dcf953cd1b9ed60a9002"
+      },
+      "index": {
+        "path": "docs/performance-evidence/s48-current-dev-capture/hosted-38270552137/provider-scripted-motion-1-cpu-profile-ref.json",
+        "byteLength": 848,
+        "sha256": "cf95396426b4723d69eea50b4352f57718e92ba420332b86890b0ce2193bf120"
+      },
+      "profileWindowMs": 24086.851,
+      "sampledGetProgramParameterMs": 7475.291,
+      "sampleCount": 19959
+    }
+  ],
+  "sources": [
+    {
+      "path": "node_modules/@cesium/engine/Source/Renderer/ShaderProgram.js",
+      "byteLength": 19205,
+      "sha256": "b0ae609324f012437311fc443f483802917be375e3015c647173080dd15dba4f"
+    },
+    {
+      "path": "node_modules/@cesium/engine/Source/Renderer/ShaderCache.js",
+      "byteLength": 9347,
+      "sha256": "897695313fe04cf4237e5a02cd522c223b4b1567fdd1e6fa6a7b514f437fa8ce"
+    },
+    {
+      "path": "node_modules/@cesium/engine/Source/Renderer/Context.js",
+      "byteLength": 54025,
+      "sha256": "3c306e674d614726546828bc2d7ebd20fd7d27668c9549b2fab19ff9c1fcdecd"
+    },
+    {
+      "path": "node_modules/@cesium/engine/Source/Scene/Primitive.js",
+      "byteLength": 81066,
+      "sha256": "62fc51ce774529d137ffce6ecc69ce6665b6c3d9685ebc939000725cefb96122"
+    }
+  ],
+  "findings": [
+    {
+      "source": "ShaderProgram.js:458",
+      "finding": "initialize returns without reinitialization when the program already exists."
+    },
+    {
+      "source": "ShaderProgram.js:217,304,471",
+      "finding": "Program initialization reads LINK_STATUS, ACTIVE_UNIFORMS and ACTIVE_ATTRIBUTES after creating/linking the program."
+    },
+    {
+      "source": "ShaderProgram.js:595; Context.js:75",
+      "finding": "VALIDATE_STATUS is read only in the validation branch; Context initializes validateShaderProgram to false."
+    },
+    {
+      "source": "ShaderCache.js:95-146",
+      "finding": "The cache keys vertex/fragment ShaderSource cache keys plus sorted attribute locations and reuses the existing shader program on a hit."
+    },
+    {
+      "source": "Primitive.js:1724-1753; ShaderProgram.js:110",
+      "finding": "Primitive shader creation obtains a cache program and accesses vertex attributes through a getter that initializes it on first use."
+    },
+    {
+      "source": "ShaderProgram.js:503-522",
+      "finding": "A separate SpectorJS shader editor callback can explicitly reinitialize a program; these profiles do not establish that callback ran."
+    }
+  ],
+  "inference": "Profile parent stacks and pinned source are consistent with initialization/first-use link/query synchronization. They do not show a readiness polling loop on an already initialized cached program.",
+  "limitations": [
+    "CPU sample weights include synchronous native waiting; they are not measured GPU duration or precise CPU execution time.",
+    "Profiles contain no WebGL program IDs or pname argument values; first initialization versus repeated queries cannot be resolved for every sample.",
+    "No branch-origin, physical Windows root-cause, or performance-benefit claim follows.",
+    "The new observer must preserve original GL semantics and report its observation window separately from these historical profile windows.",
+    "Source findings are manual inspection notes. This script recomputes profile weights and file identities; it does not automatically prove the source interpretation."
+  ]
+}

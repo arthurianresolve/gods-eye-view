@@ -1,0 +1,74 @@
+{
+  "schema": "gev-root-austin-fixture-audit/v1",
+  "checkedAt": "2026-10-12T19:27:58.507Z",
+  "sourceHashesBefore": {
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "33ee6181e0a5e2d660e24dbd28ac9209415aa03f72494fb76de46244c3528058",
+    "scripts/performance/austinOperatingWorkloadContract.mjs": "dd654a393d020c5dc5d03860492ca332fa4ff0c16f53a0f4b8b6ec0ca8f1778c",
+    "scripts/performance/austinOperatingWorkloadFixture.test.mjs": "217362f7ee36618b88dd5ac8c6c9882975ac70bff742cf8086fb17373953fb6e"
+  },
+  "sourceHashesAfter": {
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "33ee6181e0a5e2d660e24dbd28ac9209415aa03f72494fb76de46244c3528058",
+    "scripts/performance/austinOperatingWorkloadContract.mjs": "dd654a393d020c5dc5d03860492ca332fa4ff0c16f53a0f4b8b6ec0ca8f1778c",
+    "scripts/performance/austinOperatingWorkloadFixture.test.mjs": "217362f7ee36618b88dd5ac8c6c9882975ac70bff742cf8086fb17373953fb6e"
+  },
+  "sourceUnchangedDuringAudit": true,
+  "fixtureSha256": "f3bf52392efcdf6a7a8c522038e838d4c41d706d29f1a5a508b08e091017dac7",
+  "scope": "Independent Node fixture contract checks; no rendered, hardware, or performance acceptance.",
+  "rows": [
+    {
+      "id": "foreign-origin-not-owned",
+      "pass": true
+    },
+    {
+      "id": "unrelated-ack-ignored",
+      "pass": true
+    },
+    {
+      "id": "wrong-method",
+      "pass": true
+    },
+    {
+      "id": "duplicate-query",
+      "pass": true
+    },
+    {
+      "id": "extra-query",
+      "pass": true
+    },
+    {
+      "id": "all-radio-records-native-valid",
+      "pass": true,
+      "count": 750
+    },
+    {
+      "id": "radio-geographic-initial-coverage",
+      "pass": false,
+      "geographicCount": 0,
+      "claim": "Native camera rectangle math only; no screen-space visibility claimed."
+    },
+    {
+      "id": "installation-subset-native-bounds",
+      "pass": true,
+      "count": 36
+    },
+    {
+      "id": "installation-actual-hash-differs-from-catalog",
+      "pass": true,
+      "actualSha256": "eb136edb7142fc791378be3b308cc64266e8b68ade0a9075f07a3c9dc4b58996",
+      "actualByteLength": 5739,
+      "catalogSha256": "cbe09777617df34a6b93d574d9a27ffd416d325fc1443c9b079e23fbc42836fb"
+    },
+    {
+      "id": "unknown-camera-request-rejected",
+      "pass": true
+    },
+    {
+      "id": "unknown-camera-ack-rejected",
+      "pass": false
+    },
+    {
+      "id": "disposed-delivery-rejects-late-work",
+      "pass": true
+    }
+  ]
+}

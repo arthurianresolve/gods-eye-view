@@ -1,0 +1,135 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "495f0a71821de28a3a06f7cc257c20f2b89ac052",
+  "harnessSha": "495f0a71821de28a3a06f7cc257c20f2b89ac052",
+  "captureWorkerAuditMode": "diagnostic",
+  "captureRendererBackend": "swiftshader",
+  "comparisonEligible": false,
+  "performanceAcceptanceEligible": false,
+  "sceneFrameDiagnostics": false,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-map-streaming-v1",
+  "startedAt": "2026-10-13T05:55:05.413Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Native common visual settings are incomplete.",
+      "failureDetails": {
+        "phase": "native-map-streaming-journey",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "terminalRenderLoopRetirement": null,
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 5.399743000001763,
+            "document": {
+              "status": "confirmed",
+              "elapsedMs": 4.356647000000521,
+              "pageExecutionElapsedMs": 0.10000000000582077,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": true,
+              "hookRestoreAttempted": true,
+              "hookRestored": true,
+              "listenerCount": 2,
+              "listenerRemovalAttemptedCount": 2,
+              "listenerRemovalConfirmedCount": 2,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": true,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "confirmed",
+                "before": true,
+                "after": false,
+                "confirmed": true,
+                "pageExecutionElapsedMs": 0.10000000000582077
+              }
+            },
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 0.684823999999935,
+              "pageExecutionElapsedMs": null,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "smoke-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [],
+        "cleanupErrors": [
+          "Smoke delivery acknowledged required map asset kind synthetic-google-credit-placeholder-png."
+        ],
+        "mapStreamingInterceptionRelease": {
+          "schema": "gev-map-smoke-interception-release/v1",
+          "documentRole": "smoke-variant",
+          "documentId": "baseline-eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "contextCloseStatus": "closed",
+          "targetClosed": true,
+          "release": {
+            "schema": "gev-fixture-interception-release/v1",
+            "interception": {
+              "schema": "gev-fixture-interception-drain/v1",
+              "confirmed": true,
+              "listenerRemovalConfirmed": true,
+              "listenerRemovalVerification": "remove-listener-call-acknowledged",
+              "listenerRemovalErrorKind": null,
+              "pendingAtStop": 0,
+              "pendingPreparationAtStop": 0,
+              "pendingAbortSubscriptionsAtStop": 0,
+              "pendingCommandsAtStop": 0,
+              "pendingCommandsAfterDrain": 0,
+              "pendingPreparationsAfterDrain": 0,
+              "pendingAbortSubscriptionsAfterDrain": 0,
+              "rejectedDrainOperations": 0,
+              "drainCommandFailures": 0,
+              "cancelledPreparationCount": 0,
+              "unexpectedLateRequestCount": 0
+            },
+            "fetchDisable": "target-closed",
+            "detach": "target-closed",
+            "confirmed": true
+          },
+          "confirmed": true
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The map fixture runs its native journey on both exact revisions; the candidate also runs the full capture CLI. This hosted smoke is diagnostic only, not paired timing evidence.",
+    "Map-only preparation skips the unrelated dense aircraft, infrastructure and dam populations; other provider-fixture selections retain the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Native common visual settings are incomplete.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-13T05:55:42.967Z",
+  "durationMs": 37554
+}

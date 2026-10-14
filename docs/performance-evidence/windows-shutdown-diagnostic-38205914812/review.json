@@ -1,0 +1,69 @@
+{
+  "scope": "Windows hosted recovery diagnostic; not a hardware or root-cause pass",
+  "candidateCommit": "eac89bb80d7f7db8131d7ddd516b4112c146f278",
+  "raw": {
+    "path": "report.json",
+    "byteLength": 18140,
+    "sha256": "ca9debffd06a944c351e4f9e93060c9d2464c9ea29428681f6408c0da7c7a3f3"
+  },
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 488.44210000001476,
+      "naturalExitCode": 0,
+      "forced": false,
+      "beforeCloseBrowserTargets": 1,
+      "atDisconnect": "unavailable",
+      "processSnapshot": "not-needed"
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 355.44170000002487,
+      "naturalExitCode": 0,
+      "forced": false,
+      "beforeCloseBrowserTargets": 1,
+      "atDisconnect": "unavailable",
+      "processSnapshot": "not-needed"
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 2194.287399999972,
+      "naturalExitCode": 0,
+      "forced": false,
+      "beforeCloseBrowserTargets": 1,
+      "atDisconnect": "unavailable",
+      "processSnapshot": "not-needed"
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 324.85999999998603,
+      "naturalExitCode": 0,
+      "forced": false,
+      "beforeCloseBrowserTargets": 1,
+      "atDisconnect": "unavailable",
+      "processSnapshot": "not-needed"
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 340.43009999999776,
+      "naturalExitCode": 0,
+      "forced": false,
+      "beforeCloseBrowserTargets": 1,
+      "atDisconnect": "unavailable",
+      "processSnapshot": "not-needed"
+    }
+  ],
+  "shutdownTimeoutReproduced": false,
+  "forcedProcessSnapshotExercised": false,
+  "hardwareRenderingValidated": false
+}

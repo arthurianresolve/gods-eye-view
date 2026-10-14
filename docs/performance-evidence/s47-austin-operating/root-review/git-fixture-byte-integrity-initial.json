@@ -1,0 +1,134 @@
+{
+  "schema": "gev-austin-acquired-git-byte-audit/v1",
+  "recordedAt": "2026-10-12T20:57:11.646Z",
+  "commit": "670b348f8ad237e29caca4f89b7ce8bc3b38fa22",
+  "failedRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38307249499",
+  "failure": "TLE acquired snapshot metadata does not match stations.",
+  "scope": "Byte-level comparison of Git objects and existing acquired Windows files against committed acquisition metadata; no provider fetch or browser run",
+  "committedAttributes": "# Check every text file out with LF on every platform.\n#\n# 44 unit test files read repository source with readFileSync and match it\n# against multi-line regexes (src/scenes/director.test.mjs,\n# src/cockpitMarkup.test.mjs, src/firstRunExperience.test.mjs, ...). Those\n# patterns anchor on \\n, so under Git's default core.autocrlf=true on Windows\n# the sources check out with CRLF, every anchored pattern misses, and `npm test`\n# fails 25 checks on an unmodified clone. Normalizing here keeps the working\n# tree byte-identical on macOS, Linux, and Windows.\n* text=auto eol=lf\n\n# Shell launchers must stay LF to run at all.\n*.sh text eol=lf\n\n# Renderer experiment reports are archived evidence whose byte hashes are recorded.\ndocs/performance-evidence/renderer-query-*.json -text whitespace=cr-at-eol\ndocs/performance-evidence/s59-42d4be6-reproduction.mjs -text whitespace=cr-at-eol\n\n# Assets Git must never rewrite.\n*.gif binary\n*.png binary\n*.glb binary\n*.wav binary\n*.pbf binary\n",
+  "rows": [
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/stations.tle",
+      "expected": {
+        "byteLength": 3192,
+        "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c"
+      },
+      "local": {
+        "byteLength": 3192,
+        "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c",
+        "crlfCount": 57
+      },
+      "committed": {
+        "byteLength": 3135,
+        "sha256": "ee1eaa19df37e4cb2366b352518623154f49fb0fa17e75f65ff4d471a72020e3",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/visual.tle",
+      "expected": {
+        "byteLength": 26040,
+        "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9"
+      },
+      "local": {
+        "byteLength": 26040,
+        "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9",
+        "crlfCount": 465
+      },
+      "committed": {
+        "byteLength": 25575,
+        "sha256": "374cc556182934f18d557a29546bbf25a0c7dbb607e729017cf432b0daf3e1d9",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/gps-ops.tle",
+      "expected": {
+        "byteLength": 5376,
+        "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909"
+      },
+      "local": {
+        "byteLength": 5376,
+        "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909",
+        "crlfCount": 96
+      },
+      "committed": {
+        "byteLength": 5280,
+        "sha256": "f1b4c009f757c22aeeced4b985b7ce85165fe20c33141d30ca5dc4b67121e26e",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/glo-ops.tle",
+      "expected": {
+        "byteLength": 4536,
+        "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f"
+      },
+      "local": {
+        "byteLength": 4536,
+        "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f",
+        "crlfCount": 81
+      },
+      "committed": {
+        "byteLength": 4455,
+        "sha256": "f2863cc2fa145bbc63feafd78c728cea3983dd1d5330fa727bc785148c2bc81d",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/galileo.tle",
+      "expected": {
+        "byteLength": 5376,
+        "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255"
+      },
+      "local": {
+        "byteLength": 5376,
+        "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255",
+        "crlfCount": 96
+      },
+      "committed": {
+        "byteLength": 5280,
+        "sha256": "ddf720bb7ea33fbdf874e86e9b8a8dbe90fcbd6b7ff815ccf20e91a725407d0c",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/geo.tle",
+      "expected": {
+        "byteLength": 95088,
+        "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+      },
+      "local": {
+        "byteLength": 95088,
+        "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14",
+        "crlfCount": 1698
+      },
+      "committed": {
+        "byteLength": 93390,
+        "sha256": "875e0f7274320da3c8ef8de7ba997f6eb969a6f6ffe9fa187cfeb757087146fc",
+        "crlfCount": 0
+      },
+      "localMatchesAcquisition": true,
+      "commitMatchesAcquisition": false,
+      "committedEqualsLfNormalizedAcquisition": true
+    }
+  ],
+  "status": "failed",
+  "cause": "The repository text=auto/eol=lf rule removed CR bytes from all six acquired TLE files at git add. Clean Windows worktree retained original bytes and masked the committed mismatch.",
+  "requiredCorrection": "Preserve raw acquisition bytes with a narrowly scoped -text attribute, recommit the verified originals, and validate an actual checkout before retrying."
+}

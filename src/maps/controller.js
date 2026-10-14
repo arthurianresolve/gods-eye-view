@@ -50,6 +50,8 @@ export class MapSourceController {
     this._terrainMode = null;
     this._subscribers = new Set();
     this._destroyed = false;
+    this._pendingLoads = new Set();
+    this._cacheRequests = { started: 0, reused: 0, failed: 0 };
   }
 
   getStack(id) {
@@ -113,6 +115,41 @@ export class MapSourceController {
       lastError: this._lastError,
       switchOrigin: this._switchOrigin,
       ...this._registry.state,
+    };
+  }
+  /** Numeric ownership only; no provider URLs, credentials or tile payloads. */
+  getPerformanceDiagnostics() {
+    const tilesets = new Set(this._ownedTilesets);
+    if (!this._destroyed)
+      for (const source of this._sources.values()) {
+        if (source.tileset) tilesets.add(source.tileset);
+      }
+    let estimatedTileBytes = 0;
+    for (const tileset of tilesets) {
+      const bytes = tileset.isDestroyed?.()
+        ? 0
+        : tileset.totalMemoryUsageInBytes;
+      if (!Number.isFinite(bytes) || bytes < 0) {
+        estimatedTileBytes = null;
+        break;
+      }
+      estimatedTileBytes += bytes;
+    }
+    return {
+      listeners:
+        this._subscribers.size +
+        Number(Boolean(this._removeImageryErrorListener)),
+      pendingJobs: this._pendingLoads.size,
+      primitives: this._ownedTilesets.size,
+      imageryLayers: Number(Boolean(this._imageryLayer)),
+      cacheEntries:
+        this._imageryProviders.size +
+        this._terrainProviders.size +
+        this._tilesets.size,
+      estimatedTileBytes,
+      providerLoadsStarted: this._cacheRequests.started,
+      providerCacheReuses: this._cacheRequests.reused,
+      providerLoadFailures: this._cacheRequests.failed,
     };
   }
   _emitChange(status) {
@@ -298,16 +335,24 @@ export class MapSourceController {
   }
 
   _cached(cache, id, create) {
-    if (cache.has(id)) return cache.get(id);
+    if (cache.has(id)) {
+      this._cacheRequests.reused += 1;
+      return cache.get(id);
+    }
+    this._cacheRequests.started += 1;
+    const pending = Symbol();
+    this._pendingLoads.add(pending);
     const promise = Promise.resolve()
       .then(() => {
         this._abort.signal.throwIfAborted();
         return create();
       })
       .catch((error) => {
+        this._cacheRequests.failed += 1;
         if (cache.get(id) === promise) cache.delete(id);
         throw error;
-      });
+      })
+      .finally(() => this._pendingLoads.delete(pending));
     cache.set(id, promise);
     return promise;
   }
@@ -315,23 +360,46 @@ export class MapSourceController {
   _getImageryProvider(stack, visited = new Set()) {
     if (visited.has(stack.id))
       return Promise.reject(new Error('Map source fallback cycle'));
-    return this._cached(this._imageryProviders, stack.id, async () => {
-      const source = this._sources.get(stack.id);
-      try {
-        const provider = await source.imagery({ signal: this._abort.signal });
-        if (this._destroyed) this._dispose(provider);
-        return { provider, effectiveStackId: stack.id, fallbackMessage: null };
-      } catch (error) {
-        const fallback = source.constructionFallback;
-        if (this._destroyed || !fallback || !this.isStackAvailable(fallback.id))
-          throw error;
-        const next = new Set(visited).add(stack.id);
-        const resolution = await this._getImageryProvider(
-          this.getStack(fallback.id),
-          next,
-        );
-        return { ...resolution, fallbackMessage: fallback.message };
-      }
+    const cachedResolution = this._cached(
+      this._imageryProviders,
+      stack.id,
+      async () => {
+        const source = this._sources.get(stack.id);
+        try {
+          const provider = await source.imagery({ signal: this._abort.signal });
+          if (this._destroyed) this._dispose(provider);
+          return {
+            provider,
+            effectiveStackId: stack.id,
+            fallbackMessage: null,
+          };
+        } catch (error) {
+          const fallback = source.constructionFallback;
+          if (
+            this._destroyed ||
+            !fallback ||
+            !this.isStackAvailable(fallback.id)
+          )
+            throw error;
+          const next = new Set(visited).add(stack.id);
+          const resolution = await this._getImageryProvider(
+            this.getStack(fallback.id),
+            next,
+          );
+          return { ...resolution, fallbackMessage: fallback.message };
+        }
+      },
+    );
+    return cachedResolution.then((resolution) => {
+      // A fallback is a successful resolution for this switch, but it is not
+      // a provider for the requested source. Keep the fallback provider's own
+      // cache entry and allow a later explicit selection to retry construction.
+      if (
+        resolution.effectiveStackId !== stack.id &&
+        this._imageryProviders.get(stack.id) === cachedResolution
+      )
+        this._imageryProviders.delete(stack.id);
+      return resolution;
     });
   }
 

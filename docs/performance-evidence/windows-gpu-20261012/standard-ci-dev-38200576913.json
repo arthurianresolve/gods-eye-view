@@ -1,0 +1,990 @@
+{
+  "conclusion": "success",
+  "databaseId": 38200576913,
+  "headSha": "cf70aac90bce2178a53f1b71ae8d973544744d58",
+  "jobs": [
+    {
+      "completedAt": "2026-10-12T03:40:11Z",
+      "conclusion": "success",
+      "databaseId": 114652849985,
+      "name": "Windows onboarding",
+      "startedAt": "2026-10-12T03:38:58Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:38:59Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:38:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:09Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:38:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:20Z",
+          "conclusion": "success",
+          "name": "Use Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:29Z",
+          "conclusion": "success",
+          "name": "Run the Pinokio install path",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:42Z",
+          "conclusion": "success",
+          "name": "Check adopted formatting",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:55Z",
+          "conclusion": "success",
+          "name": "Check package boundaries",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:58Z",
+          "conclusion": "success",
+          "name": "Run focused onboarding tests",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:08Z",
+          "conclusion": "success",
+          "name": "Build production bundle",
+          "number": 8,
+          "startedAt": "2026-10-12T03:39:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:08Z",
+          "conclusion": "success",
+          "name": "Post Use Node.js",
+          "number": 15,
+          "startedAt": "2026-10-12T03:40:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:09Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 16,
+          "startedAt": "2026-10-12T03:40:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:10Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-12T03:40:10Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652849985"
+    },
+    {
+      "completedAt": "2026-10-12T03:44:15Z",
+      "conclusion": "success",
+      "databaseId": 114652850109,
+      "name": "Node 24.14.0",
+      "startedAt": "2026-10-12T03:38:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:00Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:38:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:06Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:12Z",
+          "conclusion": "success",
+          "name": "Use Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:19Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:19Z",
+          "conclusion": "success",
+          "name": "Run setup policy checks",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:37Z",
+          "conclusion": "success",
+          "name": "Check adopted formatting",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:54Z",
+          "conclusion": "success",
+          "name": "Check package boundaries",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:54Z",
+          "conclusion": "skipped",
+          "name": "Check published layer-token allocations",
+          "number": 8,
+          "startedAt": "2026-10-12T03:39:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:01Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 9,
+          "startedAt": "2026-10-12T03:39:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:13Z",
+          "conclusion": "success",
+          "name": "Build production bundle",
+          "number": 10,
+          "startedAt": "2026-10-12T03:44:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:13Z",
+          "conclusion": "success",
+          "name": "Post Use Node.js",
+          "number": 19,
+          "startedAt": "2026-10-12T03:44:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:13Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 20,
+          "startedAt": "2026-10-12T03:44:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:13Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-12T03:44:13Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850109"
+    },
+    {
+      "completedAt": "2026-10-12T03:56:34Z",
+      "conclusion": "success",
+      "databaseId": 114652850142,
+      "name": "Street Level browser gate",
+      "startedAt": "2026-10-12T03:38:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:00Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:07Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:15Z",
+          "conclusion": "success",
+          "name": "Use Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:25Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies and headless Chrome",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:37Z",
+          "conclusion": "success",
+          "name": "Build production bundle with a dummy Mapillary token",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:39Z",
+          "conclusion": "success",
+          "name": "Start the preview server",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:48Z",
+          "conclusion": "success",
+          "name": "Street Level gate with Mapillary fixtures",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:44:50Z",
+          "conclusion": "success",
+          "name": "Start the application lifecycle fixture server",
+          "number": 8,
+          "startedAt": "2026-10-12T03:44:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:45:11Z",
+          "conclusion": "success",
+          "name": "First-use application lifecycle gate",
+          "number": 9,
+          "startedAt": "2026-10-12T03:44:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:46:34Z",
+          "conclusion": "success",
+          "name": "Evidence references and browser-profile transfer",
+          "number": 10,
+          "startedAt": "2026-10-12T03:45:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:47:04Z",
+          "conclusion": "success",
+          "name": "Keyboard, accessible names and reflow",
+          "number": 11,
+          "startedAt": "2026-10-12T03:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:47:24Z",
+          "conclusion": "success",
+          "name": "Effective visual settings across share and workspace restores",
+          "number": 12,
+          "startedAt": "2026-10-12T03:47:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:23Z",
+          "conclusion": "success",
+          "name": "Durable workspace library and cross-page conflict journey",
+          "number": 13,
+          "startedAt": "2026-10-12T03:47:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:50:17Z",
+          "conclusion": "success",
+          "name": "Rendered application mixed-use smoke",
+          "number": 14,
+          "startedAt": "2026-10-12T03:48:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:51:39Z",
+          "conclusion": "success",
+          "name": "Scene import and sharing gate",
+          "number": 15,
+          "startedAt": "2026-10-12T03:50:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:52:55Z",
+          "conclusion": "success",
+          "name": "Aircraft evidence panel gate",
+          "number": 16,
+          "startedAt": "2026-10-12T03:51:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "success",
+          "name": "Portable panel gate",
+          "number": 17,
+          "startedAt": "2026-10-12T03:52:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "skipped",
+          "name": "Preview server log",
+          "number": 18,
+          "startedAt": "2026-10-12T03:56:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "skipped",
+          "name": "Upload gate evidence",
+          "number": 19,
+          "startedAt": "2026-10-12T03:56:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "success",
+          "name": "Post Use Node.js",
+          "number": 37,
+          "startedAt": "2026-10-12T03:56:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 38,
+          "startedAt": "2026-10-12T03:56:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:56:31Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 39,
+          "startedAt": "2026-10-12T03:56:31Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850142"
+    },
+    {
+      "completedAt": "2026-10-12T03:42:38Z",
+      "conclusion": "success",
+      "databaseId": 114652850150,
+      "name": "Install and update recovery (macos-latest)",
+      "startedAt": "2026-10-12T03:39:06Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:08Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:39:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:19Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:28Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:34Z",
+          "conclusion": "success",
+          "name": "Clean install",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:41Z",
+          "conclusion": "success",
+          "name": "Exercise real Git update paths with disposable repositories",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:41Z",
+          "conclusion": "success",
+          "name": "Reject incomplete artifacts and reopen portable workspaces",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:46Z",
+          "conclusion": "success",
+          "name": "Install fixture browser",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:29Z",
+          "conclusion": "success",
+          "name": "Upgrade and recover a real installation and browser profile",
+          "number": 8,
+          "startedAt": "2026-10-12T03:39:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:29Z",
+          "conclusion": "skipped",
+          "name": "Preserve recovery evidence",
+          "number": 9,
+          "startedAt": "2026-10-12T03:42:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:29Z",
+          "conclusion": "success",
+          "name": "Recovery evidence in job logs",
+          "number": 10,
+          "startedAt": "2026-10-12T03:42:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:30Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 19,
+          "startedAt": "2026-10-12T03:42:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:31Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 20,
+          "startedAt": "2026-10-12T03:42:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:35Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-12T03:42:31Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850150"
+    },
+    {
+      "completedAt": "2026-10-12T03:48:09Z",
+      "conclusion": "success",
+      "databaseId": 114652850183,
+      "name": "Install and update recovery (windows-latest)",
+      "startedAt": "2026-10-12T03:38:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:02Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:17Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:33Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:42Z",
+          "conclusion": "success",
+          "name": "Clean install",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:02Z",
+          "conclusion": "success",
+          "name": "Exercise real Git update paths with disposable repositories",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:03Z",
+          "conclusion": "success",
+          "name": "Reject incomplete artifacts and reopen portable workspaces",
+          "number": 6,
+          "startedAt": "2026-10-12T03:40:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:40:09Z",
+          "conclusion": "success",
+          "name": "Install fixture browser",
+          "number": 7,
+          "startedAt": "2026-10-12T03:40:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:05Z",
+          "conclusion": "success",
+          "name": "Upgrade and recover a real installation and browser profile",
+          "number": 8,
+          "startedAt": "2026-10-12T03:40:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:05Z",
+          "conclusion": "skipped",
+          "name": "Preserve recovery evidence",
+          "number": 9,
+          "startedAt": "2026-10-12T03:48:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:06Z",
+          "conclusion": "success",
+          "name": "Recovery evidence in job logs",
+          "number": 10,
+          "startedAt": "2026-10-12T03:48:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:06Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 19,
+          "startedAt": "2026-10-12T03:48:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:07Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 20,
+          "startedAt": "2026-10-12T03:48:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:48:07Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-12T03:48:07Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850183"
+    },
+    {
+      "completedAt": "2026-10-12T03:43:02Z",
+      "conclusion": "success",
+      "databaseId": 114652850227,
+      "name": "Node 26.x",
+      "startedAt": "2026-10-12T03:38:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:00Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:07Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:14Z",
+          "conclusion": "success",
+          "name": "Use Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:20Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:20Z",
+          "conclusion": "success",
+          "name": "Run setup policy checks",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:39Z",
+          "conclusion": "success",
+          "name": "Check adopted formatting",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:57Z",
+          "conclusion": "success",
+          "name": "Check package boundaries",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:57Z",
+          "conclusion": "skipped",
+          "name": "Check published layer-token allocations",
+          "number": 8,
+          "startedAt": "2026-10-12T03:39:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:42:48Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 9,
+          "startedAt": "2026-10-12T03:39:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:43:00Z",
+          "conclusion": "success",
+          "name": "Build production bundle",
+          "number": 10,
+          "startedAt": "2026-10-12T03:42:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:43:00Z",
+          "conclusion": "success",
+          "name": "Post Use Node.js",
+          "number": 19,
+          "startedAt": "2026-10-12T03:43:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:43:00Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 20,
+          "startedAt": "2026-10-12T03:43:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:43:00Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-12T03:43:00Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850227"
+    },
+    {
+      "completedAt": "2026-10-12T03:41:07Z",
+      "conclusion": "success",
+      "databaseId": 114652850253,
+      "name": "Install and update recovery (ubuntu-latest)",
+      "startedAt": "2026-10-12T03:38:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-12T03:39:00Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-12T03:38:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:06Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-10-12T03:39:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:13Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-12T03:39:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:19Z",
+          "conclusion": "success",
+          "name": "Clean install",
+          "number": 4,
+          "startedAt": "2026-10-12T03:39:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:21Z",
+          "conclusion": "success",
+          "name": "Exercise real Git update paths with disposable repositories",
+          "number": 5,
+          "startedAt": "2026-10-12T03:39:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:22Z",
+          "conclusion": "success",
+          "name": "Reject incomplete artifacts and reopen portable workspaces",
+          "number": 6,
+          "startedAt": "2026-10-12T03:39:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:39:26Z",
+          "conclusion": "success",
+          "name": "Install fixture browser",
+          "number": 7,
+          "startedAt": "2026-10-12T03:39:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "success",
+          "name": "Upgrade and recover a real installation and browser profile",
+          "number": 8,
+          "startedAt": "2026-10-12T03:39:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "skipped",
+          "name": "Preserve recovery evidence",
+          "number": 9,
+          "startedAt": "2026-10-12T03:41:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "success",
+          "name": "Recovery evidence in job logs",
+          "number": 10,
+          "startedAt": "2026-10-12T03:41:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 19,
+          "startedAt": "2026-10-12T03:41:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 20,
+          "startedAt": "2026-10-12T03:41:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-12T03:41:05Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-12T03:41:05Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850253"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850759,
+      "name": "Aircraft tracking regression",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850759"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850904,
+      "name": "Isolated terrain and picking lifecycle",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850904"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850911,
+      "name": "Free hosted Mac rendering diagnostic",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850911"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850925,
+      "name": "Isolated import and workspace lifecycle",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850925"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850946,
+      "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850946"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850950,
+      "name": "60-minute rendered application soak",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850950"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652850999,
+      "name": "Native WebGL probe (${{ matrix.os }})",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652850999"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652851000,
+      "name": "Isolated CCTV lifecycle",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652851000"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652851026,
+      "name": "Isolated rendered mixed-use smoke",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652851026"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652851172,
+      "name": "Isolated mission render-demand correctness",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652851172"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652851524,
+      "name": "Baseline-compatible performance build smoke",
+      "startedAt": "2026-10-12T03:38:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652851524"
+    },
+    {
+      "completedAt": "2026-10-12T03:38:56Z",
+      "conclusion": "skipped",
+      "databaseId": 114652883331,
+      "name": "Free hosted Mac accelerated retention diagnostic",
+      "startedAt": "2026-10-12T03:39:06Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913/job/114652883331"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200576913"
+}

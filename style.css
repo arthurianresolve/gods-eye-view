@@ -23,6 +23,9 @@
 @import './src/ui/styles/voice-card.css';
 @import './src/ui/styles/first-run.css';
 @import './src/ui/styles/provider-settings.css';
+@import './src/ui/styles/commandPalette.css';
+@import './src/ui/styles/workspaceLibrary.css';
+@import './src/ui/styles/diagnostics.css';
 
 @import './src/ui/styles/weather.css';
 @import './src/ui/styles/panel-surfaces.css';

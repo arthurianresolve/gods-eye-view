@@ -1,0 +1,98 @@
+{
+  "schema": "gev-cpu-profile-independent-review/v1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38184189829",
+  "appCommit": "94ab2536c93a964da34e0d63e771b0d357703e8c",
+  "harnessCommit": "94ab2536c93a964da34e0d63e771b0d357703e8c",
+  "reportStatus": "failed",
+  "comparisonEligible": false,
+  "reportSha256": "dab2125475ed4d1bfbb89ee1c1e6d72f6a88a98758e8edc23118a614d6bafe46",
+  "failure": {
+    "phase": "validate-provider-fixture-clock",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Measurement boundary: completed render result was not delivered within 5000ms plus 1000ms protocol grace after callback entry.",
+    "operator": null
+  },
+  "profileReference": {
+    "schema": "gev-render-boundary-cpu-profile-ref/v1",
+    "label": "Measurement boundary",
+    "status": "complete",
+    "performanceAcceptanceEligible": false,
+    "fileName": "render-boundary-02-measurement-boundary.json",
+    "sha256": "10e440a12fb05980b5fc35d321ad0e757cf273bfec74ffa50d4b034d545a5e7b",
+    "byteLength": 76940,
+    "profilerErrors": []
+  },
+  "warmupProfile": {
+    "schema": "gev-render-boundary-cpu-profile-ref/v1",
+    "label": "Warmup boundary",
+    "status": "incomplete",
+    "performanceAcceptanceEligible": false,
+    "fileName": "render-boundary-01-warmup-boundary.json",
+    "sha256": null,
+    "byteLength": null,
+    "profilerErrors": [
+      "Profiler.enable exceeded 2000 ms."
+    ]
+  },
+  "normalizedProfileMatches": true,
+  "profileWindowMs": 7040.492,
+  "sampleCount": 5516,
+  "nodeCount": 204,
+  "topLocations": [
+    {
+      "functionName": "readPixels",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1,
+      "samples": 2772,
+      "sampledWeightMs": 3073.615000000039
+    },
+    {
+      "functionName": "(idle)",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1,
+      "samples": 1520,
+      "sampledWeightMs": 1712.2929999999938
+    },
+    {
+      "functionName": "getProgramParameter",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1,
+      "samples": 1134,
+      "sampledWeightMs": 1354.0039999999963
+    },
+    {
+      "functionName": "(program)",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1,
+      "samples": 4,
+      "sampledWeightMs": 789.0060000000001
+    },
+    {
+      "functionName": "df.updateShows",
+      "url": "[non-fixture source]",
+      "lineNumber": 10167,
+      "columnNumber": 219733,
+      "samples": 6,
+      "sampledWeightMs": 16.131999999999998
+    },
+    {
+      "functionName": "Jr.getGeometryInstanceAttributes",
+      "url": "[non-fixture source]",
+      "lineNumber": 5043,
+      "columnNumber": 14173,
+      "samples": 12,
+      "sampledWeightMs": 14.777000000000001
+    }
+  ],
+  "limitations": [
+    "Sample weights are statistical attribution, not exact CPU execution or GPU time.",
+    "No direct alignment between profile timestamps and boundary progress markers was captured.",
+    "Hosted SwiftShader diagnostic does not explain the separate Windows minimal-WebGL scheduling stall.",
+    "Missing warmup profile and failed render boundary remain failures."
+  ]
+}

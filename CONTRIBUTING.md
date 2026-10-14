@@ -108,7 +108,7 @@ prints anything; never fix that by renaming or deleting PR A's published token.
 The highest-leverage places to jump in:
 
 - **🌆 Add a CCTV source pack.** Austin is the reference camera source. Adding another city means a clean public camera catalog with coordinates, attribution, and server-registered frame URLs (the proxy only fetches registered URLs — never client-supplied ones, see [SECURITY.md](SECURITY.md)). City packs are the best first lane.
-- **🛰️ Add or improve a data layer.** Layer factories live in `src/layers/<family>/`, with source, record, controller and renderer owners implementing the layer interface (`init/enable/disable/update/destroy/getStats`, optional `getDetectableObjects`/`getStats`). Use an existing layer as a template.
+- **🛰️ Add or improve a data layer.** Layer factories live in `src/layers/<family>/`, with source, record, controller and renderer owners implementing the layer interface (`init/enable/disable/update/destroy/getStats`, optional `getDetectableObjects`/`getStats`). Start with the keyless [source-adapter guide](docs/SOURCE-ADAPTERS.md) and conformance fixture, then register the adapter through existing owners.
 - **🎙️ Extend voice control.** Voice arguments are defined in `src/voice/actionSchemas.js`, with server-side descriptions in `server/providers/openai/tools.js` and client-side execution in `src/voice/gevActions.js`. Keep the tool surface tight and the responses honest (confirm only what actually happened).
 - **🎨 Add a visual style.** Styles are GLSL post-process shaders in `src/styles/`.
 - **🐛 Fix bugs / improve the first-run experience.** See [docs/KNOWN-ISSUES.md](docs/KNOWN-ISSUES.md).
@@ -147,7 +147,7 @@ ownership and adoption process.
 
 ## Pull requests
 
-1. Branch off `main`.
+1. In this fork, branch off `dev` and target `dev` for integration.
 2. Keep `npm run build`, `npm test`, and `npm run test:track` green and avoid new console errors, plus the [feature gate](#feature-regression-gates) for the area you touched.
 3. If you change runtime behavior, update `docs/CURRENT-STATE.md` and `CHANGELOG.md` in the same PR.
 4. If you add or change a data source, update [DATA_SOURCES.md](DATA_SOURCES.md) with its license and attribution. **Don't add data you don't have the right to redistribute** — fetch it at runtime instead.
@@ -159,6 +159,10 @@ God's Eye View is maintained by [Bilawal Sidhu](https://github.com/bilawalsidhu)
 and [Sameh Khamis](https://github.com/samehkhamis) at
 [Halfpixel](https://halfpixel.ai). Either maintainer can review and merge
 contributions.
+
+For this fork, maintainers integrate reviewed changes into `dev`. Promote a
+release-ready `dev` revision to `main` with a reviewed pull request after the
+normal gates pass; do not push release commits directly to `main`.
 
 ## Ground rules
 

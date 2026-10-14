@@ -1,0 +1,936 @@
+{
+  "candidateCommit": "9ec1172c922b8558bc5723b07eeef7a92b62dc09",
+  "harnessCommit": "9ec1172c922b8558bc5723b07eeef7a92b62dc09",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38217259994",
+  "status": "failed",
+  "rawBytes": 149659,
+  "rawSha256": "8c5354f015b0e7b69d104e9f65010228c618b8e8782cab1989f61fea1ee71db3",
+  "failure": {
+    "message": "Child process timed out; Wrote bounded failed-capture evidence. Capture failed during warmup: Warmup boundary: page evaluation failed: Protocol error (Runtime.callFunctionOn): Target closed Refreshed bounded failed-capture evidence after cleanup. Capture failed during warmup: Warmup boundary: page evaluation failed: Protocol error (Runtime.callFunctionOn): Target closed; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "summary": {
+    "reportSchema": "gev-performance-capture-failure/v1",
+    "status": "failed",
+    "failure": {
+      "message": "Warmup boundary: page evaluation failed: Protocol error (Runtime.callFunctionOn): Target closed",
+      "phase": "warmup",
+      "scenario": "scripted-motion",
+      "run": 2,
+      "operator": null,
+      "actual": null,
+      "expected": null
+    },
+    "source": {
+      "appCommit": "9ec1172c922b8558bc5723b07eeef7a92b62dc09",
+      "harnessCommit": "9ec1172c922b8558bc5723b07eeef7a92b62dc09",
+      "provenanceStatus": "pre-capture-served-assets-verified"
+    },
+    "fixtureDelivery": {
+      "status": "observed",
+      "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+      "observedFlightsCount": 2500,
+      "fulfilledResponseCount": 1
+    },
+    "fixtureInterceptionErrors": [],
+    "completedSampleCount": 3,
+    "completedSamplesRetained": 3,
+    "evidenceTruncated": true
+  },
+  "profiles": [
+    {
+      "target": {
+        "scenario": "idle",
+        "run": 1,
+        "captureOrdinal": 0,
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1"
+      },
+      "fileName": "provider-idle-1-cpu-profile.json",
+      "sha256": "4a9a94c617ca1a7371d545545028ff4ad3e42432930cba15ad621d1cb305cd92",
+      "bytes": 348722,
+      "verified": true,
+      "profileWindowMs": 22433.408,
+      "samples": 19025,
+      "totalSampleWeightMs": 22432.294,
+      "topFunctions": [
+        {
+          "name": "readPixels",
+          "sampledWeightMs": 8528.987,
+          "percent": 38.02102005260809
+        },
+        {
+          "name": "getProgramParameter",
+          "sampledWeightMs": 5433.621,
+          "percent": 24.222315381565522
+        },
+        {
+          "name": "getParameter",
+          "sampledWeightMs": 2853.754,
+          "percent": 12.721632482170572
+        },
+        {
+          "name": "(idle)",
+          "sampledWeightMs": 2655.691,
+          "percent": 11.838695587709397
+        },
+        {
+          "name": "(program)",
+          "sampledWeightMs": 1062.464,
+          "percent": 4.736314529401229
+        },
+        {
+          "name": "bufferData",
+          "sampledWeightMs": 401.669,
+          "percent": 1.7905837004454381
+        },
+        {
+          "name": "(garbage collector)",
+          "sampledWeightMs": 171.85,
+          "percent": 0.7660830408160664
+        },
+        {
+          "name": "_i.cartesianToCartographic",
+          "sampledWeightMs": 65.103,
+          "percent": 0.2902199837430804
+        },
+        {
+          "name": "Jr.getGeometryInstanceAttributes",
+          "sampledWeightMs": 38.889,
+          "percent": 0.17336167223913881
+        },
+        {
+          "name": "aGe",
+          "sampledWeightMs": 38.291,
+          "percent": 0.17069587265573463
+        },
+        {
+          "name": "",
+          "sampledWeightMs": 36.532,
+          "percent": 0.16285449896475143
+        },
+        {
+          "name": "get",
+          "sampledWeightMs": 35.676,
+          "percent": 0.15903857180188527
+        }
+      ],
+      "nativeCallPaths": [
+        {
+          "sampledWeightMs": 3877.329,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "d_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 533050
+            },
+            {
+              "functionName": "u_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 532560
+            },
+            {
+              "functionName": "i",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 510268
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 2853.754,
+          "chain": [
+            {
+              "functionName": "getParameter",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "observeCommonScene",
+              "scriptId": "60",
+              "url": "[non-fixture source]",
+              "lineNumber": 0,
+              "columnNumber": 28
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 4651.658,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "d_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 533050
+            },
+            {
+              "functionName": "u_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 532560
+            },
+            {
+              "functionName": "QEe",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 509026
+            },
+            {
+              "functionName": "_summaryContext",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1479,
+              "columnNumber": 7715
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1479,
+              "columnNumber": 6452
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 547256
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "scenario": "idle",
+        "run": 2,
+        "captureOrdinal": 1,
+        "documentRole": "provider-sample-2",
+        "documentId": "provider-document-2"
+      },
+      "fileName": "provider-idle-2-cpu-profile.json",
+      "sha256": "9b49024caff7bcced09a659ba73d961b0331fa95e8fcea87d91108036a60f9bc",
+      "bytes": 377247,
+      "verified": true,
+      "profileWindowMs": 20856.842,
+      "samples": 17448,
+      "totalSampleWeightMs": 20855.444,
+      "topFunctions": [
+        {
+          "name": "getProgramParameter",
+          "sampledWeightMs": 7429.722,
+          "percent": 35.624856512285234
+        },
+        {
+          "name": "(idle)",
+          "sampledWeightMs": 4990.307,
+          "percent": 23.92807844321128
+        },
+        {
+          "name": "readPixels",
+          "sampledWeightMs": 3125.081,
+          "percent": 14.98448558563414
+        },
+        {
+          "name": "getParameter",
+          "sampledWeightMs": 2067.27,
+          "percent": 9.912375876533725
+        },
+        {
+          "name": "(program)",
+          "sampledWeightMs": 1061.631,
+          "percent": 5.090426269515048
+        },
+        {
+          "name": "bufferData",
+          "sampledWeightMs": 428.189,
+          "percent": 2.0531281904139753
+        },
+        {
+          "name": "(garbage collector)",
+          "sampledWeightMs": 155.601,
+          "percent": 0.7460929625856922
+        },
+        {
+          "name": "Jr.getGeometryInstanceAttributes",
+          "sampledWeightMs": 67.179,
+          "percent": 0.3221173330090695
+        },
+        {
+          "name": "",
+          "sampledWeightMs": 60.864,
+          "percent": 0.291837469391685
+        },
+        {
+          "name": "get",
+          "sampledWeightMs": 51.734,
+          "percent": 0.24805993101849091
+        },
+        {
+          "name": "_i.cartesianToCartographic",
+          "sampledWeightMs": 45.855,
+          "percent": 0.2198706486421483
+        },
+        {
+          "name": "Sx.remove",
+          "sampledWeightMs": 36.212,
+          "percent": 0.17363332087295769
+        }
+      ],
+      "nativeCallPaths": [
+        {
+          "sampledWeightMs": 1711.706,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "Lwe",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 348205
+            },
+            {
+              "functionName": "gy",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 348818
+            },
+            {
+              "functionName": "d",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 351200
+            },
+            {
+              "functionName": "mR.raiseEvent",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 79,
+              "columnNumber": 1358
+            },
+            {
+              "functionName": "K5.checkForCameraUpdates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 8285
+            },
+            {
+              "functionName": "yi.render",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1413.375,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "d_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 533050
+            },
+            {
+              "functionName": "u_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 532560
+            },
+            {
+              "functionName": "i",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 510268
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 2067.27,
+          "chain": [
+            {
+              "functionName": "getParameter",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "observeCommonScene",
+              "scriptId": "60",
+              "url": "[non-fixture source]",
+              "lineNumber": 0,
+              "columnNumber": 28
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "scenario": "scripted-motion",
+        "run": 1,
+        "captureOrdinal": 2,
+        "documentRole": "provider-sample-3",
+        "documentId": "provider-document-3"
+      },
+      "fileName": "provider-scripted-motion-1-cpu-profile.json",
+      "sha256": "9bc97367104c1eae7ee5863ff38234c77227e73281f20f440b7358b7d1550fc5",
+      "bytes": 325608,
+      "verified": true,
+      "profileWindowMs": 24194.296,
+      "samples": 20854,
+      "totalSampleWeightMs": 24192.918,
+      "topFunctions": [
+        {
+          "name": "getProgramParameter",
+          "sampledWeightMs": 5765.689,
+          "percent": 23.832135503456012
+        },
+        {
+          "name": "(idle)",
+          "sampledWeightMs": 5649.474,
+          "percent": 23.351767653657983
+        },
+        {
+          "name": "readPixels",
+          "sampledWeightMs": 5576.166,
+          "percent": 23.048753358317505
+        },
+        {
+          "name": "getParameter",
+          "sampledWeightMs": 2953.247,
+          "percent": 12.207072334143405
+        },
+        {
+          "name": "bufferData",
+          "sampledWeightMs": 2165.899,
+          "percent": 8.952615802690689
+        },
+        {
+          "name": "(program)",
+          "sampledWeightMs": 768.866,
+          "percent": 3.1780622742572846
+        },
+        {
+          "name": "(garbage collector)",
+          "sampledWeightMs": 350.209,
+          "percent": 1.4475682511716859
+        },
+        {
+          "name": "_i.cartesianToCartographic",
+          "sampledWeightMs": 47.222,
+          "percent": 0.19518935252043593
+        },
+        {
+          "name": "",
+          "sampledWeightMs": 45.546,
+          "percent": 0.18826170534699452
+        },
+        {
+          "name": "Jr.getGeometryInstanceAttributes",
+          "sampledWeightMs": 40.22,
+          "percent": 0.16624699839845694
+        },
+        {
+          "name": "aGe",
+          "sampledWeightMs": 36.051,
+          "percent": 0.14901468272657312
+        },
+        {
+          "name": "Wue",
+          "sampledWeightMs": 28.011,
+          "percent": 0.11578181681101883
+        }
+      ],
+      "nativeCallPaths": [
+        {
+          "sampledWeightMs": 2509.04,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "Lwe",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 348205
+            },
+            {
+              "functionName": "gy",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 348818
+            },
+            {
+              "functionName": "d",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 351200
+            },
+            {
+              "functionName": "mR.raiseEvent",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 79,
+              "columnNumber": 1358
+            },
+            {
+              "functionName": "K5.checkForCameraUpdates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 8285
+            },
+            {
+              "functionName": "yi.render",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 2953.247,
+          "chain": [
+            {
+              "functionName": "getParameter",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "observeCommonScene",
+              "scriptId": "62",
+              "url": "[non-fixture source]",
+              "lineNumber": 0,
+              "columnNumber": 28
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 3067.126,
+          "chain": [
+            {
+              "functionName": "readPixels",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "scriptId": "6",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "d_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 533050
+            },
+            {
+              "functionName": "u_",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 532560
+            },
+            {
+              "functionName": "QEe",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 509026
+            },
+            {
+              "functionName": "_summaryContext",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1479,
+              "columnNumber": 7715
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1479,
+              "columnNumber": 6452
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "/assets/index-DtMeaZ-z.js",
+              "lineNumber": 1418,
+              "columnNumber": 547256
+            },
+            {
+              "functionName": "(root)",
+              "scriptId": "0",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interpretation": {
+    "profileTimes": "Sampled main-thread stack weights, including native waits; not precise CPU execution or GPU timing.",
+    "getParameter": "All sampled getParameter stacks have observeCommonScene as their direct JavaScript caller. These reads are harness renderer/vendor identity queries.",
+    "readPixels": "Sampled readPixels stacks include Cesium depth picking from HUD summary context and camera-update application paths.",
+    "shaderQueries": "getProgramParameter samples arise under Cesium shader/primitive preparation and drawing; no repeated-query bug established.",
+    "interception": "No interception errors recorded in this run. Previous two errors did not recur, so their cause is still unassigned.",
+    "stop": "Outer 180-second capture-child deadline is reported; Target closed occurs during cleanup while the fourth sample is awaiting warmup. Not proof of a spontaneous browser crash."
+  },
+  "eligibility": {
+    "performance": false,
+    "physicalHardware": false,
+    "fullCapture": false
+  },
+  "next": "Move immutable renderer/vendor reads to the existing early Cesium context probe, preserve fresh visual/population checks, and reject replacement/loss/restoration without relaxing deadlines."
+}

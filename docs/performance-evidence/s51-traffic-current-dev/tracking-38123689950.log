@@ -1,0 +1,406 @@
+Aircraft tracking regression	Set up job	﻿2026-10-11T08:07:16.4593440Z Current runner version: '2.337.0'
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4629368Z ##[group]Runner Image Provisioner
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4630762Z Hosted Compute Agent
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4631711Z Version: 20261002.596
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4632964Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4634164Z Build Date: 2026-10-02T22:28:27Z
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4635304Z Worker ID: {6838ebdd-e39b-4db1-aaf8-8c2195473599}
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4636560Z Region: centralus
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4637451Z Cloud: Azure
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4638328Z ##[endgroup]
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4640568Z ##[group]Operating System
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4641664Z Ubuntu
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4643002Z 24.04.5
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4643882Z LTS
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4644824Z ##[endgroup]
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4645881Z ##[group]Runner Image
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4646934Z Image: ubuntu-24.04
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4648149Z Version: 20261004.327.1
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4650076Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4653348Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4655128Z ##[endgroup]
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4657205Z ##[group]GITHUB_TOKEN Permissions
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4660042Z Contents: read
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4661751Z Metadata: read
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4663073Z ##[endgroup]
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4665959Z Secret source: Actions
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4667602Z Cache mode: write
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.4668995Z Prepare workflow directory
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.5126910Z Prepare all required actions
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.5200158Z Getting action download info
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.7659342Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.8518440Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Aircraft tracking regression	Set up job	2026-10-11T08:07:16.9879562Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Aircraft tracking regression	Set up job	2026-10-11T08:07:17.2427848Z Complete job name: Aircraft tracking regression
+Aircraft tracking regression	Check out immutable diagnostic source	﻿2026-10-11T08:07:17.3186838Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3187933Z with:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3188390Z   persist-credentials: false
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3188948Z   repository: arthurianresolve/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3192923Z   token: ***
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3193370Z   ssh-strict: true
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3193802Z   ssh-user: git
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3194274Z   clean: true
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3194729Z   sparse-checkout-cone-mode: true
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3195262Z   fetch-depth: 1
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3195690Z   fetch-tags: false
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3196134Z   show-progress: true
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3196591Z   lfs: false
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3197006Z   submodules: false
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3197460Z   set-safe-directory: true
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3197983Z   allow-unsafe-pr-checkout: false
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3198754Z env:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3199193Z   PUPPETEER_SKIP_DOWNLOAD: 1
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.3199690Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4241740Z Syncing repository: arthurianresolve/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4244929Z ##[group]Getting Git version info
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4246345Z Working directory is '/home/runner/work/gods-eye-view/gods-eye-view'
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4248320Z [command]/usr/bin/git version
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4319622Z git version 2.55.0
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4344253Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4386980Z Temporarily overriding HOME='/home/runner/work/_temp/78874047-c03d-47a8-b852-7f0d8b12ef32' before making global git config changes
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4389508Z Adding repository directory to the temporary git global config as a safe directory
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4394515Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/gods-eye-view/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4447870Z Deleting the contents of '/home/runner/work/gods-eye-view/gods-eye-view'
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4451377Z ##[group]Initializing the repository
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4460937Z [command]/usr/bin/git init /home/runner/work/gods-eye-view/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4554939Z hint: Using 'master' as the name for the initial branch. This default branch name
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4556554Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4557780Z hint: to use in all of your new repositories, which will suppress this warning,
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4558547Z hint: call:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4558990Z hint:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4559542Z hint: 	git config --global init.defaultBranch <name>
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4560192Z hint:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4560800Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4561748Z hint: 'development'. The just-created branch can be renamed via this command:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4562775Z hint:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4563231Z hint: 	git branch -m <name>
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4563749Z hint:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4564396Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4569081Z Initialized empty Git repository in /home/runner/work/gods-eye-view/gods-eye-view/.git/
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4590748Z [command]/usr/bin/git remote add origin https://github.com/arthurianresolve/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4632271Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4633456Z ##[group]Disabling automatic garbage collection
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4636151Z [command]/usr/bin/git config --local gc.auto 0
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4668502Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4669419Z ##[group]Setting up auth
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4677247Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.4713200Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5136451Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5194549Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5475986Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5514368Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5741461Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5783667Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5784493Z ##[group]Fetching the repository
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:17.5793701Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bda6146d2c7f978e682421bd29a7c7f087b5a491:refs/remotes/origin/qa/s51-traffic-integration
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5818757Z From https://github.com/arthurianresolve/gods-eye-view
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5822044Z  * [new ref]         bda6146d2c7f978e682421bd29a7c7f087b5a491 -> origin/qa/s51-traffic-integration
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5826009Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5827521Z ##[group]Determining the checkout info
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5829310Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5833721Z [command]/usr/bin/git sparse-checkout disable
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5892795Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5927183Z ##[group]Checking out the ref
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:21.5931164Z [command]/usr/bin/git checkout --progress --force -B qa/s51-traffic-integration refs/remotes/origin/qa/s51-traffic-integration
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5074123Z Switched to a new branch 'qa/s51-traffic-integration'
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5077709Z branch 'qa/s51-traffic-integration' set up to track 'origin/qa/s51-traffic-integration'.
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5116240Z ##[endgroup]
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5173975Z [command]/usr/bin/git log -1 --format=%H
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5199947Z bda6146d2c7f978e682421bd29a7c7f087b5a491
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5210808Z ##[group]Removing auth
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5215559Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5251027Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5479997Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5509297Z http.https://github.com/.extraheader
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5519974Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5557443Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5783609Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.5815604Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Aircraft tracking regression	Check out immutable diagnostic source	2026-10-11T08:07:22.6038419Z ##[endgroup]
+Aircraft tracking regression	Use supported Node.js	﻿2026-10-11T08:07:22.6399090Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6400756Z with:
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6401557Z   node-version: 24.14.0
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6402633Z   cache: npm
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6403469Z   always-auth: false
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6404375Z   check-latest: false
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6414307Z   token: ***
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6415110Z env:
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6415906Z   PUPPETEER_SKIP_DOWNLOAD: 1
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.6416900Z ##[endgroup]
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.7900319Z Attempting to download 24.14.0...
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.8007771Z (node:2307) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:22.8010731Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:23.4773035Z Acquiring 24.14.0 - x64 from https://github.com/actions/node-versions/releases/download/24.14.0-22380502845/node-24.14.0-linux-x64.tar.gz
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:23.9982656Z Extracting ...
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:24.0144800Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/b6d77ab7-dead-459f-b50c-6725fc3f7b3a -f /home/runner/work/_temp/8fce0d35-e7cf-47a3-9148-465ddbc52ff2
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:25.2563425Z Adding to the cache ...
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.0035892Z ##[group]Environment details
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.2366948Z node: v24.14.0
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.2367481Z npm: 11.9.0
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.2367822Z yarn: 1.22.22
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.2368499Z ##[endgroup]
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.2389852Z [command]/opt/hostedtoolcache/node/24.14.0/x64/bin/npm config get cache
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.3311199Z /home/runner/.npm
+Aircraft tracking regression	Use supported Node.js	2026-10-11T08:07:29.4649176Z npm cache is not found
+Aircraft tracking regression	Install locked dependencies and fixture browser	﻿2026-10-11T08:07:29.4857275Z ##[group]Run npm ci
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.4857620Z ^[[36;1mnpm ci^[[0m
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.4857892Z ^[[36;1mnpx puppeteer browsers install chrome^[[0m
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.5129535Z shell: /usr/bin/bash -e {0}
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.5129834Z env:
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.5130055Z   PUPPETEER_SKIP_DOWNLOAD: 1
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:29.5130307Z ##[endgroup]
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:30.7225682Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:36.6640710Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:36.6641825Z > gods-eye-view@0.2.1 postinstall
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:36.6642963Z > node scripts/apply-cesium-patches.mjs
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:36.6643378Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0146771Z [cesium-patch] patched 5 distributions
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0281539Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0282065Z added 173 packages, and audited 174 packages in 7s
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0287579Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0288490Z 26 packages are looking for funding
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0288946Z   run `npm fund` for details
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0322342Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0322761Z 3 vulnerabilities (1 low, 2 high)
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0323032Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0323324Z To address all issues, run:
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0323621Z   npm audit fix
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0323765Z 
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:37.0323914Z Run `npm audit` for details.
+Aircraft tracking regression	Install locked dependencies and fixture browser	2026-10-11T08:07:41.8750702Z chrome@152.0.7977.75 /home/runner/.cache/puppeteer/chrome/linux-152.0.7977.75/chrome-linux64/chrome
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	﻿2026-10-11T08:07:41.9015267Z ##[group]Run mkdir -p qa-artifacts
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9015675Z ^[[36;1mmkdir -p qa-artifacts^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9016029Z ^[[36;1mgit rev-parse HEAD | tee qa-artifacts/tracking-source.txt^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9016601Z ^[[36;1mgit status --porcelain --untracked-files=no | tee qa-artifacts/tracking-source-status.txt^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9017986Z ^[[36;1mnpx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/tracking-server.log 2>&1 &^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9018479Z ^[[36;1mfixture_pid=$!^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9018766Z ^[[36;1mtrap 'kill "$fixture_pid" 2>/dev/null || true' EXIT^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9019086Z ^[[36;1mready=false^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9019307Z ^[[36;1mfor attempt in $(seq 1 30); do^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9019714Z ^[[36;1m  if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9020108Z ^[[36;1m  sleep 1^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9020313Z ^[[36;1mdone^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9020633Z ^[[36;1mif [ "$ready" != true ]; then cat qa-artifacts/tracking-server.log; exit 1; fi^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9021396Z ^[[36;1mnode scripts/track-regression.mjs --url http://localhost:4174 --offline-imagery 2>&1 | tee qa-artifacts/tracking-regression.log^[[0m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9091329Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9091676Z env:
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9091886Z   PUPPETEER_SKIP_DOWNLOAD: 1
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9092137Z ##[endgroup]
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:41.9204156Z bda6146d2c7f978e682421bd29a7c7f087b5a491
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9904022Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9905012Z 3D Tracking Regression Harness
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9906173Z   App URL : http://localhost:4174
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9907099Z   Mode    : headless
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9907631Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:43.9908261Z   Imagery : bundled NaturalEarthII fixture (tile images only)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:44.1411026Z   Browser : /home/runner/.cache/puppeteer/chrome/linux-152.0.7977.75/chrome-linux64/chrome
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:44.1415104Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:45.9412974Z   Browser version: Chrome/152.0.7977.75
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:46.0544467Z Loading app...
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8023250Z   App globals ready.
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8052573Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8075003Z Invariant 4 — init clean
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8143593Z   [^[[32mPASS^[[0m] init: >=12 layers registered  — 30 layers [bhote-koshi-2026, bhote-koshi-locator, flights, military, local-adsb, earthquakes, fire-perimeters, alpr-cameras, street-level, satellites, rocket-launches, traffic, cctv, radio, transit, bikeshare, directions, recent-imagery, ais-live-vessels, military-installations, military-awareness, wind, weather-radar, weather-satellite, weather-lightning, weather-cyclones, local-datacenters, local-dams, telegeography-submarine-cables, local-firms]
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8183376Z   [^[[32mPASS^[[0m] init: flights + military layers present  — flights=true military=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8204383Z   [^[[32mPASS^[[0m] init: [Detection] Initialized logged
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8205449Z   [^[[32mPASS^[[0m] init: [TrackedReadout] Initialized logged
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:07:55.8206602Z   [^[[32mPASS^[[0m] init: no console errors during boot  — clean
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.1933920Z   GLB capability control: ready (ready)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.2012745Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.2042993Z Enabling flights + military layers (synthetic feed)...
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.2953457Z   flights enabled=true count=3 | military enabled=true count=2
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.2982898Z   shim hits: opensky=2 mil=3
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.3043291Z   [^[[32mPASS^[[0m] inject: synthetic flights ingested (count>0)  — flights count=3
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.3103208Z   [^[[32mPASS^[[0m] inject: synthetic military ingested (count>0)  — military count=2
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.3133878Z   [^[[32mPASS^[[0m] DISPLAY-rail 3D toggle drives both aircraft layers, both directions  — on: button=true flights=true military=true | off: button=false flights=false military=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.3162512Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.3223031Z Share Link v2 — tracked aircraft survives a full reload
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:03.8396738Z   [^[[32mPASS^[[0m] share-v2: explicit aircraft selection reaches the generated URL  — http://localhost:4174/#v=2&lat=30.2672&lon=-97.7431&alt=600&heading=15&pitch=-30&roll=360&style=normal&bloom=0&sharpen=1&bi=0&bv=2&si=49&hud=tactical&hv=1&dm=DENSE&dd=75&da=elastic&kf=7&ko=1&cr=0&sc=1&scf=11&map=esri-imagery&l=f&lo=f.e.1_f.t.aaa001_k.o.n&ui=c.c.1_c.p.0_l.c.1_l.p.0_d.c.1_v.c.1_i.c.0_t.c.1_r.c.1_s.c.1_g.c.1_p.c.1_m.c.0
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:18.5694974Z   [^[[32mPASS^[[0m] share-v2: full reload restores the selected logical aircraft  — {"flightsEnabled":true,"trackedId":"aaa001","durableId":"aaa001","viewerTrackedId":"flights:aaa001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:18.5733477Z   [^[[32mPASS^[[0m] share-v2: restored aircraft owns the Cesium follow camera  — viewerTrackedId=flights:aaa001
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:18.5880457Z   [^[[32mPASS^[[0m] share-v2: clean recipient magic link restores the selected aircraft  — {"flightsEnabled":true,"trackedId":"aaa001","durableId":"aaa001","viewerTrackedId":"flights:aaa001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:36.8791051Z   [^[[32mPASS^[[0m] share-v2: a not-yet-arrived subject is held pending, with no failure notice  — {"tracked":null,"notice":"ACQUIRING","noticeShown":true}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.1334937Z   [^[[32mPASS^[[0m] share-v2: the pending subject latches on when it arrives on a later poll  — {"tracked":"aaa001","viewerTrackedId":"flights:aaa001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.1469146Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.1479617Z Voice entity context — a click-selected contact answers scope:selected
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.4778035Z   [^[[32mPASS^[[0m] voice-context: click-selected aircraft answers scope:selected  — {"scope":"selected","layerId":"flights","id":"aaa001","name":"SYN001","latitude":30.26718432502674,"callsign":"SYN001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.4805936Z   [^[[32mPASS^[[0m] voice-context: the selected contact carries its identity and position  — {"scope":"selected","layerId":"flights","id":"aaa001","name":"SYN001","latitude":30.26718432502674,"callsign":"SYN001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.5014142Z   [^[[32mPASS^[[0m] voice-context: switching contacts moves the subject and leaves no stale record  — {"scope":"selected","id":"aaa002","flightRecordIds":["aaa002"]}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.5122225Z   [^[[32mPASS^[[0m] voice-context: click-selected military contact answers scope:selected  — {"scope":"selected","layerId":"military","id":"bbb101","name":"MIL101"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.5153190Z   [^[[32mPASS^[[0m] voice-context: deselecting releases the subject back to in_view  — {"scope":"in_view","selected":null}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.5196082Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:08:39.5223460Z Voice entity context — a tracked satellite is a selected subject
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0163480Z   [^[[32mPASS^[[0m] voice-context: a tracked satellite answers scope:selected with its identity  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0190914Z   [^[[32mPASS^[[0m] voice-context: switching satellites moves the subject and leaves no stale orbit  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0230779Z   [^[[32mPASS^[[0m] voice-context: the subject survives a catalog rebuild under the same id  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0240048Z   [^[[32mPASS^[[0m] voice-context: a subject missing while ANOTHER potential carrier failed is preserved  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0317559Z   [^[[32mPASS^[[0m] voice-context: a subject that does not survive the rebuild releases the slot  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0357446Z   [^[[32mPASS^[[0m] voice-context: a failed DENSE load preserves its subject, even though the mode reverts  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0387188Z   [^[[32mPASS^[[0m] voice-context: deselecting a satellite releases the subject  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":33.856383694056895,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":33.99234112506485,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0412450Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.0472985Z Panel === spoken — one number, through both real call sites
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.1944924Z   [^[[32mPASS^[[0m] panel===spoken: the Contacts panel and the voice count are one number  — {"subject":"SYN001","panelAircraft":4,"spokenCount":4,"spokenEngine":"contacts-window","spokenCenteredOn":"SYN001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.1974119Z   [^[[32mPASS^[[0m] panel===spoken: the spoken answer names the subject whose window it read  — {"subject":"SYN001","panelAircraft":4,"spokenCount":4,"spokenEngine":"contacts-window","spokenCenteredOn":"SYN001"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.2431411Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.2450846Z Context vocabulary — state output speaks the tools' own words
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.2621948Z   [^[[32mPASS^[[0m] context-vocab: a manually activated Contacts reports as "contacts", not its internal id  — {"internalMode":"flights","reportedMode":"contacts","reportedInternal":"flights","active":true}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.2734717Z   [^[[32mPASS^[[0m] context-vocab: the reported mode round-trips back through set_context_mode  — {"ok":true,"error":null,"resultMode":"contacts","resultInternal":"flights","stateMode":"contacts"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3228263Z   [^[[32mPASS^[[0m] context-vocab: no context reports as "off", never a bare null  — {"resultMode":"off","stateMode":"off","stateInternal":null}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3236003Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3236822Z Analyst handoff — a looked-up contact can actually be tracked
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3445302Z   [^[[32mPASS^[[0m] analyst-handoff: a callsign-less contact is named by the tail number the app shows  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3450572Z   [^[[32mPASS^[[0m] analyst-handoff: the identity the analyst returned is trackable, first try  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3481344Z   [^[[32mPASS^[[0m] analyst-handoff: the result carries the hex key the tracker keys on  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3924085Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:17.3954296Z Invariant 1 — no jitter (model visual centre === detectable pos)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:24.0807523Z   [^[[32mPASS^[[0m] 3D: tracked commercial model becomes ready through the DISPLAY toggle  — ready+shown id=aaa001
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:48.0827688Z   [^[[32mPASS^[[0m] jitter: max|visual centre − detectable| ≈ 0 over frames  — max=0.000 m over 30 frames (tol 5 m, mode=model-matrix)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:48.0872592Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:09:48.0873639Z Invariant 2 — no pull-out on track switch
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:23.6303313Z   [^[[32mPASS^[[0m] pull-out: camera stays in follow band on switch (no ~80 km spike)  — maxHeight=16.6 km (before=15.8 km, ceil 50 km)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:23.6363434Z   [^[[32mPASS^[[0m] pull-out: track switch actually landed on plane B  — tracking B
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:23.6452602Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:23.6482965Z Invariant 3 — no cross-layer orphan
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:28.0021127Z   [^[[32mPASS^[[0m] orphan: military clears when commercial is tracked  — mil before=true mil after=false fl after=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:30.4557516Z   [^[[32mPASS^[[0m] orphan: commercial clears when military is tracked  — fl before=true fl after=false mil after=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:30.4613403Z   [^[[32mPASS^[[0m] no console errors during tracking exercises  — clean
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:30.4642552Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:30.4673221Z Regression H1 — click on the tracked plane is a no-op
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:10:34.5085897Z   [^[[32mPASS^[[0m] H1: tracked standalone model exposes its pick id  — model.id="aaa001" (want "aaa001")
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:12.5042770Z   [^[[32mPASS^[[0m] H1: click on tracked plane keeps tracking (no deselect)  — picked via entity; still tracking=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:12.5067263Z   [^[[32mPASS^[[0m] H1: click on tracked plane does not pull the camera out  — maxHeight=15.8 km (before=15.8 km, ceil 50 km)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:12.5068265Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:12.5103277Z Regression M3 — tracked plane age-out releases the camera in place
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:13.7153807Z   [^[[32mPASS^[[0m] M3: tracking cleared after the tracked plane ages out (getTrackedInfo null)  — before=true trackedAfter=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:11:13.7198390Z   [^[[32mPASS^[[0m] M3: camera released after age-out (viewer.trackedEntity undefined)  — viewerTracked=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4032164Z   [^[[32mPASS^[[0m] M3: camera stayed in place after age-out — altitude Δ < 2 km  — Δalt=0.00 km (tol 2 km; ageOut=15.8 km, final=15.8 km)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4044354Z   [^[[32mPASS^[[0m] M3: camera stayed in place after age-out — horizontal Δ < 2 km  — Δhoriz=0.00 km (tol 2 km)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4045333Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4046407Z Change 2a — landing-ghost fast cull (1 missed poll; cruise grace intact)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4181783Z   [^[[32mPASS^[[0m] fast-cull: landed low+slow synthetics ingested (both layers)  — flights=true military=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4190723Z   [^[[32mPASS^[[0m] fast-cull: landed plane removed after ONE missed poll (flights)  — gone=true (grace skipped, was 3 polls)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4192686Z   [^[[32mPASS^[[0m] fast-cull: landed plane removed after ONE missed poll (military)  — gone=true (grace skipped, was 3 polls)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4194243Z   [^[[32mPASS^[[0m] fast-cull: cruise plane keeps the 3-poll grace (present after 1 miss)  — present=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4194954Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4195487Z Change 2b — tracked readout STALE cue during missed-poll grace
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4288920Z   [^[[32mPASS^[[0m] stale-readout: tracked label carries STALE cue during grace  — fresh="SYN003" stale="SYN003"
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4293759Z   [^[[32mPASS^[[0m] stale-readout: STALE cue clears when the plane reappears  — recovered="SYN003"
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4295728Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4349596Z Change 3 — ground traffic: full-alpha style, in-place transitions, fast cull
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4404716Z   [^[[32mPASS^[[0m] ground: on-ground plane renders full-alpha white at ground scale + detectable (flights)  — show=true scale=0.800 rgba=(1.00,1.00,1.00,1.00) detectable=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4406964Z   [^[[32mPASS^[[0m] ground: military mirror — alt_baro "ground" renders full-alpha amber  — show=true scale=0.482 rgba=(1.00,0.72,0.00,1.00)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4408835Z   [^[[32mPASS^[[0m] ground: takeoff flip restyles in place (white, full alpha, full scale)  — show=true scale=1.000 rgba=(1.00,1.00,1.00,1.00)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4410840Z   [^[[32mPASS^[[0m] ground: landing flip returns to ground scale in place (no removal, still full alpha)  — show=true scale=0.800 rgba=(1.00,1.00,1.00,1.00)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4413607Z   [^[[32mPASS^[[0m] ground: landing ghost fast-culls after ONE missed poll; born-parked contact survives the flap (round 7)  — flights(landed ghost) gone=true military(born parked) gone=false (want true/false)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4425850Z   [^[[32mPASS^[[0m] ground: depth test disabled for EVERY contact (always visible), incl. across ground flips  — flights=inf mil=inf takeoff=inf landing=inf
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4426884Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.4432895Z Ground 3D — grounded planes are model-eligible + snapped to the sampled skin
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.5997788Z   [^[[32mPASS^[[0m] ground-3d: sampleHeight stub installed + tiles-ready forced  — {"tilesForced":true,"priorModels3d":{"flights":true,"military":true}}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:21.6106877Z   [^[[32mPASS^[[0m] ground-3d: grounded synthetics ingested  — bb radii fl=6372861.4 mil=6372737.8
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:27.7993227Z   [^[[32mPASS^[[0m] ground-3d: grounded planes are model-eligible and modeled (both layers)  — fleet models up (ready+shown)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:28.9036450Z   [^[[32mPASS^[[0m] ground-3d: flights model height = sampled skin + belly offset (airliner)  — Δradial=71.12 m want=71.12 m (stub 187.5 + offset 6.72 − alt 123.10 [150 baro + -26.90 geoidN])
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:28.9073765Z   [^[[32mPASS^[[0m] ground-3d: military model height = sampled skin + belly offset (turboprop)  — Δradial=191.31 m want=191.31 m (stub 187.5 + offset 3.81 − alt 0)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:28.9080602Z   [^[[32mPASS^[[0m] ground-3d: billboard→model handoff holds on the ground (icons hidden once models render)  — fl bb.show=false mil bb.show=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:28.9082885Z   [^[[32mPASS^[[0m] ground-3d: both grounded synthetic contacts reached the sampling seam  — sample hits near distinct fixture cells: flights=1, military=1
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:42.8583818Z   [^[[32mPASS^[[0m] weld: flights grounded detection anchor === rendered model visual centre (20 frames)  — samples=20 missing=0 maxΔ=0.000 m (tol 2 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:12:42.8624015Z   [^[[32mPASS^[[0m] weld: military grounded detection anchor === rendered model visual centre (20 frames)  — samples=20 missing=0 maxΔ=0.000 m (tol 2 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:13:26.5575929Z   [^[[32mPASS^[[0m] ground-3d: fleet sampling window completed all 60 requested frames  — frames=60/60 timedOut=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:13:26.5579037Z   [^[[32mPASS^[[0m] ground-3d: fleet ground sampling is one-shot/per-poll bounded (no per-frame sampling)  — sampleHeight calls: before=3, growth over 60 verified frames=0 (per-frame would be ~60+)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:13:50.3737958Z   [^[[32mPASS^[[0m] ground-3d: tracked loading/ownership sampling window completed all 30 requested frames  — frames=30/30 timedOut=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:13:50.3747992Z   [^[[32mPASS^[[0m] ground-3d: tracked loading/ownership ground sampling is bounded (no per-frame sampling)  — sampleHeight growth from before trackById across 30 verified frames=0 (per-frame would be ~30+)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:13:50.3811473Z   [^[[32mPASS^[[0m] ground-3d: TRACKED grounded plane gets the standalone tracked model, ground-snapped  — tracked model up; Δradial=71.12 m want=71.12 m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1479924Z   [^[[32mPASS^[[0m] ground-3d: tracked ready-state sampling window completed all 30 requested frames  — frames=30/30 timedOut=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1534525Z   [^[[32mPASS^[[0m] ground-3d: tracked ready-state ground sampling is bounded (no per-frame sampling)  — sampleHeight growth over 30 verified ready-state frames=0 (per-frame would be ~30+)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1561313Z   [^[[32mPASS^[[0m] weld: TRACKED card anchor === rendered tracked model visual centre  — visualΔ=0.000 m (tol 2 m), accessor=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1593460Z   [^[[32mPASS^[[0m] weld: gevDisplayPosition still reports the dead-reckoned position (anti-jitter intact)  — displayΔ=72.775 m (must stay > 0.25 m — the ground-snap split)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1595543Z   [^[[32mPASS^[[0m] ground-3d: scenario completed without an unhandled fixture error  — primary path completed
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1597051Z   [^[[32mPASS^[[0m] ground-3d: fixture cleanup completed without errors  — all owned fixture state released
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1625996Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:12.1635514Z Change 4 — arrival rotation: moveEnd settle pass + horizon-reveal pass
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:20.4878058Z   [^[[32mPASS^[[0m] arrival: moveEnd + reveal both re-aim within 4 frames, flights (tamper was 86°)  — settle-err=0.0° reveal-err=0.0° shown=true flipFrame=1 hasModel=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:20.4880764Z   [^[[32mPASS^[[0m] arrival: moveEnd + reveal both re-aim within 4 frames, military (tamper was 86°)  — settle-err=0.0° reveal-err=0.0° shown=true flipFrame=1 hasModel=false
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:20.4962563Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:20.5004219Z Display floor — grounded contacts never render below the cell they drifted onto
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:21.2649269Z   [^[[32mPASS^[[0m] display-floor: ground-floor service owner found  — {"candidates":1}
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:21.6733875Z   [^[[32mPASS^[[0m] display-floor: harness reached the app's own groundFloor module instance  — a 400 m fix-cell seed put the sprite at 400.0 m (application surface)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:24.4092845Z   [^[[32mPASS^[[0m] display-floor: the displayed position really has drifted off the fix cell  — displayed 325 m from the fix (render delay × taxi speed)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:24.4100393Z   [^[[32mPASS^[[0m] display-floor: a grounded sprite never renders below the cell it drifted onto  — 400.0 m → 431.5 m against a 430.0 m floor (needs >= floor + 1.5 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:24.4108520Z   [^[[32mPASS^[[0m] display-floor: the lift came from the display path (fix cell still cold)  — fix cell mesh=null floor=109.3672356866829 vs seeded 430.0 m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:24.4111742Z   [^[[32mPASS^[[0m] display-floor: an AIRBORNE contact over the same cells is not lifted  — airborne renders at 123.1 m (seeded floor 430.0 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8684615Z   [^[[32mPASS^[[0m] display-floor/corridor: the display cell is not the fix cell, and started cold  — display {"lat":30.3,"lon":-97.803} vs fix {"lat":30.3,"lon":-97.8}, started at null — the fix-cell collection cannot reach the display cell
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8710228Z   [^[[32mPASS^[[0m] display-floor/corridor: polling warms the ground the contact is DISPLAYED over  — display-cell floor = 173.57929067753358 (nothing was pre-seeded — only corridor collection can produce this)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8718127Z   [^[[32mPASS^[[0m] display-floor/corridor: the corridor reaches PAST the fix, along the direction of travel  — cell ~250 m beyond the fix ({"lat":30.3,"lon":-97.797}, distinct from fix {"lat":30.3,"lon":-97.8}: true) floor = 181.81012519792728 — a fix-aimed corridor never offers it
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8727616Z   [^[[32mPASS^[[0m] display-floor/corridor: an off-path control cell stays cold (not ambient warming)  — control cell floor = null
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8740485Z   [^[[32mPASS^[[0m] display-floor/corridor: the height sample clears cell-boundary hysteresis  — the sampled coordinate lies inside one unambiguous floor cell
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:35.8744115Z   [^[[32mPASS^[[0m] display-floor/corridor: the sprite rides the corridor-warmed floor  — 197.2 m → 181.8 m on a 180.3 m floor
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4100358Z   [^[[32mPASS^[[0m] display-floor: the fleet billboard lifts onto the planted floor (control for the tracked check)  — billboard 181.8 m → 441.5 m (floor 440.0 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4140729Z   [^[[32mPASS^[[0m] display-floor/tracked-route: sampled model wait and both regimes stayed inside the declared moving-ground coverage  — seed={"lat":30.299999980163324,"lon":-97.80227863707702} → feedFix={"lat":30.3,"lon":-97.8} → endpoint={"lat":30.29999988967641,"lon":-97.79461279952807}; 30 cells / 43100 ms, observations=[{"elapsedMs":5561,"position":{"lat":30.299999990611937,"lon":-97.801567576564,"heightM":441.49999999995305},"actualCell":{"lat":30.3,"lon":-97.802},"distanceFromStartM":68.26560457233184,"meshFloor":440,"withinSeededRoute":true,"withinTimeBound":true},{"elapsedMs":9816,"position":{"lat":30.29999999589334,"lon":-97.80103677612806,"heightM":-26.774020930496334},"actualCell":{"lat":30.3,"lon":-97.801},"distanceFromStartM":119.22527958887466,"meshFloor":440,"withinSeededRoute":true,"withinTimeBound":true},{"elapsedMs":11129,"position":{"lat":30.299999997089245,"lon":-97.80087285796753,"heightM":441.5000000008414},"actualCell":{"lat":30.3,"lon":-97.801},"distanceFromStartM":134.96229791727168,"meshFloor":440,"withinSeededRoute":true,"withinTimeBound":true}]
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4187588Z   [^[[32mPASS^[[0m] display-floor/tracked-route: off-route/missing-floor negative control remains unclamped  — off-route mesh=null, missing-floor clamp=null, route-floor oracle=441.5 (expected 441.5)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4204896Z   [^[[32mPASS^[[0m] display-floor/gate: with NO resolved ground the grounded model is withheld and the billboard is floored  — cold skin: 0 aaa097 model(s) rendering / 0 shown (placed height none — never placed), billboard at 441.5 m on a 440.0 m floor
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4208501Z   [^[[32mPASS^[[0m] display-floor/placement: a resolved grounded model stands ON the floor, not under it and not hidden  — warm skin: 1 aaa097 model(s) rendering at 446.7 m on a 440.0 m floor (belly headroom 12 m; raw feed altitude was 181.8 m)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4213001Z   [^[[32mPASS^[[0m] display-floor/regime: the TRACKED grounded contact is floored exactly when the billboard is the visual  — IN @ 2 km (< 150 km enter): 1 aaa097 model(s) rendering, entity left at -26.8 m under a 440.0 m floor (groundSnap owns it); OUT @ 178 km (> 172.5 km exit): 0 aaa097 model(s) rendering, billboard owns it again, -26.8 m → 441.5 m on a 440.0 m floor
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:47.4217050Z   [^[[32mPASS^[[0m] display-floor/regime: data APIs report sensor truth in BOTH regimes, floored or not  — getTrackedInfo().altitudeM = 0 zoomed in / 0 zoomed out (feed baro), while the floored visual reads 441.5 m — the split is deliberate
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:57.6394805Z   [^[[32mPASS^[[0m] display-floor/T7: while the tracked MODEL is the visual, the clamp stands aside  — 1 aaa097 model(s) rendering at 3 km with the 3D toggle OFF; entity at -26.8 m (ground-snap owns it)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:57.6417672Z   [^[[32mPASS^[[0m] display-floor/regime: the 3D toggle governs the FLEET only — the tracked model follows the zoom  — toggle OFF throughout: at 3 km (< 150 km enter) 1 aaa097 model(s) rendering; at 178 km (> 172.5 km exit) 0 shown / 1 retained-hidden
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:14:57.6460656Z   [^[[32mPASS^[[0m] display-floor: a retained-but-hidden tracked model does NOT suppress the floor  — 441.5 m → 478.0 m on a 476.5 m floor (1 model object(s) still retained, hidden by the zoom regime)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:02.2827507Z   [^[[32mPASS^[[0m] display-floor/loading: a fleet model that is shown-but-not-ready does not own the visual  — model show=true ready=false, billboard visible=true at 524.5 m on a 523.0 m floor
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:02.2854114Z   [^[[32mPASS^[[0m] display-floor/loading: tracked regime active with no rendering model stays floored  — rendering models during load=0, entity at 571.0 m on a 569.5 m floor
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8183995Z   [^[[32mPASS^[[0m] display-floor/hold: the taxi really does invalidate, and the far step really does exceed the bound  — taxi 96.2 m (> 50 m invalidate, < 250 m bound), far step 384.8 m (> 250 m bound)
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8228885Z   [^[[32mPASS^[[0m] display-floor/hold: a taxi-invalidated ground snap holds the model through the resample backoff  — fresh owns=true after 2 positive base sample(s), on a MEASURED floor at 637.7 m; tiles gone + 96.2 m taxi → owns=true at 637.7 m, billboard shown=false (want owns=true, bb=false: no 3D→2D pop). Independent mesh floor: base=569.5 m, taxi=569.5 m
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8234685Z   [^[[32mPASS^[[0m] display-floor/hold: past the drift bound the hold is released and the model is withheld  — 384.8 m from the sample: model owns=false, billboard back at shown=true
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8236717Z   [^[[32mPASS^[[0m] no console errors across the FULL run (late groups included)  — clean
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8237865Z   [^[[32mPASS^[[0m] no HTTP 5xx responses across the FULL run  — clean
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8238934Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8239553Z ────────────────────────────────────────────────────────────
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8244348Z   RESULT: 111 passed, 0 failed, 0 skipped
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8245280Z ────────────────────────────────────────────────────────────
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8245698Z 
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:06.8246754Z   Bundled imagery tiles served: 18
+Aircraft tracking regression	Run existing tracking regressions with bundled imagery	2026-10-11T08:15:07.4726521Z   Browser cleanup: {"closeCompleted":true,"forcedProcessTermination":false,"observation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":443072.792731,"closeSettledHostMs":443719.912119,"closeElapsedMs":647.1193879999919,"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":618.776549000002},"protocolCloseTrace":null,"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null}}
+Aircraft tracking regression	Preserve regression evidence including failure	﻿2026-10-11T08:15:07.4921304Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4921746Z with:
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4921966Z   name: tracking-regression-38123689950
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4922256Z   path: qa-artifacts/tracking-*
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4922716Z   if-no-files-found: warn
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4922949Z   retention-days: 3
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4923165Z   compression-level: 6
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4923375Z   overwrite: false
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4923582Z   include-hidden-files: false
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4923810Z env:
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4923998Z   PUPPETEER_SKIP_DOWNLOAD: 1
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.4924222Z ##[endgroup]
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.6596748Z (node:2933) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.6597782Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.6665781Z With the provided path, there will be 4 files uploaded
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.6670857Z Artifact name is valid!
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.6672015Z Root directory input is valid!
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:07.9759200Z Beginning upload of artifact content to blob storage
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.0005494Z (node:2933) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.1407134Z Uploaded bytes 7979
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.1841182Z Finished uploading artifact content to blob storage!
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.1842718Z SHA256 digest of uploaded artifact zip is 5fd2a409b1e2ce7af67158b4e96f2c0f0b1e030469a9f36d7ee2be9c425474a8
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.1844872Z Finalizing artifact upload
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.4447362Z Artifact tracking-regression-38123689950.zip successfully finalized. Artifact ID 11696307889
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.4449104Z Artifact tracking-regression-38123689950 has been successfully uploaded! Final size is 7979 bytes. Artifact ID is 11696307889
+Aircraft tracking regression	Preserve regression evidence including failure	2026-10-11T08:15:08.4454201Z Artifact download URL: https://github.com/arthurianresolve/gods-eye-view/actions/runs/38123689950/artifacts/11696307889
+Aircraft tracking regression	Post Use supported Node.js	﻿2026-10-11T08:15:08.4630536Z Post job cleanup.
+Aircraft tracking regression	Post Use supported Node.js	2026-10-11T08:15:08.5867634Z (node:2946) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Aircraft tracking regression	Post Use supported Node.js	2026-10-11T08:15:08.5869191Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Aircraft tracking regression	Post Use supported Node.js	2026-10-11T08:15:08.6091970Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/gods-eye-view/gods-eye-view --files-from manifest.txt --use-compress-program zstdmt
+Aircraft tracking regression	Post Use supported Node.js	2026-10-11T08:15:08.9269644Z Failed to save: Unable to reserve cache with key node-cache-Linux-x64-npm-340f5abc20cbef195a54e894a80b173879498ee26ac80e838b6fdf7e56115701, another job may be creating this cache.
+Aircraft tracking regression	Post Check out immutable diagnostic source	﻿2026-10-11T08:15:08.9494138Z Post job cleanup.
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0320549Z [command]/usr/bin/git version
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0363422Z git version 2.55.0
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0403077Z Temporarily overriding HOME='/home/runner/work/_temp/7f424e84-ec83-4653-a7e7-b56816fb3d99' before making global git config changes
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0404099Z Adding repository directory to the temporary git global config as a safe directory
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0408996Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/gods-eye-view/gods-eye-view
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0451399Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0485133Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0736958Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.0771521Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.1036470Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Aircraft tracking regression	Post Check out immutable diagnostic source	2026-10-11T08:15:09.1071595Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Aircraft tracking regression	Complete job	﻿2026-10-11T08:15:09.1475825Z Cleaning up orphan processes
+Aircraft tracking regression	Complete job	2026-10-11T08:15:09.1960314Z Terminate orphan process: pid (2490) (MainThread)
+Aircraft tracking regression	Complete job	2026-10-11T08:15:09.1987273Z Terminate orphan process: pid (2498) (esbuild)
+Aircraft tracking regression	Complete job	2026-10-11T08:15:09.2030581Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,33 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S48",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "9e0109f1d1720712fedb7e9249d9992d418198d4",
+  "integrationCheckedCommit": "9487a57cf5ad3eb1076532da77bda8c48953e7de",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "productionBrowserCostMatrix": "pending",
+  "instrumentationOverheadConclusion": "inconclusive; matched CPU comparison has wide pair variation",
+  "sourceHashes": {
+    "scripts/performance/overlayAttribution.mjs": "aeff06ae49c558d5397d04cac61dfe35e121f3f2b9f0c0c302217e6fc0c7973d",
+    "scripts/performance/overlayAttributionContract.mjs": "9f7c112ab79236aeef118d122414a6608f4e00a474ec243f10fbbef319302166",
+    "src/overlays/worldOverlayAllocation.worker.mjs": "029241fc006be6f72bac1ca29695895c4408f91ea53e0ee3e71c5d80d8d60e60",
+    "src/performance/cpuTimings.js": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c",
+    "src/performance/performanceSnapshot.js": "13067eda7083cdb9e2f63c27bd7857fd42260cabb8b07cea081ddcb9fc6e022e",
+    "scripts/performance/soakStability.mjs": "fdbb5916fa17eb54f927e0c868f4da6d8e2199fb37fd9148b8945dfffed2877c",
+    "scripts/performance/cctvLifecycle.mjs": "6af2b7c3fe8919fcaa0a15952054513b366e74af0d6821d17879e448f166c896",
+    "src/overlays/worldOverlay.js": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+    "src/layers/cctv/controls.js": "ed527cfd286100cabff0d9e22a082a20c26f5a0f564531e1978503734cb7768c",
+    "src/layers/cctv/geometryQueue.js": "a58bec28903c03aafcce4243d05e4ad09fa590fc787dca8b3238fba68132d446",
+    "src/layers/satellites/lifecycle.js": "7b38cf5e6fbee4c5a90a0e8dff7005ba92ff3ad5b2ba07d2a3aad01b72729a75",
+    "src/data/lifecycle.js": "22db1972b596076be89d8e0207e65b5419c8d96c7dac7a081337e489b02be42e",
+    "src/app/tools.js": "97facae56bc1c2fcede674f1f07a0ca6273ca00fb093eb2f6ba6ed231902e908"
+  },
+  "review": "../s48-engineering-audit-20261014.md",
+  "limitations": [
+    "Mock Canvas CPU samples exclude browser painting and GPU execution.",
+    "Engine/shared browser listeners and allocations are outside declared owner coverage.",
+    "Hardware qualification and leading workload cost measurements remain pending."
+  ]
+}

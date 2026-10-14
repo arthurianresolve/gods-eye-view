@@ -8,7 +8,7 @@ import {
   twoline2satrec,
 } from 'satellite.js';
 import { findNextSatellitePass } from '../../data/satellitePass.js';
-import { parseTleText } from '../../sources/tle.js';
+import { decodeTleCatalogNumber, parseTleText } from '../../sources/tle.js';
 import { ORBIT_PATH_STEPS, ISS_NORAD } from './policy.js';
 
 export function createOrbits({ state: layerState, services, parts, source }) {
@@ -280,11 +280,13 @@ export function createOrbits({ state: layerState, services, parts, source }) {
   }
 
   function orbitTrackFromRecord(name, satrec) {
+    const noradId = decodeTleCatalogNumber(satrec.satnum);
+    if (noradId === null) return null;
     const referenceDate = new Date();
     const current = propagatePosition(satrec, referenceDate);
     if (!current) return null;
     return {
-      noradId: Number(satrec.satnum),
+      noradId,
       name: String(name || '').trim(),
       current,
       periodSec: orbitalPeriodSeconds(satrec),

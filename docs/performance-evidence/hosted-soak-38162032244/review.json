@@ -1,0 +1,121 @@
+{
+  "schema": "gev-independent-retention-review/v1",
+  "sourceSha256": "b55441b989b9f8e029ef8dd8eb18c485923273d2323f1aa82b3120c2b51fc383",
+  "candidateCommit": "fca2f991f493de80e73ea4c086609f9a084e4ea3",
+  "reviewerCommit": "7cea7aac9891d165a3c59bc09281bba735b71224",
+  "checkpointCount": 13,
+  "durationMs": 3609921,
+  "resourceGaugeCount": 40,
+  "resourceGaugesUnchangedAtEveryCheckpoint": true,
+  "pendingWorkerTasksAtEveryCheckpoint": 0,
+  "browserListenerRange": [
+    629,
+    629
+  ],
+  "initialFinalListeners": [
+    629,
+    629
+  ],
+  "initialFinalHeapBytes": [
+    75026292,
+    81896360
+  ],
+  "finalWindowStartMs": 1806366,
+  "finalWindowMaxHeapGrowthRatio": 0.011829316995480177,
+  "finalWindowEndHeapGrowthRatio": 0.011829316995480177,
+  "manifestResult": {
+    "comparisons": [],
+    "retention": [
+      {
+        "environmentId": "github-macos-paravirtual",
+        "candidateCommit": "fca2f991f493de80e73ea4c086609f9a084e4ea3",
+        "artifactFormat": "hosted-envelope",
+        "renderer": {
+          "kind": "apple-paravirtual-metal",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false,
+          "hosted": true,
+          "hostIdentityComplete": true
+        },
+        "primaryEligible": false,
+        "stability": {
+          "status": "passed",
+          "failures": [],
+          "pending": [],
+          "heapGrowthRatio": 0.011829316995480097
+        },
+        "errors": [],
+        "pending": [
+          "Hosted soak browser cleanup evidence is unavailable.",
+          "Hosted probe browser cleanup evidence is unavailable."
+        ],
+        "status": "pending",
+        "artifact": {
+          "path": "report.json",
+          "sha256": "b55441b989b9f8e029ef8dd8eb18c485923273d2323f1aa82b3120c2b51fc383"
+        }
+      }
+    ],
+    "comparison": {
+      "status": "pending",
+      "failures": [],
+      "pending": [
+        "No verified physical Windows comparison environment is recorded.",
+        "Required comparison workloads missing: operating-view, dense-investigation, selected-aircraft-tracking, infrastructure, weather-effects, lifecycle-stress, map-streaming.",
+        "No raw paired comparison reports were supplied."
+      ],
+      "missingWorkloads": [
+        "operating-view",
+        "dense-investigation",
+        "selected-aircraft-tracking",
+        "infrastructure",
+        "weather-effects",
+        "lifecycle-stress",
+        "map-streaming"
+      ],
+      "workloadIds": [],
+      "environments": []
+    },
+    "retentionOutcome": {
+      "status": "pending",
+      "failures": [],
+      "pending": [
+        "github-macos-paravirtual: Hosted soak browser cleanup evidence is unavailable.",
+        "github-macos-paravirtual: Hosted probe browser cleanup evidence is unavailable.",
+        "No verified physical Windows native-GPU retention run was supplied."
+      ],
+      "environments": [
+        {
+          "environmentId": "github-macos-paravirtual",
+          "status": "pending",
+          "primaryEligible": false,
+          "renderer": {
+            "kind": "apple-paravirtual-metal",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": false,
+            "hosted": true,
+            "hostIdentityComplete": true
+          },
+          "artifact": {
+            "path": "report.json",
+            "sha256": "b55441b989b9f8e029ef8dd8eb18c485923273d2323f1aa82b3120c2b51fc383"
+          },
+          "stability": {
+            "status": "passed",
+            "failures": [],
+            "pending": [],
+            "heapGrowthRatio": 0.011829316995480097
+          },
+          "errors": [],
+          "pending": [
+            "Hosted soak browser cleanup evidence is unavailable.",
+            "Hosted probe browser cleanup evidence is unavailable."
+          ],
+          "reason": "Supplemental retention evidence; physical Windows native-GPU evidence is required for acceptance."
+        }
+      ]
+    }
+  }
+}

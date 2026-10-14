@@ -1,0 +1,2 @@
+performance-build-smoke*.json -text
+fix-focused-tests.log -text -whitespace

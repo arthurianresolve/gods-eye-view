@@ -1,0 +1,201 @@
+{
+  "schema": "gev-capture-matrix/v1",
+  "fixture": "synthetic-colour-depth-points/v1",
+  "applicationCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+  "harnessCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+  "capturedAt": "2026-10-09T16:06:34.565Z",
+  "scope": "isolated application viewer; no performance claim",
+  "checks": [
+    {
+      "preserveDrawingBuffer": true,
+      "label": "idle",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": true,
+      "label": "moving",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": true,
+      "label": "portrait",
+      "status": "passed",
+      "width": 360,
+      "height": 640,
+      "pixel": [
+        0,
+        255,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": true,
+      "label": "resized",
+      "status": "passed",
+      "width": 720,
+      "height": 400,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": true,
+      "label": "restored",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": true,
+      "label": "destroy-pending",
+      "status": "passed"
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "idle",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "moving",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "portrait",
+      "status": "passed",
+      "width": 360,
+      "height": 640,
+      "pixel": [
+        0,
+        255,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "resized",
+      "status": "passed",
+      "width": 720,
+      "height": 400,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "restored",
+      "status": "passed",
+      "width": 640,
+      "height": 360,
+      "pixel": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "listeners": 2
+    },
+    {
+      "preserveDrawingBuffer": false,
+      "label": "destroy-pending",
+      "status": "passed"
+    }
+  ],
+  "environments": [
+    {
+      "appCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+      "harnessCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (Intel)",
+      "viewport": {
+        "width": 894,
+        "height": 585,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": [],
+      "preserveDrawingBuffer": true,
+      "msaaSamples": 4
+    },
+    {
+      "appCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+      "harnessCommit": "9b1c18e8bbcdfe8b78e9616d62fc45592e8b5ff7",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (Intel)",
+      "viewport": {
+        "width": 894,
+        "height": 585,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": [],
+      "preserveDrawingBuffer": false,
+      "msaaSamples": 4
+    }
+  ],
+  "status": "passed"
+}

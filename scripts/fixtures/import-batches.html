@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Imported geometry lifecycle checks</title>
+  <body>
+    <h1>Imported geometry lifecycle checks</h1>
+    <p>
+      Compare identical 5,000-point imports using synchronous and cooperative
+      creation. This is an isolated viewer check, not a full application
+      performance or soak pass.
+    </p>
+    <p>
+      Keep Chrome foreground and uncovered during a run. Page focus and
+      visibility cannot verify desktop occlusion; preserve failed reports, as a
+      later pass is separate evidence.
+    </p>
+    <label
+      >Import workload
+      <select id="workload">
+        <option value="paired">Paired synchronous/cooperative</option>
+        <option value="synchronous">Synchronous control only</option>
+        <option value="cooperative">Cooperative control only</option>
+      </select>
+    </label>
+    <label
+      >Fresh-frame check
+      <select id="capture-mode">
+        <option value="pixels">Copy and verify pixels</option>
+        <option value="copy-only">
+          Copy only (diagnostic; no pixel check)
+        </option>
+        <option value="render-only">
+          Render only (diagnostic; no pixel check)
+        </option>
+      </select>
+    </label>
+    <label
+      ><input id="preserve" type="checkbox" checked /> Preserve drawing
+      buffer</label
+    >
+    <label
+      ><input id="render-demand" type="checkbox" checked /> Render on demand
+      (uncheck for continuous-render diagnostic)</label
+    >
+    <label
+      ><input id="observe-commands" type="checkbox" /> Observe submitted WebGL
+      commands (diagnostic only; changes scheduling)</label
+    >
+    <button id="run">Run import checks</button>
+    <button id="frame-probe">Check browser frame delivery</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer" style="width: 640px; height: 360px"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./import-batches-ui.js"></script>
+  </body>
+</html>

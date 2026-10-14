@@ -1,0 +1,20 @@
+{
+  "id": 11871776268,
+  "node_id": "MDg6QXJ0aWZhY3QxMTg3MTc3NjI2OA==",
+  "name": "performance-build-smoke-38515376556",
+  "size_in_bytes": 12081,
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11871776268",
+  "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11871776268/zip",
+  "expired": false,
+  "digest": "sha256:efb88ec68459f4232ddb406df1c67219036ff41bb9d519280de7721544a66df6",
+  "created_at": "2026-10-14T05:15:17Z",
+  "updated_at": "2026-10-14T05:15:17Z",
+  "expires_at": "2026-10-17T05:15:16Z",
+  "workflow_run": {
+    "id": 38515376556,
+    "repository_id": 1362432886,
+    "head_repository_id": 1362432886,
+    "head_branch": "qa/s47-austin-receipt-only",
+    "head_sha": "9487a57cf5ad3eb1076532da77bda8c48953e7de"
+  }
+}

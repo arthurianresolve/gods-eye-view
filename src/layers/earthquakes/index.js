@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createEarthquakeEvidence } from './evidence.js';
 import {
   EARTHQUAKE_OVERLAY_SOURCE_ID,
   EARTHQUAKE_OVERLAY_COHORT_LIMIT,
@@ -9,7 +10,10 @@ import {
   mapAnalystRecord,
 } from './model.js';
 export * from './model.js';
-export { createUsgsEarthquakeSource } from './source.js';
+export {
+  createUsgsEarthquakeSource,
+  EARTHQUAKE_HISTORY_WINDOW_MS,
+} from './source.js';
 
 /** Own one earthquake display and its refresh lifecycle. */
 export function createEarthquakesLayer({ source, overlayHost } = {}) {
@@ -21,8 +25,15 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
   let _dataSource = null;
   let _count = 0;
   let _lastUpdate = null;
+  let _receivedAt = null;
+  let _sourceSnapshotAt = null;
   let _lastError = null;
   let _enabled = false;
+  let _historyTargetMs = null;
+  let _historyLoadedTargetMs = null;
+  let _historyStatus = null;
+  let _historyEffectiveTime = null;
+  let _historyWindow = null;
 
   const layer = {
     id: 'earthquakes',
@@ -39,6 +50,8 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
       viewer.dataSources.add(_dataSource);
       _count = 0;
       _lastUpdate = null;
+      _receivedAt = null;
+      _sourceSnapshotAt = null;
       _lastError = null;
       _enabled = false;
       overlayHost.setVisible(EARTHQUAKE_OVERLAY_SOURCE_ID, false);
@@ -64,13 +77,37 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
 
     async update(viewer) {
       if (!_enabled || !_dataSource) return false;
+      const historyTargetMs = _historyTargetMs;
+      if (
+        historyTargetMs !== null &&
+        _historyLoadedTargetMs === historyTargetMs
+      )
+        return false;
       _request?.abort();
       const request = new AbortController();
       _request = request;
       try {
-        const rows = await source.getSnapshot({ signal: request.signal });
+        const snapshot =
+          historyTargetMs !== null
+            ? typeof source.getSnapshotAt === 'function'
+              ? await source.getSnapshotAt(historyTargetMs, {
+                  signal: request.signal,
+                })
+              : (() => {
+                  throw new Error('USGS history is unsupported by this source');
+                })()
+            : typeof source.getSnapshotWithMetadata === 'function'
+              ? await source.getSnapshotWithMetadata({ signal: request.signal })
+              : {
+                  rows: await source.getSnapshot({ signal: request.signal }),
+                  receivedAt: Date.now(),
+                  snapshotAt: null,
+                };
+        const rows = snapshot?.rows;
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
+        if (!Array.isArray(rows))
+          throw new Error('Malformed USGS snapshot result');
 
         const nextEntities = [];
         let count = 0;
@@ -146,8 +183,18 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
         }
 
         _count = count;
-        _lastUpdate = Date.now();
+        _receivedAt = Number.isFinite(snapshot.receivedAt)
+          ? snapshot.receivedAt
+          : Date.now();
+        _sourceSnapshotAt = Number.isFinite(snapshot.snapshotAt)
+          ? snapshot.snapshotAt
+          : null;
+        _lastUpdate = _receivedAt;
         _lastError = null;
+        _historyLoadedTargetMs = historyTargetMs;
+        _historyStatus = historyTargetMs === null ? null : 'available';
+        _historyEffectiveTime = snapshot.effectiveTime ?? null;
+        _historyWindow = snapshot.window ?? null;
         console.log(`[Data:Earthquakes] Updated: ${_count} events (M2.5+)`);
         return true;
       } catch (e) {
@@ -155,6 +202,16 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
           return false;
         console.warn('[Data:Earthquakes] Fetch error:', e);
         _lastError = e?.message || 'Earthquake source unavailable';
+        if (historyTargetMs !== null) {
+          _dataSource.entities.removeAll();
+          _count = 0;
+          _historyLoadedTargetMs = historyTargetMs;
+          _historyStatus = 'unavailable';
+          _historyEffectiveTime = new Date(historyTargetMs).toISOString();
+          _historyWindow = null;
+          overlayHost.clearSource(EARTHQUAKE_OVERLAY_SOURCE_ID);
+          overlayHost.setVisible(EARTHQUAKE_OVERLAY_SOURCE_ID, _enabled);
+        }
         return false;
       } finally {
         if (_request === request) _request = null;
@@ -174,7 +231,71 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
       }
       _count = 0;
       _lastUpdate = null;
+      _receivedAt = null;
+      _sourceSnapshotAt = null;
       _lastError = null;
+      _historyTargetMs = null;
+      _historyLoadedTargetMs = null;
+      _historyStatus = null;
+      _historyEffectiveTime = null;
+      _historyWindow = null;
+    },
+
+    attachInvestigationTime(clock, capabilities = null) {
+      if (!clock?.subscribe)
+        throw new TypeError('An investigation clock is required');
+      const removeCapability =
+        typeof source.getSnapshotAt === 'function' && capabilities?.register
+          ? capabilities.register({
+              id: 'earthquakes',
+              mode: 'provider-history',
+              label: 'USGS earthquake events',
+              coverage: { from: Date.UTC(1900, 0, 1), to: Date.now() },
+              selectAt: async ({ targetMs, signal }) => {
+                const snapshot = await source.getSnapshotAt(targetMs, {
+                  signal,
+                });
+                return {
+                  sampleTimeMs: snapshot.window?.to,
+                  selectedTimeMs: targetMs,
+                  timeBasis: 'event-occurrence-window',
+                  window: snapshot.window,
+                  eventCount: snapshot.rows?.length ?? 0,
+                  truncated: snapshot.truncated === true,
+                  sourceSnapshotAt: snapshot.snapshotAt ?? null,
+                };
+              },
+            })
+          : () => {};
+      const remove = clock.subscribe((state) => {
+        const wasHistorical = _historyTargetMs !== null;
+        const next =
+          state.mode === 'live' || !Number.isFinite(state.timeMs)
+            ? null
+            : Math.floor(state.timeMs / 60_000) * 60_000;
+        if (next === _historyTargetMs) return;
+        _historyTargetMs = next;
+        _historyLoadedTargetMs = null;
+        _historyStatus = next === null ? null : 'loading';
+        _historyEffectiveTime =
+          next === null ? null : new Date(next).toISOString();
+        if (next === null && wasHistorical && _dataSource) {
+          _dataSource.entities.removeAll();
+          _count = 0;
+          _historyWindow = null;
+          overlayHost.clearSource(EARTHQUAKE_OVERLAY_SOURCE_ID);
+          overlayHost.setVisible(EARTHQUAKE_OVERLAY_SOURCE_ID, _enabled);
+        }
+        _request?.abort();
+        _request = null;
+        if (_enabled) void layer.update(_viewer);
+      });
+      return () => {
+        removeCapability();
+        remove();
+        _request?.abort();
+        _request = null;
+      };
     },
 
     /**
@@ -203,20 +324,27 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
           ? Cesium.Cartographic.fromCartesian(cartesian)
           : null;
         const p = entity.properties;
-        result.push(
-          mapAnalystRecord(
-            {
-              id: p?.usgsId?.getValue(now) ?? null,
-              mag: p?.mag?.getValue(now),
-              place: p?.place?.getValue(now),
-              time: p?.time?.getValue(now),
-              depth: p?.depth?.getValue(now),
-              lat: carto ? Cesium.Math.toDegrees(carto.latitude) : null,
-              lon: carto ? Cesium.Math.toDegrees(carto.longitude) : null,
-            },
-            result.length,
-          ),
+        const record = mapAnalystRecord(
+          {
+            id: p?.usgsId?.getValue(now) ?? null,
+            mag: p?.mag?.getValue(now),
+            place: p?.place?.getValue(now),
+            time: p?.time?.getValue(now),
+            depth: p?.depth?.getValue(now),
+            lat: carto ? Cesium.Math.toDegrees(carto.latitude) : null,
+            lon: carto ? Cesium.Math.toDegrees(carto.longitude) : null,
+          },
+          result.length,
         );
+        record.evidence = createEarthquakeEvidence(record, {
+          receivedAt: _receivedAt,
+          snapshotAt: _sourceSnapshotAt,
+          displayTime: _historyEffectiveTime,
+          historyWindow: _historyWindow,
+          feedState: _lastError ? 'degraded' : 'nominal',
+          truncated: entities.length > limit,
+        });
+        result.push(record);
       }
       return result;
     },
@@ -224,8 +352,23 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
     getStats() {
       return {
         count: _count,
+        loading: _request !== null,
         lastUpdate: _lastUpdate,
+        receivedAt: _receivedAt,
+        sourceSnapshotAt: _sourceSnapshotAt,
         error: _lastError,
+        historyTarget: _historyTargetMs,
+        historyEffectiveTime: _historyEffectiveTime,
+        historyStatus: _historyStatus,
+        historyWindow: _historyWindow,
+        loadingLabel:
+          _historyStatus === 'loading'
+            ? 'HISTORY · loading'
+            : _historyStatus === 'unavailable'
+              ? 'HISTORY · unavailable'
+              : _historyStatus === 'available'
+                ? `HISTORY · ${_historyEffectiveTime}`
+                : '',
       };
     },
   };

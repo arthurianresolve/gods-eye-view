@@ -1,0 +1,260 @@
+{
+  "schema": "gev-import-geometry-cpu/v1",
+  "capturedAt": "2026-10-14T10:56:10.111Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "scope": "Node entity/coordinate preparation; three warmups per workload per child, five alternating pairs; excludes raw decoding, WebGL, layout and GPU. No forced GC. Durations include ordinary timer scheduling.",
+  "samples": [
+    {
+      "pair": 0,
+      "variant": "baseline",
+      "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 15.88359999999966,
+          "maximumBatchMs": 11.584699999999884,
+          "batches": 2,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 15.245899999999892,
+          "maximumBatchMs": 12.5320999999999,
+          "batches": 2,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "commit": "7287159741d6b1e5bb69bcc94ecd92543dd63135",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 45.7197000000001,
+          "maximumBatchMs": 4.121799999999894,
+          "batches": 4,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 57.61349999999993,
+          "maximumBatchMs": 4.09519999999975,
+          "batches": 4,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "commit": "7287159741d6b1e5bb69bcc94ecd92543dd63135",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 48.05569999999989,
+          "maximumBatchMs": 4.182699999999841,
+          "batches": 4,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 48.214300000000094,
+          "maximumBatchMs": 4.08179999999993,
+          "batches": 4,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "baseline",
+      "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 19.079200000000128,
+          "maximumBatchMs": 17.41170000000011,
+          "batches": 2,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 20.079600000000028,
+          "maximumBatchMs": 18.169800000000123,
+          "batches": 2,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "baseline",
+      "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 41.66190000000006,
+          "maximumBatchMs": 31.626999999999953,
+          "batches": 2,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 15.191899999999805,
+          "maximumBatchMs": 12.784900000000107,
+          "batches": 2,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "commit": "7287159741d6b1e5bb69bcc94ecd92543dd63135",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 24.778000000000247,
+          "maximumBatchMs": 4.1262000000001535,
+          "batches": 4,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 31.87400000000025,
+          "maximumBatchMs": 4.065700000000106,
+          "batches": 3,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "commit": "7287159741d6b1e5bb69bcc94ecd92543dd63135",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 34.491199999999935,
+          "maximumBatchMs": 4.111699999999928,
+          "batches": 4,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 45.564000000000306,
+          "maximumBatchMs": 4.082800000000134,
+          "batches": 4,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "baseline",
+      "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 12.883200000000215,
+          "maximumBatchMs": 11.811599999999999,
+          "batches": 2,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 15.864399999999932,
+          "maximumBatchMs": 12.681699999999637,
+          "batches": 2,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "baseline",
+      "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 15.880899999999656,
+          "maximumBatchMs": 10.063199999999597,
+          "batches": 2,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 15.094300000000203,
+          "maximumBatchMs": 11.404799999999796,
+          "batches": 2,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "candidate",
+      "commit": "7287159741d6b1e5bb69bcc94ecd92543dd63135",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "durationMs": 29.726700000000164,
+          "maximumBatchMs": 4.148999999999887,
+          "batches": 4,
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "entityId": "gev-import:active:fixture:shape"
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "durationMs": 46.828899999999976,
+          "maximumBatchMs": 4.098599999999806,
+          "batches": 4,
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "entityId": "gev-import:active:fixture:shape"
+        }
+      ]
+    }
+  ],
+  "geometryEquivalent": true
+}

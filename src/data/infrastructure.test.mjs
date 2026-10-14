@@ -62,10 +62,23 @@ test('infrastructure factory preserves identity and creates independent state wi
   const first = createInfrastructureLayers(services());
   const second = createInfrastructureLayers(services());
   assert.deepEqual(
+    first.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+    ['entities', 'entities'],
+    'the application default remains Entity-backed',
+  );
+  assert.deepEqual(
     first.map(({ id, name, source }) => ({ id, name, source })),
     [
-      { id: 'local-datacenters', name: 'Datacenters', source: 'Local' },
-      { id: 'local-dams', name: 'Dams', source: 'USACE' },
+      {
+        id: 'local-datacenters',
+        name: 'Datacenters',
+        source: 'OpenStreetMap contributors · ODbL-1.0',
+      },
+      {
+        id: 'local-dams',
+        name: 'Dams',
+        source: 'Open Infrastructure Map / OpenStreetMap · ODbL-1.0',
+      },
     ],
   );
   first.forEach((layer, index) => {
@@ -78,6 +91,18 @@ test('infrastructure factory preserves identity and creates independent state wi
     });
     second[index].destroy();
   });
+});
+
+test('infrastructure factory scopes the opt-in surface renderer to datacenters only', () => {
+  const layers = createInfrastructureLayers({
+    ...services(),
+    datacenterSurfaceRenderer: 'primitive-collections',
+  });
+  assert.deepEqual(
+    layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+    ['primitive-collections', 'entities'],
+  );
+  layers.forEach((layer) => layer.destroy());
 });
 
 test('dataset URLs still name the complete bundled sources', () => {
@@ -191,6 +216,7 @@ test('consumer build includes only infrastructure code and resolves assets under
   const entry = output.find((item) => item.type === 'chunk' && item.isEntry);
   const sources = Object.keys(entry.modules).filter((id) => id.endsWith('.js'));
   assert.deepEqual(sources.map((id) => id.split('/').at(-1)).sort(), [
+    'evidence.js',
     'infrastructure.js',
     'infrastructureData.js',
     'infrastructureOverlayEntry.js',

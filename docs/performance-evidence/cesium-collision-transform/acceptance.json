@@ -1,0 +1,98 @@
+{
+  "schema": "gev-component-acceptance/v1",
+  "testedCommit": "f26f4dd738a518c6cefa96b5f809c5d9c53afa83",
+  "baseCommit": "e6ab561ad0e77a49219627e97573199f1db0af62",
+  "decision": "accept isolated no-op camera transform correctness fix",
+  "implemented": true,
+  "automaticallyValidated": true,
+  "hardwareValidated": false,
+  "scope": "Only the collision patch and its distribution/install/release integration; no fleet scheduler changes.",
+  "sources": [
+    {
+      "file": "patches/cesium-1.138.0-collision-transform.json",
+      "sha256": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79"
+    },
+    {
+      "file": "scripts/apply-cesium-patches.mjs",
+      "sha256": "692a746bd14c78c000c8b9548dc78afa50c347e54555c262b374211df124b221"
+    },
+    {
+      "file": "scripts/performance/cesiumTerrainCollisionTransform.test.mjs",
+      "sha256": "915c8539d00ea103f37d84ccaa83fa72e7597693e2bbee84ef9550f471b3b134"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "ci-38119958881.json",
+      "sha256": "cee1dcea1a1cdae626c4c098a18188475176070983b3d140b058b2f30cc67c9f",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119958881",
+      "testedCommit": "f26f4dd738a518c6cefa96b5f809c5d9c53afa83",
+      "passedJobs": [
+        "Windows onboarding",
+        "Install and update recovery (ubuntu-latest)",
+        "Node 26.x",
+        "Node 24.14.0",
+        "Install and update recovery (windows-latest)",
+        "Install and update recovery (macos-latest)",
+        "Street Level browser gate"
+      ],
+      "skippedJobs": [
+        "60-minute rendered application soak",
+        "Windows browser shutdown controls",
+        "Isolated CCTV lifecycle",
+        "Isolated mission render-demand correctness",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Aircraft tracking regression",
+        "Isolated terrain and picking lifecycle",
+        "Baseline-compatible performance build smoke",
+        "Native WebGL probe (${{ matrix.os }})",
+        "Free hosted Mac rendering diagnostic",
+        "Isolated import and workspace lifecycle",
+        "Isolated rendered mixed-use smoke"
+      ]
+    },
+    {
+      "file": "ci-38119960860.json",
+      "sha256": "6ce3c314f8ef06c9370e6f04772b5dbc2f3eb62c9385958a1d7dbfc2fd63deb2",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119960860",
+      "testedCommit": "f26f4dd738a518c6cefa96b5f809c5d9c53afa83",
+      "passedJobs": [
+        "Aircraft tracking regression"
+      ],
+      "skippedJobs": [
+        "Free hosted Mac accelerated retention diagnostic",
+        "Baseline-compatible performance build smoke",
+        "Windows onboarding",
+        "Street Level browser gate",
+        "Free hosted Mac rendering diagnostic",
+        "Isolated mission render-demand correctness",
+        "Install and update recovery (${{ matrix.os }})",
+        "Isolated CCTV lifecycle",
+        "60-minute rendered application soak",
+        "Node ${{ matrix.node }}",
+        "Isolated rendered mixed-use smoke",
+        "Isolated import and workspace lifecycle",
+        "Native WebGL probe (${{ matrix.os }})",
+        "Windows browser shutdown controls",
+        "Isolated terrain and picking lifecycle"
+      ]
+    },
+    {
+      "file": "tracking-regression.txt",
+      "sha256": "cf8c30ee3d02fec444d302f0389f9d6e774abe45e989b979aa835389cfd2c980"
+    },
+    {
+      "file": "tracking-source.txt",
+      "sha256": "0e8407ea8c2ebfdf2275298393a03649b12871cdd47c7cfdaf21d1ec2d5cb3e7"
+    },
+    {
+      "file": "tracking-source-status.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limitations": [
+    "No physical Windows frame/capture or motion-p95 claim",
+    "No complete S47-S60 or full-scene stability acceptance",
+    "Published layer-token PR checks and optional soaks were skipped in these runs"
+  ]
+}

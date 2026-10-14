@@ -33,6 +33,90 @@ const MIN_PICK_MAGNITUDE_M = 6_000_000;
 const MAX_PICK_MAGNITUDE_M = 1_000_000_000;
 
 /**
+ * Run an application-owned depth pick through the opt-in hosted attribution
+ * observer when one is installed. The ordinary path remains the original
+ * method call, while the diagnostic path preserves its receiver, return value,
+ * thrown error, and single invocation.
+ *
+ * @param {object} viewer
+ * @param {string} caller A fixed source label, never user or provider data.
+ * @param {{x: number, y: number}} samplePosition
+ * @returns {*}
+ */
+export function pickPositionWithAttribution(viewer, caller, samplePosition) {
+  const scene = viewer?.scene;
+  const observer = scene?.__gevDepthPickAttribution;
+  if (!observer || typeof observer.recordPick !== 'function')
+    return scene.pickPosition(samplePosition);
+
+  let input = null;
+  try {
+    input = observer.captureInput?.(viewer, samplePosition) ?? null;
+  } catch {
+    // The diagnostic input snapshot is optional and precedes the measured call.
+  }
+  let startedAt = null;
+  try {
+    startedAt = globalThis.performance?.now?.() ?? null;
+  } catch {
+    // Timing is optional diagnostic evidence; preserve the original pick.
+  }
+  let result;
+  let failure = null;
+  let didThrow = false;
+  try {
+    result = scene.pickPosition(samplePosition);
+  } catch (error) {
+    didThrow = true;
+    failure = error;
+  }
+  let endedAt = null;
+  try {
+    endedAt = globalThis.performance?.now?.() ?? null;
+  } catch {
+    // Timing is optional diagnostic evidence; preserve the original pick.
+  }
+  try {
+    observer.recordPick({
+      viewer,
+      caller,
+      samplePosition,
+      input,
+      startedAt,
+      endedAt,
+      result,
+      error: failure,
+      didThrow,
+    });
+  } catch {
+    // A fixture-only observer must never replace Cesium's application result.
+  }
+  if (didThrow) throw failure;
+  return result;
+}
+
+/** Record view-target cache behavior only when the hosted observer is enabled. */
+export function recordViewTargetCacheAttribution(
+  viewer,
+  caller,
+  cacheHit,
+  cacheAgeMs,
+) {
+  const observer = viewer?.scene?.__gevDepthPickAttribution;
+  if (typeof observer?.recordCache !== 'function') return;
+  try {
+    observer.recordCache({
+      viewer,
+      caller,
+      cacheHit: cacheHit === true,
+      cacheAgeMs: Number.isFinite(cacheAgeMs) ? cacheAgeMs : null,
+    });
+  } catch {
+    // Diagnostic collection is observational and cannot fail a caller.
+  }
+}
+
+/**
  * Whether a picked Cartesian names a real position on or above the globe, and
  * so can be converted to a Cartographic both safely and meaningfully.
  *

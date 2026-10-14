@@ -1,0 +1,37 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S50",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "81a5cc797e2404a740535ae1c1630b58385d796f",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "tests": {
+    "command": "node --test src/data/cctv.test.mjs src/layers/cctv/rendering.test.mjs src/layers/cctv/geometryReuse.test.mjs src/layers/cctv/groundRevision.test.mjs src/layers/cctv/source.test.mjs src/layers/cctv/workspaceRestore.integration.test.mjs src/data/layerState.test.mjs scripts/performance/cctvViewshedRetention.test.mjs",
+    "passed": 183,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "5fd9d2cdc3cb47109815564293bc77c78ba4bb7c7ba65f1cd5fb1b3596662327"
+  },
+  "renderedComponent": {
+    "runId": 38439815077,
+    "commit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "reportSha256": "5a8af98f3d10f69791239587495ee59a6efbcf646fb5e847717a289717b9b60c",
+    "physicalDesktop": false
+  },
+  "sourceHashes": {
+    "src/layers/cctv/geometry.js": "15eaa10557a9be125289875a2aec924c21ba78dd989b69dd9bc2a4a68216efb5",
+    "src/layers/cctv/geometryQueue.js": "a58bec28903c03aafcce4243d05e4ad09fa590fc787dca8b3238fba68132d446",
+    "src/layers/cctv/rendering.js": "3ec71fb0864d270bc89033830212de062c7e045c3d07d90ceb169997ccf25190",
+    "src/layers/cctv/ground.js": "89d9b91783d8fa253a8adcf7f9abda1ba3405ea21748f66dff97e7ec6e3b87e5",
+    "src/layers/cctv/model.js": "1093235b0de5dcd00f658266b3feae222ac77e0fda0c3c81f884c97ada88e39f",
+    "src/layers/cctv/source.js": "95a4ca3e342e7ab824fed7a8d65cef1bb0f9d50b2b65f516baf7857f036313df",
+    "src/layers/cctv/workspaceRestore.integration.test.mjs": "7bb18f096ae4e9106ee73cc5684aded651959058eb42d20d88c5bbe5a1facb57"
+  },
+  "limitations": [
+    "Success pixel evidence is an in-page exact comparison plus hashes, not independently retained raw PNGs.",
+    "Final physical Windows visual/performance/retention qualification remains pending.",
+    "No percentage speedup, GPU cost or long-run retention pass is claimed."
+  ]
+}

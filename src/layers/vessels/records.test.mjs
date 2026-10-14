@@ -35,7 +35,7 @@ function setup() {
 test('vessel reconciliation preserves record identity and first duplicate while emitting plain metadata', () => {
   const probe = setup();
   probe.reconcile([
-    row('111', { type: 'Cargo' }),
+    row('111', { type: 'Cargo', last_position_epoch: 1700000000 }),
     row('222'),
     row('222', { name: 'duplicate' }),
     row('bad', { lat: NaN }),
@@ -43,14 +43,35 @@ test('vessel reconciliation preserves record identity and first duplicate while 
   assert.equal(probe.store.byMmsi.size, 2);
   assert.equal(probe.store.byMmsi.get('222').name, '222');
   const record = probe.store.byMmsi.get('111');
-  probe.reconcile([row('111', { lat: 51.94, type: 'Tanker' })]);
+  probe.reconcile([
+    row('111', {
+      lat: 51.94,
+      type: 'Tanker',
+      last_position_epoch: 1700000100,
+    }),
+  ]);
   assert.equal(probe.store.byMmsi.get('111'), record);
   assert.equal(record.lat, 51.94);
+  assert.equal(record.observedAtMs, 1700000100000);
   assert.equal(probe.events.find((event) => event[0] === 'update')[2], 'Cargo');
   assert.equal(probe.store.byMmsi.has('222'), false);
   for (const field of ['position', 'surfacePosition', 'normal', 'billboard'])
     assert.equal(Object.hasOwn(record, field), false);
   assert.deepEqual(structuredClone(record), record);
+});
+
+test('vessel observations keep source time separate and leave missing times unknown', () => {
+  assert.equal(
+    normalizeVessel(row('111', { last_position_epoch: 1700000000 }))
+      .observedAtMs,
+    1700000000000,
+  );
+  assert.equal(
+    normalizeVessel(row('222', { last_position_UTC: '2023-11-14T22:13:20Z' }))
+      .observedAtMs,
+    Date.parse('2023-11-14T22:13:20Z'),
+  );
+  assert.equal(normalizeVessel(row('333')).observedAtMs, null);
 });
 
 test('selected vessel remains pinned for three complete misses and teardown precedes removal', () => {

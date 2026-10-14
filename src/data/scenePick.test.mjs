@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { isPickedWorldPosition } from './scenePick.js';
+import {
+  isPickedWorldPosition,
+  pickPositionWithAttribution,
+  recordViewTargetCacheAttribution,
+} from './scenePick.js';
 
 const describe = (position) =>
   position ? `(${position.x}, ${position.y}, ${position.z})` : String(position);
@@ -117,6 +121,68 @@ test('a real picked position is accepted', () => {
     polarSurface > 6_300_000,
     `smallest real magnitude was ${polarSurface}`,
   );
+});
+
+test('depth-pick attribution is dormant unless the fixture observer is installed', () => {
+  let calls = 0;
+  const result = { x: 1 };
+  const viewer = {
+    scene: {
+      pickPosition(position) {
+        calls += 1;
+        assert.deepEqual(position, { x: 4, y: 9 });
+        return result;
+      },
+    },
+  };
+  assert.equal(
+    pickPositionWithAttribution(viewer, 'voice-move-end-prewarm', {
+      x: 4,
+      y: 9,
+    }),
+    result,
+  );
+  recordViewTargetCacheAttribution(
+    viewer,
+    'voice-move-end-prewarm',
+    false,
+    null,
+  );
+  assert.equal(calls, 1);
+});
+
+test('depth-pick attribution records one call and preserves falsy thrown values', () => {
+  for (const thrown of [null, undefined, 0, '']) {
+    const rows = [];
+    const viewer = {
+      scene: {
+        __gevDepthPickAttribution: {
+          captureInput: () => ({ completedRenderRevision: 7 }),
+          recordPick: (row) => rows.push(row),
+        },
+        pickPosition() {
+          throw thrown;
+        },
+      },
+    };
+    let caught = false;
+    let actual;
+    try {
+      pickPositionWithAttribution(viewer, 'voice-move-end-prewarm', {
+        x: 320,
+        y: 180,
+      });
+    } catch (error) {
+      caught = true;
+      actual = error;
+    }
+    assert.equal(caught, true);
+    assert.equal(actual, thrown);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].didThrow, true);
+    assert.equal(rows[0].error, thrown);
+    assert.equal(rows[0].input.completedRenderRevision, 7);
+  }
 });
 
 test('the guard rejects each way Cesium mishandles a degenerate pick', () => {

@@ -1,0 +1,139 @@
+{
+  "schema": "gev-local-source-validation/v1",
+  "baseCommit": "701adedab3b7fda0d18b4445689feec127b4b174",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=tap",
+    "scripts/capture-scene-performance.test.mjs",
+    "scripts/qa-performance-build-smoke.test.mjs",
+    "scripts/performance/pairedRendererExperiment.test.mjs",
+    "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
+    "scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/captureDiagnosticsControl.test.mjs",
+    "scripts/performance/captureFailureReport.test.mjs",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs",
+    "scripts/performance/depthPickAttribution.test.mjs",
+    "scripts/performance/providerDocumentRetirement.test.mjs",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+    "scripts/performance/commonSceneObserver.test.mjs",
+    "scripts/performance/boundedCpuProfile.test.mjs",
+    "scripts/performance/shaderProgramAttributionArtifact.test.mjs"
+  ],
+  "startedAt": "2026-10-12T18:40:12.810Z",
+  "finishedAt": "2026-10-12T18:40:55.117Z",
+  "status": 0,
+  "error": null,
+  "signal": null,
+  "counts": {
+    "tests": 159,
+    "pass": 159,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "sourceHashesBefore": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "1b40777c53f4dea18960963ec1363ab1da46bc5b2b37cbc1fd5e749159a5037e"
+    },
+    {
+      "path": "scripts/capture-scene-performance.mjs",
+      "sha256": "4bae72fd21a1bc52591eafcbf6d7308e9ce516c9f685966d53901094187378eb"
+    },
+    {
+      "path": "scripts/capture-scene-performance.test.mjs",
+      "sha256": "5004e46e39b4608e8862b09b6f449aa100f0ec41e4d527fddd9c04c8cfb8d4e2"
+    },
+    {
+      "path": "scripts/performance/earlyCesiumRendererProbe.mjs",
+      "sha256": "328320599170d8accd9e00b5640db0346829efa3aba0d1def69598a0c0a0601a"
+    },
+    {
+      "path": "scripts/performance/pairedRendererExperiment.test.mjs",
+      "sha256": "fd9417efd8500e83f7104360239aa009494eabae715fab62c28e286936d07d7a"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.mjs",
+      "sha256": "aa89e71cecccbda2a2b930e2410c1256b5985993faba0c5b4a6ec0afed473207"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.test.mjs",
+      "sha256": "d88d43a023416824464af1941f8a49e8180a4221af61a918a39a77c1bbe12b5e"
+    },
+    {
+      "path": "scripts/performance/shaderProgramAttributionArtifact.mjs",
+      "sha256": "cd612e3a56c7514bcb5be7a3ec797dcf5553c26065e9169cc6b285851f571131"
+    },
+    {
+      "path": "scripts/performance/shaderProgramAttributionArtifact.test.mjs",
+      "sha256": "7022057afea5819fffa7c8522289f4607b0011bdeaa49d7f08f4e6c55fdc64f6"
+    },
+    {
+      "path": "scripts/run-unit-tests.mjs",
+      "sha256": "d372a19ec34452819470e139b0feb79868b1055f5b2213d7f330992a7cb54047"
+    },
+    {
+      "path": "scripts/format-scope.json",
+      "sha256": "8892c0e394ae8b1636861f9c1b4db7c485be3bce6a46e2134a1a4cbad5e64709"
+    }
+  ],
+  "sourceHashesAfter": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "1b40777c53f4dea18960963ec1363ab1da46bc5b2b37cbc1fd5e749159a5037e"
+    },
+    {
+      "path": "scripts/capture-scene-performance.mjs",
+      "sha256": "4bae72fd21a1bc52591eafcbf6d7308e9ce516c9f685966d53901094187378eb"
+    },
+    {
+      "path": "scripts/capture-scene-performance.test.mjs",
+      "sha256": "5004e46e39b4608e8862b09b6f449aa100f0ec41e4d527fddd9c04c8cfb8d4e2"
+    },
+    {
+      "path": "scripts/performance/earlyCesiumRendererProbe.mjs",
+      "sha256": "328320599170d8accd9e00b5640db0346829efa3aba0d1def69598a0c0a0601a"
+    },
+    {
+      "path": "scripts/performance/pairedRendererExperiment.test.mjs",
+      "sha256": "fd9417efd8500e83f7104360239aa009494eabae715fab62c28e286936d07d7a"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.mjs",
+      "sha256": "aa89e71cecccbda2a2b930e2410c1256b5985993faba0c5b4a6ec0afed473207"
+    },
+    {
+      "path": "scripts/qa-performance-build-smoke.test.mjs",
+      "sha256": "d88d43a023416824464af1941f8a49e8180a4221af61a918a39a77c1bbe12b5e"
+    },
+    {
+      "path": "scripts/performance/shaderProgramAttributionArtifact.mjs",
+      "sha256": "cd612e3a56c7514bcb5be7a3ec797dcf5553c26065e9169cc6b285851f571131"
+    },
+    {
+      "path": "scripts/performance/shaderProgramAttributionArtifact.test.mjs",
+      "sha256": "7022057afea5819fffa7c8522289f4607b0011bdeaa49d7f08f4e6c55fdc64f6"
+    },
+    {
+      "path": "scripts/run-unit-tests.mjs",
+      "sha256": "d372a19ec34452819470e139b0feb79868b1055f5b2213d7f330992a7cb54047"
+    },
+    {
+      "path": "scripts/format-scope.json",
+      "sha256": "8892c0e394ae8b1636861f9c1b4db7c485be3bce6a46e2134a1a4cbad5e64709"
+    }
+  ],
+  "sourceUnchanged": true,
+  "rawLog": {
+    "path": "retention-initial-validation.log.gz",
+    "uncompressedSha256": "403676dd00283acc887d30c6ae4b9bb5493ce76bbda92905d2cdca3b91be54d9",
+    "uncompressedByteLength": 35813
+  }
+}

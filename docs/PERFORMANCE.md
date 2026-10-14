@@ -1,10 +1,161 @@
 # Performance baseline
 
+The hosted large-geometry experiment at `df63fc43` is rejected for production:
+both 256-coordinate chunking arms preserve all 30 decoded images and native
+picks but regress completion time in four of five pairs for both lines and
+polygons. Their measured active spans also remain above the 4 ms target.
+[Paired timings, raw artifacts and limits](performance-evidence/import-geometry-wake-current-dev/README.md)
+record the result without changing production scheduling or preparation.
+
+Latest checkpoint (11 October 2026): imported-point collection integration is
+accepted after five hosted comparison pairs (median cooperative-load change
+-56.9%), 55 exact image pairs, native picking, full integration CI, and the
+corrected 60-minute retention gate. [Comparison details](performance-evidence/import-point-current-dev/README.md)
+keep slower synchronous capture waits separate; no full-scene claim is made.
+
+The corrected soak at `7cea7aac` completes 252 cycles with all 40 gauges
+unchanged at 13 post-GC checkpoints, 629 listeners, no pending workers and 1.937%
+maximum final-window heap growth. Both browser owners close naturally in under
+one second. [Original report and independent checks](performance-evidence/hosted-soak-38167171204/README.md)
+pass as supplemental hosted Apple paravirtual Metal evidence. Physical Windows,
+full paired workloads and final candidate acceptance remain pending. Historical
+reports with missing cleanup fields remain incomplete.
+
+S47's [stage diagnostic](performance-evidence/s47-stage-diagnostic-38165977957/README.md)
+still hits its 180-second child cap during scene setup after three samples.
+Worker audits finish; these software-rendered wall timings do not establish an
+audit stall or a Windows GPU root cause.
+
+The [historical 60-minute hosted soak](performance-evidence/hosted-soak-38155558706/README.md)
+at `26f383ed` completes 252 cycles with stable owner counts and 1.568% maximum
+heap growth over its conservative final window. Source-provenance gaps and its
+older commit keep this separate from final-candidate acceptance. Physical
+Windows comparisons and retention evidence remain outstanding.
+
+
+The direct-filter placement candidate `4686ea3` now completes its forty-pair
+isolated CPU comparison. Static and periodic infrastructure/radio paired
+medians improve 17.65-31.11%, with all twenty pairs improving. Moving generic
+and infrastructure medians regress 3.34%/2.36%; the largest individual
+regression is 6.14%, below the 10% limit. This is an explicit component
+tradeoff, not a browser/GPU or full-scene motion-p95 result. Exact-pixel,
+allocation, native font failure-control and all seven exact-commit integration
+checks pass. The component is accepted ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
+[CI results](performance-evidence/s52-placement-direct-filter/ci-run.json),
+[raw CPU report](performance-evidence/s52-placement-direct-filter/cpu-report.json),
+[independent review](performance-evidence/s52-placement-direct-filter/cpu-review.json)).
+The separate repaint optimization is still rejected: its latest isolated
+prototype passes 87 behavior checks but fails six of thirteen unchanged
+allocation gates ([preserved variants and logs](performance-evidence/s52-paint-allocation-rejections/review.json)).
+
+The previous `dev` baseline `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
+ordinary integration jobs ([results](performance-evidence/s52-placement-reuse/baseline-dev-ci.json)),
+including Node 24/26, builds, onboarding, three-OS recovery and browser journeys.
+The placement-cache experiment at `21523d5` passes five 24-case exact-pixel pairs
+and two native font-wake pairs, with independent source and artifact checks
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-placement-reuse-moving-workload-regression-found---11-october-2026)).
+Its CPU comparison now shows repeatable moving-workload regressions: +7.53%,
++8.14% and +3.22% paired medians for generic, infrastructure and radio workloads,
+with two individual pairs over 10%. Fixed and periodic cases improve in all 20
+pairs, but this candidate remains off `dev` while the moving miss path is
+corrected. These are Node algorithm results, not GPU or browser frame times.
+The [raw comparison](performance-evidence/s52-placement-reuse/cpu-report.json)
+and [independent review](performance-evidence/s52-placement-reuse/cpu-review.json)
+preserve the failed performance acceptance. All seven ordinary integration jobs
+pass at `21523d5` ([results](performance-evidence/s52-placement-reuse/ci-run.json));
+this does not override the measured regression.
+
+A revised signature first exposed a repeatable allocation failure, then a
+targeted anchor guard removed it. The applied correction passes all 86 focused
+checks and 13 allocation gates, with unchanged budgets. Frozen candidate `698752a`
+also passes five visual pairs, two native font pairs and all seven integration
+jobs. Its new 40-pair CPU comparison still regresses in all 15 ordinary moving
+pairs: generic +7.52%, infrastructure +5.58%, radio +0.77% paired medians, with
+one generic pair at +11.06%. All 20 static/periodic pairs improve. The candidate
+remains rejected for promotion while the moving path is investigated
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-corrected-placement-signature-moving-regression-remains---11-october-2026)).
+
+Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
+layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
+comparisons and isolated CPU comparisons. Layout's 35 ordinary-overlay pairs all
+improve synchronous CPU by 6.01-17.34%; the detection control has a +0.50% paired
+median and no individual regression over 4.57%. All seven full integration jobs
+pass at `f25154a`, including Node 24/26 and three-OS recovery. The native font
+failure-control comparison also passes with layout reuse enabled.
+
+The earlier projection experiment improves all 20 stable/periodic input CPU pairs
+by 2.62-8.78%, with no moving/detection pair regressing more than 4.02%. These runs
+use different baselines and CPU hosts; their percentages must not be pooled or
+multiplied. The confounded Windows batch remains diagnostic only. Neither CPU
+comparison establishes a browser, Cesium WebGL, physical Windows GPU or motion-p95
+result. The
+[plan and archived evidence](CESIUM_PERFORMANCE_PLAN.md#s52-projection-reuse-component-correctness---11-october-2026)
+record exact revisions, environments, images, cleanup and corrected harness
+failures. Remote `dev` at `d2c5aa1` also passes all seven integration jobs.
+
+Earlier, all seven full automatic CI jobs pass at
+`167ba62c047fe94f36d0d60066aa4d648ede7519`, including the mixed-use import smoke,
+Node 24/26, production builds, three-OS recovery and Windows onboarding
+([results](performance-evidence/ci-167ba62.json)). The same-panel workspace save
+race is fixed without bypassing genuine external revision conflicts. The earlier
+`f598310` failure remains [historical evidence](performance-evidence/ci-f598310.json).
+The dedicated two-page IndexedDB conflict journey passes at `886b7d2`, including
+exact preservation of the competing document and chunks after a stale UI Save
+([review](performance-evidence/workspace-browser-886b7d2-review.json)).
+The corrected `3cdd5cb` software-rendered retention soak and the fresh `996a8d3`
+hosted paravirtual Metal retention soak passed. The latter completed 252 cycles
+and 13 post-GC checkpoints, with 40 unchanged resource gauges, final pending
+workers zero, listeners returning to 629 and 1.70% final-window heap growth
+([raw report](performance-evidence/hosted-mac-996a8d3.json),
+[independent review](performance-evidence/hosted-mac-996a8d3-review.json)).
+These validate their exact revisions, not the later candidate or the failed
+`f598310` smoke. Windows UHD 620 dense-import capture recovered at `0edfb8e` after
+the requested manual foreground check: two normal ten-capture runs and the
+12-check capture matrix pass with unchanged application code and deadlines.
+The [foreground recovery evidence](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
+records the exact settings, raw reports and limits of this result.
+Later Chrome 154 diagnostics on the same UHD 620 reproduce severe frame-callback
+loss in a standalone WebGL draw loop with no Cesium or app code, while a plain
+RAF control runs near 60 callbacks/s and recovers after WebGL context release.
+The subsequent manual and automated WebGL controls both run near 60 callbacks/s.
+This establishes recovery, but does not identify Chromium, ANGLE, driver,
+compositor or OS-level occlusion as the cause. The earlier failures remain valid
+observations. No runtime fix, full-scene performance or 60-minute Windows soak
+acceptance is claimed.
+The [Cesium plan](CESIUM_PERFORMANCE_PLAN.md) distinguishes code, automatic checks,
+physical GPU checks and hosted paravirtual rendering. It also records the limited
+Windows UHD 620 capture result and repeated import-preparation CPU comparisons.
+No accepted matched comparison establishes the S47-S60 20% motion-p95 target.
+Historical results below remain evidence for their named revisions only.
+
+The S51 vessel comparison at `65fd7f3` passes five alternating pairs on this
+Windows machine (reported Intel UHD 620/ANGLE D3D11, Chrome 154) and on hosted
+paravirtual Metal. All 20 endpoint pixel comparisons match in each environment,
+including exact focus release, and every viewer and owned demand cleans up.
+Across the measured idle intervals, completed frames fall from 1,508 to 25 on
+Windows and from 502 to 25 on the hosted renderer. This is an isolated
+billboard-only result, not a motion-p95 or whole-application CPU/GPU improvement.
+The [ledger and raw reports](CESIUM_PERFORMANCE_PLAN.md#s513-exact-endpoint-comparisons-pass---10-october-2026)
+record unchanged visual settings, foreground checks, unavailable desktop
+occlusion/browser-level acceleration verification, and earlier failures.
+
+The S58 wind-image change has a narrower measured result: identical forecast
+refreshes retain the scalar image, avoiding its repeated CPU preparation and
+replacement. Three five-pair comparisons preserve exact raster bytes; the last
+batch reduces median preparation from 6.9-10.0 ms to 0.24-0.71 ms depending on
+the field. Revised forecasts still rebuild. A hosted paravirtual Metal check
+at `d905f30` confirms exact matching rendered pixels for speed, temperature and
+pressure with unchanged 1,200 flow paths and 152,736 vertices. This is not an
+overall frame-rate or Windows claim. The [ledger](CESIUM_PERFORMANCE_PLAN.md)
+links all reports, including the first batch's non-reproduced changed-temperature
+regression and the outstanding full-scene validation.
+
 This page records one hardware-rendered Apple M5 comparison captured on 22
 August 2026 in Chrome 150 at 1440 x 900. It is not a minimum hardware
 specification and should not be used to predict performance on untested systems.
-The original capture artifacts are not included here, so this page records
-results rather than defining a runnable benchmark.
+The original capture artifacts are not included here. The capture command below
+now produces a portable JSON report; the existing point-in-time results remain
+unchanged.
 
 ## Test context
 
@@ -116,22 +267,164 @@ live counts again and match the focus conditions.
 
 ## Controls for a future capture
 
-Use the same controls before attributing a difference to the application:
+Start the app at `localhost:4173`, foreground its browser window, then run:
 
-1. Record the exact GPU renderer and reject software-rendered or unavailable GPU
-   strings.
-2. Use a 1440 x 900 viewport at device pixel ratio 1 and keep the page focused.
-3. Measure cache-disabled startup separately from cold layer activation and warm
-   option switching.
-4. Repeat startup three times and compare medians.
-5. Sample each option for 5 seconds in scripted motion and 5 seconds at rest.
-6. Record live object counts before attributing a difference to the client.
-7. Treat a live-source outage as missing coverage, not as evidence of low client
-   rendering cost.
+```sh
+npm run performance:capture -- --url http://localhost:4173 --runs 3 --seconds 5 --out qa-artifacts/performance.json
+```
+
+The JSON includes renderer, browser, viewport, device pixel ratio, tab visibility,
+startup timing, per-layer counts, JavaScript heap where supported, long tasks,
+frame interval percentiles, and repeated idle/scripted-camera windows. Use
+`--hardware-required` to reject software renderers or `--max-p95-ms N` for a
+local threshold. `--inject-delay-ms N` is a diagnostic negative control and must
+not be used for a baseline. A report flags changing layer populations across
+samples; rerun base and candidate with the same fixture/data population before
+comparing them. No hardware claim is made from a software renderer or a report
+with mismatched populations.
+
+For repeatable development captures, add `--fixture-aircraft 2500`. The harness
+enables the flights layer and injects the same generated Austin aircraft ring
+through its development-only layer seam, then records the fixture ID and count.
+It adds a selected-aircraft tracking scenario that follows fixture `000001` for
+the same repeated window. Add `--mixed-layers` to enable the local datacenter and
+dam layers for a stable combined scene. Choose `--quality-mode manual` or
+`--quality-mode auto` and retain both reports when comparing profiles. This is a
+controlled workload hook, not a production feed, and software-rendered captures
+remain smoke checks rather than hardware performance evidence. For the weather
+history workload, use `scripts/qa-weather-perf.mjs --states history-playing
+--repeat 3 --no-idle` and retain its route report with the source timestamps.
+
+## Matched Windows UHD 620 comparison — 8 October 2026
+
+A corrected three-run comparison used the same hardware renderer, browser,
+foreground state, 1440 x 900 viewport at DPR 1, 5-second warmup, and stable
+7,578-object scene in every build: a 2,500-aircraft Austin ring, 4,362
+local datacenters and 716 local dams. Each reported value is a five-second
+sample; p50 and p95 describe frame intervals within that sample.
+
+The base app was `95fa816` and the candidate app was `0171b69`; both used the
+same corrected capture harness at `fdd4d7d`. All six samples had 2,500 observations and a stable object population. Base and
+Manual reported 120 candidates and 30 selected labels in every sample. Auto
+reduced its candidate count from 80 to 64 while throttling label density.
+Raw reports: [base](../qa-artifacts/performance-baseline-main-detection-fdd4d7d-3run.json),
+[Manual](../qa-artifacts/performance-candidate-manual-fdd4d7d-3run.json), and
+[Auto](../qa-artifacts/performance-candidate-auto-fdd4d7d-3run.json). The machine
+reported an Intel UHD Graphics 620 through ANGLE Direct3D 11 in HeadlessChrome
+153 on Windows x64.
+
+| Build/profile | Idle p50 / p95 by run (ms) | Scripted-motion p50 / p95 by run (ms) | Motion mean p50 / p95 (ms) | Detection labels |
+| --- | --- | --- | --- | --- |
+| Base `95fa816` | 67.1 / 153.3; 74.6 / 157.6; 73.9 / 160.1 | 86.5 / 120.0; 91.0 / 153.7; 89.2 / 137.8 | 88.9 / 137.2 | 30 at 75% density throughout |
+| Candidate Manual `0171b69` | 82.0 / 263.8; 72.4 / 188.0; 78.6 / 181.4 | 80.3 / 146.6; 87.9 / 153.9; 85.8 / 142.4 | 84.7 / 147.6 | 30 at 75% density throughout |
+| Candidate Auto `0171b69` | 84.5 / 222.2; 92.5 / 177.1; 89.4 / 182.2 | 92.8 / 184.0; 97.3 / 118.1; 96.7 / 117.1 | 95.6 / 139.7 | 20, 20, 10 idle; 10, 4, 4 moving |
+
+Auto reduced label density from 50% to 0% during motion, while preserving four
+selected labels at the reported 0% setting. Its mean motion p95 was close to the
+base and Manual results, but its mean p50 was slower and label density fell.
+Three short samples on one GPU do not establish a reliable performance gain;
+Auto remains opt-in pending broader hardware and visual review. The results do
+not establish a general Windows or minimum-hardware guarantee.
+
+The capture now cancels any startup camera flight before fixing the synthetic
+scene camera, and reports detection and camera diagnostics if visible labels do
+not appear. This prevents a late startup animation from moving the fixture out of
+view and producing misleading zero-label samples.
+
+### Selected-aircraft tracking and weather history
+
+The capture harness also exercises the selected-flight camera follow path. The
+base and candidate each ran three 5-second samples with the same foreground
+Chrome session, 2,500 generated Austin aircraft, 4,362 datacenters, 716 dams,
+and `flights:000001` selected and tracked. Every sample reported a stable 7,578
+object population and retained the tracked aircraft identity. Raw reports:
+[base `95fa816`](../qa-artifacts/performance-baseline-selected-tracking-95fa816-3run.json)
+and [candidate `215a8d9`](../qa-artifacts/performance-candidate-selected-tracking-215a8d9-3run.json).
+
+| App commit | Tracking frame p50 by run (ms) | Tracking frame p95 by run (ms) |
+| --- | --- | --- |
+| Base `95fa816` | 105.9, 91.2, 97.6 | 288.2, 1116.9, 1171.5 |
+| Candidate `215a8d9` | 111.1, 97.9, 89.4 | 201.0, 196.5, 396.7 |
+
+The base has two very large p95 samples, so these three-run captures are useful
+for harness and regression coverage but do not establish a stable tracking-speed
+gain. They were captured on one Windows UHD 620 system and are not a hardware
+matrix.
+
+Weather history playback was separately measured with three repeated routes
+through `scripts/qa-weather-perf.mjs`. Each route measured zoom-in, close idle,
+orbit, zoom-out and globe idle while Radar, Satellite and Lightning history were
+playing. All three setups reported ready, and all weather layers reported
+playback active. The harness used the live NOAA nowCOAST feed, so the exact frame
+times and tile populations changed between repetitions; treat this as playback
+coverage and a point-in-time load sample, not a matched base/candidate weather
+comparison. Results: [JSON](../qa-artifacts/weather-perf-s06-20261008/dev/results.json)
+and [summary](../qa-artifacts/weather-perf-s06-20261008/dev/summary.md).
+
+The Manual candidate's three moving p95 samples (146.6, 153.9 and 142.4 ms)
+passed a 200 ms **test-only** ceiling. An idle sample reached 263.8 ms and was
+correctly excluded from the moving-scene budget. With the same dense scene and a
+200 ms injected main-thread delay, the moving p95 reached 266.9 ms and the gate
+failed as intended: [negative-control report](../qa-artifacts/performance-delay-control-dense-fdd4d7d-1run.json).
+The 200 ms ceiling verifies the harness behavior; it is not a product target.
+## Corrected retention soak — 9 October 2026
+
+[CI run 37944725028](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028)
+tests clean application/harness commit `3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`.
+The corrected interceptor handles worker requests directly, and the workspace
+fixture observes completion before autosave can replace its status. No Cesium
+dependency patch or VM change was necessary for these reproduced failures.
+
+The [full soak job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028/job/113868003442)
+completes 169 measured cycles in 3,602,183 ms. All 13 post-GC checkpoints have
+632 listeners and zero pending worker tasks. Retained heap starts at 73,424,108
+bytes and finishes at 80,248,328 bytes; growth in the defined retention window
+is 2.03%, below the 5% limit. Operations and stability pass. The workflow's
+`rendered-soak` artifact contains the complete JSON and measurement conditions.
+
+This is Chrome 152 with ANGLE/SwiftShader, explicitly reporting
+`hardwareRenderingValidated: false`. Forced GC separates this retention
+diagnostic from latency measurements. It does not establish a hardware plateau,
+a motion-p95 improvement or visual equivalence for the remaining optimizations.
+The earlier failing reports remain historical evidence rather than being
+reclassified as passes. Node 24/26, builds, browser journeys and all three
+installation-recovery jobs also pass for this exact revision.
 
 ## What is not established yet
 
-- This report does not establish Windows performance.
+A fresh [hosted Metal run at 2e839a4](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37970731290)
+passes directly: 252 cycles over 60 minutes 9 seconds, 13 post-GC checkpoints
+and 1.59% final-window retained-heap growth. Listeners return from 629 to 629,
+with transient peaks of 641, and final pending workers are zero. The
+[raw evidence](performance-evidence/hosted-mac-2e839a4.json) identifies the
+Apple M1 virtual runner and Chrome 152.0.7977.75. This is retention evidence
+for that frozen commit, not a motion-p95 result, a later-candidate pass, or
+physical Windows coverage.
+
+Free GitHub-hosted macOS also supplies verified **paravirtual Metal** acceleration.
+The [0fa3140 run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37960247130/job/113920967041)
+completed 252 cycles in 3,603,543 ms on Chrome 152. Its 13 post-GC checkpoints
+retain 629 listeners and zero pending worker jobs; final-window heap growth is
+1.58%. The [original result](performance-evidence/hosted-mac-0fa3140-original.json)
+failed solely on the cumulative cache-use counter; the
+[separate corrected-validator reassessment](performance-evidence/hosted-mac-0fa3140-review.json)
+passes. The report explicitly excludes physical desktop coverage. It does not
+measure the target Windows GPU or a motion-p95 improvement.
+
+A second software-rendered run at `5328e256460a13edbf1be65397d2faf43e8d3075`
+completed 130 cycles in 3,620,845 ms. Its [original report](performance-evidence/soak-5328e25-original.json)
+failed because the old validator counted cumulative cache reuse as retained
+ownership. A [separate, revision-bound reassessment](performance-evidence/soak-5328e25-review.json)
+passes the corrected validator: owned resource counts stay bounded, browser
+listeners return to 632, and final-window retained-heap growth is 1.70%.
+The original failed verdict remains available. This is Chrome 152/SwiftShader;
+it provides no hardware motion-p95 result. See the [current slice ledger](CESIUM_PERFORMANCE_PLAN.md)
+for subsequent code changes, failed Windows capture diagnostics and remaining
+acceptance work.
+
+- The Apple baseline is not a Windows measurement. The separate Windows diagnostic
+  above covers only one Intel UHD 620 system and does not establish performance
+  across Windows devices.
 - The report does not record machine memory capacity, so it cannot support a
   minimum-memory recommendation.
 - The report does not cover other GPU renderers or viewport configurations.

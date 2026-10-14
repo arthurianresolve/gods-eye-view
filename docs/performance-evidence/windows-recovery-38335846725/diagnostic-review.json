@@ -1,0 +1,20 @@
+{
+  "scope": "independent exact-commit Windows shutdown diagnostic replay; no root-cause or GPU acceptance",
+  "runId": 38336908148,
+  "commit": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "rawReportBytes": 12184,
+  "rawReportSha256": "3ac82edefe282fb950b872858524fc50b1b7f71d4380cf10169daddbf15be927",
+  "checksPassed": 5,
+  "allPersistedStateMatches": true,
+  "allExitsNatural": true,
+  "closeDeadlineMs": 5000,
+  "closeElapsedMs": [
+    474.57750000001397,
+    388.4426000000094,
+    366.81219999998575,
+    329.58219999994617,
+    309.1585999999661
+  ],
+  "failureProcessSnapshotExercised": false,
+  "originalRun38335846725RemainsFailed": true
+}

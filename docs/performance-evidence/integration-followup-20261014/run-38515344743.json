@@ -1,0 +1,180 @@
+{
+  "conclusion": "success",
+  "event": "pull_request",
+  "headSha": "9487a57cf5ad3eb1076532da77bda8c48953e7de",
+  "jobs": [
+    {
+      "completedAt": "2026-10-14T05:17:10Z",
+      "conclusion": "success",
+      "databaseId": 115692770242,
+      "name": "Build and verify release artifact",
+      "startedAt": "2026-10-14T05:11:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-14T05:12:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-14T05:12:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:12:08Z",
+          "conclusion": "success",
+          "name": "Check out exact source revision",
+          "number": 2,
+          "startedAt": "2026-10-14T05:12:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:12:15Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-14T05:12:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:12:23Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies",
+          "number": 4,
+          "startedAt": "2026-10-14T05:12:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:52Z",
+          "conclusion": "success",
+          "name": "Verify source",
+          "number": 5,
+          "startedAt": "2026-10-14T05:12:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:52Z",
+          "conclusion": "skipped",
+          "name": "Require complete exact-commit acceptance before promotion",
+          "number": 6,
+          "startedAt": "2026-10-14T05:16:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:53Z",
+          "conclusion": "success",
+          "name": "Stage versioned manifest and checksummed files",
+          "number": 7,
+          "startedAt": "2026-10-14T05:16:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:53Z",
+          "conclusion": "success",
+          "name": "Verify staged release and source commit",
+          "number": 8,
+          "startedAt": "2026-10-14T05:16:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:55Z",
+          "conclusion": "success",
+          "name": "Create reproducible archive and checksum",
+          "number": 9,
+          "startedAt": "2026-10-14T05:16:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:57Z",
+          "conclusion": "success",
+          "name": "Generate release artifact attestation",
+          "number": 10,
+          "startedAt": "2026-10-14T05:16:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:59Z",
+          "conclusion": "success",
+          "name": "Upload candidate artifact for verification",
+          "number": 11,
+          "startedAt": "2026-10-14T05:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:16:59Z",
+          "conclusion": "success",
+          "name": "Require immutable candidate artifact ID",
+          "number": 12,
+          "startedAt": "2026-10-14T05:16:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:01Z",
+          "conclusion": "success",
+          "name": "Download candidate artifact for verification",
+          "number": 13,
+          "startedAt": "2026-10-14T05:16:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:05Z",
+          "conclusion": "success",
+          "name": "Verify downloaded archive and attestation before publication",
+          "number": 14,
+          "startedAt": "2026-10-14T05:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:05Z",
+          "conclusion": "skipped",
+          "name": "Create or update an unpublished tag candidate",
+          "number": 15,
+          "startedAt": "2026-10-14T05:17:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:05Z",
+          "conclusion": "skipped",
+          "name": "Verify draft release download and promote only after acceptance",
+          "number": 16,
+          "startedAt": "2026-10-14T05:17:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:06Z",
+          "conclusion": "success",
+          "name": "Retain candidate validation evidence",
+          "number": 17,
+          "startedAt": "2026-10-14T05:17:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:07Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 33,
+          "startedAt": "2026-10-14T05:17:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:07Z",
+          "conclusion": "success",
+          "name": "Post Check out exact source revision",
+          "number": 34,
+          "startedAt": "2026-10-14T05:17:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-14T05:17:07Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 35,
+          "startedAt": "2026-10-14T05:17:07Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38515344743/job/115692770242"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38515344743"
+}

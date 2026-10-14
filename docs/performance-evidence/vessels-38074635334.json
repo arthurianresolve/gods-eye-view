@@ -1,0 +1,1857 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+  "platform": "darwin",
+  "timestamp": "2026-10-10T18:09:59.287Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "capturedAt": "2026-10-10T18:10:11.058Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+        "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+        "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Vessel fixture failed in capture: Focused vessels were not observed dimmed",
+  "importBatches": {
+    "schema": "gev-import-batches/v1",
+    "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "capturedAt": "2026-10-10T18:10:16.049Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 103.29999999998836,
+        "maxHeartbeatGapMs": 246.89999999999418,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 235003789,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 8.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 8.800000000017462,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 288.79999999998836,
+        "maxHeartbeatGapMs": 36.89999999999418,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 361143344,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 21.20000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 21.20000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 320.69999999998254,
+        "maxHeartbeatGapMs": 69.69999999998254,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 107180836,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 11.60000000000582,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 11.60000000000582,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 71.5,
+        "maxHeartbeatGapMs": 153.10000000000582,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 236988508,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 8,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 8,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 62.19999999998254,
+        "maxHeartbeatGapMs": 141.10000000000582,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 361948820,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 32.10000000000582,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 25.199999999982538,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 213.69999999998254,
+        "maxHeartbeatGapMs": 89.90000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 108715908,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 43.89999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 24.60000000000582,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 235.29999999998836,
+        "maxHeartbeatGapMs": 29.89999999999418,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 237508688,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.39999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 27.29999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 42.60000000000582,
+        "maxHeartbeatGapMs": 137.10000000000582,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 348837928,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.69999999998254,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 34,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 75,
+        "maxHeartbeatGapMs": 136.60000000000582,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 234295900,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 63.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 41.60000000000582,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 127.69999999998254,
+        "maxHeartbeatGapMs": 34.10000000000582,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 365056956,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 54.10000000000582,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 22.29999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+      "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "coldActivationMs": 571.3000000000175,
+    "warmedResources": {
+      "heapBytes": 112245617,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "vesselPageErrors": [],
+  "vesselInterceptionErrors": [],
+  "vesselExternalRequestCount": 0,
+  "vesselRenderDemand": {
+    "schema": "gev-vessel-render-demand/v1",
+    "status": "failed",
+    "mode": "paired",
+    "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+    "fixtureSha256": "1a1768727c30d4f6523f2ab9ff7f77d260cf5673a038df2888c8088f1c6f4ef3",
+    "fixtureEpochMs": 1791460800000,
+    "fixtureClock": {
+      "epochMs": 1791460800000,
+      "shouldAnimate": false
+    },
+    "scope": "isolated synthetic billboard-only layer; shared overlays excluded",
+    "population": 32,
+    "environment": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "graphics": {
+        "contextAttributes": {
+          "alpha": false,
+          "antialias": true,
+          "depth": true,
+          "premultipliedAlpha": true,
+          "preserveDrawingBuffer": false,
+          "stencil": true
+        },
+        "drawingBufferWidth": 1200,
+        "drawingBufferHeight": 960
+      }
+    },
+    "viewport": {
+      "width": 1200,
+      "height": 960,
+      "devicePixelRatio": 1
+    },
+    "renderingSettings": {
+      "requestRenderMode": true,
+      "maximumRenderTimeChange": "Infinity",
+      "msaaSamples": 4,
+      "drawingBufferWidth": 1200,
+      "drawingBufferHeight": 960,
+      "devicePixelRatio": 1,
+      "contextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": false,
+        "stencil": true
+      }
+    },
+    "cadencePolicyMs": {
+      "idleVisibility": 800,
+      "activeFocus": 80
+    },
+    "pairs": [
+      {
+        "pair": 0,
+        "order": [
+          "control",
+          "candidate"
+        ],
+        "runs": [
+          {
+            "schema": "gev-vessel-render-demand/v1",
+            "status": "passed",
+            "mode": "control",
+            "fixtureSha256": "1a1768727c30d4f6523f2ab9ff7f77d260cf5673a038df2888c8088f1c6f4ef3",
+            "population": 32,
+            "viewport": {
+              "width": 1200,
+              "height": 960,
+              "devicePixelRatio": 1
+            },
+            "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+            "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+            "renderingSettings": {
+              "requestRenderMode": true,
+              "maximumRenderTimeChange": "Infinity",
+              "msaaSamples": 4,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 960,
+              "devicePixelRatio": 1,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": false,
+                "stencil": true
+              }
+            },
+            "phases": [
+              {
+                "name": "idleBefore",
+                "requestedDurationMs": 3000,
+                "elapsedMs": 3002.2999999999884,
+                "startElapsedMs": 922.2000000000116,
+                "endElapsedMs": 3924.5,
+                "completedFrames": 72,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": false,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 27.39999999999418,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "focusActive",
+                "requestedDurationMs": 800,
+                "elapsedMs": 820.5,
+                "startElapsedMs": 3957.600000000006,
+                "endElapsedMs": 4778.100000000006,
+                "completedFrames": 23,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": false,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 1.6000000000058208,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "focusRelease",
+                "requestedDurationMs": 1000,
+                "elapsedMs": 1030.7999999999884,
+                "startElapsedMs": 4857.3000000000175,
+                "endElapsedMs": 5888.100000000006,
+                "completedFrames": 27,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": false,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 29,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "idleAfter",
+                "requestedDurationMs": 2000,
+                "elapsedMs": 2024.8000000000175,
+                "startElapsedMs": 5955.5,
+                "endElapsedMs": 7980.3000000000175,
+                "completedFrames": 52,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": false,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 3.2000000000116415,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              }
+            ],
+            "startedAtMonotonic": 1777.5,
+            "focusPasses": [
+              {
+                "phase": "focusActive",
+                "elapsedMs": 3958.3000000000175
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4082.100000000006
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4193.200000000012
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4276.600000000006
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4363.3000000000175
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4476.200000000012
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4616.399999999994
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4726.3000000000175
+              }
+            ],
+            "visibilityPasses": [
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 1659.3000000000175
+              },
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 2495
+              },
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 3335.600000000006
+              },
+              {
+                "phase": "idleAfter",
+                "elapsedMs": 6644.5
+              },
+              {
+                "phase": "idleAfter",
+                "elapsedMs": 7448
+              }
+            ],
+            "scheduledUpdates": [],
+            "cleanup": {
+              "layerDestroyed": true,
+              "renderDemandDisposed": true,
+              "viewerDestroyed": true,
+              "governorUninstalled": true
+            }
+          },
+          {
+            "schema": "gev-vessel-render-demand/v1",
+            "status": "passed",
+            "mode": "candidate",
+            "fixtureSha256": "1a1768727c30d4f6523f2ab9ff7f77d260cf5673a038df2888c8088f1c6f4ef3",
+            "population": 32,
+            "viewport": {
+              "width": 1200,
+              "height": 960,
+              "devicePixelRatio": 1
+            },
+            "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+            "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+            "renderingSettings": {
+              "requestRenderMode": true,
+              "maximumRenderTimeChange": "Infinity",
+              "msaaSamples": 4,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 960,
+              "devicePixelRatio": 1,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": false,
+                "stencil": true
+              }
+            },
+            "phases": [
+              {
+                "name": "idleBefore",
+                "requestedDurationMs": 3000,
+                "elapsedMs": 3004.3000000000175,
+                "startElapsedMs": 940.6000000000058,
+                "endElapsedMs": 3944.9000000000233,
+                "completedFrames": 3,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": true,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 715.8999999999942,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "focusActive",
+                "requestedDurationMs": 800,
+                "elapsedMs": 825.7000000000116,
+                "startElapsedMs": 4039,
+                "endElapsedMs": 4864.700000000012,
+                "completedFrames": 8,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": true,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 6,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "focusRelease",
+                "requestedDurationMs": 1000,
+                "elapsedMs": 1005.6000000000058,
+                "startElapsedMs": 4922.5,
+                "endElapsedMs": 5928.100000000006,
+                "completedFrames": 2,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": true,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 2.3000000000174623,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              },
+              {
+                "name": "idleAfter",
+                "requestedDurationMs": 2000,
+                "elapsedMs": 2017.6000000000058,
+                "startElapsedMs": 6088.100000000006,
+                "endElapsedMs": 8105.700000000012,
+                "completedFrames": 2,
+                "frameOverflow": false,
+                "visibleVesselCount": 32,
+                "minAlpha": 255,
+                "endMinAlpha": 255,
+                "endDimmedVesselCount": 0,
+                "requestRenderModeAtEnd": true,
+                "alphaChanges": [
+                  {
+                    "elapsedMs": 431.5,
+                    "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+                  }
+                ],
+                "alphaOverflow": false,
+                "width": 1200,
+                "height": 960,
+                "nonBackgroundPixels": 1108,
+                "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+              }
+            ],
+            "startedAtMonotonic": 10099.399999999994,
+            "focusPasses": [
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4041.7000000000116
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4126.900000000023
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4243.200000000012
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4329.200000000012
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4412.900000000023
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4529.3000000000175
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4619.900000000023
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4725.100000000006
+              },
+              {
+                "phase": "focusActive",
+                "elapsedMs": 4808.100000000006
+              }
+            ],
+            "visibilityPasses": [
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 1617.7000000000116
+              },
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 2430.9000000000233
+              },
+              {
+                "phase": "idleBefore",
+                "elapsedMs": 3236.2000000000116
+              },
+              {
+                "phase": "idleAfter",
+                "elapsedMs": 6473.8000000000175
+              },
+              {
+                "phase": "idleAfter",
+                "elapsedMs": 7296.700000000012
+              }
+            ],
+            "scheduledUpdates": [
+              {
+                "requestedDelayMs": 799.2000000000116,
+                "actualDelayMs": 806.5,
+                "completed": true,
+                "requestedPhase": "candidate-setup",
+                "firedPhase": "candidate-setup",
+                "firedAt": 10907.899999999994
+              },
+              {
+                "requestedDelayMs": 799.7999999999884,
+                "actualDelayMs": 808.5,
+                "completed": true,
+                "requestedPhase": "candidate-setup",
+                "firedPhase": "idleBefore",
+                "firedAt": 11716.600000000006
+              },
+              {
+                "requestedDelayMs": 799.6000000000058,
+                "actualDelayMs": 813,
+                "completed": true,
+                "requestedPhase": "idleBefore",
+                "firedPhase": "idleBefore",
+                "firedAt": 12530.100000000006
+              },
+              {
+                "requestedDelayMs": 799.7999999999884,
+                "actualDelayMs": 805.0999999999767,
+                "completed": true,
+                "requestedPhase": "idleBefore",
+                "firedPhase": "idleBefore",
+                "firedAt": 13335.399999999994
+              },
+              {
+                "requestedDelayMs": 799.7999999999884,
+                "actualDelayMs": null,
+                "completed": false,
+                "requestedPhase": "idleBefore",
+                "firedPhase": null,
+                "firedAt": null
+              },
+              {
+                "requestedDelayMs": 0,
+                "actualDelayMs": 1.8000000000174623,
+                "completed": true,
+                "requestedPhase": "candidate-focus-active",
+                "firedPhase": "focusActive",
+                "firedAt": 14140.200000000012
+              },
+              {
+                "requestedDelayMs": 79.20000000001164,
+                "actualDelayMs": 85.20000000001164,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14226.300000000017
+              },
+              {
+                "requestedDelayMs": 79.90000000002328,
+                "actualDelayMs": 116.10000000000582,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14342.5
+              },
+              {
+                "requestedDelayMs": 79.89999999999418,
+                "actualDelayMs": 85.89999999999418,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14428.5
+              },
+              {
+                "requestedDelayMs": 79.79999999998836,
+                "actualDelayMs": 83.5,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14512.200000000012
+              },
+              {
+                "requestedDelayMs": 79.89999999999418,
+                "actualDelayMs": 116.39999999999418,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14628.700000000012
+              },
+              {
+                "requestedDelayMs": 79.70000000001164,
+                "actualDelayMs": 90.20000000001164,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14719.200000000012
+              },
+              {
+                "requestedDelayMs": 79.80000000001746,
+                "actualDelayMs": 105,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14824.399999999994
+              },
+              {
+                "requestedDelayMs": 79.79999999998836,
+                "actualDelayMs": 82.60000000000582,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "focusActive",
+                "firedAt": 14907.200000000012
+              },
+              {
+                "requestedDelayMs": 32.80000000001746,
+                "actualDelayMs": 56.60000000000582,
+                "completed": true,
+                "requestedPhase": "focusActive",
+                "firedPhase": "capture",
+                "firedAt": 14964.100000000006
+              },
+              {
+                "requestedDelayMs": 22.800000000017462,
+                "actualDelayMs": null,
+                "completed": false,
+                "requestedPhase": "capture",
+                "firedPhase": null,
+                "firedAt": null
+              },
+              {
+                "requestedDelayMs": 0,
+                "actualDelayMs": 0.20000000001164153,
+                "completed": true,
+                "requestedPhase": "candidate-focus-release",
+                "firedPhase": "focusRelease",
+                "firedAt": 15022.100000000006
+              },
+              {
+                "requestedDelayMs": 742,
+                "actualDelayMs": 750.2999999999884,
+                "completed": true,
+                "requestedPhase": "focusRelease",
+                "firedPhase": "focusRelease",
+                "firedAt": 15772.399999999994
+              },
+              {
+                "requestedDelayMs": 799.8999999999942,
+                "actualDelayMs": 800.3999999999942,
+                "completed": true,
+                "requestedPhase": "focusRelease",
+                "firedPhase": "idleAfter",
+                "firedAt": 16572.899999999994
+              },
+              {
+                "requestedDelayMs": 799.6999999999825,
+                "actualDelayMs": 822.7999999999884,
+                "completed": true,
+                "requestedPhase": "idleAfter",
+                "firedPhase": "idleAfter",
+                "firedAt": 17396
+              },
+              {
+                "requestedDelayMs": 799.8999999999942,
+                "actualDelayMs": 809.1000000000058,
+                "completed": true,
+                "requestedPhase": "idleAfter",
+                "firedPhase": "capture",
+                "firedAt": 18205.20000000001
+              },
+              {
+                "requestedDelayMs": 799.8999999999942,
+                "actualDelayMs": null,
+                "completed": false,
+                "requestedPhase": "capture",
+                "firedPhase": null,
+                "firedAt": null
+              }
+            ],
+            "cleanup": {
+              "layerDestroyed": true,
+              "renderDemandDisposed": true,
+              "viewerDestroyed": true,
+              "governorUninstalled": true
+            }
+          }
+        ],
+        "comparison": null
+      }
+    ],
+    "startedAt": "2026-10-10T18:10:24.860Z",
+    "cleanup": {
+      "viewerDestroyed": false,
+      "governorUninstalled": false,
+      "viewerDestroyedCount": 2,
+      "governorUninstalledCount": 2
+    },
+    "currentPair": 0,
+    "currentRun": {
+      "schema": "gev-vessel-render-demand/v1",
+      "status": "passed",
+      "mode": "candidate",
+      "fixtureSha256": "1a1768727c30d4f6523f2ab9ff7f77d260cf5673a038df2888c8088f1c6f4ef3",
+      "population": 32,
+      "viewport": {
+        "width": 1200,
+        "height": 960,
+        "devicePixelRatio": 1
+      },
+      "applicationCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+      "harnessCommit": "fdf0bbd33c16a4a8f891157383b3a12d36adf8e9",
+      "renderingSettings": {
+        "requestRenderMode": true,
+        "maximumRenderTimeChange": "Infinity",
+        "msaaSamples": 4,
+        "drawingBufferWidth": 1200,
+        "drawingBufferHeight": 960,
+        "devicePixelRatio": 1,
+        "contextAttributes": {
+          "alpha": false,
+          "antialias": true,
+          "depth": true,
+          "premultipliedAlpha": true,
+          "preserveDrawingBuffer": false,
+          "stencil": true
+        }
+      },
+      "phases": [
+        {
+          "name": "idleBefore",
+          "requestedDurationMs": 3000,
+          "elapsedMs": 3004.3000000000175,
+          "startElapsedMs": 940.6000000000058,
+          "endElapsedMs": 3944.9000000000233,
+          "completedFrames": 3,
+          "frameOverflow": false,
+          "visibleVesselCount": 32,
+          "minAlpha": 255,
+          "endMinAlpha": 255,
+          "endDimmedVesselCount": 0,
+          "requestRenderModeAtEnd": true,
+          "alphaChanges": [
+            {
+              "elapsedMs": 715.8999999999942,
+              "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+            }
+          ],
+          "alphaOverflow": false,
+          "width": 1200,
+          "height": 960,
+          "nonBackgroundPixels": 1108,
+          "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+        },
+        {
+          "name": "focusActive",
+          "requestedDurationMs": 800,
+          "elapsedMs": 825.7000000000116,
+          "startElapsedMs": 4039,
+          "endElapsedMs": 4864.700000000012,
+          "completedFrames": 8,
+          "frameOverflow": false,
+          "visibleVesselCount": 32,
+          "minAlpha": 255,
+          "endMinAlpha": 255,
+          "endDimmedVesselCount": 0,
+          "requestRenderModeAtEnd": true,
+          "alphaChanges": [
+            {
+              "elapsedMs": 6,
+              "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+            }
+          ],
+          "alphaOverflow": false,
+          "width": 1200,
+          "height": 960,
+          "nonBackgroundPixels": 1108,
+          "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+        },
+        {
+          "name": "focusRelease",
+          "requestedDurationMs": 1000,
+          "elapsedMs": 1005.6000000000058,
+          "startElapsedMs": 4922.5,
+          "endElapsedMs": 5928.100000000006,
+          "completedFrames": 2,
+          "frameOverflow": false,
+          "visibleVesselCount": 32,
+          "minAlpha": 255,
+          "endMinAlpha": 255,
+          "endDimmedVesselCount": 0,
+          "requestRenderModeAtEnd": true,
+          "alphaChanges": [
+            {
+              "elapsedMs": 2.3000000000174623,
+              "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+            }
+          ],
+          "alphaOverflow": false,
+          "width": 1200,
+          "height": 960,
+          "nonBackgroundPixels": 1108,
+          "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+        },
+        {
+          "name": "idleAfter",
+          "requestedDurationMs": 2000,
+          "elapsedMs": 2017.6000000000058,
+          "startElapsedMs": 6088.100000000006,
+          "endElapsedMs": 8105.700000000012,
+          "completedFrames": 2,
+          "frameOverflow": false,
+          "visibleVesselCount": 32,
+          "minAlpha": 255,
+          "endMinAlpha": 255,
+          "endDimmedVesselCount": 0,
+          "requestRenderModeAtEnd": true,
+          "alphaChanges": [
+            {
+              "elapsedMs": 431.5,
+              "fingerprint": "255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255"
+            }
+          ],
+          "alphaOverflow": false,
+          "width": 1200,
+          "height": 960,
+          "nonBackgroundPixels": 1108,
+          "rgbaSha256": "86cb89b0407c1e7112d7d44de8fe6f7847004929ed4a6045f69d53bf45d33a6a"
+        }
+      ],
+      "startedAtMonotonic": 10099.399999999994,
+      "focusPasses": [
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4041.7000000000116
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4126.900000000023
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4243.200000000012
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4329.200000000012
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4412.900000000023
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4529.3000000000175
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4619.900000000023
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4725.100000000006
+        },
+        {
+          "phase": "focusActive",
+          "elapsedMs": 4808.100000000006
+        }
+      ],
+      "visibilityPasses": [
+        {
+          "phase": "idleBefore",
+          "elapsedMs": 1617.7000000000116
+        },
+        {
+          "phase": "idleBefore",
+          "elapsedMs": 2430.9000000000233
+        },
+        {
+          "phase": "idleBefore",
+          "elapsedMs": 3236.2000000000116
+        },
+        {
+          "phase": "idleAfter",
+          "elapsedMs": 6473.8000000000175
+        },
+        {
+          "phase": "idleAfter",
+          "elapsedMs": 7296.700000000012
+        }
+      ],
+      "scheduledUpdates": [
+        {
+          "requestedDelayMs": 799.2000000000116,
+          "actualDelayMs": 806.5,
+          "completed": true,
+          "requestedPhase": "candidate-setup",
+          "firedPhase": "candidate-setup",
+          "firedAt": 10907.899999999994
+        },
+        {
+          "requestedDelayMs": 799.7999999999884,
+          "actualDelayMs": 808.5,
+          "completed": true,
+          "requestedPhase": "candidate-setup",
+          "firedPhase": "idleBefore",
+          "firedAt": 11716.600000000006
+        },
+        {
+          "requestedDelayMs": 799.6000000000058,
+          "actualDelayMs": 813,
+          "completed": true,
+          "requestedPhase": "idleBefore",
+          "firedPhase": "idleBefore",
+          "firedAt": 12530.100000000006
+        },
+        {
+          "requestedDelayMs": 799.7999999999884,
+          "actualDelayMs": 805.0999999999767,
+          "completed": true,
+          "requestedPhase": "idleBefore",
+          "firedPhase": "idleBefore",
+          "firedAt": 13335.399999999994
+        },
+        {
+          "requestedDelayMs": 799.7999999999884,
+          "actualDelayMs": null,
+          "completed": false,
+          "requestedPhase": "idleBefore",
+          "firedPhase": null,
+          "firedAt": null
+        },
+        {
+          "requestedDelayMs": 0,
+          "actualDelayMs": 1.8000000000174623,
+          "completed": true,
+          "requestedPhase": "candidate-focus-active",
+          "firedPhase": "focusActive",
+          "firedAt": 14140.200000000012
+        },
+        {
+          "requestedDelayMs": 79.20000000001164,
+          "actualDelayMs": 85.20000000001164,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14226.300000000017
+        },
+        {
+          "requestedDelayMs": 79.90000000002328,
+          "actualDelayMs": 116.10000000000582,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14342.5
+        },
+        {
+          "requestedDelayMs": 79.89999999999418,
+          "actualDelayMs": 85.89999999999418,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14428.5
+        },
+        {
+          "requestedDelayMs": 79.79999999998836,
+          "actualDelayMs": 83.5,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14512.200000000012
+        },
+        {
+          "requestedDelayMs": 79.89999999999418,
+          "actualDelayMs": 116.39999999999418,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14628.700000000012
+        },
+        {
+          "requestedDelayMs": 79.70000000001164,
+          "actualDelayMs": 90.20000000001164,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14719.200000000012
+        },
+        {
+          "requestedDelayMs": 79.80000000001746,
+          "actualDelayMs": 105,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14824.399999999994
+        },
+        {
+          "requestedDelayMs": 79.79999999998836,
+          "actualDelayMs": 82.60000000000582,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "focusActive",
+          "firedAt": 14907.200000000012
+        },
+        {
+          "requestedDelayMs": 32.80000000001746,
+          "actualDelayMs": 56.60000000000582,
+          "completed": true,
+          "requestedPhase": "focusActive",
+          "firedPhase": "capture",
+          "firedAt": 14964.100000000006
+        },
+        {
+          "requestedDelayMs": 22.800000000017462,
+          "actualDelayMs": null,
+          "completed": false,
+          "requestedPhase": "capture",
+          "firedPhase": null,
+          "firedAt": null
+        },
+        {
+          "requestedDelayMs": 0,
+          "actualDelayMs": 0.20000000001164153,
+          "completed": true,
+          "requestedPhase": "candidate-focus-release",
+          "firedPhase": "focusRelease",
+          "firedAt": 15022.100000000006
+        },
+        {
+          "requestedDelayMs": 742,
+          "actualDelayMs": 750.2999999999884,
+          "completed": true,
+          "requestedPhase": "focusRelease",
+          "firedPhase": "focusRelease",
+          "firedAt": 15772.399999999994
+        },
+        {
+          "requestedDelayMs": 799.8999999999942,
+          "actualDelayMs": 800.3999999999942,
+          "completed": true,
+          "requestedPhase": "focusRelease",
+          "firedPhase": "idleAfter",
+          "firedAt": 16572.899999999994
+        },
+        {
+          "requestedDelayMs": 799.6999999999825,
+          "actualDelayMs": 822.7999999999884,
+          "completed": true,
+          "requestedPhase": "idleAfter",
+          "firedPhase": "idleAfter",
+          "firedAt": 17396
+        },
+        {
+          "requestedDelayMs": 799.8999999999942,
+          "actualDelayMs": 809.1000000000058,
+          "completed": true,
+          "requestedPhase": "idleAfter",
+          "firedPhase": "capture",
+          "firedAt": 18205.20000000001
+        },
+        {
+          "requestedDelayMs": 799.8999999999942,
+          "actualDelayMs": null,
+          "completed": false,
+          "requestedPhase": "capture",
+          "firedPhase": null,
+          "firedAt": null
+        }
+      ],
+      "cleanup": {
+        "layerDestroyed": true,
+        "renderDemandDisposed": true,
+        "viewerDestroyed": true,
+        "governorUninstalled": true
+      }
+    },
+    "phase": "candidate-idle-after",
+    "error": "Focused vessels were not observed dimmed",
+    "failedPhase": "capture",
+    "finishedAt": "2026-10-10T18:10:41.387Z"
+  },
+  "vesselGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 42442.7865,
+      "closeSettledHostMs": 42990.79475,
+      "closeElapsedMs": 548.008249999999,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 514.1152079999956
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

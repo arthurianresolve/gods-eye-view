@@ -1,0 +1,86 @@
+{
+  "schema": "gev-native-satellite-boundary-cadence-audit/v1",
+  "recordedAt": "2026-10-12T20:52:49.563Z",
+  "scope": "Fresh native renderer state and production fixture clock with one controlled propagation result; simulated render cadence, no WebGL, hardware or orbital-accuracy claim",
+  "sourceSha256": {
+    "src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8",
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801"
+  },
+  "sourceStable": true,
+  "results": [
+    {
+      "frameStepMs": 16,
+      "propagationCount": 89,
+      "before": {
+        "wallEpochMs": 1791828030000,
+        "lastPositionEpochMs": 1791828029232,
+        "positionAgeMs": 768,
+        "cartesian": {
+          "x": -712966.8099835938,
+          "y": -5831242.436081801,
+          "z": 3370373.7353836372
+        }
+      },
+      "after": {
+        "wallEpochMs": 1791828090000,
+        "lastPositionEpochMs": 1791828089712,
+        "positionAgeMs": 288,
+        "cartesian": {
+          "x": -706811.0994171544,
+          "y": -5831991.777278163,
+          "z": 3370373.7353836372
+        }
+      }
+    },
+    {
+      "frameStepMs": 33,
+      "propagationCount": 87,
+      "before": {
+        "wallEpochMs": 1791828030000,
+        "lastPositionEpochMs": 1791828029667,
+        "positionAgeMs": 333,
+        "cartesian": {
+          "x": -712922.5381077481,
+          "y": -5831247.848887697,
+          "z": 3370373.7353836372
+        }
+      },
+      "after": {
+        "wallEpochMs": 1791828090000,
+        "lastPositionEpochMs": 1791828089004,
+        "positionAgeMs": 996,
+        "cartesian": {
+          "x": -706883.1648837813,
+          "y": -5831983.042816849,
+          "z": 3370373.735383637
+        }
+      }
+    },
+    {
+      "frameStepMs": 120,
+      "propagationCount": 83,
+      "before": {
+        "wallEpochMs": 1791828030000,
+        "lastPositionEpochMs": 1791828029160,
+        "positionAgeMs": 840,
+        "cartesian": {
+          "x": -712974.1377383893,
+          "y": -5831241.540136678,
+          "z": 3370373.735383637
+        }
+      },
+      "after": {
+        "wallEpochMs": 1791828090000,
+        "lastPositionEpochMs": 1791828089640,
+        "positionAgeMs": 360,
+        "cartesian": {
+          "x": -706818.4281136062,
+          "y": -5831990.889068535,
+          "z": 3370373.7353836372
+        }
+      }
+    }
+  ],
+  "reproduced": true,
+  "conclusion": "Equal held fixture-clock epochs do not imply identical cached satellite positions. Exact position hashes cannot be assumed comparable across different native rendering cadences. The capture must establish deterministic source sampling or explicitly validate sampled source times before matched acceptance."
+}

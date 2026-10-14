@@ -1,0 +1,28 @@
+{
+  "schema": "gev-main-reconciliation-check/v1",
+  "checkedAt": "2026-10-13T01:10:52.582Z",
+  "refs": {
+    "dev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+    "fork/dev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+    "fork/main": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "origin/main": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "HEAD": "acbe7019cc23672a4a65c43edacca4e36e53420b"
+  },
+  "devVsForkMain": {
+    "ahead": 608,
+    "behind": 0
+  },
+  "forkVsUpstreamMain": {
+    "ahead": 0,
+    "behind": 0
+  },
+  "localVsRemoteDev": {
+    "ahead": 0,
+    "behind": 0
+  },
+  "qaVsForkMain": {
+    "ahead": 683,
+    "behind": 0
+  },
+  "finding": "Fresh fetch of both remotes confirms no main commits missing from dev or current QA; no merge, rebase, or discard needed."
+}

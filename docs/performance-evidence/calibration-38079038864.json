@@ -1,0 +1,1780 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+  "platform": "darwin",
+  "timestamp": "2026-10-10T19:15:27.934Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "capturedAt": "2026-10-10T19:15:35.465Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+        "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+        "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: CCTV calibration report is incomplete or failed.",
+  "importBatches": {
+    "schema": "gev-import-batches/v1",
+    "applicationCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "capturedAt": "2026-10-10T19:15:38.049Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 56.09999999997672,
+        "maxHeartbeatGapMs": 125.40000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 234300483,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 57.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 33.90000000002328,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 332.0999999999767,
+        "maxHeartbeatGapMs": 68.30000000004657,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 362800554,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 126.30000000004657,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 63.59999999997672,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 165.09999999997672,
+        "maxHeartbeatGapMs": 23,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 475894974,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 65.60000000009313,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 23.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 67.40000000002328,
+        "maxHeartbeatGapMs": 172.09999999997672,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 234010522,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 55.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 50.90000000002328,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 46,
+        "maxHeartbeatGapMs": 97,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 359689790,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 3.400000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 3.400000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 208.59999999997672,
+        "maxHeartbeatGapMs": 74.40000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 107170630,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 43,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 43,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 161.09999999997672,
+        "maxHeartbeatGapMs": 43.699999999953434,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 103970670,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 10.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 10.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 54.800000000046566,
+        "maxHeartbeatGapMs": 107.09999999997672,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 221882682,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 62.09999999997672,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 27.300000000046566,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 50.5,
+        "maxHeartbeatGapMs": 99.20000000006985,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 232478174,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 5.099999999976717,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 5.099999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 146.60000000009313,
+        "maxHeartbeatGapMs": 36.800000000046566,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 356821934,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 60.09999999997672,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 60.09999999997672,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+      "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "coldActivationMs": 399.4000000000233,
+    "warmedResources": {
+      "heapBytes": 109989112,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "calibrationPageErrors": [],
+  "calibrationInterceptionErrors": [],
+  "calibrationExternalRequestCount": 0,
+  "calibrationPointerActions": [
+    {
+      "id": "calibration-0-legacy-control-0",
+      "from": {
+        "x": 619.1232751612928,
+        "y": 483.998329218423
+      },
+      "to": {
+        "x": 627.7287489838588,
+        "y": 483.9983292183604
+      },
+      "steps": 6,
+      "startedElapsedMs": 12890,
+      "status": "dispatched",
+      "finishedElapsedMs": 13994
+    },
+    {
+      "id": "calibration-0-candidate-1",
+      "from": {
+        "x": 619.1232751612928,
+        "y": 483.998329218423
+      },
+      "to": {
+        "x": 627.7287489838588,
+        "y": 483.9983292183604
+      },
+      "steps": 6,
+      "startedElapsedMs": 25756,
+      "status": "dispatched",
+      "finishedElapsedMs": 26458
+    }
+  ],
+  "calibrationRenderDemand": {
+    "schema": "gev-cctv-calibration-render-demand/v1",
+    "fixture": {
+      "id": "cctv-calibration-native-drag/v1",
+      "sha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "cameraId": "qa-cctv-calibration-camera-001",
+      "epochMs": 1791460800000,
+      "idleRequestedMs": 10000
+    },
+    "applicationCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+    "scope": "isolated production CCTV layer; native calibration input and render-demand comparison",
+    "status": "failed",
+    "phase": "pair-0-comparison",
+    "pairs": [
+      {
+        "pair": 0,
+        "order": [
+          "legacy-control",
+          "candidate"
+        ],
+        "runs": [
+          {
+            "schema": "gev-cctv-calibration-trial/v1",
+            "status": "passed",
+            "mode": "legacy-control",
+            "pair": 0,
+            "fixtureId": "cctv-calibration-native-drag/v1",
+            "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+            "applicationCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+            "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+            "startedAt": "2026-10-10T19:15:46.596Z",
+            "phase": "pair-0-legacy-control-after-drag-render",
+            "viewport": {
+              "width": 1200,
+              "height": 800,
+              "devicePixelRatio": 1,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960
+            },
+            "environment": {
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "maskedRenderer": "WebKit WebGL",
+              "rendererIdentity": "unmasked-extension",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+            },
+            "camera": {
+              "selectedCameraId": "qa-cctv-calibration-camera-001",
+              "position": [
+                -743234.6984124286,
+                -5466111.680014155,
+                3197755.2224108577
+              ],
+              "direction": [
+                0.11636545106412505,
+                0.855808471496806,
+                -0.5040346634041586
+              ],
+              "up": [
+                0.06790939745071646,
+                0.49943894086346946,
+                0.8636834246916266
+              ],
+              "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42"
+            },
+            "initialCalibration": {
+              "offsetEastM": 0,
+              "offsetNorthM": 0,
+              "headingDeg": 0,
+              "pitchDeg": 0,
+              "fovDeg": 0,
+              "rangeScale": 1,
+              "heightM": 0
+            },
+            "renderingSettings": {
+              "initialRequestRenderMode": true,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 800,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960,
+              "devicePixelRatio": 1,
+              "msaaSamples": 4,
+              "antialias": true,
+              "preserveDrawingBuffer": true,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "requestRenderModeDuringIdle": false
+            },
+            "layoutEvidence": {
+              "settled": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "cameraCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "beforePixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "afterPixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              }
+            },
+            "captureDiagnostics": null,
+            "setup": {
+              "elapsedMs": 2878.3000000000466,
+              "completedFrames": 9
+            },
+            "idle": {
+              "requestedDurationMs": 10000,
+              "durationMs": 10008.599999999977,
+              "completedFrames": 161,
+              "renderMode": false,
+              "forcedCaptureFramesIncluded": false,
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 10009.099999999977,
+                "completedPhase": "observation"
+              }
+            },
+            "drag": {
+              "instructionId": "calibration-0-legacy-control-0",
+              "instructionDelivered": true,
+              "from": {
+                "x": 619.1232751612928,
+                "y": 483.998329218423
+              },
+              "to": {
+                "x": 627.7287489838588,
+                "y": 483.9983292183604
+              },
+              "handlePosition": {
+                "x": 619.1232751612928,
+                "y": 399.998329218423
+              },
+              "axisLengthPx": 19.12327516125788,
+              "kind": "drag",
+              "steps": 6,
+              "calibrationBefore": {
+                "offsetEastM": 0,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "calibrationAfter": {
+                "offsetEastM": 28.8,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "changedFields": [
+                "offsetEastM"
+              ],
+              "acceptedCalibrationChanged": true,
+              "committedAfterRelease": true,
+              "trustedPointerDown": true,
+              "trustedPointerMoveCount": 6,
+              "trustedPointerUp": true,
+              "dragInputsDisabledObserved": true,
+              "dragInputsRestoredAfterRelease": true,
+              "selectedCameraIdAfterRelease": "qa-cctv-calibration-camera-001",
+              "pickIdentity": {
+                "entityId": "cctv-gizmo-move-east",
+                "kind": "move-east",
+                "cameraId": "qa-cctv-calibration-camera-001",
+                "trusted": true,
+                "x": 619.123291015625,
+                "y": 483.9983215332031,
+                "targetDistancePx": 0.000017618809686561372
+              },
+              "pickEvidence": {
+                "returnedObject": true,
+                "pickedObjectType": "Object",
+                "idType": "object",
+                "entityId": "cctv-gizmo-move-east",
+                "primitiveType": "PointPrimitive",
+                "primitiveId": "cctv-gizmo-move-east",
+                "client": {
+                  "x": 619.123291015625,
+                  "y": 483.9983215332031
+                },
+                "canvasRect": {
+                  "left": 0,
+                  "top": 84,
+                  "width": 1200,
+                  "height": 800
+                },
+                "cssLocal": {
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                },
+                "drawingBuffer": {
+                  "width": 1200,
+                  "height": 800,
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                }
+              },
+              "canvasLayoutAtPointerDown": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "canvasLayoutObservations": {
+                "beforeInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterRelease": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterCapture": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                }
+              },
+              "geometrySha256After": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 1378,
+                "completedPhase": "after-frame-capture"
+              }
+            },
+            "beforePixels": {
+              "sha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1777
+            },
+            "afterPixels": {
+              "sha256": "7db9190826cc1f6df58826c542b96cdb0b7be090517c627012ee6867f5b460e3",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1493
+            },
+            "cleanup": {
+              "layerDisabled": true,
+              "layerDestroyed": true,
+              "worldOverlayDestroyed": true,
+              "governorUninstalled": true,
+              "viewerDestroyed": true,
+              "ownedEntitiesBeforeDestroy": 8,
+              "ownedEntitiesAfterLayerDestroy": 0,
+              "governorHoldsAfterLayerDestroy": 0,
+              "error": null
+            }
+          },
+          {
+            "schema": "gev-cctv-calibration-trial/v1",
+            "status": "passed",
+            "mode": "candidate",
+            "pair": 0,
+            "fixtureId": "cctv-calibration-native-drag/v1",
+            "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+            "applicationCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+            "harnessCommit": "61d662a870f4b1e5c82711a18676a2f3c623e847",
+            "startedAt": "2026-10-10T19:16:01.836Z",
+            "phase": "pair-0-candidate-after-drag-render",
+            "viewport": {
+              "width": 1200,
+              "height": 800,
+              "devicePixelRatio": 1,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960
+            },
+            "environment": {
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "maskedRenderer": "WebKit WebGL",
+              "rendererIdentity": "unmasked-extension",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+            },
+            "camera": {
+              "selectedCameraId": "qa-cctv-calibration-camera-001",
+              "position": [
+                -743234.6984124286,
+                -5466111.680014155,
+                3197755.2224108577
+              ],
+              "direction": [
+                0.11636545106412499,
+                0.855808471496806,
+                -0.5040346634041586
+              ],
+              "up": [
+                0.06790939745071646,
+                0.49943894086346946,
+                0.8636834246916266
+              ],
+              "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42"
+            },
+            "initialCalibration": {
+              "offsetEastM": 0,
+              "offsetNorthM": 0,
+              "headingDeg": 0,
+              "pitchDeg": 0,
+              "fovDeg": 0,
+              "rangeScale": 1,
+              "heightM": 0
+            },
+            "renderingSettings": {
+              "initialRequestRenderMode": true,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 800,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960,
+              "devicePixelRatio": 1,
+              "msaaSamples": 4,
+              "antialias": true,
+              "preserveDrawingBuffer": true,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "requestRenderModeDuringIdle": true
+            },
+            "layoutEvidence": {
+              "settled": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "cameraCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "beforePixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "afterPixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              }
+            },
+            "captureDiagnostics": null,
+            "setup": {
+              "elapsedMs": 737.2000000000698,
+              "completedFrames": 14
+            },
+            "idle": {
+              "requestedDurationMs": 10000,
+              "durationMs": 10005.800000000047,
+              "completedFrames": 17,
+              "renderMode": true,
+              "forcedCaptureFramesIncluded": false,
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 10005.900000000023,
+                "completedPhase": "observation"
+              }
+            },
+            "drag": {
+              "instructionId": "calibration-0-candidate-1",
+              "instructionDelivered": true,
+              "from": {
+                "x": 619.1232751612928,
+                "y": 483.998329218423
+              },
+              "to": {
+                "x": 627.7287489838588,
+                "y": 483.9983292183604
+              },
+              "handlePosition": {
+                "x": 619.1232751612928,
+                "y": 399.998329218423
+              },
+              "axisLengthPx": 19.12327516125788,
+              "kind": "drag",
+              "steps": 6,
+              "calibrationBefore": {
+                "offsetEastM": 0,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "calibrationAfter": {
+                "offsetEastM": 28.8,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "changedFields": [
+                "offsetEastM"
+              ],
+              "acceptedCalibrationChanged": true,
+              "committedAfterRelease": true,
+              "trustedPointerDown": true,
+              "trustedPointerMoveCount": 6,
+              "trustedPointerUp": true,
+              "dragInputsDisabledObserved": true,
+              "dragInputsRestoredAfterRelease": true,
+              "selectedCameraIdAfterRelease": "qa-cctv-calibration-camera-001",
+              "pickIdentity": {
+                "entityId": "cctv-gizmo-move-east",
+                "kind": "move-east",
+                "cameraId": "qa-cctv-calibration-camera-001",
+                "trusted": true,
+                "x": 619.123291015625,
+                "y": 483.9983215332031,
+                "targetDistancePx": 0.000017618809686561372
+              },
+              "pickEvidence": {
+                "returnedObject": true,
+                "pickedObjectType": "Object",
+                "idType": "object",
+                "entityId": "cctv-gizmo-move-east",
+                "primitiveType": "PointPrimitive",
+                "primitiveId": "cctv-gizmo-move-east",
+                "client": {
+                  "x": 619.123291015625,
+                  "y": 483.9983215332031
+                },
+                "canvasRect": {
+                  "left": 0,
+                  "top": 84,
+                  "width": 1200,
+                  "height": 800
+                },
+                "cssLocal": {
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                },
+                "drawingBuffer": {
+                  "width": 1200,
+                  "height": 800,
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                }
+              },
+              "canvasLayoutAtPointerDown": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "canvasLayoutObservations": {
+                "beforeInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterRelease": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterCapture": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                }
+              },
+              "geometrySha256After": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 970.8000000000466,
+                "completedPhase": "after-frame-capture"
+              }
+            },
+            "beforePixels": {
+              "sha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1777
+            },
+            "afterPixels": {
+              "sha256": "ec70d2168a763081f2a4a1786ce21e823cbcff7f861628b3e24eaecae27b3f91",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1492
+            },
+            "cleanup": {
+              "layerDisabled": true,
+              "layerDestroyed": true,
+              "worldOverlayDestroyed": true,
+              "governorUninstalled": true,
+              "viewerDestroyed": true,
+              "ownedEntitiesBeforeDestroy": 8,
+              "ownedEntitiesAfterLayerDestroy": 0,
+              "governorHoldsAfterLayerDestroy": 0,
+              "error": null
+            }
+          }
+        ],
+        "comparison": null
+      }
+    ],
+    "cleanup": {
+      "trials": 2,
+      "allTrialsReleased": false,
+      "viewerDestroyedCount": 2,
+      "governorUninstalledCount": 2
+    },
+    "environment": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "desktopForegroundVerification": "unavailable",
+      "maskedRenderer": "WebKit WebGL",
+      "rendererIdentity": "unmasked-extension"
+    },
+    "viewport": {
+      "width": 1200,
+      "height": 800,
+      "devicePixelRatio": 1,
+      "cssWidth": 1200,
+      "cssHeight": 800,
+      "viewportWidth": 1200,
+      "viewportHeight": 960
+    },
+    "startedAt": "2026-10-10T19:15:46.594Z",
+    "failedPhase": "pair-0-comparison",
+    "error": "CCTV calibration control and candidate outputs differ.",
+    "finishedAt": "2026-10-10T19:16:14.299Z"
+  },
+  "calibrationGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "calibrationRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 46543.802208,
+      "closeSettledHostMs": 46901.923375,
+      "closeElapsedMs": 358.1211669999975,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 325.45291700000234
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "candidate": "698752adcd27b59040affc0d0a1a9bd643025833",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099704275",
+  "rawSha256": "b6f03daef1ebbcbf3b4202dd408cd19a21a85c0a6e2f002e1a991f169f9d334e",
+  "standardJobsPassed": [
+    "Windows onboarding",
+    "Install and update recovery (ubuntu-latest)",
+    "Node 24.14.0",
+    "Install and update recovery (macos-latest)",
+    "Install and update recovery (windows-latest)",
+    "Street Level browser gate",
+    "Node 26.x"
+  ],
+  "skippedSteps": [
+    {
+      "job": "Install and update recovery (ubuntu-latest)",
+      "step": "Preserve recovery evidence"
+    },
+    {
+      "job": "Node 24.14.0",
+      "step": "Check published layer-token allocations"
+    },
+    {
+      "job": "Install and update recovery (macos-latest)",
+      "step": "Preserve recovery evidence"
+    },
+    {
+      "job": "Install and update recovery (windows-latest)",
+      "step": "Preserve recovery evidence"
+    },
+    {
+      "job": "Street Level browser gate",
+      "step": "Preview server log"
+    },
+    {
+      "job": "Street Level browser gate",
+      "step": "Upload gate evidence"
+    },
+    {
+      "job": "Node 26.x",
+      "step": "Check published layer-token allocations"
+    }
+  ],
+  "limitations": "PR-only published layer-token checks and optional diagnostics are not passes; this workflow does not establish Windows physical GPU or complete S52 acceptance."
+}

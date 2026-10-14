@@ -74,6 +74,11 @@ export function createFlightSnapshotRenderer({
           viewerLonDeg,
           trackedId: flightState._trackedIcao,
           floorWarmPoints,
+          sourceId: snapshot.source,
+          sourceSnapshotObservedAtMs: snapshot.observedAtMs,
+          sourceCoverage: snapshot.coverage,
+          sourceFreshness: snapshot.freshness,
+          sourceComplete: snapshot.complete,
         },
       );
       const position = Cesium.Cartesian3.fromDegrees(

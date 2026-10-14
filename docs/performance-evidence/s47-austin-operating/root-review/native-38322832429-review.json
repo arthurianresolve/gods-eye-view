@@ -1,0 +1,191 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-12T23:42:47.188Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322832429",
+  "testedCommit": "f204837e224e8a7d5ae98a7ebe051365db24b0e0",
+  "status": "failed",
+  "comparisonEligible": false,
+  "completedSampleCount": 4,
+  "retainedCompleteSampleCount": 0,
+  "evidenceTruncated": true,
+  "failure": {
+    "phase": "final-integrity-check",
+    "scenario": null,
+    "run": null,
+    "message": "Expected values to be strictly equal:\n\nfalse !== true\n",
+    "operator": "strictEqual",
+    "actual": false,
+    "expected": true
+  },
+  "verifiedRenderer": {
+    "schema": "gev-hosted-renderer-diagnostic/v1",
+    "requestedBackend": "macos-native-diagnostic",
+    "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "observedWebglVendor": "Google Inc. (Apple)",
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "status": "verified",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "physicalDesktopCoverage": false,
+    "hostedEnvironment": "github-actions-macos",
+    "comparisonEligible": false,
+    "performanceAcceptanceEligible": false
+  },
+  "cleanupRecomputed": [
+    {
+      "documentRole": "startup-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-4",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "sampleDelivery": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "status": "observed",
+      "fullRouteCoverageComplete": true
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "status": "observed",
+      "fullRouteCoverageComplete": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "status": "observed",
+      "fullRouteCoverageComplete": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "status": "observed",
+      "fullRouteCoverageComplete": true
+    }
+  ],
+  "baselineVisualEvidence": {
+    "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+    "status": "passed",
+    "settingsBefore": {
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "detectionMode": "DENSE",
+      "resolutionScale": 1,
+      "antialias": true,
+      "msaaSamples": 4,
+      "fxaa": false,
+      "bloom": false,
+      "sharpen": true
+    },
+    "settingsAfter": {
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "detectionMode": "DENSE",
+      "resolutionScale": 1,
+      "antialias": true,
+      "msaaSamples": 4,
+      "fxaa": false,
+      "bloom": false,
+      "sharpen": true
+    }
+  },
+  "finding": {
+    "kind": "invalid-harness-visual-expectation",
+    "expectedByAustinContract": {
+      "fxaa": true
+    },
+    "observedOnBaseline": {
+      "fxaa": false,
+      "msaaSamples": 4,
+      "antialias": true
+    },
+    "candidateSource": "src/app/viewer.js sets msaaSamples:4 and does not enable FXAA; pinned Cesium PostProcessStageCollection initializes FXAA disabled.",
+    "limitation": "The failed assertion is unlabeled and completed candidate settings were truncated. The record cannot identify its exact sample or independently replay final capture integrity.",
+    "sourceFiles": [
+      {
+        "file": "src/app/viewer.js",
+        "sha256": "d54423936748a2a20c170b0b7d9ac2cacd79d3f617a49b5963261cb31b943911"
+      },
+      {
+        "file": "scripts/performance/captureComparisonContract.mjs",
+        "sha256": "d2954c0b1b06c7be8108db083927115df21198fd5561ab280954ed9f3c25a92e"
+      },
+      {
+        "file": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+        "sha256": "6b6e7ed71ede757f84139d6e99f40137f553a6c5427d381396a94c3b0036790d"
+      },
+      {
+        "file": "node_modules/@cesium/engine/Source/Scene/PostProcessStageCollection.js",
+        "sha256": "24534f74e8b11f37c1d82b0986b4ad6fd14501bf722ef79f392895ed1e45a274"
+      }
+    ],
+    "cesiumVersion": "1.138.0",
+    "fxaaSourceReferences": {
+      "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7": [],
+      "f204837e224e8a7d5ae98a7ebe051365db24b0e0": [
+        "f204837e224e8a7d5ae98a7ebe051365db24b0e0:src/app/tools.js:554:        fxaa: viewer.scene.postProcessStages?.fxaa?.enabled ?? null,"
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "file": "hosted-native-38322832429-smoke-failed.json",
+      "bytes": 287359,
+      "sha256": "62f6774b56bac7a0ccfc31c8aa0a6e501f6a62fbff6fba701fbdcd0e4bbec742"
+    },
+    {
+      "file": "hosted-native-38322832429-cli-failed.json",
+      "bytes": 196483,
+      "sha256": "1adaf5efaefadb6ec6a5b0d91edeaed31c8c7fab475fa0ad9426058ab3cc36c6"
+    }
+  ]
+}

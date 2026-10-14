@@ -112,6 +112,22 @@ function makeGestureHandler() {
 // lat/lon→metres conversion in the assertions matches the module's math.
 const M_PER_DEG = (Math.PI / 180) * 6371000;
 
+test('CCTV ownership diagnostics are bounded and JSON-safe', () => {
+  const diagnostics = cctvLayer.getPerformanceDiagnostics();
+  for (const field of [
+    'listeners',
+    'timers',
+    'pendingJobs',
+    'primitives',
+    'dataSources',
+    'cacheEntries',
+  ]) {
+    assert.ok(Number.isInteger(diagnostics[field]));
+    assert.ok(diagnostics[field] >= 0);
+  }
+  assert.doesNotThrow(() => JSON.stringify(diagnostics));
+});
+
 /** Local ENU metres of point b relative to point a ({lat, lon, alt}). */
 function enu(a, b) {
   return {
@@ -375,6 +391,29 @@ test('geometry drain pacing yields to tracked and cockpit camera ownership', () 
   const queue = [{ id: 'near' }, { id: 'far' }, active];
   assert.equal(prioritizeActiveCctvGeometryRecord(queue, active), true);
   assert.equal(queue[0], active);
+});
+
+test('cursor geometry drains avoid shifting the pending queue between batches', () => {
+  const queue = [1, 2, 3, 4, 5];
+  const cursor = { index: 0 };
+  const visited = [];
+  const drain = () =>
+    processCctvGeometryQueueBatch({
+      queue,
+      cursor,
+      batchSize: 2,
+      visit: (value) => visited.push(value),
+    });
+
+  assert.equal(drain(), true);
+  assert.deepEqual(queue, [1, 2, 3, 4, 5]);
+  assert.equal(cursor.index, 2);
+  assert.equal(drain(), true);
+  assert.equal(cursor.index, 4);
+  assert.equal(drain(), false);
+  assert.deepEqual(visited, [1, 2, 3, 4, 5]);
+  assert.deepEqual(queue, []);
+  assert.equal(cursor.index, 0);
 });
 
 test('geometry drain rechecks pacing when tracking releases between batches', () => {
@@ -651,9 +690,9 @@ test('deactivation clears the probe clamp and restores nominal frustum geometry'
   assert.equal(rewrittenRange, 210);
 });
 
-test('CCTV disable hide sweep hides record visuals and destroys viewsheds without restyling', () => {
-  const viewshedA = { id: 'viewshed-a' };
-  const viewshedB = { id: 'viewshed-b' };
+test('CCTV disable hide sweep hides and retains viewshed cohort without restyling', () => {
+  const viewshedA = { id: 'viewshed-a', show: true };
+  const viewshedB = { id: 'viewshed-b', show: true };
   const records = [
     {
       camera: { id: 'a' },
@@ -673,13 +712,13 @@ test('CCTV disable hide sweep hides record visuals and destroys viewsheds withou
       viewshedPrimitive: viewshedB,
     },
   ];
-  const destroyed = [];
+  const hidden = [];
 
   hideCctvRecordVisuals(
     records,
     (record) => {
-      destroyed.push(record.camera.id);
-      record.viewshedPrimitive = null;
+      hidden.push(record.camera.id);
+      record.viewshedPrimitive.show = false;
     },
     'a',
   );
@@ -691,9 +730,11 @@ test('CCTV disable hide sweep hides record visuals and destroys viewsheds withou
     [false, false],
   );
   assert.equal(records[0].projection.planeEntity.show, false);
-  assert.deepEqual(destroyed, ['a', 'b']);
-  assert.equal(records[0].viewshedPrimitive, null);
-  assert.equal(records[1].viewshedPrimitive, null);
+  assert.deepEqual(hidden, ['a', 'b']);
+  assert.equal(records[0].viewshedPrimitive, viewshedA);
+  assert.equal(records[1].viewshedPrimitive, viewshedB);
+  assert.equal(viewshedA.show, false);
+  assert.equal(viewshedB.show, false);
   assert.deepEqual(
     records.map((record) => record.probeClampRangeM),
     [null, null],

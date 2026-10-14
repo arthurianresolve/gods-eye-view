@@ -1,0 +1,131 @@
+{
+  "schema": "gev-independent-diagnostic-review/v1",
+  "reviewKind": "failed-run-evidence-and-source-attribution",
+  "runId": 38212601518,
+  "applicationCommit": "7a169618e5036a14b56b861bba2640e6ff2bff72",
+  "harnessCommit": "7a169618e5036a14b56b861bba2640e6ff2bff72",
+  "rawReport": {
+    "file": "report.json",
+    "bytes": 546151,
+    "sha256": "31728367ecf7397a76d237d9a8cd892c7057c92ed8c130930c9b30f3591549bf"
+  },
+  "runConclusion": "failure",
+  "performanceAcceptanceEligible": false,
+  "hardwareAcceptanceEligible": false,
+  "productionDefaultsChanged": false,
+  "focusedTests": {
+    "primitiveReadiness": {
+      "passed": 48,
+      "failed": 0
+    },
+    "comparatorRepair": {
+      "commit": "24bebb1b3598e590e5c3529fca5e1f58ef170130",
+      "passed": 15,
+      "failed": 0
+    }
+  },
+  "observations": {
+    "lifetimes": [
+      {
+        "mode": "entities",
+        "status": "passed",
+        "samples": 10,
+        "teardown": {
+          "layerDestroyed": true,
+          "dataSourceRemoved": true,
+          "rendererOwnersRemoved": true,
+          "viewerKeptForNextLifetime": true,
+          "instrumentationRestored": true,
+          "ownerCountAfterDestroy": 0,
+          "dataSourceCountAfterDestroy": 0,
+          "scenePrimitiveCountAfterDestroy": 1,
+          "groundPrimitiveCountAfterDestroy": 1
+        }
+      },
+      {
+        "mode": "primitive-collections",
+        "status": "passed",
+        "samples": 10,
+        "teardown": {
+          "layerDestroyed": true,
+          "dataSourceRemoved": true,
+          "rendererOwnersRemoved": true,
+          "viewerKeptForNextLifetime": true,
+          "instrumentationRestored": true,
+          "ownerCountAfterDestroy": 0,
+          "dataSourceCountAfterDestroy": 0,
+          "scenePrimitiveCountAfterDestroy": 1,
+          "groundPrimitiveCountAfterDestroy": 1
+        }
+      }
+    ],
+    "diagnosticStatus": "not-triggered",
+    "acceptedDiagnosticSnapshots": 0,
+    "rawPngsIndependentlyDecoded": 20,
+    "rgbaHashesMatchReported": true,
+    "identicalPngPairs": 9,
+    "mismatches": [
+      {
+        "caseId": "camera-lod-update",
+        "pair": 0,
+        "diffPixels": 16,
+        "bbox": [
+          478,
+          277,
+          482,
+          280
+        ],
+        "encodedPngEqual": false,
+        "pixelHashValid": [
+          true,
+          true
+        ],
+        "geometryEqual": true,
+        "styleEqual": true,
+        "identityEqual": true,
+        "cameraEqual": true,
+        "clockEqual": true,
+        "pointSame": true,
+        "stemSame": true,
+        "selectionSame": true
+      }
+    ],
+    "originalFailure": {
+      "name": "Error",
+      "message": "default-style pair 1 baseline/candidate evidence differs."
+    },
+    "confirmedHarnessDefect": "Local fixture comparator includes renderer-specific primitiveType/appearanceType while shared datacenter comparator preserves stable identity and verified native ownership.",
+    "repairReplay": "Shared comparator rejects camera-lod-update pair 1 for the remaining pixel mismatch.",
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 47108.483917,
+        "closeSettledHostMs": 47536.804875,
+        "closeElapsedMs": 428.3209580000039,
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 386.7047920000041
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "viewerDestroyed": true
+  },
+  "limitations": [
+    "Readiness gate failure did not recur; no current-primitive observation was triggered.",
+    "Hosted Apple Paravirtual rendering is not physical Windows evidence.",
+    "A 16-pixel first-camera mismatch remains; identical later samples do not establish its cause.",
+    "No fresh hosted run of the comparator repair was performed.",
+    "No performance or full-plan acceptance is established."
+  ]
+}

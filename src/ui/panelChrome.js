@@ -18,6 +18,7 @@ const SHARE_PANEL_STATE_SPECS = Object.freeze([
   { id: 'radio-panel' },
   { id: 'scene-panel' },
   { id: 'global-context-panel' },
+  { id: 'evidence-panel' },
   { id: 'pp-toggles' },
   { id: 'param-slider-panel' },
 ]);
@@ -31,6 +32,7 @@ const COCKPIT_ENTRY_COLLAPSE_PANEL_IDS = Object.freeze([
   'scene-panel',
   'pp-toggles',
   'global-context-panel',
+  'evidence-panel',
   'radio-panel',
 ]);
 
@@ -487,6 +489,15 @@ export class PanelChrome {
         syncShare,
       });
     }
+    // Opening Context also owns its compact Radio disclosure. Enforce that
+    // invariant before the no-op return, since Context may already be open.
+    if (
+      !nextCollapsed &&
+      panelId === 'global-context-panel' &&
+      this._contextRadioDock?.classList.contains('disclosure-open')
+    ) {
+      this._setRadioDisclosure?.(false);
+    }
     if (
       panelEl.classList.contains('collapsed') === nextCollapsed &&
       !wasAutoCollapsed
@@ -514,13 +525,6 @@ export class PanelChrome {
       if (this._cockpitContextCollapsedForDataPanel) {
         this.cockpitView.setContextCollapsed(true);
       }
-    }
-    if (
-      !nextCollapsed &&
-      panelId === 'global-context-panel' &&
-      this._contextRadioDock?.classList.contains('disclosure-open')
-    ) {
-      this._setRadioDisclosure?.(false);
     }
     if (
       !nextCollapsed &&

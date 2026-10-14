@@ -1,0 +1,242 @@
+{
+  "schema": "gev-map-terrain-ancestry-chain-probe/v1",
+  "generatedAt": "2026-10-13T07:54:39.709Z",
+  "cesiumVersion": "1.138.0",
+  "sourceWorkerArtifactPath": "node_modules/@cesium/engine/Source/Workers",
+  "bundledWorkerArtifactPath": "node_modules/cesium/Build/Cesium/Workers (copied by production vite-plugin-cesium configuration)",
+  "fixtureId": "austin-map-streaming-synthetic-v1",
+  "fixtureManifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
+  "fixtureTerrainAsset": {
+    "path": "terrain/10/468/684.terrain",
+    "byteLength": 4986,
+    "sha256": "b2140ab323c70ecb27078ccd1a4f2e1bb61a6ebb50410322b9b1570a509f1ece"
+  },
+  "fixtureTerrainMetadata": {
+    "path": "terrain/layer.json",
+    "byteLength": 1121,
+    "sha256": "f28a0289b4236678f2f41d6fa8f69da627ecc1f3f24d71d6e95185d2cfbf2c52"
+  },
+  "target": {
+    "x": 59940,
+    "y": 43502,
+    "level": 17
+  },
+  "sourceWorkerHashes": {
+    "createVerticesFromQuantizedTerrainMesh.js": {
+      "byteLength": 14754,
+      "sha256": "9a3cb582889acba05da41d33877264c8324a1655972655e5631566a8ad68ea65"
+    },
+    "upsampleQuantizedTerrainMesh.js": {
+      "byteLength": 17861,
+      "sha256": "6b181019f33fa61a6deadaadf04c318b23cf9b825ad4626d4af89031064001a1"
+    }
+  },
+  "bundledWorkerHashes": {
+    "createVerticesFromQuantizedTerrainMesh.js": {
+      "byteLength": 5846,
+      "sha256": "4bae2da6cd4d8f3ed228efbfbf012a9f643788e02fe0c06e95ac7b4c5b8b7158"
+    },
+    "upsampleQuantizedTerrainMesh.js": {
+      "byteLength": 9693,
+      "sha256": "067080b2242f70b169ed76177e8f009a22365b2ddcb2fa7fc4440c8da0ad5727"
+    }
+  },
+  "sourceRows": [
+    {
+      "x": 468,
+      "y": 339,
+      "level": 10,
+      "availability": true,
+      "quantizedVertexCount": 289,
+      "meshVertexCount": 289,
+      "indexCount": 1716,
+      "minHeight": 120,
+      "maxHeight": 880,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 936,
+      "y": 679,
+      "level": 11,
+      "availability": false,
+      "quantizedVertexCount": 188,
+      "meshVertexCount": 188,
+      "indexCount": 1335,
+      "minHeight": 286.99728385265666,
+      "maxHeight": 394.9888607440413,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 1873,
+      "y": 1359,
+      "level": 12,
+      "availability": false,
+      "quantizedVertexCount": 75,
+      "meshVertexCount": 75,
+      "indexCount": 579,
+      "minHeight": 287.98930218342565,
+      "maxHeight": 390.1770774785174,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 3746,
+      "y": 2718,
+      "level": 13,
+      "availability": false,
+      "quantizedVertexCount": 35,
+      "meshVertexCount": 35,
+      "indexCount": 291,
+      "minHeight": 313.59017528962227,
+      "maxHeight": 347.80196763896066,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 7492,
+      "y": 5437,
+      "level": 14,
+      "availability": false,
+      "quantizedVertexCount": 19,
+      "meshVertexCount": 19,
+      "indexCount": 162,
+      "minHeight": 315.1052326121278,
+      "maxHeight": 345.3405530906623,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 14985,
+      "y": 10875,
+      "level": 15,
+      "availability": false,
+      "quantizedVertexCount": 13,
+      "meshVertexCount": 13,
+      "indexCount": 111,
+      "minHeight": 315.1052326121278,
+      "maxHeight": 327.09187153370317,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 29970,
+      "y": 21751,
+      "level": 16,
+      "availability": false,
+      "quantizedVertexCount": 15,
+      "meshVertexCount": 15,
+      "indexCount": 129,
+      "minHeight": 316.5121111312257,
+      "maxHeight": 322.5054554278375,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 59940,
+      "y": 43502,
+      "level": 17,
+      "availability": false,
+      "quantizedVertexCount": 16,
+      "meshVertexCount": 16,
+      "indexCount": 138,
+      "minHeight": 319.501901233062,
+      "maxHeight": 322.5054554278375,
+      "horizonPointFinite": true
+    }
+  ],
+  "bundledRows": [
+    {
+      "x": 468,
+      "y": 339,
+      "level": 10,
+      "availability": true,
+      "quantizedVertexCount": 289,
+      "meshVertexCount": 289,
+      "indexCount": 1716,
+      "minHeight": 120,
+      "maxHeight": 880,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 936,
+      "y": 679,
+      "level": 11,
+      "availability": false,
+      "quantizedVertexCount": 188,
+      "meshVertexCount": 188,
+      "indexCount": 1335,
+      "minHeight": 286.99728385265666,
+      "maxHeight": 394.9888607440413,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 1873,
+      "y": 1359,
+      "level": 12,
+      "availability": false,
+      "quantizedVertexCount": 75,
+      "meshVertexCount": 75,
+      "indexCount": 579,
+      "minHeight": 287.98930218342565,
+      "maxHeight": 390.1770774785174,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 3746,
+      "y": 2718,
+      "level": 13,
+      "availability": false,
+      "quantizedVertexCount": 35,
+      "meshVertexCount": 35,
+      "indexCount": 291,
+      "minHeight": 313.59017528962227,
+      "maxHeight": 347.80196763896066,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 7492,
+      "y": 5437,
+      "level": 14,
+      "availability": false,
+      "quantizedVertexCount": 19,
+      "meshVertexCount": 19,
+      "indexCount": 162,
+      "minHeight": 315.1052326121278,
+      "maxHeight": 345.3405530906623,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 14985,
+      "y": 10875,
+      "level": 15,
+      "availability": false,
+      "quantizedVertexCount": 13,
+      "meshVertexCount": 13,
+      "indexCount": 111,
+      "minHeight": 315.1052326121278,
+      "maxHeight": 327.09187153370317,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 29970,
+      "y": 21751,
+      "level": 16,
+      "availability": false,
+      "quantizedVertexCount": 15,
+      "meshVertexCount": 15,
+      "indexCount": 129,
+      "minHeight": 316.5121111312257,
+      "maxHeight": 322.5054554278375,
+      "horizonPointFinite": true
+    },
+    {
+      "x": 59940,
+      "y": 43502,
+      "level": 17,
+      "availability": false,
+      "quantizedVertexCount": 16,
+      "meshVertexCount": 16,
+      "indexCount": 138,
+      "minHeight": 319.501901233062,
+      "maxHeight": 322.5054554278375,
+      "horizonPointFinite": true
+    }
+  ],
+  "rowsMatch": true,
+  "scope": "Source and minified production worker handlers run as CPU functions with structuredClone inputs/outputs and a scoped TaskProcessor.scheduleTask seam. This does not exercise browser Worker transport, WebGL, or rendering."
+}

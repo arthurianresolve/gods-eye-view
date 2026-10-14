@@ -1,0 +1,263 @@
+{
+  "reviewedAt": "2026-10-13T04:50:54.021Z",
+  "candidateCommit": "ae4de36512da7222b6da60f8e5fb03a4eddc3ac6",
+  "runId": "38345739954",
+  "scope": "Actual successful test-name markers from both completed Node job logs, matched to the server test source at the tested commit; raw logs not stored",
+  "jobs": [
+    {
+      "name": "Node 24.14.0",
+      "jobId": "115126615063",
+      "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38345739954/job/115126615063",
+      "logBytes": 1073719,
+      "logSha256": "e7db5ee8b02a70a2dfa74adfa611bc4e409d410d5704d23ad7c8c052112130e6",
+      "suiteSummaries": [
+        "ℹ tests 7568",
+        "ℹ pass 7565",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 3",
+        "ℹ duration_ms 180478.275419",
+        "ℹ tests 1",
+        "ℹ pass 1",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 1709.960551",
+        "ℹ tests 13",
+        "ℹ pass 13",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 76022.08083"
+      ],
+      "inventory": [
+        {
+          "file": "server/providers/cctv-health.test.mjs",
+          "tests": [
+            {
+              "name": "CCTV health reasons distinguish transport, decode, fallback and placeholders",
+              "passObserved": true
+            },
+            {
+              "name": "CCTV health expires at the exact three-interval boundary",
+              "passObserved": true
+            },
+            {
+              "name": "unknown CCTV cadence uses five minutes and expires at its exact boundary",
+              "passObserved": true
+            }
+          ]
+        },
+        {
+          "file": "server/providers/transitHistory.test.mjs",
+          "tests": [
+            {
+              "name": "TTL ages reports and reads do not extend it; duplicate/conflicting times never append",
+              "passObserved": true
+            },
+            {
+              "name": "128-fix ring and bounded epoch contexts preserve breaks, never scene heights",
+              "passObserved": true
+            },
+            {
+              "name": "allocated key, metadata and chunk bytes obey feed/process ceilings across stores",
+              "passObserved": true
+            },
+            {
+              "name": "accelerated two-hour ingestion plateaus and expires idle keys",
+              "passObserved": true
+            },
+            {
+              "name": "retention is opt-in and entire decoded identifiers are bounded",
+              "passObserved": true
+            },
+            {
+              "name": "unref sweep is owned and clear closes the cache",
+              "passObserved": true
+            },
+            {
+              "name": "three identical-order 15000-vehicle snapshots retain paths within a bounded ingestion time",
+              "passObserved": true
+            },
+            {
+              "name": "snapshot capacity pressure preserves members not yet visited and discloses recreated history",
+              "passObserved": true
+            }
+          ]
+        },
+        {
+          "file": "server/providers/evidenceArchive.test.mjs",
+          "tests": [
+            {
+              "name": "proxy rejects cross-site calls before consuming or fetching",
+              "passObserved": true
+            },
+            {
+              "name": "proxy canonicalizes documented HTTP Wayback URLs and forbids redirects",
+              "passObserved": true
+            },
+            {
+              "name": "proxy distinguishes malformed responses and caps response bytes",
+              "passObserved": true
+            },
+            {
+              "name": "proxy deadline includes a stalled response body",
+              "passObserved": true
+            },
+            {
+              "name": "server coalesces separate browser clients into one provider call",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy returns a normalized closest capture",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy distinguishes unavailable and rejects unsafe input",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy labels rate limits and malformed provider responses",
+              "passObserved": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Node 26.x",
+      "jobId": "115126614706",
+      "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38345739954/job/115126614706",
+      "logBytes": 1075695,
+      "logSha256": "4ada5ab893b32d3314a813d30fb76ad2b42b0e0c9e1514e1b0cc6e0c832fab09",
+      "suiteSummaries": [
+        "ℹ tests 7568",
+        "ℹ pass 7565",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 3",
+        "ℹ duration_ms 187078.817691"
+      ],
+      "inventory": [
+        {
+          "file": "server/providers/cctv-health.test.mjs",
+          "tests": [
+            {
+              "name": "CCTV health reasons distinguish transport, decode, fallback and placeholders",
+              "passObserved": true
+            },
+            {
+              "name": "CCTV health expires at the exact three-interval boundary",
+              "passObserved": true
+            },
+            {
+              "name": "unknown CCTV cadence uses five minutes and expires at its exact boundary",
+              "passObserved": true
+            }
+          ]
+        },
+        {
+          "file": "server/providers/transitHistory.test.mjs",
+          "tests": [
+            {
+              "name": "TTL ages reports and reads do not extend it; duplicate/conflicting times never append",
+              "passObserved": true
+            },
+            {
+              "name": "128-fix ring and bounded epoch contexts preserve breaks, never scene heights",
+              "passObserved": true
+            },
+            {
+              "name": "allocated key, metadata and chunk bytes obey feed/process ceilings across stores",
+              "passObserved": true
+            },
+            {
+              "name": "accelerated two-hour ingestion plateaus and expires idle keys",
+              "passObserved": true
+            },
+            {
+              "name": "retention is opt-in and entire decoded identifiers are bounded",
+              "passObserved": true
+            },
+            {
+              "name": "unref sweep is owned and clear closes the cache",
+              "passObserved": true
+            },
+            {
+              "name": "three identical-order 15000-vehicle snapshots retain paths within a bounded ingestion time",
+              "passObserved": true
+            },
+            {
+              "name": "snapshot capacity pressure preserves members not yet visited and discloses recreated history",
+              "passObserved": true
+            }
+          ]
+        },
+        {
+          "file": "server/providers/evidenceArchive.test.mjs",
+          "tests": [
+            {
+              "name": "proxy rejects cross-site calls before consuming or fetching",
+              "passObserved": true
+            },
+            {
+              "name": "proxy canonicalizes documented HTTP Wayback URLs and forbids redirects",
+              "passObserved": true
+            },
+            {
+              "name": "proxy distinguishes malformed responses and caps response bytes",
+              "passObserved": true
+            },
+            {
+              "name": "proxy deadline includes a stalled response body",
+              "passObserved": true
+            },
+            {
+              "name": "server coalesces separate browser clients into one provider call",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy returns a normalized closest capture",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy distinguishes unavailable and rejects unsafe input",
+              "passObserved": true
+            },
+            {
+              "name": "archive proxy labels rate limits and malformed provider responses",
+              "passObserved": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "linuxPlatformSkips": [
+    "PowerShell skips command-line queries when the owned root is absent",
+    "PowerShell derives roles only from command lines for owned process IDs",
+    "Windows production hardener applies its exact DACL with native tools"
+  ],
+  "localWindowsSupplement": {
+    "runAt": "2026-10-13T04:53:44.558Z",
+    "sourceCommit": "14baa299f03db3eeb70ec60d87c357d09e4fac17",
+    "sourcesIdenticalToCandidate": [
+      "scripts/performance/profileRecoveryPageOwnership.test.mjs",
+      "scripts/performance/profileRecoveryPageOwnership.mjs"
+    ],
+    "platform": "win32",
+    "node": "v24.16.0",
+    "command": "node --test --test-name-pattern 'PowerShell (skips|derives)' scripts/performance/profileRecoveryPageOwnership.test.mjs",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Native PowerShell evaluation of generated ownership/filter/redaction scripts with test-provided CIM responses; not live browser shutdown or GPU evidence"
+  },
+  "hostedWindowsNativeDacl": {
+    "jobId": "115126614963",
+    "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38345739954/job/115126614963",
+    "passMarker": "✔ Windows production hardener applies its exact DACL with native tools (644.942ms)",
+    "logSha256": "88ac79c860dd991bec7c73346a7346ee817f478f4fc1773750b3358b66eb6039"
+  },
+  "allocationProbeScope": "Two GC-bracketed allocation files run separately on their calibrated Node 24 runtime (1 + 13 tests passed); Node 26 explicitly skips these calibrated probes, as defined by the existing runner."
+}

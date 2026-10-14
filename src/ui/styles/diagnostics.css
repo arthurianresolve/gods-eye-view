@@ -1,0 +1,67 @@
+.gev-diagnostics {
+  margin: 0.75rem 0;
+  border: 1px solid var(--panel-border, rgb(255 255 255 / 16%));
+  border-radius: 0.5rem;
+  background: var(--panel-surface, rgb(8 15 24 / 88%));
+  color: var(--panel-text, #e8f0f6);
+  font: 0.78rem/1.45 var(--font-mono, ui-monospace, monospace);
+}
+
+.gev-diagnostics > summary {
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.gev-diagnostics summary:focus-visible,
+.gev-diagnostics button:focus-visible,
+.gev-diagnostics input:focus-visible {
+  outline: 2px solid #5ce1e6;
+  outline-offset: 2px;
+}
+
+.gev-diagnostics-body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.75rem;
+}
+
+.gev-diagnostics p {
+  margin: 0;
+}
+
+.gev-diagnostics label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gev-diagnostics input,
+.gev-diagnostics button {
+  min-height: 2.25rem;
+  max-width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--panel-border, rgb(255 255 255 / 22%));
+  border-radius: 0.3rem;
+  background: rgb(10 20 30 / 95%);
+  color: inherit;
+  font: inherit;
+}
+
+.gev-diagnostics button {
+  cursor: pointer;
+}
+
+.gev-diagnostics button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.gev-diagnostics pre {
+  max-height: 24rem;
+  overflow: auto;
+  padding: 0.65rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

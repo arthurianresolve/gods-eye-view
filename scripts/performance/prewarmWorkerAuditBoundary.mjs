@@ -1,0 +1,72 @@
+export const PREWARM_WORKER_AUDIT_BOUNDARY =
+  'after-warmup-and-completed-render-before-measurement';
+
+/** Extract the provider fixture clock snapshot from the host boundary envelope. */
+export function readProviderWarmupBoundarySnapshot(boundaryObservation) {
+  const snapshot =
+    boundaryObservation?.page?.diagnostics?.beforeRenderRequestObservation ??
+    null;
+  if (
+    snapshot?.schema !== 'gev-phased-monotonic-wall-clock/v1' ||
+    snapshot.phase !== 'warmup-held' ||
+    !Number.isFinite(snapshot.elapsedMs) ||
+    !Number.isSafeInteger(snapshot.epochMs) ||
+    !Number.isSafeInteger(snapshot.runOrdinal) ||
+    snapshot.runOrdinal < 1
+  )
+    return null;
+  return structuredClone(snapshot);
+}
+
+/** Run the warmup/render boundary and only then validate prewarmed worker bodies. */
+export async function runWorkerAuditAtWarmupBoundary({
+  auditMode,
+  warmupMs,
+  readWarmupBoundary,
+  settleCompletedRender,
+  audit,
+}) {
+  if (!['diagnostic', 'prewarm', 'receipt-only'].includes(auditMode))
+    throw new Error('Worker audit mode is invalid.');
+  if (
+    typeof readWarmupBoundary !== 'function' ||
+    typeof settleCompletedRender !== 'function'
+  )
+    throw new Error('Worker audit boundary callbacks are required.');
+  const warmupBoundary = await readWarmupBoundary();
+  const completedRender = await settleCompletedRender(warmupBoundary);
+  if (auditMode === 'receipt-only')
+    return {
+      warmupBoundary,
+      completedRender,
+      receiptOnly: true,
+      timingBoundary: null,
+    };
+  if (auditMode !== 'prewarm')
+    return { warmupBoundary, completedRender, timingBoundary: null };
+  if (
+    !Number.isSafeInteger(warmupMs) ||
+    warmupMs < 0 ||
+    warmupBoundary?.phase !== 'warmup-held' ||
+    warmupBoundary.elapsedMs !== warmupMs ||
+    !Number.isFinite(completedRender?.settleElapsedMs) ||
+    completedRender.settleElapsedMs < 0
+  )
+    throw new Error(
+      'Prewarm worker audit requires the declared warmup and a completed boundary render.',
+    );
+  const result = await audit();
+  if (!result?.inventory || !result.documentAudit?.validation)
+    throw new Error('Provider sample has no validated prewarm worker set.');
+  return {
+    ...result,
+    warmupBoundary,
+    completedRender,
+    timingBoundary: {
+      phase: PREWARM_WORKER_AUDIT_BOUNDARY,
+      configuredWarmupMs: warmupMs,
+      fixtureClockElapsedMs: warmupBoundary.elapsedMs,
+      completedRenderSettleMs: completedRender.settleElapsedMs,
+    },
+  };
+}

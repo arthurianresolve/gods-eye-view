@@ -1,0 +1,202 @@
+{
+  "schema": "gev-s47-first-motion-cpu-profile-review/v1",
+  "sourceCommit": "73e6c72cc7e7acc6cbb957dd94a6a902e7e489f3",
+  "runId": 38210121293,
+  "rawArtifact": {
+    "byteLength": 92567,
+    "sha256": "2f0e62d2305b02d342aa34ec858da291079e7352f8315dd56bd9b87b367f1a53"
+  },
+  "independentValidation": "passed report integrity and failed-result assertions; not a capture pass",
+  "captureStatus": "failed",
+  "baselineStatus": "passed",
+  "profile": {
+    "targetScenario": "scripted-motion",
+    "targetRun": 1,
+    "coverage": "not reached",
+    "status": "unavailable",
+    "filesPresent": [
+      "performance-build-smoke.json"
+    ]
+  },
+  "fixture": {
+    "identity": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+    "observedFlights": 2500,
+    "populations": [
+      {
+        "checkpoint": "initial",
+        "layers": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        }
+      },
+      {
+        "checkpoint": "final-before-code-validation",
+        "layers": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        }
+      }
+    ]
+  },
+  "completedSamples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 5069.399999999994,
+      "renderedFrameCount": 2,
+      "frameIntervals": {
+        "p50": 4986,
+        "p95": 4986,
+        "max": 4986,
+        "samples": 1,
+        "reason": null
+      },
+      "totalObjects": 7578,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "foregroundThroughout": true,
+      "longTasks": {
+        "count": 1,
+        "maxMs": 84
+      }
+    }
+  ],
+  "failedSample": {
+    "scenario": "idle",
+    "run": 2,
+    "phase": "measurement-boundary-render-wait",
+    "warmupBoundary": {
+      "status": "settled",
+      "pageMs": 4409.400000000023
+    },
+    "measurement": {
+      "durationMs": 5359.700000000012,
+      "renderedFrameCount": 2,
+      "frameIntervals": {
+        "p50": 2826.7999999999884,
+        "p95": 2826.7999999999884,
+        "max": 2826.7999999999884,
+        "samples": 1,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 2272
+      },
+      "foregroundThroughout": true
+    },
+    "measurementBoundary": {
+      "schema": "gev-render-boundary-observation/v1",
+      "invocationId": "f97afb73-1357-4657-812d-407ce38dc369",
+      "label": "Measurement boundary",
+      "status": "host-observation-deadline",
+      "hostTimeoutMs": 6000,
+      "hostElapsedMs": 6298.319669999997,
+      "hostDispatchElapsedMs": 0.325475000005099,
+      "hostProgressBindingSetupElapsedMs": null,
+      "progressBindingOwnerId": "provider-sample-2:provider-document-2",
+      "progressBindingSetupElapsedMs": 5.201000999993994,
+      "pageEntryObserved": false,
+      "pageEntryHostReceiptElapsedMs": null,
+      "progressEvents": [],
+      "ignoredProgressEvents": {
+        "wrongInvocation": 0,
+        "malformed": 0,
+        "overflow": 0
+      },
+      "hostEvaluationOverheadResidualMs": null,
+      "page": null,
+      "pageError": {
+        "name": "TargetCloseError",
+        "message": "Protocol error (Runtime.callFunctionOn): Target closed"
+      },
+      "hostError": {
+        "name": "TimeoutError",
+        "message": "Measurement boundary: host observation deadline elapsed."
+      },
+      "pendingPageResultAtDeadline": true,
+      "latePageResultObserved": true,
+      "cleanup": {
+        "hostTimerCleared": true,
+        "progressBindingRemoved": null,
+        "progressInvocationReleased": true,
+        "progressBindingCleanupElapsedMs": 0.05012499999429565,
+        "progressInvocationReleaseElapsedMs": 0.05012499999429565
+      }
+    },
+    "progressBinding": {
+      "ownerId": "provider-sample-2:provider-document-2",
+      "status": "cleanup-failed",
+      "setupTimeoutMs": 5000,
+      "setupElapsedMs": 5.201000999993994,
+      "cleanup": {
+        "removed": false,
+        "elapsedMs": 250.07308600000397,
+        "error": {
+          "name": "TimeoutError",
+          "message": "Render boundary progress binding cleanup timed out."
+        }
+      },
+      "disposeReason": "capture-failed",
+      "ignoredCallbacks": {
+        "malformedInvocation": 0,
+        "unownedInvocation": 0
+      }
+    }
+  },
+  "errors": {
+    "page": [],
+    "interception": []
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "vendor": "Google Inc. (Google)",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    },
+    "focused": true,
+    "visible": true,
+    "totalObjects": 7578,
+    "appCommit": "73e6c72cc7e7acc6cbb957dd94a6a902e7e489f3"
+  },
+  "processCleanupReported": true,
+  "limitations": [
+    "Profiler target was never reached; no CPU function attribution was collected.",
+    "Progress binding cleanup timed out after 250 ms; wrapper-confirmed child cleanup does not convert it to a pass.",
+    "Late TargetCloseError occurs during timeout cleanup, not evidence of an independent browser crash.",
+    "Bounded failed-report projection remains truncated.",
+    "SwiftShader is software rendering and cannot establish physical Windows GPU acceptance.",
+    "No unchanged retry, deadline increase, or runtime optimization is justified by this run alone."
+  ]
+}

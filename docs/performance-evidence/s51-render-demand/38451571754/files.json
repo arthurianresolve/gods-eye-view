@@ -1,0 +1,67 @@
+[
+  {
+    "file": "artifacts.json",
+    "bytes": 946,
+    "sha256": "398a29db683337e2e8e9d18164b34b14fab29a0a46c17ccfa03af24a6978e3ad"
+  },
+  {
+    "file": "job.log.gz",
+    "bytes": 18104,
+    "sha256": "74ca8dcc2003f34b79def4acc86b085a8ab54a2f639df4e06cf991f3df7cbd69",
+    "rawBytes": 89870,
+    "rawSha256": "2c43c039c9de239cca7079f51a6167d682313de5f3331e04e92ea291866531d9"
+  },
+  {
+    "file": "mixed-use-render-demand.log.gz",
+    "bytes": 1543,
+    "sha256": "c7ea05df9ebe93ece002e2967cd748140361794b4c67ad2b0b3c4af1926329e2",
+    "rawBytes": 4802,
+    "rawSha256": "788c6841bbc007f1298b0013e8a4751c8919020ba87c5d759ccc33782112c7f7"
+  },
+  {
+    "file": "mixed-use-server.log.gz",
+    "bytes": 134,
+    "sha256": "2d70a2b750f0de586632d202e71571b871649c21730271e4d1b0b3f83fbb2686",
+    "rawBytes": 159,
+    "rawSha256": "640e7ca173f1ac59d5cd7a372d853871d6d291198c0e064466f9966836b4da7a"
+  },
+  {
+    "file": "mixed-use-smoke.json",
+    "bytes": 26209,
+    "sha256": "959073236b122684ff561fdc1337073149580256bf0440a6ef953943ecdb5a0e"
+  },
+  {
+    "file": "mixed-use-smoke.log.gz",
+    "bytes": 3574,
+    "sha256": "ad43aa1d9f36a1f818a49e8e530ccd7a762543d06de1a0b64156d7ed44953e61",
+    "rawBytes": 29139,
+    "rawSha256": "b6d854102adf96320761e45e7fa10724fb7f1acf9ba2f8544bc8f31ec076a141"
+  },
+  {
+    "file": "mixed-use-source-status.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "mixed-use-source.txt",
+    "bytes": 41,
+    "sha256": "6fd9f0c3768979d415fe09618d4a8bb95806d3618523539485677a6f2c7d98fb"
+  },
+  {
+    "file": "render-demand-failure.json",
+    "bytes": 3220,
+    "sha256": "34e1db75afb4ec18a1b6b44cbf45a9db50d6d65bcea1d0289622b3e29ef47fe2"
+  },
+  {
+    "file": "root-focused.log.gz",
+    "bytes": 5025,
+    "sha256": "977e5b91e5c436be1ece5d2c66d16053b72fde8d23fc212a4f14e69a20378fb1",
+    "rawBytes": 13255,
+    "rawSha256": "40f1499be186e6acf1a4a03b6ecadc6cdd53eca1c01071dcc21230f103f1328f"
+  },
+  {
+    "file": "run.json",
+    "bytes": 9411,
+    "sha256": "69e06568ab7bb92e6c4775fb675ca5638e8631625803968962ee044e32a2fd20"
+  }
+]

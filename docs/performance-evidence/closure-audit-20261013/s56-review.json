@@ -1,0 +1,44 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S56",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "d73f3c8988b5bdce0161ef28dcd106bc7db55937",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "tests": {
+    "command": "node --test src/voice/pointerCrop.test.mjs src/freshFrame.test.mjs src/voice/gevRealtime.test.mjs",
+    "passed": 199,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "0d2f67cff9d4fbb2944b388745869c13d3ba0a0818227693602381ecc8158f5b",
+    "negativeCommit": "e842103c",
+    "negativeFailed": 14,
+    "negativeLogSha256": "28ec61ccd0fd9bbc819fcb498e530565c564c40e477e872a3be351b86c972557"
+  },
+  "defaultDecision": {
+    "preserveDrawingBuffer": true,
+    "reason": "No qualifying full-application capture and benefit evidence supports disabling preservation; previous controlled hardware observations still had stalls with preservation disabled.",
+    "performanceClaim": false
+  },
+  "viewerDestroyCoverage": {
+    "fixture": "scripts/fixtures/capture-matrix-ui.js",
+    "check": "destroy-pending",
+    "latestContainingHostedRun": 38439815077,
+    "testedCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "scope": "Application viewer component; not full application matrix"
+  },
+  "sourceHashes": {
+    "src/freshFrame.js": "56e2fb400e0af904d585d6c8dbf8039278a5182ce3d5b15c3df01b05e88e18ca",
+    "src/voice/realtimeViewport.js": "c6e5bf9025bd7e8d5ba6024903419b260add7b40e4736ea06d3a9f8d727f47e6",
+    "src/app/viewer.js": "d54423936748a2a20c170b0b7d9ac2cacd79d3f617a49b5963261cb31b943911",
+    "src/freshFrame.test.mjs": "4360e077babe581bdf9ae928c228aaeb79a16606a43f865193ff2d0b05051283",
+    "src/voice/pointerCrop.test.mjs": "34d35dc3b30074d9544bd81018a11e6033338b2b002870f939452e51c074941e",
+    "scripts/fixtures/capture-matrix-ui.js": "9b2d2a609ee5ebd913f3b4cde8d8e8a3a0ff68a60e7bf6d8c181fe866f88631e"
+  },
+  "limitations": [
+    "Sampler surface retention is bounded transient allocation, not proof of an unbounded leak or hardware stall cause.",
+    "Full application idle/moving/portrait/resized/restored/hidden matrix and primary Windows qualification remain pending."
+  ]
+}

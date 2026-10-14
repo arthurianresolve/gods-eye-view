@@ -1,0 +1,165 @@
+{
+  "schema": "gev-import-geometry-load-profile/v1",
+  "status": "failed",
+  "mode": "cpu",
+  "arm": "whole-feature-timer",
+  "geometryType": "LineString",
+  "timestamp": "2026-10-11T20:18:24.121Z",
+  "performanceAcceptanceEligible": false,
+  "source": {
+    "applicationCommit": "15f0067280d355da31ae37d4ba57e935880fad80",
+    "harnessCommit": "15f0067280d355da31ae37d4ba57e935880fad80",
+    "sourceDirtyAtStart": false,
+    "harnessDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "harnessChangedDuringRun": false,
+    "hashes": {
+      "runtimeLayerSha256": "1e0a1f2010facb76760581f4f4ae1bbbad758e57f5b82dd9775305c7a1235fcd",
+      "cooperativeSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+      "fixtureSha256": "f22fc27cc1d4c4d8639d2d981739877ba0c5e4616f241100cd01265bc7d73300",
+      "fixtureHtmlSha256": "c214a9bcdad6f13ce9c75d9369eb5d328b8be526b2907788681ebd737e673873",
+      "viteEntryConfigSha256": "fda61ef04f9cbfdcef020a4c2d2c6c2d9f6fbbe8cde6e11bf291be603732edc7",
+      "viteConfigSha256": "280d30fac59f57a865ab19ef2f13f26802b121dc89cb704c602094794ff7cf62",
+      "runnerSha256": "7c7ecd37dc70175a614708348ec7ddcbfb5548d84ae12e776890c87249647b13",
+      "profileHelperSha256": "21cdfd86b91236d7694875c5b4b6cc54f6b43982a90c487562f76caf708c6f12",
+      "cpuHeapHelperSha256": "3dff95f351bbf3d86583805782379825ff9c8914c1ae83f0965890447d4672fc",
+      "traceHelperSha256": "ee910fba342c55c2ebdedae36fc19d1fc76510d8722d1af67f4ea8f6812406d4",
+      "traceSummarySha256": "93130e64738b8b94e810d0d671666c53a855f2d0b9fae064428b004fbe865ed7",
+      "sampledCpuProfileSha256": "297c054f6583c1047bb8e8cc5966e1f2dc7ca8a0ee12e47c622a5f4b4c81bb07",
+      "rendererEvidenceSha256": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "pageOwnershipSha256": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "sourceProvenanceSha256": "3736bf76178578ce5d3f6bff37c590609057a46f994f3120f9316f580bfed7c9",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "06965275ff39485bfdf76a10b60b7e245cb6e928225287bbd97c83c49e2d79af",
+      "cesiumSceneSha256": "df48862a64670bed7379acbd1401d47e8ab2015cfcd83ff33b4497acc6161f12"
+    },
+    "dirtyAtStart": false,
+    "hashesAtFinish": {
+      "runtimeLayerSha256": "1e0a1f2010facb76760581f4f4ae1bbbad758e57f5b82dd9775305c7a1235fcd",
+      "cooperativeSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+      "fixtureSha256": "f22fc27cc1d4c4d8639d2d981739877ba0c5e4616f241100cd01265bc7d73300",
+      "fixtureHtmlSha256": "c214a9bcdad6f13ce9c75d9369eb5d328b8be526b2907788681ebd737e673873",
+      "viteEntryConfigSha256": "fda61ef04f9cbfdcef020a4c2d2c6c2d9f6fbbe8cde6e11bf291be603732edc7",
+      "viteConfigSha256": "280d30fac59f57a865ab19ef2f13f26802b121dc89cb704c602094794ff7cf62",
+      "runnerSha256": "7c7ecd37dc70175a614708348ec7ddcbfb5548d84ae12e776890c87249647b13",
+      "profileHelperSha256": "21cdfd86b91236d7694875c5b4b6cc54f6b43982a90c487562f76caf708c6f12",
+      "cpuHeapHelperSha256": "3dff95f351bbf3d86583805782379825ff9c8914c1ae83f0965890447d4672fc",
+      "traceHelperSha256": "ee910fba342c55c2ebdedae36fc19d1fc76510d8722d1af67f4ea8f6812406d4",
+      "traceSummarySha256": "93130e64738b8b94e810d0d671666c53a855f2d0b9fae064428b004fbe865ed7",
+      "sampledCpuProfileSha256": "297c054f6583c1047bb8e8cc5966e1f2dc7ca8a0ee12e47c622a5f4b4c81bb07",
+      "rendererEvidenceSha256": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "pageOwnershipSha256": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "sourceProvenanceSha256": "3736bf76178578ce5d3f6bff37c590609057a46f994f3120f9316f580bfed7c9",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "06965275ff39485bfdf76a10b60b7e245cb6e928225287bbd97c83c49e2d79af",
+      "cesiumSceneSha256": "df48862a64670bed7379acbd1401d47e8ab2015cfcd83ff33b4497acc6161f12"
+    }
+  },
+  "fixture": {
+    "applicationCommit": null,
+    "harnessCommit": null,
+    "geometry": "s59-50k-line-polygon/v1",
+    "profileWindow": "actual-load-async-call-and-runtime-phase-observers",
+    "captureAfterProfileStop": true
+  },
+  "environment": null,
+  "profile": null,
+  "fixtureResult": {
+    "schema": "gev-import-geometry-load-profile/v1",
+    "status": "failed",
+    "applicationCommit": "15f0067280d355da31ae37d4ba57e935880fad80",
+    "harnessCommit": "15f0067280d355da31ae37d4ba57e935880fad80",
+    "arm": "whole-feature-timer",
+    "chunkSize": 0,
+    "fixture": "s59-50k-line-polygon/v1",
+    "phases": [],
+    "renderErrors": [],
+    "schedulerKind": "setTimeout",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "canvas": {
+        "cssWidth": 960,
+        "cssHeight": 640,
+        "drawingBufferWidth": 960,
+        "drawingBufferHeight": 640
+      },
+      "sceneMode": 3,
+      "renderLoop": true,
+      "requestRenderMode": false,
+      "globeShow": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "imageryLayerCount": 0,
+      "clockCurrentTime": "2025-01-01T00:00:00.000Z",
+      "clockShouldAnimate": false,
+      "cameraPosition": [
+        -686390.040485531,
+        -5590198.274425677,
+        3230373.7353836372
+      ],
+      "cameraDirection": [
+        0.1055386661162648,
+        0.8595434583972056,
+        -0.5000466309065296
+      ],
+      "drawingBufferWidth": 960,
+      "drawingBufferHeight": 640,
+      "msaa": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      }
+    },
+    "diagnosticMode": "geometry-load-profile",
+    "profileMode": "cpu",
+    "geometryType": "LineString",
+    "profileStatus": "aborted",
+    "profileStartedAtMs": 4012.100000000006,
+    "profileStoppedAtMs": null,
+    "samples": [],
+    "error": "Diagnostic did not capture.",
+    "stack": "Error: Diagnostic did not capture.\n    at check (http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:41:25)\n    at run (http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:792:5)\n    at async http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:818:3"
+  },
+  "pageErrors": [],
+  "error": "Invalid CPU profile: unknown sample or invalid weight",
+  "cleanupError": "Profiler or trace session cleanup failed.",
+  "profileCleanupError": "Import load profile already stopped",
+  "pageCleanup": {
+    "closeCompleted": true,
+    "openPageCount": 0
+  },
+  "browserCleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 13818.426042,
+      "closeSettledHostMs": 14008.323042,
+      "closeElapsedMs": 189.89700000000084,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 173.40166600000157
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "serverCleanup": {
+    "confirmed": true,
+    "reason": "exit-observed"
+  }
+}

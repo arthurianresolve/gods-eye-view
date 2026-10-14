@@ -1,0 +1,91 @@
+{
+  "schema": "gev-cctv-exact-pose-review/v1",
+  "reviewedAt": "2026-10-12T11:05:16.816Z",
+  "baselineCommit": "48329a9f33ce0e2d8586da90540f7e2331434b8f",
+  "candidateCommit": "61c050caf84415dafd844e5524f1a91d09ef1a70",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.16.0"
+  },
+  "negativeControl": {
+    "command": "node --test src/layers/cctv/geometryReuse.test.mjs src/layers/cctv/groundRevision.test.mjs",
+    "runtime": "unchanged baseline; only the two candidate test files copied",
+    "exitCode": 1,
+    "total": 25,
+    "passed": 19,
+    "failed": 6,
+    "tests": [
+      {
+        "file": "src/layers/cctv/geometryReuse.test.mjs",
+        "sha256": "f55fdc2bd2824262afad50cbbca187a8b1d1487b601cadeb70da659187bcd790"
+      },
+      {
+        "file": "src/layers/cctv/groundRevision.test.mjs",
+        "sha256": "5d24c9fa7ba0090dd1b941e8a5ff44575b3897b63e1067e8b8bdf4848c13d64e"
+      }
+    ]
+  },
+  "candidate": {
+    "command": "node --test src/layers/cctv/geometryQueue.test.mjs src/layers/cctv/geometryReuse.test.mjs src/layers/cctv/groundRevision.test.mjs src/layers/cctv/calibrationRenderDemand.test.mjs src/layers/cctv/source.test.mjs src/data/cctvFootprint.test.mjs src/data/cctvGroundHeights.test.mjs src/data/cctvViewshed.test.mjs scripts/performance/cctvLifecycle.test.mjs",
+    "exitCode": 0,
+    "total": 83,
+    "passed": 83,
+    "failed": 0
+  },
+  "format": {
+    "command": "node scripts/format.mjs --check",
+    "files": 1563,
+    "status": "passed",
+    "finalTestAssertionFollowup": "Direct Prettier check passed after correcting geometry spy assertion; all 83 tests rerun."
+  },
+  "boundaries": {
+    "command": "npm run check:boundaries",
+    "status": "passed",
+    "modules": 1009,
+    "portableEntries": 80
+  },
+  "artifacts": [
+    {
+      "file": "old-runtime-tests.txt",
+      "byteLength": 16586,
+      "sha256": "f9550523cbf96046c59d1dbd7e7b5f3fccd90d22d1edc876420281ad78f5677c"
+    },
+    {
+      "file": "candidate-focused-tests.txt",
+      "byteLength": 16284,
+      "sha256": "9121939970f11ee31965b584a38531b30ac1005e78fa209cc5d80d7255870ac8"
+    },
+    {
+      "file": "cctv-lifecycle.json",
+      "byteLength": 252591,
+      "sha256": "590d0cb0270273a5b6d731dd7aeaec9c0859642be114ee9b8cf992a004cefa5c"
+    },
+    {
+      "file": "native-calibration.json",
+      "byteLength": 424234,
+      "sha256": "23542cc0da18da634eef32a73d2f6b01e143fd03d2ba3e6196c9c364bb24aacf"
+    }
+  ],
+  "hostedRuns": [
+    {
+      "runId": "38240312988",
+      "kind": "cctv-lifecycle",
+      "status": "passed",
+      "independentValidation": "passed"
+    },
+    {
+      "runId": "38240316095",
+      "kind": "native-calibration",
+      "status": "passed",
+      "independentValidation": "passed"
+    }
+  ],
+  "scope": "Runtime terrain ownership correction. No hardware performance, full S50 or final-candidate acceptance claim.",
+  "standardIntegration": {
+    "status": "passed",
+    "commit": "40b9f5c91355ccc37f7c2ca664f92893be4ccdb2",
+    "runId": "38240973936",
+    "passedJobs": 7,
+    "artifact": "standard-ci-dev-38240973936.json"
+  }
+}

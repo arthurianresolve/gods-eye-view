@@ -1,0 +1,35 @@
+✔ capture CLI recognizes an infrastructure workload before browser startup (324.3489ms)
+✔ capture CLI rejects unsupported infrastructure names and mixed populations (680.0906ms)
+✔ invalid infrastructure CLI requests reject before importing Cesium (2893.4432ms)
+✔ first-motion profiling rejects unsupported workload before browser startup (672.9319ms)
+✔ shader program attribution is opt-in only for the dense capture fixture (667.229ms)
+✔ capture no-undef config accepts standard Node and browser globals (96.2531ms)
+✔ capture no-undef config rejects an undeclared project identifier (5.9109ms)
+✔ capture no-undef config does not allow inline suppression (5.551ms)
+✔ Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence (1320.645ms)
+✔ Austin rendering contract matches observed viewer defaults and labels changed AA settings (715.5343ms)
+✔ Austin capture setting copies stay bound to the native visual observations (662.456ms)
+✔ Austin measurement contract consumes the settled render-boundary producer result (612.7441ms)
+✔ Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity (619.5988ms)
+✔ Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog (3822.5112ms)
+✔ paired Austin ingestion recomputes cleanup from producer-shaped drain records (4758.4362ms)
+✔ paired Austin validation recomputes raw satellite rows against the pinned TLEs (1595.3988ms)
+✔ paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged (1672.1316ms)
+✔ capture provenance binds full application and harness SHAs to the receipt (2.2932ms)
+✔ capture provenance rejects wrong SHAs and changes between the two served checks (1.8729ms)
+✔ capture provenance rejects a different served root or harness checkout (1.4619ms)
+✔ registered infrastructure workloads bind exact bundled bytes and populations (56.823ms)
+✔ fixed fixture clock uses Cesium JulianDate UTC-to-TAI conversion (4.8796ms)
+✔ fixture rejects unknown workloads and noncanonical timestamps (0.4768ms)
+✔ receipt asset routing resolves hashed build names and rejects ambiguity (13.1651ms)
+✔ delivery observer binds matching served responses and before/after populations (19.3649ms)
+✔ delivery observer fails for missing, changed, failed, or count-drifted observations (8.4914ms)
+✔ fixed Cesium clock observation rejects animate or epoch drift (26.5889ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25776.2983

@@ -1,0 +1,296 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38190313885",
+  "commit": "392d2ebc1ab454476a55f0c656b07c080e9a713a",
+  "harnessCommit": "392d2ebc1ab454476a55f0c656b07c080e9a713a",
+  "rawSha256": "cd1bda56d3e4446da8511e80ba8e99c67688333f14d82659a45a36afb9d91fcc",
+  "status": "failed",
+  "stage": "map-stack-terrain-restore",
+  "completedSamples": 0,
+  "observationCount": 232,
+  "observationsRetained": 8,
+  "buildStates": [
+    {
+      "phase": "first-post-render",
+      "frame": {
+        "available": true,
+        "value": 641
+      },
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 1,
+              "name": "CREATING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 25,
+      "frame": 642,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 1,
+              "name": "CREATING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 9548.400000000023,
+      "frame": 867,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 3,
+              "name": "COMBINING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 9614.700000000012,
+      "frame": 868,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 3,
+              "name": "COMBINING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 9663.700000000012,
+      "frame": 869,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 3,
+              "name": "COMBINING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 9680.100000000035,
+      "frame": 870,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 3,
+              "name": "COMBINING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 9746.5,
+      "frame": 871,
+      "stableFrames": 0,
+      "ready": false,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false,
+          "buildState": {
+            "schema": "gev-cesium-ground-polyline-build-state/v1",
+            "status": "observed",
+            "cesiumVersion": "1.138.0",
+            "primitivePresent": true,
+            "primitiveReady": false,
+            "primitiveShow": false,
+            "asynchronous": true,
+            "innerAsynchronous": true,
+            "state": {
+              "value": 3,
+              "name": "COMBINING"
+            },
+            "instanceCount": 1913,
+            "createGeometryResultsCount": null,
+            "geometriesCount": 0,
+            "vertexArraysCount": 0,
+            "error": null,
+            "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+          }
+        }
+      ]
+    },
+    {
+      "elapsedMs": 12204.5,
+      "frame": 872,
+      "stableFrames": 0,
+      "ready": true,
+      "owners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": true,
+          "show": false
+        }
+      ]
+    }
+  ],
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 71095.348583,
+      "closeSettledHostMs": 71907.686708,
+      "closeElapsedMs": 812.3381249999948,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 752.4992090000014
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "limitations": [
+    "No camera-change samples; final-pose fix is unit validated only.",
+    "Readiness after the deadline cannot retroactively pass the failed wait.",
+    "This run demonstrates asynchronous build progress and late completion, not a permanently abandoned worker.",
+    "Hosted Apple paravirtual Metal, not physical Windows acceptance."
+  ]
+}

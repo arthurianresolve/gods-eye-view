@@ -1,0 +1,67 @@
+{
+  "schema": "gev-austin-report-contract-review/v1",
+  "checkedAt": "2026-10-13T01:09:06.000Z",
+  "candidate": "5368d54aac2fe01c8fd472615af9bc8bd4c4612d",
+  "rawSha256": "b9762d40eb00428077677758269e06d37ebb2b7d2a61214698715eec012bcbc6",
+  "rawByteLength": 3676508,
+  "canonicalFixture": "exact-match",
+  "observedComparisonContract": "exact-match",
+  "readinessHistory": "passed",
+  "sampledEpochs": "passed",
+  "renderer": "verified-hosted-apple-paravirtual-metal",
+  "comparisonAcceptance": false,
+  "childCapture": "completed-four-samples",
+  "outerValidation": "failed",
+  "failure": {
+    "name": "AssertionError",
+    "message": "Expected values to be strictly equal:\n\n5 !== 1\n",
+    "stack": [
+      "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+      "",
+      "5 !== 1",
+      "",
+      "    at assertWeatherCaptureCleanupEvidence (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:2118:10)"
+    ]
+  },
+  "retirements": [
+    {
+      "phase": "startup-final-details",
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "confirmed": true
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1",
+      "scenario": "idle",
+      "run": 1,
+      "confirmed": true
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "documentRole": "provider-sample-2",
+      "documentId": "provider-document-2",
+      "scenario": "idle",
+      "run": 2,
+      "confirmed": true
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "documentRole": "provider-sample-3",
+      "documentId": "provider-document-3",
+      "scenario": "scripted-motion",
+      "run": 1,
+      "confirmed": true
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "documentRole": "provider-sample-4",
+      "documentId": "provider-document-4",
+      "scenario": "scripted-motion",
+      "run": 2,
+      "confirmed": true
+    }
+  ],
+  "limitation": "Current raw report remains failed. Export-only load hook exposed the existing private cleanup validator for exact failure replay; source and report bytes were not edited."
+}

@@ -1,0 +1,136 @@
+{
+  "schema": "gev-austin-baseline-observer-api-review/v1",
+  "checkedAt": "2026-10-12T20:31:44.207Z",
+  "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateAncestor": "cd44d1df2bdcbb0e9ed401c4f813ea2a5709b998",
+  "scope": "Static declaration inventory and source diff review for APIs used by the Austin capture observer. No built-application, browser or performance validation.",
+  "observations": [
+    {
+      "path": "src/layers/satellites/controls.js",
+      "baselineGitBlob": "f4910f7546c8a63d823e92bde99396446a05429b",
+      "candidateGitBlob": "210988742ec6d816b2e88eba4f383f55edf2f3d5",
+      "baselineContentSha256": "ee5d6aa568a5d804a2289fda9cacc83a7f5c691ff1ec4888798df94a4eba6d1e",
+      "candidateContentSha256": "87ba258bf943d4abff7bf849e260471dc421234b653cc9e414997f439efe7717",
+      "methods": [
+        {
+          "name": "getAllPositions",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": "diff --git a/src/layers/satellites/controls.js b/src/layers/satellites/controls.js\nindex f4910f75..21098874 100644\n--- a/src/layers/satellites/controls.js\n+++ b/src/layers/satellites/controls.js\n@@ -452,6 +452,7 @@ export function createControls({ state: layerState, services, parts, source }) {\n           parts.tracking._applyPendingTrackingRestore();\n         }\n       }\n+      parts.lifecycle?.methods?.syncRenderDemand?.();\n       return true;\n     },"
+    },
+    {
+      "path": "src/layers/cctv/controls.js",
+      "baselineGitBlob": "63ecea69bc48e209d53421e8909fe2a08d586557",
+      "candidateGitBlob": "37038daf9f42d8e8db0bae12e704eacf5236710e",
+      "baselineContentSha256": "0989223e9a3e60852b08d008d2a235274c8227c9a8473fac5077b6a10254f285",
+      "candidateContentSha256": "21448b86579302b328cf740c7f1076bdeede412a1f995ac29c90bceebacabec2",
+      "methods": [
+        {
+          "name": "getDetectableObjects",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": "diff --git a/src/layers/cctv/controls.js b/src/layers/cctv/controls.js\nindex 63ecea69..37038daf 100644\n--- a/src/layers/cctv/controls.js\n+++ b/src/layers/cctv/controls.js\n@@ -7,7 +7,7 @@ import {\n } from './policy.js';\n \n export function createControls({ state: layerState, services, parts, source }) {\n-  const { holdContinuousRender, releaseContinuousRender } = services.render;\n+  const requestRender = services.render?.governorRequestRender || (() => {});\n   const { CCTV_ACTIVATION_RESULT } = services.activation;\n \n   const methods = {\n@@ -106,6 +106,7 @@ export function createControls({ state: layerState, services, parts, source }) {\n             parts.ground.resolveCommittedGroundAnchor(targetRecord);\n             void parts.ground.resolveFootprintGround(targetRecord);\n             parts.frames.refreshProjectionImage(targetRecord, true);\n+            requestRender('cctv-calibration-reset');\n           }\n           if (\n             calibrationCfg.patch &&\n@@ -151,12 +152,10 @@ export function createControls({ state: layerState, services, parts, source }) {\n         if (layerState._calibrationMode) {\n           parts.calibration.ensureGizmo();\n           layerState._gizmo?.setEnabled(true);\n-          // ADJUST mode: gizmo drags mutate entity geometry from pointer events,\n-          // which don't trigger renders in requestRenderMode. (perf wave 2)\n-          holdContinuousRender('cctv-adjust');\n+          requestRender('cctv-adjust-enabled');\n         } else {\n-          releaseContinuousRender('cctv-adjust');\n           layerState._gizmo?.setEnabled(false);\n+          requestRender('cctv-adjust-disabled');\n         }\n       }\n       if (params.focusSelected && layerState._activeCameraId) {\n@@ -250,6 +249,48 @@ export function createControls({ state: layerState, services, parts, source }) {\n       };\n     },\n \n+    /** Bounded ownership counts consumed only by local performance snapshots. */\n+    getPerformanceDiagnostics() {\n+      let viewshedPrimitives = 0;\n+      let sceneEntities = 0;\n+      for (const record of layerState._records) {\n+        viewshedPrimitives += Number(Boolean(record.viewshedPrimitive));\n+        sceneEntities +=\n+          (record.coverageEntities?.length || 0) +\n+          Number(Boolean(record.projection?.planeEntity));\n+      }\n+      return {\n+        listeners:\n+          Number(Boolean(layerState._clickHandler)) +\n+          Number(Boolean(layerState._mapStackListener)) +\n+          Number(Boolean(layerState._horizonCullListener)) +\n+          Number(Boolean(layerState._moveStartListener)) +\n+          Number(Boolean(layerState._removeFocusAppearListener)) +\n+          (layerState._listeners?.size || 0),\n+        timers:\n+          Number(Boolean(layerState._geoQueueTimer)) +\n+          Number(Boolean(layerState._projectionRaf)) +\n+          Number(Boolean(layerState._cardFetchTimer)) +\n+          Number(Boolean(layerState._hoverReleaseTimer)),\n+        pendingJobs:\n+          Math.max(\n+            0,\n+            layerState._geoQueue.length -\n+              (layerState._geoQueueCursor?.index || 0),\n+          ) +\n+          (layerState._cardFetchInFlightCount || 0) +\n+          (layerState._cardFetchPendingIds?.size || 0),\n+        primitives:\n+          Number(Boolean(layerState._billboards)) + viewshedPrimitives,\n+        dataSources: sceneEntities,\n+        cacheEntries:\n+          (layerState._cardFrameSlots?.size || 0) +\n+          (layerState._healthById?.size || 0) +\n+          (layerState._clientHealthById?.size || 0) +\n+          (layerState._calibrationById?.size || 0),\n+      };\n+    },\n+\n     /**\n      * Registers a callback that receives the full UI state on every change.\n      * The callback is invoked immediately with the current state."
+    },
+    {
+      "path": "src/layers/alpr/index.js",
+      "baselineGitBlob": "072fcf47affce00d3013b52b8a6db97969a612a7",
+      "candidateGitBlob": "072fcf47affce00d3013b52b8a6db97969a612a7",
+      "baselineContentSha256": "d87af996274cf550365485e0cec4e5f92a8942e3c0af79cb594d2325597df987",
+      "candidateContentSha256": "d87af996274cf550365485e0cec4e5f92a8942e3c0af79cb594d2325597df987",
+      "methods": [
+        {
+          "name": "getAnalystRecords",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": ""
+    },
+    {
+      "path": "src/layers/installations/controls.js",
+      "baselineGitBlob": "db891043c20d6324c6990564ce7432c44c35ff8b",
+      "candidateGitBlob": "db891043c20d6324c6990564ce7432c44c35ff8b",
+      "baselineContentSha256": "a68021d82df0df9d685264a2e780cc063183a489aefc106fea4258a008b84090",
+      "candidateContentSha256": "a68021d82df0df9d685264a2e780cc063183a489aefc106fea4258a008b84090",
+      "methods": [
+        {
+          "name": "getAnalystRecords",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": ""
+    },
+    {
+      "path": "src/layers/radio/controls.js",
+      "baselineGitBlob": "6313ccf4dcd866cf645741686da92a752105cd05",
+      "candidateGitBlob": "6313ccf4dcd866cf645741686da92a752105cd05",
+      "baselineContentSha256": "0a50fb06df71b760a20f5f3c685450e8daa907802b524702c218ac5d2b86a05f",
+      "candidateContentSha256": "0a50fb06df71b760a20f5f3c685450e8daa907802b524702c218ac5d2b86a05f",
+      "methods": [
+        {
+          "name": "getAcceptedCatalogSnapshot",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": ""
+    },
+    {
+      "path": "src/layers/wind/index.js",
+      "baselineGitBlob": "17e7b08555bb63235d3a020131fe23c023d464cc",
+      "candidateGitBlob": "17e7b08555bb63235d3a020131fe23c023d464cc",
+      "baselineContentSha256": "c0b65fb34433981085f3c3f7682283f8d9b05e9b2ae8862a8058e901aeaebd76",
+      "candidateContentSha256": "c0b65fb34433981085f3c3f7682283f8d9b05e9b2ae8862a8058e901aeaebd76",
+      "methods": [
+        {
+          "name": "getParams",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getStats",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        },
+        {
+          "name": "getDiagnostics",
+          "baselineDeclarationPresent": true,
+          "candidateDeclarationPresent": true
+        }
+      ],
+      "diff": ""
+    }
+  ],
+  "review": "The four complete ALPR/installations/radio/wind modules are identical. Satellite and CCTV changes are outside the observed getters. The required native observer methods remain available on both revisions.",
+  "limitation": "Build identity, runtime exports, startup and full workload delivery still require the production-build smoke gate."
+}

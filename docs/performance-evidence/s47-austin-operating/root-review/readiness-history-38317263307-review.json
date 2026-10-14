@@ -1,0 +1,358 @@
+{
+  "schema": "gev-austin-readiness-history-review/v1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38317263307",
+  "candidateCommit": "fe0f66c38c9f394d8282f157d63d81846ab9c4d9",
+  "raw": {
+    "file": "hosted-smoke-38317263307-cli-failed.json",
+    "bytes": 106071,
+    "sha256": "9625bfc4fb00c3c8899abbf467ac5a092bb4277dfb3dc4672ede0caad437ff21"
+  },
+  "failure": {
+    "phase": "configure-austin-operating-sample-document",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Waiting failed: 60000ms exceeded",
+    "operator": null
+  },
+  "completedSampleCount": 0,
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "history": {
+    "entryLimit": 16,
+    "sampleCount": 16,
+    "omittedCount": 9,
+    "documents": [
+      {
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document",
+        "phase": "source-readiness-wait",
+        "status": "stalled",
+        "stopReason": "stalled",
+        "intervalMs": 1000,
+        "omittedCount": 4,
+        "session": {
+          "creationStatus": "created",
+          "detachStatus": "confirmed",
+          "disconnectListenerRemoval": "confirmed",
+          "lateAttachCleanupStatus": "not-applicable"
+        }
+      },
+      {
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1",
+        "phase": "source-readiness-wait",
+        "status": "stalled",
+        "stopReason": "stalled",
+        "intervalMs": 1000,
+        "omittedCount": 0,
+        "session": {
+          "creationStatus": "created",
+          "detachStatus": "confirmed",
+          "disconnectListenerRemoval": "confirmed",
+          "lateAttachCleanupStatus": "not-applicable"
+        }
+      }
+    ]
+  },
+  "samples": [
+    {
+      "documentRole": "main-setup",
+      "sequence": 10,
+      "status": "observed",
+      "hostStartedAtMs": 44744.437036,
+      "commandElapsedMs": 399.2649309999979,
+      "cctv": {
+        "loaded": 48,
+        "total": 250,
+        "pendingJobs": 202
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 11,
+      "status": "observed",
+      "hostStartedAtMs": 45745.430361,
+      "commandElapsedMs": 637.2599259999988,
+      "cctv": {
+        "loaded": 48,
+        "total": 250,
+        "pendingJobs": 202
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 12,
+      "status": "observed",
+      "hostStartedAtMs": 46746.510049,
+      "commandElapsedMs": 525.4845490000007,
+      "cctv": {
+        "loaded": 52,
+        "total": 250,
+        "pendingJobs": 198
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 13,
+      "status": "observed",
+      "hostStartedAtMs": 47748.56839,
+      "commandElapsedMs": 7.0791590000008,
+      "cctv": {
+        "loaded": 64,
+        "total": 250,
+        "pendingJobs": 186
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 14,
+      "status": "observed",
+      "hostStartedAtMs": 48748.680141,
+      "commandElapsedMs": 1.2574970000059693,
+      "cctv": {
+        "loaded": 100,
+        "total": 250,
+        "pendingJobs": 150
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 15,
+      "status": "observed",
+      "hostStartedAtMs": 49749.759791,
+      "commandElapsedMs": 946.4205160000056,
+      "cctv": {
+        "loaded": 108,
+        "total": 250,
+        "pendingJobs": 142
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 16,
+      "status": "observed",
+      "hostStartedAtMs": 50750.423812,
+      "commandElapsedMs": 749.7527209999971,
+      "cctv": {
+        "loaded": 112,
+        "total": 250,
+        "pendingJobs": 138
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 17,
+      "status": "observed",
+      "hostStartedAtMs": 51752.426485,
+      "commandElapsedMs": 462.15026399999624,
+      "cctv": {
+        "loaded": 112,
+        "total": 250,
+        "pendingJobs": 138
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 18,
+      "status": "observed",
+      "hostStartedAtMs": 52753.22163,
+      "commandElapsedMs": 151.63562500000262,
+      "cctv": {
+        "loaded": 116,
+        "total": 250,
+        "pendingJobs": 134
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 19,
+      "status": "observed",
+      "hostStartedAtMs": 53753.056019,
+      "commandElapsedMs": 582.7239219999974,
+      "cctv": {
+        "loaded": 120,
+        "total": 250,
+        "pendingJobs": 130
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "sequence": 20,
+      "status": "command-timeout",
+      "hostStartedAtMs": 54754.023902,
+      "commandElapsedMs": 1501.607836999996,
+      "cctv": null
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "sequence": 1,
+      "status": "observed",
+      "hostStartedAtMs": 93101.822367,
+      "commandElapsedMs": 1376.7266789999994,
+      "cctv": {
+        "loaded": 20,
+        "total": 250,
+        "pendingJobs": 230
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "sequence": 2,
+      "status": "observed",
+      "hostStartedAtMs": 95102.136022,
+      "commandElapsedMs": 1444.482548,
+      "cctv": {
+        "loaded": 24,
+        "total": 250,
+        "pendingJobs": 226
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "sequence": 3,
+      "status": "observed",
+      "hostStartedAtMs": 97105.132932,
+      "commandElapsedMs": 430.64823700000125,
+      "cctv": {
+        "loaded": 24,
+        "total": 250,
+        "pendingJobs": 226
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "sequence": 4,
+      "status": "observed",
+      "hostStartedAtMs": 98106.258996,
+      "commandElapsedMs": 549.7224480000004,
+      "cctv": {
+        "loaded": 28,
+        "total": 250,
+        "pendingJobs": 222
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "sequence": 5,
+      "status": "command-timeout",
+      "hostStartedAtMs": 99106.438637,
+      "commandElapsedMs": 1500.4529360000015,
+      "cctv": null
+    }
+  ],
+  "terminalSnapshot": {
+    "phase": "source-readiness-wait",
+    "documentRole": "provider-sample-1",
+    "documentId": "provider-document-1",
+    "status": "completed",
+    "snapshot": {
+      "schema": "gev-austin-readiness-failure/v1",
+      "selectedLayerCount": 6,
+      "layers": [
+        {
+          "id": "satellites",
+          "enabled": true,
+          "count": 828,
+          "loading": null,
+          "loadingLoaded": null,
+          "loadingTotal": null,
+          "ownership": null,
+          "status": "nominal",
+          "error": null
+        },
+        {
+          "id": "cctv",
+          "enabled": true,
+          "count": 250,
+          "loading": true,
+          "loadingLoaded": 144,
+          "loadingTotal": 250,
+          "ownership": {
+            "timers": 3,
+            "pendingJobs": 106,
+            "primitives": 1,
+            "dataSources": 71
+          },
+          "status": null,
+          "error": null
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": true,
+          "count": 776,
+          "loading": false,
+          "loadingLoaded": null,
+          "loadingTotal": null,
+          "ownership": null,
+          "status": "ready",
+          "error": null
+        },
+        {
+          "id": "military-installations",
+          "enabled": true,
+          "count": 357,
+          "loading": false,
+          "loadingLoaded": null,
+          "loadingTotal": null,
+          "ownership": null,
+          "status": "ready",
+          "error": null
+        },
+        {
+          "id": "radio",
+          "enabled": true,
+          "count": 750,
+          "loading": false,
+          "loadingLoaded": null,
+          "loadingTotal": null,
+          "ownership": null,
+          "status": null,
+          "error": null
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160,
+          "loading": false,
+          "loadingLoaded": null,
+          "loadingTotal": null,
+          "ownership": null,
+          "status": null,
+          "error": null
+        }
+      ]
+    }
+  },
+  "documentCleanupReview": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      },
+      "storedAgrees": true
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      },
+      "storedAgrees": true
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      },
+      "storedAgrees": true
+    }
+  ],
+  "interpretation": "The first provider-sample CCTV queue progressed from 20 to 28 observed builds before diagnostic sampling stalled, then reached 144/250 in the post-failure snapshot. This does not identify the execution bottleneck or prove deadlock. The failed capture has no completed performance samples."
+}

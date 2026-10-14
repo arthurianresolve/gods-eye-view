@@ -1,0 +1,177 @@
+{
+  "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "sourceTree": "09e2c88edab51d73fd3e5a2e957a85f444052c13",
+  "runs": [
+    {
+      "run": 38505961701,
+      "base": "dev",
+      "workflow": "CI",
+      "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115663415943,
+          "name": "Street Level browser gate",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416112,
+          "name": "Node 26.x",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416201,
+          "name": "Install and update recovery (macos-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416290,
+          "name": "Install and update recovery (ubuntu-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416292,
+          "name": "Windows onboarding",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416364,
+          "name": "Node 24.14.0",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663416379,
+          "name": "Install and update recovery (windows-latest)",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [],
+      "testedMergeCommit": "d02eef0b9414be89aab4994e218a9eedb60b53af",
+      "baseCommit": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+      "treeEqualsSource": true
+    },
+    {
+      "run": 38505965518,
+      "base": "main",
+      "workflow": "CI",
+      "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115663428105,
+          "name": "Windows onboarding",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428236,
+          "name": "Node 24.14.0",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428300,
+          "name": "Node 26.x",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428316,
+          "name": "Install and update recovery (ubuntu-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428380,
+          "name": "Install and update recovery (windows-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428464,
+          "name": "Install and update recovery (macos-latest)",
+          "conclusion": "success"
+        },
+        {
+          "id": 115663428568,
+          "name": "Street Level browser gate",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [],
+      "testedMergeCommit": "c1378b0eb7f41688947e3b5781f182252b374800",
+      "baseCommit": "9beadbda6333b83f79aa03047e2d851830f01f6b",
+      "treeEqualsSource": true
+    },
+    {
+      "run": 38505961793,
+      "base": "dev",
+      "workflow": "release",
+      "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115663415449,
+          "name": "Build and verify release artifact",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 11868435010,
+          "name": "gev-candidate-d02eef0b9414be89aab4994e218a9eedb60b53af",
+          "bytes": 19864495,
+          "digest": "sha256:597f6b040ae23c7d372e02ddb7e09548537c17b62b3d614109f0167720eb8af8"
+        },
+        {
+          "id": 11867854722,
+          "name": "gev-release-evidence-d02eef0b9414be89aab4994e218a9eedb60b53af",
+          "bytes": 787,
+          "digest": "sha256:a72a3f99a6ffbd44969ba81650d1be0aeac76b6ed3096a50d79acc4a775fb8a9"
+        }
+      ],
+      "testedMergeCommit": "d02eef0b9414be89aab4994e218a9eedb60b53af",
+      "baseCommit": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+      "treeEqualsSource": true,
+      "attestationStdoutBytes": 0,
+      "attestationProof": "Completed release job and raw bash-e verification log, not empty stdout.",
+      "downloadedEvidenceZipVerified": true
+    },
+    {
+      "run": 38505965510,
+      "base": "main",
+      "workflow": "release",
+      "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 115663427510,
+          "name": "Build and verify release artifact",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 11868091705,
+          "name": "gev-release-evidence-c1378b0eb7f41688947e3b5781f182252b374800",
+          "bytes": 787,
+          "digest": "sha256:5ee7ffab79b3b5b60dcc54428f92c3eac4cc3519d84b8dcbbe5f503b55094b90"
+        },
+        {
+          "id": 11867996985,
+          "name": "gev-candidate-c1378b0eb7f41688947e3b5781f182252b374800",
+          "bytes": 19863668,
+          "digest": "sha256:16b83b5a858259d3effa52ad97e9e093a6bf8fecafba52ce444b051bd0e00497"
+        }
+      ],
+      "testedMergeCommit": "c1378b0eb7f41688947e3b5781f182252b374800",
+      "baseCommit": "9beadbda6333b83f79aa03047e2d851830f01f6b",
+      "treeEqualsSource": true,
+      "attestationStdoutBytes": 0,
+      "attestationProof": "Completed release job and raw bash-e verification log, not empty stdout.",
+      "downloadedEvidenceZipVerified": true
+    }
+  ],
+  "recoveryRecordsPassed": 30,
+  "stablePublished": false,
+  "scope": "Both-base standard CI and PR release-artifact verification; no physical hardware qualification."
+}

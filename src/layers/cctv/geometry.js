@@ -13,20 +13,40 @@ import {
 
 import {
   planeDimensions,
+  sameFootprintPose,
   poseHash,
   requiredPlaneLift,
 } from '../../data/cctvFootprint.js';
 
 export function createGeometry({ state: layerState, services, parts, source }) {
-  const { warmGroundFloor, cachedGroundFloor } = services.ground;
+  const { warmGroundFloor, cachedGroundFloor, cachedMeshFloor } =
+    services.ground;
   const { sampleMeshFloorCells } = services.mesh;
+  const surfaceOwnerIds = new WeakMap();
+  let nextSurfaceOwnerId = 1;
+
+  function surfaceOwnerIdentity(owner) {
+    if (
+      owner !== null &&
+      (typeof owner === 'object' || typeof owner === 'function')
+    ) {
+      let identity = surfaceOwnerIds.get(owner);
+      if (identity === undefined) {
+        identity = nextSurfaceOwnerId++;
+        surfaceOwnerIds.set(owner, identity);
+      }
+      return `object:${identity}`;
+    }
+    return `${typeof owner}:${String(owner)}`;
+  }
 
   /**
    * Ground measured under the plane's support points for the record's
    * CURRENT pose, or null. Shipped precompute samples (`camera.groundHeights`)
-   * were taken for the nominal pose; they apply only while the pose hash still
-   * matches, so a calibrated (edited) camera falls back to the mount ground
-   * until its own footprint is resolved. Photoreal regime only: the values
+   * were taken for the nominal pose; they apply only while the effective pose
+   * exactly matches that base pose (with the legacy hash retained as a sidecar
+   * compatibility check). A calibrated camera falls back to mount ground until
+   * its own footprint is resolved. Photoreal regime only: the values
    * are aligned to the Google 3D Tiles surface and would be wrong against a
    * globe DEM.
    * @param {Object} record
@@ -39,7 +59,7 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     // DEM footprint resolved on demand (activation / calibration commit) —
     // valid in either regime, the DEM is what the globe stacks render anyway.
     const resolved = record?.footprintGround;
-    if (resolved && resolved.poseHash === poseHash(footprintPose(record))) {
+    if (resolved && sameFootprintPose(resolved.pose, footprintPose(record))) {
       return resolved.supports || null;
     }
     return null;
@@ -82,9 +102,12 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     const shipped = record?.camera?.groundHeights;
     if (!shipped || typeof shipped !== 'object') return false;
     if (parts.ground.currentSurfaceRegime() !== 'google-3d') return false;
-    // Samples describe the pose as served. Any calibration, client clamp or
-    // activation range clamp changes the rendered pose and its hash, and the
-    // camera then falls back to its own DEM footprint.
+    const basePose = record.camera.basePose;
+    if (!basePose || !sameFootprintPose(footprintPose(record), basePose))
+      return false;
+    // Samples describe the source's exact base pose. The rounded p1 hash keeps
+    // sidecar compatibility, while this exact check prevents a small
+    // calibration from colliding into the shipped sample's rounding bin.
     return (
       Number.isFinite(shipped.mountGroundM) &&
       shipped.poseHash === poseHash(footprintPose(record))
@@ -335,15 +358,71 @@ export function createGeometry({ state: layerState, services, parts, source }) {
    */
 
   function applyFrustumGeometry(record, groundAltM) {
+    const regime = parts.ground.currentSurfaceRegime?.() || 'unknown';
+    const surfaceOwner =
+      regime === 'google-3d'
+        ? (layerState._googleGroundSource ?? null)
+        : (layerState._viewer?.terrainProvider ?? null);
+    const surfaceOwnerId = surfaceOwnerIdentity(surfaceOwner);
+    const hasPriorSurfaceOwner = Object.hasOwn(
+      record,
+      'frustumGeometrySurfaceRegime',
+    );
+    const sourceChanged =
+      hasPriorSurfaceOwner &&
+      (record.frustumGeometrySurfaceRegime !== regime ||
+        record.frustumGeometrySurfaceOwnerId !== surfaceOwnerId);
     const geometry = computeFrustumGeometry(
       record.camera,
       groundAltM,
       record.probeClampRangeM,
       footprintGroundFor(record),
     );
+    // Cesium treats a new positions array as a geometry mutation and schedules
+    // a worker rebuild even when every coordinate is unchanged. CCTV disable /
+    // enable intentionally re-probes the active camera, so this path is common
+    // during recovery and soak runs. Keep the semantic activation pass while
+    // avoiding a duplicate worker submission for an identical frustum.
+    const previous = record.frustumGeometry;
+    const samePoint = (a, b) =>
+      a && b && a.lat === b.lat && a.lon === b.lon && a.alt === b.alt;
+    const sameRenderedGeometry =
+      previous &&
+      record.frustumPositions &&
+      previous.rangeM === geometry.rangeM &&
+      previous.vFovDeg === geometry.vFovDeg &&
+      previous.halfW === geometry.halfW &&
+      previous.halfH === geometry.halfH &&
+      previous.groundAltM === geometry.groundAltM &&
+      previous.liftM === geometry.liftM &&
+      samePoint(previous.mount, geometry.mount) &&
+      samePoint(previous.capCenter, geometry.capCenter) &&
+      samePoint(previous.topCenter, geometry.topCenter) &&
+      samePoint(previous.corners?.tl, geometry.corners?.tl) &&
+      samePoint(previous.corners?.tr, geometry.corners?.tr) &&
+      samePoint(previous.corners?.br, geometry.corners?.br) &&
+      samePoint(previous.corners?.bl, geometry.corners?.bl);
+    if (sameRenderedGeometry) {
+      // Footprint observation metadata can resolve after the visible vertices
+      // are already correct (for example, a zero-height fixture DEM). Keep the
+      // newest observation without resubmitting identical Cesium geometry.
+      if (
+        previous.liftLimitedBy !== geometry.liftLimitedBy ||
+        previous.liftCapped !== geometry.liftCapped ||
+        previous.footprintMeasured !== geometry.footprintMeasured
+      )
+        record.frustumGeometry = geometry;
+      record.frustumGeometrySurfaceRegime = regime;
+      record.frustumGeometrySurfaceOwnerId = surfaceOwnerId;
+      if (sourceChanged && record.viewshedPrimitive?.show === false)
+        destroyViewshedVolume(record);
+      return;
+    }
     const positions = frustumCartesians(geometry);
     record.frustumGeometry = geometry;
     record.frustumPositions = positions;
+    record.frustumGeometrySurfaceRegime = regime;
+    record.frustumGeometrySurfaceOwnerId = surfaceOwnerId;
     record.position = positions.mount;
     record.camera.absoluteHeightM = geometry.mount.alt;
     if (record.billboard) {
@@ -381,10 +460,17 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     // during an activation switch this runs BEFORE refreshCoverageStyles, and
     // the cache is stale for exactly that window.
     if (record.viewshedPrimitive) {
-      rebuildViewshedVolume(
-        record,
-        record.camera.id === layerState._activeCameraId,
-      );
+      if (record.viewshedPrimitive.show === false) {
+        // Cached hidden geometry is tied to the previous frustum. Drop it on
+        // pose/source changes and rebuild only if that camera re-enters the
+        // visible cohort.
+        destroyViewshedVolume(record);
+      } else {
+        rebuildViewshedVolume(
+          record,
+          record.camera.id === layerState._activeCameraId,
+        );
+      }
     }
     parts.projection.updatePlanePlacement(record);
     // Gizmo handles track the pose they manipulate: refresh when the ACTIVE
@@ -470,16 +556,18 @@ export function createGeometry({ state: layerState, services, parts, source }) {
       });
     }
 
+    const cachedMesh = cachedMeshFloor?.(point.lat, point.lon);
     const cachedFloor = cachedGroundFloor(point.lat, point.lon);
-    const ground = Number.isFinite(cachedFloor)
-      ? cachedFloor
-      : parts.ground.groundAltFor(record, 'google-3d');
+    const ground = Number.isFinite(cachedMesh)
+      ? cachedMesh
+      : Number.isFinite(cachedFloor)
+        ? cachedFloor
+        : parts.ground.groundAltFor(record, 'google-3d');
     applyFrustumGeometry(record, ground);
 
-    record.groundResolved['google-3d'] = Number.isFinite(cachedFloor);
-    if (Number.isFinite(cachedFloor)) {
-      record.groundSamples['google-3d'] = ground;
-    }
+    record.groundResolved['google-3d'] =
+      Number.isFinite(cachedMesh) || !parts.model.hasProjectionTileset();
+    if (Number.isFinite(cachedMesh)) record.groundSamples['google-3d'] = ground;
   }
 
   /**
@@ -533,10 +621,85 @@ export function createGeometry({ state: layerState, services, parts, source }) {
 
   function destroyViewshedVolume(record) {
     if (!record) return;
+    removeViewshedTintReadyListener(record);
     if (record.viewshedPrimitive && layerState._viewer) {
       layerState._viewer.scene.primitives.remove(record.viewshedPrimitive);
     }
     record.viewshedPrimitive = null;
+    record.viewshedPrimitiveInstanceId = null;
+    record.viewshedActiveTint = null;
+  }
+
+  function removeViewshedTintReadyListener(record) {
+    const remove = record?.viewshedTintReadyUnsubscribe;
+    record.viewshedTintReadyUnsubscribe = null;
+    if (typeof remove === 'function') remove();
+  }
+
+  function applyViewshedVolumeTint(record, primitive, isActive) {
+    if (record?.viewshedPrimitive !== primitive || primitive.ready !== true)
+      return false;
+    const attributes = primitive.getGeometryInstanceAttributes(
+      record.viewshedPrimitiveInstanceId,
+    );
+    if (!attributes?.color) return false;
+    const color = isActive
+      ? record.viewshedColors.fillActive
+      : record.viewshedColors.fill;
+    attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(color);
+    record.viewshedActiveTint = isActive;
+    return true;
+  }
+
+  function watchViewshedVolumeReadiness(record, primitive) {
+    if (record.viewshedTintReadyUnsubscribe) return;
+    const postRender = layerState._viewer?.scene?.postRender;
+    if (typeof postRender?.addEventListener !== 'function') return;
+    const onPostRender = () => {
+      if (record.viewshedPrimitive !== primitive) {
+        removeViewshedTintReadyListener(record);
+        return;
+      }
+      if (primitive.ready !== true) return;
+      const desired = record.viewshedDesiredTint === true;
+      let applied = false;
+      try {
+        applied = applyViewshedVolumeTint(record, primitive, desired);
+      } finally {
+        removeViewshedTintReadyListener(record);
+      }
+      if (applied) {
+        services.render?.governorRequestRender?.('cctv-viewshed-tint-ready');
+      }
+    };
+    record.viewshedTintReadyUnsubscribe =
+      postRender.addEventListener(onPostRender);
+  }
+
+  function hideViewshedVolume(record) {
+    if (!record?.viewshedPrimitive) return;
+    removeViewshedTintReadyListener(record);
+    record.viewshedPrimitive.show = false;
+  }
+
+  function updateViewshedVolumeTint(record, isActive) {
+    const primitive = record?.viewshedPrimitive;
+    if (!primitive) return false;
+    const desiredActive = !!isActive;
+    record.viewshedDesiredTint = desiredActive;
+    if (record.viewshedActiveTint === desiredActive) {
+      removeViewshedTintReadyListener(record);
+      return true;
+    }
+    if (applyViewshedVolumeTint(record, primitive, desiredActive)) {
+      removeViewshedTintReadyListener(record);
+      return true;
+    }
+    // Cesium exposes per-instance attributes only after its first update. A
+    // single owned postRender listener applies the latest requested tint once
+    // ready, then requests one governed redraw; it does not hold a render loop.
+    watchViewshedVolumeReadiness(record, primitive);
+    return false;
   }
 
   /**
@@ -561,15 +724,20 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     const color = isActive
       ? record.viewshedColors.fillActive
       : record.viewshedColors.fill;
+    const instanceId = `gev-viewshed:${record.camera.id}`;
     const primitive = createFrustumVolumePrimitive(
       record.frustumPositions,
       color,
+      instanceId,
     );
     // QA tag: the harness counts viewshed volumes by this marker.
     primitive._gevViewshed = record.camera.id;
     record.viewshedPrimitive =
       layerState._viewer.scene.primitives.add(primitive);
+    record.viewshedPrimitive.show = true;
+    record.viewshedPrimitiveInstanceId = instanceId;
     record.viewshedActiveTint = !!isActive;
+    record.viewshedDesiredTint = !!isActive;
   }
 
   /**
@@ -615,6 +783,23 @@ export function createGeometry({ state: layerState, services, parts, source }) {
   function runActivationObstructionProbe(record) {
     record.probeClampRangeM = null;
     const scene = layerState._viewer?.scene;
+    const surfaceSource = services.mesh?.reconcileMeshFloorSource?.(scene);
+    if (surfaceSource?.pending) {
+      record.probeClampSource = null;
+      record.probeClampPendingSource = null;
+      record.probeClampPendingMapSwitch = true;
+      return;
+    }
+    record.probeClampPendingMapSwitch = false;
+    record.probeClampSource = surfaceSource?.source || null;
+    if (
+      record.probeClampSource &&
+      parts.model.projectionTilesReady?.() === false
+    ) {
+      record.probeClampPendingSource = record.probeClampSource;
+      return;
+    }
+    record.probeClampPendingSource = null;
     if (!scene || typeof scene.pickFromRay !== 'function') return;
     const camera = record.camera;
     const rangeScale = parts.calibration.normalizeCalibration(
@@ -653,8 +838,13 @@ export function createGeometry({ state: layerState, services, parts, source }) {
    */
 
   function clearProbeClampOnDeactivation(record, rewriteGeometry) {
-    if (!record || !Number.isFinite(record.probeClampRangeM)) return false;
+    if (!record) return false;
+    const hadClamp = Number.isFinite(record.probeClampRangeM);
     record.probeClampRangeM = null;
+    record.probeClampSource = null;
+    record.probeClampPendingSource = null;
+    record.probeClampPendingMapSwitch = false;
+    if (!hadClamp) return false;
     rewriteGeometry?.(record);
     return true;
   }
@@ -826,6 +1016,8 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     updateRecordGeometry,
     buildCoverageVisibleSet,
     destroyViewshedVolume,
+    hideViewshedVolume,
+    updateViewshedVolumeTint,
     rebuildViewshedVolume,
     coverageNeighborCount,
     runActivationObstructionProbe,

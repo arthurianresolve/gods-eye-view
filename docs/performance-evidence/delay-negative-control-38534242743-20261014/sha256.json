@@ -1,0 +1,30 @@
+{
+  "schema": "gev-evidence-sha256/v1",
+  "files": [
+    {
+      "file": ".gitattributes",
+      "bytes": 14,
+      "sha256": "ed0552c0c90dc66525615947b802a78c48a1bf76ef68886ec8679298594f2511"
+    },
+    {
+      "file": "performance-build-smoke.json",
+      "bytes": 233768,
+      "sha256": "e4410a7672a620699a4825b19ac2ab88a78aab993f4bf52f5ec6db4b0268fbdd"
+    },
+    {
+      "file": "performance-build-smoke.json.capture-cli-report-candidate.json",
+      "bytes": 143943,
+      "sha256": "964395a2b6bcad88ad923efeb7b10242ae9a4b60db3ec9b487f14f5952496ad7"
+    },
+    {
+      "file": "performance-build-smoke.json.capture-cli-report-candidate.json.delay-control.json",
+      "bytes": 144480,
+      "sha256": "35ec5253d7adf9e9d0b5a4aa8b41f3690180b4c0b55a6e2775aadba5ef6c4ef9"
+    },
+    {
+      "file": "performance-build-smoke.json.capture-cli-report-candidate.json.delay-delayed.json",
+      "bytes": 144799,
+      "sha256": "507a0cb5117a6f76506c07482113fb63aa3cb40e3667b5670269286ce68027f8"
+    }
+  ]
+}

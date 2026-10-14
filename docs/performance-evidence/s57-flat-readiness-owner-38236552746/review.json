@@ -1,0 +1,273 @@
+{
+  "schema": "gev-streamed-tiles-artifact-review/v1",
+  "candidateCommit": "e1a6f5e4bc58aeb30b69ed611deebf221f7695c9",
+  "status": "passed",
+  "artifact": {
+    "file": "report.json",
+    "byteLength": 3896343,
+    "sha256": "6b6291c5feaf5c86eda6ef3832a304d31effba03c3914938660e2fa583e3ad0d"
+  },
+  "scope": "hosted Apple paravirtual Metal component; no physical Windows or matched timing acceptance",
+  "validation": {
+    "status": "passed",
+    "cycles": 5,
+    "switchTransitions": 10,
+    "terrainTileRequests": 162,
+    "terrainTransitionWorkerSubmissions": 174,
+    "terrainTransitionWorkerCompletions": 174,
+    "selectionReenablePicks": 3,
+    "streamedTileFactoryCalls": 1,
+    "streamedTileHttpManifestResponses": 1,
+    "streamedTileHttpContentResponses": 1,
+    "streamedTileSwitches": 10,
+    "applicationCommit": "e1a6f5e4bc58aeb30b69ed611deebf221f7695c9"
+  },
+  "source": {
+    "commit": "e1a6f5e4bc58aeb30b69ed611deebf221f7695c9",
+    "cleanAtStart": true,
+    "cleanAtEnd": true
+  },
+  "environment": {
+    "browserVersion": "Chrome/152.0.7977.75",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "nodeVersion": "v24.14.0",
+    "platform": "darwin"
+  },
+  "renderer": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "assetIdentity": {
+    "fixtureId": "s57-local-http-3dtiles-v1",
+    "manifest": {
+      "path": "/qa/s57-streaming/tileset.json",
+      "sha256": "9d09c0121b01956e83b8c24139d42def6c98aa1460f3b8a5cc92ffd3590f7c9a",
+      "byteLength": 249
+    },
+    "content": {
+      "path": "/qa/s57-streaming/tile.glb",
+      "sha256": "81bded5feb11e86993e187d8b265d8e12fbdc57613a9ceb98b8c70e39bd7622c",
+      "byteLength": 960
+    }
+  },
+  "flatReadinessOwners": [
+    {
+      "label": "streamed-tile-post-warm-flat",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1001.1000000000058
+    },
+    {
+      "label": "streamed-tile-cycle-1-second",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1062.1000000000058
+    },
+    {
+      "label": "streamed-tile-cycle-2-first",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1024
+    },
+    {
+      "label": "streamed-tile-cycle-3-warm-start",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1076.2999999999884
+    },
+    {
+      "label": "streamed-tile-cycle-3-second",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1056.7000000000116
+    },
+    {
+      "label": "streamed-tile-cycle-4-first",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1050.5
+    },
+    {
+      "label": "streamed-tile-cycle-5-warm-start",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1089.0999999999767
+    },
+    {
+      "label": "streamed-tile-cycle-5-second",
+      "owner": "qa-terrain-flat",
+      "pending": 0,
+      "stableWindowMs": 1019.6999999999534
+    }
+  ],
+  "browserCounts": {
+    "manifest": {
+      "requests": 1,
+      "responses": 1,
+      "completed": 1,
+      "failed": 0,
+      "servedFromCache": 0
+    },
+    "content": {
+      "requests": 2,
+      "responses": 1,
+      "completed": 1,
+      "failed": 1,
+      "servedFromCache": 0
+    }
+  },
+  "serverCounts": {
+    "manifest": {
+      "requests": 1,
+      "responses": 1,
+      "successfulResponses": 1,
+      "bytesFromHeader": 249
+    },
+    "content": {
+      "requests": 1,
+      "responses": 1,
+      "successfulResponses": 1,
+      "bytesFromHeader": 960
+    }
+  },
+  "warmedOwnership": {
+    "listeners": 0,
+    "pendingJobs": 0,
+    "primitives": 1,
+    "imageryLayers": 0,
+    "cacheEntries": 7,
+    "estimatedTileBytes": 108,
+    "providerLoadsStarted": 7,
+    "providerCacheReuses": 38,
+    "providerLoadFailures": 0
+  },
+  "finalOwnership": {
+    "listeners": 0,
+    "pendingJobs": 0,
+    "primitives": 1,
+    "imageryLayers": 1,
+    "cacheEntries": 7,
+    "estimatedTileBytes": 108,
+    "providerLoadsStarted": 7,
+    "providerCacheReuses": 53,
+    "providerLoadFailures": 0
+  },
+  "measuredSwitches": [
+    {
+      "from": "qa-terrain-flat",
+      "to": "qa-streamed-tiles",
+      "owner": "qa-streamed-tiles",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-streamed-tiles",
+      "to": "qa-terrain-flat",
+      "owner": "qa-terrain-flat",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-streamed-tiles",
+      "to": "qa-terrain-flat",
+      "owner": "qa-terrain-flat",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-terrain-flat",
+      "to": "qa-streamed-tiles",
+      "owner": "qa-streamed-tiles",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-terrain-flat",
+      "to": "qa-streamed-tiles",
+      "owner": "qa-streamed-tiles",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-streamed-tiles",
+      "to": "qa-terrain-flat",
+      "owner": "qa-terrain-flat",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-streamed-tiles",
+      "to": "qa-terrain-flat",
+      "owner": "qa-terrain-flat",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-terrain-flat",
+      "to": "qa-streamed-tiles",
+      "owner": "qa-streamed-tiles",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-terrain-flat",
+      "to": "qa-streamed-tiles",
+      "owner": "qa-streamed-tiles",
+      "estimatedTileBytes": 108
+    },
+    {
+      "from": "qa-streamed-tiles",
+      "to": "qa-terrain-flat",
+      "owner": "qa-terrain-flat",
+      "estimatedTileBytes": 108
+    }
+  ],
+  "tileObserverCleanup": {
+    "attemptedCount": 4,
+    "removedCount": 4,
+    "cleanupConfirmed": true,
+    "errors": []
+  },
+  "controllerDestroyedTileset": true,
+  "finalMap": {
+    "activeStackId": "qa-terrain-flat",
+    "switchOrigin": "manual",
+    "listeners": 0,
+    "pendingJobs": 0,
+    "primitives": 0,
+    "imageryLayers": 0,
+    "cacheEntries": 0,
+    "estimatedTileBytes": 0,
+    "providerLoadsStarted": 7,
+    "providerCacheReuses": 53,
+    "providerLoadFailures": 0,
+    "streamedTileMemoryBytes": null,
+    "streamedTileMemoryUnavailableReason": "legacy terrain-only observation; streamed tile ownership and memory are reported separately under streamedTiles"
+  },
+  "viewerDestroyed": true,
+  "cleanup": {
+    "pageClosed": true,
+    "cdpSessionDetached": true,
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 85849.647833,
+        "closeSettledHostMs": 86291.515708,
+        "closeElapsedMs": 441.8678750000108,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 402.28208400000585
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "serverClosed": true
+  }
+}

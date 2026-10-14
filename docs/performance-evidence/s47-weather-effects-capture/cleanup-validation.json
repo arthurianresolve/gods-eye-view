@@ -1,0 +1,50 @@
+{
+  "schema": "gev-focused-validation/v1",
+  "node": "v24.16.0",
+  "startedAt": "2026-10-12T17:25:10.863Z",
+  "finishedAt": "2026-10-12T17:25:25.087Z",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--test",
+    "scripts/capture-scene-performance.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs",
+    "scripts/qa-performance-build-smoke.test.mjs"
+  ],
+  "exitCode": 0,
+  "sourceHashesBefore": {
+    "scripts/qa-performance-build-smoke.mjs": "56e7bd835aee6ab91659eed6f826d054cdfa2fb7c6ff3c59a4958017d87bd767",
+    "scripts/capture-scene-performance.test.mjs": "3839884d173426fb0ba199a8a6aebdda85b3c91345403a74e2d4f1ceed10fdc5",
+    "scripts/performance/captureComparisonContract.test.mjs": "30e43058b946106104646070b68733b2c5129601ce3e5637368ab0aafd399278",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs": "f7ecae34e79686be5634288a68518374297cb7227c72f07510954de81af44569",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs": "c035ad7647d27724298a54177e71ea530c22d21bfedc2996163795b866fff6b4",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs": "ad118ff1be710b191903387d649c4c9d4efbf1dc101a66e454008f294483a10f",
+    "scripts/qa-performance-build-smoke.test.mjs": "8595304f654b8923444a0b18ee165d7764338a85399d72c6f52e1cede2688698"
+  },
+  "sourceHashesAfter": {
+    "scripts/qa-performance-build-smoke.mjs": "56e7bd835aee6ab91659eed6f826d054cdfa2fb7c6ff3c59a4958017d87bd767",
+    "scripts/capture-scene-performance.test.mjs": "3839884d173426fb0ba199a8a6aebdda85b3c91345403a74e2d4f1ceed10fdc5",
+    "scripts/performance/captureComparisonContract.test.mjs": "30e43058b946106104646070b68733b2c5129601ce3e5637368ab0aafd399278",
+    "scripts/performance/infrastructureWorkloadFixture.test.mjs": "f7ecae34e79686be5634288a68518374297cb7227c72f07510954de81af44569",
+    "scripts/performance/weatherEffectsWorkloadFixture.test.mjs": "c035ad7647d27724298a54177e71ea530c22d21bfedc2996163795b866fff6b4",
+    "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs": "ad118ff1be710b191903387d649c4c9d4efbf1dc101a66e454008f294483a10f",
+    "scripts/qa-performance-build-smoke.test.mjs": "8595304f654b8923444a0b18ee165d7764338a85399d72c6f52e1cede2688698"
+  },
+  "sourceUnchanged": true,
+  "summary": [
+    "ℹ tests 76",
+    "ℹ suites 0",
+    "ℹ pass 76",
+    "ℹ fail 0",
+    "ℹ cancelled 0",
+    "ℹ skipped 0",
+    "ℹ todo 0",
+    "ℹ duration_ms 14153.6054"
+  ],
+  "log": {
+    "fileName": "cleanup-validation.log.gz",
+    "sha256": "7a426fb8b08561b1ed896aa388a550a4209b3a535f41024317623632268953ce"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "validation": true,
+  "environment": {
+    "appCommit": "954b08f92ad32cec7ceb3901d11cda087629cbba",
+    "harnessCommit": "954b08f92ad32cec7ceb3901d11cda087629cbba",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 1200,
+      "height": 960,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 960,
+      "height": 640
+    },
+    "layers": []
+  },
+  "cleanup": {
+    "viewerDestroyed": true
+  },
+  "lifetimes": [
+    {
+      "mode": "entities",
+      "activationDiagnosticMs": 585.2000000000116,
+      "samples": 10
+    },
+    {
+      "mode": "primitive-collections",
+      "activationDiagnosticMs": 777.2999999999884,
+      "samples": 10
+    }
+  ],
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 76572.767958,
+      "closeSettledHostMs": 77310.220042,
+      "closeElapsedMs": 737.4520840000041,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 673.1813750000001
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

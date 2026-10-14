@@ -1,0 +1,36 @@
+{
+  "schema": "gev-cli-import-boundary-root-review/v1",
+  "node": "v24.16.0",
+  "scope": "Actual CLI with fail-fast dependency resolution guard; no browser, live provider, or rendering measurement",
+  "timeoutMs": 5000,
+  "passed": true,
+  "results": [
+    {
+      "label": "original",
+      "status": 1,
+      "signal": null,
+      "errorCode": null,
+      "elapsedMs": 372.3759,
+      "attemptedHeavyImports": [
+        "cesium"
+      ],
+      "failureReportCreated": false,
+      "failure": null,
+      "cliSha256": "f194bcd31cae839dda14dd34c14d545e952457aed362425c360d0020916492fa"
+    },
+    {
+      "label": "candidate",
+      "status": 1,
+      "signal": null,
+      "errorCode": null,
+      "elapsedMs": 391.8412000000001,
+      "attemptedHeavyImports": [],
+      "failureReportCreated": true,
+      "failure": {
+        "phase": "setup",
+        "message": "Candidate SHA must be a full lowercase Git SHA."
+      },
+      "cliSha256": "f885444d832e158f8a0c362119ed3c16925201003f76b6fd7a83c7d7a8a7a949"
+    }
+  ]
+}

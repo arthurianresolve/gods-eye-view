@@ -1,0 +1,127 @@
+{
+  "schema": "gev-overlay-cpu-review/v1",
+  "reviewedAt": "2026-10-10T23:21:23.004Z",
+  "reportSha256": "1817f9b19fd5f1d0933c08e406fc180297b080b398112de5246c0120928d277f",
+  "integrity": "passed: 40 pairs, identical before/after conditions and recomputed disabled-instrumentation medians",
+  "acceptance": "diagnostic-only",
+  "limitation": "Concurrent repository checkout, formatting and Git/file inspection occurred on this Windows host during the run. Large timing spread prevents acceptance from this batch. All samples retained. A separate isolated hosted comparison is pending.",
+  "scope": "Node synchronous overlay algorithm, mock Canvas2D and fixed camera; no rendered visual-equivalence, GPU or browser FPS claim",
+  "sources": {
+    "baseline": {
+      "commit": "886b7d2927b6eb3a546c0dfaf629684973d9e501",
+      "overlaySha256": "8279f2f000fb8aec4cc2071c6c0ef8a111a32b2a585be59a7f72f54dc3104dba",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+    },
+    "candidate": {
+      "commit": "33d985657c8949a02cfce2f0f1ad4131d3da774c",
+      "overlaySha256": "328f9ca8d5cfd62507773847ebd2e00d2dba978c75a9ff9b1161d19a044fb174",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+    }
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entries": 250,
+      "cadence": 1,
+      "pairedPercent": [
+        -1.004085861581716,
+        -17.62842939791598,
+        2.1007896391304737,
+        12.022063050512187,
+        -5.44717078328768
+      ],
+      "medianPairedPercent": -1.004085861581716
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 1,
+      "pairedPercent": [
+        4.189760424138789,
+        -13.677683544829788,
+        -5.990888064217293,
+        -1.0913470173072204,
+        -4.39885704989188
+      ],
+      "medianPairedPercent": -4.39885704989188
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 1,
+      "pairedPercent": [
+        -4.084063112331049,
+        -4.318677294773043,
+        6.389359110489745,
+        -16.126581777945013,
+        -7.770170246928043
+      ],
+      "medianPairedPercent": -4.318677294773043
+    },
+    {
+      "profile": "phase6-detection",
+      "entries": 5000,
+      "cadence": 1,
+      "pairedPercent": [
+        -2.472887061688689,
+        1.5600759237352602,
+        -3.318499636307637,
+        15.815754744857212,
+        -11.151587869286583
+      ],
+      "medianPairedPercent": -2.472887061688689
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 0,
+      "pairedPercent": [
+        18.699406553502307,
+        3.954349081727626,
+        -27.485954569315563,
+        -7.958097006544918,
+        0.4480430866262708
+      ],
+      "medianPairedPercent": 0.4480430866262708
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 0,
+      "pairedPercent": [
+        -1.697317712054569,
+        -9.815438252711095,
+        -16.651707575964902,
+        -23.173256781930153,
+        -26.68142097902697
+      ],
+      "medianPairedPercent": -16.651707575964902
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 60,
+      "pairedPercent": [
+        29.86685261012012,
+        20.0878964584291,
+        0.08805377829621541,
+        -13.01660668296567,
+        -25.76472149032154
+      ],
+      "medianPairedPercent": 0.08805377829621541
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 60,
+      "pairedPercent": [
+        5.6791972053549244,
+        28.598067748410916,
+        21.07537308430465,
+        -16.495825866703406,
+        -6.875961797495711
+      ],
+      "medianPairedPercent": 5.6791972053549244
+    }
+  ]
+}

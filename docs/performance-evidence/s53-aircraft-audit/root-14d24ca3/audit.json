@@ -1,0 +1,997 @@
+{
+  "schema": "gev-aircraft-billboard-mutation-audit/v1",
+  "cesiumVersion": "1.138.0",
+  "scope": "snapshot-and-record-producers-with-real-billboard-collections-no-webgl",
+  "fixture": {
+    "descriptor": {
+      "schema": "gev-aircraft-billboard-fixture/v1",
+      "receiptClockMs": 1790000123456,
+      "source": "s53-aircraft-mutation-fixture",
+      "coverage": "bounded-three-contact-fixture",
+      "contacts": [
+        {
+          "id": "a00001",
+          "latitude": 30.2,
+          "longitude": -97.7,
+          "index": 0,
+          "baroAltitudeM": 9000,
+          "ellipsoidAltitudeM": 9200,
+          "onGround": false,
+          "speedMps": 150,
+          "courseDeg": 80,
+          "verticalRateMps": 0,
+          "category": 3,
+          "typeCode": "A320"
+        },
+        {
+          "id": "a00002",
+          "latitude": 30.21,
+          "longitude": -97.69,
+          "index": 1,
+          "baroAltitudeM": 9100,
+          "ellipsoidAltitudeM": 9300,
+          "onGround": false,
+          "speedMps": 151,
+          "courseDeg": 81,
+          "verticalRateMps": 0,
+          "category": 3,
+          "typeCode": "A320"
+        },
+        {
+          "id": "a00003",
+          "latitude": 30.22,
+          "longitude": -97.68,
+          "index": 2,
+          "baroAltitudeM": 9200,
+          "ellipsoidAltitudeM": 9400,
+          "onGround": false,
+          "speedMps": 152,
+          "courseDeg": 82,
+          "verticalRateMps": 0,
+          "category": 3,
+          "typeCode": "A320"
+        }
+      ],
+      "stages": [
+        {
+          "label": "initial-population",
+          "revision": 0,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000000000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": [
+              {
+                "id": "a00001",
+                "reference": "a00001",
+                "callsign": "FIX1",
+                "latitude": 30.2,
+                "longitude": -97.7,
+                "baroAltitudeM": 9000,
+                "ellipsoidAltitudeM": 9200,
+                "onGround": false,
+                "speedMps": 150,
+                "courseDeg": 80,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00002",
+                "reference": "a00002",
+                "callsign": "FIX2",
+                "latitude": 30.21,
+                "longitude": -97.69,
+                "baroAltitudeM": 9100,
+                "ellipsoidAltitudeM": 9300,
+                "onGround": false,
+                "speedMps": 151,
+                "courseDeg": 81,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00003",
+                "reference": "a00003",
+                "callsign": "FIX3",
+                "latitude": 30.22,
+                "longitude": -97.68,
+                "baroAltitudeM": 9200,
+                "ellipsoidAltitudeM": 9400,
+                "onGround": false,
+                "speedMps": 152,
+                "courseDeg": 82,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              }
+            ]
+          }
+        },
+        {
+          "label": "equivalent-repeat",
+          "revision": 0,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000000000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": [
+              {
+                "id": "a00001",
+                "reference": "a00001",
+                "callsign": "FIX1",
+                "latitude": 30.2,
+                "longitude": -97.7,
+                "baroAltitudeM": 9000,
+                "ellipsoidAltitudeM": 9200,
+                "onGround": false,
+                "speedMps": 150,
+                "courseDeg": 80,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00002",
+                "reference": "a00002",
+                "callsign": "FIX2",
+                "latitude": 30.21,
+                "longitude": -97.69,
+                "baroAltitudeM": 9100,
+                "ellipsoidAltitudeM": 9300,
+                "onGround": false,
+                "speedMps": 151,
+                "courseDeg": 81,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00003",
+                "reference": "a00003",
+                "callsign": "FIX3",
+                "latitude": 30.22,
+                "longitude": -97.68,
+                "baroAltitudeM": 9200,
+                "ellipsoidAltitudeM": 9400,
+                "onGround": false,
+                "speedMps": 152,
+                "courseDeg": 82,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000000000,
+                "contactTimeMs": 1790000000000,
+                "category": 3,
+                "typeCode": "A320"
+              }
+            ]
+          }
+        },
+        {
+          "label": "changed-positions-same-identities",
+          "revision": 1,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000001000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": [
+              {
+                "id": "a00001",
+                "reference": "a00001",
+                "callsign": "FIX1",
+                "latitude": 30.2001,
+                "longitude": -97.6999,
+                "baroAltitudeM": 9000,
+                "ellipsoidAltitudeM": 9200,
+                "onGround": false,
+                "speedMps": 150,
+                "courseDeg": 80,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000001000,
+                "contactTimeMs": 1790000001000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00002",
+                "reference": "a00002",
+                "callsign": "FIX2",
+                "latitude": 30.2101,
+                "longitude": -97.6899,
+                "baroAltitudeM": 9100,
+                "ellipsoidAltitudeM": 9300,
+                "onGround": false,
+                "speedMps": 151,
+                "courseDeg": 81,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000001000,
+                "contactTimeMs": 1790000001000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00003",
+                "reference": "a00003",
+                "callsign": "FIX3",
+                "latitude": 30.2201,
+                "longitude": -97.6799,
+                "baroAltitudeM": 9200,
+                "ellipsoidAltitudeM": 9400,
+                "onGround": false,
+                "speedMps": 152,
+                "courseDeg": 82,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000001000,
+                "contactTimeMs": 1790000001000,
+                "category": 3,
+                "typeCode": "A320"
+              }
+            ]
+          }
+        },
+        {
+          "label": "partial-absence-retained",
+          "revision": 2,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000002000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": false,
+            "records": [
+              {
+                "id": "a00001",
+                "reference": "a00001",
+                "callsign": "FIX1",
+                "latitude": 30.2002,
+                "longitude": -97.6998,
+                "baroAltitudeM": 9000,
+                "ellipsoidAltitudeM": 9200,
+                "onGround": false,
+                "speedMps": 150,
+                "courseDeg": 80,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000002000,
+                "contactTimeMs": 1790000002000,
+                "category": 3,
+                "typeCode": "A320"
+              },
+              {
+                "id": "a00002",
+                "reference": "a00002",
+                "callsign": "FIX2",
+                "latitude": 30.2102,
+                "longitude": -97.68979999999999,
+                "baroAltitudeM": 9100,
+                "ellipsoidAltitudeM": 9300,
+                "onGround": false,
+                "speedMps": 151,
+                "courseDeg": 81,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000002000,
+                "contactTimeMs": 1790000002000,
+                "category": 3,
+                "typeCode": "A320"
+              }
+            ]
+          }
+        },
+        {
+          "label": "complete-miss-1",
+          "revision": 3,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000003000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": []
+          }
+        },
+        {
+          "label": "complete-miss-2",
+          "revision": 4,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000004000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": []
+          }
+        },
+        {
+          "label": "complete-miss-3-removal",
+          "revision": 5,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000005000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": []
+          }
+        },
+        {
+          "label": "reappearance",
+          "revision": 6,
+          "snapshot": {
+            "source": "s53-aircraft-mutation-fixture",
+            "observedAtMs": 1790000006000,
+            "coverage": "bounded-three-contact-fixture",
+            "freshness": "current",
+            "complete": true,
+            "records": [
+              {
+                "id": "a00001",
+                "reference": "a00001",
+                "callsign": "FIX1",
+                "latitude": 30.200599999999998,
+                "longitude": -97.6994,
+                "baroAltitudeM": 9000,
+                "ellipsoidAltitudeM": 9200,
+                "onGround": false,
+                "speedMps": 150,
+                "courseDeg": 80,
+                "verticalRateMps": 0,
+                "positionTimeMs": 1790000006000,
+                "contactTimeMs": 1790000006000,
+                "category": 3,
+                "typeCode": "A320"
+              }
+            ]
+          }
+        }
+      ],
+      "collaboratorAssumptions": {
+        "viewer": {
+          "cameraCartographic": null,
+          "sceneAvailable": true
+        },
+        "records": {
+          "geoidReady": false,
+          "geoidHeightM": 0,
+          "cachedGroundFloorM": null,
+          "floorAltitude": "identity",
+          "incompleteRecentSnapshot": "retain",
+          "completeMissesBeforeRemoval": 3
+        },
+        "rendering": {
+          "modelOwnsVisual": false,
+          "presentationCallbacks": "no-op",
+          "fixtureBillboardColor": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "motion": {
+          "deadReckonedPosition": null,
+          "trackedId": null
+        },
+        "registry": {
+          "militaryClassification": false,
+          "suppression": false
+        },
+        "collection": {
+          "engine": "Cesium.BillboardCollection",
+          "webglContext": false
+        }
+      },
+      "churnControl": {
+        "initialStage": "initial-population",
+        "repeatStage": "equivalent-repeat",
+        "operation": "remove-all-owned-billboards-and-clear-id-map-before-repeat"
+      }
+    },
+    "recordCount": 3,
+    "sha256": "6aa43a6c6404f8fa27c8e03726464dd0560421ee187ee0bf84a01b5cc39daec5"
+  },
+  "sourceIdentity": {
+    "gitHead": "14d24ca3d14623ecaa2f59ecf7dfc5b8d92bfd27",
+    "workingTreeClean": true,
+    "statusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "lockfileSha256": "632eab4fec411920456fe4da43a3564d5cdfe0eb0bfa6b66e862c1465217fd36",
+  "installedCesiumPackageSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+  "sourceSha256": {
+    "scripts/performance/aircraftBillboardMutationAudit.mjs": "0bed3cc00abd19b2bdb23ea36af0f2e44b0174212b36e1fd12b22717030b869e",
+    "src/layers/flights/snapshotRenderer.js": "cecf33f322ddf58abe0abd7cb95ce277c43a4dd2f013402d82b82cf857a4af55",
+    "src/layers/flights/records.js": "fd75e46e7fe70deaf7dbf75325d3c5535b6b68ef5516ad84fccc36e5a3c66fc4",
+    "src/layers/flights/recordPolicy.js": "684c8cbe3c539cadee78d7483c1b7b7c1bc399fcc7d0c6a8637df6d00261d6de",
+    "src/layers/military/snapshotRenderer.js": "bbb47a8b3279ecd7f5c11690dcef60037e3d7a377eec1e9c97514911a623bc40",
+    "src/layers/military/records.js": "97ed6650377030908a44b5b8b1051564932c2231bae25ebd070d271d3b649117",
+    "src/layers/military/recordPolicy.js": "d7723e036ab2639d681a7ad051075ab3b480229ca43e73909ae9ebe6b29d9aa4"
+  },
+  "runs": [
+    {
+      "kind": "flights",
+      "stages": [
+        {
+          "label": "initial-population",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 3,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "equivalent-repeat",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 3,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "changed-positions-same-identities",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 3,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "partial-absence-retained",
+          "inputRecordCount": 2,
+          "complete": false,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 2,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-1",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-2",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-3-removal",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 0,
+          "retainedCount": 0,
+          "collectionLength": 0,
+          "observedRecordReceiptTimesMs": [],
+          "added": 0,
+          "removed": 3,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [],
+          "identitySha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "label": "reappearance",
+          "inputRecordCount": 1,
+          "complete": true,
+          "returnedCount": 1,
+          "retainedCount": 1,
+          "collectionLength": 1,
+          "observedRecordReceiptTimesMs": [
+            1790000123456
+          ],
+          "added": 1,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              4
+            ]
+          ],
+          "identitySha256": "650abf63664032c36e87688e748fcf8217e6c712ddbbb9582253dd5f96e86d8a"
+        }
+      ],
+      "churnControl": {
+        "label": "churn-control-equivalent-repeat",
+        "inputRecordCount": 3,
+        "complete": true,
+        "returnedCount": 3,
+        "retainedCount": 3,
+        "collectionLength": 3,
+        "observedRecordReceiptTimesMs": [
+          1790000123456,
+          1790000123456,
+          1790000123456
+        ],
+        "added": 3,
+        "removed": 0,
+        "attemptedPositionWrites": 0,
+        "attemptedColorWrites": 0,
+        "identityEntries": [
+          [
+            "a00001",
+            4
+          ],
+          [
+            "a00002",
+            5
+          ],
+          [
+            "a00003",
+            6
+          ]
+        ],
+        "identitySha256": "ef8f300c1c1458032901c800c2d49fdbea3478bfed6c1095f13ff42695e417de",
+        "removedBeforeRepeat": 3,
+        "previousIdentitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb",
+        "detected": true,
+        "cleanup": {
+          "lengthBeforeDestroy": 3,
+          "lengthAfterRemoval": 0,
+          "destroyed": true,
+          "prototypeInstrumentationInstalled": false
+        }
+      },
+      "cleanup": {
+        "lengthBeforeDestroy": 1,
+        "lengthAfterRemoval": 0,
+        "destroyed": true,
+        "prototypeInstrumentationInstalled": false
+      }
+    },
+    {
+      "kind": "military",
+      "stages": [
+        {
+          "label": "initial-population",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 3,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "equivalent-repeat",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "changed-positions-same-identities",
+          "inputRecordCount": 3,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "partial-absence-retained",
+          "inputRecordCount": 2,
+          "complete": false,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-1",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-2",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 3,
+          "retainedCount": 3,
+          "collectionLength": 3,
+          "observedRecordReceiptTimesMs": [
+            1790000123456,
+            1790000123456,
+            1790000123456
+          ],
+          "added": 0,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              1
+            ],
+            [
+              "a00002",
+              2
+            ],
+            [
+              "a00003",
+              3
+            ]
+          ],
+          "identitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb"
+        },
+        {
+          "label": "complete-miss-3-removal",
+          "inputRecordCount": 0,
+          "complete": true,
+          "returnedCount": 0,
+          "retainedCount": 0,
+          "collectionLength": 0,
+          "observedRecordReceiptTimesMs": [],
+          "added": 0,
+          "removed": 3,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [],
+          "identitySha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "label": "reappearance",
+          "inputRecordCount": 1,
+          "complete": true,
+          "returnedCount": 1,
+          "retainedCount": 1,
+          "collectionLength": 1,
+          "observedRecordReceiptTimesMs": [
+            1790000123456
+          ],
+          "added": 1,
+          "removed": 0,
+          "attemptedPositionWrites": 0,
+          "attemptedColorWrites": 0,
+          "identityEntries": [
+            [
+              "a00001",
+              4
+            ]
+          ],
+          "identitySha256": "650abf63664032c36e87688e748fcf8217e6c712ddbbb9582253dd5f96e86d8a"
+        }
+      ],
+      "churnControl": {
+        "label": "churn-control-equivalent-repeat",
+        "inputRecordCount": 3,
+        "complete": true,
+        "returnedCount": 3,
+        "retainedCount": 3,
+        "collectionLength": 3,
+        "observedRecordReceiptTimesMs": [
+          1790000123456,
+          1790000123456,
+          1790000123456
+        ],
+        "added": 3,
+        "removed": 0,
+        "attemptedPositionWrites": 0,
+        "attemptedColorWrites": 0,
+        "identityEntries": [
+          [
+            "a00001",
+            4
+          ],
+          [
+            "a00002",
+            5
+          ],
+          [
+            "a00003",
+            6
+          ]
+        ],
+        "identitySha256": "ef8f300c1c1458032901c800c2d49fdbea3478bfed6c1095f13ff42695e417de",
+        "removedBeforeRepeat": 3,
+        "previousIdentitySha256": "30d7cdaaacf0f306ee61c53dfce57fd08fe4217e6b6ac9c74514a2f38ab48dbb",
+        "detected": true,
+        "cleanup": {
+          "lengthBeforeDestroy": 3,
+          "lengthAfterRemoval": 0,
+          "destroyed": true,
+          "prototypeInstrumentationInstalled": false
+        }
+      },
+      "cleanup": {
+        "lengthBeforeDestroy": 1,
+        "lengthAfterRemoval": 0,
+        "destroyed": true,
+        "prototypeInstrumentationInstalled": false
+      }
+    }
+  ],
+  "limitations": [
+    "No WebGL context, GPU upload count, upload bytes, or frame-time claim.",
+    "Rendering-tick position/focus/freshness writes are outside this snapshot-path audit.",
+    "Churn control is a deliberate map-ownership mutation for audit sensitivity, not a proposed implementation.",
+    "Absolute current behavior only; no aircraft before/after optimization is measured."
+  ],
+  "clock": {
+    "receiptClockMs": 1790000123456,
+    "restoredAfterRun": true
+  }
+}

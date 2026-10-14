@@ -1,0 +1,19 @@
+{
+  "source": "acbb48942b85484861056e1443d5c8d68b2a29cf",
+  "reportSha256": "2a91ca78f1484edab8dc02aa8312de87fb0260e67a1eaffe1d037f8c0557648e",
+  "sourceHashes": {
+    "scripts/performance/overlayAttribution.mjs": "1591b6ede1e1b063032f23067606d62d6bed156d4b548b0ab82f02778a449336",
+    "src/overlays/worldOverlayAllocation.worker.mjs": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+    "src/performance/cpuTimings.js": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c"
+  },
+  "outcome": "inconclusive-for-instrumentation-overhead",
+  "observedRatios": {
+    "generic": -0.062200387275729074,
+    "local-infrastructure": 0.02098083669061368,
+    "all-live-radio": 0.017216382406693764,
+    "phase6-detection": 0.288934595026223
+  },
+  "reason": "CPU-mode samples advance a continuous route and clock between on/off trials. Radio visible populations differ; detection reads overlay counters instead of detection observations. Thus the ratio cannot isolate instrumentation overhead.",
+  "nextControl": "Version the fixture; compare fresh lifetimes at equal route/time, populations and warmup. Report detection-specific counts. Preserve this result and do not rerun unchanged.",
+  "scope": "Node mock-canvas diagnostic only; no browser/GPU or production regression claim; no change to allocation test regime."
+}

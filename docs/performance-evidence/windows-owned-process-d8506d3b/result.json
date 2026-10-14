@@ -1,0 +1,10 @@
+{
+  "source": "d8506d3bf4509bb6c5ac2eb61d070abbc35340f1",
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=bounded child runner|bounded child failure",
+    "scripts/qa-performance-build-smoke.test.mjs"
+  ],
+  "exitCode": 0
+}

@@ -1,0 +1,118 @@
+✔ destroying before the first init leaves pre-init buffering intact (14.2809ms)
+✔ lifecycle is idempotent and teardown removes listeners, observers, and DOM (30.1038ms)
+✔ no ancestor isolates the detection surface, so `screen` reaches the scene (41.7119ms)
+✔ canvas backing store tracks CSS size and live DPR (1.8028ms)
+✔ shared fade tuning reaches a host-painted card on the next rendered frame (2.34ms)
+✔ inlined host alpha binding matches combinedOverlayAlpha across channel ranges (3.0921ms)
+✔ a host dormant since init holds no canvas backing store (1.3086ms)
+✔ empty postRender stays inert through production mutation, resize, and clock noise (0.8166ms)
+✔ HUD mutations defer occluder selector scans until overlay paint work exists (1.3385ms)
+✔ ticking chrome churn (text swaps, non-chrome nodes) never invalidates a live host (9.1397ms)
+✔ genuine chrome changes still invalidate: add, remove, and own-attribute flips (4.6365ms)
+✔ chrome observers scope: body is childList discovery; occluder attributes are element-only (9.4582ms)
+✔ stable projection inputs reuse actual visibility work while callbacks stay live (4.3983ms)
+✔ cached negative projection decisions retry after their owning input changes (1.6919ms)
+✔ invalid dynamic position samples do not poison a later valid sample (0.8659ms)
+✔ projection cache isolates duplicate identities and clears across remove/re-add and visibility changes (1.9671ms)
+✔ an out-of-view position can become visible without changing entry identity (0.7803ms)
+✔ projection records never retain keys for entries that are no longer live (38.4929ms)
+✔ the per-domain candidate index stays bounded while identities churn (117.9387ms)
+✔ entry normalization validates required fields and source lifecycle is stable (1.5884ms)
+✔ accessible actions announce only accepted focus and expose selected state (1.0443ms)
+✔ viewport and horizon culling obey explicit policy inputs (0.2129ms)
+✔ paint lanes are deterministic across all seven binding lanes (5.3949ms)
+✔ custom detection lane receives the shared host frame and paints below ordinary entries (4.8987ms)
+✔ custom-lane painter state is bracketed by host save/restore (0.6978ms)
+✔ custom lanes without the detection target paint on the shared canvas (0.4836ms)
+✔ UI exclusions stay per-rect: overlapping chrome never merges into a bounding union (7.54ms)
+✔ UI exclusions ignore chrome the user cannot see (14.364ms)
+✔ chrome that fills the viewport suppresses neither cards nor the detection lane (4.211ms)
+✔ a placement is only ever kept under chrome that composites ABOVE the host (20.4443ms)
+✔ cockpit keeps its cards and its detection lane, and hides only the tracked readout (17.0164ms)
+✔ opt-in anchor separation thins a co-located cohort before the arbiter sees it (2.57ms)
+✔ the occluder inventory carries no cockpit line-art chrome (0.3536ms)
+✔ position getters snapshot once per frame and cockpit-gated sources disappear (1.1379ms)
+✔ bounded per-source cohorts feed the domain arbiter without universal selection (1.021ms)
+✔ FIRMS and vessels enlarge the ambient-card lane under an explicit aggregate budget (159.6212ms)
+✔ paint rectangles publish from a pool and topmost interactive lookup wins (1.0632ms)
+✔ CCTV stable frame slots gate ambient chrome and wire the exact host hit rectangle (2.099ms)
+✔ pinned CCTV chrome may paint before frame one while ordinary safe-top policy still yields (0.8228ms)
+✔ safe-top yield culls an uncontested ambient entry at projection, with a below-band control (0.8654ms)
+✔ CCTV host binding preserves the smoothstep scale and 0.45/0.35 fade curve (1.2714ms)
+✔ scene presentation samples once per frame and recovers after a callback failure (1.8837ms)
+✔ CCTV leader remains one CSS pixel at the 0.35 altitude scale point (1.057ms)
+✔ active CCTV thumbnail is protected outside the ambient quota and excludes ambient footprint (1.003ms)
+✔ protected tracked entry bypasses ambient quota and excludes its paint footprint (0.8871ms)
+✔ three clustered protected cards fall back to the least-overlapping placement (1.0816ms)
+✔ steady frames reuse paint-item and paint-rectangle pool identities (1.4097ms)
+✔ destroy empties paint pools and releases pooled record and entry payloads (0.9533ms)
+✔ a candidate that is not projected this frame stops painting immediately (1.0099ms)
+✔ published paint rectangles are scoped to the publishing key and frame (0.9199ms)
+✔ every exported entry point is inert after destroy (0.9566ms)
+✔ diagnostics facade preserves the complete binding shape (0.1347ms)
+✔ installation titles share persistent card arbitration and retain a bounded Contacts cohort (127.096ms)
+✖ promoting an ambient entry to selected paints it once with no fading duplicate (2.2908ms)
+✔ destroyed host font events cannot wake its replacement viewer (1.0487ms)
+✔ font loading wakes a parked static overlay to recompute layout and hit bounds (1.0266ms)
+✔ stable entry layout avoids repeated measurement while moving presentation stays live (1.6423ms)
+✔ replacement and visibility preserve complete layout geometry for every card variant (4.7331ms)
+✔ S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes (5.6172ms)
+✔ S52 placement behavior restores ambient eligibility after a protected footprint moves (1.6738ms)
+✔ S52 placement signature rebuilds moved configuration before returning to an older pose (1.3318ms)
+✔ the tracked card alpha constant stays bound to the card it describes (2.1611ms)
+✔ every detection theme carries a callout plate inside the ambient band (0.5952ms)
+✔ an ambient detection callout paints its backing plate under its text (2.3047ms)
+✔ a callout with no micro-field paints one text run and still gets a plate (0.4553ms)
+✔ distance and altitude fades preserve exact boundary/ramp math (0.5973ms)
+✔ distance scale matches the legacy infrastructure NearFarScalar curve (0.4294ms)
+✔ altitude scale preserves CCTV's exact smoothstep and linear waypoints (0.5348ms)
+✔ the five-channel alpha chain is multiplicative and clamps inputs (0.354ms)
+✔ placement variants flip below near the top and stay viewport-clamped (1.1323ms)
+✔ tactical cards retain vertical-only placement and sprite-edge leaders (0.7457ms)
+✔ edge-clamped CCTV placements keep leaders vertical unless the anchor is outside the card (0.4158ms)
+✔ rounded rectangles use native support and retain a fallback path (0.5449ms)
+✔ text measurement cache is font-aware and font hooks follow host lifetime (0.7672ms)
+✔ text measurement cache caps LRU retention at 1024 entries (3.6991ms)
+✔ variant measurement and all six painters remain renderer-local (2.575ms)
+✔ thumbnail painter preserves the shipped CCTV 104x77 geometry and drawing coordinates (1.1669ms)
+✔ tracked painter preserves centered multi-line readout metrics (0.476ms)
+✔ shared tactical painter preserves FIRMS card metrics and top-rule treatment (2.8112ms)
+✔ selected elbow leader reveals from the glyph before its card fades in (0.9203ms)
+✔ track display text is cached across measure and paint and invalidates on content change (0.6034ms)
+✔ a sky-backed callout feathers its PLATE and nothing else (0.7417ms)
+✔ a callout with no backdrop information paints at full plate (0.2461ms)
+✔ the sky plate scale is a whisper, not a second plate (0.2492ms)
+✔ font invalidation requests a render only when font state changes (2.1788ms)
+✔ late readiness and queued events cannot wake a disposed or replacement host (0.6281ms)
+✔ every detection theme carries a distinct bracket colour for every transit mode (1.4514ms)
+ℹ tests 87
+ℹ suites 0
+ℹ pass 86
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3867.8553
+
+✖ failing tests:
+
+test at src\overlays\worldOverlay.test.mjs:2758:1
+✖ promoting an ambient entry to selected paints it once with no fading duplicate (2.2908ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-03/source/candidate/src/overlays/worldOverlay.test.mjs:2768:34)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

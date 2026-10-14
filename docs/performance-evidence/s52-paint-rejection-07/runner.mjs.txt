@@ -1,0 +1,149 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..', '..', '..');
+const referenceRoot = path.join(here, 'candidate-tuning-output-03');
+const candidateRoot = path.join(here, 'candidate-keyhole-revision-07');
+const workerRelative = 'src/overlays/worldOverlayAllocation.worker.mjs';
+const outputArg = process.argv[2];
+const output = outputArg && path.resolve(root, outputArg);
+if (!output || output === root || !output.startsWith(`${root}${path.sep}`) || existsSync(output)) {
+  throw new Error('Usage: measure-keyhole-revision-rocket.mjs fresh-output-directory inside the checkout');
+}
+
+const hashBytes = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const hashFile = (filename) => hashBytes(readFileSync(filename));
+const rel = (base, file) => path.join(base, file);
+function listRuntimeInputs(directory, prefix = '') {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const relative = path.posix.join(prefix, entry.name);
+    if (entry.isDirectory()) files.push(...listRuntimeInputs(path.join(directory, entry.name), relative));
+    else if (entry.isFile() && /\.(?:js|mjs)$/.test(entry.name)) {
+      if (!['src/celestialRing.js', 'src/overlays/worldOverlay.js', 'src/overlays/worldOverlay.test.mjs'].includes(relative.replaceAll('\\', '/'))) files.push(relative);
+    }
+  }
+  return files.sort();
+}
+const trackedInputs = listRuntimeInputs(path.join(referenceRoot, 'src'), 'src');
+const starting = {
+  referenceRuntime: hashFile(rel(referenceRoot, 'src/overlays/worldOverlay.js')),
+  referenceRing: hashFile(rel(referenceRoot, 'src/celestialRing.js')),
+  candidateRuntime: hashFile(rel(candidateRoot, 'src/overlays/worldOverlay.js')),
+  candidateRing: hashFile(rel(candidateRoot, 'src/celestialRing.js')),
+  packageLock: hashFile(path.join(root, 'package-lock.json')),
+  inputs: Object.fromEntries(trackedInputs.map((file) => [file, hashFile(rel(referenceRoot, file))])),
+};
+for (const file of trackedInputs) {
+  assert.equal(hashFile(rel(candidateRoot, file)), starting.inputs[file], `${file} differs between reference and candidate`);
+}
+assert.equal(hashFile(rel(referenceRoot, workerRelative)), hashFile(rel(root, workerRelative)), 'reference worker differs from current worker');
+
+const variants = {
+  reference: { cwd: referenceRoot, worker: rel(referenceRoot, workerRelative) },
+  revision: { cwd: candidateRoot, worker: rel(candidateRoot, workerRelative) },
+};
+const orders = [
+  ['reference', 'revision'],
+  ['revision', 'reference'],
+  ['reference', 'revision'],
+  ['revision', 'reference'],
+  ['reference', 'revision'],
+];
+mkdirSync(output, { recursive: true });
+const rows = [];
+for (let pair = 0; pair < orders.length; pair++) {
+  for (const variant of orders[pair]) {
+    const selected = variants[variant];
+    const env = {
+      ...process.env,
+      GEV_ALLOC_PROFILE: 'rocket-missions',
+      GEV_ALLOC_ENTRIES: '48',
+      GEV_ALLOC_WARMUP: '3000',
+      GEV_ALLOC_CHUNK: '48',
+      GEV_ALLOC_CHUNKS: '10',
+    };
+    const result = spawnSync(process.execPath, ['--expose-gc', '--no-concurrent-recompilation', selected.worker], {
+      cwd: selected.cwd,
+      encoding: 'utf8',
+      timeout: 180_000,
+      maxBuffer: 8 * 1024 * 1024,
+      env,
+    });
+    const stdout = result.stdout || '';
+    const stderr = result.stderr || '';
+    const stem = `pair-${pair}-${variant}`;
+    writeFileSync(path.join(output, `${stem}.stdout.txt`), stdout, { flag: 'wx' });
+    writeFileSync(path.join(output, `${stem}.stderr.txt`), stderr, { flag: 'wx' });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, `${stem} allocation worker failed: ${stderr}`);
+    const measured = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+    assert.equal(measured.ok, true);
+    assert.equal(measured.profile, 'rocket-missions');
+    assert.equal(measured.entryCount, 48);
+    rows.push({
+      pair,
+      variant,
+      medianBytesPerFrame: measured.medianBytesPerFrame,
+      maxBytesPerFrame: measured.maxBytesPerFrame,
+      chunkBytesPerFrame: measured.chunkBytesPerFrame,
+      candidateCount: measured.candidateCount,
+      paintedCount: measured.paintedCount,
+      paintedBySource: measured.paintedBySource,
+      stdoutSha256: hashBytes(Buffer.from(stdout)),
+      stderrSha256: hashBytes(Buffer.from(stderr)),
+    });
+  }
+}
+
+const pairs = [];
+for (let pair = 0; pair < orders.length; pair++) {
+  const reference = rows.find((row) => row.pair === pair && row.variant === 'reference');
+  const candidate = rows.find((row) => row.pair === pair && row.variant === 'revision');
+  assert.equal(candidate.candidateCount, reference.candidateCount, `candidate count differs in pair ${pair}`);
+  assert.equal(candidate.paintedCount, reference.paintedCount, `painted count differs in pair ${pair}`);
+  assert.deepEqual(candidate.paintedBySource, reference.paintedBySource, `painted populations differ in pair ${pair}`);
+  pairs.push({
+    pair,
+    referenceMedian: reference.medianBytesPerFrame,
+    revisionMedian: candidate.medianBytesPerFrame,
+    deltaPct: (candidate.medianBytesPerFrame / reference.medianBytesPerFrame - 1) * 100,
+    referenceMax: reference.maxBytesPerFrame,
+    revisionMax: candidate.maxBytesPerFrame,
+  });
+}
+const medians = Object.fromEntries(['reference', 'revision'].map((variant) => {
+  const values = rows.filter((row) => row.variant === variant).map((row) => row.medianBytesPerFrame).sort((a, b) => a - b);
+  return [variant, values[Math.floor(values.length / 2)]];
+}));
+
+const ending = {
+  referenceRuntime: hashFile(rel(referenceRoot, 'src/overlays/worldOverlay.js')),
+  referenceRing: hashFile(rel(referenceRoot, 'src/celestialRing.js')),
+  candidateRuntime: hashFile(rel(candidateRoot, 'src/overlays/worldOverlay.js')),
+  candidateRing: hashFile(rel(candidateRoot, 'src/celestialRing.js')),
+  packageLock: hashFile(path.join(root, 'package-lock.json')),
+  inputs: Object.fromEntries(trackedInputs.map((file) => [file, hashFile(rel(referenceRoot, file))])),
+};
+assert.deepEqual(ending, starting, 'source or dependency bytes changed during the comparison');
+for (const file of trackedInputs) assert.equal(hashFile(rel(candidateRoot, file)), starting.inputs[file], `${file} changed in candidate during comparison`);
+
+const report = {
+  schema: 's52-keyhole-revision-allocation-control/v1',
+  scope: 'Five alternating paired Node GC-bracketed allocation comparisons of caller-owned tuning output03 against the keyhole-fade revision-token variant. This is a focused rocket-missions allocation control; no browser, pixel, or GPU claim.',
+  node: process.version,
+  platform: process.platform,
+  environment: { profile: 'rocket-missions', entryCount: 48, warmupFrames: 3000, chunkFrames: 48, measuredChunks: 10 },
+  sourceSha256: starting,
+  medians,
+  paired: { rows: pairs, medianDeltaPct: [...pairs.map((pair) => pair.deltaPct)].sort((a, b) => a - b)[2], minDeltaPct: Math.min(...pairs.map((pair) => pair.deltaPct)), maxDeltaPct: Math.max(...pairs.map((pair) => pair.deltaPct)) },
+  rows,
+};
+const reportPath = path.join(output, 'report.json');
+writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ report: path.relative(root, reportPath).replaceAll('\\', '/'), reportSha256: hashFile(reportPath), medians, paired: report.paired }, null, 2));

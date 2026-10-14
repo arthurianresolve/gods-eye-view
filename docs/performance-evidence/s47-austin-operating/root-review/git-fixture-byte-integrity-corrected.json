@@ -1,0 +1,65 @@
+{
+  "schema": "gev-austin-acquired-checkout-byte-audit/v1",
+  "recordedAt": "2026-10-12T21:00:10.502Z",
+  "commit": "d768aaa0ca7639b54ca6d4c9512b52df380702b6",
+  "scope": "Root independent verification of fresh detached Git checkout files and native fixture factory; no browser or GPU claim",
+  "checkoutClean": true,
+  "rows": [
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/stations.tle",
+      "byteLength": 3192,
+      "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/visual.tle",
+      "byteLength": 26040,
+      "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/gps-ops.tle",
+      "byteLength": 5376,
+      "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/glo-ops.tle",
+      "byteLength": 4536,
+      "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/galileo.tle",
+      "byteLength": 5376,
+      "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    },
+    {
+      "file": "src/data/fixtures/austin-operating-v1/tle/geo.tle",
+      "byteLength": 95088,
+      "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14",
+      "matchesAcquisition": true,
+      "checkoutMatchesCommit": true
+    }
+  ],
+  "fixture": {
+    "id": "austin-operating-composed-v1",
+    "sha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+    "assetCount": 27,
+    "populations": {
+      "satellites": 828,
+      "cctv": 250,
+      "alpr-cameras": 952,
+      "military-installations": 699,
+      "radio": 750,
+      "wind": 65160
+    }
+  },
+  "status": "passed"
+}

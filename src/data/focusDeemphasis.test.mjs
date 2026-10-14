@@ -1,12 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as Cesium from 'cesium';
 import {
   DEFAULT_FOCUS_DEEMPHASIS_PARAMS,
   advanceFocusEvidenceNowMs,
+  advanceProjectedSpriteFocus,
   advanceSpriteFocus,
+  clearFocusTarget,
   focusNowMs,
+  focusAlphaNeedsWrite,
   focusTargetEmphasis,
   nearFarScalarValueAtDistance,
+  onFocusTargetChange,
+  publishFocusTargetFromCachedPosition,
   setFocusEvidenceNowMs,
   smoothFocusEmphasis,
 } from './focusDeemphasis.js';
@@ -17,6 +23,54 @@ const target = {
   paddingPx: 0,
   cameraDistance: 1000,
 };
+
+test('focus identity changes notify once and isolate listener failures', () => {
+  const originalProject = Cesium.SceneTransforms.worldToWindowCoordinates;
+  const originalWarn = console.warn;
+  Cesium.SceneTransforms.worldToWindowCoordinates = () =>
+    new Cesium.Cartesian2(10, 20);
+  console.warn = () => {};
+  clearFocusTarget();
+  const changes = [];
+  const removeFailureListener = onFocusTargetChange(() => {
+    throw new Error('observer failure');
+  });
+  const remove = onFocusTargetChange((next, previous) => {
+    changes.push({ next: next?.id ?? null, previous: previous?.id ?? null });
+  });
+  const camera = { positionWC: new Cesium.Cartesian3(0, 0, 0) };
+  const publish = (ownerLayer, id, frameNumber) =>
+    publishFocusTargetFromCachedPosition({
+      ownerLayer,
+      id,
+      scene: { frameState: { frameNumber } },
+      camera,
+      displayPosition: new Cesium.Cartesian3(1, 2, 3),
+    });
+
+  try {
+    publish('flights', 'A', 1);
+    publish('flights', 'A', 2);
+    publish('flights', 'B', 3);
+    publish('satellites', 'B', 4);
+    clearFocusTarget('flights', 'B');
+    clearFocusTarget('satellites', 'B');
+    remove();
+    publish('flights', 'C', 5);
+    assert.deepEqual(changes, [
+      { next: 'A', previous: null },
+      { next: 'B', previous: 'A' },
+      { next: 'B', previous: 'B' },
+      { next: null, previous: 'B' },
+    ]);
+  } finally {
+    remove();
+    removeFailureListener();
+    clearFocusTarget();
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProject;
+    console.warn = originalWarn;
+  }
+});
 
 test('focus decision dims a farther sprite inside and preserves one outside', () => {
   assert.equal(focusTargetEmphasis({ x: 50, y: 50 }, 1200, target, params), 0.25);
@@ -73,6 +127,85 @@ test('per-sprite state attacks, restores after focus clears, and settles at one'
   const release = advanceSpriteFocus(sprite, { ...input, target: null, nowMs: 600 });
   assert.ok(release.factor > 0.25 && release.factor < 1);
   assert.equal(advanceSpriteFocus(sprite, { ...input, target: null, nowMs: 900 }).factor, 1);
+});
+
+test('release crosses the write deadband, writes exact identity, then suspends', () => {
+  const releaseTimes = [4826.2, 4910.9, 5002, 5123.9, 5317.9];
+  for (const baseAlpha of [1, 0.7]) {
+    const sprite = {};
+    let currentAlpha = baseAlpha;
+    const sample = (nowMs, targetState) => {
+      const focus = advanceSpriteFocus(sprite, {
+        screenPosition: { x: 50, y: 50 },
+        cameraDistance: 1200,
+        target: targetState,
+        nowMs,
+      });
+      const nextAlpha = baseAlpha * focus.factor;
+      const shouldWrite = focusAlphaNeedsWrite(currentAlpha, nextAlpha, null, focus.endpointCompleted);
+      if (shouldWrite) currentAlpha = nextAlpha;
+      return { focus, nextAlpha, shouldWrite };
+    };
+
+    for (const nowMs of [3984, 4095.8, 4197.9, 4299.7, 4397.9, 4534.8, 4615.4, 4730.5])
+      sample(nowMs, target);
+
+    let release;
+    for (const nowMs of releaseTimes) release = sample(nowMs, null);
+    assert.equal(release.focus.active, true);
+    assert.equal(release.focus.transitioning, true);
+    assert.ok(currentAlpha < baseAlpha);
+
+    const nearEndpoint = sample(5398, null);
+    assert.ok(nearEndpoint.nextAlpha - currentAlpha <= DEFAULT_FOCUS_DEEMPHASIS_PARAMS.writeEpsilon);
+    assert.equal(nearEndpoint.shouldWrite, false);
+    assert.equal(nearEndpoint.focus.active, true);
+
+    const endpoint = sample(5478, null);
+    assert.equal(endpoint.focus.factor, 1);
+    assert.equal(endpoint.focus.endpointCompleted, true);
+    assert.equal(endpoint.focus.active, false);
+    assert.equal(endpoint.shouldWrite, true);
+    assert.equal(currentAlpha, baseAlpha);
+
+    const unrelated = advanceProjectedSpriteFocus({}, null, null, null, 5479, null);
+    assert.equal(unrelated.endpointCompleted, false, 'projected fast path clears the shared result flag');
+
+    const settled = sample(5558, null);
+    assert.equal(settled.focus.active, false);
+    assert.equal(settled.focus.endpointCompleted, false);
+    assert.equal(settled.shouldWrite, false);
+  }
+});
+
+test('attack endpoint also bypasses alpha deadband for a composed base color', () => {
+  const sprite = {};
+  const baseAlpha = 0.7;
+  let currentAlpha = baseAlpha;
+  const sample = (nowMs) => {
+    const focus = advanceSpriteFocus(sprite, {
+      screenPosition: { x: 50, y: 50 },
+      cameraDistance: 1200,
+      target,
+      nowMs,
+    });
+    const nextAlpha = baseAlpha * focus.factor;
+    const shouldWrite = focusAlphaNeedsWrite(currentAlpha, nextAlpha, null, focus.endpointCompleted);
+    if (shouldWrite) currentAlpha = nextAlpha;
+    return { focus, nextAlpha, shouldWrite };
+  };
+
+  for (const nowMs of [0, 80, 160, 240, 280]) sample(nowMs);
+  const nearFloor = sample(290);
+  assert.ok(nearFloor.nextAlpha - currentAlpha <= DEFAULT_FOCUS_DEEMPHASIS_PARAMS.writeEpsilon);
+  assert.equal(nearFloor.shouldWrite, false);
+  assert.equal(nearFloor.focus.endpointCompleted, false);
+
+  const endpoint = sample(300);
+  assert.equal(endpoint.focus.factor, DEFAULT_FOCUS_DEEMPHASIS_PARAMS.dimFloor);
+  assert.equal(endpoint.focus.endpointCompleted, true);
+  assert.equal(endpoint.shouldWrite, true);
+  assert.equal(currentAlpha, baseAlpha * DEFAULT_FOCUS_DEEMPHASIS_PARAMS.dimFloor);
 });
 
 test('distance chatter reanchors from current progress and converges toward the majority state', () => {

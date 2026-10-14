@@ -24,6 +24,7 @@ export default defineConfig(({ command, mode }) => {
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,
     cesiumToken: process.env.CESIUM_ION_TOKEN,
     mapillaryToken: process.env.MAPILLARY_CLIENT_TOKEN,
+    appCommit: process.env.GEV_APP_COMMIT || process.env.GITHUB_SHA || null,
     host: process.env.HOST,
     port: process.env.PORT,
     allowedHosts: resolveAllowedHosts(process.env.GEV_ALLOWED_HOSTS),

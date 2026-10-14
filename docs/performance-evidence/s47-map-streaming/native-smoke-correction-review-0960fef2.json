@@ -1,0 +1,30 @@
+{
+  "schema": "gev-map-native-smoke-correction-review/v1",
+  "implementationCommit": "0960fef267f345c0d01098604a1071fa70510c9c",
+  "integrationCommit": "7e7e50d29832a5050b9b7073f025fe9f063ce0a3",
+  "status": "component-reviewed-browser-validation-pending",
+  "corrections": [
+    "Map-only setup retains observed application defaults and records actual enabled layers and counts; normal dense setup remains separate.",
+    "Both native map variants use the shared context-close, interception-drain/release, then delivery-dispose finalizer.",
+    "Baseline success reporting is completed after finally, including its finalized delivery setup and native-journey evidence.",
+    "Requested outcomes balance acknowledged plus cancelled counts at aggregate and asset levels, with nonnegative safe-integer validation.",
+    "Required asset kinds need actual acknowledged bytes; cancelled-only kinds are rejected.",
+    "Failure diagnostics remain in runRevision scope; the undefined main-finally references are removed."
+  ],
+  "independentValidation": {
+    "focusedTests": { "passed": 58, "failed": 0, "skipped": 0 },
+    "frozenChangedModuleLint": { "files": 6, "errors": 0 },
+    "integratedCaptureNoUndef": { "files": 25, "errors": 0 },
+    "formatting": { "sourceFiles": 1634, "status": "passed" },
+    "importDirections": "passed",
+    "packageBoundaries": "passed",
+    "diffCheck": "passed"
+  },
+  "coverage": "The shared finalizer tests use real interception and fixture adapters with an EventEmitter/CDP transport seam. They exercise both document labels, pending-command drain, late-callback rejection and disposal order. Source review verifies both runRevision call sites and post-finally report attachment. This is not a production-browser observation.",
+  "applicationRuntimeDiffFromDev": "none; src, build and server runtime match dev e8ccc268; the server diff is a previously reviewed health test only",
+  "remaining": [
+    "Successful native map browser journeys on baseline eb8c682 and the frozen candidate.",
+    "Rendered missing/corrupt asset, cancellation, supersession and recovery controls.",
+    "M4 matched hardware comparisons and S60 final retention acceptance."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "encodedImages": 20,
+  "rgbaHashesMatch": true,
+  "matchedPairs": 10,
+  "teardown": [
+    {
+      "mode": "entities",
+      "layerDestroyed": true,
+      "dataSourceRemoved": true,
+      "rendererOwnersRemoved": true,
+      "viewerKeptForNextLifetime": true,
+      "instrumentationRestored": true,
+      "ownerCountAfterDestroy": 0,
+      "dataSourceCountAfterDestroy": 0,
+      "scenePrimitiveCountAfterDestroy": 1,
+      "groundPrimitiveCountAfterDestroy": 1
+    },
+    {
+      "mode": "primitive-collections",
+      "layerDestroyed": true,
+      "dataSourceRemoved": true,
+      "rendererOwnersRemoved": true,
+      "viewerKeptForNextLifetime": true,
+      "instrumentationRestored": true,
+      "ownerCountAfterDestroy": 0,
+      "dataSourceCountAfterDestroy": 0,
+      "scenePrimitiveCountAfterDestroy": 1,
+      "groundPrimitiveCountAfterDestroy": 1
+    }
+  ]
+}

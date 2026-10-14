@@ -1,0 +1,3 @@
+*.json -text
+*.gz binary
+*.diff -text

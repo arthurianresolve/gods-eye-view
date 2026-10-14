@@ -84,6 +84,30 @@ test('flights analyst record: full record maps every contract field', () => {
   });
 });
 
+test('flights analyst record retains source timestamps and coverage for evidence pinning', () => {
+  const r = mapAnalystRecord('a1b2c3', {
+    ...FULL_INFO,
+    sourceId: 'OpenSky',
+    sourceReference: 'a1b2c3',
+    positionObservedAtMs: 1_700_000_000_000,
+    receivedAtMs: 1_700_000_000_250,
+    sourceSnapshotObservedAtMs: 1_700_000_000_100,
+    sourceFreshness: 'partial',
+    sourceCoverage: 'Austin regional fallback',
+    sourceComplete: false,
+  });
+  assert.deepEqual(r.provenance, {
+    sourceId: 'OpenSky',
+    sourceRecordId: 'a1b2c3',
+    positionObservedAtMs: 1_700_000_000_000,
+    receivedAtMs: 1_700_000_000_250,
+    sourceSnapshotObservedAtMs: 1_700_000_000_100,
+    sourceFreshness: 'partial',
+    sourceCoverage: 'Austin regional fallback',
+    sourceComplete: false,
+  });
+});
+
 test('flights analyst record: implausible route is suppressed (routeOk=false)', () => {
   const r = mapAnalystRecord('a1b2c3', FULL_INFO, { routeOk: false });
   assert.equal(r.routeOrigin, null);

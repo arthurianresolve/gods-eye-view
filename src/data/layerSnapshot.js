@@ -16,6 +16,7 @@ export const LAYER_FEED_STATES = Object.freeze([
   'nominal',
   'loading',
   'degraded',
+  'partial',
   'stale',
   'fallback',
   'unavailable',
@@ -26,6 +27,7 @@ export const LAYER_FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
   loading: 'LOADING',
   degraded: 'DEGRADED',
+  partial: 'PARTIAL',
   stale: 'STALE',
   fallback: 'FALLBACK',
   unavailable: 'UNAVAILABLE',
@@ -46,10 +48,11 @@ export const FEED_STATE_SEVERITY = Object.freeze({
   unavailable: 0,
   loading: 1,
   degraded: 2,
-  stale: 3,
-  fallback: 4,
-  nominal: 5,
-  off: 6,
+  partial: 3,
+  stale: 4,
+  fallback: 5,
+  nominal: 6,
+  off: 7,
 });
 
 export { layerFeedState } from './feedState.js';
@@ -58,6 +61,12 @@ function snapshotError(stats) {
   const err = stats?.error || stats?.lastError || stats?.managerRefreshError;
   if (err == null || err === '') return null;
   return err instanceof Error ? err.message : String(err);
+}
+
+function snapshotInstant(value) {
+  if (value == null || value === '') return null;
+  const instant = typeof value === 'number' ? value : Date.parse(value);
+  return Number.isFinite(instant) && instant > 0 ? instant : null;
 }
 
 /**
@@ -90,7 +99,7 @@ export function snapshotAgeLabel(lastUpdate, now = Date.now()) {
 /**
  * Pick the most severe feed-state from a list.
  * @param {Iterable<string|null|undefined>} states Feed-state strings.
- * @returns {'nominal'|'loading'|'degraded'|'stale'|'fallback'|'unavailable'|'off'|null}
+ * @returns {'nominal'|'loading'|'degraded'|'partial'|'stale'|'fallback'|'unavailable'|'off'|null}
  */
 export function worstFeedState(states) {
   let worst = null;
@@ -139,6 +148,28 @@ export function layerSnapshot(layer = {}, { now = Date.now() } = {}) {
     ? Number(stats.lastUpdate)
     : null;
   const feedState = enabled ? layerFeedState({ ...stats, source }) : 'off';
+  const coverage =
+    typeof stats.coverage === 'string'
+      ? stats.coverage.trim() || null
+      : typeof stats.coverageLabel === 'string'
+        ? stats.coverageLabel.trim() || null
+        : null;
+  const completeness =
+    stats.partial === true ||
+    String(stats.status || '').toLowerCase() === 'partial'
+      ? 'partial'
+      : stats.complete === true
+        ? 'complete'
+        : 'unknown';
+  const observedAt =
+    snapshotInstant(stats.observedAtMs) ?? snapshotInstant(stats.observedAt);
+  const validAt =
+    snapshotInstant(stats.validAt) ?? snapshotInstant(stats.validTime);
+  const issuedAt =
+    snapshotInstant(stats.issuedAtMs) ??
+    snapshotInstant(stats.issuedAt) ??
+    snapshotInstant(stats.runIso) ??
+    (validAt != null ? lastUpdate : null);
   return {
     id: layer.id || layer.layerKey || null,
     name: layer.name || layer.label || layer.id || layer.layerKey || null,
@@ -150,6 +181,24 @@ export function layerSnapshot(layer = {}, { now = Date.now() } = {}) {
     ageSec: snapshotAgeSec(lastUpdate, now),
     ageLabel: snapshotAgeLabel(lastUpdate, now),
     error: snapshotError(stats),
+    freshness:
+      typeof stats.freshness === 'string'
+        ? stats.freshness
+        : stats.stale
+          ? 'stale'
+          : 'unknown',
+    observedAt,
+    issuedAt,
+    validAt,
+    sourceTimeKind:
+      validAt != null
+        ? 'forecast'
+        : observedAt != null
+          ? 'observation'
+          : 'unknown',
+    coverage,
+    completeness,
+    truncated: stats.truncated === true || stats.saturated === true,
   };
 }
 

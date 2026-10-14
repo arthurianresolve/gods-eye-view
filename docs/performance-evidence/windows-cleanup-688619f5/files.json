@@ -1,0 +1,14 @@
+{
+  "focused.log": {
+    "bytes": 641,
+    "sha256": "947892f37228831e6389a58a08a14130e1a21e6c48497809be5a28cf978b74ce"
+  },
+  "full-node24.log.gz": {
+    "bytes": 241995,
+    "sha256": "78554afd23355730d4290a7d477b793599773cd8e04ab5ead49fd768234dca58"
+  },
+  "run.json": {
+    "bytes": 967,
+    "sha256": "675aeb1595a6bb5520b93d838532d478905113af8f626453db5ff80ab71d52aa"
+  }
+}

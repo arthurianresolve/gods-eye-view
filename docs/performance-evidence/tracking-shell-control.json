@@ -1,0 +1,24 @@
+{
+  "scope": "tracking CI logging pipeline exit propagation; no browser correctness claim",
+  "workflowSha256": "7f22714c08e0686d8554ff748f554872dc8264ddad7bf79c447a8a1662726c5a",
+  "rows": [
+    {
+      "mode": "old-default",
+      "injectedExitCode": 7,
+      "observedExitCode": 0,
+      "logPreserved": true
+    },
+    {
+      "mode": "explicit-bash",
+      "injectedExitCode": 7,
+      "observedExitCode": 7,
+      "logPreserved": true
+    },
+    {
+      "mode": "explicit-bash",
+      "injectedExitCode": 0,
+      "observedExitCode": 0,
+      "logPreserved": true
+    }
+  ]
+}

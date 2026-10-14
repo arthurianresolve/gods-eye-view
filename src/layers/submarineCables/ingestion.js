@@ -1,9 +1,33 @@
 import {
   featureLabel,
   featureReference,
+  createCableFeatureRecord,
+  clearSourceOrdinalAnnotations,
+  groupEntitiesBySourceOrdinal,
   normalizeFeatures,
+  withSourceOrdinals,
 } from './geometry.js';
 import * as Cesium from 'cesium';
+
+// Bind and remove transient metadata before any data source is published, even
+// when a generation was superseded while Cesium was loading its geometry.
+async function loadBoundDataSource(features, options) {
+  const binding = withSourceOrdinals(features);
+  try {
+    const dataSource = await Cesium.GeoJsonDataSource.load(
+      { type: 'FeatureCollection', features: binding.features },
+      options,
+    );
+    const entitiesByFeature = groupEntitiesBySourceOrdinal(
+      dataSource.entities.values,
+      binding,
+    );
+    return { dataSource, entitiesByFeature };
+  } finally {
+    // Cesium descriptions can retain the supplied GeoJSON properties.
+    clearSourceOrdinalAnnotations(binding);
+  }
+}
 
 export function createIngestion({ state, parts, source }) {
   async function load(viewer) {
@@ -46,31 +70,37 @@ export function createIngestion({ state, parts, source }) {
 
       const cableFeatures = normalizeFeatures(cableJson, 'cable');
       const landingFeatures = normalizeFeatures(landingJson, 'landing');
-
-      const cableDataSource = await Cesium.GeoJsonDataSource.load(
-        { type: 'FeatureCollection', features: cableFeatures },
-        {
-          clampToGround: true,
-          stroke: state.cableColor.withAlpha(0.95),
-          fill: state.cableColor.withAlpha(0.18),
-          strokeWidth: 2,
-          markerColor: state.cableColor,
-          markerSize: 6,
-        },
-      );
-      if (!owns()) return;
-      const landingDataSource = await Cesium.GeoJsonDataSource.load(
-        { type: 'FeatureCollection', features: landingFeatures },
-        {
-          clampToGround: true,
-          stroke: state.landingColor.withAlpha(0.9),
-          fill: state.landingColor.withAlpha(0.35),
-          strokeWidth: 2,
-          markerColor: state.landingColor,
-          markerSize: 6,
-        },
-      );
-      if (!owns()) return;
+      const {
+        dataSource: cableDataSource,
+        entitiesByFeature: cableEntitiesByFeature,
+      } = await loadBoundDataSource(cableFeatures, {
+        clampToGround: true,
+        stroke: state.cableColor.withAlpha(0.95),
+        fill: state.cableColor.withAlpha(0.18),
+        strokeWidth: 2,
+        markerColor: state.cableColor,
+        markerSize: 6,
+      });
+      if (!owns()) {
+        cableDataSource.destroy?.();
+        return;
+      }
+      const {
+        dataSource: landingDataSource,
+        entitiesByFeature: landingEntitiesByFeature,
+      } = await loadBoundDataSource(landingFeatures, {
+        clampToGround: true,
+        stroke: state.landingColor.withAlpha(0.9),
+        fill: state.landingColor.withAlpha(0.35),
+        strokeWidth: 2,
+        markerColor: state.landingColor,
+        markerSize: 6,
+      });
+      if (!owns()) {
+        cableDataSource.destroy?.();
+        landingDataSource.destroy?.();
+        return;
+      }
 
       cableDataSource.name = `${source.label} Submarine Cables`;
       landingDataSource.name = `${source.label} Landing Points`;
@@ -124,57 +154,74 @@ export function createIngestion({ state, parts, source }) {
       state._landingDataSource = landingDataSource;
       state._referenceDataSource = referenceDataSource;
 
-      const cableEntities = state._cableDataSource.entities.values;
-      const landingEntities = state._landingDataSource.entities.values;
       state._pickByEntity = new WeakMap();
       state._referenceRecords = [];
       state._surfaceRecords = [];
+      state._featureRecords = [];
 
-      cableEntities.forEach((entity, index) => {
-        const feature = cableFeatures[index];
+      cableFeatures.forEach((feature, index) => {
         const reference = featureReference(feature);
         if (!reference) return;
-
-        parts.rendering.styleCableEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, {
-          kind: 'cable',
+        const featureRecord = createCableFeatureRecord(
+          feature,
+          'cable',
           reference,
-          label: featureLabel(feature),
-        });
-        state._surfaceRecords.push({
-          entity,
-          base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
-        });
+        );
+        if (!featureRecord) return;
+        const featureEntities = cableEntitiesByFeature[index];
+        if (featureEntities.length === 0) return;
+        state._featureRecords.push(featureRecord);
+        for (const entity of featureEntities) {
+          parts.rendering.styleCableEntity(entity, feature);
+          parts.interaction.registerPickEntity(entity, featureRecord);
+          state._surfaceRecords.push({
+            entity,
+            base: Cesium.Cartesian3.fromDegrees(
+              reference.lon,
+              reference.lat,
+              0,
+            ),
+          });
+        }
         parts.rendering.addReferenceStem({
           reference,
           label: featureLabel(feature),
           kind: 'cable',
           color: state.cableColor,
-          feature,
+          featureRecord,
         });
       });
 
-      landingEntities.forEach((entity, index) => {
-        const feature = landingFeatures[index];
+      landingFeatures.forEach((feature, index) => {
         const reference = featureReference(feature);
         if (!reference) return;
-
-        parts.rendering.styleLandingEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, {
-          kind: 'landing-point',
+        const featureRecord = createCableFeatureRecord(
+          feature,
+          'landing-point',
           reference,
-          label: featureLabel(feature),
-        });
-        state._surfaceRecords.push({
-          entity,
-          base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
-        });
+        );
+        if (!featureRecord) return;
+        const featureEntities = landingEntitiesByFeature[index];
+        if (featureEntities.length === 0) return;
+        state._featureRecords.push(featureRecord);
+        for (const entity of featureEntities) {
+          parts.rendering.styleLandingEntity(entity, feature);
+          parts.interaction.registerPickEntity(entity, featureRecord);
+          state._surfaceRecords.push({
+            entity,
+            base: Cesium.Cartesian3.fromDegrees(
+              reference.lon,
+              reference.lat,
+              0,
+            ),
+          });
+        }
         parts.rendering.addReferenceStem({
           reference,
           label: featureLabel(feature),
           kind: 'landing-point',
           color: state.landingColor,
-          feature,
+          featureRecord,
         });
       });
 
@@ -183,12 +230,28 @@ export function createIngestion({ state, parts, source }) {
       state._lastUpdate = Date.now();
       state._loadingLabel = '';
       parts.rendering.updateVisibility();
+      if (state._enabled) state._overlayPublisher.show();
       state._referenceSweepGate.markDirty();
       viewer.scene.requestRender?.();
     } catch (error) {
       // A stale or aborted load reports nothing: its failure belongs to a
       // lifecycle the user already left.
       if (owns() && error?.name !== 'AbortError') {
+        // If the source handoff committed before this error, release its
+        // generation-owned render objects before a later retry can rebuild.
+        try {
+          parts.rendering.releaseDataSources(viewer);
+        } catch {
+          /* clear identity ownership even if viewer teardown raced cleanup */
+        }
+        state._featureRecords = [];
+        state._pickByEntity = new WeakMap();
+        state._referenceRecords = [];
+        state._surfaceRecords = [];
+        state._count = 0;
+        state._loaded = false;
+        parts.rendering.resetPublishSignature();
+        state._overlayPublisher.hide();
         state._error = error?.message || 'TeleGeography load failed';
         console.warn(
           '[Data:telegeography-submarine-cables]',

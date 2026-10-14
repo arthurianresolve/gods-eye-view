@@ -28,7 +28,17 @@ export class FlightRecords {
 
   receive(
     observation,
-    { viewerLatDeg, viewerLonDeg, trackedId, floorWarmPoints },
+    {
+      viewerLatDeg,
+      viewerLonDeg,
+      trackedId,
+      floorWarmPoints,
+      sourceId = null,
+      sourceSnapshotObservedAtMs = null,
+      sourceCoverage = null,
+      sourceFreshness = null,
+      sourceComplete = null,
+    },
   ) {
     const { geoidHeight, cachedGroundFloor, floorAltitudeM } = this.services;
     const {
@@ -197,9 +207,27 @@ export class FlightRecords {
       !!prevMeta && (prevMeta.onGround === true) !== onGround;
     // Store flight metadata for click-to-track labels
     const cat = stickyNumber(category, prevMeta?.category, null);
+    const receivedAtMs = Date.now();
+    const positionObservedAtMs =
+      Number.isFinite(observation.positionTimeMs) &&
+      observation.positionTimeMs > 0
+        ? observation.positionTimeMs
+        : null;
     const meta = {
       sourceReference: observation.reference,
-      observedReceiptMs: Date.now(),
+      observedReceiptMs: receivedAtMs,
+      receivedAtMs,
+      positionObservedAtMs,
+      sourceSnapshotObservedAtMs:
+        Number.isFinite(sourceSnapshotObservedAtMs) &&
+        sourceSnapshotObservedAtMs > 0
+          ? sourceSnapshotObservedAtMs
+          : null,
+      sourceId: sourceId || null,
+      sourceCoverage: sourceCoverage || null,
+      sourceFreshness: sourceFreshness || null,
+      sourceComplete:
+        typeof sourceComplete === 'boolean' ? sourceComplete : null,
       callsign: stickyText(callsign, prevMeta?.callsign),
       altitude: alt,
       // geoAltitudeM/renderAltitudeM are ADDITIVE fields alongside the
@@ -250,11 +278,10 @@ export class FlightRecords {
     };
     this.data.set(icao24, meta);
 
-    const fixEpochMs =
-      Number.isFinite(observation.positionTimeMs) &&
-      observation.positionTimeMs > 0
-        ? observation.positionTimeMs
-        : Date.now();
+    // Rendering still needs a clock for feeds that omit per-record position
+    // time. Evidence above keeps that source time unknown; local receipt is
+    // only the runtime interpolation fallback.
+    const fixEpochMs = positionObservedAtMs ?? receivedAtMs;
     return { icao24, prevMeta, meta, groundFlipped, fixEpochMs };
   }
 

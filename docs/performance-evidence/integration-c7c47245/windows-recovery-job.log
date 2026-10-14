@@ -1,0 +1,1421 @@
+﻿2026-10-13T16:27:55.8226262Z Current runner version: '2.337.0'
+2026-10-13T16:27:55.8256360Z ##[group]Runner Image Provisioner
+2026-10-13T16:27:55.8257376Z Hosted Compute Agent
+2026-10-13T16:27:55.8257990Z Version: 20260901.588
+2026-10-13T16:27:55.8258686Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-13T16:27:55.8259569Z Build Date: 2026-09-01T19:56:44Z
+2026-10-13T16:27:55.8260284Z Worker ID: {8201b8bc-8595-48f5-b0ca-7107b9d9c809}
+2026-10-13T16:27:55.8261151Z Azure Region: westus3
+2026-10-13T16:27:55.8261741Z ##[endgroup]
+2026-10-13T16:27:55.8263423Z ##[group]Operating System
+2026-10-13T16:27:55.8264089Z Microsoft Windows Server 2025
+2026-10-13T16:27:55.8264709Z 10.0.26100
+2026-10-13T16:27:55.8265299Z Datacenter
+2026-10-13T16:27:55.8265830Z ##[endgroup]
+2026-10-13T16:27:55.8266386Z ##[group]Runner Image
+2026-10-13T16:27:55.8267025Z Image: windows-2025-vs2026
+2026-10-13T16:27:55.8267678Z Version: 20260925.250.1
+2026-10-13T16:27:55.8269426Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+2026-10-13T16:27:55.8271283Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+2026-10-13T16:27:55.8272380Z ##[endgroup]
+2026-10-13T16:27:55.8273613Z ##[group]GITHUB_TOKEN Permissions
+2026-10-13T16:27:55.8275814Z Contents: read
+2026-10-13T16:27:55.8276779Z Metadata: read
+2026-10-13T16:27:55.8277413Z ##[endgroup]
+2026-10-13T16:27:55.8279719Z Secret source: Actions
+2026-10-13T16:27:55.8280653Z Cache mode: write
+2026-10-13T16:27:55.8281428Z Prepare workflow directory
+2026-10-13T16:27:55.8848796Z Prepare all required actions
+2026-10-13T16:27:55.8919223Z Getting action download info
+2026-10-13T16:27:56.1911853Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-13T16:27:56.4473006Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-13T16:27:56.7709449Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-13T16:27:57.1390861Z Complete job name: Install and update recovery (windows-latest)
+2026-10-13T16:27:57.4271945Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+2026-10-13T16:27:57.4273285Z with:
+2026-10-13T16:27:57.4273732Z   persist-credentials: false
+2026-10-13T16:27:57.4274243Z   fetch-depth: 0
+2026-10-13T16:27:57.4274847Z   repository: arthurianresolve/gods-eye-view
+2026-10-13T16:27:57.4278132Z   token: ***
+2026-10-13T16:27:57.4278563Z   ssh-strict: true
+2026-10-13T16:27:57.4278974Z   ssh-user: git
+2026-10-13T16:27:57.4279407Z   clean: true
+2026-10-13T16:27:57.4279850Z   sparse-checkout-cone-mode: true
+2026-10-13T16:27:57.4280306Z   fetch-tags: false
+2026-10-13T16:27:57.4280759Z   show-progress: true
+2026-10-13T16:27:57.4281185Z   lfs: false
+2026-10-13T16:27:57.4281617Z   submodules: false
+2026-10-13T16:27:57.4282104Z   set-safe-directory: true
+2026-10-13T16:27:57.4282558Z   allow-unsafe-pr-checkout: false
+2026-10-13T16:27:57.4283342Z env:
+2026-10-13T16:27:57.4283750Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:27:57.4284326Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:27:57.4284784Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:27:57.4285306Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:27:57.4285811Z ##[endgroup]
+2026-10-13T16:27:57.5712998Z Syncing repository: arthurianresolve/gods-eye-view
+2026-10-13T16:27:57.5717188Z ##[group]Getting Git version info
+2026-10-13T16:27:57.5718074Z Working directory is 'D:\a\gods-eye-view\gods-eye-view'
+2026-10-13T16:27:57.7825933Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-13T16:27:58.3411613Z git version 2.55.0.windows.5
+2026-10-13T16:27:58.3462237Z ##[endgroup]
+2026-10-13T16:27:58.3488983Z Temporarily overriding HOME='D:\a\_temp\3c532d4a-0a99-4fcb-8ff7-daec93c5bd44' before making global git config changes
+2026-10-13T16:27:58.3493225Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T16:27:58.3502040Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\gods-eye-view\gods-eye-view
+2026-10-13T16:27:58.6647639Z Deleting the contents of 'D:\a\gods-eye-view\gods-eye-view'
+2026-10-13T16:27:58.6655038Z ##[group]Initializing the repository
+2026-10-13T16:27:58.6664091Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\gods-eye-view\gods-eye-view
+2026-10-13T16:27:58.7465000Z Initialized empty Git repository in D:/a/gods-eye-view/gods-eye-view/.git/
+2026-10-13T16:27:58.7527887Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/arthurianresolve/gods-eye-view
+2026-10-13T16:27:58.8144536Z ##[endgroup]
+2026-10-13T16:27:58.8145746Z ##[group]Disabling automatic garbage collection
+2026-10-13T16:27:58.8155481Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-13T16:27:58.8485963Z ##[endgroup]
+2026-10-13T16:27:58.8487322Z ##[group]Setting up auth
+2026-10-13T16:27:58.8500821Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T16:27:58.8827391Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T16:28:01.3387010Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T16:28:01.3740484Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T16:28:01.9313417Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T16:28:01.9598964Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T16:28:02.4923462Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-13T16:28:02.5239952Z ##[endgroup]
+2026-10-13T16:28:02.5240834Z ##[group]Fetching the repository
+2026-10-13T16:28:02.5254898Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-13T16:28:12.3616633Z From https://github.com/arthurianresolve/gods-eye-view
+2026-10-13T16:28:12.3617573Z  * [new branch]        dev                     -> origin/dev
+2026-10-13T16:28:12.3622515Z  * [new branch]        fix/cable-source-identity -> origin/fix/cable-source-identity
+2026-10-13T16:28:12.3623881Z  * [new branch]        fix/cesium-dependency-identity -> origin/fix/cesium-dependency-identity
+2026-10-13T16:28:12.3626871Z  * [new branch]        fix/next-stage-validation -> origin/fix/next-stage-validation
+2026-10-13T16:28:12.3630702Z  * [new branch]        main                    -> origin/main
+2026-10-13T16:28:12.3632093Z  * [new branch]        qa/accessibility-focus-diagnostics -> origin/qa/accessibility-focus-diagnostics
+2026-10-13T16:28:12.3642599Z  * [new branch]        qa/cctv-calibration-demand -> origin/qa/cctv-calibration-demand
+2026-10-13T16:28:12.3644033Z  * [new branch]        qa/cctv-lifecycle       -> origin/qa/cctv-lifecycle
+2026-10-13T16:28:12.3645221Z  * [new branch]        qa/cesium-collision-fix -> origin/qa/cesium-collision-fix
+2026-10-13T16:28:12.3646188Z  * [new branch]        qa/command-palette-focus -> origin/qa/command-palette-focus
+2026-10-13T16:28:12.3647102Z  * [new branch]        qa/free-renderer-a49b221 -> origin/qa/free-renderer-a49b221
+2026-10-13T16:28:12.3648062Z  * [new branch]        qa/hosted-soak-envelope -> origin/qa/hosted-soak-envelope
+2026-10-13T16:28:12.3650906Z  * [new branch]        qa/hud-summary-coalescing -> origin/qa/hud-summary-coalescing
+2026-10-13T16:28:12.3651749Z  * [new branch]        qa/import-entity-ownership -> origin/qa/import-entity-ownership
+2026-10-13T16:28:12.3652676Z  * [new branch]        qa/import-point-current-dev -> origin/qa/import-point-current-dev
+2026-10-13T16:28:12.3653506Z  * [new branch]        qa/import-workspace-lifecycle -> origin/qa/import-workspace-lifecycle
+2026-10-13T16:28:12.3654439Z  * [new branch]        qa/infrastructure-collections -> origin/qa/infrastructure-collections
+2026-10-13T16:28:12.3655445Z  * [new branch]        qa/main-integration-591f299 -> origin/qa/main-integration-591f299
+2026-10-13T16:28:12.3658296Z  * [new branch]        qa/main-tle-reconciliation-8b8ccc9 -> origin/qa/main-tle-reconciliation-8b8ccc9
+2026-10-13T16:28:12.3660175Z  * [new branch]        qa/main-weather-integration -> origin/qa/main-weather-integration
+2026-10-13T16:28:12.3661215Z  * [new branch]        qa/map-streaming-metal-control-7fbbf1fa -> origin/qa/map-streaming-metal-control-7fbbf1fa
+2026-10-13T16:28:12.3662395Z  * [new branch]        qa/mission-render-demand -> origin/qa/mission-render-demand
+2026-10-13T16:28:12.3663221Z  * [new branch]        qa/mixed-use-smoke      -> origin/qa/mixed-use-smoke
+2026-10-13T16:28:12.3664062Z  * [new branch]        qa/performance-build-smoke -> origin/qa/performance-build-smoke
+2026-10-13T16:28:12.3664954Z  * [new branch]        qa/s47-atomic-warmup-boundary -> origin/qa/s47-atomic-warmup-boundary
+2026-10-13T16:28:12.3665905Z  * [new branch]        qa/s47-austin-operating-workload -> origin/qa/s47-austin-operating-workload
+2026-10-13T16:28:12.3666843Z  * [new branch]        qa/s47-austin-receipt-only -> origin/qa/s47-austin-receipt-only
+2026-10-13T16:28:12.3667778Z  * [new branch]        qa/s47-common-renderer-evidence -> origin/qa/s47-common-renderer-evidence
+2026-10-13T16:28:12.3670232Z  * [new branch]        qa/s47-early-document-cpu-profile -> origin/qa/s47-early-document-cpu-profile
+2026-10-13T16:28:12.3675476Z  * [new branch]        qa/s47-first-motion-cpu-profile -> origin/qa/s47-first-motion-cpu-profile
+2026-10-13T16:28:12.3678208Z  * [new branch]        qa/s47-fixture-clock-contract -> origin/qa/s47-fixture-clock-contract
+2026-10-13T16:28:12.3679487Z  * [new branch]        qa/s47-infrastructure-workloads -> origin/qa/s47-infrastructure-workloads
+2026-10-13T16:28:12.3680829Z  * [new branch]        qa/s47-interception-failure-evidence -> origin/qa/s47-interception-failure-evidence
+2026-10-13T16:28:12.3682043Z  * [new branch]        qa/s47-observation-retirement -> origin/qa/s47-observation-retirement
+2026-10-13T16:28:12.3682953Z  * [new branch]        qa/s47-observer-read-cost -> origin/qa/s47-observer-read-cost
+2026-10-13T16:28:12.3684194Z  * [new branch]        qa/s47-prewarm-stage-diagnostic -> origin/qa/s47-prewarm-stage-diagnostic
+2026-10-13T16:28:12.3685255Z  * [new branch]        qa/s47-renderer-cleanup-evidence -> origin/qa/s47-renderer-cleanup-evidence
+2026-10-13T16:28:12.3690756Z  * [new branch]        qa/s47-renderer-cleanup-lifetime -> origin/qa/s47-renderer-cleanup-lifetime
+2026-10-13T16:28:12.3692065Z  * [new branch]        qa/s47-renderer-cleanup-timing -> origin/qa/s47-renderer-cleanup-timing
+2026-10-13T16:28:12.3693179Z  * [new branch]        qa/s47-retire-setup-render-loop -> origin/qa/s47-retire-setup-render-loop
+2026-10-13T16:28:12.3694266Z  * [new branch]        qa/s47-retirement-order -> origin/qa/s47-retirement-order
+2026-10-13T16:28:12.3695209Z  * [new branch]        qa/s47-weather-capture  -> origin/qa/s47-weather-capture
+2026-10-13T16:28:12.3696162Z  * [new branch]        qa/s48-current-dev-capture -> origin/qa/s48-current-dev-capture
+2026-10-13T16:28:12.3697267Z  * [new branch]        qa/s48-depth-pick-attribution -> origin/qa/s48-depth-pick-attribution
+2026-10-13T16:28:12.3699386Z  * [new branch]        qa/s48-fixture-release-ownership -> origin/qa/s48-fixture-release-ownership
+2026-10-13T16:28:12.3700565Z  * [new branch]        qa/s48-registration-retirement -> origin/qa/s48-registration-retirement
+2026-10-13T16:28:12.3701408Z  * [new branch]        qa/s48-shader-program-attribution -> origin/qa/s48-shader-program-attribution
+2026-10-13T16:28:12.3702227Z  * [new branch]        qa/s48-smoke-cli-startup -> origin/qa/s48-smoke-cli-startup
+2026-10-13T16:28:12.3702972Z  * [new branch]        qa/s49-camera-verbs-ownership -> origin/qa/s49-camera-verbs-ownership
+2026-10-13T16:28:12.3703597Z  * [new branch]        qa/s49-view-target-prewarm-ownership -> origin/qa/s49-view-target-prewarm-ownership
+2026-10-13T16:28:12.3704182Z  * [new branch]        qa/s50-frustum-input-reuse -> origin/qa/s50-frustum-input-reuse
+2026-10-13T16:28:12.3704688Z  * [new branch]        qa/s50-revision-completion -> origin/qa/s50-revision-completion
+2026-10-13T16:28:12.3705159Z  * [new branch]        qa/s50-terrain-epoch    -> origin/qa/s50-terrain-epoch
+2026-10-13T16:28:12.3705606Z  * [new branch]        qa/s51-fleet-demand     -> origin/qa/s51-fleet-demand
+2026-10-13T16:28:12.3706086Z  * [new branch]        qa/s51-traffic-demand   -> origin/qa/s51-traffic-demand
+2026-10-13T16:28:12.3706564Z  * [new branch]        qa/s51-traffic-integration -> origin/qa/s51-traffic-integration
+2026-10-13T16:28:12.3707062Z  * [new branch]        qa/s52-direct-filter-checks -> origin/qa/s52-direct-filter-checks
+2026-10-13T16:28:12.3707538Z  * [new branch]        qa/s52-font-wake        -> origin/qa/s52-font-wake
+2026-10-13T16:28:12.3707966Z  * [new branch]        qa/s52-layout-reuse     -> origin/qa/s52-layout-reuse
+2026-10-13T16:28:12.3708389Z  * [new branch]        qa/s52-node-comparison  -> origin/qa/s52-node-comparison
+2026-10-13T16:28:12.3708851Z  * [new branch]        qa/s52-overlay-visual   -> origin/qa/s52-overlay-visual
+2026-10-13T16:28:12.3709391Z  * [new branch]        qa/s52-paint-callback-controls -> origin/qa/s52-paint-callback-controls
+2026-10-13T16:28:12.3709899Z  * [new branch]        qa/s52-placement-reuse  -> origin/qa/s52-placement-reuse
+2026-10-13T16:28:12.3710355Z  * [new branch]        qa/s52-placement-revised -> origin/qa/s52-placement-revised
+2026-10-13T16:28:12.3710804Z  * [new branch]        qa/s52-projection-reuse -> origin/qa/s52-projection-reuse
+2026-10-13T16:28:12.3711440Z  * [new branch]        qa/s53-command-attribution -> origin/qa/s53-command-attribution
+2026-10-13T16:28:12.3711910Z  * [new branch]        qa/s54-cable-benefit    -> origin/qa/s54-cable-benefit
+2026-10-13T16:28:12.3712354Z  * [new branch]        qa/s54-cable-references -> origin/qa/s54-cable-references
+2026-10-13T16:28:12.3712904Z  * [new branch]        qa/s54-current-dev-integration -> origin/qa/s54-current-dev-integration
+2026-10-13T16:28:12.3713399Z  * [new branch]        qa/s54-current-update-gate -> origin/qa/s54-current-update-gate
+2026-10-13T16:28:12.3714010Z  * [new branch]        qa/s54-current-update-readiness -> origin/qa/s54-current-update-readiness
+2026-10-13T16:28:12.3714693Z  * [new branch]        qa/s54-datacenter-current-dev -> origin/qa/s54-datacenter-current-dev
+2026-10-13T16:28:12.3715264Z  * [new branch]        qa/s54-infrastructure-collections -> origin/qa/s54-infrastructure-collections
+2026-10-13T16:28:12.3716066Z  * [new branch]        qa/s54-infrastructure-integration -> origin/qa/s54-infrastructure-integration
+2026-10-13T16:28:12.3716617Z  * [new branch]        qa/s54-primitive-readiness -> origin/qa/s54-primitive-readiness
+2026-10-13T16:28:12.3717141Z  * [new branch]        qa/s54-stem-comparator  -> origin/qa/s54-stem-comparator
+2026-10-13T16:28:12.3717615Z  * [new branch]        qa/s54-stem-pick-diagnostic -> origin/qa/s54-stem-pick-diagnostic
+2026-10-13T16:28:12.3718403Z  * [new branch]        qa/s57-artifact-log     -> origin/qa/s57-artifact-log
+2026-10-13T16:28:12.3718901Z  * [new branch]        qa/s57-flat-readiness-owner -> origin/qa/s57-flat-readiness-owner
+2026-10-13T16:28:12.3719396Z  * [new branch]        qa/s57-observer-epoch   -> origin/qa/s57-observer-epoch
+2026-10-13T16:28:12.3719864Z  * [new branch]        qa/s57-stream-comparison -> origin/qa/s57-stream-comparison
+2026-10-13T16:28:12.3720549Z  * [new branch]        qa/s57-tiles-cancellation-recovery -> origin/qa/s57-tiles-cancellation-recovery
+2026-10-13T16:28:12.3721113Z  * [new branch]        qa/s57-tiles-streaming  -> origin/qa/s57-tiles-streaming
+2026-10-13T16:28:12.3721641Z  * [new branch]        qa/s58-weather-image-ownership -> origin/qa/s58-weather-image-ownership
+2026-10-13T16:28:12.3722164Z  * [new branch]        qa/s59-batch-attribution -> origin/qa/s59-batch-attribution
+2026-10-13T16:28:12.3722639Z  * [new branch]        qa/s59-chunk-inner-loop -> origin/qa/s59-chunk-inner-loop
+2026-10-13T16:28:12.3723124Z  * [new branch]        qa/s59-geometry-load-profile -> origin/qa/s59-geometry-load-profile
+2026-10-13T16:28:12.3723620Z  * [new branch]        qa/s59-geometry-wake-browser -> origin/qa/s59-geometry-wake-browser
+2026-10-13T16:28:12.3724209Z  * [new branch]        qa/s59-import-cartesian-kernel -> origin/qa/s59-import-cartesian-kernel
+2026-10-13T16:28:12.3724792Z  * [new branch]        qa/s59-import-point-collection -> origin/qa/s59-import-point-collection
+2026-10-13T16:28:12.3725563Z  * [new branch]        qa/terrain-picking-lifecycle -> origin/qa/terrain-picking-lifecycle
+2026-10-13T16:28:12.3726268Z  * [new branch]        qa/tracking-regression  -> origin/qa/tracking-regression
+2026-10-13T16:28:12.3726976Z  * [new branch]        qa/vessel-render-demand -> origin/qa/vessel-render-demand
+2026-10-13T16:28:12.3727716Z  * [new branch]        qa/webgl-preserve-control -> origin/qa/webgl-preserve-control
+2026-10-13T16:28:12.3728403Z  * [new branch]        qa/wind-image-reuse     -> origin/qa/wind-image-reuse
+2026-10-13T16:28:12.3729142Z  * [new branch]        qa/windows-browser-shutdown -> origin/qa/windows-browser-shutdown
+2026-10-13T16:28:12.3729915Z  * [new branch]        qa/windows-close-diagnostics -> origin/qa/windows-close-diagnostics
+2026-10-13T16:28:12.3730703Z  * [new branch]        qa/windows-close-observation -> origin/qa/windows-close-observation
+2026-10-13T16:28:12.3731534Z  * [new branch]        qa/windows-frame-controls -> origin/qa/windows-frame-controls
+2026-10-13T16:28:12.3732295Z  * [new branch]        qa/windows-profile-recovery -> origin/qa/windows-profile-recovery
+2026-10-13T16:28:12.3733325Z  * [new branch]        qa/windows-recovery-diagnostic -> origin/qa/windows-recovery-diagnostic
+2026-10-13T16:28:12.3734164Z  * [new branch]        qa/windows-renderer-experiment -> origin/qa/windows-renderer-experiment
+2026-10-13T16:28:12.3735929Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/qa/s47-austin-receipt-only
+2026-10-13T16:28:13.1457480Z   origin/qa/s47-austin-receipt-only
+2026-10-13T16:28:13.1508589Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/qa/s47-austin-receipt-only
+2026-10-13T16:28:13.2998178Z c7c47245f96e4839312983e8bcbba1da57948b4e
+2026-10-13T16:28:13.3034178Z ##[endgroup]
+2026-10-13T16:28:13.3034816Z ##[group]Determining the checkout info
+2026-10-13T16:28:13.3036834Z ##[endgroup]
+2026-10-13T16:28:13.3045994Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-13T16:28:13.3435302Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-13T16:28:13.3720309Z ##[group]Checking out the ref
+2026-10-13T16:28:13.3729770Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B qa/s47-austin-receipt-only refs/remotes/origin/qa/s47-austin-receipt-only
+2026-10-13T16:28:14.4364803Z Updating files:  25% (1335/5280)
+2026-10-13T16:28:14.4586095Z Updating files:  26% (1373/5280)
+2026-10-13T16:28:14.4808071Z Updating files:  27% (1426/5280)
+2026-10-13T16:28:14.5029150Z Updating files:  28% (1479/5280)
+2026-10-13T16:28:14.5349936Z Updating files:  29% (1532/5280)
+2026-10-13T16:28:14.5555372Z Updating files:  30% (1584/5280)
+2026-10-13T16:28:14.5751816Z Updating files:  31% (1637/5280)
+2026-10-13T16:28:14.5956037Z Updating files:  32% (1690/5280)
+2026-10-13T16:28:14.6156100Z Updating files:  33% (1743/5280)
+2026-10-13T16:28:14.6946099Z Updating files:  34% (1796/5280)
+2026-10-13T16:28:14.7068915Z Updating files:  35% (1848/5280)
+2026-10-13T16:28:14.7155327Z Updating files:  36% (1901/5280)
+2026-10-13T16:28:14.7248210Z Updating files:  37% (1954/5280)
+2026-10-13T16:28:14.7581470Z Updating files:  38% (2007/5280)
+2026-10-13T16:28:14.7808951Z Updating files:  39% (2060/5280)
+2026-10-13T16:28:14.8045366Z Updating files:  40% (2112/5280)
+2026-10-13T16:28:14.8302922Z Updating files:  41% (2165/5280)
+2026-10-13T16:28:14.8526118Z Updating files:  42% (2218/5280)
+2026-10-13T16:28:14.8755988Z Updating files:  43% (2271/5280)
+2026-10-13T16:28:14.8969533Z Updating files:  44% (2324/5280)
+2026-10-13T16:28:14.9180062Z Updating files:  45% (2376/5280)
+2026-10-13T16:28:14.9375260Z Updating files:  46% (2429/5280)
+2026-10-13T16:28:14.9609785Z Updating files:  47% (2482/5280)
+2026-10-13T16:28:15.0148244Z Updating files:  48% (2535/5280)
+2026-10-13T16:28:15.0522960Z Updating files:  49% (2588/5280)
+2026-10-13T16:28:15.0682083Z Updating files:  50% (2640/5280)
+2026-10-13T16:28:15.0813782Z Updating files:  51% (2693/5280)
+2026-10-13T16:28:15.1020920Z Updating files:  52% (2746/5280)
+2026-10-13T16:28:15.2086627Z Updating files:  53% (2799/5280)
+2026-10-13T16:28:15.2251393Z Updating files:  54% (2852/5280)
+2026-10-13T16:28:15.2360022Z Updating files:  55% (2904/5280)
+2026-10-13T16:28:15.2466035Z Updating files:  56% (2957/5280)
+2026-10-13T16:28:15.2854372Z Updating files:  57% (3010/5280)
+2026-10-13T16:28:15.2997521Z Updating files:  58% (3063/5280)
+2026-10-13T16:28:15.3183220Z Updating files:  59% (3116/5280)
+2026-10-13T16:28:15.3316428Z Updating files:  60% (3168/5280)
+2026-10-13T16:28:15.3448515Z Updating files:  61% (3221/5280)
+2026-10-13T16:28:15.3563127Z Updating files:  62% (3274/5280)
+2026-10-13T16:28:15.3677935Z Updating files:  63% (3327/5280)
+2026-10-13T16:28:15.3818505Z Updating files:  64% (3380/5280)
+2026-10-13T16:28:15.3981092Z Updating files:  65% (3432/5280)
+2026-10-13T16:28:15.4095059Z Updating files:  66% (3485/5280)
+2026-10-13T16:28:15.4183713Z Updating files:  67% (3538/5280)
+2026-10-13T16:28:15.4225337Z Updating files:  68% (3591/5280)
+2026-10-13T16:28:15.4298767Z Updating files:  68% (3611/5280)
+2026-10-13T16:28:15.4370229Z Updating files:  69% (3644/5280)
+2026-10-13T16:28:15.4473278Z Updating files:  70% (3696/5280)
+2026-10-13T16:28:15.4616522Z Updating files:  71% (3749/5280)
+2026-10-13T16:28:15.4725318Z Updating files:  72% (3802/5280)
+2026-10-13T16:28:15.4898826Z Updating files:  73% (3855/5280)
+2026-10-13T16:28:15.5073866Z Updating files:  74% (3908/5280)
+2026-10-13T16:28:15.6135458Z Updating files:  75% (3960/5280)
+2026-10-13T16:28:15.6229107Z Updating files:  76% (4013/5280)
+2026-10-13T16:28:15.6321223Z Updating files:  77% (4066/5280)
+2026-10-13T16:28:15.6416089Z Updating files:  78% (4119/5280)
+2026-10-13T16:28:15.6520394Z Updating files:  79% (4172/5280)
+2026-10-13T16:28:15.6620945Z Updating files:  80% (4224/5280)
+2026-10-13T16:28:15.6722184Z Updating files:  81% (4277/5280)
+2026-10-13T16:28:15.6828183Z Updating files:  82% (4330/5280)
+2026-10-13T16:28:15.6922688Z Updating files:  83% (4383/5280)
+2026-10-13T16:28:15.7031994Z Updating files:  84% (4436/5280)
+2026-10-13T16:28:15.7141248Z Updating files:  85% (4488/5280)
+2026-10-13T16:28:15.7252293Z Updating files:  86% (4541/5280)
+2026-10-13T16:28:15.7345574Z Updating files:  87% (4594/5280)
+2026-10-13T16:28:15.7460339Z Updating files:  88% (4647/5280)
+2026-10-13T16:28:15.7617289Z Updating files:  89% (4700/5280)
+2026-10-13T16:28:15.7751600Z Updating files:  90% (4752/5280)
+2026-10-13T16:28:15.7849405Z Updating files:  91% (4805/5280)
+2026-10-13T16:28:15.7949010Z Updating files:  92% (4858/5280)
+2026-10-13T16:28:15.8074089Z Updating files:  93% (4911/5280)
+2026-10-13T16:28:15.8185526Z Updating files:  94% (4964/5280)
+2026-10-13T16:28:15.8295109Z Updating files:  95% (5016/5280)
+2026-10-13T16:28:15.8401390Z Updating files:  96% (5069/5280)
+2026-10-13T16:28:15.8520438Z Updating files:  97% (5122/5280)
+2026-10-13T16:28:15.8656201Z Updating files:  98% (5175/5280)
+2026-10-13T16:28:15.8757061Z Updating files:  99% (5228/5280)
+2026-10-13T16:28:15.8757984Z Updating files: 100% (5280/5280)
+2026-10-13T16:28:15.8758492Z Updating files: 100% (5280/5280), done.
+2026-10-13T16:28:16.0070024Z Switched to a new branch 'qa/s47-austin-receipt-only'
+2026-10-13T16:28:16.1273973Z branch 'qa/s47-austin-receipt-only' set up to track 'origin/qa/s47-austin-receipt-only'.
+2026-10-13T16:28:16.1551409Z ##[endgroup]
+2026-10-13T16:28:16.4887660Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-13T16:28:16.6259573Z c7c47245f96e4839312983e8bcbba1da57948b4e
+2026-10-13T16:28:16.6310914Z ##[group]Removing auth
+2026-10-13T16:28:16.6319379Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T16:28:16.6623036Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T16:28:17.3844685Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T16:28:17.4090224Z http.https://github.com/.extraheader
+2026-10-13T16:28:17.4132832Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-13T16:28:17.4403983Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T16:28:17.9789489Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T16:28:18.0093919Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T16:28:18.5474987Z ##[endgroup]
+2026-10-13T16:28:18.5905310Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+2026-10-13T16:28:18.5905877Z with:
+2026-10-13T16:28:18.5906245Z   node-version: 24.14.0
+2026-10-13T16:28:18.5906566Z   cache: npm
+2026-10-13T16:28:18.5906857Z   always-auth: false
+2026-10-13T16:28:18.5907185Z   check-latest: false
+2026-10-13T16:28:18.5910122Z   token: ***
+2026-10-13T16:28:18.5910381Z env:
+2026-10-13T16:28:18.5910634Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:28:18.5910984Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:28:18.5911269Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:28:18.5911614Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:28:18.5911942Z ##[endgroup]
+2026-10-13T16:28:18.7677063Z Attempting to download 24.14.0...
+2026-10-13T16:28:18.7841044Z (node:5760) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T16:28:18.7842574Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T16:28:19.7719235Z Acquiring 24.14.0 - x64 from https://github.com/actions/node-versions/releases/download/24.14.0-22380502845/node-24.14.0-win32-x64.7z
+2026-10-13T16:28:20.2692505Z Extracting ...
+2026-10-13T16:28:22.1916860Z Adding to the cache ...
+2026-10-13T16:28:25.1808657Z ##[group]Environment details
+2026-10-13T16:28:26.3913513Z node: v24.14.0
+2026-10-13T16:28:26.3913894Z npm: 11.9.0
+2026-10-13T16:28:26.3914155Z yarn: 1.22.22
+2026-10-13T16:28:26.3914705Z ##[endgroup]
+2026-10-13T16:28:26.4443334Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\24.14.0\x64\npm.cmd config get cache"
+2026-10-13T16:28:26.6849898Z C:\npm\cache
+2026-10-13T16:28:27.3376760Z Cache hit for: node-cache-Windows-x64-npm-d97d4f933e744ae3f558a8696bbd3ffce9b80f181937649447aa37d43a5becf6
+2026-10-13T16:28:27.3469886Z (node:5760) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-13T16:28:28.5650238Z Received 67108864 of 96344739 (69.7%), 63.6 MBs/sec
+2026-10-13T16:28:28.9152315Z Received 96344739 of 96344739 (100.0%), 67.3 MBs/sec
+2026-10-13T16:28:28.9155257Z Cache Size: ~92 MB (96344739 B)
+2026-10-13T16:28:28.9259703Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/7e4440ad-ed4f-4f48-8e62-06956645c5a3/cache.tzst -P -C D:/a/gods-eye-view/gods-eye-view --force-local --use-compress-program "zstd -d"
+2026-10-13T16:28:31.4163339Z Cache restored successfully
+2026-10-13T16:28:31.4275509Z Cache restored from key: node-cache-Windows-x64-npm-d97d4f933e744ae3f558a8696bbd3ffce9b80f181937649447aa37d43a5becf6
+2026-10-13T16:28:31.4586555Z ##[group]Run node scripts/validate-profile-recovery-browser-selection.mjs
+2026-10-13T16:28:31.4587381Z [36;1mnode scripts/validate-profile-recovery-browser-selection.mjs[0m
+2026-10-13T16:28:31.6124976Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:28:31.6125684Z env:
+2026-10-13T16:28:31.6126102Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:28:31.6126580Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:28:31.6127104Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:28:31.6127722Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:28:31.6128294Z   GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: 
+2026-10-13T16:28:31.6128826Z   GEV_QA_VALIDATION_MODE: standard
+2026-10-13T16:28:31.6129317Z   GEV_QA_SELECTED_RUNNER: windows-latest
+2026-10-13T16:28:31.6129881Z ##[endgroup]
+2026-10-13T16:28:31.9741526Z {"selection":"pinned-default","expectedVersion":null}
+2026-10-13T16:28:32.0993245Z ##[group]Run node scripts/pinokio-install.mjs
+2026-10-13T16:28:32.0993902Z [36;1mnode scripts/pinokio-install.mjs[0m
+2026-10-13T16:28:32.1060016Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:28:32.1060611Z env:
+2026-10-13T16:28:32.1061137Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:28:32.1061692Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:28:32.1062052Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:28:32.1062431Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:28:32.1062891Z ##[endgroup]
+2026-10-13T16:28:35.1403995Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2026-10-13T16:28:41.0427567Z 
+2026-10-13T16:28:41.0428628Z > gods-eye-view@0.2.1 postinstall
+2026-10-13T16:28:41.0429222Z > node scripts/apply-cesium-patches.mjs
+2026-10-13T16:28:41.0429520Z 
+2026-10-13T16:28:41.5233441Z [cesium-patch] patched 5 distributions
+2026-10-13T16:28:41.5480981Z 
+2026-10-13T16:28:41.5482781Z added 247 packages, and audited 248 packages in 9s
+2026-10-13T16:28:41.5483220Z 
+2026-10-13T16:28:41.5483802Z 40 packages are looking for funding
+2026-10-13T16:28:41.5485923Z   run `npm fund` for details
+2026-10-13T16:28:41.5523770Z 
+2026-10-13T16:28:41.5524827Z 3 vulnerabilities (1 low, 2 high)
+2026-10-13T16:28:41.5525231Z 
+2026-10-13T16:28:41.5525423Z To address all issues, run:
+2026-10-13T16:28:41.5525974Z   npm audit fix
+2026-10-13T16:28:41.5526167Z 
+2026-10-13T16:28:41.5526587Z Run `npm audit` for details.
+2026-10-13T16:28:43.3319814Z 
+2026-10-13T16:28:43.3320959Z God's Eye View setup doctor
+2026-10-13T16:28:43.3321656Z 
+2026-10-13T16:28:43.3322888Z [OK] Node 24.14.0: supported LTS and calibrated for release gates
+2026-10-13T16:28:43.3323688Z [OK] npm 11.9.0
+2026-10-13T16:28:43.3324196Z [OK] dependencies installed
+2026-10-13T16:28:43.3324513Z 
+2026-10-13T16:28:43.3325375Z Map:     Esri World Imagery (keyless satellite basemap) with keyless terrain
+2026-10-13T16:28:43.3326303Z Flights: OpenSky keyless anonymous access (rate-limited)
+2026-10-13T16:28:43.3327403Z Voice:   off until an OpenAI key is added, or a Codex ChatGPT sign-in is selected in Provider Settings (experimental)
+2026-10-13T16:28:43.3328401Z Vessels: off until an AISStream key is added
+2026-10-13T16:28:43.3329716Z Fires:   off until a FIRMS key is added
+2026-10-13T16:28:43.3330305Z Traffic: built-in traffic simulation
+2026-10-13T16:28:43.3330910Z Missions: Launch Library 2 public access
+2026-10-13T16:28:43.3331206Z 
+2026-10-13T16:28:43.3331436Z Configured providers:
+2026-10-13T16:28:43.3331947Z   [--] Google Maps
+2026-10-13T16:28:43.3332881Z   [--] Google Places / Street View server
+2026-10-13T16:28:43.3333469Z   [--] Cesium ion
+2026-10-13T16:28:43.3333888Z   [--] OpenAI voice
+2026-10-13T16:28:43.3336496Z   [--] AISStream vessels
+2026-10-13T16:28:43.3337051Z   [--] NASA FIRMS fires
+2026-10-13T16:28:43.3337545Z   [--] TomTom traffic
+2026-10-13T16:28:43.3338009Z   [--] OpenSky client ID
+2026-10-13T16:28:43.3344454Z   [--] OpenSky client secret
+2026-10-13T16:28:43.3345323Z   [--] Launch Library 2
+2026-10-13T16:28:43.3345820Z   [--] Mapillary street level
+2026-10-13T16:28:43.3347416Z (node:8396) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+2026-10-13T16:28:43.3348874Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T16:28:43.3349389Z 
+2026-10-13T16:28:43.3349680Z Ready. Return to Pinokio and choose Start.
+2026-10-13T16:28:43.3350063Z 
+2026-10-13T16:28:43.3350263Z [Pinokio] Installation ready.
+2026-10-13T16:28:43.4735384Z ##[group]Run node --test scripts/performance/mapStreamingFixture.test.mjs
+2026-10-13T16:28:43.4736501Z [36;1mnode --test scripts/performance/mapStreamingFixture.test.mjs[0m
+2026-10-13T16:28:43.4818111Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:28:43.4818740Z env:
+2026-10-13T16:28:43.4819226Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:28:43.4819806Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:28:43.4820357Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:28:43.4820949Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:28:43.4821511Z ##[endgroup]
+2026-10-13T16:28:45.5504906Z ✔ map streaming fixture generation is stable, bounded, and route-indexed (504.0863ms)
+2026-10-13T16:28:45.9266902Z ✔ v4 adds only actual Cesium OSM skeleton and imagery-parent dependencies (376.5672ms)
+2026-10-13T16:28:46.2279109Z ✔ canonical 3D Tiles corpus is immutable, bounded, and fail-closed (301.0119ms)
+2026-10-13T16:28:47.1132689Z ✔ pinned high-LOD PNG templates preserve every route pixel and identity (885.1869ms)
+2026-10-13T16:28:47.6363713Z ✔ map streaming fixture rejects truncated, modified, missing, and unbounded assets (522.8961ms)
+2026-10-13T16:28:56.2434292Z ✔ Cesium terrain and tileset parsers accept the generated local route corpus (8607.5322ms)
+2026-10-13T16:28:56.4503051Z ✔ ArcGIS probe proof rejects successful HTTP bytes when image decoding fails (207.0699ms)
+2026-10-13T16:28:56.6571284Z ✔ Cesium rejects truncated quantized-mesh and GLB HTTP responses (206.828ms)
+2026-10-13T16:28:56.6938652Z ℹ tests 8
+2026-10-13T16:28:56.6939108Z ℹ suites 0
+2026-10-13T16:28:56.6939432Z ℹ pass 8
+2026-10-13T16:28:56.6939757Z ℹ fail 0
+2026-10-13T16:28:56.6940087Z ℹ cancelled 0
+2026-10-13T16:28:56.6940418Z ℹ skipped 0
+2026-10-13T16:28:56.6940760Z ℹ todo 0
+2026-10-13T16:28:56.6941085Z ℹ duration_ms 12885.5331
+2026-10-13T16:28:56.8056303Z ##[group]Run node --test src/pinokioUpdatePreview.test.mjs
+2026-10-13T16:28:56.8057077Z [36;1mnode --test src/pinokioUpdatePreview.test.mjs[0m
+2026-10-13T16:28:56.8132721Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:28:56.8133350Z env:
+2026-10-13T16:28:56.8133701Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:28:56.8134162Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:28:56.8134564Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:28:56.8135155Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:28:56.8136048Z ##[endgroup]
+2026-10-13T16:28:57.8521793Z ✔ a checkout with no upstream is reported and left to the plain pull (672.4189ms)
+2026-10-13T16:28:58.4906741Z ✔ dirty checkouts stop before fetch, merge, or reinstall (639.1538ms)
+2026-10-13T16:28:59.7480489Z ✔ a schema mismatch stops before merge and install (1256.8982ms)
+2026-10-13T16:28:59.7482334Z ✔ schema compatibility requires all reader versions to match (0.2435ms)
+2026-10-13T16:29:00.8398994Z ✔ the tracking branch and the remote it fetches from are printed (1091.763ms)
+2026-10-13T16:29:02.1352931Z ✔ the incoming commits and their diffstat are printed, and the report alone applies nothing (1295.2859ms)
+2026-10-13T16:29:03.5032563Z ✔ the revision that is applied is the revision that was disclosed (1367.7601ms)
+2026-10-13T16:29:05.4445035Z ✔ the whole update applies exactly one disclosed revision (1941.3385ms)
+2026-10-13T16:29:07.2721971Z ✔ a remote that moves during the update does not change what is applied (1827.5071ms)
+2026-10-13T16:29:08.1777055Z ✔ an up-to-date checkout says so and applies nothing (905.5102ms)
+2026-10-13T16:29:09.2883020Z ✔ an unreadable commit range is reported as unreadable, not as up to date (1110.5274ms)
+2026-10-13T16:29:10.5148073Z ✔ an upstream that cannot be resolved after fetching stops the update (1226.3912ms)
+2026-10-13T16:29:12.1354524Z ✔ a remote whose name contains a slash is read correctly (1620.5976ms)
+2026-10-13T16:29:13.4712114Z ✔ a diffstat that cannot be read is reported, and the commits still are (1335.7475ms)
+2026-10-13T16:29:14.9807688Z ✔ diverged history is refused rather than applied (1509.5467ms)
+2026-10-13T16:29:16.2346568Z ✔ a remote that is behind this checkout is named, not announced as incoming (1253.7421ms)
+2026-10-13T16:29:17.4860439Z ✔ a stop means nothing is installed, and the script fails (1251.3185ms)
+2026-10-13T16:29:18.9155625Z ✔ an ordinary update installs once and does not fail (1429.6303ms)
+2026-10-13T16:29:19.9558220Z ✔ an up-to-date checkout still reinstalls (1039.565ms)
+2026-10-13T16:29:19.9559980Z ✔ the entrypoint is what the direct invocation runs (0.2113ms)
+2026-10-13T16:29:19.9560974Z ✔ a password in the remote URL is not printed (0.165ms)
+2026-10-13T16:29:19.9561886Z ✔ a bare token in the remote URL is not printed (0.0825ms)
+2026-10-13T16:29:19.9562861Z ✔ a credential in a query parameter is not printed (0.0879ms)
+2026-10-13T16:29:19.9563414Z ✔ an ordinary remote URL is printed unchanged (0.0928ms)
+2026-10-13T16:29:21.0523025Z ✔ a credential-bearing remote is redacted in the printed report (1096.2481ms)
+2026-10-13T16:29:21.9708632Z ✔ a failed git read is null, and an empty successful read is an empty string (918.38ms)
+2026-10-13T16:29:21.9709331Z ✔ the update and reinstall stay behind the direct-invocation guard (0.3006ms)
+2026-10-13T16:29:21.9710045Z ✔ the disclosed revision is applied by merge, not by a second pull (0.09ms)
+2026-10-13T16:29:21.9834961Z ℹ tests 28
+2026-10-13T16:29:21.9835400Z ℹ suites 0
+2026-10-13T16:29:21.9835726Z ℹ pass 28
+2026-10-13T16:29:21.9836081Z ℹ fail 0
+2026-10-13T16:29:21.9836415Z ℹ cancelled 0
+2026-10-13T16:29:21.9836783Z ℹ skipped 0
+2026-10-13T16:29:21.9837111Z ℹ todo 0
+2026-10-13T16:29:21.9837566Z ℹ duration_ms 24874.4049
+2026-10-13T16:29:22.0974238Z ##[group]Run npm run qa:install-recovery
+2026-10-13T16:29:22.0974853Z [36;1mnpm run qa:install-recovery[0m
+2026-10-13T16:29:22.1038898Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:29:22.1039308Z env:
+2026-10-13T16:29:22.1039642Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:29:22.1039992Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:29:22.1040321Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:29:22.1040687Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:29:22.1041086Z ##[endgroup]
+2026-10-13T16:29:22.7193075Z 
+2026-10-13T16:29:22.7193988Z > gods-eye-view@0.2.1 qa:install-recovery
+2026-10-13T16:29:22.7194664Z > node scripts/qa-install-recovery.mjs
+2026-10-13T16:29:22.7194877Z 
+2026-10-13T16:29:22.8976778Z {
+2026-10-13T16:29:22.8977241Z   "platform": "win32",
+2026-10-13T16:29:22.8977634Z   "scope": "portable-artifact-recovery",
+2026-10-13T16:29:22.8978033Z   "browserProfileValidated": false,
+2026-10-13T16:29:22.8978855Z   "checks": [
+2026-10-13T16:29:22.8979312Z     "verified-prior-artifact",
+2026-10-13T16:29:22.8979814Z     "interrupted-copy-rejected",
+2026-10-13T16:29:22.8980286Z     "checksum-failure-recovery",
+2026-10-13T16:29:22.8980801Z     "bundle-asset-reopen"
+2026-10-13T16:29:22.8981172Z   ]
+2026-10-13T16:29:22.8981507Z }
+2026-10-13T16:29:22.9869748Z ##[group]Run node --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
+2026-10-13T16:29:22.9870866Z [36;1mnode --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs[0m
+2026-10-13T16:29:22.9935480Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:29:22.9935895Z env:
+2026-10-13T16:29:22.9936174Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:29:22.9936571Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:29:22.9936885Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:29:22.9937307Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:29:22.9937666Z ##[endgroup]
+2026-10-13T16:29:23.5858317Z ✔ browser shutdown matrix runs each document/treatment sequentially and validates a complete result (2.8903ms)
+2026-10-13T16:29:23.5860293Z ✔ a failed graceful close remains failed but later controls run after confirmed exit (0.4589ms)
+2026-10-13T16:29:23.5861523Z ✔ an unconfirmed owned process blocks every later control (0.3258ms)
+2026-10-13T16:29:23.5864903Z ✔ browser version mismatch is kept as a failed control (0.4456ms)
+2026-10-13T16:29:23.5871197Z ✔ validator rejects missing control evidence, changed identity, or false forced-cleanup pass (1.5414ms)
+2026-10-13T16:29:23.5872945Z ✔ navigation-first control requires a delivered outgoing-pagehide observation (0.3089ms)
+2026-10-13T16:29:23.5874220Z ✔ fixture inline scripts retain valid regex escapes and compile as browser scripts (1.0128ms)
+2026-10-13T16:29:23.5876048Z ✔ WebGL fixture performs one ready-frame renderer query and records unmasked identity (2.1299ms)
+2026-10-13T16:29:23.5877571Z ✔ Cesium fixture samples renderer once from one completed postRender and removes its listener (2.3918ms)
+2026-10-13T16:29:23.5920052Z ✔ report finalization retains interrupted matrix rows and the primary error (0.775ms)
+2026-10-13T16:29:23.8509272Z ✔ owned fixture server closes active connections within its bounded cleanup (287.6856ms)
+2026-10-13T16:29:23.8686174Z ✔ scratch profile cleanup reports removal only after successful deletion (6.3502ms)
+2026-10-13T16:29:23.8687582Z ✔ shutdown CLI can be imported for fixture tests without launching Chrome (0.1329ms)
+2026-10-13T16:29:23.8836056Z ✔ serialized pagehide handler reaches the bounded owned fixture server (24.5106ms)
+2026-10-13T16:29:24.9118258Z ✔ pagehide endpoint rejects unknown tokens, malformed events, and oversized bodies (1028.8522ms)
+2026-10-13T16:29:24.9155454Z ✔ pagehide tracker bounds registered control tokens and ignores delayed or absent delivery (1.914ms)
+2026-10-13T16:29:24.9156670Z ✔ pagehide timing uses server receipt time and late evidence remains a failure (1.7271ms)
+2026-10-13T16:29:24.9157891Z ✔ an emitted page error invalidates an otherwise healthy shutdown control (0.1153ms)
+2026-10-13T16:29:24.9162547Z ✔ WebGL and Cesium controls require observed live context and renderer data (0.1807ms)
+2026-10-13T16:29:24.9164879Z ✔ shutdown fixture identity requires the declared WebGL-only SwiftShader launch (0.265ms)
+2026-10-13T16:29:24.9168163Z ✔ shutdown runtime and reports support win32 with webglOnly=false (0.3843ms)
+2026-10-13T16:29:24.9171402Z ✔ shutdown runtime and reports support win32 with webglOnly=true (0.1438ms)
+2026-10-13T16:29:24.9172874Z ✔ shutdown runtime and reports support darwin with webglOnly=false (0.1317ms)
+2026-10-13T16:29:24.9183657Z ✔ shutdown runtime and reports support darwin with webglOnly=true (0.1091ms)
+2026-10-13T16:29:24.9184859Z ✔ shutdown runtime and reports support linux with webglOnly=false (0.0871ms)
+2026-10-13T16:29:24.9187573Z ✔ shutdown runtime and reports support linux with webglOnly=true (0.0842ms)
+2026-10-13T16:29:24.9188807Z ✔ shutdown runtime rejects unsupported platforms and ambiguous renderer flags (0.2374ms)
+2026-10-13T16:29:24.9189992Z ✔ shutdown errors remove URL and path details before report storage (0.1686ms)
+2026-10-13T16:29:26.2593621Z ✔ PowerShell test harness waits for a flushed readiness marker before sending script (9.7858ms)
+2026-10-13T16:29:26.2595119Z ✔ PowerShell startup and hung execution have distinct bounded failures and cleanup (1.9268ms)
+2026-10-13T16:29:26.2595999Z ✔ PowerShell late readiness after startup timeout never sends the script (1.46ms)
+2026-10-13T16:29:26.2596656Z ✔ PowerShell spawn failure, synchronous close and output overflow are bounded (1.4913ms)
+2026-10-13T16:29:26.2597436Z ✔ PowerShell early exit, nonzero exit and unconfirmed kill remain failed (3.4067ms)
+2026-10-13T16:29:26.2598071Z ✔ each recovery launch requires exactly one initial blank page (0.4632ms)
+2026-10-13T16:29:26.2598692Z ✔ post-navigation invariant requires the sole app page to be owned (0.2256ms)
+2026-10-13T16:29:26.2599270Z ✔ target guard rejects even a transient extra page target (0.2429ms)
+2026-10-13T16:29:26.2599856Z ✔ owned page closes before browser close and leaves zero open pages (0.9884ms)
+2026-10-13T16:29:26.2600484Z ✔ wedged owned-page close is bounded and reported as incomplete (30.015ms)
+2026-10-13T16:29:26.2601070Z ✔ a passed workspace check still fails when cleanup leaves a page open (0.45ms)
+2026-10-13T16:29:26.2601740Z ✔ owned process snapshot keeps only a bounded rooted tree and safe fields (1.1267ms)
+2026-10-13T16:29:26.2602370Z ✔ Windows process tree capture is bounded and omits command lines (1.0163ms)
+2026-10-13T16:29:26.2602988Z ✔ PowerShell skips command-line queries when the owned root is absent (2831.0525ms)
+2026-10-13T16:29:26.2603776Z ℹ {"startupElapsedMs":1713.2118,"executionElapsedMs":1117.3199000000002,"totalElapsedMs":2830.5317}
+2026-10-13T16:29:26.6678435Z ✔ PowerShell derives roles only from command lines for owned process IDs (411.0087ms)
+2026-10-13T16:29:26.6680772Z ℹ {"startupElapsedMs":149.9731999999999,"executionElapsedMs":260.68280000000004,"totalElapsedMs":410.65599999999995}
+2026-10-13T16:29:26.6682174Z ✔ process snapshot failure remains unavailable instead of affecting cleanup (0.3257ms)
+2026-10-13T16:29:26.6683191Z ✔ SystemInfo process inventory keeps only bounded roles and IDs (0.6267ms)
+2026-10-13T16:29:26.6684039Z ✔ browser process inventory uses only the existing owned CDP connection (0.235ms)
+2026-10-13T16:29:26.6684932Z ✔ browser process inventory bounds the command and rejects when the owned connection is unavailable (0.3161ms)
+2026-10-13T16:29:26.6707274Z ✔ late SystemInfo reply after the owned command timeout has no session cleanup side effects (1.3897ms)
+2026-10-13T16:29:26.6708656Z ✔ owned process-info command timeout does not issue attach or detach protocol commands (0.3969ms)
+2026-10-13T16:29:26.6709929Z ✔ owned browser PID presence reports only bounded read-only status and its reuse limit (0.3122ms)
+2026-10-13T16:29:26.6890386Z ✔ close diagnostics capture target types and process tree before forced cleanup (18.9712ms)
+2026-10-13T16:29:26.6891293Z ✔ pre-close SystemInfo observation is bounded and excluded from the close deadline (0.4406ms)
+2026-10-13T16:29:27.1765236Z ✔ a timed out SystemInfo probe is marked unavailable and does not change the close gate (487.3067ms)
+2026-10-13T16:29:27.1849879Z ✔ a late SystemInfo response after its diagnostic deadline cannot replace the recorded timeout (7.3532ms)
+2026-10-13T16:29:27.1850769Z ✔ CDP unsupported and permission failures remain diagnostic-only (0.65ms)
+2026-10-13T16:29:27.2023136Z ✔ pinned Puppeteer CDP errors are classified without retaining protocol text (17.768ms)
+2026-10-13T16:29:27.2168033Z ✔ shutdown diagnostic errors do not prevent forced cleanup or alter failed close (14.6587ms)
+2026-10-13T16:29:27.2335882Z ✔ timeout target inventory is captured when the browser has not disconnected (15.7446ms)
+2026-10-13T16:29:27.2337781Z ✔ pre-close diagnostics do not extend close timing and timing origins stay explicit (0.3772ms)
+2026-10-13T16:29:27.2339088Z ✔ owned process stop distinguishes pre-existing exit from confirmed taskkill (0.5125ms)
+2026-10-13T16:29:27.2489340Z ✔ owned process stop does not claim an exit after failed taskkill and bounds a stuck helper (14.7774ms)
+2026-10-13T16:29:27.2490416Z ✔ browser close records an already-exited process and releases listeners (0.4087ms)
+2026-10-13T16:29:27.2543260Z ✔ darwin fallback signals only the owned process group and waits for observed exit (5.5968ms)
+2026-10-13T16:29:27.2611393Z ✔ linux fallback signals only the owned process group and waits for observed exit (6.0604ms)
+2026-10-13T16:29:27.2612553Z ✔ close trace ignores unrelated and pre-close protocol text without retaining it (0.5847ms)
+2026-10-13T16:29:27.2965824Z ✔ close trace correlates Browser.close acknowledgement but keeps process wait separate (34.771ms)
+2026-10-13T16:29:27.2967184Z ✔ close trace distinguishes missing and late acknowledgements and bounds messages (0.4379ms)
+2026-10-13T16:29:27.3177808Z ✔ an exited process with an unresolved close acknowledgement remains a failure (21.1798ms)
+2026-10-13T16:29:27.3433263Z ✔ a live process timeout invokes bounded owned-process cleanup and stays failed (25.682ms)
+2026-10-13T16:29:27.3751427Z ✔ a resolved but unconfirmed process stop is not reported as termination (31.7632ms)
+2026-10-13T16:29:27.4070975Z ✔ an exit racing with the force callback is not reported as forced termination (31.3762ms)
+2026-10-13T16:29:27.4072050Z ✔ close rejection is distinguished and failed forced cleanup is reported (0.4161ms)
+2026-10-13T16:29:27.4552264Z ✔ successful close clears the deadline and does not invoke fallback (47.3017ms)
+2026-10-13T16:29:27.4553066Z ✔ cleanup failure becomes primary only after an otherwise-passed check (0.3492ms)
+2026-10-13T16:29:27.4668641Z ℹ tests 74
+2026-10-13T16:29:27.4669155Z ℹ suites 0
+2026-10-13T16:29:27.4669732Z ℹ pass 74
+2026-10-13T16:29:27.4670023Z ℹ fail 0
+2026-10-13T16:29:27.4670368Z ℹ cancelled 0
+2026-10-13T16:29:27.4670674Z ℹ skipped 0
+2026-10-13T16:29:27.4670942Z ℹ todo 0
+2026-10-13T16:29:27.4671423Z ℹ duration_ms 4187.0144
+2026-10-13T16:29:27.5787586Z ##[group]Run npx puppeteer browsers install chrome
+2026-10-13T16:29:27.5788152Z [36;1mnpx puppeteer browsers install chrome[0m
+2026-10-13T16:29:27.5846738Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:29:27.5847149Z env:
+2026-10-13T16:29:27.5847429Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:29:27.5847817Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:29:27.5848134Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:29:27.5848779Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:29:27.5849102Z ##[endgroup]
+2026-10-13T16:29:31.7110122Z chrome@152.0.7977.75 C:\Users\runneradmin\.cache\puppeteer\chrome\win64-152.0.7977.75\chrome-win64\chrome.exe
+2026-10-13T16:29:31.9783517Z ##[group]Run node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
+2026-10-13T16:29:31.9784283Z [36;1mnode scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json[0m
+2026-10-13T16:29:31.9844116Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:29:31.9844429Z env:
+2026-10-13T16:29:31.9844722Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:29:31.9845034Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:29:31.9845325Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:29:31.9845700Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:29:31.9846071Z ##[endgroup]
+2026-10-13T16:29:33.4346238Z {"phase":"command","executable":"git","args":["clone","--quiet","--no-hardlinks","D:\\a\\gods-eye-view\\gods-eye-view","C:\\Users\\runneradmin\\AppData\\Local\\Temp\\gev-profile-recovery-7B9e4k\\installation"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.1.log"}
+2026-10-13T16:29:40.8336213Z {"phase":"command","executable":"git","args":["checkout","--quiet","-B","recovery-test","6b896e2a8277fba12bc9577ad7772005a71e13c7"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.2.log"}
+2026-10-13T16:29:42.4970260Z {"phase":"command","executable":"git","args":["update-ref","refs/remotes/origin/recovery-candidate","c7c47245f96e4839312983e8bcbba1da57948b4e"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.3.log"}
+2026-10-13T16:29:42.5441607Z {"phase":"command","executable":"git","args":["config","branch.recovery-test.remote","origin"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.4.log"}
+2026-10-13T16:29:42.5798783Z {"phase":"command","executable":"git","args":["config","branch.recovery-test.merge","c7c47245f96e4839312983e8bcbba1da57948b4e"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.5.log"}
+2026-10-13T16:29:42.6156854Z {"phase":"command","executable":"git","args":["config","remote.origin.fetch","+c7c47245f96e4839312983e8bcbba1da57948b4e:refs/remotes/origin/recovery-candidate"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.6.log"}
+2026-10-13T16:29:42.6532557Z {"phase":"command","executable":"node.exe","args":["scripts/pinokio-install.mjs"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.7.log"}
+2026-10-13T16:31:40.0937360Z {"phase":"command","executable":"node.exe","args":["node_modules/vite/bin/vite.js","build"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.8.log"}
+2026-10-13T16:31:53.2135777Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"launch"}
+2026-10-13T16:31:55.2682631Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"install-fixtures"}
+2026-10-13T16:31:55.3006837Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"navigation"}
+2026-10-13T16:31:56.3887989Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"application-ready"}
+2026-10-13T16:31:59.8514091Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"initial-view-restore"}
+2026-10-13T16:31:59.8573455Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"ready"}
+2026-10-13T16:31:59.8576803Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"read-renderer"}
+2026-10-13T16:32:00.3278514Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"renderer-read-complete"}
+2026-10-13T16:32:00.3287440Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"seed-workspace"}
+2026-10-13T16:32:07.3311310Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"verify-persisted-workspace"}
+2026-10-13T16:32:12.0644955Z {"phase":"browser-recovery","check":"prior-install-saves-browser-workspace","step":"passed"}
+2026-10-13T16:32:12.0661865Z {"id":"prior-install-saves-browser-workspace","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4554,"rendererQueryDurationMs":290,"bootPlusQueryCriticalPathMs":4845,"rendererCheckpointElapsedMs":6931},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":159289.7256,"closeSettledHostMs":159805.8458,"closeElapsedMs":516.1202000000048,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":532.8227999999945},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.2776000000012573,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":3.554699999978766,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":14.834600000001956,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":7,"rows":[{"id":900,"role":"renderer"},{"id":4400,"role":"renderer"},{"id":4556,"role":"other"},{"id":6176,"role":"browser"},{"id":7336,"role":"gpu"},{"id":7588,"role":"other"},{"id":9432,"role":"renderer"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":16.726900000008754,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}
+2026-10-13T16:32:12.0675636Z {"phase":"command","executable":"node.exe","args":["scripts/pinokio-update.mjs"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.9.log"}
+2026-10-13T16:32:19.1361828Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"launch"}
+2026-10-13T16:32:19.4751613Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"install-fixtures"}
+2026-10-13T16:32:19.4864223Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"navigation"}
+2026-10-13T16:32:20.0972615Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"application-ready"}
+2026-10-13T16:32:23.6022982Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"initial-view-restore"}
+2026-10-13T16:32:23.8834411Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"ready"}
+2026-10-13T16:32:23.8836535Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"read-renderer"}
+2026-10-13T16:32:23.8988729Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"renderer-read-complete"}
+2026-10-13T16:32:23.8991744Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"verify-persisted-workspace"}
+2026-10-13T16:32:36.0233272Z {"phase":"browser-recovery","check":"interrupted-update-retained-application","step":"passed"}
+2026-10-13T16:32:36.0254311Z {"id":"interrupted-update-retained-application","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4397,"rendererQueryDurationMs":9,"bootPlusQueryCriticalPathMs":4406,"rendererCheckpointElapsedMs":4756},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":183440.7695,"closeSettledHostMs":183764.4906,"closeElapsedMs":323.7210999999952,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":336.7559000000183},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.08059999998658895,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":16.20549999998184,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":23.181299999996554,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":2392,"role":"other"},{"id":2504,"role":"other"},{"id":5164,"role":"renderer"},{"id":5184,"role":"renderer"},{"id":8336,"role":"browser"},{"id":9524,"role":"gpu"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":13.08410000000731,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}
+2026-10-13T16:32:36.0273298Z {"phase":"command","executable":"git","args":["checkout","--quiet","-B","recovery-test","6b896e2a8277fba12bc9577ad7772005a71e13c7"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.10.log"}
+2026-10-13T16:32:37.4252762Z {"phase":"command","executable":"node.exe","args":["scripts/pinokio-install.mjs"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.11.log"}
+2026-10-13T16:34:37.6930790Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"launch"}
+2026-10-13T16:34:38.0644570Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"install-fixtures"}
+2026-10-13T16:34:38.0793217Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"navigation"}
+2026-10-13T16:34:38.6833074Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"application-ready"}
+2026-10-13T16:34:41.3078570Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"initial-view-restore"}
+2026-10-13T16:34:41.5755233Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"ready"}
+2026-10-13T16:34:41.5757225Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"read-renderer"}
+2026-10-13T16:34:41.8322907Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"renderer-read-complete"}
+2026-10-13T16:34:41.8324852Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"verify-persisted-workspace"}
+2026-10-13T16:34:48.6508163Z {"phase":"browser-recovery","check":"prior-install-rollback-same-profile","step":"passed"}
+2026-10-13T16:34:48.6527336Z {"id":"prior-install-rollback-same-profile","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":3497,"rendererQueryDurationMs":249,"bootPlusQueryCriticalPathMs":3746,"rendererCheckpointElapsedMs":4132},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":316040.82,"closeSettledHostMs":316394.5887,"closeElapsedMs":353.7687000000151,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":365.4101999999839},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.13850000000093132,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":23.754599999985658,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":25.351499999989755,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":556,"role":"gpu"},{"id":1584,"role":"other"},{"id":2908,"role":"renderer"},{"id":6052,"role":"browser"},{"id":8492,"role":"renderer"},{"id":9368,"role":"other"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":11.732799999997951,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}
+2026-10-13T16:34:48.6544955Z {"phase":"command","executable":"node.exe","args":["scripts/pinokio-update.mjs"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.12.log"}
+2026-10-13T16:37:08.6922027Z {"phase":"command","executable":"node.exe","args":["node_modules/vite/bin/vite.js","build"],"log":"D:\\a\\gods-eye-view\\gods-eye-view\\qa-artifacts\\profile-recovery.json.13.log"}
+2026-10-13T16:37:22.8731993Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"launch"}
+2026-10-13T16:37:23.2904644Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"install-fixtures"}
+2026-10-13T16:37:23.3016140Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"navigation"}
+2026-10-13T16:37:23.9094108Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"application-ready"}
+2026-10-13T16:37:27.1400519Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"initial-view-restore"}
+2026-10-13T16:37:27.5392649Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"ready"}
+2026-10-13T16:37:27.5395059Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"read-renderer"}
+2026-10-13T16:37:27.8391608Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"renderer-read-complete"}
+2026-10-13T16:37:27.8393414Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"verify-persisted-workspace"}
+2026-10-13T16:37:29.1374073Z {"phase":"browser-recovery","check":"upgraded-application-same-profile","step":"passed"}
+2026-10-13T16:37:29.1392371Z {"id":"upgraded-application-same-profile","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4238,"rendererQueryDurationMs":299,"bootPlusQueryCriticalPathMs":4537,"rendererCheckpointElapsedMs":4965},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":476566.2794,"closeSettledHostMs":476882.7595,"closeElapsedMs":316.4800999999861,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":329.9326000000001},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.09899999998742715,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":21.353400000021793,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":21.627900000021327,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":1084,"role":"gpu"},{"id":1952,"role":"browser"},{"id":2112,"role":"other"},{"id":2452,"role":"renderer"},{"id":3720,"role":"renderer"},{"id":10204,"role":"other"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":13.530799999949522,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}
+2026-10-13T16:37:29.5903877Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"launch"}
+2026-10-13T16:37:29.9599377Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"install-fixtures"}
+2026-10-13T16:37:29.9725175Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"navigation"}
+2026-10-13T16:37:30.6026237Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"application-ready"}
+2026-10-13T16:37:33.7403795Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"initial-view-restore"}
+2026-10-13T16:37:33.9677374Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"ready"}
+2026-10-13T16:37:33.9679983Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"read-renderer"}
+2026-10-13T16:37:34.4194870Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"renderer-read-complete"}
+2026-10-13T16:37:34.4197635Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"verify-persisted-workspace"}
+2026-10-13T16:37:41.2224031Z {"phase":"browser-recovery","check":"failed-verification-rolls-back-and-reopens-assets","step":"passed"}
+2026-10-13T16:37:41.2240768Z {"id":"failed-verification-rolls-back-and-reopens-assets","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":3992,"rendererQueryDurationMs":454,"bootPlusQueryCriticalPathMs":4446,"rendererCheckpointElapsedMs":4829},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":488614.077,"closeSettledHostMs":488967.9123,"closeElapsedMs":353.8353000000352,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":365.65990000002785},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.11710000003222376,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":16.816000000049826,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":19.85480000003008,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":3708,"role":"renderer"},{"id":5024,"role":"other"},{"id":8708,"role":"renderer"},{"id":9024,"role":"browser"},{"id":9244,"role":"other"},{"id":9408,"role":"gpu"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":11.917500000039581,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}
+2026-10-13T16:37:41.2965948Z {
+2026-10-13T16:37:41.2967055Z   "scope": "prior-install-browser-profile-recovery",
+2026-10-13T16:37:41.2967932Z   "candidateCommit": "c7c47245f96e4839312983e8bcbba1da57948b4e",
+2026-10-13T16:37:41.2968729Z   "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+2026-10-13T16:37:41.2969295Z   "platform": "win32",
+2026-10-13T16:37:41.2969794Z   "os": "10.0.26100",
+2026-10-13T16:37:41.2970213Z   "node": "v24.14.0",
+2026-10-13T16:37:41.2970631Z   "hostEnvironment": {
+2026-10-13T16:37:41.2971221Z     "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C",
+2026-10-13T16:37:41.2971712Z     "logicalCpus": 4,
+2026-10-13T16:37:41.2972153Z     "totalMemoryBytes": 17174360064
+2026-10-13T16:37:41.2972728Z   },
+2026-10-13T16:37:41.2973246Z   "requestedRenderingBackend": "swiftshader-webgl-only",
+2026-10-13T16:37:41.2973881Z   "rendererExperiment": null,
+2026-10-13T16:37:41.2974472Z   "browserVersion": "Chrome/152.0.7977.75",
+2026-10-13T16:37:41.2975367Z   "expectedBrowserVersion": null,
+2026-10-13T16:37:41.2975893Z   "browserVersionMatch": null,
+2026-10-13T16:37:41.2976391Z   "viewport": {
+2026-10-13T16:37:41.2976783Z     "width": 960,
+2026-10-13T16:37:41.2977187Z     "height": 640
+2026-10-13T16:37:41.2977638Z   },
+2026-10-13T16:37:41.2978605Z   "hardwareRenderingValidated": false,
+2026-10-13T16:37:41.2979198Z   "timestamp": "2026-10-13T16:37:41.222Z",
+2026-10-13T16:37:41.2979755Z   "sourceDirtyAtStart": false,
+2026-10-13T16:37:41.2980090Z   "sourceChangedDuringRun": false,
+2026-10-13T16:37:41.2980439Z   "checks": [
+2026-10-13T16:37:41.2980748Z     {
+2026-10-13T16:37:41.2981099Z       "id": "prior-install-saves-browser-workspace",
+2026-10-13T16:37:41.2981481Z       "status": "passed",
+2026-10-13T16:37:41.2982511Z       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+2026-10-13T16:37:41.2983053Z       "timing": {
+2026-10-13T16:37:41.2983379Z         "rendererQueryTiming": "late",
+2026-10-13T16:37:41.2983833Z         "rendererQueryDurationClock": "host-wall-clock",
+2026-10-13T16:37:41.2984470Z         "rendererQueryMeasurement": "host-round-trip",
+2026-10-13T16:37:41.2985331Z         "bootElapsedMs": 4554,
+2026-10-13T16:37:41.2985779Z         "rendererQueryDurationMs": 290,
+2026-10-13T16:37:41.2986197Z         "bootPlusQueryCriticalPathMs": 4845,
+2026-10-13T16:37:41.2986757Z         "rendererCheckpointElapsedMs": 6931
+2026-10-13T16:37:41.2987255Z       },
+2026-10-13T16:37:41.2987691Z       "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+2026-10-13T16:37:41.2988191Z       "renderedFeatures": 1,
+2026-10-13T16:37:41.2988647Z       "settingsMatch": true,
+2026-10-13T16:37:41.2989029Z       "workspaceBundleMatches": true,
+2026-10-13T16:37:41.2989364Z       "pageOwnership": {
+2026-10-13T16:37:41.2989722Z         "initialPageCount": 1,
+2026-10-13T16:37:41.2990112Z         "appPagesBeforeNavigation": 0,
+2026-10-13T16:37:41.2990463Z         "appPagesAfterBoot": 1,
+2026-10-13T16:37:41.2990819Z         "appPagesAfterWorkspace": 1,
+2026-10-13T16:37:41.2991210Z         "unexpectedCreatedPageTargets": 0,
+2026-10-13T16:37:41.2991587Z         "closeCompleted": true,
+2026-10-13T16:37:41.2991932Z         "openPagesBeforeBrowserClose": 0,
+2026-10-13T16:37:41.2992339Z         "browserCloseCompleted": true,
+2026-10-13T16:37:41.2992707Z         "forcedBrowserProcessTermination": false,
+2026-10-13T16:37:41.2993061Z         "browserCloseObservation": {
+2026-10-13T16:37:41.2993565Z           "closeStatus": "completed",
+2026-10-13T16:37:41.2994028Z           "closeDeadlineMs": 5000,
+2026-10-13T16:37:41.2994376Z           "closeStartHostMs": 159289.7256,
+2026-10-13T16:37:41.2994773Z           "closeSettledHostMs": 159805.8458,
+2026-10-13T16:37:41.2995130Z           "closeElapsedMs": 516.1202000000048,
+2026-10-13T16:37:41.2995478Z           "timingOrigins": {
+2026-10-13T16:37:41.2996168Z             "closeElapsedMs": "browser.close invocation",
+2026-10-13T16:37:41.3761811Z             "processExitElapsedMs": "closeRecoveryBrowser entry",
+2026-10-13T16:37:41.3763029Z             "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+2026-10-13T16:37:41.3763738Z           },
+2026-10-13T16:37:41.3764103Z           "closeRejectionName": null,
+2026-10-13T16:37:41.3764561Z           "processExitedBeforeClose": false,
+2026-10-13T16:37:41.3765014Z           "processExit": {
+2026-10-13T16:37:41.3765375Z             "code": 0,
+2026-10-13T16:37:41.3765680Z             "signal": null,
+2026-10-13T16:37:41.3766045Z             "elapsedMs": 532.8227999999945
+2026-10-13T16:37:41.3766376Z           },
+2026-10-13T16:37:41.3766682Z           "protocolCloseTrace": {
+2026-10-13T16:37:41.3825335Z             "scope": "owned-browser-close-only",
+2026-10-13T16:37:41.3825947Z             "browserCloseRequestSeen": true,
+2026-10-13T16:37:41.3826588Z             "browserCloseRequestElapsedMs": 0.2776000000012573,
+2026-10-13T16:37:41.3827477Z             "browserCloseAcknowledgementSeen": true,
+2026-10-13T16:37:41.3828116Z             "browserCloseAcknowledgementElapsedMs": 3.554699999978766,
+2026-10-13T16:37:41.3828693Z             "browserCloseAcknowledgementLate": false,
+2026-10-13T16:37:41.3829184Z             "browserCloseAcknowledgementError": false,
+2026-10-13T16:37:41.3830566Z             "browserDisconnected": true,
+2026-10-13T16:37:41.3833325Z             "browserDisconnectedElapsedMs": 14.834600000001956,
+2026-10-13T16:37:41.3834863Z             "malformedCloseMessage": false,
+2026-10-13T16:37:41.3835342Z             "protocolMessageCount": 2,
+2026-10-13T16:37:41.3835843Z             "protocolMessageOverflow": false,
+2026-10-13T16:37:41.3836336Z             "protocolObservationComplete": true
+2026-10-13T16:37:41.3836776Z           },
+2026-10-13T16:37:41.3837161Z           "shutdownDiagnostics": {
+2026-10-13T16:37:41.3837614Z             "targetTypeCounts": {
+2026-10-13T16:37:41.3838055Z               "beforeClose": {
+2026-10-13T16:37:41.3838502Z                 "status": "available",
+2026-10-13T16:37:41.3838943Z                 "source": "browser.targets",
+2026-10-13T16:37:41.3839959Z                 "targetCount": 1,
+2026-10-13T16:37:41.3840828Z                 "counts": {
+2026-10-13T16:37:41.3843017Z                   "background_page": 0,
+2026-10-13T16:37:41.3843480Z                   "browser": 1,
+2026-10-13T16:37:41.3843859Z                   "page": 0,
+2026-10-13T16:37:41.3844269Z                   "service_worker": 0,
+2026-10-13T16:37:41.3844703Z                   "shared_worker": 0,
+2026-10-13T16:37:41.3845114Z                   "webview": 0,
+2026-10-13T16:37:41.3845542Z                   "worker": 0,
+2026-10-13T16:37:41.3845916Z                   "other": 0
+2026-10-13T16:37:41.3846278Z                 },
+2026-10-13T16:37:41.3846693Z                 "malformedTargetCount": 0
+2026-10-13T16:37:41.3847118Z               },
+2026-10-13T16:37:41.3847498Z               "atDisconnect": {
+2026-10-13T16:37:41.3847932Z                 "status": "unavailable",
+2026-10-13T16:37:41.3848424Z                 "reason": "browser-disconnected"
+2026-10-13T16:37:41.3848858Z               }
+2026-10-13T16:37:41.3849164Z             },
+2026-10-13T16:37:41.3849587Z             "browserProcessInfoBeforeClose": {
+2026-10-13T16:37:41.3850082Z               "status": "available",
+2026-10-13T16:37:41.3850612Z               "source": "SystemInfo.getProcessInfo",
+2026-10-13T16:37:41.3851101Z               "processCount": 7,
+2026-10-13T16:37:41.3852742Z               "rows": [
+2026-10-13T16:37:41.3853050Z                 {
+2026-10-13T16:37:41.3853319Z                   "id": 900,
+2026-10-13T16:37:41.3853657Z                   "role": "renderer"
+2026-10-13T16:37:41.3854013Z                 },
+2026-10-13T16:37:41.3854319Z                 {
+2026-10-13T16:37:41.3855540Z                   "id": 4400,
+2026-10-13T16:37:41.3873981Z                   "role": "renderer"
+2026-10-13T16:37:41.3874449Z                 },
+2026-10-13T16:37:41.3874821Z                 {
+2026-10-13T16:37:41.3875164Z                   "id": 4556,
+2026-10-13T16:37:41.3875605Z                   "role": "other"
+2026-10-13T16:37:41.3876053Z                 },
+2026-10-13T16:37:41.3876353Z                 {
+2026-10-13T16:37:41.3876864Z                   "id": 6176,
+2026-10-13T16:37:41.3877237Z                   "role": "browser"
+2026-10-13T16:37:41.3877578Z                 },
+2026-10-13T16:37:41.3877852Z                 {
+2026-10-13T16:37:41.3878131Z                   "id": 7336,
+2026-10-13T16:37:41.3878487Z                   "role": "gpu"
+2026-10-13T16:37:41.3888000Z                 },
+2026-10-13T16:37:41.3889820Z                 {
+2026-10-13T16:37:41.3890260Z                   "id": 7588,
+2026-10-13T16:37:41.3891219Z                   "role": "other"
+2026-10-13T16:37:41.3893102Z                 },
+2026-10-13T16:37:41.3893425Z                 {
+2026-10-13T16:37:41.3894400Z                   "id": 9432,
+2026-10-13T16:37:41.3909899Z                   "role": "renderer"
+2026-10-13T16:37:41.3912619Z                 }
+2026-10-13T16:37:41.3922989Z               ],
+2026-10-13T16:37:41.3923673Z               "truncated": false,
+2026-10-13T16:37:41.3927173Z               "retainedFields": [
+2026-10-13T16:37:41.3931265Z                 "id",
+2026-10-13T16:37:41.3931624Z                 "role"
+2026-10-13T16:37:41.3931926Z               ]
+2026-10-13T16:37:41.3932188Z             },
+2026-10-13T16:37:41.3939065Z             "preCloseDiagnosticsElapsedMs": 16.726900000008754,
+2026-10-13T16:37:41.3941784Z             "ownedPidPresence": {},
+2026-10-13T16:37:41.3942797Z             "processTreeBeforeForce": null
+2026-10-13T16:37:41.3944531Z           },
+2026-10-13T16:37:41.3948371Z           "forceProcessStatus": "not-needed",
+2026-10-13T16:37:41.3953620Z           "forceProcessAttempted": false,
+2026-10-13T16:37:41.3955869Z           "forceProcessCallbackInvoked": false,
+2026-10-13T16:37:41.3959495Z           "forceProcessElapsedMs": null,
+2026-10-13T16:37:41.3960363Z           "stderr": []
+2026-10-13T16:37:41.3960653Z         }
+2026-10-13T16:37:41.3961156Z       }
+2026-10-13T16:37:41.3965612Z     },
+2026-10-13T16:37:41.3966121Z     {
+2026-10-13T16:37:41.3966514Z       "id": "interrupted-update-retained-application",
+2026-10-13T16:37:41.3966944Z       "status": "passed",
+2026-10-13T16:37:41.3967594Z       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+2026-10-13T16:37:41.3968213Z       "timing": {
+2026-10-13T16:37:41.3968907Z         "rendererQueryTiming": "late",
+2026-10-13T16:37:41.3969405Z         "rendererQueryDurationClock": "host-wall-clock",
+2026-10-13T16:37:41.3969992Z         "rendererQueryMeasurement": "host-round-trip",
+2026-10-13T16:37:41.3970588Z         "bootElapsedMs": 4397,
+2026-10-13T16:37:41.3971047Z         "rendererQueryDurationMs": 9,
+2026-10-13T16:37:41.3971562Z         "bootPlusQueryCriticalPathMs": 4406,
+2026-10-13T16:37:41.3973149Z         "rendererCheckpointElapsedMs": 4756
+2026-10-13T16:37:41.3973621Z       },
+2026-10-13T16:37:41.3974306Z       "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+2026-10-13T16:37:41.3974861Z       "renderedFeatures": 1,
+2026-10-13T16:37:41.3975185Z       "settingsMatch": true,
+2026-10-13T16:37:41.3975516Z       "workspaceBundleMatches": true,
+2026-10-13T16:37:41.3977294Z       "pageOwnership": {
+2026-10-13T16:37:41.3977725Z         "initialPageCount": 1,
+2026-10-13T16:37:41.3978130Z         "appPagesBeforeNavigation": 0,
+2026-10-13T16:37:41.3978725Z         "appPagesAfterBoot": 1,
+2026-10-13T16:37:41.3979198Z         "appPagesAfterWorkspace": 1,
+2026-10-13T16:37:41.3979694Z         "unexpectedCreatedPageTargets": 0,
+2026-10-13T16:37:41.3980180Z         "closeCompleted": true,
+2026-10-13T16:37:41.3980633Z         "openPagesBeforeBrowserClose": 0,
+2026-10-13T16:37:41.3981950Z         "browserCloseCompleted": true,
+2026-10-13T16:37:41.3982501Z         "forcedBrowserProcessTermination": false,
+2026-10-13T16:37:41.3983035Z         "browserCloseObservation": {
+2026-10-13T16:37:41.3983669Z           "closeStatus": "completed",
+2026-10-13T16:37:41.3984102Z           "closeDeadlineMs": 5000,
+2026-10-13T16:37:41.3984544Z           "closeStartHostMs": 183440.7695,
+2026-10-13T16:37:41.3985023Z           "closeSettledHostMs": 183764.4906,
+2026-10-13T16:37:41.3985543Z           "closeElapsedMs": 323.7210999999952,
+2026-10-13T16:37:41.3985979Z           "timingOrigins": {
+2026-10-13T16:37:41.3986462Z             "closeElapsedMs": "browser.close invocation",
+2026-10-13T16:37:41.3987184Z             "processExitElapsedMs": "closeRecoveryBrowser entry",
+2026-10-13T16:37:41.3988343Z             "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+2026-10-13T16:37:41.3989144Z           },
+2026-10-13T16:37:41.3989583Z           "closeRejectionName": null,
+2026-10-13T16:37:41.3990168Z           "processExitedBeforeClose": false,
+2026-10-13T16:37:41.3990877Z           "processExit": {
+2026-10-13T16:37:41.3991346Z             "code": 0,
+2026-10-13T16:37:41.3991721Z             "signal": null,
+2026-10-13T16:37:41.3992152Z             "elapsedMs": 336.7559000000183
+2026-10-13T16:37:41.3992981Z           },
+2026-10-13T16:37:41.3993364Z           "protocolCloseTrace": {
+2026-10-13T16:37:41.3993884Z             "scope": "owned-browser-close-only",
+2026-10-13T16:37:41.3994436Z             "browserCloseRequestSeen": true,
+2026-10-13T16:37:41.3995073Z             "browserCloseRequestElapsedMs": 0.08059999998658895,
+2026-10-13T16:37:41.3995703Z             "browserCloseAcknowledgementSeen": true,
+2026-10-13T16:37:41.3996401Z             "browserCloseAcknowledgementElapsedMs": 16.20549999998184,
+2026-10-13T16:37:41.3997419Z             "browserCloseAcknowledgementLate": false,
+2026-10-13T16:37:41.3998260Z             "browserCloseAcknowledgementError": false,
+2026-10-13T16:37:41.3999600Z             "browserDisconnected": true,
+2026-10-13T16:37:41.4000064Z             "browserDisconnectedElapsedMs": 23.181299999996554,
+2026-10-13T16:37:41.4000583Z             "malformedCloseMessage": false,
+2026-10-13T16:37:41.4001587Z             "protocolMessageCount": 2,
+2026-10-13T16:37:41.4002930Z             "protocolMessageOverflow": false,
+2026-10-13T16:37:41.4003507Z             "protocolObservationComplete": true
+2026-10-13T16:37:41.4003994Z           },
+2026-10-13T16:37:41.4004448Z           "shutdownDiagnostics": {
+2026-10-13T16:37:41.4005129Z             "targetTypeCounts": {
+2026-10-13T16:37:41.4005604Z               "beforeClose": {
+2026-10-13T16:37:41.4006096Z                 "status": "available",
+2026-10-13T16:37:41.4006760Z                 "source": "browser.targets",
+2026-10-13T16:37:41.4007250Z                 "targetCount": 1,
+2026-10-13T16:37:41.4007669Z                 "counts": {
+2026-10-13T16:37:41.4008096Z                   "background_page": 0,
+2026-10-13T16:37:41.4008582Z                   "browser": 1,
+2026-10-13T16:37:41.4009005Z                   "page": 0,
+2026-10-13T16:37:41.4009472Z                   "service_worker": 0,
+2026-10-13T16:37:41.4009940Z                   "shared_worker": 0,
+2026-10-13T16:37:41.4011237Z                   "webview": 0,
+2026-10-13T16:37:41.4011718Z                   "worker": 0,
+2026-10-13T16:37:41.4012115Z                   "other": 0
+2026-10-13T16:37:41.4012480Z                 },
+2026-10-13T16:37:41.4012950Z                 "malformedTargetCount": 0
+2026-10-13T16:37:41.4013376Z               },
+2026-10-13T16:37:41.4013728Z               "atDisconnect": {
+2026-10-13T16:37:41.4016660Z                 "status": "unavailable",
+2026-10-13T16:37:41.4017323Z                 "reason": "browser-disconnected"
+2026-10-13T16:37:41.4017779Z               }
+2026-10-13T16:37:41.4018120Z             },
+2026-10-13T16:37:41.4018579Z             "browserProcessInfoBeforeClose": {
+2026-10-13T16:37:41.4019331Z               "status": "available",
+2026-10-13T16:37:41.4019842Z               "source": "SystemInfo.getProcessInfo",
+2026-10-13T16:37:41.4020746Z               "processCount": 6,
+2026-10-13T16:37:41.4021799Z               "rows": [
+2026-10-13T16:37:41.4023309Z                 {
+2026-10-13T16:37:41.4024317Z                   "id": 2392,
+2026-10-13T16:37:41.4025610Z                   "role": "other"
+2026-10-13T16:37:41.4026028Z                 },
+2026-10-13T16:37:41.4028099Z                 {
+2026-10-13T16:37:41.4028721Z                   "id": 2504,
+2026-10-13T16:37:41.4029154Z                   "role": "other"
+2026-10-13T16:37:41.4035328Z                 },
+2026-10-13T16:37:41.4036743Z                 {
+2026-10-13T16:37:41.4040676Z                   "id": 5164,
+2026-10-13T16:37:41.4045803Z                   "role": "renderer"
+2026-10-13T16:37:41.4047595Z                 },
+2026-10-13T16:37:41.4050064Z                 {
+2026-10-13T16:37:41.4050603Z                   "id": 5184,
+2026-10-13T16:37:41.4051068Z                   "role": "renderer"
+2026-10-13T16:37:41.4051713Z                 },
+2026-10-13T16:37:41.4052283Z                 {
+2026-10-13T16:37:41.4052615Z                   "id": 8336,
+2026-10-13T16:37:41.4053058Z                   "role": "browser"
+2026-10-13T16:37:41.4053522Z                 },
+2026-10-13T16:37:41.4053847Z                 {
+2026-10-13T16:37:41.4054216Z                   "id": 9524,
+2026-10-13T16:37:41.4054604Z                   "role": "gpu"
+2026-10-13T16:37:41.4054958Z                 }
+2026-10-13T16:37:41.4055284Z               ],
+2026-10-13T16:37:41.4055667Z               "truncated": false,
+2026-10-13T16:37:41.4056101Z               "retainedFields": [
+2026-10-13T16:37:41.4056493Z                 "id",
+2026-10-13T16:37:41.4056863Z                 "role"
+2026-10-13T16:37:41.4057200Z               ]
+2026-10-13T16:37:41.4057551Z             },
+2026-10-13T16:37:41.4058063Z             "preCloseDiagnosticsElapsedMs": 13.08410000000731,
+2026-10-13T16:37:41.4058682Z             "ownedPidPresence": {},
+2026-10-13T16:37:41.4060266Z             "processTreeBeforeForce": null
+2026-10-13T16:37:41.4060736Z           },
+2026-10-13T16:37:41.4061131Z           "forceProcessStatus": "not-needed",
+2026-10-13T16:37:41.4061612Z           "forceProcessAttempted": false,
+2026-10-13T16:37:41.4062147Z           "forceProcessCallbackInvoked": false,
+2026-10-13T16:37:41.4062708Z           "forceProcessElapsedMs": null,
+2026-10-13T16:37:41.4063143Z           "stderr": []
+2026-10-13T16:37:41.4063479Z         }
+2026-10-13T16:37:41.4063825Z       }
+2026-10-13T16:37:41.4064135Z     },
+2026-10-13T16:37:41.4064414Z     {
+2026-10-13T16:37:41.4064814Z       "id": "prior-install-rollback-same-profile",
+2026-10-13T16:37:41.4065272Z       "status": "passed",
+2026-10-13T16:37:41.4065981Z       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+2026-10-13T16:37:41.4066708Z       "timing": {
+2026-10-13T16:37:41.4067091Z         "rendererQueryTiming": "late",
+2026-10-13T16:37:41.4067600Z         "rendererQueryDurationClock": "host-wall-clock",
+2026-10-13T16:37:41.4068250Z         "rendererQueryMeasurement": "host-round-trip",
+2026-10-13T16:37:41.4068762Z         "bootElapsedMs": 3497,
+2026-10-13T16:37:41.4069137Z         "rendererQueryDurationMs": 249,
+2026-10-13T16:37:41.4069563Z         "bootPlusQueryCriticalPathMs": 3746,
+2026-10-13T16:37:41.4070101Z         "rendererCheckpointElapsedMs": 4132
+2026-10-13T16:37:41.4070477Z       },
+2026-10-13T16:37:41.4071009Z       "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+2026-10-13T16:37:41.4072240Z       "renderedFeatures": 1,
+2026-10-13T16:37:41.4072662Z       "settingsMatch": true,
+2026-10-13T16:37:41.4080353Z       "workspaceBundleMatches": true,
+2026-10-13T16:37:41.4080872Z       "pageOwnership": {
+2026-10-13T16:37:41.4081243Z         "initialPageCount": 1,
+2026-10-13T16:37:41.4081698Z         "appPagesBeforeNavigation": 0,
+2026-10-13T16:37:41.4082447Z         "appPagesAfterBoot": 1,
+2026-10-13T16:37:41.4082916Z         "appPagesAfterWorkspace": 1,
+2026-10-13T16:37:41.4083390Z         "unexpectedCreatedPageTargets": 0,
+2026-10-13T16:37:41.4083777Z         "closeCompleted": true,
+2026-10-13T16:37:41.4084059Z         "openPagesBeforeBrowserClose": 0,
+2026-10-13T16:37:41.4084372Z         "browserCloseCompleted": true,
+2026-10-13T16:37:41.4084704Z         "forcedBrowserProcessTermination": false,
+2026-10-13T16:37:41.4085036Z         "browserCloseObservation": {
+2026-10-13T16:37:41.4085305Z           "closeStatus": "completed",
+2026-10-13T16:37:41.4085564Z           "closeDeadlineMs": 5000,
+2026-10-13T16:37:41.4085867Z           "closeStartHostMs": 316040.82,
+2026-10-13T16:37:41.4086312Z           "closeSettledHostMs": 316394.5887,
+2026-10-13T16:37:41.4087090Z           "closeElapsedMs": 353.7687000000151,
+2026-10-13T16:37:41.4087534Z           "timingOrigins": {
+2026-10-13T16:37:41.4087873Z             "closeElapsedMs": "browser.close invocation",
+2026-10-13T16:37:41.4088275Z             "processExitElapsedMs": "closeRecoveryBrowser entry",
+2026-10-13T16:37:41.4088969Z             "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+2026-10-13T16:37:41.4089383Z           },
+2026-10-13T16:37:41.4089624Z           "closeRejectionName": null,
+2026-10-13T16:37:41.4089963Z           "processExitedBeforeClose": false,
+2026-10-13T16:37:41.4090244Z           "processExit": {
+2026-10-13T16:37:41.4090466Z             "code": 0,
+2026-10-13T16:37:41.4090653Z             "signal": null,
+2026-10-13T16:37:41.4091258Z             "elapsedMs": 365.4101999999839
+2026-10-13T16:37:41.4091490Z           },
+2026-10-13T16:37:41.4091681Z           "protocolCloseTrace": {
+2026-10-13T16:37:41.4091949Z             "scope": "owned-browser-close-only",
+2026-10-13T16:37:41.4092225Z             "browserCloseRequestSeen": true,
+2026-10-13T16:37:41.4092535Z             "browserCloseRequestElapsedMs": 0.13850000000093132,
+2026-10-13T16:37:41.4092868Z             "browserCloseAcknowledgementSeen": true,
+2026-10-13T16:37:41.4093226Z             "browserCloseAcknowledgementElapsedMs": 23.754599999985658,
+2026-10-13T16:37:41.4093637Z             "browserCloseAcknowledgementLate": false,
+2026-10-13T16:37:41.4094065Z             "browserCloseAcknowledgementError": false,
+2026-10-13T16:37:41.4094341Z             "browserDisconnected": true,
+2026-10-13T16:37:41.4094636Z             "browserDisconnectedElapsedMs": 25.351499999989755,
+2026-10-13T16:37:41.4094955Z             "malformedCloseMessage": false,
+2026-10-13T16:37:41.4095212Z             "protocolMessageCount": 2,
+2026-10-13T16:37:41.4095468Z             "protocolMessageOverflow": false,
+2026-10-13T16:37:41.4095787Z             "protocolObservationComplete": true
+2026-10-13T16:37:41.4096082Z           },
+2026-10-13T16:37:41.4096338Z           "shutdownDiagnostics": {
+2026-10-13T16:37:41.4096608Z             "targetTypeCounts": {
+2026-10-13T16:37:41.4096897Z               "beforeClose": {
+2026-10-13T16:37:41.4097187Z                 "status": "available",
+2026-10-13T16:37:41.4097640Z                 "source": "browser.targets",
+2026-10-13T16:37:41.4098379Z                 "targetCount": 1,
+2026-10-13T16:37:41.4098626Z                 "counts": {
+2026-10-13T16:37:41.4098892Z                   "background_page": 0,
+2026-10-13T16:37:41.4099142Z                   "browser": 1,
+2026-10-13T16:37:41.4099350Z                   "page": 0,
+2026-10-13T16:37:41.4099574Z                   "service_worker": 0,
+2026-10-13T16:37:41.4099811Z                   "shared_worker": 0,
+2026-10-13T16:37:41.4100052Z                   "webview": 0,
+2026-10-13T16:37:41.4100259Z                   "worker": 0,
+2026-10-13T16:37:41.4100465Z                   "other": 0
+2026-10-13T16:37:41.4100673Z                 },
+2026-10-13T16:37:41.4100880Z                 "malformedTargetCount": 0
+2026-10-13T16:37:41.4101135Z               },
+2026-10-13T16:37:41.4101473Z               "atDisconnect": {
+2026-10-13T16:37:41.4101711Z                 "status": "unavailable",
+2026-10-13T16:37:41.4101972Z                 "reason": "browser-disconnected"
+2026-10-13T16:37:41.4102227Z               }
+2026-10-13T16:37:41.4102394Z             },
+2026-10-13T16:37:41.4102601Z             "browserProcessInfoBeforeClose": {
+2026-10-13T16:37:41.4102879Z               "status": "available",
+2026-10-13T16:37:41.4103143Z               "source": "SystemInfo.getProcessInfo",
+2026-10-13T16:37:41.4103407Z               "processCount": 6,
+2026-10-13T16:37:41.4103622Z               "rows": [
+2026-10-13T16:37:41.4103801Z                 {
+2026-10-13T16:37:41.4104001Z                   "id": 556,
+2026-10-13T16:37:41.4104256Z                   "role": "gpu"
+2026-10-13T16:37:41.4104527Z                 },
+2026-10-13T16:37:41.4104739Z                 {
+2026-10-13T16:37:41.4104922Z                   "id": 1584,
+2026-10-13T16:37:41.4105149Z                   "role": "other"
+2026-10-13T16:37:41.4105350Z                 },
+2026-10-13T16:37:41.4105506Z                 {
+2026-10-13T16:37:41.4105788Z                   "id": 2908,
+2026-10-13T16:37:41.4106059Z                   "role": "renderer"
+2026-10-13T16:37:41.4106304Z                 },
+2026-10-13T16:37:41.4106515Z                 {
+2026-10-13T16:37:41.4106710Z                   "id": 6052,
+2026-10-13T16:37:41.4106980Z                   "role": "browser"
+2026-10-13T16:37:41.4107228Z                 },
+2026-10-13T16:37:41.4107436Z                 {
+2026-10-13T16:37:41.4107602Z                   "id": 8492,
+2026-10-13T16:37:41.4107811Z                   "role": "renderer"
+2026-10-13T16:37:41.4108046Z                 },
+2026-10-13T16:37:41.4108267Z                 {
+2026-10-13T16:37:41.4108485Z                   "id": 9368,
+2026-10-13T16:37:41.4108760Z                   "role": "other"
+2026-10-13T16:37:41.4109017Z                 }
+2026-10-13T16:37:41.4109234Z               ],
+2026-10-13T16:37:41.4109597Z               "truncated": false,
+2026-10-13T16:37:41.4110054Z               "retainedFields": [
+2026-10-13T16:37:41.4110439Z                 "id",
+2026-10-13T16:37:41.4110718Z                 "role"
+2026-10-13T16:37:41.4111222Z               ]
+2026-10-13T16:37:41.4111438Z             },
+2026-10-13T16:37:41.4111693Z             "preCloseDiagnosticsElapsedMs": 11.732799999997951,
+2026-10-13T16:37:41.4112019Z             "ownedPidPresence": {},
+2026-10-13T16:37:41.4112271Z             "processTreeBeforeForce": null
+2026-10-13T16:37:41.4112495Z           },
+2026-10-13T16:37:41.4112713Z           "forceProcessStatus": "not-needed",
+2026-10-13T16:37:41.4112976Z           "forceProcessAttempted": false,
+2026-10-13T16:37:41.4113251Z           "forceProcessCallbackInvoked": false,
+2026-10-13T16:37:41.4113524Z           "forceProcessElapsedMs": null,
+2026-10-13T16:37:41.4113756Z           "stderr": []
+2026-10-13T16:37:41.4113950Z         }
+2026-10-13T16:37:41.4114102Z       }
+2026-10-13T16:37:41.4114271Z     },
+2026-10-13T16:37:41.4114449Z     {
+2026-10-13T16:37:41.4114747Z       "id": "upgraded-application-same-profile",
+2026-10-13T16:37:41.4115090Z       "status": "passed",
+2026-10-13T16:37:41.4115523Z       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+2026-10-13T16:37:41.4115952Z       "timing": {
+2026-10-13T16:37:41.4116171Z         "rendererQueryTiming": "late",
+2026-10-13T16:37:41.4116471Z         "rendererQueryDurationClock": "host-wall-clock",
+2026-10-13T16:37:41.4116798Z         "rendererQueryMeasurement": "host-round-trip",
+2026-10-13T16:37:41.4117081Z         "bootElapsedMs": 4238,
+2026-10-13T16:37:41.4117316Z         "rendererQueryDurationMs": 299,
+2026-10-13T16:37:41.4117589Z         "bootPlusQueryCriticalPathMs": 4537,
+2026-10-13T16:37:41.4117860Z         "rendererCheckpointElapsedMs": 4965
+2026-10-13T16:37:41.4118097Z       },
+2026-10-13T16:37:41.4118425Z       "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+2026-10-13T16:37:41.4118950Z       "renderedFeatures": 1,
+2026-10-13T16:37:41.4119178Z       "settingsMatch": true,
+2026-10-13T16:37:41.4119439Z       "workspaceBundleMatches": true,
+2026-10-13T16:37:41.4119753Z       "pageOwnership": {
+2026-10-13T16:37:41.4120058Z         "initialPageCount": 1,
+2026-10-13T16:37:41.4120469Z         "appPagesBeforeNavigation": 0,
+2026-10-13T16:37:41.4121147Z         "appPagesAfterBoot": 1,
+2026-10-13T16:37:41.4121531Z         "appPagesAfterWorkspace": 1,
+2026-10-13T16:37:41.4121802Z         "unexpectedCreatedPageTargets": 0,
+2026-10-13T16:37:41.4122059Z         "closeCompleted": true,
+2026-10-13T16:37:41.4122309Z         "openPagesBeforeBrowserClose": 0,
+2026-10-13T16:37:41.4122702Z         "browserCloseCompleted": true,
+2026-10-13T16:37:41.4123324Z         "forcedBrowserProcessTermination": false,
+2026-10-13T16:37:41.4123738Z         "browserCloseObservation": {
+2026-10-13T16:37:41.4124069Z           "closeStatus": "completed",
+2026-10-13T16:37:41.4124317Z           "closeDeadlineMs": 5000,
+2026-10-13T16:37:41.4124689Z           "closeStartHostMs": 476566.2794,
+2026-10-13T16:37:41.4124958Z           "closeSettledHostMs": 476882.7595,
+2026-10-13T16:37:41.4125273Z           "closeElapsedMs": 316.4800999999861,
+2026-10-13T16:37:41.4125512Z           "timingOrigins": {
+2026-10-13T16:37:41.4125811Z             "closeElapsedMs": "browser.close invocation",
+2026-10-13T16:37:41.4126169Z             "processExitElapsedMs": "closeRecoveryBrowser entry",
+2026-10-13T16:37:41.4126876Z             "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+2026-10-13T16:37:41.4127549Z           },
+2026-10-13T16:37:41.4127782Z           "closeRejectionName": null,
+2026-10-13T16:37:41.4128040Z           "processExitedBeforeClose": false,
+2026-10-13T16:37:41.4128287Z           "processExit": {
+2026-10-13T16:37:41.4128525Z             "code": 0,
+2026-10-13T16:37:41.4128717Z             "signal": null,
+2026-10-13T16:37:41.4128997Z             "elapsedMs": 329.9326000000001
+2026-10-13T16:37:41.4129235Z           },
+2026-10-13T16:37:41.4129431Z           "protocolCloseTrace": {
+2026-10-13T16:37:41.4129722Z             "scope": "owned-browser-close-only",
+2026-10-13T16:37:41.4130002Z             "browserCloseRequestSeen": true,
+2026-10-13T16:37:41.4130323Z             "browserCloseRequestElapsedMs": 0.09899999998742715,
+2026-10-13T16:37:41.4130672Z             "browserCloseAcknowledgementSeen": true,
+2026-10-13T16:37:41.4131046Z             "browserCloseAcknowledgementElapsedMs": 21.353400000021793,
+2026-10-13T16:37:41.4131716Z             "browserCloseAcknowledgementLate": false,
+2026-10-13T16:37:41.4132077Z             "browserCloseAcknowledgementError": false,
+2026-10-13T16:37:41.4132367Z             "browserDisconnected": true,
+2026-10-13T16:37:41.4132666Z             "browserDisconnectedElapsedMs": 21.627900000021327,
+2026-10-13T16:37:41.4132970Z             "malformedCloseMessage": false,
+2026-10-13T16:37:41.4133242Z             "protocolMessageCount": 2,
+2026-10-13T16:37:41.4133504Z             "protocolMessageOverflow": false,
+2026-10-13T16:37:41.4133784Z             "protocolObservationComplete": true
+2026-10-13T16:37:41.4134030Z           },
+2026-10-13T16:37:41.4134331Z           "shutdownDiagnostics": {
+2026-10-13T16:37:41.4134808Z             "targetTypeCounts": {
+2026-10-13T16:37:41.4135433Z               "beforeClose": {
+2026-10-13T16:37:41.4135725Z                 "status": "available",
+2026-10-13T16:37:41.4136031Z                 "source": "browser.targets",
+2026-10-13T16:37:41.4136385Z                 "targetCount": 1,
+2026-10-13T16:37:41.4136654Z                 "counts": {
+2026-10-13T16:37:41.4136912Z                   "background_page": 0,
+2026-10-13T16:37:41.4137206Z                   "browser": 1,
+2026-10-13T16:37:41.4137422Z                   "page": 0,
+2026-10-13T16:37:41.4137651Z                   "service_worker": 0,
+2026-10-13T16:37:41.4137882Z                   "shared_worker": 0,
+2026-10-13T16:37:41.4138238Z                   "webview": 0,
+2026-10-13T16:37:41.4138455Z                   "worker": 0,
+2026-10-13T16:37:41.4138658Z                   "other": 0
+2026-10-13T16:37:41.4138853Z                 },
+2026-10-13T16:37:41.4139085Z                 "malformedTargetCount": 0
+2026-10-13T16:37:41.4139299Z               },
+2026-10-13T16:37:41.4139556Z               "atDisconnect": {
+2026-10-13T16:37:41.4139918Z                 "status": "unavailable",
+2026-10-13T16:37:41.4140564Z                 "reason": "browser-disconnected"
+2026-10-13T16:37:41.4140898Z               }
+2026-10-13T16:37:41.4141067Z             },
+2026-10-13T16:37:41.4141296Z             "browserProcessInfoBeforeClose": {
+2026-10-13T16:37:41.4141589Z               "status": "available",
+2026-10-13T16:37:41.4141893Z               "source": "SystemInfo.getProcessInfo",
+2026-10-13T16:37:41.4142198Z               "processCount": 6,
+2026-10-13T16:37:41.4142406Z               "rows": [
+2026-10-13T16:37:41.4142594Z                 {
+2026-10-13T16:37:41.4142774Z                   "id": 1084,
+2026-10-13T16:37:41.4143169Z                   "role": "gpu"
+2026-10-13T16:37:41.4143438Z                 },
+2026-10-13T16:37:41.4143678Z                 {
+2026-10-13T16:37:41.4143901Z                   "id": 1952,
+2026-10-13T16:37:41.4144171Z                   "role": "browser"
+2026-10-13T16:37:41.4144443Z                 },
+2026-10-13T16:37:41.4144713Z                 {
+2026-10-13T16:37:41.4145033Z                   "id": 2112,
+2026-10-13T16:37:41.4145437Z                   "role": "other"
+2026-10-13T16:37:41.4145758Z                 },
+2026-10-13T16:37:41.4146010Z                 {
+2026-10-13T16:37:41.4146269Z                   "id": 2452,
+2026-10-13T16:37:41.4146608Z                   "role": "renderer"
+2026-10-13T16:37:41.4146952Z                 },
+2026-10-13T16:37:41.4147205Z                 {
+2026-10-13T16:37:41.4147455Z                   "id": 3720,
+2026-10-13T16:37:41.4147796Z                   "role": "renderer"
+2026-10-13T16:37:41.4148122Z                 },
+2026-10-13T16:37:41.4148379Z                 {
+2026-10-13T16:37:41.4148667Z                   "id": 10204,
+2026-10-13T16:37:41.4149002Z                   "role": "other"
+2026-10-13T16:37:41.4149314Z                 }
+2026-10-13T16:37:41.4149562Z               ],
+2026-10-13T16:37:41.4149863Z               "truncated": false,
+2026-10-13T16:37:41.4150219Z               "retainedFields": [
+2026-10-13T16:37:41.4150537Z                 "id",
+2026-10-13T16:37:41.4150817Z                 "role"
+2026-10-13T16:37:41.4151078Z               ]
+2026-10-13T16:37:41.4151609Z             },
+2026-10-13T16:37:41.4151972Z             "preCloseDiagnosticsElapsedMs": 13.530799999949522,
+2026-10-13T16:37:41.4152896Z             "ownedPidPresence": {},
+2026-10-13T16:37:41.4153370Z             "processTreeBeforeForce": null
+2026-10-13T16:37:41.4153753Z           },
+2026-10-13T16:37:41.4154103Z           "forceProcessStatus": "not-needed",
+2026-10-13T16:37:41.4154568Z           "forceProcessAttempted": false,
+2026-10-13T16:37:41.4155039Z           "forceProcessCallbackInvoked": false,
+2026-10-13T16:37:41.4155496Z           "forceProcessElapsedMs": null,
+2026-10-13T16:37:41.4155872Z           "stderr": []
+2026-10-13T16:37:41.4156159Z         }
+2026-10-13T16:37:41.4156401Z       }
+2026-10-13T16:37:41.4156629Z     },
+2026-10-13T16:37:41.4156859Z     {
+2026-10-13T16:37:41.4157288Z       "id": "failed-verification-rolls-back-and-reopens-assets",
+2026-10-13T16:37:41.4157798Z       "status": "passed",
+2026-10-13T16:37:41.4158490Z       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+2026-10-13T16:37:41.4159156Z       "timing": {
+2026-10-13T16:37:41.4159477Z         "rendererQueryTiming": "late",
+2026-10-13T16:37:41.4159965Z         "rendererQueryDurationClock": "host-wall-clock",
+2026-10-13T16:37:41.4160501Z         "rendererQueryMeasurement": "host-round-trip",
+2026-10-13T16:37:41.4161176Z         "bootElapsedMs": 3992,
+2026-10-13T16:37:41.4161565Z         "rendererQueryDurationMs": 454,
+2026-10-13T16:37:41.4162015Z         "bootPlusQueryCriticalPathMs": 4446,
+2026-10-13T16:37:41.4162476Z         "rendererCheckpointElapsedMs": 4829
+2026-10-13T16:37:41.4162849Z       },
+2026-10-13T16:37:41.4163373Z       "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+2026-10-13T16:37:41.4163994Z       "renderedFeatures": 1,
+2026-10-13T16:37:41.4164341Z       "settingsMatch": true,
+2026-10-13T16:37:41.4164695Z       "workspaceBundleMatches": true,
+2026-10-13T16:37:41.4166243Z       "pageOwnership": {
+2026-10-13T16:37:41.4168329Z         "initialPageCount": 1,
+2026-10-13T16:37:41.4169246Z         "appPagesBeforeNavigation": 0,
+2026-10-13T16:37:41.4170784Z         "appPagesAfterBoot": 1,
+2026-10-13T16:37:41.4172028Z         "appPagesAfterWorkspace": 1,
+2026-10-13T16:37:41.4172544Z         "unexpectedCreatedPageTargets": 0,
+2026-10-13T16:37:41.4173021Z         "closeCompleted": true,
+2026-10-13T16:37:41.4173827Z         "openPagesBeforeBrowserClose": 0,
+2026-10-13T16:37:41.4174546Z         "browserCloseCompleted": true,
+2026-10-13T16:37:41.4175038Z         "forcedBrowserProcessTermination": false,
+2026-10-13T16:37:41.4175739Z         "browserCloseObservation": {
+2026-10-13T16:37:41.4176007Z           "closeStatus": "completed",
+2026-10-13T16:37:41.4176328Z           "closeDeadlineMs": 5000,
+2026-10-13T16:37:41.4176769Z           "closeStartHostMs": 488614.077,
+2026-10-13T16:37:41.4177545Z           "closeSettledHostMs": 488967.9123,
+2026-10-13T16:37:41.4178048Z           "closeElapsedMs": 353.8353000000352,
+2026-10-13T16:37:41.4178727Z           "timingOrigins": {
+2026-10-13T16:37:41.4180479Z             "closeElapsedMs": "browser.close invocation",
+2026-10-13T16:37:41.4181519Z             "processExitElapsedMs": "closeRecoveryBrowser entry",
+2026-10-13T16:37:41.4182886Z             "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+2026-10-13T16:37:41.4183392Z           },
+2026-10-13T16:37:41.4183665Z           "closeRejectionName": null,
+2026-10-13T16:37:41.4184624Z           "processExitedBeforeClose": false,
+2026-10-13T16:37:41.4185083Z           "processExit": {
+2026-10-13T16:37:41.4185427Z             "code": 0,
+2026-10-13T16:37:41.4185977Z             "signal": null,
+2026-10-13T16:37:41.4186867Z             "elapsedMs": 365.65990000002785
+2026-10-13T16:37:41.4187217Z           },
+2026-10-13T16:37:41.4187612Z           "protocolCloseTrace": {
+2026-10-13T16:37:41.4189403Z             "scope": "owned-browser-close-only",
+2026-10-13T16:37:41.4190557Z             "browserCloseRequestSeen": true,
+2026-10-13T16:37:41.4191269Z             "browserCloseRequestElapsedMs": 0.11710000003222376,
+2026-10-13T16:37:41.4191767Z             "browserCloseAcknowledgementSeen": true,
+2026-10-13T16:37:41.4192292Z             "browserCloseAcknowledgementElapsedMs": 16.816000000049826,
+2026-10-13T16:37:41.4193691Z             "browserCloseAcknowledgementLate": false,
+2026-10-13T16:37:41.4194285Z             "browserCloseAcknowledgementError": false,
+2026-10-13T16:37:41.4194982Z             "browserDisconnected": true,
+2026-10-13T16:37:41.4196004Z             "browserDisconnectedElapsedMs": 19.85480000003008,
+2026-10-13T16:37:41.4196768Z             "malformedCloseMessage": false,
+2026-10-13T16:37:41.4197772Z             "protocolMessageCount": 2,
+2026-10-13T16:37:41.4198627Z             "protocolMessageOverflow": false,
+2026-10-13T16:37:41.4199339Z             "protocolObservationComplete": true
+2026-10-13T16:37:41.4199964Z           },
+2026-10-13T16:37:41.4200270Z           "shutdownDiagnostics": {
+2026-10-13T16:37:41.4200645Z             "targetTypeCounts": {
+2026-10-13T16:37:41.4201048Z               "beforeClose": {
+2026-10-13T16:37:41.4202149Z                 "status": "available",
+2026-10-13T16:37:41.4203141Z                 "source": "browser.targets",
+2026-10-13T16:37:41.4203939Z                 "targetCount": 1,
+2026-10-13T16:37:41.4204763Z                 "counts": {
+2026-10-13T16:37:41.4205141Z                   "background_page": 0,
+2026-10-13T16:37:41.4205764Z                   "browser": 1,
+2026-10-13T16:37:41.4206085Z                   "page": 0,
+2026-10-13T16:37:41.4206425Z                   "service_worker": 0,
+2026-10-13T16:37:41.4206795Z                   "shared_worker": 0,
+2026-10-13T16:37:41.4207137Z                   "webview": 0,
+2026-10-13T16:37:41.4208170Z                   "worker": 0,
+2026-10-13T16:37:41.4208541Z                   "other": 0
+2026-10-13T16:37:41.4209349Z                 },
+2026-10-13T16:37:41.4216249Z                 "malformedTargetCount": 0
+2026-10-13T16:37:41.4216734Z               },
+2026-10-13T16:37:41.4217029Z               "atDisconnect": {
+2026-10-13T16:37:41.4218044Z                 "status": "unavailable",
+2026-10-13T16:37:41.4218594Z                 "reason": "browser-disconnected"
+2026-10-13T16:37:41.4219927Z               }
+2026-10-13T16:37:41.4220473Z             },
+2026-10-13T16:37:41.4220912Z             "browserProcessInfoBeforeClose": {
+2026-10-13T16:37:41.4222244Z               "status": "available",
+2026-10-13T16:37:41.4222866Z               "source": "SystemInfo.getProcessInfo",
+2026-10-13T16:37:41.4223970Z               "processCount": 6,
+2026-10-13T16:37:41.4224580Z               "rows": [
+2026-10-13T16:37:41.4224892Z                 {
+2026-10-13T16:37:41.4225685Z                   "id": 3708,
+2026-10-13T16:37:41.4226526Z                   "role": "renderer"
+2026-10-13T16:37:41.4226883Z                 },
+2026-10-13T16:37:41.4227087Z                 {
+2026-10-13T16:37:41.4227316Z                   "id": 5024,
+2026-10-13T16:37:41.4227652Z                   "role": "other"
+2026-10-13T16:37:41.4227934Z                 },
+2026-10-13T16:37:41.4228107Z                 {
+2026-10-13T16:37:41.4228294Z                   "id": 8708,
+2026-10-13T16:37:41.4228508Z                   "role": "renderer"
+2026-10-13T16:37:41.4228778Z                 },
+2026-10-13T16:37:41.4229054Z                 {
+2026-10-13T16:37:41.4229565Z                   "id": 9024,
+2026-10-13T16:37:41.4229916Z                   "role": "browser"
+2026-10-13T16:37:41.4230233Z                 },
+2026-10-13T16:37:41.4230479Z                 {
+2026-10-13T16:37:41.4230729Z                   "id": 9244,
+2026-10-13T16:37:41.4231040Z                   "role": "other"
+2026-10-13T16:37:41.4231361Z                 },
+2026-10-13T16:37:41.4232337Z                 {
+2026-10-13T16:37:41.4232649Z                   "id": 9408,
+2026-10-13T16:37:41.4233037Z                   "role": "gpu"
+2026-10-13T16:37:41.4233367Z                 }
+2026-10-13T16:37:41.4233854Z               ],
+2026-10-13T16:37:41.4234203Z               "truncated": false,
+2026-10-13T16:37:41.4234609Z               "retainedFields": [
+2026-10-13T16:37:41.4235767Z                 "id",
+2026-10-13T16:37:41.4236135Z                 "role"
+2026-10-13T16:37:41.4236796Z               ]
+2026-10-13T16:37:41.4237078Z             },
+2026-10-13T16:37:41.4237530Z             "preCloseDiagnosticsElapsedMs": 11.917500000039581,
+2026-10-13T16:37:41.4239206Z             "ownedPidPresence": {},
+2026-10-13T16:37:41.4240102Z             "processTreeBeforeForce": null
+2026-10-13T16:37:41.4240669Z           },
+2026-10-13T16:37:41.4241354Z           "forceProcessStatus": "not-needed",
+2026-10-13T16:37:41.4242570Z           "forceProcessAttempted": false,
+2026-10-13T16:37:41.4243149Z           "forceProcessCallbackInvoked": false,
+2026-10-13T16:37:41.4244020Z           "forceProcessElapsedMs": null,
+2026-10-13T16:37:41.4244562Z           "stderr": []
+2026-10-13T16:37:41.4244968Z         }
+2026-10-13T16:37:41.4245321Z       }
+2026-10-13T16:37:41.4245690Z     }
+2026-10-13T16:37:41.4246023Z   ],
+2026-10-13T16:37:41.4246386Z   "status": "passed",
+2026-10-13T16:37:41.4246711Z   "failure": null
+2026-10-13T16:37:41.4247007Z }
+2026-10-13T16:37:52.6261763Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+2026-10-13T16:37:52.6262300Z with:
+2026-10-13T16:37:52.6262610Z   name: profile-recovery-windows-latest
+2026-10-13T16:37:52.6262928Z   path: qa-artifacts/profile-recovery*
+2026-10-13T16:37:52.6263262Z   retention-days: 30
+2026-10-13T16:37:52.6263536Z   if-no-files-found: warn
+2026-10-13T16:37:52.6263801Z   compression-level: 6
+2026-10-13T16:37:52.6264054Z   overwrite: false
+2026-10-13T16:37:52.6264275Z   include-hidden-files: false
+2026-10-13T16:37:52.6264490Z env:
+2026-10-13T16:37:52.6264672Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:37:52.6264902Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:37:52.6265146Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:37:52.6265418Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:37:52.6265684Z ##[endgroup]
+2026-10-13T16:37:52.8222263Z (node:6168) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T16:37:52.8223520Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T16:37:52.8326374Z With the provided path, there will be 14 files uploaded
+2026-10-13T16:37:52.8332007Z Artifact name is valid!
+2026-10-13T16:37:52.8334012Z Root directory input is valid!
+2026-10-13T16:37:53.1862797Z Beginning upload of artifact content to blob storage
+2026-10-13T16:37:53.2594675Z (node:6168) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-13T16:37:53.6785523Z Uploaded bytes 212144
+2026-10-13T16:37:53.7427509Z Finished uploading artifact content to blob storage!
+2026-10-13T16:37:53.7430626Z SHA256 digest of uploaded artifact zip is 7a65bcf7422c3ef18627f5065a51f38aaa6cf6d2d1df0f1c4ef5375f9f95187f
+2026-10-13T16:37:53.7432675Z Finalizing artifact upload
+2026-10-13T16:37:54.0165546Z Artifact profile-recovery-windows-latest.zip successfully finalized. Artifact ID 11831246922
+2026-10-13T16:37:54.0166900Z Artifact profile-recovery-windows-latest has been successfully uploaded! Final size is 212144 bytes. Artifact ID is 11831246922
+2026-10-13T16:37:54.0176980Z Artifact download URL: https://github.com/arthurianresolve/gods-eye-view/actions/runs/38430700214/artifacts/11831246922
+2026-10-13T16:37:54.0498132Z ##[group]Run node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
+2026-10-13T16:37:54.0498883Z [36;1mnode scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json[0m
+2026-10-13T16:37:54.0574828Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T16:37:54.0575208Z env:
+2026-10-13T16:37:54.0575509Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T16:37:54.0575814Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T16:37:54.0576114Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T16:37:54.0576480Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T16:37:54.0576817Z ##[endgroup]
+2026-10-13T16:37:54.3682708Z QA_EVIDENCE_BEGIN qa-artifacts/profile-recovery.json
+2026-10-13T16:37:54.3745298Z {"scope":"prior-install-browser-profile-recovery","candidateCommit":"c7c47245f96e4839312983e8bcbba1da57948b4e","priorCommit":"6b896e2a8277fba12bc9577ad7772005a71e13c7","platform":"win32","os":"10.0.26100","node":"v24.14.0","hostEnvironment":{"cpuModel":"INTEL(R) XEON(R) PLATINUM 8573C","logicalCpus":4,"totalMemoryBytes":17174360064},"requestedRenderingBackend":"swiftshader-webgl-only","rendererExperiment":null,"browserVersion":"Chrome/152.0.7977.75","expectedBrowserVersion":null,"browserVersionMatch":null,"viewport":{"width":960,"height":640},"hardwareRenderingValidated":false,"timestamp":"2026-10-13T16:37:41.222Z","sourceDirtyAtStart":false,"sourceChangedDuringRun":false,"checks":[{"id":"prior-install-saves-browser-workspace","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4554,"rendererQueryDurationMs":290,"bootPlusQueryCriticalPathMs":4845,"rendererCheckpointElapsedMs":6931},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":159289.7256,"closeSettledHostMs":159805.8458,"closeElapsedMs":516.1202000000048,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":532.8227999999945},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.2776000000012573,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":3.554699999978766,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":14.834600000001956,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":7,"rows":[{"id":900,"role":"renderer"},{"id":4400,"role":"renderer"},{"id":4556,"role":"other"},{"id":6176,"role":"browser"},{"id":7336,"role":"gpu"},{"id":7588,"role":"other"},{"id":9432,"role":"renderer"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":16.726900000008754,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}},{"id":"interrupted-update-retained-application","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4397,"rendererQueryDurationMs":9,"bootPlusQueryCriticalPathMs":4406,"rendererCheckpointElapsedMs":4756},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":183440.7695,"closeSettledHostMs":183764.4906,"closeElapsedMs":323.7210999999952,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":336.7559000000183},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.08059999998658895,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":16.20549999998184,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":23.181299999996554,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":2392,"role":"other"},{"id":2504,"role":"other"},{"id":5164,"role":"renderer"},{"id":5184,"role":"renderer"},{"id":8336,"role":"browser"},{"id":9524,"role":"gpu"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":13.08410000000731,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}},{"id":"prior-install-rollback-same-profile","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":3497,"rendererQueryDurationMs":249,"bootPlusQueryCriticalPathMs":3746,"rendererCheckpointElapsedMs":4132},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":316040.82,"closeSettledHostMs":316394.5887,"closeElapsedMs":353.7687000000151,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":365.4101999999839},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.13850000000093132,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":23.754599999985658,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":25.351499999989755,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":556,"role":"gpu"},{"id":1584,"role":"other"},{"id":2908,"role":"renderer"},{"id":6052,"role":"browser"},{"id":8492,"role":"renderer"},{"id":9368,"role":"other"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":11.732799999997951,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}},{"id":"upgraded-application-same-profile","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":4238,"rendererQueryDurationMs":299,"bootPlusQueryCriticalPathMs":4537,"rendererCheckpointElapsedMs":4965},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":476566.2794,"closeSettledHostMs":476882.7595,"closeElapsedMs":316.4800999999861,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":329.9326000000001},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.09899999998742715,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":21.353400000021793,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":21.627900000021327,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":1084,"role":"gpu"},{"id":1952,"role":"browser"},{"id":2112,"role":"other"},{"id":2452,"role":"renderer"},{"id":3720,"role":"renderer"},{"id":10204,"role":"other"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":13.530799999949522,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}},{"id":"failed-verification-rolls-back-and-reopens-assets","status":"passed","renderer":"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)","timing":{"rendererQueryTiming":"late","rendererQueryDurationClock":"host-wall-clock","rendererQueryMeasurement":"host-round-trip","bootElapsedMs":3992,"rendererQueryDurationMs":454,"bootPlusQueryCriticalPathMs":4446,"rendererCheckpointElapsedMs":4829},"assetSha256":"0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc","renderedFeatures":1,"settingsMatch":true,"workspaceBundleMatches":true,"pageOwnership":{"initialPageCount":1,"appPagesBeforeNavigation":0,"appPagesAfterBoot":1,"appPagesAfterWorkspace":1,"unexpectedCreatedPageTargets":0,"closeCompleted":true,"openPagesBeforeBrowserClose":0,"browserCloseCompleted":true,"forcedBrowserProcessTermination":false,"browserCloseObservation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":488614.077,"closeSettledHostMs":488967.9123,"closeElapsedMs":353.8353000000352,"timingOrigins":{"closeElapsedMs":"browser.close invocation","processExitElapsedMs":"closeRecoveryBrowser entry","preCloseDiagnosticsElapsedMs":"bounded shutdown diagnostics before Browser.close invocation"},"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":365.65990000002785},"protocolCloseTrace":{"scope":"owned-browser-close-only","browserCloseRequestSeen":true,"browserCloseRequestElapsedMs":0.11710000003222376,"browserCloseAcknowledgementSeen":true,"browserCloseAcknowledgementElapsedMs":16.816000000049826,"browserCloseAcknowledgementLate":false,"browserCloseAcknowledgementError":false,"browserDisconnected":true,"browserDisconnectedElapsedMs":19.85480000003008,"malformedCloseMessage":false,"protocolMessageCount":2,"protocolMessageOverflow":false,"protocolObservationComplete":true},"shutdownDiagnostics":{"targetTypeCounts":{"beforeClose":{"status":"available","source":"browser.targets","targetCount":1,"counts":{"background_page":0,"browser":1,"page":0,"service_worker":0,"shared_worker":0,"webview":0,"worker":0,"other":0},"malformedTargetCount":0},"atDisconnect":{"status":"unavailable","reason":"browser-disconnected"}},"browserProcessInfoBeforeClose":{"status":"available","source":"SystemInfo.getProcessInfo","processCount":6,"rows":[{"id":3708,"role":"renderer"},{"id":5024,"role":"other"},{"id":8708,"role":"renderer"},{"id":9024,"role":"browser"},{"id":9244,"role":"other"},{"id":9408,"role":"gpu"}],"truncated":false,"retainedFields":["id","role"]},"preCloseDiagnosticsElapsedMs":11.917500000039581,"ownedPidPresence":{},"processTreeBeforeForce":null},"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null,"stderr":[]}}}],"status":"passed","failure":null}
+2026-10-13T16:37:54.3789094Z QA_EVIDENCE_END qa-artifacts/profile-recovery.json
+2026-10-13T16:37:54.5120068Z Post job cleanup.
+2026-10-13T16:37:54.6592613Z (node:7556) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T16:37:54.6593421Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T16:37:54.6597453Z Cache hit occurred on the primary key node-cache-Windows-x64-npm-d97d4f933e744ae3f558a8696bbd3ffce9b80f181937649447aa37d43a5becf6, not saving cache.
+2026-10-13T16:37:54.6895571Z Post job cleanup.
+2026-10-13T16:37:54.8604260Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-13T16:37:54.8866531Z git version 2.55.0.windows.5
+2026-10-13T16:37:54.8925755Z Temporarily overriding HOME='D:\a\_temp\74fc8c80-3f73-4e66-9c0e-2ac4060d3e49' before making global git config changes
+2026-10-13T16:37:54.8926616Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T16:37:54.8935517Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\gods-eye-view\gods-eye-view
+2026-10-13T16:37:54.9231099Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T16:37:54.9515906Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T16:37:55.4838593Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T16:37:55.5116763Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T16:37:56.0400669Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T16:37:56.0673198Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T16:37:56.5816868Z Cleaning up orphan processes
+2026-10-13T16:37:56.6068149Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

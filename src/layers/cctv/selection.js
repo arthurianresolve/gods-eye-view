@@ -61,7 +61,40 @@ export function createSelection({
    * @returns {'activated'|'unchanged'|'not-found'} Discriminated activation result.
    */
 
-  function setActiveCamera(cameraId) {
+  function publishCameraEvidence(record, { clear = false } = {}) {
+    const host = globalThis.window;
+    const EventCtor = host?.CustomEvent || globalThis.CustomEvent;
+    if (!host?.dispatchEvent || !EventCtor) return;
+    const camera = record?.camera;
+    const cameraState = record
+      ? parts.presentation.getPublicCameraState(record, camera.id)
+      : null;
+    const detail = clear
+      ? {
+          id: camera?.id || null,
+          layerId: 'cctv',
+          origin: 'user',
+        }
+      : {
+          id: camera.id,
+          layerId: 'cctv',
+          label: camera.name,
+          origin: 'user',
+          evidence: cameraState.evidence,
+          record,
+          cameraState,
+        };
+    host.dispatchEvent(
+      new EventCtor(
+        clear ? 'gev:entity-selection-cleared' : 'gev:entity-selected',
+        {
+          detail,
+        },
+      ),
+    );
+  }
+
+  function setActiveCamera(cameraId, { publish = false } = {}) {
     if (!cameraId || !layerState._recordById.has(cameraId))
       return CCTV_ACTIVATION_RESULT.NOT_FOUND;
     const record = layerState._recordById.get(cameraId);
@@ -79,6 +112,7 @@ export function createSelection({
         record,
       )
     ) {
+      if (publish) publishCameraEvidence(record);
       return CCTV_ACTIVATION_RESULT.UNCHANGED;
     }
     layerState._activeCameraId = cameraId;
@@ -147,6 +181,7 @@ export function createSelection({
     // ADJUST mode follows the active camera.
     layerState._gizmo?.refresh();
     parts.presentation.notifyListeners();
+    if (publish) publishCameraEvidence(record);
     return CCTV_ACTIVATION_RESULT.ACTIVATED;
   }
 
@@ -157,7 +192,7 @@ export function createSelection({
    * @returns {boolean} True when a camera was deactivated.
    */
 
-  function deactivateActiveCamera() {
+  function deactivateActiveCamera({ publish = false } = {}) {
     const record = layerState._activeCameraId
       ? layerState._recordById.get(layerState._activeCameraId)
       : null;
@@ -175,6 +210,7 @@ export function createSelection({
     parts.cards.refreshAmbientCards();
     layerState._gizmo?.refresh();
     parts.presentation.notifyListeners();
+    if (publish) publishCameraEvidence(record, { clear: true });
     return true;
   }
 

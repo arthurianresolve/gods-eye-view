@@ -1,0 +1,1394 @@
+{
+  "schema": "gev-s52-placement-reuse-focused/v1",
+  "capturedAt": "2026-10-11T00:11:20.907Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "scope": "Exact-source mock-canvas correctness and work counts; no timing, rendered pixel or hardware acceptance",
+  "childTimeoutMs": 60000,
+  "candidateSourcePath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\src\\overlays\\worldOverlay.js",
+  "requestedOutputPath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\qa-artifacts\\placement-work-final\\report.json",
+  "artifactDirectory": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\qa-artifacts\\placement-work-final\\artifacts",
+  "baseline": {
+    "commit": "f25154a61326e881e2223f2238d94b06cf231df8",
+    "worldOverlayGitBlobId": "cb6d52aed1eea154bff1ddff4d36be2e83d30f70",
+    "sourceSha256": "b6344025f66949eafc84f56b40d45254d56394bbcd8cf4cb50c6f3a4e54b6e4f"
+  },
+  "candidate": {
+    "baseCommit": "f25154a61326e881e2223f2238d94b06cf231df8",
+    "workingHead": "72694089e7fa0fa414042cde48765e1418a70d7e",
+    "baseWorldOverlayGitBlobId": "cb6d52aed1eea154bff1ddff4d36be2e83d30f70",
+    "stagedSourceSha256": "c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b"
+  },
+  "harness": {
+    "runnerSha256": "e6a19606a88c03c142926a8e16f162a8a4ee1d7af552a6e22d8f37d9ce2cc5e2",
+    "pinnedTestHelperSha256": "a4be97c902a31a44cd0cc52f1081ae44a70434ef2b737e1e3c8b425e6bc615a2",
+    "behaviorAppendSha256": "44381f4d97e47bd2a7dfb5f80b6daa7e27cec215c67ad898190e465705ddd1f1"
+  },
+  "sharedRuntimeDependencies": {
+    "src/testSupport/readStylesheet.mjs": {
+      "baselineGitBlobId": "6ce02400e10259d4f2083a6a881eff25ca3d6dac",
+      "baselineSha256": "ec2ee3289632a076d5e97e57dd97634cbd97761948592851faf2a2a50ae69a09",
+      "workingSha256": "ec2ee3289632a076d5e97e57dd97634cbd97761948592851faf2a2a50ae69a09",
+      "exactBytesMatch": true
+    },
+    "build/application-html.js": {
+      "baselineGitBlobId": "b14210a5695d780f565e4122e9461d9d8d6a6b0d",
+      "baselineSha256": "73c2c0e5808044be11f2fe4ab50c787d33e1a5a0e24426394246aafbfcb99cb5",
+      "workingSha256": "73c2c0e5808044be11f2fe4ab50c787d33e1a5a0e24426394246aafbfcb99cb5",
+      "exactBytesMatch": true
+    },
+    "src/layers/installations/namedMarkers.js": {
+      "baselineGitBlobId": "e516fb6276129052412265a567becf26284f28a3",
+      "baselineSha256": "7e2a3b00a87bcaff1a1614e36afe5edcbdf650f1768f9a9ce62983bb4985278b",
+      "workingSha256": "7e2a3b00a87bcaff1a1614e36afe5edcbdf650f1768f9a9ce62983bb4985278b",
+      "exactBytesMatch": true
+    },
+    "src/data/cctvCards.js": {
+      "baselineGitBlobId": "63b08fa441361b6cfb743e56948e6e070b01a269",
+      "baselineSha256": "e4b12321793d9f2e0a372f8283b8d627f77f988f48722852c4cfde0c912bbe11",
+      "workingSha256": "e4b12321793d9f2e0a372f8283b8d627f77f988f48722852c4cfde0c912bbe11",
+      "exactBytesMatch": true
+    },
+    "src/performance/cpuTimings.js": {
+      "baselineGitBlobId": "32958d49452ef431cc12dacb784e6545a5d16f81",
+      "baselineSha256": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c",
+      "workingSha256": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c",
+      "exactBytesMatch": true
+    },
+    "src/cyberSonar.js": {
+      "baselineGitBlobId": "3e0d1c453316e14654580b780c2d575fb295a25c",
+      "baselineSha256": "ddf0ce1d9b4538d59bc8a88b72671d6115cb88eeeaf0b15b95d737480e99f356",
+      "workingSha256": "ddf0ce1d9b4538d59bc8a88b72671d6115cb88eeeaf0b15b95d737480e99f356",
+      "exactBytesMatch": true
+    },
+    "src/celestialRing.js": {
+      "baselineGitBlobId": "3e30e62ec09d2342980f7137ff1fa8a3ecc8f60b",
+      "baselineSha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+      "workingSha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+      "exactBytesMatch": true
+    },
+    "src/data/detectionCohort.js": {
+      "baselineGitBlobId": "ed9f46c5272010e25d40c97ba8b1bb99c0d4cf1c",
+      "baselineSha256": "a3c5ecddba212a244ac8470b93e6beb8761f7cde99b9ee4ffc6f1660e22a0afc",
+      "workingSha256": "a3c5ecddba212a244ac8470b93e6beb8761f7cde99b9ee4ffc6f1660e22a0afc",
+      "exactBytesMatch": true
+    },
+    "src/data/labelArbiter.js": {
+      "baselineGitBlobId": "94869f9091b9f41180a1b0afa2282f773b0a7036",
+      "baselineSha256": "da178072243462227e064ffcc3f0d79ac2956bf4de7a066d01ac82756d51b184",
+      "workingSha256": "da178072243462227e064ffcc3f0d79ac2956bf4de7a066d01ac82756d51b184",
+      "exactBytesMatch": true
+    },
+    "src/overlays/worldOverlayDraw.js": {
+      "baselineGitBlobId": "8d0a68aebd543a959fa8bc49b0efd1ad6615fde4",
+      "baselineSha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d",
+      "workingSha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d",
+      "exactBytesMatch": true
+    },
+    "src/overlays/worldOverlayTokens.js": {
+      "baselineGitBlobId": "7fcf9dc6429af77672864f8bd8abc532ba84f515",
+      "baselineSha256": "a17971c49ccac5179d40625dcefa34d30b2fe0d931298df4faeb18675d08ab75",
+      "workingSha256": "a17971c49ccac5179d40625dcefa34d30b2fe0d931298df4faeb18675d08ab75",
+      "exactBytesMatch": true
+    },
+    "index.html": {
+      "baselineGitBlobId": "2e630c4a85c194d37a183d214290fe810d981fd1",
+      "baselineSha256": "10bfe30778ac25372653a7e461e94b0bab6567fa660f222a005375682c7e4f18",
+      "workingSha256": "10bfe30778ac25372653a7e461e94b0bab6567fa660f222a005375682c7e4f18",
+      "exactBytesMatch": true
+    },
+    "style.css": {
+      "baselineGitBlobId": "cda73da284459431df66376315b05b65a9124fe5",
+      "baselineSha256": "da9d8ad764df1f7d341374229446c1e489b2bbf115456909af626e954fa4dd76",
+      "workingSha256": "da9d8ad764df1f7d341374229446c1e489b2bbf115456909af626e954fa4dd76",
+      "exactBytesMatch": true
+    },
+    "package.json": {
+      "baselineGitBlobId": "17da8edcef98d994be3bab67561aabdf24130e0f",
+      "baselineSha256": "6a5ac79042dc47250eb6e2b0b2cd1dcbe04972f4a81c51c3fd872ecbe41c7fc3",
+      "workingSha256": "6a5ac79042dc47250eb6e2b0b2cd1dcbe04972f4a81c51c3fd872ecbe41c7fc3",
+      "exactBytesMatch": true
+    },
+    "package-lock.json": {
+      "baselineGitBlobId": "34a08bfdb1d3b222ffe242cded62e0ceeeec3e47",
+      "baselineSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "workingSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "exactBytesMatch": true
+    }
+  },
+  "installedCesium": {
+    "version": "1.138.0",
+    "packagePath": "node_modules\\cesium\\package.json",
+    "packageBytesSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+    "resolvedImportPath": "node_modules\\cesium\\Source\\Cesium.js",
+    "resolvedImportBytesSha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33"
+  },
+  "instrumentation": "fixture wrapper counts actual worldOverlayDraw.placementVariants invocations",
+  "runs": {
+    "baseline": {
+      "exitCode": 1,
+      "signal": null,
+      "timedOut": false,
+      "statuses": {
+        "S52 placement reuse preserves output while skipping unchanged variant construction": false,
+        "S52 placement reuse adds no placement work to detection-only painting": true,
+        "S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes": true,
+        "S52 placement behavior restores ambient eligibility after a protected footprint moves": true
+      },
+      "stdout": "TAP version 13\n# Subtest: S52 placement reuse preserves output while skipping unchanged variant construction\nnot ok 1 - S52 placement reuse preserves output while skipping unchanged variant construction\n  ---\n  duration_ms: 33.7052\n  type: 'test'\n  location: 'C:\\\\Users\\\\Privat\\\\Documents\\\\Codex\\\\2026-10-08\\\\i\\\\work\\\\gev-dev\\\\qa-artifacts\\\\.run-mTDc9Y\\\\baseline\\\\worldOverlay.test.mjs:2941:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    unchanged pure placement inputs reuse their complete variants\n    \n    2 !== 1\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 1\n  actual: 2\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/.run-mTDc9Y/baseline/worldOverlay.test.mjs:3058:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1306:25)\n    Test.start (node:internal/test_runner/test:1177:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)\n  ...\n# Subtest: S52 placement reuse adds no placement work to detection-only painting\nok 2 - S52 placement reuse adds no placement work to detection-only painting\n  ---\n  duration_ms: 1.5457\n  type: 'test'\n  ...\n# Subtest: S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes\nok 3 - S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes\n  ---\n  duration_ms: 9.0875\n  type: 'test'\n  ...\n# Subtest: S52 placement behavior restores ambient eligibility after a protected footprint moves\nok 4 - S52 placement behavior restores ambient eligibility after a protected footprint moves\n  ---\n  duration_ms: 5.5625\n  type: 'test'\n  ...\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 3122.3801\n",
+      "expectedCacheWitness": true,
+      "behaviorRegressionsPassed": true,
+      "expectedCandidateAllPass": true,
+      "exactSingleBaselineFailure": true,
+      "stderr": "",
+      "snapshots": [
+        {
+          "rect": {
+            "x": 142,
+            "y": 83,
+            "w": 126,
+            "h": 31,
+            "anchorX": 204.99999999999997,
+            "anchorY": 128
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 1,
+          "presentationSamples": 1
+        },
+        {
+          "rect": {
+            "x": 142,
+            "y": 83,
+            "w": 126,
+            "h": 31,
+            "anchorX": 204.99999999999997,
+            "anchorY": 128
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 2,
+          "presentationSamples": 2
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 88,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 3,
+          "presentationSamples": 3
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 4,
+          "presentationSamples": 4
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 5,
+          "presentationSamples": 5
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 6,
+          "presentationSamples": 6
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 7,
+          "presentationSamples": 7
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 8,
+          "presentationSamples": 8
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 9,
+          "presentationSamples": 9
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 10,
+          "presentationSamples": 10
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 11,
+          "presentationSamples": 11
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 12,
+          "presentationSamples": 12
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 13,
+          "presentationSamples": 13
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 147,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 14,
+          "presentationSamples": 14
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 147,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 15,
+          "presentationSamples": 15
+        },
+        {
+          "rect": {
+            "x": 135,
+            "y": 147,
+            "w": 157.5,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 16,
+          "presentationSamples": 16
+        },
+        {
+          "rect": {
+            "x": 135,
+            "y": 147,
+            "w": 157.5,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 17,
+          "presentationSamples": 17
+        },
+        {
+          "rect": {
+            "x": 139,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 18,
+          "presentationSamples": 18
+        },
+        {
+          "rect": {
+            "x": 139,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 19,
+          "presentationSamples": 19
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 20,
+          "presentationSamples": 20
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 21,
+          "presentationSamples": 21
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 147,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 22,
+          "presentationSamples": 22
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 147,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 23,
+          "presentationSamples": 23
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 24,
+          "presentationSamples": 24
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 25,
+          "presentationSamples": 25
+        },
+        {
+          "rect": null,
+          "hit": null,
+          "text": [],
+          "buildCalls": 25,
+          "presentationSamples": 25
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 26,
+          "presentationSamples": 26
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 27,
+          "presentationSamples": 27
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 28,
+          "presentationSamples": 28
+        }
+      ]
+    },
+    "candidate": {
+      "exitCode": 0,
+      "signal": null,
+      "timedOut": false,
+      "statuses": {
+        "S52 placement reuse preserves output while skipping unchanged variant construction": true,
+        "S52 placement reuse adds no placement work to detection-only painting": true,
+        "S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes": true,
+        "S52 placement behavior restores ambient eligibility after a protected footprint moves": true
+      },
+      "stdout": "TAP version 13\n# Subtest: S52 placement reuse preserves output while skipping unchanged variant construction\nok 1 - S52 placement reuse preserves output while skipping unchanged variant construction\n  ---\n  duration_ms: 30.8803\n  type: 'test'\n  ...\n# Subtest: S52 placement reuse adds no placement work to detection-only painting\nok 2 - S52 placement reuse adds no placement work to detection-only painting\n  ---\n  duration_ms: 1.2711\n  type: 'test'\n  ...\n# Subtest: S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes\nok 3 - S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes\n  ---\n  duration_ms: 6.6974\n  type: 'test'\n  ...\n# Subtest: S52 placement behavior restores ambient eligibility after a protected footprint moves\nok 4 - S52 placement behavior restores ambient eligibility after a protected footprint moves\n  ---\n  duration_ms: 4.3465\n  type: 'test'\n  ...\n1..4\n# tests 4\n# suites 0\n# pass 4\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 2706.7091\n",
+      "expectedCacheWitness": true,
+      "behaviorRegressionsPassed": true,
+      "expectedCandidateAllPass": true,
+      "exactSingleBaselineFailure": true,
+      "stderr": "",
+      "snapshots": [
+        {
+          "rect": {
+            "x": 142,
+            "y": 83,
+            "w": 126,
+            "h": 31,
+            "anchorX": 204.99999999999997,
+            "anchorY": 128
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 1,
+          "presentationSamples": 1
+        },
+        {
+          "rect": {
+            "x": 142,
+            "y": 83,
+            "w": 126,
+            "h": 31,
+            "anchorX": 204.99999999999997,
+            "anchorY": 128
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 1,
+          "presentationSamples": 2
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 88,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 2,
+          "presentationSamples": 3
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 3,
+          "presentationSamples": 4
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 3,
+          "presentationSamples": 5
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 4,
+          "presentationSamples": 6
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 84,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 4,
+          "presentationSamples": 7
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 5,
+          "presentationSamples": 8
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 5,
+          "presentationSamples": 9
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 6,
+          "presentationSamples": 10
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 6,
+          "presentationSamples": 11
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 7,
+          "presentationSamples": 12
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 151,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 7,
+          "presentationSamples": 13
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 147,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 8,
+          "presentationSamples": 14
+        },
+        {
+          "rect": {
+            "x": 151,
+            "y": 147,
+            "w": 126,
+            "h": 31,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 8,
+          "presentationSamples": 15
+        },
+        {
+          "rect": {
+            "x": 135,
+            "y": 147,
+            "w": 157.5,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 9,
+          "presentationSamples": 16
+        },
+        {
+          "rect": {
+            "x": 135,
+            "y": 147,
+            "w": 157.5,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "PLACEMENT WITNESS"
+          ],
+          "buildCalls": 9,
+          "presentationSamples": 17
+        },
+        {
+          "rect": {
+            "x": 139,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 10,
+          "presentationSamples": 18
+        },
+        {
+          "rect": {
+            "x": 139,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 214,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 10,
+          "presentationSamples": 19
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 11,
+          "presentationSamples": 20
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 11,
+          "presentationSamples": 21
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 147,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 12,
+          "presentationSamples": 22
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 147,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 12,
+          "presentationSamples": 23
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 13,
+          "presentationSamples": 24
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 13,
+          "presentationSamples": 25
+        },
+        {
+          "rect": null,
+          "hit": null,
+          "text": [],
+          "buildCalls": 13,
+          "presentationSamples": 25
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 13,
+          "presentationSamples": 26
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 14,
+          "presentationSamples": 27
+        },
+        {
+          "rect": {
+            "x": 160,
+            "y": 80,
+            "w": 150,
+            "h": 38.75,
+            "anchorX": 235.4,
+            "anchorY": 133
+          },
+          "hit": {
+            "sourceId": "s52-placement",
+            "entryId": "probe",
+            "variant": "label"
+          },
+          "text": [
+            "REPLACED CONTENT"
+          ],
+          "buildCalls": 14,
+          "presentationSamples": 28
+        }
+      ]
+    }
+  },
+  "finalIntegrity": {
+    "candidateSource": {
+      "initialSha256": "c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b",
+      "finalSha256": "c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b",
+      "unchanged": true
+    },
+    "behaviorAppend": {
+      "initialSha256": "44381f4d97e47bd2a7dfb5f80b6daa7e27cec215c67ad898190e465705ddd1f1",
+      "finalSha256": "44381f4d97e47bd2a7dfb5f80b6daa7e27cec215c67ad898190e465705ddd1f1",
+      "unchanged": true
+    },
+    "runtimeDependencies": {
+      "src/testSupport/readStylesheet.mjs": {
+        "initialSha256": "ec2ee3289632a076d5e97e57dd97634cbd97761948592851faf2a2a50ae69a09",
+        "finalSha256": "ec2ee3289632a076d5e97e57dd97634cbd97761948592851faf2a2a50ae69a09",
+        "unchanged": true
+      },
+      "build/application-html.js": {
+        "initialSha256": "73c2c0e5808044be11f2fe4ab50c787d33e1a5a0e24426394246aafbfcb99cb5",
+        "finalSha256": "73c2c0e5808044be11f2fe4ab50c787d33e1a5a0e24426394246aafbfcb99cb5",
+        "unchanged": true
+      },
+      "src/layers/installations/namedMarkers.js": {
+        "initialSha256": "7e2a3b00a87bcaff1a1614e36afe5edcbdf650f1768f9a9ce62983bb4985278b",
+        "finalSha256": "7e2a3b00a87bcaff1a1614e36afe5edcbdf650f1768f9a9ce62983bb4985278b",
+        "unchanged": true
+      },
+      "src/data/cctvCards.js": {
+        "initialSha256": "e4b12321793d9f2e0a372f8283b8d627f77f988f48722852c4cfde0c912bbe11",
+        "finalSha256": "e4b12321793d9f2e0a372f8283b8d627f77f988f48722852c4cfde0c912bbe11",
+        "unchanged": true
+      },
+      "src/performance/cpuTimings.js": {
+        "initialSha256": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c",
+        "finalSha256": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c",
+        "unchanged": true
+      },
+      "src/cyberSonar.js": {
+        "initialSha256": "ddf0ce1d9b4538d59bc8a88b72671d6115cb88eeeaf0b15b95d737480e99f356",
+        "finalSha256": "ddf0ce1d9b4538d59bc8a88b72671d6115cb88eeeaf0b15b95d737480e99f356",
+        "unchanged": true
+      },
+      "src/celestialRing.js": {
+        "initialSha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+        "finalSha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+        "unchanged": true
+      },
+      "src/data/detectionCohort.js": {
+        "initialSha256": "a3c5ecddba212a244ac8470b93e6beb8761f7cde99b9ee4ffc6f1660e22a0afc",
+        "finalSha256": "a3c5ecddba212a244ac8470b93e6beb8761f7cde99b9ee4ffc6f1660e22a0afc",
+        "unchanged": true
+      },
+      "src/data/labelArbiter.js": {
+        "initialSha256": "da178072243462227e064ffcc3f0d79ac2956bf4de7a066d01ac82756d51b184",
+        "finalSha256": "da178072243462227e064ffcc3f0d79ac2956bf4de7a066d01ac82756d51b184",
+        "unchanged": true
+      },
+      "src/overlays/worldOverlayDraw.js": {
+        "initialSha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d",
+        "finalSha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d",
+        "unchanged": true
+      },
+      "src/overlays/worldOverlayTokens.js": {
+        "initialSha256": "a17971c49ccac5179d40625dcefa34d30b2fe0d931298df4faeb18675d08ab75",
+        "finalSha256": "a17971c49ccac5179d40625dcefa34d30b2fe0d931298df4faeb18675d08ab75",
+        "unchanged": true
+      },
+      "index.html": {
+        "initialSha256": "10bfe30778ac25372653a7e461e94b0bab6567fa660f222a005375682c7e4f18",
+        "finalSha256": "10bfe30778ac25372653a7e461e94b0bab6567fa660f222a005375682c7e4f18",
+        "unchanged": true
+      },
+      "style.css": {
+        "initialSha256": "da9d8ad764df1f7d341374229446c1e489b2bbf115456909af626e954fa4dd76",
+        "finalSha256": "da9d8ad764df1f7d341374229446c1e489b2bbf115456909af626e954fa4dd76",
+        "unchanged": true
+      },
+      "package.json": {
+        "initialSha256": "6a5ac79042dc47250eb6e2b0b2cd1dcbe04972f4a81c51c3fd872ecbe41c7fc3",
+        "finalSha256": "6a5ac79042dc47250eb6e2b0b2cd1dcbe04972f4a81c51c3fd872ecbe41c7fc3",
+        "unchanged": true
+      },
+      "package-lock.json": {
+        "initialSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+        "finalSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+        "unchanged": true
+      }
+    },
+    "allRuntimeDependenciesUnchanged": true,
+    "installedCesiumUnchanged": true
+  },
+  "sharedDependenciesIdentical": true,
+  "outputParity": true
+}

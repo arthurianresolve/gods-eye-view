@@ -1,0 +1,105 @@
+{
+  "commit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+  "reportSha256": "f57fdfebe81cbec473f587ba7c5fc0d29159c9f64b99da620470cf45ce9c63ca",
+  "reportBytes": 411015,
+  "reportContractValidated": true,
+  "sourceHashesValidated": 27,
+  "encodedImageHashesValidated": 40,
+  "summary": {
+    "latency": {
+      "entities": {
+        "sourceReadyElapsedMedianMs": 627.5,
+        "firstUsableAfterSourceReadyMedianMs": 5447.799999999988,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "sourceReadyElapsedMedianMs": 859.6000000000349,
+        "firstUsableAfterSourceReadyMedianMs": 3846.2999999999884,
+        "samples": 5
+      }
+    },
+    "memory": {
+      "entities": {
+        "enabledHeapDeltaMedianBytes": 163880096,
+        "afterDestroyHeapDeltaMedianBytes": 118976360,
+        "absoluteHeapBytesAfterGc": 134010304,
+        "afterViewerDestroyHeapDeltaMedianBytes": 9220060,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "enabledHeapDeltaMedianBytes": 137418776,
+        "afterDestroyHeapDeltaMedianBytes": 85304752,
+        "absoluteHeapBytesAfterGc": 100342512,
+        "afterViewerDestroyHeapDeltaMedianBytes": 8923744,
+        "samples": 5
+      }
+    }
+  },
+  "medianChangesPercent": {
+    "sourceReady": 36.988047808770496,
+    "firstUsableAfterSourceReady": -29.39718785564821,
+    "enabledHeap": -16.14675646760666
+  },
+  "latencyPairs": [
+    {
+      "pair": 0,
+      "order": [
+        "entities",
+        "primitive-collections"
+      ],
+      "entityMs": 898,
+      "candidateMs": 859.6000000000349,
+      "sourceReadyChangePercent": -4.276169265029517
+    },
+    {
+      "pair": 1,
+      "order": [
+        "primitive-collections",
+        "entities"
+      ],
+      "entityMs": 606.2000000000116,
+      "candidateMs": 688.0999999999767,
+      "sourceReadyChangePercent": 13.510392609693756
+    },
+    {
+      "pair": 2,
+      "order": [
+        "entities",
+        "primitive-collections"
+      ],
+      "entityMs": 730.5999999999767,
+      "candidateMs": 965.7000000000116,
+      "sourceReadyChangePercent": 32.17903093348513
+    },
+    {
+      "pair": 3,
+      "order": [
+        "primitive-collections",
+        "entities"
+      ],
+      "entityMs": 627.5,
+      "candidateMs": 1083.9000000000233,
+      "sourceReadyChangePercent": 72.73306772908738
+    },
+    {
+      "pair": 4,
+      "order": [
+        "entities",
+        "primitive-collections"
+      ],
+      "entityMs": 452.0999999999767,
+      "candidateMs": 619.5,
+      "sourceReadyChangePercent": 37.02720637027912
+    }
+  ],
+  "performanceAcceptance": false,
+  "reason": "Runtime correctness remains failed. Source-ready phase regresses more than 10%; full activation and phase redistribution require interpretation before acceptance.",
+  "scope": "Hosted Apple paravirtual Metal component comparison; no physical Windows/full-scene acceptance",
+  "exactByteIdenticalImagePairs": 20,
+  "fullActivationDerived": {
+    "scope": "Source-ready elapsed plus subsequent first-usable elapsed, computed per latency run",
+    "entitiesMedianMs": 6178.399999999965,
+    "collectionsMedianMs": 4812,
+    "changePercent": -22.115758125080486
+  }
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "audit",
+    "command": [
+      "node",
+      "scripts/performance/aircraftFleetTickAudit.mjs"
+    ],
+    "started": "2026-10-14T03:15:22.307309+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "focused",
+    "command": [
+      "node",
+      "--test",
+      "scripts/performance/aircraftFleetTickAudit.test.mjs",
+      "scripts/performance/aircraftBillboardMutationAudit.test.mjs",
+      "src/data/aircraftRecession.test.mjs"
+    ],
+    "started": "2026-10-14T03:15:24.566494+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "scripts/check-capture-no-undef.mjs"
+    ],
+    "started": "2026-10-14T03:15:27.819722+00:00",
+    "exitCode": 0
+  }
+]

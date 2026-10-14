@@ -56,6 +56,31 @@ test('analyst: a radius query centers on the active contact, not the parked came
   assert.ok(r.coverage.scope.includes('@SWA1'));
 });
 
+test('analyst results retain a normalized query, temporal source, coverage, and record references', async () => {
+  const engine = createAnalystEngine({
+    getRecords: () => FLIGHTS.slice(0, 2),
+    getRecordCoverage: () => ({ total: 9, truncated: true }),
+    getTemporalContext: () => ({ mode: 'paused', source: 'recording', recordingId: 'flight-run' }),
+    now: () => Date.UTC(2026, 0, 2),
+    getViewContext: () => ({ lat: 30, lon: -97, viewRadiusKm: 100 }),
+  });
+  const result = await engine.query({
+    layers: ['flights'],
+    scope: { kind: 'anywhere' },
+    filters: [{ field: 'altitudeM', op: 'gt', value: 10_000 }],
+    limit: 1,
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.resultMetadata.normalizedQuery.filters, [
+    { field: 'altitudeM', op: 'gt', value: 10_000 },
+  ]);
+  assert.equal(result.resultMetadata.sourceMode, 'recording');
+  assert.equal(result.resultMetadata.investigationTime.recordingId, 'flight-run');
+  assert.equal(result.resultMetadata.records.total, 9);
+  assert.equal(result.resultMetadata.records.truncated, true);
+  assert.equal(result.resultMetadata.evidenceRefs[0].id, 'SWA1');
+});
+
 test('analyst: an explicit center still wins over the active contact', async () => {
   const subject = { lat: 30.2, lon: -97.7, label: 'SWA1' };
   const r = await makeContactsEngine(subject).query({

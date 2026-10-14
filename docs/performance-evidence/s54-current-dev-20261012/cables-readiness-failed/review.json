@@ -1,0 +1,176 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187344922",
+  "commit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+  "rawSha256": "493cb9537a1a4e76e8852369b7e11687b26d5bf7101293c564e8efee8fe2ca46",
+  "status": "failed",
+  "failedPhase": "entities-lifetime",
+  "stage": "map-stack-photoreal",
+  "totalObservations": 239,
+  "retainedObservations": [
+    {
+      "frame": 27,
+      "elapsedMs": null,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 28,
+      "elapsedMs": 5.100000000093132,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 260,
+      "elapsedMs": 11775.30000000028,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 261,
+      "elapsedMs": 11794.30000000028,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 262,
+      "elapsedMs": 11800.399999999907,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 263,
+      "elapsedMs": 11911.600000000093,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 264,
+      "elapsedMs": 11916.5,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    },
+    {
+      "frame": 265,
+      "elapsedMs": 11997,
+      "dataSourceDisplayReady": true,
+      "globeTilesLoaded": true,
+      "pending": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ],
+      "unreadyOwners": [
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive",
+          "ready": false,
+          "show": false
+        }
+      ]
+    }
+  ],
+  "completedComparisons": 0,
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "browserCloseCompleted": true,
+  "scope": "Changed diagnostics locate the unsatisfied readiness predicate: a hidden GroundPolylinePrimitive remains unready while frames progress and other readiness flags are true. This does not identify why geometry work remains incomplete or establish a production regression. Original deadline and strict hidden-primitive readiness remain intact."
+}

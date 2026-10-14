@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Wind image reuse visual check</title>
+  <body>
+    <h1>Wind image reuse visual check</h1>
+    <p>
+      Fixed synthetic forecast, camera and paused flow. Compare rebuilt and
+      retained images; no motion performance claim.
+    </p>
+    <button id="run">Run wind checks</button>
+    <p id="status" role="status">Ready</p>
+    <div
+      id="viewer"
+      style="position: relative; width: 640px; height: 360px"
+    ></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./wind-restores-ui.js"></script>
+  </body>
+</html>

@@ -12,8 +12,31 @@ export function createTesting({ state: layerState, services, parts, source }) {
   function _setSelectedRocketMissionForTest(launchId = null) {
     parts.selection.setSelectedMission(launchId, Boolean(launchId));
   }
+
+  function _observeRocketRenderInvalidationForTest(onInvalidate) {
+    const demand = parts.renderDemand;
+    const invalidate = demand.invalidate;
+    demand.invalidate = (...args) => {
+      onInvalidate?.();
+      return invalidate.apply(demand, args);
+    };
+    return () => {
+      demand.invalidate = invalidate;
+    };
+  }
+
+  function _previewRocketMissionForTest(index) {
+    parts.panel.scheduleMissionRosterPreview(index);
+  }
+
+  function _clearRocketMissionPreviewForTest() {
+    parts.panel.clearMissionRosterPreviewState();
+  }
   return {
     _setRocketMissionOverlayHostForTest,
     _setSelectedRocketMissionForTest,
+    _observeRocketRenderInvalidationForTest,
+    _previewRocketMissionForTest,
+    _clearRocketMissionPreviewForTest,
   };
 }

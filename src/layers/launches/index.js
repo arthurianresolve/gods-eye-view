@@ -14,6 +14,7 @@ import { createTesting } from './testing.js';
 import { createControls } from './controls.js';
 import { createLifecycle } from './lifecycle.js';
 import { createState } from './state.js';
+import { createLaunchRenderDemand } from './renderDemand.js';
 
 /** Construct one layer with its own scene state and supplied application services. */
 export function createRocketLaunchesLayer({ services, source }) {
@@ -22,6 +23,7 @@ export function createRocketLaunchesLayer({ services, source }) {
   const state = createState({ services });
   const parts = {};
   const context = { state, services, parts, source };
+  parts.renderDemand = createLaunchRenderDemand(services.render, state);
   parts.policyHelpers = createPolicyHelpers(context);
   parts.ingestion = createIngestion(context);
   parts.orbitRendering = createOrbitRendering(context);
@@ -104,6 +106,11 @@ export function createRocketLaunchesLayer({ services, source }) {
         parts.testing._setRocketMissionOverlayHostForTest,
       _setSelectedRocketMissionForTest:
         parts.testing._setSelectedRocketMissionForTest,
+      _observeRocketRenderInvalidationForTest:
+        parts.testing._observeRocketRenderInvalidationForTest,
+      _previewRocketMissionForTest: parts.testing._previewRocketMissionForTest,
+      _clearRocketMissionPreviewForTest:
+        parts.testing._clearRocketMissionPreviewForTest,
     },
   );
 }

@@ -1,0 +1,202 @@
+{
+  "schema": "gev-cctv-style-comparison/v1",
+  "status": "passed",
+  "timestamp": "2026-10-10T14:04:49.312Z",
+  "scope": "real Cesium entities and geometry updaters; no browser, worker, GPU or frame-time measurement",
+  "cesiumVersion": "1.138.0",
+  "nodeVersion": "v24.16.0",
+  "platform": "win32",
+  "harnessSha256": "1b264212caec197ee2817f798b094b5348764cdc2acfc48233975f9ebf150634",
+  "sourceClean": true,
+  "stylesEqual": true,
+  "rows": [
+    {
+      "commit": "c19f3271cce3655b10ff1d1abaf3acf288a762ef",
+      "sourceSha256": "bfd241a32b36995604d67634c7c4e6fb84c2a415bb3c30fd31901376b647d92c",
+      "phases": [
+        {
+          "name": "estimated-active-projection",
+          "stylesSha256": "e3e9fe323e6bfa4ea67fb8ef21e009040b7ee7ceb5225da6228b80b136235b08",
+          "repeatGeometryChanges": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ]
+        },
+        {
+          "name": "curated-active-projection",
+          "stylesSha256": "c9141bf17d06e5aab103081b4f8d52f9a487211712cc35b20e6a7309662d2987",
+          "repeatGeometryChanges": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ]
+        },
+        {
+          "name": "curated-idle",
+          "stylesSha256": "c9a58a6d533a3942316f6fa4be9388ee0b1fb053ad90a52de27d974404f346d2",
+          "repeatGeometryChanges": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        {
+          "name": "estimated-idle",
+          "stylesSha256": "ef509dbfd6190e009fdccee8b067d493a8c051005be9882833f442fefa7c9514",
+          "repeatGeometryChanges": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        {
+          "name": "viewshed-active",
+          "stylesSha256": "9737566e2bfff461daa873ac85441893c54a013f2f0e9efae27b879f051e0f77",
+          "repeatGeometryChanges": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ]
+        },
+        {
+          "name": "viewshed-idle",
+          "stylesSha256": "30e2ea4c9974880af6b9ae0c6494cacdbd5e1b6817b28c266656f6932543b5c9",
+          "repeatGeometryChanges": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        {
+          "name": "viewshed-active-no-projection",
+          "stylesSha256": "b1cfd45118122808402125c22662b7fa81f89ad9e67ae18d5d60a95852a6c8f1",
+          "repeatGeometryChanges": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        {
+          "name": "frustum-active-no-projection",
+          "stylesSha256": "e0eac63e79f121fc56e913d8f2fc7a644c36f9ab0eefe35e5183647b06a896cb",
+          "repeatGeometryChanges": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "commit": "db298d42a52d9f0c491a51f78ca060dbaa8a0461",
+      "sourceSha256": "60691963108b7467683dea79a41e4e0fb3529673a0c6469b4eae15cb9d2dc0b5",
+      "phases": [
+        {
+          "name": "estimated-active-projection",
+          "stylesSha256": "e3e9fe323e6bfa4ea67fb8ef21e009040b7ee7ceb5225da6228b80b136235b08",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "curated-active-projection",
+          "stylesSha256": "c9141bf17d06e5aab103081b4f8d52f9a487211712cc35b20e6a7309662d2987",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "curated-idle",
+          "stylesSha256": "c9a58a6d533a3942316f6fa4be9388ee0b1fb053ad90a52de27d974404f346d2",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "estimated-idle",
+          "stylesSha256": "ef509dbfd6190e009fdccee8b067d493a8c051005be9882833f442fefa7c9514",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "viewshed-active",
+          "stylesSha256": "9737566e2bfff461daa873ac85441893c54a013f2f0e9efae27b879f051e0f77",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "viewshed-idle",
+          "stylesSha256": "30e2ea4c9974880af6b9ae0c6494cacdbd5e1b6817b28c266656f6932543b5c9",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "viewshed-active-no-projection",
+          "stylesSha256": "b1cfd45118122808402125c22662b7fa81f89ad9e67ae18d5d60a95852a6c8f1",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "frustum-active-no-projection",
+          "stylesSha256": "e0eac63e79f121fc56e913d8f2fc7a644c36f9ab0eefe35e5183647b06a896cb",
+          "repeatGeometryChanges": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

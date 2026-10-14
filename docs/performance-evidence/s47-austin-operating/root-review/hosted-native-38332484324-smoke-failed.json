@@ -1,0 +1,1078 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "78e0417244856a2a3d2905ab618d32b909507eb6",
+  "harnessSha": "78e0417244856a2a3d2905ab618d32b909507eb6",
+  "captureWorkerAuditMode": "receipt-only",
+  "captureRendererBackend": "macos-native-diagnostic",
+  "comparisonEligible": false,
+  "performanceAcceptanceEligible": false,
+  "sceneFrameDiagnostics": true,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-operating-v1",
+  "startedAt": "2026-10-13T01:31:18.404Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "passed",
+      "receiptSha256": "530a3946572a66235f36e2976d4b624102d6908170586477e5053c5df79a4cfc",
+      "assetCount": 434,
+      "totalAssetBytes": 43912979,
+      "servedBefore": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "530a3946572a66235f36e2976d4b624102d6908170586477e5053c5df79a4cfc",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "servedAfter": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "530a3946572a66235f36e2976d4b624102d6908170586477e5053c5df79a4cfc",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "loadedCodePathAudit": {
+        "status": "receipt-backed-paths-observed",
+        "paths": [
+          "assets/egm96-universal.esm-D6y_VLZc.js",
+          "assets/index-DFXg4IQ_.js",
+          "cesium/Cesium.js"
+        ],
+        "externalCodeRequestsObserved": 0,
+        "validatedWorkerBlobCount": 17,
+        "cesiumWorkerBlobs": {
+          "schema": "gev-cesium-worker-blob-audit/v1",
+          "status": "receipt-derived-worker-blobs-validated",
+          "auditMode": "diagnostic",
+          "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+          "createdScriptBlobCount": 12,
+          "validatedWorkerCount": 6,
+          "validatedCreatedWrapperCount": 6,
+          "unobservedCreatedWrapperCount": 0,
+          "validatedEmbeddedSourceCount": 6,
+          "validatedModuleIds": [
+            "combineGeometry",
+            "createGeometry",
+            "createVerticesFromHeightmap",
+            "incrementallyBuildTerrainPicker",
+            "transferTypedArrayTest"
+          ],
+          "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+          "scriptBlobSha256": [
+            "563714ab31cc16e9ad0b8efb440208195be8d654bf476b2730424fbe2f9d1c26",
+            "591dd73d4d227d811af4afacf636151ad0dc04c26cf481a6d1fe67be73890a2c",
+            "6956f9ef9e2436dc863cc046d9b6cdaa021d7e376c44a66cecf295d1db44be94",
+            "84aea253ff8472d6579e98579147c7df7299d8f97ee8a2e61fb81aecebf92e77",
+            "c96300d04ef3d82d9444d0989eefe8d23471d260dceed3baa4d7a17912faeaf6",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "df877300a64a3095794e0c533d908dc498c2c60f3ef347f98f809b6510fa2754"
+          ],
+          "validatedWrapperSha256": [
+            "563714ab31cc16e9ad0b8efb440208195be8d654bf476b2730424fbe2f9d1c26",
+            "591dd73d4d227d811af4afacf636151ad0dc04c26cf481a6d1fe67be73890a2c",
+            "6956f9ef9e2436dc863cc046d9b6cdaa021d7e376c44a66cecf295d1db44be94",
+            "84aea253ff8472d6579e98579147c7df7299d8f97ee8a2e61fb81aecebf92e77",
+            "c96300d04ef3d82d9444d0989eefe8d23471d260dceed3baa4d7a17912faeaf6",
+            "df877300a64a3095794e0c533d908dc498c2c60f3ef347f98f809b6510fa2754"
+          ],
+          "readBytes": 5510379,
+          "retentionByteCapBytes": 33554432
+        },
+        "requestCount": 108,
+        "coverage": "receipt-backed request-path audit with smoke-only Cesium worker blob instrumentation; browser response bytes are not independently attested and the smoke is not performance evidence"
+      },
+      "providerInterception": {
+        "status": "worker-aware-external-blocking-probe-passed",
+        "preflight": {
+          "status": "passed",
+          "scope": "harness-generated same-origin inert document; excluded from app code audit",
+          "workerNetworkProbe": {
+            "status": "passed",
+            "interceptedWorkerRequests": 3
+          },
+          "discardedAudit": {
+            "requestCount": 0,
+            "codeRequestCount": 0
+          },
+          "targetDisposal": {
+            "closed": true,
+            "remainingCount": 0,
+            "waitMs": 111.6472500000018
+          }
+        },
+        "sameOriginOnlyStaticServer": true
+      },
+      "denseProviderFixture": {
+        "scope": "real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence",
+        "expectedLayerCounts": {
+          "flights": 2500,
+          "local-datacenters": 4362,
+          "local-dams": 716
+        },
+        "observedLayerPopulation": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        },
+        "flightFixture": {
+          "schema": "gev-fixture-delivery-observation/v1",
+          "status": "observed",
+          "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+          "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+          "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "fulfilledResponseCount": 1,
+          "observedFlightsCount": 2500
+        },
+        "captureClock": {
+          "schema": "gev-provider-fixture-capture-clock/v1",
+          "scope": "hosted integration smoke only; one short route check, not a performance measurement",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "start": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800000,
+            "elapsedMs": 0
+          },
+          "end": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800288,
+            "elapsedMs": 288.79999999993015
+          },
+          "ageAtEndMs": 288,
+          "freshnessWindowMs": 120000,
+          "sourceFreshness": "current"
+        },
+        "comparisonEligible": false,
+        "comparisonIneligibilityReason": "This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract."
+      },
+      "terminalRenderLoopRetirement": {
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      },
+      "rendererProbeCleanup": [
+        {
+          "schema": "gev-early-renderer-probe-cleanup/v1",
+          "confirmed": true,
+          "timeoutMs": 1000,
+          "elapsedMs": 10.879124999999476,
+          "document": {
+            "status": "confirmed",
+            "elapsedMs": 4.2838750000009895,
+            "pageExecutionElapsedMs": 1.3000000000465661,
+            "errorKind": null,
+            "errorDetail": null,
+            "lateCompletion": null,
+            "lateHostReceiptElapsedMs": null,
+            "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+            "lateOutcome": null,
+            "lateErrorKind": null,
+            "lateErrorDetail": null,
+            "statePresent": true,
+            "hookRestoreAttempted": true,
+            "hookRestored": true,
+            "listenerCount": 2,
+            "listenerRemovalAttemptedCount": 2,
+            "listenerRemovalConfirmedCount": 2,
+            "listenerRemovalFailedCount": 0,
+            "stateDeleted": true,
+            "renderLoopRetirement": {
+              "requested": true,
+              "status": "already-disabled",
+              "before": false,
+              "after": false,
+              "confirmed": true,
+              "pageExecutionElapsedMs": 0.09999999997671694
+            }
+          },
+          "scriptRegistration": {
+            "status": "confirmed",
+            "elapsedMs": 6.243416999997862,
+            "pageExecutionElapsedMs": null,
+            "errorKind": null,
+            "errorDetail": null,
+            "lateCompletion": null,
+            "lateHostReceiptElapsedMs": null,
+            "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+            "lateOutcome": null,
+            "lateErrorKind": null,
+            "lateErrorDetail": null,
+            "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+          },
+          "phase": "smoke-document-retirement",
+          "registrationRemovalBoundary": "owned-document-retirement"
+        }
+      ],
+      "rendererProbeCleanupOmittedCount": 0,
+      "serviceWorker": {
+        "controlled": false
+      },
+      "browser": {
+        "requestedBackend": "macos-native-diagnostic",
+        "softwareRenderingRequested": false,
+        "flags": [],
+        "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "observedVendor": "Google Inc. (Apple)",
+        "nativeRendererDiagnostic": {
+          "schema": "gev-hosted-renderer-diagnostic/v1",
+          "requestedBackend": "macos-native-diagnostic",
+          "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "observedWebglVendor": "Google Inc. (Apple)",
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "status": "verified",
+          "featureStatus": {
+            "webgl": "enabled",
+            "webgl2": null,
+            "gpu_compositing": "enabled",
+            "opengl": "enabled_on"
+          },
+          "physicalDesktopCoverage": false,
+          "hostedEnvironment": "github-actions-macos",
+          "comparisonEligible": false,
+          "performanceAcceptanceEligible": false
+        }
+      },
+      "route": {
+        "id": "integration-smoke-idle",
+        "start": {
+          "position": {
+            "x": -742897.2382877241,
+            "y": -5463629.833118254,
+            "z": 3196293.52591379
+          },
+          "direction": {
+            "x": 0.3370901126365865,
+            "y": 0.8154931692376242,
+            "z": 0.4704690711294732
+          },
+          "up": {
+            "x": 0.0602517138324918,
+            "y": -0.5173780701589545,
+            "z": 0.8536332136807022
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 260.79999999993015,
+        "motionDistanceM": 0
+      },
+      "observerBefore": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "vendor": "Google Inc. (Apple)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -742897.2382877241,
+            "y": -5463629.833118254,
+            "z": 3196293.52591379
+          },
+          "direction": {
+            "x": 0.3370901126365865,
+            "y": 0.8154931692376242,
+            "z": 0.4704690711294732
+          },
+          "up": {
+            "x": 0.0602517138324918,
+            "y": -0.5173780701589545,
+            "z": 0.8536332136807022
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "observerAfter": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "vendor": "Google Inc. (Apple)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -742897.2382877241,
+            "y": -5463629.833118254,
+            "z": 3196293.52591379
+          },
+          "direction": {
+            "x": 0.3370901126365865,
+            "y": 0.8154931692376242,
+            "z": 0.4704690711294732
+          },
+          "up": {
+            "x": 0.0602517138324918,
+            "y": -0.5173780701589545,
+            "z": 0.8536332136807022
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "durationMs": 71654
+    },
+    {
+      "revision": "78e0417244856a2a3d2905ab618d32b909507eb6",
+      "label": "candidate",
+      "status": "failed",
+      "captureCliReportArtifact": {
+        "schema": "gev-smoke-capture-cli-report-artifact/v1",
+        "status": "preserved",
+        "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+        "byteLength": 3676548,
+        "sha256": "eddeff6538198e2854875effaed7d3e830cd9fc2488017377881d9ef498d371e",
+        "limitBytes": 8388608,
+        "childStatus": "completed"
+      },
+      "failure": "Expected values to be strictly deep-equal: + actual - expected ... Skipped lines   [     { -     delivery: { -       alprTileCoverage: { -         fullRouteCoverageComplete: true, -         inventory: [ -           { -             id: 'alpr-10-232-420', -             x: 232, -             y: 420, -             z: 10 -           }, -           { -             id: 'alpr-10-232-421', -             x:",
+      "failureDetails": {
+        "phase": "candidate-capture-cli-integration",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "workerBlobDiagnostics": {
+          "schema": "gev-cesium-worker-blob-diagnostics/v1",
+          "urlValuesOmitted": true,
+          "retentionByteCapBytes": 33554432,
+          "blobRequestCount": 17,
+          "observedBlobCount": 12,
+          "entryCount": 12,
+          "omittedEntryCount": 0,
+          "entries": [
+            {
+              "index": 0,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 148,
+              "bodySha256": "289fef357cbf7901f6cbd4c732b8dd69a1b547db02f115c4b490c18df6afd9f4",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 1,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 143,
+              "bodySha256": "2fd15814058089a7076d7e88ef2bd8eaeeab0fd4f4a0ffc82a0b3f09713f0320",
+              "requestCount": 2,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 2,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 152,
+              "bodySha256": "5c2db236cf22d7552d90c92f33f68592c57a6960e3c48ffa6432020187ebab43",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 3,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "0bdcaea0916f909f5e24610a822b0ac3c67ab7d39b1dd63306cfd7252b7d9ce4",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 4,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "07d8329fb75489cda3190eda5ce754e2de2f4f280445ea30dc13a0c928c93e44",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 5,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 136,
+              "bodySha256": "f547e5662cfd9ece9371c97a8315d119a0b5649ee569278d63ecdd0b91c23073",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 6,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 7,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 8,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 9,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 10,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 11,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            }
+          ]
+        },
+        "captureCliFailure": {
+          "schema": "gev-smoke-capture-cli-failure/v1",
+          "summary": {
+            "reportSchema": "gev-performance-capture/v1",
+            "status": null,
+            "failure": null,
+            "source": {
+              "appCommit": "78e0417244856a2a3d2905ab618d32b909507eb6",
+              "harnessCommit": "78e0417244856a2a3d2905ab618d32b909507eb6",
+              "provenanceStatus": "verified-local-build-and-served-assets-before-and-after"
+            },
+            "fixtureDelivery": {
+              "status": "observed",
+              "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94"
+            },
+            "fixtureInterceptionErrors": [],
+            "completedSampleCount": 4,
+            "completedSamplesRetained": 4,
+            "evidenceTruncated": null
+          },
+          "rawReportUnavailable": "Completed report exceeded the bounded artifact limit.",
+          "captureCliReportArtifact": {
+            "schema": "gev-smoke-capture-cli-report-artifact/v1",
+            "status": "preserved",
+            "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+            "byteLength": 3676548,
+            "sha256": "eddeff6538198e2854875effaed7d3e830cd9fc2488017377881d9ef498d371e",
+            "limitBytes": 8388608,
+            "childStatus": "completed"
+          }
+        },
+        "terminalRenderLoopRetirement": {
+          "requested": true,
+          "status": "retired-with-final-observation",
+          "before": true,
+          "after": false,
+          "confirmed": true,
+          "elapsedMs": 0
+        },
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 14.397582999998122,
+            "document": {
+              "status": "confirmed",
+              "elapsedMs": 10.02129099999729,
+              "pageExecutionElapsedMs": 0,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": true,
+              "hookRestoreAttempted": true,
+              "hookRestored": true,
+              "listenerCount": 2,
+              "listenerRemovalAttemptedCount": 2,
+              "listenerRemovalConfirmedCount": 2,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": true,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "already-disabled",
+                "before": false,
+                "after": false,
+                "confirmed": true,
+                "pageExecutionElapsedMs": 0
+              }
+            },
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 4.301666999992449,
+              "pageExecutionElapsedMs": null,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "candidate-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [
+          {
+            "checkpoint": "initial",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          },
+          {
+            "checkpoint": "final-before-code-validation",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            },
+            "renderLoopRetirement": {
+              "requested": true,
+              "status": "retired-with-final-observation",
+              "before": true,
+              "after": false,
+              "confirmed": true,
+              "elapsedMs": 0
+            }
+          }
+        ],
+        "nativeRendererEvidence": {
+          "schema": "gev-hosted-renderer-diagnostic/v1",
+          "requestedBackend": "macos-native-diagnostic",
+          "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "observedWebglVendor": "Google Inc. (Apple)",
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "status": "verified",
+          "featureStatus": {
+            "webgl": "enabled",
+            "webgl2": null,
+            "gpu_compositing": "enabled",
+            "opengl": "enabled_on"
+          },
+          "physicalDesktopCoverage": false,
+          "hostedEnvironment": "github-actions-macos",
+          "comparisonEligible": false,
+          "performanceAcceptanceEligible": false
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.",
+    "Native rendering on a hosted macOS runner is a reachability diagnostic; Metal may be paravirtualized and is not physical desktop or paired performance evidence."
+  ],
+  "failure": {
+    "message": "Expected values to be strictly deep-equal: + actual - expected ... Skipped lines   [     { -     delivery: { -       alprTileCoverage: { -         fullRouteCoverageComplete: true, -         inventory: [ -           { -             id: 'alpr-10-232-420', -             x: 232, -             y: 420, -             z: 10 -           }, -           { -             id: 'alpr-10-232-421', -             x:",
+    "phase": "candidate"
+  },
+  "finishedAt": "2026-10-13T01:35:00.978Z",
+  "durationMs": 222574
+}

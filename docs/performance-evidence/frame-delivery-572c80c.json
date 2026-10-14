@@ -1,0 +1,14 @@
+{
+  "applicationCommit": "572c80c98b11da6e1529db909ffd6c396437ae77",
+  "observedAfter": "import-batches-572c80c-fence-failed.json",
+  "recordingMethod": "Visible fixture result, copied unchanged; wrapper adds build and association",
+  "result": {
+    "scope": "Browser scheduling diagnostic without a Cesium viewer; not acceptance evidence",
+    "frames": 299,
+    "maximumGapMs": 25.100000023841858,
+    "trailingGapMs": 11.399999976158142,
+    "elapsedMs": 5001.799999952316,
+    "visibility": "visible",
+    "focused": true
+  }
+}

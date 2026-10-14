@@ -1,0 +1,134 @@
+{
+  "schema": "gev-overlay-range-census/v1",
+  "capturedAt": "2026-10-10T22:14:01.795Z",
+  "commit": "438245c409ca0097dc644ae09957197612bb5bea",
+  "sourceSha256": "b73bdc48f2f294c1f0f11c3d6a6eb9390f94f03c51b46044344ce5be31b5ed42",
+  "fixtureSourceSha256": {
+    "worker": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+    "overlay": "8279f2f000fb8aec4cc2071c6c0ef8a111a32b2a585be59a7f72f54dc3104dba"
+  },
+  "instrumentedWorkerSha256": "2363a380703edd2d1f2158ec59ad51a0c9830d56ca1603365744bc97bedcc61c",
+  "instrumentedOverlaySha256": "f52697a04504802d579c84178d8be93c5bef02a4cdf1dc2512ca51d42559f198",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "osRelease": "10.0.19045",
+  "cpuModel": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+  "worktreeCleanAtStart": false,
+  "scope": "Counts from existing Node overlay allocation fixtures using mock Canvas2D; not a timing, browser, GPU, or rendered-equivalence result.",
+  "interpretation": "Finite-range early rejection can skip projection and visibility checks only for finite-range entries with distance alpha zero after positive clipW. It adds a distance calculation for each positive-clipW entry currently rejected by safe-top or viewport/horizon/occluder tests. No optimization is applied.",
+  "workloads": [
+    {
+      "profile": "generic",
+      "configuredPopulation": 250,
+      "observedCandidateCount": 250,
+      "observedPaintedCount": 96,
+      "frames": 6000,
+      "observation": "overlay-projection-path-observed",
+      "census": {
+        "snapshotCalls": 1500000,
+        "positiveClipW": 1500000,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 0,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 1500000
+      },
+      "perFrame": {
+        "snapshotCalls": 250,
+        "positiveClipW": 250,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 0,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 250
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "configuredPopulation": 320,
+      "observedCandidateCount": 320,
+      "observedPaintedCount": 192,
+      "frames": 6000,
+      "observation": "overlay-projection-path-observed",
+      "census": {
+        "snapshotCalls": 1920000,
+        "positiveClipW": 1920000,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 1920000,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 0
+      },
+      "perFrame": {
+        "snapshotCalls": 320,
+        "positiveClipW": 320,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 320,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 0
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "configuredPopulation": 864,
+      "observedCandidateCount": 864,
+      "observedPaintedCount": 399,
+      "frames": 6000,
+      "observation": "overlay-projection-path-observed",
+      "census": {
+        "snapshotCalls": 5184000,
+        "positiveClipW": 5184000,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 3090000,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 2094000
+      },
+      "perFrame": {
+        "snapshotCalls": 864,
+        "positiveClipW": 864,
+        "positiveClipWVisibilityRejected": 0,
+        "currentVisibilityRejectedSafeTop": 0,
+        "currentVisibilityRejectedViewportHorizon": 0,
+        "finiteRangeEntries": 515,
+        "finiteRangeRejected": 0,
+        "rangeRejectedSafeTop": 0,
+        "rangeRejectedVisibility": 0,
+        "rangeRejectedVisible": 0,
+        "unboundedEntries": 349
+      }
+    },
+    {
+      "profile": "phase6-detection",
+      "configuredPopulation": 5000,
+      "observedCandidateCount": 0,
+      "observedPaintedCount": 0,
+      "frames": 6000,
+      "observation": "custom-detection-path-does-not-use-overlay-projection",
+      "census": null,
+      "perFrame": null
+    }
+  ],
+  "status": "complete"
+}

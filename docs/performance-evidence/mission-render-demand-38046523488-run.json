@@ -1,0 +1,76 @@
+{
+  "schema": "gev-hosted-ci-summary/v1",
+  "recordedAt": "2026-10-10T11:02:12.452Z",
+  "conclusion": "failure",
+  "headSha": "2e1245e6eab0e504bfbad922807aca5693e8c33d",
+  "jobs": [
+    {
+      "name": "Isolated mission render-demand correctness",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063163"
+    },
+    {
+      "name": "Free hosted Mac accelerated retention diagnostic",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063650"
+    },
+    {
+      "name": "Isolated import and workspace lifecycle",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063680"
+    },
+    {
+      "name": "Node ${{ matrix.node }}",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063713"
+    },
+    {
+      "name": "Native WebGL probe (${{ matrix.os }})",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063786"
+    },
+    {
+      "name": "Baseline-compatible performance build smoke",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063799"
+    },
+    {
+      "name": "60-minute rendered application soak",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063846"
+    },
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197063877"
+    },
+    {
+      "name": "Free hosted Mac rendering diagnostic",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197064028"
+    },
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197080426"
+    },
+    {
+      "name": "Install and update recovery (${{ matrix.os }})",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488/job/114197083614"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488"
+}

@@ -1,0 +1,2948 @@
+{
+  "schema": "gev-preserved-cpu-stack-review/v1",
+  "performanceAcceptanceEligible": false,
+  "scope": "Statistical main-thread stack attribution; neither GPU time nor a matched performance comparison. Stack weights include native descendants and must not be added to native self totals.",
+  "timestampRule": "Accumulate raw deltas, stable-sort sample timestamps, weight each sample by elapsed interval since its predecessor; preserve the unsampled end tail.",
+  "summaries": [
+    {
+      "file": "../s48-depth-pick-38254885790/cpu-profiles/provider-idle-1-cpu-profile.json",
+      "sha256": "096de64fea55b79ef889575fff0cc95bb5f10103ff5bdf09edcba715508cd7ad",
+      "byteLength": 260123,
+      "profileWindowMs": 13828.301,
+      "attributedSamples": 11763,
+      "attributedMs": 13827.27,
+      "unattributedTailMs": 1.031,
+      "reorderedNegativeDeltas": 0,
+      "producerTopLocationsIndependentlyMatched": true,
+      "nativeApiSampledSelfMs": {
+        "getProgramParameter": 4261.652,
+        "readPixels": 4125.17,
+        "bufferData": 216.868
+      },
+      "topApiStacks": [
+        {
+          "sampledWeightMs": 2380.704,
+          "samples": 2138,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "eh",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 17725
+            },
+            {
+              "functionName": "N",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22660
+            },
+            {
+              "functionName": "F$",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22043
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1693.752,
+          "samples": 1511,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "i",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 510509
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1434.109,
+          "samples": 1296,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "get",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 10700
+            },
+            {
+              "functionName": "wre",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 16
+            },
+            {
+              "functionName": "fYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 7351
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "b",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1614,
+              "columnNumber": 767
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1227.005,
+          "samples": 1124,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "Nwe",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 348205
+            },
+            {
+              "functionName": "gy",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 348840
+            },
+            {
+              "functionName": "d",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 351254
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 352789
+            },
+            {
+              "functionName": "mR.raiseEvent",
+              "url": "[non-fixture source]",
+              "lineNumber": 79,
+              "columnNumber": 1358
+            },
+            {
+              "functionName": "K5.checkForCameraUpdates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 8285
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1204.413,
+          "samples": 1090,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "eAe",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 509226
+            },
+            {
+              "functionName": "_summaryContext",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 7715
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 6452
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 547718
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 446.839,
+          "samples": 401,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "zD.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 3378
+            },
+            {
+              "functionName": "Fte.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 49702
+            },
+            {
+              "functionName": "R_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 26152
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 209.706,
+          "samples": 184,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createIndexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26624
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "Vx.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 5852
+            },
+            {
+              "functionName": "ad.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 13371
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "Cp.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 113881
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 5.303,
+          "samples": 2,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createVertexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26462
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "Vx.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 5852
+            },
+            {
+              "functionName": "ad.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 13371
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "Cp.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 113881
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1.859,
+          "samples": 2,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createVertexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26462
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "b",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1614,
+              "columnNumber": 767
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "../s48-depth-pick-38254885790/cpu-profiles/provider-idle-2-cpu-profile.json",
+      "sha256": "73c6ab402134c9dfd381103e119f8e1bcd01ad7c837f2a43f9bb88e4537bb92e",
+      "byteLength": 237430,
+      "profileWindowMs": 11420.564,
+      "attributedSamples": 9671,
+      "attributedMs": 11419.955,
+      "unattributedTailMs": 0.609,
+      "reorderedNegativeDeltas": 1,
+      "producerTopLocationsIndependentlyMatched": true,
+      "nativeApiSampledSelfMs": {
+        "readPixels": 3565.184,
+        "getProgramParameter": 4097.569,
+        "bufferData": 1185.64
+      },
+      "topApiStacks": [
+        {
+          "sampledWeightMs": 2501.653,
+          "samples": 2291,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "eAe",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 509226
+            },
+            {
+              "functionName": "_summaryContext",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 7715
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 6452
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 547718
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 2350.017,
+          "samples": 2147,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "eh",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 17725
+            },
+            {
+              "functionName": "N",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22660
+            },
+            {
+              "functionName": "F$",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22043
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1520.924,
+          "samples": 1359,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "get",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 10700
+            },
+            {
+              "functionName": "wre",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 16
+            },
+            {
+              "functionName": "fYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 7351
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "b",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1614,
+              "columnNumber": 767
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1185.64,
+          "samples": 1090,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createIndexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26624
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "Vx.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 5852
+            },
+            {
+              "functionName": "ad.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 13371
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "Cp.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 113881
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1063.531,
+          "samples": 945,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "i",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 510509
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 226.628,
+          "samples": 204,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "zD.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 3378
+            },
+            {
+              "functionName": "Fte.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 49702
+            },
+            {
+              "functionName": "R_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 26152
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "../s48-depth-pick-38254885790/cpu-profiles/provider-scripted-motion-1-cpu-profile.json",
+      "sha256": "b6ea4e7fba6568af912a259ea06d73770e6d6b49c1b58849dd85e34a989393cd",
+      "byteLength": 301523,
+      "profileWindowMs": 13075.667,
+      "attributedSamples": 11190,
+      "attributedMs": 13074.487,
+      "unattributedTailMs": 1.18,
+      "reorderedNegativeDeltas": 0,
+      "producerTopLocationsIndependentlyMatched": true,
+      "nativeApiSampledSelfMs": {
+        "bufferData": 1056.882,
+        "getProgramParameter": 3992.158,
+        "readPixels": 4634.353
+      },
+      "topApiStacks": [
+        {
+          "sampledWeightMs": 2509.898,
+          "samples": 2281,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "eAe",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 509226
+            },
+            {
+              "functionName": "_summaryContext",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 7715
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1479,
+              "columnNumber": 6452
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 547718
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1908.888,
+          "samples": 1690,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "eh",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 17725
+            },
+            {
+              "functionName": "N",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22660
+            },
+            {
+              "functionName": "F$",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22043
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1592.273,
+          "samples": 1431,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "get",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 10700
+            },
+            {
+              "functionName": "wre",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 16
+            },
+            {
+              "functionName": "fYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 7351
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "b",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1614,
+              "columnNumber": 767
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1072.74,
+          "samples": 963,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "Nwe",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 348205
+            },
+            {
+              "functionName": "gy",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 348840
+            },
+            {
+              "functionName": "d",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 351254
+            },
+            {
+              "functionName": "",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 352789
+            },
+            {
+              "functionName": "mR.raiseEvent",
+              "url": "[non-fixture source]",
+              "lineNumber": 79,
+              "columnNumber": 1358
+            },
+            {
+              "functionName": "K5.checkForCameraUpdates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 8285
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1051.715,
+          "samples": 947,
+          "stack": [
+            {
+              "functionName": "readPixels",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "od.readPixels",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 59051
+            },
+            {
+              "functionName": "qE.getDepth",
+              "url": "[non-fixture source]",
+              "lineNumber": 11787,
+              "columnNumber": 315
+            },
+            {
+              "functionName": "fa.pickPositionWorldCoordinates",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 17466
+            },
+            {
+              "functionName": "fa.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 12117,
+              "columnNumber": 18713
+            },
+            {
+              "functionName": "yi.pickPosition",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 43775
+            },
+            {
+              "functionName": "mE",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 276,
+              "columnNumber": 23139
+            },
+            {
+              "functionName": "d_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 533498
+            },
+            {
+              "functionName": "u_",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 532907
+            },
+            {
+              "functionName": "i",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1418,
+              "columnNumber": 510509
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 1049.459,
+          "samples": 946,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createIndexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26624
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "Vx.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 5852
+            },
+            {
+              "functionName": "ad.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 13371
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "Cp.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 113881
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 243.904,
+          "samples": 219,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "zD.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 3378
+            },
+            {
+              "functionName": "Fte.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 49702
+            },
+            {
+              "functionName": "R_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 26152
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 189.009,
+          "samples": 154,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "IX.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 11512,
+              "columnNumber": 340
+            },
+            {
+              "functionName": "KL.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5947,
+              "columnNumber": 6389
+            },
+            {
+              "functionName": "l8e",
+              "url": "[non-fixture source]",
+              "lineNumber": 8736,
+              "columnNumber": 44477
+            },
+            {
+              "functionName": "_o.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 8736,
+              "columnNumber": 42527
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "b",
+              "url": "/assets/index-DIGkrpUm.js",
+              "lineNumber": 1614,
+              "columnNumber": 767
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 58.084,
+          "samples": 53,
+          "stack": [
+            {
+              "functionName": "getProgramParameter",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "b1e",
+              "url": "[non-fixture source]",
+              "lineNumber": 90,
+              "columnNumber": 11441
+            },
+            {
+              "functionName": "hie",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1379
+            },
+            {
+              "functionName": "OD",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 1341
+            },
+            {
+              "functionName": "gA._bind",
+              "url": "[non-fixture source]",
+              "lineNumber": 93,
+              "columnNumber": 2209
+            },
+            {
+              "functionName": "SBe",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57061
+            },
+            {
+              "functionName": "od.draw",
+              "url": "[non-fixture source]",
+              "lineNumber": 3947,
+              "columnNumber": 57762
+            },
+            {
+              "functionName": "CR.execute",
+              "url": "[non-fixture source]",
+              "lineNumber": 89,
+              "columnNumber": 5773
+            },
+            {
+              "functionName": "eh",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 17725
+            },
+            {
+              "functionName": "WCt",
+              "url": "[non-fixture source]",
+              "lineNumber": 11876,
+              "columnNumber": 2802
+            },
+            {
+              "functionName": "mb.executeCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 11876,
+              "columnNumber": 3549
+            },
+            {
+              "functionName": "e._executeOITFunction",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 20569
+            },
+            {
+              "functionName": "YRt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 20735
+            },
+            {
+              "functionName": "F$",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 22043
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        },
+        {
+          "sampledWeightMs": 3.721,
+          "samples": 6,
+          "stack": [
+            {
+              "functionName": "bufferData",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            },
+            {
+              "functionName": "Gc",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 25801
+            },
+            {
+              "functionName": "Gc.createVertexBuffer",
+              "url": "[non-fixture source]",
+              "lineNumber": 78,
+              "columnNumber": 26462
+            },
+            {
+              "functionName": "xA.fromGeometry",
+              "url": "[non-fixture source]",
+              "lineNumber": 96,
+              "columnNumber": 72874
+            },
+            {
+              "functionName": "mYe",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 5947
+            },
+            {
+              "functionName": "Jr.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5043,
+              "columnNumber": 11263
+            },
+            {
+              "functionName": "Vx.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 5852
+            },
+            {
+              "functionName": "ad.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 5203,
+              "columnNumber": 13371
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "Cp.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 113881
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "tc.update",
+              "url": "[non-fixture source]",
+              "lineNumber": 10167,
+              "columnNumber": 112045
+            },
+            {
+              "functionName": "V_e",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 33374
+            },
+            {
+              "functionName": "zy",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 30242
+            },
+            {
+              "functionName": "yi.updateAndExecuteCommands",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 27594
+            },
+            {
+              "functionName": "lGt",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 40151
+            },
+            {
+              "functionName": "CT",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41315
+            },
+            {
+              "functionName": "yi.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15529,
+              "columnNumber": 41496
+            },
+            {
+              "functionName": "qo.render",
+              "url": "[non-fixture source]",
+              "lineNumber": 15909,
+              "columnNumber": 1893
+            },
+            {
+              "functionName": "n",
+              "url": "[non-fixture source]",
+              "lineNumber": 15907,
+              "columnNumber": 5755
+            },
+            {
+              "functionName": "(root)",
+              "url": "",
+              "lineNumber": -1,
+              "columnNumber": -1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

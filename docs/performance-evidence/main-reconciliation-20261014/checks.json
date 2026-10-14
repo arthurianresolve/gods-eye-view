@@ -1,0 +1,30 @@
+[
+  {
+    "name": "gbfs-focused",
+    "command": [
+      "node",
+      "--test",
+      "src/sources/gbfsStations.test.mjs",
+      "src/tools/queries/mobility.test.mjs"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "format",
+    "command": [
+      "node",
+      "scripts/format.mjs",
+      "--check"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "unit-discovery",
+    "command": [
+      "node",
+      "--test",
+      "scripts/run-unit-tests.test.mjs"
+    ],
+    "exitCode": 0
+  }
+]

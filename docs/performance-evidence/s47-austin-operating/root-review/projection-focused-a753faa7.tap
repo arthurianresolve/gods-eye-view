@@ -1,0 +1,516 @@
+TAP version 13
+# Subtest: capture provenance binds full application and harness SHAs to the receipt
+ok 1 - capture provenance binds full application and harness SHAs to the receipt
+  ---
+  duration_ms: 5.6716
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects wrong SHAs and changes between the two served checks
+ok 2 - capture provenance rejects wrong SHAs and changes between the two served checks
+  ---
+  duration_ms: 4.8632
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects a different served root or harness checkout
+ok 3 - capture provenance rejects a different served root or harness checkout
+  ---
+  duration_ms: 3.9528
+  type: 'test'
+  ...
+# Subtest: capture CLI stops and drains the real fixture interceptor before closing its target
+ok 4 - capture CLI stops and drains the real fixture interceptor before closing its target
+  ---
+  duration_ms: 345.4716
+  type: 'test'
+  ...
+# Subtest: capture CLI keeps a rejected close acknowledgement failed after target closure
+ok 5 - capture CLI keeps a rejected close acknowledgement failed after target closure
+  ---
+  duration_ms: 343.4539
+  type: 'test'
+  ...
+# Subtest: missing lifecycle witness reports the child import error instead of only ENOENT
+ok 6 - missing lifecycle witness reports the child import error instead of only ENOENT
+  ---
+  duration_ms: 282.922
+  type: 'test'
+  ...
+# Subtest: render boundary reports page entry, dispatch delay, render and listener cleanup
+ok 7 - render boundary reports page entry, dispatch delay, render and listener cleanup
+  ---
+  duration_ms: 34.727
+  type: 'test'
+  ...
+# Subtest: host deadline retains page entry acknowledgement when page stalls
+ok 8 - host deadline retains page entry acknowledgement when page stalls
+  ---
+  duration_ms: 28.2159
+  type: 'test'
+  ...
+# Subtest: host deadline distinguishes no page entry and ignores malformed or foreign acknowledgements
+ok 9 - host deadline distinguishes no page entry and ignores malformed or foreign acknowledgements
+  ---
+  duration_ms: 16.877
+  type: 'test'
+  ...
+# Subtest: a progress binding that resolves after the deadline is disposed without starting page evaluation
+ok 10 - a progress binding that resolves after the deadline is disposed without starting page evaluation
+  ---
+  duration_ms: 29.8431
+  type: 'test'
+  ...
+# Subtest: malformed progress binding is disposed and page evaluation never starts
+ok 11 - malformed progress binding is disposed and page evaluation never starts
+  ---
+  duration_ms: 0.9124
+  type: 'test'
+  ...
+# Subtest: binding cleanup failure is recorded without replacing a page timer failure
+ok 12 - binding cleanup failure is recorded without replacing a page timer failure
+  ---
+  duration_ms: 1.0756
+  type: 'test'
+  ...
+# Subtest: binding cleanup duration measures only its own bounded teardown
+ok 13 - binding cleanup duration measures only its own bounded teardown
+  ---
+  duration_ms: 0.8612
+  type: 'test'
+  ...
+# Subtest: page timeout and render-request errors remain distinct from host timeout
+ok 14 - page timeout and render-request errors remain distinct from host timeout
+  ---
+  duration_ms: 1.0847
+  type: 'test'
+  ...
+# Subtest: invalid observers fail before scheduling a timer
+ok 15 - invalid observers fail before scheduling a timer
+  ---
+  duration_ms: 0.5711
+  type: 'test'
+  ...
+# Subtest: a null optional progress binding is treated as absent while malformed bindings still fail
+ok 16 - a null optional progress binding is treated as absent while malformed bindings still fail
+  ---
+  duration_ms: 1.1108
+  type: 'test'
+  ...
+# Subtest: host deadline is scheduled from the original boundary start after slow dispatch
+ok 17 - host deadline is scheduled from the original boundary start after slow dispatch
+  ---
+  duration_ms: 1.0917
+  type: 'test'
+  ...
+# Subtest: boundary progress recorder remains bound to the invocation owner after current record changes
+ok 18 - boundary progress recorder remains bound to the invocation owner after current record changes
+  ---
+  duration_ms: 3.704
+  type: 'test'
+  ...
+# Subtest: preinstalled document binding covers warmup and measurement without boundary setup cost
+ok 19 - preinstalled document binding covers warmup and measurement without boundary setup cost
+  ---
+  duration_ms: 3.4767
+  type: 'test'
+  ...
+# Subtest: late acknowledgements remain bound to their invocation and cannot update the next record
+ok 20 - late acknowledgements remain bound to their invocation and cannot update the next record
+  ---
+  duration_ms: 11.2029
+  type: 'test'
+  ...
+# Subtest: late document-binding setup schedules cleanup without treating install as success
+ok 21 - late document-binding setup schedules cleanup without treating install as success
+  ---
+  duration_ms: 20.6299
+  type: 'test'
+  ...
+# Subtest: failed document-binding setup attempts owner-local cleanup and preserves setup error
+ok 22 - failed document-binding setup attempts owner-local cleanup and preserves setup error
+  ---
+  duration_ms: 0.946
+  type: 'test'
+  ...
+# Subtest: persistent binding cleanup is bounded and reports an unremoved owner
+ok 23 - persistent binding cleanup is bounded and reports an unremoved owner
+  ---
+  duration_ms: 265.3751
+  type: 'test'
+  ...
+# Subtest: concurrent binding disposal waits for the same pending removal outcome
+ok 24 - concurrent binding disposal waits for the same pending removal outcome
+  ---
+  duration_ms: 30.6788
+  type: 'test'
+  ...
+# Subtest: concurrent disposal shares removal rejection and timeout results
+    # Subtest: rejection
+    ok 1 - rejection
+      ---
+      duration_ms: 1.3578
+      type: 'test'
+      ...
+    # Subtest: timeout
+    ok 2 - timeout
+      ---
+      duration_ms: 260.0237
+      type: 'test'
+      ...
+    1..2
+ok 25 - concurrent disposal shares removal rejection and timeout results
+  ---
+  duration_ms: 263.916
+  type: 'test'
+  ...
+# Subtest: invocation unregistration errors use invocation cleanup evidence
+ok 26 - invocation unregistration errors use invocation cleanup evidence
+  ---
+  duration_ms: 1.0472
+  type: 'test'
+  ...
+# Subtest: failure reports retain progress-binding setup and boundary-timeout ownership
+    # Subtest: setup failure
+    ok 1 - setup failure
+      ---
+      duration_ms: 0.9233
+      type: 'test'
+      ...
+    # Subtest: boundary timeout after cleanup
+    ok 2 - boundary timeout after cleanup
+      ---
+      duration_ms: 15.2267
+      type: 'test'
+      ...
+    1..2
+ok 27 - failure reports retain progress-binding setup and boundary-timeout ownership
+  ---
+  duration_ms: 17.2632
+  type: 'test'
+  ...
+# Subtest: diagnostic render probe records request, postRender and owned cleanup
+ok 28 - diagnostic render probe records request, postRender and owned cleanup
+  ---
+  duration_ms: 7.6749
+  type: 'test'
+  ...
+# Subtest: page timer and missing render request stay explicit without relaxing settle
+ok 29 - page timer and missing render request stay explicit without relaxing settle
+  ---
+  duration_ms: 10.1154
+  type: 'test'
+  ...
+# Subtest: render request exception is retained and listener is removed
+ok 30 - render request exception is retained and listener is removed
+  ---
+  duration_ms: 0.7049
+  type: 'test'
+  ...
+# Subtest: warmup boundary leaves viewer loop active and final boundary retires after postRender
+ok 31 - warmup boundary leaves viewer loop active and final boundary retires after postRender
+  ---
+  duration_ms: 2.5527
+  type: 'test'
+  ...
+# Subtest: final boundary timeout does not claim retirement or settle successfully
+ok 32 - final boundary timeout does not claim retirement or settle successfully
+  ---
+  duration_ms: 18.5879
+  type: 'test'
+  ...
+# Subtest: final boundary fails closed when loop state is unavailable or retirement is refused
+ok 33 - final boundary fails closed when loop state is unavailable or retirement is refused
+  ---
+  duration_ms: 1.7504
+  type: 'test'
+  ...
+# Subtest: host binding receives owned page phase acknowledgements and is removed
+ok 34 - host binding receives owned page phase acknowledgements and is removed
+  ---
+  duration_ms: 5.6042
+  type: 'test'
+  ...
+# Subtest: page evaluate argument order delivers the invocation and host observes page entry
+ok 35 - page evaluate argument order delivers the invocation and host observes page entry
+  ---
+  duration_ms: 2.5875
+  type: 'test'
+  ...
+# Subtest: tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+ok 36 - tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+  ---
+  duration_ms: 4.9449
+  type: 'test'
+  ...
+# Subtest: provider warmup clock hold and listener registration share one serialized page callback
+ok 37 - provider warmup clock hold and listener registration share one serialized page callback
+  ---
+  duration_ms: 8.2901
+  type: 'test'
+  ...
+# Subtest: atomic provider clock callback error removes the listener without requesting a render
+ok 38 - atomic provider clock callback error removes the listener without requesting a render
+  ---
+  duration_ms: 0.4177
+  type: 'test'
+  ...
+# Subtest: host progress preserves an atomic warmup snapshot when its page render times out
+ok 39 - host progress preserves an atomic warmup snapshot when its page render times out
+  ---
+  duration_ms: 23.9013
+  type: 'test'
+  ...
+# Subtest: serialized Austin boundary waits for installation readiness and a later render before retirement
+ok 40 - serialized Austin boundary waits for installation readiness and a later render before retirement
+  ---
+  duration_ms: 6.7679
+  type: 'test'
+  ...
+# Subtest: Austin readiness boundary fails on missing or errored installation state without retiring
+ok 41 - Austin readiness boundary fails on missing or errored installation state without retiring
+  ---
+  duration_ms: 1.9882
+  type: 'test'
+  ...
+# Subtest: Austin readiness timeout stays within page boundary and removes its listener
+ok 42 - Austin readiness timeout stays within page boundary and removes its listener
+  ---
+  duration_ms: 22.4897
+  type: 'test'
+  ...
+# Subtest: Austin loading postrenders record first observation without accepting or retiring the boundary
+ok 43 - Austin loading postrenders record first observation without accepting or retiring the boundary
+  ---
+  duration_ms: 18.0019
+  type: 'test'
+  ...
+# Subtest: Austin readiness condition errors after a postrender preserve the render observation
+ok 44 - Austin readiness condition errors after a postrender preserve the render observation
+  ---
+  duration_ms: 1.8838
+  type: 'test'
+  ...
+# Subtest: capture clock validation consumes the actual phased producer and rejects phase/time drift
+ok 45 - capture clock validation consumes the actual phased producer and rejects phase/time drift
+  ---
+  duration_ms: 12.7035
+  type: 'test'
+  ...
+# Subtest: smoke CLI parser preserves the candidate SHA and output path
+ok 46 - smoke CLI parser preserves the candidate SHA and output path
+  ---
+  duration_ms: 2.8658
+  type: 'test'
+  ...
+# Subtest: capture report renderer validation binds verified evidence to the observed renderer
+ok 47 - capture report renderer validation binds verified evidence to the observed renderer
+  ---
+  duration_ms: 3.3721
+  type: 'test'
+  ...
+# Subtest: Austin readiness-history smoke contract rejects unbounded or mismatched host samples
+ok 48 - Austin readiness-history smoke contract rejects unbounded or mismatched host samples
+  ---
+  duration_ms: 14.8547
+  type: 'test'
+  ...
+# Subtest: Austin readiness history validates producer snapshots with document-local sequences
+ok 49 - Austin readiness history validates producer snapshots with document-local sequences
+  ---
+  duration_ms: 10.8045
+  type: 'test'
+  ...
+# Subtest: provider CPU profile set binds first two idle and first motion windows to exact documents
+ok 50 - provider CPU profile set binds first two idle and first motion windows to exact documents
+  ---
+  duration_ms: 55.98
+  type: 'test'
+  ...
+# Subtest: failed later profile window preserves the earlier ordered sidecar indexes
+ok 51 - failed later profile window preserves the earlier ordered sidecar indexes
+  ---
+  duration_ms: 84.5723
+  type: 'test'
+  ...
+# Subtest: capture CLI validator accepts only the complete six-sample hosted smoke contract
+ok 52 - capture CLI validator accepts only the complete six-sample hosted smoke contract
+  ---
+  duration_ms: 37.3076
+  type: 'test'
+  ...
+# Subtest: capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason
+ok 53 - capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason
+  ---
+  duration_ms: 11.5369
+  type: 'test'
+  ...
+# Subtest: shader attribution smoke validation binds serialized producer records and remains ineligible
+ok 54 - shader attribution smoke validation binds serialized producer records and remains ineligible
+  ---
+  duration_ms: 56.1211
+  type: 'test'
+  ...
+# Subtest: scene frame attribution is bounded and permanently ineligible for comparison
+ok 55 - scene frame attribution is bounded and permanently ineligible for comparison
+  ---
+  duration_ms: 22.836
+  type: 'test'
+  ...
+# Subtest: capture CLI validates the selected infrastructure workload and rejects dense substitution
+ok 56 - capture CLI validates the selected infrastructure workload and rejects dense substitution
+  ---
+  duration_ms: 538.3995
+  type: 'test'
+  ...
+# Subtest: Austin renderer retirements exactly match startup and provider sample boundaries
+ok 57 - Austin renderer retirements exactly match startup and provider sample boundaries
+  ---
+  duration_ms: 4.8775
+  type: 'test'
+  ...
+# Subtest: full cleanup validator replays a raw Austin report and rejects release mutations
+ok 58 - full cleanup validator replays a raw Austin report and rejects release mutations
+  ---
+  duration_ms: 16.2869
+  type: 'test'
+  ...
+# Subtest: full Austin CLI validator accepts the recorded producer projection and rejects contract mutations
+ok 59 - full Austin CLI validator accepts the recorded producer projection and rejects contract mutations
+  ---
+  duration_ms: 999.0476
+  type: 'test'
+  ...
+# Subtest: capture CLI validates the actual weather fixture manifest, timeline, states and worker topology
+ok 60 - capture CLI validates the actual weather fixture manifest, timeline, states and worker topology
+  ---
+  duration_ms: 100.1019
+  type: 'test'
+  ...
+# Subtest: infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+ok 61 - infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+  ---
+  duration_ms: 286.4901
+  type: 'test'
+  ...
+# Subtest: capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+ok 62 - capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+  ---
+  duration_ms: 15.4001
+  type: 'test'
+  ...
+# Subtest: capture CLI accepts empty startup worker audits only when no worker path was observed
+ok 63 - capture CLI accepts empty startup worker audits only when no worker path was observed
+  ---
+  duration_ms: 8.0864
+  type: 'test'
+  ...
+# Subtest: capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+ok 64 - capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+  ---
+  duration_ms: 28.2954
+  type: 'test'
+  ...
+# Subtest: capture CLI rejects missing, altered or unreported comparison contracts
+ok 65 - capture CLI rejects missing, altered or unreported comparison contracts
+  ---
+  duration_ms: 23.5651
+  type: 'test'
+  ...
+# Subtest: capture CLI requires usable frame-interval evidence for moving and tracking samples
+ok 66 - capture CLI requires usable frame-interval evidence for moving and tracking samples
+  ---
+  duration_ms: 69.8492
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves legitimately unavailable zero-frame idle timing
+ok 67 - capture CLI preserves legitimately unavailable zero-frame idle timing
+  ---
+  duration_ms: 7.3712
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+ok 68 - smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+  ---
+  duration_ms: 0.8578
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves a bounded completed capture report after outer validation failure
+ok 69 - smoke compaction preserves a bounded completed capture report after outer validation failure
+  ---
+  duration_ms: 0.9878
+  type: 'test'
+  ...
+# Subtest: smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+ok 70 - smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+  ---
+  duration_ms: 3.4447
+  type: 'test'
+  ...
+# Subtest: smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+ok 71 - smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+  ---
+  duration_ms: 0.2584
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process on timeout
+ok 72 - bounded child runner stops an owned process on timeout
+  ---
+  duration_ms: 780.7432
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process when output exceeds its cap
+ok 73 - bounded child runner stops an owned process when output exceeds its cap
+  ---
+  duration_ms: 651.5481
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops a separately owned browser process
+ok 74 - bounded child runner stops a separately owned browser process
+  ---
+  duration_ms: 1410.6043
+  type: 'test'
+  ...
+# Subtest: bounded child runner cleans the owned browser when the CLI exits with failure
+ok 75 - bounded child runner cleans the owned browser when the CLI exits with failure
+  ---
+  duration_ms: 981.8923
+  type: 'test'
+  ...
+# Subtest: bounded child failure keeps sanitized stderr and the latest capture progress
+ok 76 - bounded child failure keeps sanitized stderr and the latest capture progress
+  ---
+  duration_ms: 500.3007
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves hash-bound raw reports on success and failure
+ok 77 - capture CLI preserves hash-bound raw reports on success and failure
+  ---
+  duration_ms: 40.053
+  type: 'test'
+  ...
+# Subtest: capture CLI report sidecar marks missing, malformed, and oversized reports
+ok 78 - capture CLI report sidecar marks missing, malformed, and oversized reports
+  ---
+  duration_ms: 48.7034
+  type: 'test'
+  ...
+# Subtest: capture CLI closes the browser after page creation fails inside its lifecycle
+ok 79 - capture CLI closes the browser after page creation fails inside its lifecycle
+  ---
+  duration_ms: 379.2777
+  type: 'test'
+  ...
+# Subtest: invalid smoke input writes a bounded failure artifact without launching a browser
+ok 80 - invalid smoke input writes a bounded failure artifact without launching a browser
+  ---
+  duration_ms: 210.151
+  type: 'test'
+  ...
+1..80
+# tests 84
+# suites 0
+# pass 84
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11814.4735

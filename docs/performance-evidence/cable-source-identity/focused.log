@@ -1,0 +1,47 @@
+✔ cable reference winners remain nearest-first and hard-capped (5.5857ms)
+✔ cable overlay entries satisfy the shared presentation contract (3.2237ms)
+✔ cable reference priority is nearest-first and sweep-stable (0.6193ms)
+✔ cable overlay publisher owns the production show/publish/hide lifecycle (1.2875ms)
+✔ cable ground lines classify against exactly the active surface on every stack (0.8891ms)
+✔ a map-stack change re-classifies every cable line once, and destroy detaches the listener (42.3428ms)
+✔ marker collections blend in a single translucent pass behind a loud shape invariant (35.1373ms)
+✔ cable reference sweep gate is dirty-only — no timer path (1.1389ms)
+✔ the sweep gate falls back to motion probes for cameras that never emit moveEnd (9.1787ms)
+✔ staticized stems redefine constants only on real tip changes, alternating buffers (1.6212ms)
+✔ the depth decision is the dated Option-2 host migration, superseding Option 1 (0.2943ms)
+✔ cables create no native labels and no per-frame geometry callbacks (10.7722ms)
+✔ an abort landing at the post-fetch boundary stops the stale load before GeoJson work (451.4577ms)
+✔ an abort landing at the post-cable-GeoJson boundary stops the stale load before the landing build (570.0498ms)
+✔ an abort landing at the pre-add boundary stops the stale load before any dataSources.add (694.4509ms)
+✔ a destroy inside the deferred add window leaves zero post-destroy data sources (254.4725ms)
+✔ a destroy in the deferred window with a rejected-after-push add still leaves zero sources (127.8897ms)
+✔ a direct destroy of a published layer clears and hides its host source (112.4278ms)
+✔ a stale aborted load never clobbers the next load's lifecycle (A/B/C toggle race) (379.9231ms)
+✔ destroy mid-load stays clean and a re-enabled layer reloads exactly once (354.3889ms)
+✔ a real enabled cable layer publishes host entries and has zero native labels (15.4051ms)
+✔ stems never rebuild mid-drag; exactly one rebuild lands on moveEnd (958.2883ms)
+✔ a tracked camera that never emits moveEnd is swept by the motion fallback (16.9835ms)
+✔ an unchanged cohort never republishes, so a parked camera stays governor-idle (29.8054ms)
+✔ a toggle-off releases every data source and a toggle-on rebuilds them without refetching (30.9302ms)
+✔ another GeoJSON source renders with its own label and rebuilds from accepted cache (123.6111ms)
+✔ plain cable identities keep duplicate names distinct and detach coordinates (2.7458ms)
+✔ multipart and duplicate-ID GeoJSON entities bind to source order, not entity index (9.0864ms)
+✔ source ordinal annotation avoids metadata collisions and cleans malformed entity groups (1.8324ms)
+✔ bundled cable source maps every real Cesium segment to all 712 parent features (294.0935ms)
+✔ ingestion applies source records to every expanded segment without flattening Entity IDs (15.5661ms)
+✔ abort at GeoJSON load boundary 0 removes transient fields without publishing stale sources (3.6099ms)
+✔ abort at GeoJSON load boundary 1 removes transient fields without publishing stale sources (1.78ms)
+✔ load rejection clears temporary metadata before retry (3.4709ms)
+✔ invalid source ordinal clears temporary metadata before retry (2.9988ms)
+✔ all bundled cable segments receive their actual source style and active pick record (415.3533ms)
+✔ release drops active pick mappings while old Cesium objects remain inert (5.4604ms)
+✔ unregistered pick-like expandos cannot bypass active identity ownership (0.5625ms)
+✔ post-add identity failure rolls back sources and retry rebuilds the same record (25.5023ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8699.372

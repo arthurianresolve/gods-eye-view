@@ -2,6 +2,7 @@
  * Bundled OpenStreetMap infrastructure layers (datacenters and dams): their
  * data files, line-delimited GeoJSON parsing and analyst records.
  */
+import { createEvidenceEnvelope } from '../evidence/evidence.js';
 
 // Resolved by Vite in builds and relative to this module in other consumers,
 // when read, so importing this module never needs a module URL.
@@ -93,8 +94,15 @@ export function mapAnalystRecord(raw, layerId = '') {
     layerId === 'local-dams'
       ? text(props.output) || text(tags['plant:output:electricity'])
       : null;
+  const sourceRecordId = text(props.osm_id) || text(raw?.id);
+  const entityId =
+    sourceRecordId ||
+    (Number.isFinite(raw?.lat) && Number.isFinite(raw?.lon)
+      ? 'coordinate:' + raw.lat + ':' + raw.lon + ':' + (name || 'unnamed')
+      : null);
   return {
     id: name || text(raw?.id) || layerTitle(layerId),
+    sourceRecordId,
     name,
     lat: num(raw?.lat),
     lon: num(raw?.lon),
@@ -102,6 +110,40 @@ export function mapAnalystRecord(raw, layerId = '') {
     capacity,
     river,
     output,
+    evidence: createEvidenceEnvelope({
+      entityRef: {
+        layerKey: layerId,
+        id: entityId,
+      },
+      sourceId:
+        layerId === 'local-dams'
+          ? 'Open Infrastructure Map / OpenStreetMap'
+          : 'OpenStreetMap contributors',
+      sourceRecordId,
+      sourceUrl:
+        layerId === 'local-dams'
+          ? 'https://openinframap.org/'
+          : 'https://www.openstreetmap.org/',
+      method: 'unknown',
+      coverage: {
+        completeness: 'unknown',
+        reason: 'Bundled static extract; extraction date was not recorded.',
+      },
+      licenseRef: 'ODbL-1.0',
+      references:
+        layerId === 'local-datacenters' && name
+          ? [
+              {
+                kind: 'peeringdb',
+                url: `https://www.peeringdb.com/search?q=${encodeURIComponent(name || text(raw?.id))}`,
+                title: 'Search this facility in PeeringDB',
+              },
+            ]
+          : [],
+      limitations: [
+        'Bundled static extract; source observation and extraction times are unknown.',
+      ],
+    }),
   };
 }
 

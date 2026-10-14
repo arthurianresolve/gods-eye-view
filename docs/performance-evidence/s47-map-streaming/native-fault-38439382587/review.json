@@ -1,0 +1,38 @@
+{
+  "schema": "gev-local-artifact-review/v1",
+  "sourceSha256": "df2bfe6b9daa34b552d7e786b4f136a8f288c0cd3634f15a1766532b5d8dbb2f",
+  "applicationCommit": "e0710bd5cf3ba7c5d0d5383189b82fd8475ec087",
+  "harnessCommit": "e0710bd5cf3ba7c5d0d5383189b82fd8475ec087",
+  "strictJourneyAndFaultValidatorsPassed": true,
+  "faultScenarios": [
+    {
+      "scenarioId": "esri-metadata-missing-v1",
+      "status": "passed",
+      "pending": 0,
+      "missingPaths": 0,
+      "injected": 1,
+      "released": 0,
+      "cleanupConfirmed": true
+    },
+    {
+      "scenarioId": "esri-metadata-corrupt-v1",
+      "status": "passed",
+      "pending": 0,
+      "missingPaths": 0,
+      "injected": 1,
+      "released": 0,
+      "cleanupConfirmed": true
+    },
+    {
+      "scenarioId": "esri-metadata-superseded-v1",
+      "status": "passed",
+      "pending": 0,
+      "missingPaths": 0,
+      "injected": 1,
+      "released": 1,
+      "cleanupConfirmed": true
+    }
+  ],
+  "physicalWindowsQualified": false,
+  "performanceClaim": false
+}

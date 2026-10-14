@@ -25,6 +25,12 @@ import {
 } from './data/geoid.js';
 import { getBasemapLabelContext } from './voice/gevActions.js';
 import {
+  canBuildHudSummaryContext,
+  getHudSummaryContextForRevision,
+  HUD_SUMMARY_CONTEXT_SKIPPED,
+  isHudSummaryContextCurrent,
+} from './hudSummaryContext.js';
+import {
   hudSummaryMatchesProvenance,
   hudSummaryLayerContext,
   hudTelemetryProvenanceTag,
@@ -125,6 +131,8 @@ export class IntelHUD {
     this._dataManagerUnsubscribe = null;
     this._summaryDirty = true;
     this._summaryRequest = null;
+    this._summaryContextBuild = null;
+    this._destroyed = false;
     this._lastSummarySignature = '';
     this._summaryRevision = 0;
     // One-shot guards so the very first summary lands immediately instead of
@@ -695,6 +703,7 @@ export class IntelHUD {
    *   by character; otherwise sets it instantly.
    */
   async _updateSummary(animate = false, force = false) {
+    if (!isHudSummaryContextCurrent(this, this._summaryRevision)) return;
     const fallbackText = this._composeSummary();
     if (!this._latestMetrics) {
       this._setSummaryText(fallbackText, animate);
@@ -702,6 +711,9 @@ export class IntelHUD {
     }
     if (!force && !this._summaryDirty) return;
     if (this.summaryPolicy.canRequest?.() === false) return;
+    // Context construction includes a center-depth pick. Do not repeat it
+    // while an already-built summary is waiting on its service response.
+    if (!canBuildHudSummaryContext(this)) return;
 
     const revision = this._summaryRevision;
     // Every caller invokes this as `void this._updateSummary(...)`, so nothing
@@ -712,15 +724,19 @@ export class IntelHUD {
     // fallback line, not a crash.
     let context;
     try {
-      context = await this._summaryContext();
+      context = await getHudSummaryContextForRevision(this, revision, () =>
+        this._summaryContext(),
+      );
     } catch (error) {
+      if (!isHudSummaryContextCurrent(this, revision)) return;
       console.warn('[HUD] summary context unavailable:', error);
       // Left dirty on purpose: the next periodic tick retries instead of
       // sticking on the fallback line for the rest of the session.
       this._setSummaryText(fallbackText, animate);
       return;
     }
-    if (revision !== this._summaryRevision) return;
+    if (context === HUD_SUMMARY_CONTEXT_SKIPPED) return;
+    if (!isHudSummaryContextCurrent(this, revision)) return;
     const signature = JSON.stringify(context);
     if (!force && signature === this._lastSummarySignature) {
       this._summaryDirty = false;
@@ -740,7 +756,7 @@ export class IntelHUD {
         signal: controller.signal,
       });
       const data = response.data;
-      if (revision !== this._summaryRevision) return;
+      if (!isHudSummaryContextCurrent(this, revision)) return;
       if (isHudSummaryUnconfigured(response.status, data)) {
         this._setSummaryText(fallbackText, animate);
         return;
@@ -755,14 +771,16 @@ export class IntelHUD {
         animate,
       );
     } catch (error) {
-      if (error?.name !== 'AbortError') {
-        console.warn('[HUD] AI summary unavailable:', error);
-        // Invalidate the committed signature so the next periodic tick
-        // retries instead of sticking on the fallback line forever.
-        this._lastSummarySignature = null;
-        this._summaryDirty = true;
+      if (isHudSummaryContextCurrent(this, revision)) {
+        if (error?.name !== 'AbortError') {
+          console.warn('[HUD] AI summary unavailable:', error);
+          // Invalidate the committed signature so the next periodic tick
+          // retries instead of sticking on the fallback line forever.
+          this._lastSummarySignature = null;
+          this._summaryDirty = true;
+        }
+        this._setSummaryText(fallbackText, animate);
       }
-      this._setSummaryText(fallbackText, animate);
     } finally {
       window.clearTimeout(timeout);
       if (this._summaryRequest === controller) this._summaryRequest = null;
@@ -779,11 +797,10 @@ export class IntelHUD {
   }
 
   async _summaryContext() {
-    const labels = await getBasemapLabelContext(
-      this.viewer,
-      this.placeSearch,
-      this.basemapContext,
-    );
+    const labels = await getBasemapLabelContext(this.viewer, this.placeSearch, {
+      ...this.basemapContext,
+      caller: 'hud-summary-context',
+    });
     const enabledLayers =
       this._dataManager
         ?.getAll?.()
@@ -938,6 +955,8 @@ export class IntelHUD {
 
   /** Tear down all running intervals. Call when discarding the HUD instance. */
   destroy() {
+    this._destroyed = true;
+    this._summaryContextBuild = null;
     clearInterval(this._updateInterval);
     clearInterval(this._recBlinkInterval);
     clearInterval(this._timestampInterval);

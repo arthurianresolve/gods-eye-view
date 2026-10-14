@@ -1,0 +1,10 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "failure": {
+    "phase": "setup",
+    "message": "TLE acquired snapshot metadata does not match stations."
+  },
+  "finishedAt": "2026-10-12T20:55:10.961Z"
+}

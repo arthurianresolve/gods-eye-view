@@ -1,0 +1,179 @@
+{
+  "schema": "gev-independent-phased-clock-audit/v1",
+  "checkedAt": "2026-10-12T20:28:04.842Z",
+  "scope": "Node clock controls and real satellite-rendering cadence with a stubbed propagation result; no browser, hardware, or application acceptance.",
+  "sourceHashesBefore": {
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8"
+  },
+  "sourceHashesAfter": {
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8"
+  },
+  "checks": [
+    {
+      "id": "ten-runs-phase-order-monotonicity-and-independent-native-time",
+      "pass": true
+    },
+    {
+      "id": "stale-bound-transition-callbacks-cannot-mutate-a-later-run",
+      "pass": true
+    },
+    {
+      "id": "legacy-single-use-callers-remain-valid",
+      "pass": true
+    },
+    {
+      "id": "fresh-document-rejects-global-sample-ordinal",
+      "pass": true
+    }
+  ],
+  "completedRunSnapshots": [
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 1
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 2
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 3
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 4
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 5
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 6
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 7
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 8
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 9
+    },
+    {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "complete",
+      "epochMs": 1791828090000,
+      "elapsedMs": 90000,
+      "warmupMs": 30000,
+      "measurementMs": 60000,
+      "warmupNativeElapsedMs": 30000,
+      "measurementNativeElapsedMs": 60000,
+      "startCount": 1,
+      "measurementStartCount": 1,
+      "runOrdinal": 10
+    }
+  ],
+  "nativeRewindFailure": {
+    "first": {
+      "runOrdinal": 1,
+      "fleetPropagationCount": 90,
+      "lastPropagation": 1791828090000,
+      "endEpochMs": 1791828090000
+    },
+    "second": {
+      "runOrdinal": 2,
+      "fleetPropagationCount": 0,
+      "lastPropagation": 1791828090000,
+      "endEpochMs": 1791828090000
+    },
+    "reproduced": true
+  },
+  "conclusion": "Run guards work in isolation. Reusing application state after a wall-clock rewind suppresses satellite fleet propagation; sample isolation or a complete native lifecycle reset is required before capture acceptance."
+}

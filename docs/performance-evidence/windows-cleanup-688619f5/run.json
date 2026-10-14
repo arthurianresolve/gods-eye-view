@@ -1,0 +1,76 @@
+{
+  "sourceCommit": "688619f5d1159fb9119a90e0eeeefae1e30ac7c1",
+  "node": "v24.16.0",
+  "environment": "local Windows",
+  "startedAt": "2026-10-13T20:45:18.123044+00:00",
+  "command": [
+    "node",
+    "scripts/run-unit-tests.mjs"
+  ],
+  "status": "completed",
+  "exitCode": 0,
+  "finishedAt": "2026-10-13T20:55:19.692997+00:00",
+  "sourceUnchanged": true,
+  "counts": [
+    [
+      "tests",
+      "7819"
+    ],
+    [
+      "pass",
+      "7809"
+    ],
+    [
+      "fail",
+      "0"
+    ],
+    [
+      "cancelled",
+      "0"
+    ],
+    [
+      "skipped",
+      "10"
+    ],
+    [
+      "tests",
+      "1"
+    ],
+    [
+      "pass",
+      "1"
+    ],
+    [
+      "fail",
+      "0"
+    ],
+    [
+      "cancelled",
+      "0"
+    ],
+    [
+      "skipped",
+      "0"
+    ],
+    [
+      "tests",
+      "13"
+    ],
+    [
+      "pass",
+      "13"
+    ],
+    [
+      "fail",
+      "0"
+    ],
+    [
+      "cancelled",
+      "0"
+    ],
+    [
+      "skipped",
+      "0"
+    ]
+  ]
+}

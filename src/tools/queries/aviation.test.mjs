@@ -78,7 +78,8 @@ test('aircraft in an area are filtered, nearest first, with source details', asy
     ['bbb222', 'aaa111'],
   );
   assert.deepEqual(aircraft.calls[0], { latitude: 37.6, longitude: -122.3 });
-  assert.deepEqual(result.data.rows[1], {
+  const { evidence_ref: evidenceRef, ...row } = result.data.rows[1];
+  assert.deepEqual(row, {
     id: 'aaa111',
     callsign: 'UAL123',
     lat: 37.7,
@@ -95,6 +96,17 @@ test('aircraft in an area are filtered, nearest first, with source details', asy
     last_contact: '2026-01-01T00:00:05.000Z',
     distance_km: 14.2,
   });
+  assert.equal(evidenceRef.source, 'Test feed');
+  assert.equal(evidenceRef.observed_at, Date.UTC(2026, 0, 1));
+  assert.equal(evidenceRef.method, 'observed');
+  assert.ok(Number.isFinite(evidenceRef.received_at));
+  assert.equal(
+    result.data.evidence_scope.area,
+    '60 km around 37.600, -122.300',
+  );
+  assert.equal(result.data.evidence_scope.count, 2);
+  assert.equal(result.data.evidence_scope.sourceSnapshotCount, 3);
+  assert.equal(result.data.evidence_scope.completeness, 'complete');
   assert.equal(result.data.source, 'Test feed');
   assert.equal(result.data.observed_at, '2026-01-01T00:00:00.000Z');
 

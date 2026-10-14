@@ -1,0 +1,26 @@
+{
+  "reviewedAt": "2026-10-13T03:02:06.678Z",
+  "sourceCommit": "f24b68ad3e812b5b6bee6fa1e7af3a794a03d6f8",
+  "integrationCommit": "9b99a4df2786c480e4c17bc489a67144ca7baa3f",
+  "fixtureId": "austin-map-streaming-synthetic-v1",
+  "manifestSha256": "2bdeb8dbcaa4570b735d0bda4594173df14d43d1d0d8f5486de34d125862183d",
+  "assetCount": 71,
+  "totalBytes": 1948777,
+  "focusedTests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "scope": "Node corpus, native Cesium terrain/tileset/ArcGIS metadata parsing and sharp-backed probe image decode; no browser or GPU acceptance",
+  "negativeControls": [
+    "modified/missing/truncated assets",
+    "out-of-bound inventory",
+    "zero terrain horizon sentinel",
+    "injected image decode failure despite successful HTTP response"
+  ],
+  "remaining": [
+    "actual application route interception",
+    "browser image decoding and rendered coverage",
+    "build-profile receipt binding",
+    "matched baseline/candidate captures"
+  ]
+}

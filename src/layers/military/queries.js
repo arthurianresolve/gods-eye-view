@@ -166,6 +166,20 @@ export function createQueries({
       return t || null;
     };
     const callsign = text(info?.callsign);
+    const provenance = {
+      sourceId: text(info?.sourceId),
+      sourceRecordId: text(info?.sourceReference),
+      positionObservedAtMs: num(info?.positionObservedAtMs),
+      receivedAtMs: num(info?.receivedAtMs),
+      sourceSnapshotObservedAtMs: num(info?.sourceSnapshotObservedAtMs),
+      sourceFreshness: text(info?.sourceFreshness),
+      sourceCoverage: text(info?.sourceCoverage),
+      sourceComplete:
+        typeof info?.sourceComplete === 'boolean' ? info.sourceComplete : null,
+    };
+    const hasProvenance = Object.values(provenance).some(
+      (value) => value !== null,
+    );
     return {
       id: callsign || text(info?.registration) || icao24,
       icao24,
@@ -189,6 +203,7 @@ export function createQueries({
       operator: text(info?.operator),
       routeOrigin: null,
       routeDestination: null,
+      ...(hasProvenance ? { provenance } : {}),
     };
   }
   const methods = {

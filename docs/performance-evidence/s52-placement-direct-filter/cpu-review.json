@@ -1,0 +1,255 @@
+{
+  "schema": "gev-placement-cpu-independent-review/v1",
+  "reviewedAt": "2026-10-11T01:43:16.978Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101751521",
+  "candidateCommit": "4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5",
+  "baselineCommit": "72694089e7fa0fa414042cde48765e1418a70d7e",
+  "rawReportSha256": "f90c01e73b013c2293b0d7f0abff3cc3972e96955b6e53500788d0e1e16c6c6e",
+  "verified": {
+    "terminalRunAndExactCommits": true,
+    "sourceFixtureLockAndHarnessGitHashes": true,
+    "unchangedPreviouslyReviewedAdapter": true,
+    "allFortyPairsRecomputed": true,
+    "allBeforeAfterConditionsAndRepeatTrajectoriesMatch": true,
+    "instrumentationDisabledLatencyOnly": true
+  },
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "linux",
+    "osRelease": "6.17.0-1022-azure",
+    "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "conditions": {
+    "warmupFrames": 3000,
+    "pairs": 5,
+    "sampleFrames": 600,
+    "samplesPerProcess": 10,
+    "measuredFramesPerProcess": 6000,
+    "virtualFrameMs": 16,
+    "latencyUsesForcedGc": false,
+    "cadence": "0: fixed after first tick; 1: every tick; 60: every 960 ms of virtual time"
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entries": 250,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 3.336538742517692,
+      "minDeltaPercent": 1.5118287325310176,
+      "maxDeltaPercent": 6.141949834926619,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.18234731833332565,
+          "candidate": 0.18698351166667787,
+          "deltaPercent": 2.5425070002276673
+        },
+        "placement": {
+          "baseline": 0.04437623000000485,
+          "candidate": 0.04445218499999707,
+          "deltaPercent": 0.17116145285935858
+        },
+        "paint": {
+          "baseline": 0.05171080166667328,
+          "candidate": 0.05214168666665728,
+          "deltaPercent": 0.8332591762190589
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 2.3633442585115016,
+      "minDeltaPercent": 0.2170867675385102,
+      "maxDeltaPercent": 3.6459098205000817,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.2585798799999884,
+          "candidate": 0.2655476133333453,
+          "deltaPercent": 2.6946154253599586
+        },
+        "placement": {
+          "baseline": 0.06861517833333133,
+          "candidate": 0.06945720833333249,
+          "deltaPercent": 1.2271774561462
+        },
+        "paint": {
+          "baseline": 0.11787843833333075,
+          "candidate": 0.11901967499999652,
+          "deltaPercent": 0.9681470867798803
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -1.9009999872042327,
+      "minDeltaPercent": -3.6364092416486304,
+      "maxDeltaPercent": 0.05719990970132205,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.8165889616666906,
+          "candidate": 0.7916062500000104,
+          "deltaPercent": -3.059398649681655
+        },
+        "placement": {
+          "baseline": 0.3467478433332932,
+          "candidate": 0.33433052500010185,
+          "deltaPercent": -3.581080191825703
+        },
+        "paint": {
+          "baseline": 0.6729388999999901,
+          "candidate": 0.6558093583332781,
+          "deltaPercent": -2.545482460103321
+        }
+      }
+    },
+    {
+      "profile": "phase6-detection",
+      "entries": 5000,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 0.19979839728028193,
+      "minDeltaPercent": -1.1576441985978514,
+      "maxDeltaPercent": 0.8960113935611691,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.0023420099999505815,
+          "candidate": 0.0023334316666235584,
+          "deltaPercent": -0.36628081550480474
+        },
+        "placement": {
+          "baseline": 0.001506598333329142,
+          "candidate": 0.0014452816666319752,
+          "deltaPercent": -4.069874852554422
+        },
+        "paint": {
+          "baseline": 1.8592044166666861,
+          "candidate": 1.8682631183333493,
+          "deltaPercent": 0.48723537796366845
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -30.65271236601931,
+      "minDeltaPercent": -30.966325108513338,
+      "maxDeltaPercent": -29.41293058272353,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.22824918499998906,
+          "candidate": 0.1033480266666796,
+          "deltaPercent": -54.7214038610107
+        },
+        "placement": {
+          "baseline": 0.06262590499999836,
+          "candidate": 0.06244630666667338,
+          "deltaPercent": -0.2867796215080265
+        },
+        "paint": {
+          "baseline": 0.11553768833333077,
+          "candidate": 0.11746255666666987,
+          "deltaPercent": 1.666009040951022
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -22.927818700332182,
+      "minDeltaPercent": -25.319563967676306,
+      "maxDeltaPercent": -20.069241766588508,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.67819913000003,
+          "candidate": 0.3844636666666717,
+          "deltaPercent": -43.31109409316778
+        },
+        "placement": {
+          "baseline": 0.23492611166670335,
+          "candidate": 0.2298294550000143,
+          "deltaPercent": -2.169472192993094
+        },
+        "paint": {
+          "baseline": 0.37695108000001104,
+          "candidate": 0.3812126149999843,
+          "deltaPercent": 1.1305273352640866
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -31.11190393661265,
+      "minDeltaPercent": -32.37555176363399,
+      "maxDeltaPercent": -28.210514480846214,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.24133280500000182,
+          "candidate": 0.10537607333334563,
+          "deltaPercent": -56.33578562460879
+        },
+        "placement": {
+          "baseline": 0.06563827166669246,
+          "candidate": 0.06705003666666698,
+          "deltaPercent": 2.1508259802198726
+        },
+        "paint": {
+          "baseline": 0.11599574000000681,
+          "candidate": 0.11671154333334471,
+          "deltaPercent": 0.6170945013479479
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -17.646603301314336,
+      "minDeltaPercent": -18.81739519019936,
+      "maxDeltaPercent": -16.933636141377118,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.699633938333327,
+          "candidate": 0.3987245183333774,
+          "deltaPercent": -43.009551640216046
+        },
+        "placement": {
+          "baseline": 0.32407658000009176,
+          "candidate": 0.31861310166666346,
+          "deltaPercent": -1.6858602782795273
+        },
+        "paint": {
+          "baseline": 0.6539750250000361,
+          "candidate": 0.6634373399999822,
+          "deltaPercent": 1.4468924099885205
+        }
+      }
+    }
+  ],
+  "disposition": "Independent recomputation complete; review measured workload changes before accepting or rejecting promotion.",
+  "limitations": [
+    "Synchronous Node algorithm with mock Canvas2D; not GPU, browser painting, full-scene motion p95, or final S52 acceptance.",
+    "Phase timings are separate instrumented samples and are used only for attribution."
+  ]
+}

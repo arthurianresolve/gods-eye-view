@@ -1,0 +1,2913 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "af821c5ce9080ce726e258248135105d3a510945",
+  "harnessSha": "af821c5ce9080ce726e258248135105d3a510945",
+  "captureWorkerAuditMode": "diagnostic",
+  "captureRendererBackend": "macos-native-diagnostic",
+  "comparisonEligible": false,
+  "performanceAcceptanceEligible": false,
+  "sceneFrameDiagnostics": false,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-map-streaming-v1",
+  "startedAt": "2026-10-13T13:24:24.410Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Fixture interception reported 83 errors.",
+      "failureDetails": {
+        "phase": "final-page-health-and-code-path-audit",
+        "pageErrors": [],
+        "interceptionErrors": [
+          "native-asset-not-in-manifest",
+          "native-asset-not-in-manifest",
+          "native-asset-not-in-manifest",
+          "native-asset-not-in-manifest"
+        ],
+        "mapStreamingNativeJourney": {
+          "schema": "gev-map-streaming-native-smoke/v1",
+          "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "fixtureId": "austin-map-streaming-synthetic-v1",
+          "manifestSha256": "798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4",
+          "buildProfile": {
+            "id": "austin-map-streaming-v1",
+            "configurationSha256": "81844cda2a913e69012c1b6dad6d154475f5092ba555f8feec248233d8af1bdd"
+          },
+          "routeId": "austin-map-rightward-v1",
+          "performanceAcceptanceEligible": false,
+          "journey": {
+            "initialStack": "photoreal",
+            "initialState": {
+              "activeStack": "photoreal",
+              "controllerStatus": "ready",
+              "switchOrigin": "manual",
+              "lastError": null,
+              "stackAvailable": true,
+              "globeShown": false,
+              "globeTilesLoaded": true,
+              "globeQueueDiagnostics": {
+                "available": true,
+                "unavailableReason": null,
+                "queueCounts": {
+                  "high": 0,
+                  "medium": 0,
+                  "low": 0,
+                  "total": 0
+                },
+                "renderedTileCount": 0,
+                "sampledTiles": [],
+                "omittedSampledTileCount": 0,
+                "terrainAncestry": {
+                  "available": false,
+                  "unavailableReason": "no-queued-sample",
+                  "sample": null,
+                  "rows": [],
+                  "truncated": false,
+                  "cycleDetected": false,
+                  "unsupportedFields": []
+                }
+              },
+              "terrainProviderClass": "EllipsoidTerrainProvider",
+              "terrainSamples": [
+                {
+                  "longitude": -97.724,
+                  "latitude": 30.27,
+                  "heightM": null
+                },
+                {
+                  "longitude": -97.72,
+                  "latitude": 30.27,
+                  "heightM": null
+                },
+                {
+                  "longitude": -97.716,
+                  "latitude": 30.27,
+                  "heightM": null
+                }
+              ],
+              "imageryLayerCount": 0,
+              "imageryProviderClass": null,
+              "imageryLayerShow": null,
+              "photorealShown": true,
+              "photorealTilesLoaded": true,
+              "photorealReadyContentTiles": 21,
+              "photorealSelectedTiles": 4,
+              "camera": {
+                "longitude": -97.72,
+                "latitude": 30.27,
+                "heightM": 6000.000000000201,
+                "headingRadians": 6.283185307179586,
+                "pitchRadians": -1.5707963267948966
+              },
+              "viewRectangle": {
+                "west": -97.75601533818671,
+                "south": 30.250460353071706,
+                "east": -97.683984661986,
+                "north": 30.28952934981408
+              },
+              "viewport": {
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900
+              },
+              "settings": {
+                "qualityMode": "manual",
+                "densityPct": 75,
+                "detectionMode": "DENSE",
+                "resolutionScale": 1,
+                "antialias": true,
+                "msaaSamples": 4,
+                "fxaa": false,
+                "preserveDrawingBuffer": true,
+                "bloom": false,
+                "bloomIntensity": 0,
+                "sharpen": true,
+                "sharpenIntensity": 49,
+                "visualState": {
+                  "style": "normal",
+                  "bloom": {
+                    "enabled": false,
+                    "intensity": 0,
+                    "version": 2
+                  },
+                  "sharpen": {
+                    "enabled": true,
+                    "intensity": 49
+                  },
+                  "hud": {
+                    "visible": true,
+                    "variant": "tactical"
+                  },
+                  "detection": {
+                    "mode": "DENSE",
+                    "density": 75,
+                    "allocation": "ELASTIC",
+                    "fadePct": 7,
+                    "outsideOpacityPct": 1
+                  },
+                  "scope": {
+                    "enabled": true,
+                    "featherPct": 11
+                  },
+                  "mapStack": "photoreal",
+                  "styleParams": {
+                    "retro": {
+                      "pixelation": 5,
+                      "distortion": 0,
+                      "instability": 0.4
+                    },
+                    "surveillance": {
+                      "gain": 0.55,
+                      "bloom": 0.3,
+                      "scanlineStr": 1,
+                      "pixelation": 2.5
+                    },
+                    "thermal": {
+                      "sensitivity": 0.75,
+                      "bloom": 0.65,
+                      "mode": 0,
+                      "pixelation": 1.5,
+                      "palette": 0
+                    },
+                    "anime": {
+                      "saturation": 1,
+                      "edgeThick": 0.5
+                    },
+                    "noir": {
+                      "contrastAmt": 1.2,
+                      "grainAmt": 0.5,
+                      "vignetteAmt": 0.5
+                    },
+                    "snow": {
+                      "density": 0.6,
+                      "wind": 0.5
+                    }
+                  }
+                },
+                "globeMaximumScreenSpaceError": 2,
+                "tilesetMaximumScreenSpaceError": 16,
+                "tilesetCacheBytes": 1610612736,
+                "tilesetMaximumCacheOverflowBytes": 1073741824
+              },
+              "postRenderElapsedMs": 8101.3000000000175
+            },
+            "transitions": [
+              {
+                "stackId": "photoreal",
+                "scheduledAtMs": 0,
+                "actualStartMs": 0,
+                "settledAtMs": 0,
+                "state": {
+                  "activeStack": "photoreal",
+                  "controllerStatus": "ready",
+                  "switchOrigin": "manual",
+                  "lastError": null,
+                  "stackAvailable": true,
+                  "globeShown": false,
+                  "globeTilesLoaded": true,
+                  "globeQueueDiagnostics": {
+                    "available": true,
+                    "unavailableReason": null,
+                    "queueCounts": {
+                      "high": 0,
+                      "medium": 0,
+                      "low": 0,
+                      "total": 0
+                    },
+                    "renderedTileCount": 0,
+                    "sampledTiles": [],
+                    "omittedSampledTileCount": 0,
+                    "terrainAncestry": {
+                      "available": false,
+                      "unavailableReason": "no-queued-sample",
+                      "sample": null,
+                      "rows": [],
+                      "truncated": false,
+                      "cycleDetected": false,
+                      "unsupportedFields": []
+                    }
+                  },
+                  "terrainProviderClass": "EllipsoidTerrainProvider",
+                  "terrainSamples": [
+                    {
+                      "longitude": -97.724,
+                      "latitude": 30.27,
+                      "heightM": null
+                    },
+                    {
+                      "longitude": -97.72,
+                      "latitude": 30.27,
+                      "heightM": null
+                    },
+                    {
+                      "longitude": -97.716,
+                      "latitude": 30.27,
+                      "heightM": null
+                    }
+                  ],
+                  "imageryLayerCount": 0,
+                  "imageryProviderClass": null,
+                  "imageryLayerShow": null,
+                  "photorealShown": true,
+                  "photorealTilesLoaded": true,
+                  "photorealReadyContentTiles": 21,
+                  "photorealSelectedTiles": 4,
+                  "camera": {
+                    "longitude": -97.72,
+                    "latitude": 30.27,
+                    "heightM": 6000.000000000201,
+                    "headingRadians": 6.283185307179586,
+                    "pitchRadians": -1.5707963267948966
+                  },
+                  "viewRectangle": {
+                    "west": -97.75601533818671,
+                    "south": 30.250460353071706,
+                    "east": -97.683984661986,
+                    "north": 30.28952934981408
+                  },
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "drawingBufferWidth": 1440,
+                    "drawingBufferHeight": 900
+                  },
+                  "settings": {
+                    "qualityMode": "manual",
+                    "densityPct": 75,
+                    "detectionMode": "DENSE",
+                    "resolutionScale": 1,
+                    "antialias": true,
+                    "msaaSamples": 4,
+                    "fxaa": false,
+                    "preserveDrawingBuffer": true,
+                    "bloom": false,
+                    "bloomIntensity": 0,
+                    "sharpen": true,
+                    "sharpenIntensity": 49,
+                    "visualState": {
+                      "style": "normal",
+                      "bloom": {
+                        "enabled": false,
+                        "intensity": 0,
+                        "version": 2
+                      },
+                      "sharpen": {
+                        "enabled": true,
+                        "intensity": 49
+                      },
+                      "hud": {
+                        "visible": true,
+                        "variant": "tactical"
+                      },
+                      "detection": {
+                        "mode": "DENSE",
+                        "density": 75,
+                        "allocation": "ELASTIC",
+                        "fadePct": 7,
+                        "outsideOpacityPct": 1
+                      },
+                      "scope": {
+                        "enabled": true,
+                        "featherPct": 11
+                      },
+                      "mapStack": "photoreal",
+                      "styleParams": {
+                        "retro": {
+                          "pixelation": 5,
+                          "distortion": 0,
+                          "instability": 0.4
+                        },
+                        "surveillance": {
+                          "gain": 0.55,
+                          "bloom": 0.3,
+                          "scanlineStr": 1,
+                          "pixelation": 2.5
+                        },
+                        "thermal": {
+                          "sensitivity": 0.75,
+                          "bloom": 0.65,
+                          "mode": 0,
+                          "pixelation": 1.5,
+                          "palette": 0
+                        },
+                        "anime": {
+                          "saturation": 1,
+                          "edgeThick": 0.5
+                        },
+                        "noir": {
+                          "contrastAmt": 1.2,
+                          "grainAmt": 0.5,
+                          "vignetteAmt": 0.5
+                        },
+                        "snow": {
+                          "density": 0.6,
+                          "wind": 0.5
+                        }
+                      }
+                    },
+                    "globeMaximumScreenSpaceError": 2,
+                    "tilesetMaximumScreenSpaceError": 16,
+                    "tilesetCacheBytes": 1610612736,
+                    "tilesetMaximumCacheOverflowBytes": 1073741824
+                  },
+                  "postRenderElapsedMs": 8101.3000000000175
+                }
+              },
+              {
+                "stackId": "esri-imagery",
+                "scheduledAtMs": 15000,
+                "actualStartMs": 15005.899999999994,
+                "settledAtMs": 16311.299999999988,
+                "state": {
+                  "activeStack": "esri-imagery",
+                  "controllerStatus": "ready",
+                  "switchOrigin": "manual",
+                  "lastError": null,
+                  "stackAvailable": true,
+                  "globeShown": true,
+                  "globeTilesLoaded": true,
+                  "globeQueueDiagnostics": {
+                    "available": true,
+                    "unavailableReason": null,
+                    "queueCounts": {
+                      "high": 0,
+                      "medium": 0,
+                      "low": 0,
+                      "total": 0
+                    },
+                    "renderedTileCount": 25,
+                    "sampledTiles": [],
+                    "omittedSampledTileCount": 0,
+                    "terrainAncestry": {
+                      "available": false,
+                      "unavailableReason": "no-queued-sample",
+                      "sample": null,
+                      "rows": [],
+                      "truncated": false,
+                      "cycleDetected": false,
+                      "unsupportedFields": []
+                    }
+                  },
+                  "terrainProviderClass": "CesiumTerrainProvider",
+                  "terrainSamples": [
+                    {
+                      "longitude": -97.70371606886671,
+                      "latitude": 30.269998429038626,
+                      "heightM": 370.72154192907783
+                    },
+                    {
+                      "longitude": -97.6997160688667,
+                      "latitude": 30.269998429038626,
+                      "heightM": 362.8762137759575
+                    },
+                    {
+                      "longitude": -97.6957160688667,
+                      "latitude": 30.269998429038626,
+                      "heightM": 354.9962140195784
+                    }
+                  ],
+                  "imageryLayerCount": 1,
+                  "imageryProviderClass": "ArcGisMapServerImageryProvider",
+                  "imageryLayerShow": true,
+                  "photorealShown": false,
+                  "photorealTilesLoaded": true,
+                  "photorealReadyContentTiles": 21,
+                  "photorealSelectedTiles": 4,
+                  "camera": {
+                    "longitude": -97.6997160688667,
+                    "latitude": 30.269998429038626,
+                    "heightM": 6000.298665983485,
+                    "headingRadians": 0.00017845433909169373,
+                    "pitchRadians": -1.5704905733166994
+                  },
+                  "viewRectangle": {
+                    "west": -97.73573316836476,
+                    "south": 30.250470943832852,
+                    "east": -97.66369093147212,
+                    "north": 30.289553042430285
+                  },
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "drawingBufferWidth": 1440,
+                    "drawingBufferHeight": 900
+                  },
+                  "settings": {
+                    "qualityMode": "manual",
+                    "densityPct": 75,
+                    "detectionMode": "DENSE",
+                    "resolutionScale": 1,
+                    "antialias": true,
+                    "msaaSamples": 4,
+                    "fxaa": false,
+                    "preserveDrawingBuffer": true,
+                    "bloom": false,
+                    "bloomIntensity": 0,
+                    "sharpen": true,
+                    "sharpenIntensity": 49,
+                    "visualState": {
+                      "style": "normal",
+                      "bloom": {
+                        "enabled": false,
+                        "intensity": 0,
+                        "version": 2
+                      },
+                      "sharpen": {
+                        "enabled": true,
+                        "intensity": 49
+                      },
+                      "hud": {
+                        "visible": true,
+                        "variant": "tactical"
+                      },
+                      "detection": {
+                        "mode": "DENSE",
+                        "density": 75,
+                        "allocation": "ELASTIC",
+                        "fadePct": 7,
+                        "outsideOpacityPct": 1
+                      },
+                      "scope": {
+                        "enabled": true,
+                        "featherPct": 11
+                      },
+                      "mapStack": "esri-imagery",
+                      "styleParams": {
+                        "retro": {
+                          "pixelation": 5,
+                          "distortion": 0,
+                          "instability": 0.4
+                        },
+                        "surveillance": {
+                          "gain": 0.55,
+                          "bloom": 0.3,
+                          "scanlineStr": 1,
+                          "pixelation": 2.5
+                        },
+                        "thermal": {
+                          "sensitivity": 0.75,
+                          "bloom": 0.65,
+                          "mode": 0,
+                          "pixelation": 1.5,
+                          "palette": 0
+                        },
+                        "anime": {
+                          "saturation": 1,
+                          "edgeThick": 0.5
+                        },
+                        "noir": {
+                          "contrastAmt": 1.2,
+                          "grainAmt": 0.5,
+                          "vignetteAmt": 0.5
+                        },
+                        "snow": {
+                          "density": 0.6,
+                          "wind": 0.5
+                        }
+                      }
+                    },
+                    "globeMaximumScreenSpaceError": 2,
+                    "tilesetMaximumScreenSpaceError": 16,
+                    "tilesetCacheBytes": 1610612736,
+                    "tilesetMaximumCacheOverflowBytes": 1073741824
+                  },
+                  "postRenderElapsedMs": 24413.20000000001
+                }
+              },
+              {
+                "stackId": "osm",
+                "scheduledAtMs": 30000,
+                "actualStartMs": 30007.099999999977,
+                "settledAtMs": 30364,
+                "state": {
+                  "activeStack": "osm",
+                  "controllerStatus": "ready",
+                  "switchOrigin": "manual",
+                  "lastError": null,
+                  "stackAvailable": true,
+                  "globeShown": true,
+                  "globeTilesLoaded": true,
+                  "globeQueueDiagnostics": {
+                    "available": true,
+                    "unavailableReason": null,
+                    "queueCounts": {
+                      "high": 0,
+                      "medium": 0,
+                      "low": 0,
+                      "total": 0
+                    },
+                    "renderedTileCount": 1,
+                    "sampledTiles": [],
+                    "omittedSampledTileCount": 0,
+                    "terrainAncestry": {
+                      "available": false,
+                      "unavailableReason": "no-queued-sample",
+                      "sample": null,
+                      "rows": [],
+                      "truncated": false,
+                      "cycleDetected": false,
+                      "unsupportedFields": []
+                    }
+                  },
+                  "terrainProviderClass": "CesiumTerrainProvider",
+                  "terrainSamples": [
+                    {
+                      "longitude": -97.6862115371961,
+                      "latitude": 30.269994547700435,
+                      "heightM": 336.26255996075616
+                    },
+                    {
+                      "longitude": -97.6822115371961,
+                      "latitude": 30.269994547700435,
+                      "heightM": 334.103960679919
+                    },
+                    {
+                      "longitude": -97.67821153719609,
+                      "latitude": 30.269994547700435,
+                      "heightM": 332.04501212965124
+                    }
+                  ],
+                  "imageryLayerCount": 1,
+                  "imageryProviderClass": "OpenStreetMapImageryProvider",
+                  "imageryLayerShow": true,
+                  "photorealShown": false,
+                  "photorealTilesLoaded": true,
+                  "photorealReadyContentTiles": 21,
+                  "photorealSelectedTiles": 4,
+                  "camera": {
+                    "longitude": -97.6822115371961,
+                    "latitude": 30.269994547700435,
+                    "heightM": 6001.03657331384,
+                    "headingRadians": 0.00033245601412446035,
+                    "pitchRadians": -1.5702267155993295
+                  },
+                  "viewRectangle": {
+                    "west": -97.71823303590142,
+                    "south": 30.250475993917895,
+                    "east": -97.64617504997221,
+                    "north": 30.289572535056184
+                  },
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "drawingBufferWidth": 1440,
+                    "drawingBufferHeight": 900
+                  },
+                  "settings": {
+                    "qualityMode": "manual",
+                    "densityPct": 75,
+                    "detectionMode": "DENSE",
+                    "resolutionScale": 1,
+                    "antialias": true,
+                    "msaaSamples": 4,
+                    "fxaa": false,
+                    "preserveDrawingBuffer": true,
+                    "bloom": false,
+                    "bloomIntensity": 0,
+                    "sharpen": true,
+                    "sharpenIntensity": 49,
+                    "visualState": {
+                      "style": "normal",
+                      "bloom": {
+                        "enabled": false,
+                        "intensity": 0,
+                        "version": 2
+                      },
+                      "sharpen": {
+                        "enabled": true,
+                        "intensity": 49
+                      },
+                      "hud": {
+                        "visible": true,
+                        "variant": "tactical"
+                      },
+                      "detection": {
+                        "mode": "DENSE",
+                        "density": 75,
+                        "allocation": "ELASTIC",
+                        "fadePct": 7,
+                        "outsideOpacityPct": 1
+                      },
+                      "scope": {
+                        "enabled": true,
+                        "featherPct": 11
+                      },
+                      "mapStack": "osm",
+                      "styleParams": {
+                        "retro": {
+                          "pixelation": 5,
+                          "distortion": 0,
+                          "instability": 0.4
+                        },
+                        "surveillance": {
+                          "gain": 0.55,
+                          "bloom": 0.3,
+                          "scanlineStr": 1,
+                          "pixelation": 2.5
+                        },
+                        "thermal": {
+                          "sensitivity": 0.75,
+                          "bloom": 0.65,
+                          "mode": 0,
+                          "pixelation": 1.5,
+                          "palette": 0
+                        },
+                        "anime": {
+                          "saturation": 1,
+                          "edgeThick": 0.5
+                        },
+                        "noir": {
+                          "contrastAmt": 1.2,
+                          "grainAmt": 0.5,
+                          "vignetteAmt": 0.5
+                        },
+                        "snow": {
+                          "density": 0.6,
+                          "wind": 0.5
+                        }
+                      }
+                    },
+                    "globeMaximumScreenSpaceError": 2,
+                    "tilesetMaximumScreenSpaceError": 16,
+                    "tilesetCacheBytes": 1610612736,
+                    "tilesetMaximumCacheOverflowBytes": 1073741824
+                  },
+                  "postRenderElapsedMs": 38466
+                }
+              },
+              {
+                "stackId": "photoreal",
+                "scheduledAtMs": 45000,
+                "actualStartMs": 45020.20000000001,
+                "settledAtMs": 45053.29999999999,
+                "state": {
+                  "activeStack": "photoreal",
+                  "controllerStatus": "ready",
+                  "switchOrigin": "manual",
+                  "lastError": null,
+                  "stackAvailable": true,
+                  "globeShown": false,
+                  "globeTilesLoaded": true,
+                  "globeQueueDiagnostics": {
+                    "available": true,
+                    "unavailableReason": null,
+                    "queueCounts": {
+                      "high": 0,
+                      "medium": 0,
+                      "low": 0,
+                      "total": 0
+                    },
+                    "renderedTileCount": 4,
+                    "sampledTiles": [],
+                    "omittedSampledTileCount": 0,
+                    "terrainAncestry": {
+                      "available": false,
+                      "unavailableReason": "no-queued-sample",
+                      "sample": null,
+                      "rows": [],
+                      "truncated": false,
+                      "cycleDetected": false,
+                      "unsupportedFields": []
+                    }
+                  },
+                  "terrainProviderClass": "CesiumTerrainProvider",
+                  "terrainSamples": [
+                    {
+                      "longitude": -97.6678972907111,
+                      "latitude": 30.26998798209029,
+                      "heightM": 348.0880557739527
+                    },
+                    {
+                      "longitude": -97.66389729071109,
+                      "latitude": 30.26998798209029,
+                      "heightM": 355.94155199650015
+                    },
+                    {
+                      "longitude": -97.6598972907111,
+                      "latitude": 30.26998798209029,
+                      "heightM": 363.82032280037436
+                    }
+                  ],
+                  "imageryLayerCount": 0,
+                  "imageryProviderClass": null,
+                  "imageryLayerShow": null,
+                  "photorealShown": true,
+                  "photorealTilesLoaded": true,
+                  "photorealReadyContentTiles": 21,
+                  "photorealSelectedTiles": 5,
+                  "camera": {
+                    "longitude": -97.66389729071109,
+                    "latitude": 30.26998798209029,
+                    "heightM": 6002.284806107268,
+                    "headingRadians": 0.0004935813873672146,
+                    "pitchRadians": -1.5699506524706353
+                  },
+                  "viewRectangle": {
+                    "west": -97.69992624664565,
+                    "south": 30.250477225913773,
+                    "east": -97.62784605804332,
+                    "north": 30.28959198897794
+                  },
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "drawingBufferWidth": 1440,
+                    "drawingBufferHeight": 900
+                  },
+                  "settings": {
+                    "qualityMode": "manual",
+                    "densityPct": 75,
+                    "detectionMode": "DENSE",
+                    "resolutionScale": 1,
+                    "antialias": true,
+                    "msaaSamples": 4,
+                    "fxaa": false,
+                    "preserveDrawingBuffer": true,
+                    "bloom": false,
+                    "bloomIntensity": 0,
+                    "sharpen": true,
+                    "sharpenIntensity": 49,
+                    "visualState": {
+                      "style": "normal",
+                      "bloom": {
+                        "enabled": false,
+                        "intensity": 0,
+                        "version": 2
+                      },
+                      "sharpen": {
+                        "enabled": true,
+                        "intensity": 49
+                      },
+                      "hud": {
+                        "visible": true,
+                        "variant": "tactical"
+                      },
+                      "detection": {
+                        "mode": "DENSE",
+                        "density": 75,
+                        "allocation": "ELASTIC",
+                        "fadePct": 7,
+                        "outsideOpacityPct": 1
+                      },
+                      "scope": {
+                        "enabled": true,
+                        "featherPct": 11
+                      },
+                      "mapStack": "photoreal",
+                      "styleParams": {
+                        "retro": {
+                          "pixelation": 5,
+                          "distortion": 0,
+                          "instability": 0.4
+                        },
+                        "surveillance": {
+                          "gain": 0.55,
+                          "bloom": 0.3,
+                          "scanlineStr": 1,
+                          "pixelation": 2.5
+                        },
+                        "thermal": {
+                          "sensitivity": 0.75,
+                          "bloom": 0.65,
+                          "mode": 0,
+                          "pixelation": 1.5,
+                          "palette": 0
+                        },
+                        "anime": {
+                          "saturation": 1,
+                          "edgeThick": 0.5
+                        },
+                        "noir": {
+                          "contrastAmt": 1.2,
+                          "grainAmt": 0.5,
+                          "vignetteAmt": 0.5
+                        },
+                        "snow": {
+                          "density": 0.6,
+                          "wind": 0.5
+                        }
+                      }
+                    },
+                    "globeMaximumScreenSpaceError": 2,
+                    "tilesetMaximumScreenSpaceError": 16,
+                    "tilesetCacheBytes": 1610612736,
+                    "tilesetMaximumCacheOverflowBytes": 1073741824
+                  },
+                  "postRenderElapsedMs": 53155
+                }
+              }
+            ],
+            "route": {
+              "id": "austin-map-rightward-v1",
+              "durationMs": 60000,
+              "elapsedMs": 60088.59999999998,
+              "startupFlightDelayMs": 500,
+              "startupFlightPreparationElapsedMs": 511.1000000000058,
+              "startupFlightCancelled": true,
+              "moveRightMetersPerSecond": 120,
+              "headingRadians": 0,
+              "pitchRadians": -1.5707963267948966,
+              "start": {
+                "longitude": -97.72,
+                "latitude": 30.27,
+                "heightM": 6000.000000000201,
+                "headingRadians": 6.283185307179586,
+                "pitchRadians": -1.5707963267948966
+              },
+              "end": {
+                "longitude": -97.6452449138987,
+                "latitude": 30.269978662537365,
+                "heightM": 6004.056610674536,
+                "headingRadians": 0.0006576815303178662,
+                "pitchRadians": -1.569669492428309
+              },
+              "declaredBounds": {
+                "west": -97.82,
+                "south": 30.2,
+                "east": -97.58,
+                "north": 30.34
+              },
+              "observedFrustumUnion": {
+                "west": -97.75601533818671,
+                "south": 30.250460353071706,
+                "east": -97.60917564387547,
+                "north": 30.28961081974927
+              },
+              "observedFrustumSamples": 2543,
+              "finalPostRenderObserved": true
+            },
+            "finalState": {
+              "activeStack": "photoreal",
+              "controllerStatus": "ready",
+              "switchOrigin": "manual",
+              "lastError": null,
+              "stackAvailable": true,
+              "globeShown": false,
+              "globeTilesLoaded": true,
+              "globeQueueDiagnostics": {
+                "available": true,
+                "unavailableReason": null,
+                "queueCounts": {
+                  "high": 0,
+                  "medium": 0,
+                  "low": 0,
+                  "total": 0
+                },
+                "renderedTileCount": 4,
+                "sampledTiles": [],
+                "omittedSampledTileCount": 0,
+                "terrainAncestry": {
+                  "available": false,
+                  "unavailableReason": "no-queued-sample",
+                  "sample": null,
+                  "rows": [],
+                  "truncated": false,
+                  "cycleDetected": false,
+                  "unsupportedFields": []
+                }
+              },
+              "terrainProviderClass": "CesiumTerrainProvider",
+              "terrainSamples": [
+                {
+                  "longitude": -97.6492449138987,
+                  "latitude": 30.269978662537365,
+                  "heightM": 384.79320684971077
+                },
+                {
+                  "longitude": -97.6452449138987,
+                  "latitude": 30.269978662537365,
+                  "heightM": 390.7492220648349
+                },
+                {
+                  "longitude": -97.64124491389869,
+                  "latitude": 30.269978662537365,
+                  "heightM": 395.3202233583932
+                }
+              ],
+              "imageryLayerCount": 0,
+              "imageryProviderClass": null,
+              "imageryLayerShow": null,
+              "photorealShown": true,
+              "photorealTilesLoaded": true,
+              "photorealReadyContentTiles": 21,
+              "photorealSelectedTiles": 4,
+              "camera": {
+                "longitude": -97.6452449138987,
+                "latitude": 30.269978662537365,
+                "heightM": 6004.056610674536,
+                "headingRadians": 0.0006576815303178662,
+                "pitchRadians": -1.569669492428309
+              },
+              "viewRectangle": {
+                "west": -97.68128446575496,
+                "south": 30.250474223778554,
+                "east": -97.60917564387547,
+                "north": 30.28961081974927
+              },
+              "viewport": {
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900
+              },
+              "settings": {
+                "qualityMode": "manual",
+                "densityPct": 75,
+                "detectionMode": "DENSE",
+                "resolutionScale": 1,
+                "antialias": true,
+                "msaaSamples": 4,
+                "fxaa": false,
+                "preserveDrawingBuffer": true,
+                "bloom": false,
+                "bloomIntensity": 0,
+                "sharpen": true,
+                "sharpenIntensity": 49,
+                "visualState": {
+                  "style": "normal",
+                  "bloom": {
+                    "enabled": false,
+                    "intensity": 0,
+                    "version": 2
+                  },
+                  "sharpen": {
+                    "enabled": true,
+                    "intensity": 49
+                  },
+                  "hud": {
+                    "visible": true,
+                    "variant": "tactical"
+                  },
+                  "detection": {
+                    "mode": "DENSE",
+                    "density": 75,
+                    "allocation": "ELASTIC",
+                    "fadePct": 7,
+                    "outsideOpacityPct": 1
+                  },
+                  "scope": {
+                    "enabled": true,
+                    "featherPct": 11
+                  },
+                  "mapStack": "photoreal",
+                  "styleParams": {
+                    "retro": {
+                      "pixelation": 5,
+                      "distortion": 0,
+                      "instability": 0.4
+                    },
+                    "surveillance": {
+                      "gain": 0.55,
+                      "bloom": 0.3,
+                      "scanlineStr": 1,
+                      "pixelation": 2.5
+                    },
+                    "thermal": {
+                      "sensitivity": 0.75,
+                      "bloom": 0.65,
+                      "mode": 0,
+                      "pixelation": 1.5,
+                      "palette": 0
+                    },
+                    "anime": {
+                      "saturation": 1,
+                      "edgeThick": 0.5
+                    },
+                    "noir": {
+                      "contrastAmt": 1.2,
+                      "grainAmt": 0.5,
+                      "vignetteAmt": 0.5
+                    },
+                    "snow": {
+                      "density": 0.6,
+                      "wind": 0.5
+                    }
+                  }
+                },
+                "globeMaximumScreenSpaceError": 2,
+                "tilesetMaximumScreenSpaceError": 16,
+                "tilesetCacheBytes": 1610612736,
+                "tilesetMaximumCacheOverflowBytes": 1073741824
+              },
+              "postRenderElapsedMs": 68190.10000000003
+            },
+            "settingsBefore": {
+              "qualityMode": "manual",
+              "densityPct": 75,
+              "detectionMode": "DENSE",
+              "resolutionScale": 1,
+              "antialias": true,
+              "msaaSamples": 4,
+              "fxaa": false,
+              "preserveDrawingBuffer": true,
+              "bloom": false,
+              "bloomIntensity": 0,
+              "sharpen": true,
+              "sharpenIntensity": 49,
+              "visualState": {
+                "style": "normal",
+                "bloom": {
+                  "enabled": false,
+                  "intensity": 0,
+                  "version": 2
+                },
+                "sharpen": {
+                  "enabled": true,
+                  "intensity": 49
+                },
+                "hud": {
+                  "visible": true,
+                  "variant": "tactical"
+                },
+                "detection": {
+                  "mode": "DENSE",
+                  "density": 75,
+                  "allocation": "ELASTIC",
+                  "fadePct": 7,
+                  "outsideOpacityPct": 1
+                },
+                "scope": {
+                  "enabled": true,
+                  "featherPct": 11
+                },
+                "mapStack": "photoreal",
+                "styleParams": {
+                  "retro": {
+                    "pixelation": 5,
+                    "distortion": 0,
+                    "instability": 0.4
+                  },
+                  "surveillance": {
+                    "gain": 0.55,
+                    "bloom": 0.3,
+                    "scanlineStr": 1,
+                    "pixelation": 2.5
+                  },
+                  "thermal": {
+                    "sensitivity": 0.75,
+                    "bloom": 0.65,
+                    "mode": 0,
+                    "pixelation": 1.5,
+                    "palette": 0
+                  },
+                  "anime": {
+                    "saturation": 1,
+                    "edgeThick": 0.5
+                  },
+                  "noir": {
+                    "contrastAmt": 1.2,
+                    "grainAmt": 0.5,
+                    "vignetteAmt": 0.5
+                  },
+                  "snow": {
+                    "density": 0.6,
+                    "wind": 0.5
+                  }
+                }
+              },
+              "globeMaximumScreenSpaceError": 2,
+              "tilesetMaximumScreenSpaceError": 16,
+              "tilesetCacheBytes": 1610612736,
+              "tilesetMaximumCacheOverflowBytes": 1073741824
+            },
+            "settingsAfter": {
+              "qualityMode": "manual",
+              "densityPct": 75,
+              "detectionMode": "DENSE",
+              "resolutionScale": 1,
+              "antialias": true,
+              "msaaSamples": 4,
+              "fxaa": false,
+              "preserveDrawingBuffer": true,
+              "bloom": false,
+              "bloomIntensity": 0,
+              "sharpen": true,
+              "sharpenIntensity": 49,
+              "visualState": {
+                "style": "normal",
+                "bloom": {
+                  "enabled": false,
+                  "intensity": 0,
+                  "version": 2
+                },
+                "sharpen": {
+                  "enabled": true,
+                  "intensity": 49
+                },
+                "hud": {
+                  "visible": true,
+                  "variant": "tactical"
+                },
+                "detection": {
+                  "mode": "DENSE",
+                  "density": 75,
+                  "allocation": "ELASTIC",
+                  "fadePct": 7,
+                  "outsideOpacityPct": 1
+                },
+                "scope": {
+                  "enabled": true,
+                  "featherPct": 11
+                },
+                "mapStack": "photoreal",
+                "styleParams": {
+                  "retro": {
+                    "pixelation": 5,
+                    "distortion": 0,
+                    "instability": 0.4
+                  },
+                  "surveillance": {
+                    "gain": 0.55,
+                    "bloom": 0.3,
+                    "scanlineStr": 1,
+                    "pixelation": 2.5
+                  },
+                  "thermal": {
+                    "sensitivity": 0.75,
+                    "bloom": 0.65,
+                    "mode": 0,
+                    "pixelation": 1.5,
+                    "palette": 0
+                  },
+                  "anime": {
+                    "saturation": 1,
+                    "edgeThick": 0.5
+                  },
+                  "noir": {
+                    "contrastAmt": 1.2,
+                    "grainAmt": 0.5,
+                    "vignetteAmt": 0.5
+                  },
+                  "snow": {
+                    "density": 0.6,
+                    "wind": 0.5
+                  }
+                }
+              },
+              "globeMaximumScreenSpaceError": 2,
+              "tilesetMaximumScreenSpaceError": 16,
+              "tilesetCacheBytes": 1610612736,
+              "tilesetMaximumCacheOverflowBytes": 1073741824
+            },
+            "terrainEvidence": {
+              "providerClass": "CesiumTerrainProvider",
+              "sampleCount": 6,
+              "minHeightM": 332.04501212965124,
+              "maxHeightM": 370.72154192907783
+            }
+          },
+          "layerPopulation": {
+            "schema": "gev-map-smoke-layer-population/v1",
+            "scope": "Observed application layer enabled states and source counts; map smoke leaves defaults unchanged and does not assume all non-map layers are disabled.",
+            "before": [
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-radar",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "after": [
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-radar",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "enabledLayerIds": []
+          },
+          "delivery": {
+            "schema": "gev-map-streaming-fixture-delivery/v1",
+            "fixtureId": "austin-map-streaming-synthetic-v1",
+            "manifestSha256": "798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4",
+            "appOrigin": "http://127.0.0.1:49194",
+            "status": "disposed",
+            "requestedCount": 77,
+            "fulfilledAckCount": 77,
+            "cancelledCount": 0,
+            "pendingCount": 0,
+            "unexpectedFulfillmentCount": 0,
+            "errorObservationCount": 83,
+            "omittedErrorObservationCount": 0,
+            "omittedErrorKindCount": 0,
+            "missingAssetPathEvidence": {
+              "observationCount": 83,
+              "uniquePathCount": 83,
+              "omittedPathCount": 75,
+              "paths": [
+                {
+                  "path": "imagery/15/7492/13489.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13490.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13491.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13489.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13490.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13491.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13492.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13492.png",
+                  "observationCount": 1
+                }
+              ]
+            },
+            "errors": [
+              {
+                "code": "native-asset-not-in-manifest",
+                "count": 83
+              }
+            ],
+            "assets": [
+              {
+                "path": "tileset/tileset.json",
+                "sha256": "6f435f6f73d46d6989082ac9a369864b22dd9eefca3e13870441e2a08abc0d06",
+                "byteLength": 10109,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-0/0-0.glb",
+                "sha256": "3a1d34fff6b48c3fb1c122a829d093a403550c92af71956a6deedb43d7a3fe79",
+                "byteLength": 2704,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-1/0-0.glb",
+                "sha256": "8a3bb382461c15f20aa065dddcb6e75382f4ccdb7bebb19ec92ecef52f455bf8",
+                "byteLength": 2700,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-1/1-0.glb",
+                "sha256": "728f8203b8e61ebd129ebb8a4723971f47a6e59d11f92cc32f8bc2b4d0f0cdd5",
+                "byteLength": 2684,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-1/1-1.glb",
+                "sha256": "da283d89e2113a4ce32063fe70ab99d486d7a4adb580bd7ce7b4d3bbebbd267b",
+                "byteLength": 2688,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-1/0-1.glb",
+                "sha256": "918be284118c732b321768463278525739433a482b6e21840cb729b14239305d",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-0.glb",
+                "sha256": "bb3178e06579746a0f9681330a52646ab2ca649d2506c866bcfc49f33d301e52",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-0.glb",
+                "sha256": "e909ddae1e553822cc466a1a56950330e06e30d0d6f3581f5b07261295db1c71",
+                "byteLength": 2692,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-2.glb",
+                "sha256": "7d72843f0fa283e04c2dedd8c6ff0f70a5ebe32c030e5e9f70d71b50959040c0",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-3.glb",
+                "sha256": "3e7d3ed541afb8cd626d7ffcdc0016230558cfb6915a715aea58a454ff8cb78d",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-2.glb",
+                "sha256": "b1eea4d9282aa01b37ae9422a3cdf109c946f0c80f47cba67197af7703788272",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-1.glb",
+                "sha256": "773223d321520cf881b8177f0a7420aeae3bf3c595ca60fc73baa66a78e5a730",
+                "byteLength": 2704,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-3.glb",
+                "sha256": "9da90181324f4e832d0e7157b8f65630dbee5a42c39629ea82e3cf21aa4b3e43",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-1.glb",
+                "sha256": "9efb0a2d0a5143b523ea8e4e4aebe9035677177a1a1a7facd58f6d0b9e743fc4",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-0.glb",
+                "sha256": "916709e52d2d52e2800bba519893e12d4eb7e5a28e544f8e33d958c76375f20f",
+                "byteLength": 2692,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-1.glb",
+                "sha256": "7c289f712c508f343855c3adc2a44b6fe397c568813f9bda0d479d0def707eff",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-1.glb",
+                "sha256": "c4a4da8349365e4d218113c6cc16ad46a6fa401a68c855488365cd8d382fd5d9",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-0.glb",
+                "sha256": "ddd0a55eed3563fe81c44ac2e670d4e4005e6de545f45f74186d094624f95404",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-2.glb",
+                "sha256": "d51791cfb7f850ca34eee9c531117b3c27c278b31e2a2daf4492d61c45217dbe",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-2.glb",
+                "sha256": "8c260ebbdbd1fcbf8ce0dd05c8ce5fb07a60c4cc4189a99e26f6df26c94dcd06",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-3.glb",
+                "sha256": "13d5392d0a5bdc27864315f28d7e6e1f3b5d0064606ae73c59283652cdddf908",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-3.glb",
+                "sha256": "3a6ddd3f35f8bc75a74bf0073478c13eeaafde55eb94825c0cb85d55474f5f6a",
+                "byteLength": 2688,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "google/credit-placeholder.png",
+                "sha256": "52cfac7b3aee00110128f033dcdc8ecba17aaae2f23d278443ab34167439fa0f",
+                "byteLength": 1168,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "arcgis/rest/services/World_Imagery/MapServer/metadata.json",
+                "sha256": "396c34ab2ebf94b1704359ae8040e1600fd28663aae3b3135cfaad1cbc9b7e70",
+                "byteLength": 1590,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "arcgis/rest/services/World_Imagery/MapServer/missing-tile-probe/12/0/0.png",
+                "sha256": "3e29eea17b67ef2e72fa32c60f7eb14189d866bb8ed9b487bf6408ab259eb34c",
+                "byteLength": 65953,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/layer.json",
+                "sha256": "f28a0289b4236678f2f41d6fa8f69da627ecc1f3f24d71d6e95185d2cfbf2c52",
+                "byteLength": 1121,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/0/0/0.terrain",
+                "sha256": "38414e35f413cf6638632821c07ad1107b6764e4c38390a47034fd09ea284c6c",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/1/0/0.png",
+                "sha256": "200ec0e9fcfd9fe26c4ffb1c7631375509c0593d8a6dd356aba7ab0b6691b4b1",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/10/468/684.terrain",
+                "sha256": "b2140ab323c70ecb27078ccd1a4f2e1bb61a6ebb50410322b9b1570a509f1ece",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/10/467/684.terrain",
+                "sha256": "514bc27a2d7ad9a497ec4c1f511df9ce29ac90158481a2f358403ed9af25cd76",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/7/58/85.terrain",
+                "sha256": "a59bcda304e2061b1d9983db51962cb870e72c26e6546b61047f242369b11546",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/1/0/1.terrain",
+                "sha256": "78ce01f49d5600c79d3449343de8c58d7add02bac0a2c1c96345df1be56c3d14",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/2/1/2.terrain",
+                "sha256": "e394e5927edcc237e0c09510b28c1f502d34edf9eba687de8f5ba21a52d20e6f",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/9/234/342.terrain",
+                "sha256": "4e92257ec7028faa8f3c02aef6029ca84c650df29f6f9d572be9046d542e976d",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/3/3/5.terrain",
+                "sha256": "fa81d621083afaabe557bfbd15e74b95388e47bda4f7c07e97a0cecd7f534689",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/4/7/10.terrain",
+                "sha256": "0f8e1f27b114c1f33905996bca8310c9728ba5492d7f0ab202853831daab7e38",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/5/14/21.terrain",
+                "sha256": "54ec46ff9f84756214a159ed913d835b00195728f70b1b6d3b56d17d6637ab7f",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/8/117/171.terrain",
+                "sha256": "f7a433415282c4fed83468432386ae6110a93a28728a7609c401a94b8fd5443d",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/9/233/342.terrain",
+                "sha256": "69e4b3ff32997e7520fb8dbc62c71a9f6ba0609d12728d82a81100c749950ba1",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/6/29/42.terrain",
+                "sha256": "a2aea8d7e2742d4e5b75b6b6a02da299913de7591dd4dcd88d8760d8cddda0a7",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "terrain/8/116/171.terrain",
+                "sha256": "b04a1a773b03b78e6354295d6106c6d5118283413b64e1d375259b58298a3e99",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/8/58/105.png",
+                "sha256": "282f416fcf79563e6d1cbfb55c5e6cff8188b2df343e2a6d64f8f80012bb2c33",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/11/468/842.png",
+                "sha256": "9dc7a61ac1384614075214f8653f019608959ef026bbb8393b9cdd4a2a01da46",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/11/468/843.png",
+                "sha256": "83b2e2d995b595273b3a7be2318e8080f13e284d4d95b7f9e2d79ac0bbdc1d8c",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/11/467/842.png",
+                "sha256": "ac911cfc1571fceaba09a689c0c688b2cde7018d77243a535cef387834223c13",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/11/467/843.png",
+                "sha256": "c24d458c01c1c28045133f7a02a8be12b55d654fdab0d1f51862e8279bf7eafa",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/2/0/1.png",
+                "sha256": "9cb5715220967e39cdfab63241a1961de4e088c48ee9fd46e3d11dfa59fdd880",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/3/1/3.png",
+                "sha256": "bb4e335c64f6e07a29d1e4f3d3ab52fb35512d0cd259bf3ce4b99e0313659427",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/10/234/421.png",
+                "sha256": "83b2e2d995b595273b3a7be2318e8080f13e284d4d95b7f9e2d79ac0bbdc1d8c",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/4/3/6.png",
+                "sha256": "11cf28ad4304271f11ac98a95463c9e57edbeba03118e5bbb95769a4a62fba48",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/5/7/13.png",
+                "sha256": "980ba4da1ac1e8dce49e8ae2d12fa92f03418c51b05166b78dad8c328f6d20a4",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/6/14/26.png",
+                "sha256": "b93190f257707c6923229769d4ded703e4c92e2401d32073c1e7efb9c7d83d01",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/9/117/210.png",
+                "sha256": "7b9ba1327826452d3fec912aca0be40c879425c4cbeb5e67eba7ce4381ed0f83",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/7/29/52.png",
+                "sha256": "11cf28ad4304271f11ac98a95463c9e57edbeba03118e5bbb95769a4a62fba48",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/10/233/421.png",
+                "sha256": "a6fa02d4440349b04828f6eb17e4cb956764c1ee7f36d98b9758907cd72674a9",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/9/116/210.png",
+                "sha256": "296e604740cb7fc62c679679bd7fc6a53098a0c4160195e9680d858305239c4a",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/936/1685.png",
+                "sha256": "ea2f277feda4549f06cb9bb9c539331a6edb3f6ffee89382110ca8a6f14888af",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/936/1686.png",
+                "sha256": "a4388e64785830f1727a9090a8f51ff1302afdc7d0ababb054d5d3042079949e",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/935/1685.png",
+                "sha256": "787edf62f5bbb205234116945dac44a037992a1ebd9006609118606cb4d70ff0",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/935/1686.png",
+                "sha256": "343c4b1a890fbd3784905d2b84aa32438292bfea06d199bbc300c4b772ed61eb",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/0/0/0.png",
+                "sha256": "0b2ae228ef20c444107371d73ae5e2ea42eb87d102d64e3395c84f4911da6bc1",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/937/1685.png",
+                "sha256": "e6a7e1a710ee6907a20c112016de974af2c2514b6be3fc4994663af223d48566",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              },
+              {
+                "path": "imagery/12/937/1686.png",
+                "sha256": "5d591e6379c3509b51df3898dc1175620aee64850c68fc6ce9de77cb45802995",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0
+              }
+            ],
+            "limits": {
+              "maxRequests": 512,
+              "maxAssets": 72,
+              "maxErrorRecords": 8,
+              "maxErrorObservations": 512,
+              "maxMissingAssetPaths": 8,
+              "maxAbortSignals": 8
+            },
+            "cleanupConfirmed": false,
+            "browserDecodeObserved": false,
+            "renderedReadinessObserved": false
+          },
+          "interceptionRelease": {
+            "schema": "gev-map-smoke-interception-release/v1",
+            "documentRole": "smoke-variant",
+            "documentId": "baseline-eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+            "contextCloseStatus": "closed",
+            "targetClosed": true,
+            "release": {
+              "schema": "gev-fixture-interception-release/v1",
+              "interception": {
+                "schema": "gev-fixture-interception-drain/v1",
+                "confirmed": true,
+                "listenerRemovalConfirmed": true,
+                "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                "listenerRemovalErrorKind": null,
+                "pendingAtStop": 0,
+                "pendingPreparationAtStop": 0,
+                "pendingAbortSubscriptionsAtStop": 0,
+                "pendingCommandsAtStop": 0,
+                "pendingCommandsAfterDrain": 0,
+                "pendingPreparationsAfterDrain": 0,
+                "pendingAbortSubscriptionsAfterDrain": 0,
+                "rejectedDrainOperations": 0,
+                "drainCommandFailures": 0,
+                "cancelledPreparationCount": 0,
+                "unexpectedLateRequestCount": 0
+              },
+              "fetchDisable": "target-closed",
+              "detach": "target-closed",
+              "confirmed": true
+            },
+            "confirmed": true
+          },
+          "rendering": {
+            "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+            "observedVendor": "Google Inc. (Apple)",
+            "nativeRendererDiagnostic": {
+              "schema": "gev-hosted-renderer-diagnostic/v1",
+              "requestedBackend": "macos-native-diagnostic",
+              "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "observedWebglVendor": "Google Inc. (Apple)",
+              "kind": "apple-paravirtual-metal",
+              "accelerationVerified": true,
+              "status": "verified",
+              "featureStatus": {
+                "webgl": "enabled",
+                "webgl2": null,
+                "gpu_compositing": "enabled",
+                "opengl": "enabled_on"
+              },
+              "physicalDesktopCoverage": false,
+              "hostedEnvironment": "github-actions-macos",
+              "comparisonEligible": false,
+              "performanceAcceptanceEligible": false
+            }
+          },
+          "renderLoopRetirement": null,
+          "terminalObservation": null
+        },
+        "terminalRenderLoopRetirement": null,
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 10.754000000000815,
+            "document": {
+              "status": "confirmed",
+              "elapsedMs": 6.769124999991618,
+              "pageExecutionElapsedMs": 1.7999999999883585,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": true,
+              "hookRestoreAttempted": true,
+              "hookRestored": true,
+              "listenerCount": 2,
+              "listenerRemovalAttemptedCount": 2,
+              "listenerRemovalConfirmedCount": 2,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": true,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "confirmed",
+                "before": true,
+                "after": false,
+                "confirmed": true,
+                "pageExecutionElapsedMs": 0.5
+              }
+            },
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 3.3687079999945126,
+              "pageExecutionElapsedMs": null,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "smoke-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [],
+        "nativeRendererEvidence": {
+          "schema": "gev-hosted-renderer-diagnostic/v1",
+          "requestedBackend": "macos-native-diagnostic",
+          "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "observedWebglVendor": "Google Inc. (Apple)",
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "status": "verified",
+          "featureStatus": {
+            "webgl": "enabled",
+            "webgl2": null,
+            "gpu_compositing": "enabled",
+            "opengl": "enabled_on"
+          },
+          "physicalDesktopCoverage": false,
+          "hostedEnvironment": "github-actions-macos",
+          "comparisonEligible": false,
+          "performanceAcceptanceEligible": false
+        },
+        "cleanupErrors": [
+          "Map fixture delivery cleanup was not confirmed.",
+          "Expected values to be strictly equal: false !== true "
+        ],
+        "mapStreamingFixtureSetup": {
+          "fixtureId": "austin-map-streaming-synthetic-v1",
+          "manifestSha256": "798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4",
+          "delivery": {
+            "schema": "gev-map-streaming-fixture-delivery/v1",
+            "fixtureId": "austin-map-streaming-synthetic-v1",
+            "manifestSha256": "798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4",
+            "status": "disposed",
+            "requestedCount": 77,
+            "fulfilledAckCount": 77,
+            "cancelledCount": 0,
+            "pendingCount": 0,
+            "unexpectedFulfillmentCount": 0,
+            "errorObservationCount": 83,
+            "omittedErrorObservationCount": 0,
+            "omittedErrorKindCount": 0,
+            "cleanupConfirmed": false,
+            "errors": [
+              {
+                "code": "native-asset-not-in-manifest",
+                "count": 83
+              }
+            ],
+            "missingAssetPathEvidence": {
+              "observationCount": 83,
+              "uniquePathCount": 83,
+              "omittedPathCount": 75,
+              "paths": [
+                {
+                  "path": "imagery/15/7492/13489.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13490.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13491.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13489.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13490.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13491.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7492/13492.png",
+                  "observationCount": 1
+                },
+                {
+                  "path": "imagery/15/7493/13492.png",
+                  "observationCount": 1
+                }
+              ]
+            },
+            "assets": [
+              {
+                "path": "tileset/tileset.json",
+                "sha256": "6f435f6f73d46d6989082ac9a369864b22dd9eefca3e13870441e2a08abc0d06",
+                "byteLength": 10109,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-0/0-0.glb",
+                "sha256": "3a1d34fff6b48c3fb1c122a829d093a403550c92af71956a6deedb43d7a3fe79",
+                "byteLength": 2704,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-1/0-0.glb",
+                "sha256": "8a3bb382461c15f20aa065dddcb6e75382f4ccdb7bebb19ec92ecef52f455bf8",
+                "byteLength": 2700,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-1/1-0.glb",
+                "sha256": "728f8203b8e61ebd129ebb8a4723971f47a6e59d11f92cc32f8bc2b4d0f0cdd5",
+                "byteLength": 2684,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-1/1-1.glb",
+                "sha256": "da283d89e2113a4ce32063fe70ab99d486d7a4adb580bd7ce7b4d3bbebbd267b",
+                "byteLength": 2688,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-1/0-1.glb",
+                "sha256": "918be284118c732b321768463278525739433a482b6e21840cb729b14239305d",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-0.glb",
+                "sha256": "bb3178e06579746a0f9681330a52646ab2ca649d2506c866bcfc49f33d301e52",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-0.glb",
+                "sha256": "e909ddae1e553822cc466a1a56950330e06e30d0d6f3581f5b07261295db1c71",
+                "byteLength": 2692,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-2.glb",
+                "sha256": "7d72843f0fa283e04c2dedd8c6ff0f70a5ebe32c030e5e9f70d71b50959040c0",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-3.glb",
+                "sha256": "3e7d3ed541afb8cd626d7ffcdc0016230558cfb6915a715aea58a454ff8cb78d",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-2.glb",
+                "sha256": "b1eea4d9282aa01b37ae9422a3cdf109c946f0c80f47cba67197af7703788272",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-1.glb",
+                "sha256": "773223d321520cf881b8177f0a7420aeae3bf3c595ca60fc73baa66a78e5a730",
+                "byteLength": 2704,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/1-3.glb",
+                "sha256": "9da90181324f4e832d0e7157b8f65630dbee5a42c39629ea82e3cf21aa4b3e43",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/0-1.glb",
+                "sha256": "9efb0a2d0a5143b523ea8e4e4aebe9035677177a1a1a7facd58f6d0b9e743fc4",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-0.glb",
+                "sha256": "916709e52d2d52e2800bba519893e12d4eb7e5a28e544f8e33d958c76375f20f",
+                "byteLength": 2692,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-1.glb",
+                "sha256": "7c289f712c508f343855c3adc2a44b6fe397c568813f9bda0d479d0def707eff",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-1.glb",
+                "sha256": "c4a4da8349365e4d218113c6cc16ad46a6fa401a68c855488365cd8d382fd5d9",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-0.glb",
+                "sha256": "ddd0a55eed3563fe81c44ac2e670d4e4005e6de545f45f74186d094624f95404",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-2.glb",
+                "sha256": "d51791cfb7f850ca34eee9c531117b3c27c278b31e2a2daf4492d61c45217dbe",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-2.glb",
+                "sha256": "8c260ebbdbd1fcbf8ce0dd05c8ce5fb07a60c4cc4189a99e26f6df26c94dcd06",
+                "byteLength": 2708,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/3-3.glb",
+                "sha256": "13d5392d0a5bdc27864315f28d7e6e1f3b5d0064606ae73c59283652cdddf908",
+                "byteLength": 2712,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "tiles/level-2/2-3.glb",
+                "sha256": "3a6ddd3f35f8bc75a74bf0073478c13eeaafde55eb94825c0cb85d55474f5f6a",
+                "byteLength": 2688,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "google/credit-placeholder.png",
+                "sha256": "52cfac7b3aee00110128f033dcdc8ecba17aaae2f23d278443ab34167439fa0f",
+                "byteLength": 1168,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "arcgis/rest/services/World_Imagery/MapServer/metadata.json",
+                "sha256": "396c34ab2ebf94b1704359ae8040e1600fd28663aae3b3135cfaad1cbc9b7e70",
+                "byteLength": 1590,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "arcgis/rest/services/World_Imagery/MapServer/missing-tile-probe/12/0/0.png",
+                "sha256": "3e29eea17b67ef2e72fa32c60f7eb14189d866bb8ed9b487bf6408ab259eb34c",
+                "byteLength": 65953,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/layer.json",
+                "sha256": "f28a0289b4236678f2f41d6fa8f69da627ecc1f3f24d71d6e95185d2cfbf2c52",
+                "byteLength": 1121,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/0/0/0.terrain",
+                "sha256": "38414e35f413cf6638632821c07ad1107b6764e4c38390a47034fd09ea284c6c",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/1/0/0.png",
+                "sha256": "200ec0e9fcfd9fe26c4ffb1c7631375509c0593d8a6dd356aba7ab0b6691b4b1",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/10/468/684.terrain",
+                "sha256": "b2140ab323c70ecb27078ccd1a4f2e1bb61a6ebb50410322b9b1570a509f1ece",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/10/467/684.terrain",
+                "sha256": "514bc27a2d7ad9a497ec4c1f511df9ce29ac90158481a2f358403ed9af25cd76",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/7/58/85.terrain",
+                "sha256": "a59bcda304e2061b1d9983db51962cb870e72c26e6546b61047f242369b11546",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/1/0/1.terrain",
+                "sha256": "78ce01f49d5600c79d3449343de8c58d7add02bac0a2c1c96345df1be56c3d14",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/2/1/2.terrain",
+                "sha256": "e394e5927edcc237e0c09510b28c1f502d34edf9eba687de8f5ba21a52d20e6f",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/9/234/342.terrain",
+                "sha256": "4e92257ec7028faa8f3c02aef6029ca84c650df29f6f9d572be9046d542e976d",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/3/3/5.terrain",
+                "sha256": "fa81d621083afaabe557bfbd15e74b95388e47bda4f7c07e97a0cecd7f534689",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/4/7/10.terrain",
+                "sha256": "0f8e1f27b114c1f33905996bca8310c9728ba5492d7f0ab202853831daab7e38",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/5/14/21.terrain",
+                "sha256": "54ec46ff9f84756214a159ed913d835b00195728f70b1b6d3b56d17d6637ab7f",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/8/117/171.terrain",
+                "sha256": "f7a433415282c4fed83468432386ae6110a93a28728a7609c401a94b8fd5443d",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/9/233/342.terrain",
+                "sha256": "69e4b3ff32997e7520fb8dbc62c71a9f6ba0609d12728d82a81100c749950ba1",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/6/29/42.terrain",
+                "sha256": "a2aea8d7e2742d4e5b75b6b6a02da299913de7591dd4dcd88d8760d8cddda0a7",
+                "byteLength": 4918,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "terrain/8/116/171.terrain",
+                "sha256": "b04a1a773b03b78e6354295d6106c6d5118283413b64e1d375259b58298a3e99",
+                "byteLength": 4986,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/8/58/105.png",
+                "sha256": "282f416fcf79563e6d1cbfb55c5e6cff8188b2df343e2a6d64f8f80012bb2c33",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/11/468/842.png",
+                "sha256": "9dc7a61ac1384614075214f8653f019608959ef026bbb8393b9cdd4a2a01da46",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/11/468/843.png",
+                "sha256": "83b2e2d995b595273b3a7be2318e8080f13e284d4d95b7f9e2d79ac0bbdc1d8c",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/11/467/842.png",
+                "sha256": "ac911cfc1571fceaba09a689c0c688b2cde7018d77243a535cef387834223c13",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/11/467/843.png",
+                "sha256": "c24d458c01c1c28045133f7a02a8be12b55d654fdab0d1f51862e8279bf7eafa",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/2/0/1.png",
+                "sha256": "9cb5715220967e39cdfab63241a1961de4e088c48ee9fd46e3d11dfa59fdd880",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/3/1/3.png",
+                "sha256": "bb4e335c64f6e07a29d1e4f3d3ab52fb35512d0cd259bf3ce4b99e0313659427",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/10/234/421.png",
+                "sha256": "83b2e2d995b595273b3a7be2318e8080f13e284d4d95b7f9e2d79ac0bbdc1d8c",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/4/3/6.png",
+                "sha256": "11cf28ad4304271f11ac98a95463c9e57edbeba03118e5bbb95769a4a62fba48",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/5/7/13.png",
+                "sha256": "980ba4da1ac1e8dce49e8ae2d12fa92f03418c51b05166b78dad8c328f6d20a4",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/6/14/26.png",
+                "sha256": "b93190f257707c6923229769d4ded703e4c92e2401d32073c1e7efb9c7d83d01",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/9/117/210.png",
+                "sha256": "7b9ba1327826452d3fec912aca0be40c879425c4cbeb5e67eba7ce4381ed0f83",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/7/29/52.png",
+                "sha256": "11cf28ad4304271f11ac98a95463c9e57edbeba03118e5bbb95769a4a62fba48",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/10/233/421.png",
+                "sha256": "a6fa02d4440349b04828f6eb17e4cb956764c1ee7f36d98b9758907cd72674a9",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/9/116/210.png",
+                "sha256": "296e604740cb7fc62c679679bd7fc6a53098a0c4160195e9680d858305239c4a",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/936/1685.png",
+                "sha256": "ea2f277feda4549f06cb9bb9c539331a6edb3f6ffee89382110ca8a6f14888af",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/936/1686.png",
+                "sha256": "a4388e64785830f1727a9090a8f51ff1302afdc7d0ababb054d5d3042079949e",
+                "byteLength": 65925,
+                "requests": 2,
+                "fulfilledAckCount": 2,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/935/1685.png",
+                "sha256": "787edf62f5bbb205234116945dac44a037992a1ebd9006609118606cb4d70ff0",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/935/1686.png",
+                "sha256": "343c4b1a890fbd3784905d2b84aa32438292bfea06d199bbc300c4b772ed61eb",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/0/0/0.png",
+                "sha256": "0b2ae228ef20c444107371d73ae5e2ea42eb87d102d64e3395c84f4911da6bc1",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/937/1685.png",
+                "sha256": "e6a7e1a710ee6907a20c112016de974af2c2514b6be3fc4994663af223d48566",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              },
+              {
+                "path": "imagery/12/937/1686.png",
+                "sha256": "5d591e6379c3509b51df3898dc1175620aee64850c68fc6ce9de77cb45802995",
+                "byteLength": 65925,
+                "requests": 1,
+                "fulfilledAckCount": 1,
+                "cancelledCount": 0,
+                "pendingCount": 0
+              }
+            ],
+            "browserDecodeObserved": false,
+            "renderedReadinessObserved": false
+          },
+          "comparisonEligible": false
+        },
+        "mapStreamingInterceptionRelease": {
+          "schema": "gev-map-smoke-interception-release/v1",
+          "documentRole": "smoke-variant",
+          "documentId": "baseline-eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "contextCloseStatus": "closed",
+          "targetClosed": true,
+          "release": {
+            "schema": "gev-fixture-interception-release/v1",
+            "interception": {
+              "schema": "gev-fixture-interception-drain/v1",
+              "confirmed": true,
+              "listenerRemovalConfirmed": true,
+              "listenerRemovalVerification": "remove-listener-call-acknowledged",
+              "listenerRemovalErrorKind": null,
+              "pendingAtStop": 0,
+              "pendingPreparationAtStop": 0,
+              "pendingAbortSubscriptionsAtStop": 0,
+              "pendingCommandsAtStop": 0,
+              "pendingCommandsAfterDrain": 0,
+              "pendingPreparationsAfterDrain": 0,
+              "pendingAbortSubscriptionsAfterDrain": 0,
+              "rejectedDrainOperations": 0,
+              "drainCommandFailures": 0,
+              "cancelledPreparationCount": 0,
+              "unexpectedLateRequestCount": 0
+            },
+            "fetchDisable": "target-closed",
+            "detach": "target-closed",
+            "confirmed": true
+          },
+          "confirmed": true
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The map fixture runs its native journey on both exact revisions; the candidate also runs the full capture CLI. This hosted smoke is diagnostic only, not paired timing evidence.",
+    "Map-only preparation skips the unrelated dense aircraft, infrastructure and dam populations; other provider-fixture selections retain the dense integration checks.",
+    "Native rendering on a hosted macOS runner is a reachability diagnostic; Metal may be paravirtualized and is not physical desktop or paired performance evidence."
+  ],
+  "failure": {
+    "message": "Fixture interception reported 83 errors.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-13T13:26:21.338Z",
+  "durationMs": 116928
+}

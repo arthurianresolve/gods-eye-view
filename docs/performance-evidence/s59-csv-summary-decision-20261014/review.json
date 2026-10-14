@@ -1,0 +1,25 @@
+{
+  "schema": "gev-s59-csv-summary-decision/v1",
+  "decision": "reject-experiment",
+  "reason": "No repeatable benefit demonstrated; four of five paired totals are slower despite slightly lower aggregate median.",
+  "sourceCommit": "da7a33082644d6c1200dc7df66d300941170ce8c",
+  "reportSha256": "93e01db8860048681cdd92cf775ad69196994943dbeb12d4a52d63849d08b09d",
+  "pairedRelativeChangePct": [
+    1.3541680761719688,
+    2.7086597509957233,
+    4.616571743082032,
+    -25.3674018333901,
+    12.841096600919188
+  ],
+  "conditions": "No concurrent agent/root local test or benchmark activity during this run. Background Windows/browser load was not independently controlled. Node-only diagnostic; not hardware rendering or browser responsiveness evidence.",
+  "historicalReports": "Prior confounded and unreproducible results retain their original outcomes.",
+  "restoredSourceSha256": "b641993b975f53d4c396736d1079aa144e67754a4222fec713dde3bf972f492d",
+  "scope": "Only CSV summary accumulation is reverted. Existing GeoJSON batching/summary, ownership and workspace fixes remain.",
+  "validation": {
+    "tests": 49,
+    "passed": 49,
+    "failed": 0,
+    "logSha256": "d1795bb0b0688e41c365f5ad64c04663258faaa0b7058626a6f59258bc64039a",
+    "formatting": "two changed JavaScript files pass Prettier; driver syntax passes"
+  }
+}

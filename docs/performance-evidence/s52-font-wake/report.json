@@ -1,0 +1,12 @@
+{
+  "scope": "Node regression coverage; native render validation pending",
+  "baselineCommit": "1da828a47b797c994d1d67e2f7d36f517fe61e79",
+  "capturedAt": "2026-10-10T23:20:58.553Z",
+  "node": "v24.16.0",
+  "baselineExit": 1,
+  "candidateExit": 0,
+  "sourceHashes": {
+    "src/overlays/worldOverlay.js": "59c0b7f98d8a7911f2c62ddf2c95c30022a9176db8f23d4e09c2d16e6f2a43de",
+    "src/overlays/worldOverlayDraw.js": "187cf0ae8f176d15163d32dcc764677bed95da4ab2bf6dba5b9039b43da2c340"
+  }
+}

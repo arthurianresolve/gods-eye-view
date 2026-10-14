@@ -1,0 +1,150 @@
+{
+  "caseId": "camera-change",
+  "sample": 0,
+  "pixelDifferenceCount": 162,
+  "componentConnectivity": 8,
+  "components": [
+    {
+      "count": 24,
+      "minX": 119,
+      "minY": 271,
+      "maxX": 123,
+      "maxY": 277
+    },
+    {
+      "count": 22,
+      "minX": 127,
+      "minY": 322,
+      "maxX": 131,
+      "maxY": 328
+    },
+    {
+      "count": 18,
+      "minX": 632,
+      "minY": 513,
+      "maxX": 636,
+      "maxY": 518
+    },
+    {
+      "count": 18,
+      "minX": 732,
+      "minY": 522,
+      "maxX": 736,
+      "maxY": 528
+    },
+    {
+      "count": 16,
+      "minX": 139,
+      "minY": 325,
+      "maxX": 143,
+      "maxY": 330
+    },
+    {
+      "count": 15,
+      "minX": 448,
+      "minY": 409,
+      "maxX": 452,
+      "maxY": 415
+    },
+    {
+      "count": 10,
+      "minX": 764,
+      "minY": 584,
+      "maxX": 765,
+      "maxY": 589
+    },
+    {
+      "count": 9,
+      "minX": 751,
+      "minY": 519,
+      "maxX": 752,
+      "maxY": 524
+    },
+    {
+      "count": 9,
+      "minX": 754,
+      "minY": 519,
+      "maxX": 755,
+      "maxY": 524
+    },
+    {
+      "count": 9,
+      "minX": 767,
+      "minY": 584,
+      "maxX": 768,
+      "maxY": 589
+    },
+    {
+      "count": 8,
+      "minX": 518,
+      "minY": 609,
+      "maxX": 519,
+      "maxY": 614
+    },
+    {
+      "count": 3,
+      "minX": 522,
+      "minY": 609,
+      "maxX": 522,
+      "maxY": 611
+    },
+    {
+      "count": 1,
+      "minX": 521,
+      "minY": 613,
+      "maxX": 521,
+      "maxY": 613
+    }
+  ],
+  "colorTransitions": [
+    {
+      "rgba": "63afb4ff>62afb4ff",
+      "count": 2
+    },
+    {
+      "rgba": "64b1b2ff>63b0b2ff",
+      "count": 2
+    },
+    {
+      "rgba": "7e8f91ff>7d8d8fff",
+      "count": 2
+    },
+    {
+      "rgba": "5c8aabff>537da4ff",
+      "count": 1
+    },
+    {
+      "rgba": "629daeff>5a90a7ff",
+      "count": 1
+    },
+    {
+      "rgba": "6299adff>598da6ff",
+      "count": 1
+    },
+    {
+      "rgba": "426295ff>405f93ff",
+      "count": 1
+    },
+    {
+      "rgba": "6fbcbdff>6dbabcff",
+      "count": 1
+    },
+    {
+      "rgba": "92edd1ff>92ecd1ff",
+      "count": 1
+    },
+    {
+      "rgba": "91fbd3ff>92fcd3ff",
+      "count": 1
+    },
+    {
+      "rgba": "6dadafff>73b6b4ff",
+      "count": 1
+    },
+    {
+      "rgba": "65b2b3ff>65b2b4ff",
+      "count": 1
+    }
+  ],
+  "interpretation": "Pixel-coordinate/color observations only; no causal attribution to hidden references or draw order."
+}

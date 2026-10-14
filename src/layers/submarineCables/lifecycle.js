@@ -132,6 +132,7 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
       state._landingDataSource = null;
       state._referenceDataSource = null;
       state._referenceRecords = [];
+      state._featureRecords = [];
       state._surfaceRecords = [];
       state._pickByEntity = new WeakMap();
       state._referenceLabelCount = 0;
@@ -150,6 +151,26 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
         loadingLabel: state._loadingLabel,
         error: state._error,
         referenceLabelCount: state._referenceLabelCount,
+      };
+    },
+
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics() {
+      return {
+        listeners:
+          Number(Boolean(state._mapStackListener)) +
+          Number(Boolean(state._preRenderRemover)) +
+          Number(Boolean(state._moveEndRemover)) +
+          Number(Boolean(state._clickHandler)),
+        pendingJobs: Number(Boolean(state._loading)),
+        dataSources: [
+          state._cableDataSource,
+          state._landingDataSource,
+          state._referenceDataSource,
+        ].filter(Boolean).length,
+        cacheEntries:
+          Number(Boolean(state._cachedCableJson)) +
+          Number(Boolean(state._cachedLandingJson)),
       };
     },
   };

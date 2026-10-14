@@ -1,0 +1,12 @@
+{
+  "schema": "gev-camera-owner-replacement-review/v1",
+  "sourceSha256": "0d5fc65abfabfaa2b9bc72b30e3a7399ab6a5c0ede55e5a4eb9ba25ddf440704",
+  "scope": "real Cesium.Event with camera/canvas stubs; replacement and late callback behavior only",
+  "replacementMotion": 0,
+  "carriedWrites": 0,
+  "lateWrites": 0,
+  "newMotionSurvived": true,
+  "oldTickListeners": 0,
+  "oldInputListeners": 0,
+  "passed": true
+}
