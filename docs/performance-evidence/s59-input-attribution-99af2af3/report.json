@@ -1,0 +1,103 @@
+{
+  "schema": "gev-import-input-attribution/v1",
+  "commit": "99af2af31e783670940a00b99d9ee8c964567fac",
+  "capturedAt": "2026-10-14T04:12:48.737Z",
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz"
+  },
+  "scope": "Node synchronous decode/parse and preview-prefix attribution; total preview includes cooperative timer waits. No forced GC, browser, rendered scene, interaction percentile or GPU claim.",
+  "performanceAcceptanceEligible": false,
+  "trials": 5,
+  "warmupTrials": 1,
+  "workloads": [
+    {
+      "kind": "csv",
+      "records": 50000,
+      "bytes": 2477807,
+      "sha256": "08fd9f3332affc16a600018b7648b0a90c5b8dbcb29758a16e3864200b089e5d",
+      "samples": [
+        {
+          "trial": 0,
+          "decodeMs": 0.6292999999999438,
+          "parseMs": 47.12939999999992,
+          "synchronousPreviewPrefixMs": 100.28280000000007,
+          "totalPreviewMs": 252.06510000000003
+        },
+        {
+          "trial": 1,
+          "decodeMs": 1.0037999999999556,
+          "parseMs": 209.8221000000001,
+          "synchronousPreviewPrefixMs": 113.40030000000002,
+          "totalPreviewMs": 280.96810000000005
+        },
+        {
+          "trial": 2,
+          "decodeMs": 0.9202000000000226,
+          "parseMs": 58.802400000000034,
+          "synchronousPreviewPrefixMs": 90.85829999999987,
+          "totalPreviewMs": 238.97749999999996
+        },
+        {
+          "trial": 3,
+          "decodeMs": 0.8074999999998909,
+          "parseMs": 61.461500000000115,
+          "synchronousPreviewPrefixMs": 96.55739999999992,
+          "totalPreviewMs": 247.30600000000004
+        },
+        {
+          "trial": 4,
+          "decodeMs": 0.6824000000001433,
+          "parseMs": 56.515100000000075,
+          "synchronousPreviewPrefixMs": 98.46379999999999,
+          "totalPreviewMs": 259.5518000000002
+        }
+      ]
+    },
+    {
+      "kind": "geojson",
+      "records": 25000,
+      "bytes": 3527821,
+      "sha256": "8c2077a1ab3d030c4327558cb66a2bc58bffd01e08642310a9fa480e25a1f756",
+      "samples": [
+        {
+          "trial": 0,
+          "decodeMs": 1.0486000000000786,
+          "parseMs": 26.107899999999972,
+          "synchronousPreviewPrefixMs": 28.484400000000278,
+          "totalPreviewMs": 119.56899999999996
+        },
+        {
+          "trial": 1,
+          "decodeMs": 0.8906999999999243,
+          "parseMs": 24.431499999999687,
+          "synchronousPreviewPrefixMs": 30.31809999999996,
+          "totalPreviewMs": 140.85440000000017
+        },
+        {
+          "trial": 2,
+          "decodeMs": 0.9559000000003834,
+          "parseMs": 27.592599999999948,
+          "synchronousPreviewPrefixMs": 30.867699999999786,
+          "totalPreviewMs": 223.58289999999988
+        },
+        {
+          "trial": 3,
+          "decodeMs": 1.433799999999792,
+          "parseMs": 50.29130000000032,
+          "synchronousPreviewPrefixMs": 52.948599999999715,
+          "totalPreviewMs": 197.81770000000006
+        },
+        {
+          "trial": 4,
+          "decodeMs": 1.094499999999698,
+          "parseMs": 32.5329999999999,
+          "synchronousPreviewPrefixMs": 35.76819999999998,
+          "totalPreviewMs": 126.36020000000008
+        }
+      ]
+    }
+  ]
+}
