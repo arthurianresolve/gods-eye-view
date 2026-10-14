@@ -19,6 +19,8 @@
   opt-in NYC DOT Traffic Management Center CCTV pack with its required
   operator-controlled agreement gate and attribution.
 
+- Tool string length validation counts Unicode characters correctly, including characters outside the basic multilingual plane.
+
 - Director timeline seeks cross the dateline along the short longitude arc.
 
 - S31 adds a candidate matrix for formatting, package boundaries, the complete
