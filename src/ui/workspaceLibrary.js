@@ -15,7 +15,7 @@ import {
 import {
   IMPORT_LIMITS,
   decodeImportText,
-  parseCsvHeaders,
+  parseCsvHeadersAsync,
   previewCSV,
   previewGeoJSON,
   previewGPX,
@@ -1522,6 +1522,10 @@ export function createWorkspaceLibraryPanel({
     });
     stagedImportOwner = owner;
     stagedFile = file;
+    // Own the asynchronous header scan as soon as a file is selected.  A
+    // replacement, cancellation or disposal then interrupts the mapping
+    // setup instead of waiting for a stale header result to settle.
+    importController = new AbortController();
     importStatus.textContent = 'Reading import file…';
     try {
       const read =
@@ -1539,9 +1543,9 @@ export function createWorkspaceLibraryPanel({
       stagedBytes = read.bytes || null;
       const extension = owner.file.name.split('.').at(-1).toLowerCase();
       if (extension === 'csv') {
-        const headers = parseCsvHeaders(
-          stagedText || decodeImportText(stagedBytes),
-        );
+        const headers = await parseCsvHeadersAsync(stagedBytes || stagedText, {
+          signal: importController?.signal,
+        });
         if (!importOwnerIsCurrent(owner)) return;
         for (const field of ['latitude', 'longitude', 'id', 'time']) {
           const selectColumn = root.querySelector(`[data-column="${field}"]`);

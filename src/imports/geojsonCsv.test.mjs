@@ -4,6 +4,7 @@ import {
   decodeImportTextAsync,
   parseCsv,
   parseCsvHeaders,
+  parseCsvHeadersAsync,
   previewCSV,
   previewGeoJSON,
 } from './geojsonCsv.js';
@@ -349,6 +350,16 @@ test('shared CSV decoder preserves sync parse output and reads headers without s
 
   const malformedTail = 'lat,lon\n1,2\n"unterminated';
   assert.deepEqual(parseCsvHeaders(malformedTail), ['lat', 'lon']);
+  assert.deepEqual(
+    await parseCsvHeadersAsync(new TextEncoder().encode(csv), {
+      chunkBytes: 2,
+    }),
+    parsed.headers,
+  );
+  assert.deepEqual(await parseCsvHeadersAsync(malformedTail, {}), [
+    'lat',
+    'lon',
+  ]);
   await assert.rejects(
     previewCSV(malformedTail, {
       mapping: { latitude: 'lat', longitude: 'lon' },
@@ -375,6 +386,24 @@ test('CSV header-only path shares grammar but stops before body validation', asy
     }),
     { code: 'invalid-csv' },
   );
+});
+
+test('CSV header mapping can be cancelled while decoding a byte-backed file', async () => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 0);
+  try {
+    await assert.rejects(
+      parseCsvHeadersAsync(
+        new TextEncoder().encode(
+          'latitude,longitude\n' + '30,-97\n'.repeat(40_000),
+        ),
+        { signal: controller.signal, chunkBytes: 256 },
+      ),
+      { name: 'AbortError' },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 });
 
 test('CSV sync parser preserves late syntax and configured-limit error precedence', () => {

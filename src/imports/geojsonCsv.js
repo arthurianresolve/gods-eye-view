@@ -445,6 +445,22 @@ export function parseCsvHeaders(text) {
   return scanCsv(text, true);
 }
 
+/**
+ * Read the CSV header for the browser mapping controls without making a
+ * large byte-backed file block the main thread.  Unlike the synchronous
+ * compatibility helper, this path decodes and scans cooperatively and keeps
+ * the same header-only grammar (the body is intentionally not validated).
+ */
+export async function parseCsvHeadersAsync(
+  input,
+  { signal, chunkBytes = IMPORT_LIMITS.decodeChunkBytes } = {},
+) {
+  signal?.throwIfAborted();
+  const text = await decodeImportTextAsync(input, { signal, chunkBytes });
+  signal?.throwIfAborted();
+  return scanCsvAsync(text, true, { signal });
+}
+
 /** Stage CSV points using explicit latitude/longitude and optional field mappings. */
 export async function previewCSV(
   input,

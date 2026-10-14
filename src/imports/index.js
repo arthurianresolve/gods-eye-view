@@ -5,6 +5,7 @@ export {
   decodeImportTextAsync,
   parseCsv,
   parseCsvHeaders,
+  parseCsvHeadersAsync,
   parseImportInstant,
   previewCSV,
   previewGeoJSON,
