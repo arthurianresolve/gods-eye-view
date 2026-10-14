@@ -57,6 +57,9 @@ import {
 const FRAME_TIMEOUT_MS = 400;
 const CURRENT_UPDATE_SAMPLE_LIMIT = 64;
 const fixtureSearchParams = new URLSearchParams(location.search);
+const frameFailureDiagnosticEnabled =
+  fixtureSearchParams.get('frame-failure-diagnostic') === '1';
+let frameFailure = null;
 const pickPathDiagnosticEnabled =
   pickPathDiagnosticRequested(fixtureSearchParams);
 const primitiveReadinessDiagnosticEnabled =
@@ -765,9 +768,31 @@ async function captureFrame(
   viewer.scene.requestRender();
   return processOwnedCapturedFrame({
     async capture() {
+      const before = frameFailureDiagnosticEnabled
+        ? {
+            visibility: document.visibilityState,
+            focused: document.hasFocus(),
+            defaultRenderLoop: viewer.useDefaultRenderLoop,
+            requestRenderMode: viewer.scene.requestRenderMode,
+          }
+        : null;
       const canvas = await captureFreshCesiumFrame(viewer, {
         timeoutMs,
         signal,
+        onDiagnostic: frameFailureDiagnosticEnabled
+          ? (outcome) => {
+              if (outcome.status !== 'completed' && !frameFailure)
+                frameFailure = {
+                  outcome,
+                  before,
+                  after: {
+                    visibility: document.visibilityState,
+                    focused: document.hasFocus(),
+                  },
+                  scope: 'failure-only; not GPU or performance acceptance',
+                };
+            }
+          : undefined,
       });
       check(canvas, 'Fresh completed frame was unavailable.');
       return canvas;
@@ -1931,6 +1956,11 @@ async function main() {
   status.textContent =
     'Running default and candidate production layer lifetimes…';
   const report = await runDiagnostic();
+  if (frameFailureDiagnosticEnabled) {
+    report.frameFailureDiagnosticEnabled = true;
+    report.performanceAcceptanceEligible = false;
+    report.frameFailure = frameFailure;
+  }
   output.textContent = JSON.stringify(report);
   status.textContent = report.status;
 }

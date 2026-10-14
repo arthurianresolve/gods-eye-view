@@ -111,8 +111,10 @@ for (const mode of [
       drawError: mode === 'draw-error',
     });
     const controller = new AbortController();
+    const outcomes = [];
     const capture = captureFreshCesiumFrame(env.viewer, {
       signal: controller.signal,
+      onDiagnostic: (outcome) => outcomes.push(outcome),
     });
     if (mode === 'timeout') t.mock.timers.tick(400);
     if (mode === 'abort') controller.abort();
@@ -123,6 +125,21 @@ for (const mode of [
     if (mode === 'destroy') env.destroy();
     if (mode === 'draw-error') env.fire();
     assert.equal(await capture, null);
+    assert.equal(outcomes.length, 1);
+    assert.equal(outcomes[0].status, 'unavailable');
+    assert.equal(
+      outcomes[0].reason,
+      {
+        timeout: 'timeout',
+        abort: 'aborted',
+        hidden: 'hidden-document',
+        destroy: 'viewer-destroyed',
+        'request-error': 'render-setup-failed',
+        'draw-error': 'copy-failed',
+      }[mode],
+    );
+    assert.equal(outcomes[0].postRenderObserved, mode === 'draw-error');
+    assert.ok(Number.isFinite(outcomes[0].elapsedMs));
     env.assertClean(controller.signal);
     env.fire();
     t.mock.timers.tick(1000);
@@ -138,6 +155,19 @@ test('viewer destruction settles concurrent copies and pixel-free waits together
   assert.deepEqual(await Promise.all([first, second]), [null, false]);
   env.assertClean();
   assert.equal(await captureFreshCesiumFrame(env.viewer), null);
+});
+
+test('diagnostic failures cannot change capture results or leak handlers', async (t) => {
+  const env = fixture(t);
+  const capture = captureFreshCesiumFrame(env.viewer, {
+    onDiagnostic() {
+      throw new Error('diagnostic callback failed');
+    },
+  });
+  env.fire();
+  const copy = await capture;
+  assert.equal(copy.width, 6);
+  env.assertClean();
 });
 
 for (const [label, source] of [

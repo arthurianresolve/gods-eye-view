@@ -11,16 +11,43 @@ export function cancelPendingFrameCaptures(viewer) {
 
 async function completedFrame(
   viewer,
-  { signal, timeoutMs = 400, copy = false } = {},
+  { signal, timeoutMs = 400, copy = false, onDiagnostic } = {},
 ) {
   const scene = viewer?.scene;
-  if (
-    !scene?.postRender?.addEventListener ||
-    destroyed(viewer) ||
-    hidden() ||
-    signal?.aborted
-  )
-    return null;
+  let reason = null;
+  let postRenderObserved = false;
+  const diagnosticStartedAt =
+    typeof onDiagnostic === 'function' ? performance.now() : null;
+  const unavailableReason = () =>
+    !scene?.postRender?.addEventListener
+      ? 'unavailable-scene'
+      : destroyed(viewer)
+        ? 'viewer-destroyed'
+        : hidden()
+          ? 'hidden-document'
+          : signal?.aborted
+            ? 'aborted'
+            : null;
+  const publish = (value) => {
+    if (typeof onDiagnostic === 'function') {
+      try {
+        onDiagnostic({
+          schema: 'gev-fresh-frame-outcome/v1',
+          status: value ? 'completed' : 'unavailable',
+          reason: value ? null : reason,
+          elapsedMs: performance.now() - diagnosticStartedAt,
+          postRenderObserved,
+          copyRequested: copy,
+        });
+      } catch {
+        // Diagnostics must never change capture success or resource ownership.
+      }
+    }
+    onDiagnostic = null;
+    return value;
+  };
+  reason = unavailableReason();
+  if (reason) return publish(null);
   const result = await new Promise((resolve) => {
     let settled = false,
       timer = null,
@@ -29,44 +56,49 @@ async function completedFrame(
     const doc = globalThis.document;
     const owners = pending.get(viewer) || new Set();
     pending.set(viewer, owners);
-    const finish = (value = null) => {
+    const finish = (value = null, failureReason = 'capture-failed') => {
       if (settled) return;
       settled = true;
+      if (!value) reason = failureReason;
       if (timer !== null) clearTimeout(timer);
       remove?.();
-      signal?.removeEventListener('abort', cancel);
+      signal?.removeEventListener('abort', abort);
       doc?.removeEventListener?.('visibilitychange', visibility);
       owners.delete(cancel);
       if (!owners.size) pending.delete(viewer);
       if (!value && canvas) canvas.width = canvas.height = 0;
       resolve(value);
     };
-    const cancel = () => finish();
+    const cancel = () => finish(null, 'owner-cancelled');
+    const abort = () => finish(null, 'aborted');
     const visibility = () => {
-      if (hidden()) cancel();
+      if (hidden()) finish(null, 'hidden-document');
     };
     const onRender = () => {
       if (settled) return;
+      postRenderObserved = true;
       try {
-        if (hidden() || destroyed(viewer) || signal?.aborted) return finish();
+        const unavailable = unavailableReason();
+        if (unavailable) return finish(null, unavailable);
         if (!copy) return finish(true);
         const source = scene.canvas;
-        if (!source?.width || !source?.height) return finish();
+        if (!source?.width || !source?.height)
+          return finish(null, 'missing-source-canvas');
         canvas = doc.createElement('canvas');
         canvas.width = source.width;
         canvas.height = source.height;
         const context = canvas.getContext('2d');
-        if (!context) return finish();
+        if (!context) return finish(null, 'missing-copy-context');
         // Copy synchronously inside postRender, before WebGL buffer disposal.
         context.drawImage(source, 0, 0);
         finish(canvas);
       } catch {
-        finish();
+        finish(null, 'copy-failed');
       }
     };
     owners.add(cancel);
     try {
-      signal?.addEventListener('abort', cancel, { once: true });
+      signal?.addEventListener('abort', abort, { once: true });
       doc?.addEventListener?.('visibilitychange', visibility);
       const unsubscribe = scene.postRender.addEventListener(onRender);
       remove =
@@ -80,18 +112,21 @@ async function completedFrame(
       const delay = Number.isFinite(timeoutMs)
         ? Math.min(400, Math.max(0, timeoutMs))
         : 400;
-      timer = setTimeout(cancel, delay);
-      if (signal?.aborted || hidden() || destroyed(viewer)) cancel();
+      timer = setTimeout(() => finish(null, 'timeout'), delay);
+      const unavailable = unavailableReason();
+      if (unavailable) finish(null, unavailable);
       else scene.requestRender?.();
     } catch {
-      finish();
+      finish(null, 'render-setup-failed');
     }
   });
-  if (hidden() || destroyed(viewer) || signal?.aborted) {
+  const unavailable = unavailableReason();
+  if (unavailable) {
+    reason = unavailable;
     if (copy && result) result.width = result.height = 0;
-    return null;
+    return publish(null);
   }
-  return result;
+  return publish(result);
 }
 
 /** Fresh copied pixels, owned by the caller; null for any incomplete capture. */
