@@ -325,7 +325,7 @@ test('AIS first-connect grace expiry reports failure even without a terminal man
   assert.equal(presentLoadingFeedback(state, unavailable, 300).label, 'LOAD FAILED');
 });
 
-test('participant stats failure outranks a simultaneous visibility completion', () => {
+test('missing optional provider keys do not become a global failure', () => {
   const enabling = aggregateLayerLoading([{
     id: 'ais-live-vessels',
     name: 'AIS Vessels',
@@ -346,7 +346,11 @@ test('participant stats failure outranks a simultaneous visibility completion', 
     type: 'visibility', layerId: 'ais-live-vessels', enabled: true,
   });
 
-  assert.equal(state.terminal, 'error');
+  assert.equal(state.terminal, 'complete');
+  assert.equal(
+    presentLoadingFeedback(state, missingKey, 250).label,
+    'LOAD COMPLETE',
+  );
 });
 
 test('retains the worst terminal outcome until every concurrent load drains', () => {

@@ -88,7 +88,11 @@ function terminalFromParticipantStats(summary, participantIds) {
   return summary.records.some(
     (record) =>
       participants.has(record.id) &&
-      (record.error || record.unavailable || record.keyRequired),
+      // A missing optional provider key is an honest configuration state, not
+      // a failed request. The layer row already exposes KEY REQUIRED and the
+      // provider-settings affordance; promoting it to the shared terminal
+      // failure banner incorrectly marks a mixed mission as LOAD FAILED.
+      (record.error || record.unavailable),
   )
     ? 'error'
     : null;
@@ -383,7 +387,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
       (record) =>
         record.id !== 'alpr-cameras' &&
         (state?.activeIds || []).includes(record.id) &&
-        (record.error || record.unavailable || record.keyRequired),
+        (record.error || record.unavailable),
     ) || (state?.failedEventIds || []).some((id) => id !== 'alpr-cameras');
   if (camera && !summary.active.length && !otherCameraFailure) {
     const seconds = Math.max(
@@ -407,7 +411,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
       (record) =>
         record.id !== 'military-installations' &&
         (state?.activeIds || []).includes(record.id) &&
-        (record.error || record.unavailable || record.keyRequired),
+        (record.error || record.unavailable),
     ) ||
     (state?.failedEventIds || []).some((id) => id !== 'military-installations');
   // Keep the actual retry visible between attempts, without hiding another
