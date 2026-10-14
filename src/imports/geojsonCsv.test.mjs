@@ -259,6 +259,90 @@ test('CSV sync parser preserves late syntax and configured-limit error precedenc
   });
 });
 
+test('cooperative CSV preview matches sync decoding across quote and CRLF batch boundaries', async () => {
+  const batchChars = 64 * 1024;
+  const header = 'lat,lon,note\n';
+  const fixedRow = '1,2,x\n';
+  const makeBoundaryCsv = (prefixBeforeBoundary, suffix) => {
+    const boundary = batchChars - 1;
+    const needed = boundary - header.length - prefixBeforeBoundary.length;
+    assert.ok(needed >= fixedRow.length);
+    const regularRows = Math.floor(needed / fixedRow.length);
+    const remainder = needed % fixedRow.length;
+    const paddingRow = `1,2,${'x'.repeat(1 + remainder)}\n`;
+    const prefix =
+      header +
+      fixedRow.repeat(regularRows - 1) +
+      paddingRow +
+      prefixBeforeBoundary;
+    assert.equal(prefix.length, boundary);
+    return prefix + suffix;
+  };
+  const escapedQuote = makeBoundaryCsv('2,2,"a', '""b"\r\n');
+  const crlf = makeBoundaryCsv('2,2,"value"', '\r\n');
+  for (const csv of [escapedQuote, crlf]) {
+    const expected = parseCsv(csv);
+    const preview = await previewCSV(csv, {
+      mapping: { latitude: 'lat', longitude: 'lon' },
+    });
+    assert.equal(preview.accepted + preview.rejected, expected.rows.length);
+    assert.equal(preview.rejected, 0);
+    assert.deepEqual(
+      preview.records.map((record) => [
+        record.geometry.coordinates[1],
+        record.geometry.coordinates[0],
+        record.properties.note,
+      ]),
+      expected.rows.map(([latitude, longitude, note]) => [
+        Number(latitude),
+        Number(longitude),
+        note,
+      ]),
+    );
+    assert.equal(
+      preview.records.at(-1).properties.note,
+      expected.rows.at(-1)[2],
+    );
+  }
+});
+
+test('CSV parse progress is bounded and malformed late input yields no partial preview', async () => {
+  const mapping = { id: 'id', latitude: 'lat', longitude: 'lon' };
+  const csv =
+    'id,lat,lon\n' +
+    Array.from({ length: 30_000 }, (_, index) => `${index},1,2`).join('\n') +
+    '\n"unterminated';
+  const progress = [];
+  const outcome = await previewCSV(csv, {
+    mapping,
+    onProgress: (event) => progress.push(event),
+  }).then(
+    (value) => ({ value }),
+    (error) => ({ error }),
+  );
+  assert.equal(outcome.value, undefined);
+  assert.equal(outcome.error?.code, 'invalid-csv');
+  assert.ok(progress.length > 1);
+  assert.ok(
+    progress.every(
+      (event, index) =>
+        event.phase === 'csv-parse' &&
+        JSON.stringify(Object.keys(event).sort()) ===
+          JSON.stringify(['phase', 'processedCharacters', 'totalCharacters']) &&
+        Number.isSafeInteger(event.processedCharacters) &&
+        event.processedCharacters > 0 &&
+        event.processedCharacters <= event.totalCharacters &&
+        event.totalCharacters === csv.length &&
+        (index === 0 ||
+          event.processedCharacters - progress[index - 1].processedCharacters <=
+            64 * 1024 + 1) &&
+        (index === 0 ||
+          event.processedCharacters > progress[index - 1].processedCharacters),
+    ),
+  );
+  assert.equal(progress.at(-1).processedCharacters, csv.length);
+});
+
 test('import previews honor cancellation before applying any records', async () => {
   const controller = new AbortController();
   controller.abort(new DOMException('User cancelled', 'AbortError'));

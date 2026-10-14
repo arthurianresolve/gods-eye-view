@@ -1315,6 +1315,14 @@ export function createWorkspaceLibraryPanel({
               signal,
               attribution,
               mapping: selectedCsvMapping(),
+              onProgress: ({ processedCharacters, totalCharacters }) => {
+                if (signal.aborted || !importOwnerIsCurrent(owner)) return;
+                const percent = Math.min(
+                  100,
+                  Math.floor((processedCharacters / totalCharacters) * 100),
+                );
+                importStatus.textContent = `Parsing CSV… ${percent}%`;
+              },
             })
           : extension === 'kml'
             ? await previewKML(text, { signal, attribution })

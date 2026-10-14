@@ -56,6 +56,30 @@ for (const kind of ['csv', 'geojson', 'kml', 'gpx']) {
   });
 }
 
+test('CSV parsing yields before cancellation and publishes no partial preview', async () => {
+  const input =
+    'id,lat,lon\n' +
+    Array.from({ length: 30_000 }, (_, index) => `${index},1,2`).join('\n');
+  const controller = new AbortController();
+  let progressCount = 0;
+  const timer = setTimeout(() => controller.abort(), 0);
+  try {
+    const outcome = await previewCSV(input, {
+      signal: controller.signal,
+      mapping: { id: 'id', latitude: 'lat', longitude: 'lon' },
+      onProgress: () => progressCount++,
+    }).then(
+      (value) => ({ value }),
+      (error) => ({ error }),
+    );
+    assert.equal(outcome.value, undefined);
+    assert.equal(outcome.error?.name, 'AbortError');
+    assert.equal(progressCount, 1);
+  } finally {
+    clearTimeout(timer);
+  }
+});
+
 test('one very large GeoJSON feature yields for queued cancellation', async () => {
   const coordinates = Array.from({ length: 50_000 }, (_, index) => [
     (index % 360) - 180,
