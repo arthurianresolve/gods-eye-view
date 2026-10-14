@@ -355,7 +355,8 @@ export function createLifecycle({
         primitives:
           Number(Boolean(layerState._pointCollection)) +
           (layerState._orbitPaths?.size || 0),
-        dataSources: Number(Boolean(layerState._trackedEntity)),
+        entities: Number(Boolean(layerState._trackedEntity)),
+        dataSources: 0,
         cacheEntries:
           (layerState._catalog?.size || 0) +
           (layerState._points?.size || 0) +

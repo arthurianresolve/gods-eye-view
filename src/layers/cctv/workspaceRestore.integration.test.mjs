@@ -255,6 +255,9 @@ test('persisted workspace CCTV mode restores one real viewshed and reuses it on 
     true,
   );
   await waitForCctvDrain(cctv, viewer, 1, 'first workspace restore');
+  const cctvResources = cctv.getPerformanceDiagnostics();
+  assert.equal(cctvResources.dataSources, 0);
+  assert.equal(cctvResources.entities, 6);
   const firstPrimitive = viewer.viewshedAdds[0];
   assert.equal(cctv.getParams().coverageMode, 'viewshed');
   assert.equal(cctv.getParams().showProjection, false);

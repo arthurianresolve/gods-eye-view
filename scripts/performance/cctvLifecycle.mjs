@@ -1582,7 +1582,7 @@ export function validateCctvLifecycleReport(
   if (
     !report.warmup.enabled.cameraView?.containsFixture ||
     report.warmup.enabled.diagnostics.primitives < 1 ||
-    report.warmup.enabled.diagnostics.dataSources < 1
+    report.warmup.enabled.diagnostics.entities < 1
   )
     throw new Error(
       'CCTV fixture camera did not materialize visible scene geometry.',
@@ -1789,11 +1789,16 @@ export function assertCctvCheckpoint(
     'timers',
     'pendingJobs',
     'primitives',
+    'entities',
     'dataSources',
     'cacheEntries',
   ])
     if (!Number.isSafeInteger(count?.[key]) || count[key] < 0)
       throw new Error(`CCTV diagnostic ${key} is missing or invalid.`);
+  if (count.dataSources !== 0)
+    throw new Error(
+      'CCTV owner diagnostics must not report scene entities as data sources.',
+    );
   for (const key of [
     'entities',
     'dataSources',

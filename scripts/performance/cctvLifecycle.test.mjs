@@ -55,7 +55,8 @@ function validCheckpoint(enabled, probeError = false) {
       timers: enabled ? 1 : 0,
       pendingJobs: 0,
       primitives: 1,
-      dataSources: 1,
+      entities: 1,
+      dataSources: 0,
       cacheEntries: 0,
     },
     scene: { entities: 1, dataSources: 0, primitives: 8, groundPrimitives: 0 },
@@ -838,6 +839,7 @@ test('serialized checkpoint callback reads the actual module, scene, worker and 
       timers: 0,
       pendingJobs: 0,
       primitives: 1,
+      entities: 0,
       dataSources: 0,
       cacheEntries: 0,
     }),
@@ -1076,6 +1078,15 @@ test('CCTV checkpoint rejects pending/errors/invalid counters', () => {
   const negative = validCheckpoint(false);
   negative.diagnostics.listeners = -1;
   assert.throws(() => assertCctvCheckpoint(negative), /listeners/);
+  const missingEntities = validCheckpoint(false);
+  delete missingEntities.diagnostics.entities;
+  assert.throws(() => assertCctvCheckpoint(missingEntities), /entities/);
+  const mislabeledEntities = validCheckpoint(false);
+  mislabeledEntities.diagnostics.dataSources = 1;
+  assert.throws(
+    () => assertCctvCheckpoint(mislabeledEntities),
+    /scene entities as data sources/,
+  );
   const workerError = validCheckpoint(false);
   workerError.worker.workers[0].taskErrors = 1;
   assert.throws(() => assertCctvCheckpoint(workerError), /worker/);
@@ -1392,7 +1403,8 @@ function createCctvRunnerDependencies({
       timers: enabled ? 1 : 0,
       pendingJobs: 0,
       primitives: 1,
-      dataSources: 1,
+      entities: 1,
+      dataSources: 0,
       cacheEntries: 0,
     }),
     init: async () => {

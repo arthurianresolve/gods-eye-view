@@ -282,7 +282,8 @@ export function createControls({ state: layerState, services, parts, source }) {
           (layerState._cardFetchPendingIds?.size || 0),
         primitives:
           Number(Boolean(layerState._billboards)) + viewshedPrimitives,
-        dataSources: sceneEntities,
+        entities: sceneEntities,
+        dataSources: 0,
         cacheEntries:
           (layerState._cardFrameSlots?.size || 0) +
           (layerState._healthById?.size || 0) +

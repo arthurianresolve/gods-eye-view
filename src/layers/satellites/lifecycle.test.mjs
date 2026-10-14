@@ -105,6 +105,9 @@ test('satellite periodic wake, tracking handoff and teardown use one owned sched
     source: {},
   });
 
+  assert.equal(lifecycle.methods.getPerformanceDiagnostics().entities, 0);
+  assert.equal(lifecycle.methods.getPerformanceDiagnostics().dataSources, 0);
+
   const originalDocument = globalThis.document;
   globalThis.document = { removeEventListener() {} };
   t.after(() => {
@@ -134,11 +137,15 @@ test('satellite periodic wake, tracking handoff and teardown use one owned sched
   assert.equal(scheduledCallbacks.at(-1).delayMs, POSITION_UPDATE_MS);
 
   state._trackedNorad = 25544;
+  state._trackedEntity = { id: 'tracked-satellite' };
   lifecycle.methods.syncRenderDemand();
+  assert.equal(lifecycle.methods.getPerformanceDiagnostics().entities, 1);
+  assert.equal(lifecycle.methods.getPerformanceDiagnostics().dataSources, 0);
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
   assert.deepEqual(getRenderGovernorDiagnostics().holds, ['satellites']);
 
   state._trackedNorad = null;
+  state._trackedEntity = null;
   lifecycle.methods.syncRenderDemand();
   assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
   assert.equal(getRenderGovernorDiagnostics().scheduledUpdates.length, 1);
