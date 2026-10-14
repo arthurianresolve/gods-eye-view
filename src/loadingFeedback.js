@@ -61,6 +61,7 @@ export function normalizeLayerLoading(layer = {}) {
     keyRequired && isCredentialConfigurationError(rawError);
   const error = configurationOnly ? null : rawError;
   const unavailable =
+    !configurationOnly &&
     !stoppingInstallations &&
     (stats.unavailable === true ||
       stats.available === false ||
