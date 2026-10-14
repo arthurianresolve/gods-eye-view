@@ -24,6 +24,17 @@ suite pass: 7,832 ordinary passes, ten skips and fourteen allocation passes. The
 prior failed assertion remains recorded. These checks do not qualify physical
 Windows rendering, performance or retention.
 
+The [datacenter candidate integration](performance-evidence/s54-current-integration-20261014/README.md)
+at `352d985d` ports the reviewed collection option into current QA. Ninety-seven
+focused checks and package boundaries pass. Entity defaults remain; rejected
+dam/cable prototypes are excluded. Current rendered/mixed-layer and physical
+Windows acceptance remain pending, so S54 is still partial.
+
+The [current S48 overhead audit](performance-evidence/s48-overhead-audit-20261014/README.md)
+finds unmatched route phases and incorrect detection-population reporting in
+the existing CPU comparison. Its raw result is retained as inconclusive. A
+matched fixture correction and resource-gauge labeling fixes remain required.
+
 The [S53 fleet audit](performance-evidence/s53-aircraft-audit/root-51033433/README.md)
 now covers real producer membership, warmed cadence, write deltas, scratch
 argument reuse and failure cleanup alongside the snapshot audit. Root passes
