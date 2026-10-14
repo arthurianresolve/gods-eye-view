@@ -1112,6 +1112,8 @@ and sharpen. Display supplies actions and renders settings; effect execution has
 no DOM dependency. Existing presets and the 500 ms transition remain unchanged.
 Stopping the controller revokes animation before asynchronous UI teardown; final
 destruction removes its stages and restores the borrowed bloom configuration.
+Snow's sideways sway stays within a fixed range at any session age; Wind scales
+its amplitude.
 
 ## Display control ownership
 

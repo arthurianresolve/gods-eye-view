@@ -145,6 +145,7 @@ test('Codex OAuth reader enforces expiry margin and bounds tokens without exp by
 
 test('Codex login resolves an installed executable before PATH and starts browser auth detached', async () => {
   const checked = [];
+  // Build this with path.join so the stub matches Windows separators too.
   const installedExecutable = path.join(
     '/home/fixture',
     '.local',

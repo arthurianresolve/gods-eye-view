@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -7,7 +7,7 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/data/focusAllocations.test.mjs',
   'src/overlays/worldOverlayAllocation.test.mjs',
 ]);
-const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/accessibilityFocusDiagnostics.test.mjs',
   'scripts/performance/cesiumDisabledInputInertia.test.mjs',
   'scripts/performance/cesiumTerrainCollisionTransform.test.mjs',
@@ -124,6 +124,18 @@ export function assertNode24AllocationRuntime(version = process.versions.node) {
   return version;
 }
 
+/**
+ * Directories this runner searches for `*.test.mjs`, in stable order.
+ *
+ * `server/` belongs here because provider modules own tests of their own: a
+ * suite placed beside the module it covers must run, and CI's unit-test job runs
+ * `npm test`, so a directory missing from this list is a suite that never runs
+ * there. `unitTestRunner.test.mjs` asserts the list covers every `*.test.mjs`
+ * outside dependencies, build output and dot-directories, so adding a tree
+ * without adding it here fails.
+ */
+export const UNIT_TEST_ROOTS = Object.freeze(['src', 'server', 'scripts']);
+
 /** Discover repository unit tests in stable path order. */
 export function discoverUnitTestFiles(root = process.cwd()) {
   const files = [];
@@ -136,10 +148,9 @@ export function discoverUnitTestFiles(root = process.cwd()) {
       }
     }
   };
-  for (const sourceRoot of ['src', 'server'].map((name) =>
-    path.join(root, name),
-  )) {
-    visit(sourceRoot);
+  for (const testRoot of UNIT_TEST_ROOTS) {
+    const directory = path.join(root, testRoot);
+    if (existsSync(directory)) visit(directory);
   }
   return files.sort();
 }
@@ -182,11 +193,7 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests([
-    '--test',
-    ...plan.parallel,
-    ...PERFORMANCE_HARNESS_TEST_FILES,
-  ]);
+  const parallelStatus = runTests(['--test', ...plan.parallel]);
   if (parallelStatus !== 0) return parallelStatus;
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on

@@ -267,6 +267,25 @@ live counts again and match the focus conditions.
 
 ## Controls for a future capture
 
+Use the same controls before attributing a difference to the application:
+
+1. Record the exact GPU renderer and reject software-rendered or unavailable GPU
+   strings.
+2. Use a 1440 x 900 viewport at device pixel ratio 1 and keep the page focused.
+3. Measure cache-disabled startup separately from cold layer activation and warm
+   option switching.
+4. Repeat startup three times and compare medians.
+5. Sample each option in scripted motion and at rest.
+6. Record live object counts before attributing a difference to the client.
+7. Treat a live-source outage as missing coverage, not as evidence of low client
+   rendering cost.
+8. Record whether the app runs in Pinokio's embedded view or an external browser.
+   One Pinokio 8.2.0 user reported severe stutter in the embedded view that went
+   away when the same local URL was opened in a normal browser
+   ([#365](https://github.com/bilawalsidhu/gods-eye-view/issues/365)). Do not
+   compare embedded-view and external-browser measurements directly; compare the
+   reported renderer and matched scene settings first.
+
 Start the app at `localhost:4173`, foreground its browser window, then run:
 
 ```sh
