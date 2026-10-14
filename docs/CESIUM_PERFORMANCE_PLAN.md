@@ -5584,3 +5584,10 @@ reverted at `65fa2e4e`; the production path keeps its existing per-coordinate
 cooperative boundary until a comparison demonstrates both responsiveness and
 completion improvement. This is a supported no-change decision, not a claim
 that the single-feature interaction gate or hardware qualification has passed.
+
+The subsequent full software gate at `4db28f17` passes 7,983 ordinary tests
+(7,973 pass, 10 skipped, zero failures), the GC-bracketed allocation check
+(1/1), and all 13 performance-harness checks. The gate covers the cooperative
+decoder packet and the rejected geometry experiment's reverted production
+path; it does not convert the retained comparison into a performance result or
+provide primary Windows GPU/soak evidence.
