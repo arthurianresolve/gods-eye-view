@@ -36,6 +36,13 @@ existing callers. Focused import tests cover split UTF-8 code points, malformed
 encoding, cancellation and output parity. This reduces decode-time blocking;
 JSON/XML parsing and the remaining S59.2 UI/catalog work are still pending.
 
+The S59.2 DOM-write slice at `42b34101` applies the same bounded-update rule to
+layer catalog counts/meta and workspace storage usage. Existing refresh
+coalescing, selection preservation and stale-owner guards remain unchanged;
+unchanged text now causes no DOM write. Focused layer-panel, workspace-import,
+ownership and text-update checks pass. This is a narrow maintenance slice, not
+the full interaction or catalog-journey acceptance.
+
 The [S47 producer audit](performance-evidence/s47-workload-audit-20261014.md)
 identifies real workload identity/export gaps in addition to absent physical
 Windows comparisons. The [S59 ownership audit](performance-evidence/s59-engineering-audit-20261014.md)
@@ -1454,7 +1461,7 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture                  | Engineering closed: shared fresh-frame ownership, real viewport/pointer caller cleanup, all three temporary surfaces released; explicitly retain preserveDrawingBuffer=true.                                                                                                                                                                                 | 199 frame/pointer/voice checks pass at d73f3c89, after fourteen before-fix sampler-surface failures. The real viewer destroy-pending component passes in native run 38439815077. Full app capture matrix remains separate.                                                                                                                                                                                                                                 | Historical isolated Windows viewer matrix passes at 47dbee4; current full application idle/moving/portrait/resized/restored/hidden qualification and any benefit claim remain pending.                     |
 | S57 map-resource lifetime                | Engineering closed: superseded imagery/terrain/tileset ownership, comparison leases, explicit retry after fallback, native fixture coverage and rendered fault controls; detail/cache defaults retained.                                                                                                                                                     | 50 map tests pass; current native production journeys and all three fault/recovery controls pass at e0710bd5. Historical streamed-tile component at e1a6f5e4 retains its original cancellation/cache/cleanup evidence. See the 13 October closure audit.                                                                                                                                                                                                   | Hosted native integration passed; physical Windows equivalent-detail, route-time and retention qualification pending.                                                                                      |
 | S58 weather/effects | Engineering closed: wind/scalar reuse, weather/image/cache ownership and effect-stage census reviewed; preserve required crossfade and effects | Current full integration and focused ownership tests pass; three five-pair raster CPU reports and real-stage census retained | Hosted component pixels retained; full physical Windows weather/effect matrix and final qualification pending |
-| S59 cooperative ingestion                | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards, header-only CSV setup and cancellable 64 KiB UTF-8 decoding at `435bf103`; JSON/XML parsing and wider UI maintenance remain                                                                                                    | All seven integration jobs pass at `9a665b2`; bounded-decoder focused tests cover split UTF-8, malformed input, cancellation and parity; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4`                                                                                                                                                                                                   | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S59 cooperative ingestion                | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards, header-only CSV setup, cancellable 64 KiB UTF-8 decoding at `435bf103`, and unchanged catalog/status DOM-write suppression at `42b34101`; JSON/XML parsing and broader UI maintenance remain                                                                                                    | All seven integration jobs pass at `9a665b2`; bounded-decoder and text-update focused tests cover split UTF-8, malformed input, cancellation, parity and unchanged-write behavior; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4`                                                                                                                                                                                                   | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate                      | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending                                                                                                                                                                                                                                                   | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below                                                                                                                                                                                                                                                                                                                                 | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental                                                                                                    |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -2978,6 +2985,18 @@ This closes only the raw UTF-8 decode portion of S59.1. `JSON.parse`, the
 restricted XML tree construction, single-feature preparation and S59.2 UI/
 catalog maintenance remain synchronous or otherwise pending; no worker default
 or four-millisecond end-to-end claim follows from this slice.
+
+### S59.2 unchanged catalog/status writes - 14 October 2026
+
+The narrow UI maintenance correction at `42b34101` adds
+`setTextIfChanged` and uses it for layer-panel counts/meta and workspace storage
+usage. Repeated refreshes still preserve keyed controls, selection and focus;
+they now avoid assigning identical text values. Existing refresh coalescing and
+workspace/import ownership guards remain the authority for stale completion
+handling. The focused layer-panel and workspace-library suites pass, including
+rapid refresh, workspace replacement, cancellation and disposal cases. Broader
+catalog progress coalescing, full interaction timing and hardware validation
+remain open under S59.2/S60.
 
 ### S59.1 document decode worker prototype - 10 October 2026
 
