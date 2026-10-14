@@ -241,7 +241,7 @@ export async function previewGeoJSON(
 }
 
 const CSV_PARSE_BATCH_CHARS = 64 * 1024;
-const CSV_PARSE_SLICE_MS = 8;
+const CSV_PARSE_SLICE_MS = 4;
 const CSV_PARSE_CLOCK_CHECK_CHARS = 1024;
 
 /** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */
@@ -278,14 +278,12 @@ function createCsvScanner(text, headersOnly = false) {
   function advance({ maxChars = Infinity, budgetMs = Infinity, now } = {}) {
     const started = now?.() ?? 0;
     let processed = 0;
+    let nextClockCheck = CSV_PARSE_CLOCK_CHECK_CHARS;
     while (index < source.length && processed < maxChars) {
-      if (
-        processed > 0 &&
-        processed % CSV_PARSE_CLOCK_CHECK_CHARS === 0 &&
-        now &&
-        now() - started >= budgetMs
-      )
+      if (processed >= nextClockCheck && now && now() - started >= budgetMs)
         break;
+      while (processed >= nextClockCheck)
+        nextClockCheck += CSV_PARSE_CLOCK_CHECK_CHARS;
       const char = source[index];
       if (quoted) {
         if (char === '"' && source[index + 1] === '"') {
@@ -381,9 +379,16 @@ function scanCsv(text, headersOnly = false) {
   return scanner.finish();
 }
 
-async function scanCsvCooperatively(text, { signal, onProgress } = {}) {
+export async function scanCsvCooperatively(
+  text,
+  {
+    signal,
+    onProgress,
+    now = () => globalThis.performance?.now?.() ?? Date.now(),
+    yieldControl = () => new Promise((resolve) => setTimeout(resolve, 0)),
+  } = {},
+) {
   const scanner = createCsvScanner(text);
-  const now = () => globalThis.performance?.now?.() ?? Date.now();
   while (!scanner.finished && scanner.position < scanner.length) {
     signal?.throwIfAborted();
     scanner.advance({
@@ -397,7 +402,7 @@ async function scanCsvCooperatively(text, { signal, onProgress } = {}) {
       totalCharacters: scanner.length,
     });
     if (!scanner.finished && scanner.position < scanner.length) {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await yieldControl();
       signal?.throwIfAborted();
     }
   }

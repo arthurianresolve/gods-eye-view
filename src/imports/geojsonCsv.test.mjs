@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   parseCsv,
   parseCsvHeaders,
+  scanCsvCooperatively,
   previewCSV,
   previewGeoJSON,
 } from './geojsonCsv.js';
@@ -304,6 +305,22 @@ test('cooperative CSV preview matches sync decoding across quote and CRLF batch 
       expected.rows.at(-1)[2],
     );
   }
+});
+
+test('cooperative CSV scanner checks the 4ms budget across a two-character escape boundary', async () => {
+  const input = `h\n"${'x'.repeat(1020)}""y"\n`;
+  const progress = [];
+  let clockCalls = 0;
+  let yields = 0;
+  const parsed = await scanCsvCooperatively(input, {
+    now: () => (clockCalls++ === 0 ? 0 : 5),
+    yieldControl: async () => yields++,
+    onProgress: (sample) => progress.push(sample),
+  });
+  assert.deepEqual(parsed, parseCsv(input));
+  assert.equal(clockCalls, 3);
+  assert.equal(yields, 1);
+  assert.equal(progress[0].processedCharacters, 1025);
 });
 
 test('CSV parse progress is bounded and malformed late input yields no partial preview', async () => {

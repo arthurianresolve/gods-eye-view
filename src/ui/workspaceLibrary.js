@@ -1307,6 +1307,7 @@ export function createWorkspaceLibraryPanel({
     importController = new AbortController();
     const signal = importController.signal;
     const attribution = root.querySelector('[data-attribution]').value;
+    let lastCsvProgressPercent = -1;
     try {
       const extension = file.name.split('.').at(-1).toLowerCase();
       const preview =
@@ -1321,6 +1322,8 @@ export function createWorkspaceLibraryPanel({
                   100,
                   Math.floor((processedCharacters / totalCharacters) * 100),
                 );
+                if (percent === lastCsvProgressPercent) return;
+                lastCsvProgressPercent = percent;
                 importStatus.textContent = `Parsing CSV… ${percent}%`;
               },
             })
