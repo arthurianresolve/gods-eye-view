@@ -353,6 +353,50 @@ test('missing optional provider keys do not become a global failure', () => {
   );
 });
 
+test('legacy key guidance in the error field does not become a global failure', () => {
+  const enabling = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    lifecycleState: 'enabling',
+    stats: { loading: true },
+  }]);
+  let state = reduceLoadingFeedback(createLoadingFeedbackState(), enabling, 0);
+  state = reduceLoadingFeedback(state, enabling, 200);
+
+  const keyRequired = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: { loading: false, keyRequired: true, error: 'KEY REQUIRED' },
+  }]);
+  state = reduceLoadingFeedback(state, keyRequired, 250, {
+    type: 'visibility', layerId: 'firms', enabled: true,
+  });
+
+  assert.equal(keyRequired.records[0].error, null);
+  assert.equal(state.terminal, 'complete');
+  assert.equal(presentLoadingFeedback(state, keyRequired, 250).label, 'LOAD COMPLETE');
+});
+
+test('an unrelated failure is preserved even when a key is also required', () => {
+  const summary = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: { loading: false, keyRequired: true, error: 'upstream timeout' },
+  }]);
+  assert.equal(summary.records[0].error, 'upstream timeout');
+  let state = reduceLoadingFeedback(createLoadingFeedbackState(), aggregateLayerLoading([
+    { id: 'firms', name: 'NASA FIRMS', lifecycleState: 'enabling', stats: { loading: true } },
+  ]), 0);
+  state = reduceLoadingFeedback(state, summary, 200, {
+    type: 'visibility', layerId: 'firms', enabled: true,
+  });
+  assert.equal(state.batchOutcome, 'error');
+});
+
 test('retains the worst terminal outcome until every concurrent load drains', () => {
   const both = aggregateLayerLoading([
     { id: 'a', name: 'A', lifecycleState: 'enabling' },
