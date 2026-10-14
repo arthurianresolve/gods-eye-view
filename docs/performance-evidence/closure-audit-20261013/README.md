@@ -1,10 +1,27 @@
 # Engineering closure audit under the amended criteria
 
-S50, S51, S52, S53, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
+S49, S50, S51, S52, S53, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **7/14 engineering closed (50%)**, **7/14 partial**
+their own audit. Counts are **8/14 engineering closed (57.1%)**, **6/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S49 lifecycle ownership - 14 October review
+
+The [engineering review](s49-review.json) binds current sources and the
+[three fresh lifecycle reports](../s49-current-e53df518/README.md). Native import
+and persisted-workspace cycles, controlled cancellation/supersession, rapid CCTV
+revisions, terrain replacement and retired selection checks pass. Application
+resources return to their declared warmed checkpoints and pending workers drain.
+The existing rollback regression and its missing-guard negative control cover
+stale fulfillment/rejection after replacement, navigation, abort or destruction.
+Native map failure controls retain missing/corrupt/superseded-provider coverage.
+
+Worker assets and interception were checked before engine attribution. No
+independently reproduced Cesium defect calls for a dependency patch. Current
+both-base Node 24/26, browser and recovery integration passes. This closes the
+finite engineering checklist; raw listener/heap snapshots are diagnostic, and
+full physical Windows journeys plus the final retention soak remain pending.
 
 ## S53 collections and producer mutation - 14 October review
 

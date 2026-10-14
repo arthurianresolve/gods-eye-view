@@ -1,0 +1,130 @@
+{
+  "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "validators": "all three unmodified production report validators passed",
+  "importCases": [
+    {
+      "id": "cooperative-import",
+      "status": "passed",
+      "operations": {
+        "warmupLoads": 1,
+        "completedLoads": 5,
+        "cancellations": 0,
+        "supersededLoads": 0,
+        "completedReplacementLoads": 0,
+        "clearDrains": 6
+      },
+      "baseline": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 1,
+        "groundPrimitives": 1
+      },
+      "final": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 1,
+        "groundPrimitives": 1
+      },
+      "diagnosticListeners": [
+        599,
+        609
+      ],
+      "cleanup": null
+    },
+    {
+      "id": "workspace-replacement",
+      "status": "passed",
+      "operations": {
+        "completedWorkspaceReplacements": 5
+      },
+      "baseline": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 2,
+        "groundPrimitives": 1
+      },
+      "final": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 2,
+        "groundPrimitives": 1
+      },
+      "diagnosticListeners": [
+        804,
+        704
+      ],
+      "cleanup": null
+    },
+    {
+      "id": "controlled-import-supersession",
+      "status": "passed",
+      "operations": {
+        "warmupLoads": 1,
+        "cancellations": 5,
+        "supersessions": 5,
+        "completedReplacementLoads": 5,
+        "clearDrains": 6
+      },
+      "baseline": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 1,
+        "groundPrimitives": 1
+      },
+      "final": {
+        "entities": 0,
+        "dataSources": 3,
+        "primitives": 1,
+        "groundPrimitives": 1
+      },
+      "diagnosticListeners": [
+        null,
+        null
+      ],
+      "cleanup": {
+        "destroyed": true,
+        "pendingJobs": 0,
+        "ownedTimers": 0,
+        "heldCallbacks": 0
+      }
+    }
+  ],
+  "cctv": {
+    "cycles": 5,
+    "directReinit": "passed",
+    "rapidGeometryRevision": "passed",
+    "renderer": {
+      "classification": "software",
+      "name": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "vendor": "Google Inc. (Google)",
+      "contextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      }
+    }
+  },
+  "terrain": {
+    "status": "passed",
+    "cycles": 5,
+    "switchTransitions": 10,
+    "terrainTileRequests": 162,
+    "terrainTransitionWorkerSubmissions": 174,
+    "terrainTransitionWorkerCompletions": 174,
+    "selectionReenablePicks": 3,
+    "streamedTileFactoryCalls": 1,
+    "streamedTileHttpManifestResponses": 1,
+    "streamedTileHttpContentResponses": 1,
+    "streamedTileSwitches": 10,
+    "applicationCommit": "e53df5188d1f416acd4c9319b6efb5d5b2068f65"
+  },
+  "physicalWindowsQualification": "pending",
+  "full60MinuteRetention": "pending"
+}
