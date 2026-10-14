@@ -531,6 +531,7 @@
       "src/data/layerSnapshot.js",
       "src/ui/investigationTimeline.js",
       "src/ui/investigationTimelineController.js",
+      "src/ui/textUpdate.js",
       "src/recording/bundle.js",
       "src/storage/codec.js"
     ],
@@ -712,6 +713,7 @@
       "src/ui/effects.js",
       "src/ui/frameRateMonitor.js",
       "src/ui/layerPanel.js",
+      "src/ui/textUpdate.js",
       "src/ui/weatherPanel.js",
       "src/ui/railCards.js",
       "src/ui/railCardBlocks.js",
@@ -1564,6 +1566,7 @@
       "src/data/bhoteKoshiEvent.js",
       "src/ui/imagerySplit.js",
       "src/ui/workspaceLibrary.js",
+      "src/ui/textUpdate.js",
       "src/ui/workspaceImportRead.js",
       "src/ui/diagnosticsPanel.js",
       "src/diagnostics/portable.js",

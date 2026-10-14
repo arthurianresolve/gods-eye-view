@@ -32,6 +32,42 @@ test('bounded import decoding preserves UTF-8 across chunks and can be cancelled
   }
 });
 
+test('CSV preview keeps quoted records equivalent while scanning cooperatively', async () => {
+  const csv = [
+    'id,latitude,longitude,note',
+    'one,30,-97,"line one"',
+    'two,31,-98,"line two, with comma"',
+    'three,32,-99,"line three\ncontinued"',
+  ].join('\n');
+  const preview = await previewCSV(csv, {
+    mapping: { id: 'id', latitude: 'latitude', longitude: 'longitude' },
+  });
+  assert.equal(preview.accepted, 3);
+  assert.equal(preview.rejected, 0);
+  assert.equal(preview.records[1].properties.note, 'line two, with comma');
+  assert.equal(preview.records[2].properties.note, 'line three\ncontinued');
+  assert.deepEqual(preview.bounds, [-99, 30, -97, 32]);
+});
+
+test('large CSV scanning can be cancelled before normalization completes', async () => {
+  const csv =
+    'id,latitude,longitude\n' +
+    Array.from({ length: 50_000 }, (_, index) => `${index},30,-97`).join('\n');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2);
+  try {
+    await assert.rejects(
+      previewCSV(csv, {
+        signal: controller.signal,
+        mapping: { id: 'id', latitude: 'latitude', longitude: 'longitude' },
+      }),
+      { name: 'AbortError' },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+});
+
 test('GeoJSON preview validates WGS84 geometry and leaves invalid features staged as rejections', async () => {
   const input = JSON.stringify({
     type: 'FeatureCollection',

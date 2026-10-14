@@ -362,6 +362,70 @@ function scanCsv(text, headersOnly = false) {
   return headersOnly ? headers : { headers, rows: rows.slice(1) };
 }
 
+/**
+ * Cooperative counterpart used by preview paths.  CSV quoting is stateful,
+ * so the scanner yields between character batches rather than splitting the
+ * input into independent lines.  The synchronous parser above remains the
+ * compatibility API used by mapping controls and callers with small text.
+ */
+async function scanCsvAsync(text, headersOnly = false, { signal } = {}) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  let earlyHeaders = null;
+  const pushCell = () => {
+    if (cell.length > IMPORT_LIMITS.cellChars)
+      fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
+    row.push(cell);
+    cell = '';
+    if (row.length > IMPORT_LIMITS.columns)
+      fail('too-many-columns', 'CSV is limited to 64 columns.');
+  };
+  const pushRow = () => {
+    pushCell();
+    if (row.some((value) => value.trim())) rows.push(row);
+    row = [];
+    if (rows.length > IMPORT_LIMITS.rows + 1)
+      fail('too-many-rows', `CSV is limited to ${IMPORT_LIMITS.rows} records.`);
+    if (headersOnly && rows.length === 1) {
+      earlyHeaders = validateCsvHeaders(rows[0]);
+      return true;
+    }
+    return false;
+  };
+  const source = text.replace(/^\uFEFF/, '');
+  const iterator = (function* () {
+    for (let i = 0; i < source.length; i++) {
+      signal?.throwIfAborted();
+      const char = source[i];
+      if (quoted) {
+        if (char === '"' && source[i + 1] === '"') {
+          cell += '"';
+          i++;
+        } else if (char === '"') quoted = false;
+        else cell += char;
+      } else if (char === '"' && cell === '') quoted = true;
+      else if (char === ',') pushCell();
+      else if (char === '\n' || char === '\r') {
+        if (char === '\r' && source[i + 1] === '\n') i++;
+        if (pushRow()) return;
+      } else cell += char;
+      if (cell.length > IMPORT_LIMITS.cellChars)
+        fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
+      yield;
+    }
+    if (quoted) fail('invalid-csv', 'CSV ends inside a quoted cell.');
+    if (cell || row.length) pushRow();
+  })();
+  await consumeInBatches(iterator, { signal, deferStart: true });
+  signal?.throwIfAborted();
+  if (earlyHeaders) return earlyHeaders;
+  if (!rows.length) fail('invalid-csv', 'CSV needs a header row.');
+  const headers = validateCsvHeaders(rows[0]);
+  return headersOnly ? headers : { headers, rows: rows.slice(1) };
+}
+
 function validateCsvHeaders(row) {
   const headers = row.map((header) => header.trim());
   if (
@@ -389,7 +453,7 @@ export async function previewCSV(
   signal?.throwIfAborted();
   const text = await decodeImportTextAsync(input, { signal });
   signal?.throwIfAborted();
-  const { headers, rows } = parseCsv(text);
+  const { headers, rows } = await scanCsvAsync(text, false, { signal });
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;

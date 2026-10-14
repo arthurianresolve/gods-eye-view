@@ -78,13 +78,25 @@ async function parseSafeXML(input, { signal } = {}) {
   const stack = [root];
   let index = 0;
   let nodes = 0;
+  let sliceStartedAt = performance.now();
   while (index < source.length) {
+    signal?.throwIfAborted();
     const open = source.indexOf('<', index);
     const rawText = source.slice(index, open < 0 ? source.length : open);
     if (rawText) {
       if (stack.length === 1 && rawText.trim())
         xmlFail('XML contains text outside the root element.');
       if (stack.length > 1) stack.at(-1).text += entities(rawText);
+    }
+    if (performance.now() - sliceStartedAt >= 4) {
+      await consumeInBatches(
+        (function* () {
+          signal?.throwIfAborted();
+          yield;
+        })(),
+        { signal, deferStart: true },
+      );
+      sliceStartedAt = performance.now();
     }
     if (open < 0) break;
     if (source.startsWith('<!--', open)) {
@@ -147,6 +159,19 @@ async function parseSafeXML(input, { signal } = {}) {
     stack.at(-1).children.push(node);
     if (!selfClosing) stack.push(node);
     index = end + 1;
+    // Keep large documents cancellable even when one placemark has no
+    // geometry work yet.  The timer is owned by consumeInBatches, so every
+    // exit path removes its wake and abort listener.
+    if (performance.now() - sliceStartedAt >= 4) {
+      await consumeInBatches(
+        (function* () {
+          signal?.throwIfAborted();
+          yield;
+        })(),
+        { signal, deferStart: true },
+      );
+      sliceStartedAt = performance.now();
+    }
   }
   if (stack.length !== 1 || root.children.length !== 1)
     xmlFail('XML document is incomplete or has multiple roots.');
