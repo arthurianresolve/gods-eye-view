@@ -781,7 +781,9 @@ async function captureFrame(
           }
         : null;
       const frameTiming = frameFailureDiagnosticEnabled
-        ? createSceneFrameTimingDiagnostics(viewer.scene)
+        ? createSceneFrameTimingDiagnostics(viewer.scene, {
+            includeEventCounts: true,
+          })
         : null;
       let canvas, outcome, frameWindow;
       try {

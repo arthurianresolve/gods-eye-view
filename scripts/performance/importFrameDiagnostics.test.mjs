@@ -24,15 +24,15 @@ test('failure frame timings separate event spans, bound records and dispose owne
     };
   };
   const scene = Object.fromEntries(
-    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
-      name,
-      events(),
-    ]),
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender', 'renderError'].map(
+      (name) => [name, events()],
+    ),
   );
   const trace = createSceneFrameTimingDiagnostics(scene, {
     now: () => time,
     PerformanceObserverClass: null,
   });
+  assert.equal(scene.renderError.callbacks.size, 0);
   for (let i = 0; i < IMPORT_FRAME_EVENT_LIMIT + 5; i++) {
     scene.preUpdate.fire();
     time += 3;
@@ -42,6 +42,7 @@ test('failure frame timings separate event spans, bound records and dispose owne
     scene.postRender.fire();
   }
   const report = trace.stop();
+  assert.equal(Object.hasOwn(report, 'eventCounts'), false);
   assert.equal(report.counts.update, IMPORT_FRAME_EVENT_LIMIT + 5);
   assert.equal(report.spans.update.length, IMPORT_FRAME_EVENT_LIMIT);
   assert.equal(report.spans.render.length, IMPORT_FRAME_EVENT_LIMIT);
@@ -74,6 +75,7 @@ test('failure frame counts expose incomplete render and errors without retaining
   const trace = createSceneFrameTimingDiagnostics(scene, {
     now: () => 100,
     PerformanceObserverClass: null,
+    includeEventCounts: true,
   });
   listeners.get('preUpdate')();
   listeners.get('postUpdate')();
@@ -96,6 +98,7 @@ test('failure frame counts expose incomplete render and errors without retaining
     {
       now: () => 0,
       PerformanceObserverClass: null,
+      includeEventCounts: true,
     },
   ).stop();
   assert.equal(unavailable.eventCounts.renderError, null);

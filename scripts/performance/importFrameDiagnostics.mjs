@@ -9,6 +9,7 @@ export function createSceneFrameTimingDiagnostics(
     PerformanceObserverClass = globalThis.PerformanceObserver,
     maxEntries = 32,
     storeAs = null,
+    includeEventCounts = false,
   } = {},
 ) {
   if (
@@ -38,11 +39,17 @@ export function createSceneFrameTimingDiagnostics(
     update: sceneEventAvailability.update ? 0 : null,
     render: sceneEventAvailability.render ? 0 : null,
   };
-  const eventCounts = Object.fromEntries(
-    ['preUpdate', 'postUpdate', 'preRender', 'postRender', 'renderError'].map(
-      (name) => [name, scene?.[name]?.addEventListener ? 0 : null],
-    ),
-  );
+  const eventCounts = includeEventCounts
+    ? Object.fromEntries(
+        [
+          'preUpdate',
+          'postUpdate',
+          'preRender',
+          'postRender',
+          'renderError',
+        ].map((name) => [name, scene?.[name]?.addEventListener ? 0 : null]),
+      )
+    : null;
   const starts = { update: null, render: null };
   const removers = [];
   const observers = [];
@@ -131,12 +138,12 @@ export function createSceneFrameTimingDiagnostics(
     ]) {
       add(before, scene?.[before], () => {
         if (active) {
-          eventCounts[before]++;
+          if (eventCounts) eventCounts[before]++;
           starts[name] = now();
         }
       });
       add(after, scene?.[after], () => {
-        if (active) eventCounts[after]++;
+        if (active && eventCounts) eventCounts[after]++;
         if (!active || starts[name] === null) return;
         counts[name]++;
         overflow[name] ||= counts[name] > maxEntries;
@@ -147,9 +154,10 @@ export function createSceneFrameTimingDiagnostics(
         starts[name] = null;
       });
     }
-    add('renderError', scene?.renderError, () => {
-      if (active) eventCounts.renderError++;
-    });
+    if (eventCounts)
+      add('renderError', scene?.renderError, () => {
+        if (active) eventCounts.renderError++;
+      });
     for (const type of Object.keys(entries)) {
       if (!PerformanceObserverClass?.supportedEntryTypes?.includes(type))
         continue;
@@ -212,7 +220,7 @@ export function createSceneFrameTimingDiagnostics(
         elapsedMs: Math.max(0, now() - startedAt),
         sceneEventAvailability,
         counts,
-        eventCounts,
+        ...(eventCounts ? { eventCounts } : {}),
         spans,
         overflow,
         entries,
