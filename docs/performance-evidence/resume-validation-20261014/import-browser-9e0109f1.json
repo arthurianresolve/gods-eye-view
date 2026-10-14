@@ -1,0 +1,1588 @@
+{
+  "schema": "gev-import-input-comparison/v1",
+  "applicationCommit": "9e0109f1d1720712fedb7e9249d9992d418198d4",
+  "harnessCommit": "9e0109f1d1720712fedb7e9249d9992d418198d4",
+  "browserUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "capturedAt": "2026-10-14T05:05:30.358Z",
+  "diagnosticOnly": true,
+  "performanceAcceptanceEligible": false,
+  "runLimitMs": 60000,
+  "trialsPerPair": 5,
+  "warmupTrialsPerMode": 1,
+  "scope": "Synthetic parser comparison only; no Cesium, GPU, rendering, user-file data, or performance acceptance claim.",
+  "pageStatePolicy": "Each arm records DOM visibility and focus at start/end; hidden or blurred arms invalidate the run. OS-level occlusion is not checked.",
+  "status": "completed",
+  "workloads": [
+    {
+      "kind": "csv",
+      "records": 50000,
+      "bytes": 2477807,
+      "fixtureSha256": "08fd9f3332affc16a600018b7648b0a90c5b8dbcb29758a16e3864200b089e5d",
+      "expectedFixtureSha256": "08fd9f3332affc16a600018b7648b0a90c5b8dbcb29758a16e3864200b089e5d",
+      "firstId": "0",
+      "lastId": "49999",
+      "modeNames": {
+        "synchronous": "synchronous",
+        "alternate": "cooperative"
+      },
+      "status": "passed",
+      "armEvidence": [
+        {
+          "stage": "warmup",
+          "trial": null,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 848.2999999821186,
+          "synchronousPrefixMs": 116.2999999821186,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "warmup",
+          "trial": null,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 843,
+          "synchronousPrefixMs": 21.899999976158142,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 1,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 636.4000000059605,
+          "synchronousPrefixMs": 149.80000001192093,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 1,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 787.5999999940395,
+          "synchronousPrefixMs": 17.099999994039536,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 2,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 1057.800000011921,
+          "synchronousPrefixMs": 17.80000001192093,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 2,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 864.6999999880791,
+          "synchronousPrefixMs": 134.19999998807907,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 3,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 458.10000002384186,
+          "synchronousPrefixMs": 117.40000000596046,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 3,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 553.0999999940395,
+          "synchronousPrefixMs": 13.099999994039536,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 4,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 498.80000001192093,
+          "synchronousPrefixMs": 10.199999988079071,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 4,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 324.19999998807907,
+          "synchronousPrefixMs": 77.90000000596046,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 5,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 510.90000000596046,
+          "synchronousPrefixMs": 79.7000000178814,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 5,
+          "mode": "cooperative",
+          "status": "passed",
+          "elapsedMs": 603.8000000119209,
+          "synchronousPrefixMs": 14.5,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        }
+      ],
+      "warmup": {
+        "synchronous": {
+          "mode": "synchronous",
+          "synchronousPrefixMs": 116.2999999821186,
+          "totalMs": 685.9000000059605,
+          "accepted": 50000,
+          "rejected": 0,
+          "firstId": "0",
+          "lastId": "49999",
+          "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        "alternate": {
+          "mode": "cooperative",
+          "synchronousPrefixMs": 21.899999976158142,
+          "totalMs": 675.8999999761581,
+          "accepted": 50000,
+          "rejected": 0,
+          "firstId": "0",
+          "lastId": "49999",
+          "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        }
+      },
+      "pairs": [
+        {
+          "trial": 1,
+          "order": [
+            "synchronous",
+            "cooperative"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 149.80000001192093,
+            "totalMs": 479.30000001192093,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "cooperative": {
+            "mode": "cooperative",
+            "synchronousPrefixMs": 17.099999994039536,
+            "totalMs": 623.7000000178814,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 2,
+          "order": [
+            "cooperative",
+            "synchronous"
+          ],
+          "status": "passed",
+          "cooperative": {
+            "mode": "cooperative",
+            "synchronousPrefixMs": 17.80000001192093,
+            "totalMs": 900.6000000238419,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 134.19999998807907,
+            "totalMs": 760.6999999880791,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 3,
+          "order": [
+            "synchronous",
+            "cooperative"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 117.40000000596046,
+            "totalMs": 340.90000000596046,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "cooperative": {
+            "mode": "cooperative",
+            "synchronousPrefixMs": 13.099999994039536,
+            "totalMs": 463.39999997615814,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 4,
+          "order": [
+            "cooperative",
+            "synchronous"
+          ],
+          "status": "passed",
+          "cooperative": {
+            "mode": "cooperative",
+            "synchronousPrefixMs": 10.199999988079071,
+            "totalMs": 416.90000000596046,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 77.90000000596046,
+            "totalMs": 244.90000000596046,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 5,
+          "order": [
+            "synchronous",
+            "cooperative"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 79.7000000178814,
+            "totalMs": 406.40000000596046,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "cooperative": {
+            "mode": "cooperative",
+            "synchronousPrefixMs": 14.5,
+            "totalMs": 498.30000001192093,
+            "accepted": 50000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "49999",
+            "resultSha256": "42abb1337be96d2e4b7af7a6244d0e920d81b803e662bef54189208b2239c61f",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        }
+      ]
+    },
+    {
+      "kind": "geojson",
+      "records": 25000,
+      "bytes": 3527821,
+      "fixtureSha256": "8c2077a1ab3d030c4327558cb66a2bc58bffd01e08642310a9fa480e25a1f756",
+      "expectedFixtureSha256": "8c2077a1ab3d030c4327558cb66a2bc58bffd01e08642310a9fa480e25a1f756",
+      "firstId": "0",
+      "lastId": "24999",
+      "modeNames": {
+        "synchronous": "synchronous",
+        "alternate": "worker"
+      },
+      "status": "passed",
+      "armEvidence": [
+        {
+          "stage": "warmup",
+          "trial": null,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 156.7000000178814,
+          "synchronousPrefixMs": 39,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "warmup",
+          "trial": null,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 223.69999998807907,
+          "synchronousPrefixMs": 15.5,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 1,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 147.09999999403954,
+          "synchronousPrefixMs": 37.19999998807907,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 1,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 196.10000002384186,
+          "synchronousPrefixMs": 15,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 2,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 195.2999999821186,
+          "synchronousPrefixMs": 15.199999988079071,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 2,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 132.60000002384186,
+          "synchronousPrefixMs": 36.60000002384186,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 3,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 130.90000000596046,
+          "synchronousPrefixMs": 37.79999998211861,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 3,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 394.59999999403954,
+          "synchronousPrefixMs": 14.199999988079071,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 4,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 194.19999998807907,
+          "synchronousPrefixMs": 13.800000011920929,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 4,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 122.7999999821186,
+          "synchronousPrefixMs": 35.79999998211861,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 5,
+          "mode": "synchronous",
+          "status": "passed",
+          "elapsedMs": 126,
+          "synchronousPrefixMs": 33.400000005960464,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        {
+          "stage": "trial",
+          "trial": 5,
+          "mode": "worker",
+          "status": "passed",
+          "elapsedMs": 193.2000000178814,
+          "synchronousPrefixMs": 14,
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        }
+      ],
+      "warmup": {
+        "synchronous": {
+          "mode": "synchronous",
+          "synchronousPrefixMs": 39,
+          "totalMs": 114.09999999403954,
+          "accepted": 25000,
+          "rejected": 0,
+          "firstId": "0",
+          "lastId": "24999",
+          "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        },
+        "alternate": {
+          "mode": "worker",
+          "synchronousPrefixMs": 15.5,
+          "totalMs": 182.39999997615814,
+          "accepted": 25000,
+          "rejected": 0,
+          "firstId": "0",
+          "lastId": "24999",
+          "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+          "pageState": {
+            "start": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "end": {
+              "visibilityState": "visible",
+              "hasFocus": true,
+              "osOcclusionChecked": false
+            },
+            "events": {
+              "visibilityChange": 0,
+              "blur": 0,
+              "focus": 0
+            },
+            "becameHidden": false,
+            "lostFocus": false,
+            "valid": true,
+            "scope": "DOM visibility/focus only; OS occlusion is not checked."
+          }
+        }
+      },
+      "pairs": [
+        {
+          "trial": 1,
+          "order": [
+            "synchronous",
+            "worker"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 37.19999998807907,
+            "totalMs": 107.40000000596046,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "worker": {
+            "mode": "worker",
+            "synchronousPrefixMs": 15,
+            "totalMs": 155.90000000596046,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 2,
+          "order": [
+            "worker",
+            "synchronous"
+          ],
+          "status": "passed",
+          "worker": {
+            "mode": "worker",
+            "synchronousPrefixMs": 15.199999988079071,
+            "totalMs": 157.69999998807907,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 36.60000002384186,
+            "totalMs": 95,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 3,
+          "order": [
+            "synchronous",
+            "worker"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 37.79999998211861,
+            "totalMs": 93.59999999403954,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "worker": {
+            "mode": "worker",
+            "synchronousPrefixMs": 14.199999988079071,
+            "totalMs": 355.90000000596046,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 4,
+          "order": [
+            "worker",
+            "synchronous"
+          ],
+          "status": "passed",
+          "worker": {
+            "mode": "worker",
+            "synchronousPrefixMs": 13.800000011920929,
+            "totalMs": 154.5,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 35.79999998211861,
+            "totalMs": 87.2999999821186,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        },
+        {
+          "trial": 5,
+          "order": [
+            "synchronous",
+            "worker"
+          ],
+          "status": "passed",
+          "synchronous": {
+            "mode": "synchronous",
+            "synchronousPrefixMs": 33.400000005960464,
+            "totalMs": 90.30000001192093,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "worker": {
+            "mode": "worker",
+            "synchronousPrefixMs": 14,
+            "totalMs": 156.30000001192093,
+            "accepted": 25000,
+            "rejected": 0,
+            "firstId": "0",
+            "lastId": "24999",
+            "resultSha256": "2cb493cc7e16914b4127335789c40ac1bafdb4be3a94241161021857bf3c13cf",
+            "pageState": {
+              "start": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "end": {
+                "visibilityState": "visible",
+                "hasFocus": true,
+                "osOcclusionChecked": false
+              },
+              "events": {
+                "visibilityChange": 0,
+                "blur": 0,
+                "focus": 0
+              },
+              "becameHidden": false,
+              "lostFocus": false,
+              "valid": true,
+              "scope": "DOM visibility/focus only; OS occlusion is not checked."
+            }
+          },
+          "equal": true
+        }
+      ]
+    }
+  ],
+  "wallTimeMs": 10293.5
+}

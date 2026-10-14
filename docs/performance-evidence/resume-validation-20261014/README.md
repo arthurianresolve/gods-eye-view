@@ -27,3 +27,49 @@ The [Windows d0f463a8 failure](../s54-local-d0f463a8/README.md) occurred in the 
 `e4b22d2b` makes cooperative CSV parsing explicit via `cooperativeParsing: true`; the workspace UI keeps synchronous parsing. The synchronous scanner is refactored and behavior-parity-tested, not byte-identical to the original implementation. Its standalone timing difference remains a diagnostic observation rather than a proven regression.
 
 Fresh fetches found fork main `9beadbda` and upstream main `132b9e96` already contained in QA. Fork dev remains `e8ccc268`. No new main reconciliation is required. This packet does not promote QA to dev/main or update VM105.
+
+
+## Reviewed follow-up at 9e0109f1 and edac418b
+
+The clean Windows Node 24.16.0 full run at `2d210d27` failed: 7,928 passed,
+two failed, ten skipped, in 535.5 seconds. The allocation phase was not reached.
+The retained failure summary records both assertions and the local raw log digest.
+One failure was introduced by the new optional frame diagnostic fields;
+`516e9b54` restores the strict default report shape and enables event counts only
+for the isolated failure fixture. All 61 affected report/frame checks pass.
+The second was an inherited MCP shared-key repair race: one child reported EPERM
+and fell back to a process-local key. The old log does not identify which filesystem
+operation failed. `fc9db154`, `38abd71b`, and `edac418b` handle Windows link/rename
+failure and transient publication gaps without replacing a valid first winner.
+All fourteen panel-key checks pass, including natural concurrency and controlled
+EPERM/gap cases. The repair deadline remains five seconds. This is scoped evidence;
+a new full both-base matrix is required.
+
+At clean `9e0109f1`, Chrome 154 on this Windows machine completed one warmup per
+mode and five alternating pairs for each import parser experiment. Every pair had
+identical input/output hashes, populations, and IDs; every arm reported continuous
+DOM visibility/focus. Desktop occlusion was not checked. The fixed CSV has 50,000
+records (2,477,807 bytes), and GeoJSON has 25,000 (3,527,821 bytes).
+
+| Experiment | Median synchronous prefix, control / experiment | Median total completion, control / experiment | Decision |
+| --- | --- | --- | --- |
+| Cooperative CSV scanner | 117.4 / 14.5 ms | 406.4 / 498.3 ms | Reject default activation: all five pairs are slower overall (+18.4% to +70.2%) |
+| One-shot JSON parser worker | 36.6 / 14.2 ms | 93.6 / 156.3 ms | Reject default activation: all five pairs are slower overall (+45.2% to +280.2%) |
+
+These are bounded parser diagnostics, not full import/UI interaction acceptance.
+The explicit experimental options remain off in the workspace UI. The worker owns
+and retires its listeners, timeout, and process on completion, failure, and abort;
+38 parser/cancellation/fixture/lint-config tests pass. Package boundaries and capture
+lint pass, and the production build completes in 14.8 seconds. No speedup/default
+rollout follows merely from the shorter synchronous prefix.
+
+The same clean source also ran five-second scheduling controls without Cesium.
+Plain RAF delivered 285 callbacks, while static WebGL delivered 14 and animated
+WebGL delivered 11. Both WebGL paths fell to one callback per second in later
+buckets, with maximum gaps near 1,017 ms; timers delivered 249-250 ticks. The actual
+renderer was Intel UHD 620 through ANGLE D3D11. DOM visibility/focus remained true,
+no lifecycle/context-loss events were recorded, and desktop foreground verification
+remains unavailable. Changing pixels did not restore frame delivery. This reproduces
+the symptom outside the application, but does not prove driver, compositor,
+occlusion, upstream, or candidate causation. It does not qualify performance,
+fresh capture, or the sixty-minute soak. The owned tabs and local server were closed.
