@@ -558,6 +558,12 @@ test('retention gates scene entities and explicitly scoped import point instance
   wrongCoverage.checkpoints[4].metrics.application.resources.ownerResources.fixture.pointPrimitiveCoverage =
     'all-scene-primitives';
   assert.equal(evaluateSoakStability(wrongCoverage).status, 'pending');
+
+  const unscoped = stableReport();
+  unscoped.checkpoints.at(
+    -1,
+  ).metrics.application.resources.pointPrimitiveCount = 1;
+  assert.equal(evaluateSoakStability(unscoped).status, 'passed');
 });
 
 test('operation failure preserves completed counts and retained checkpoints', async () => {

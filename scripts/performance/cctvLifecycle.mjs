@@ -1608,10 +1608,15 @@ export function validateCctvLifecycleReport(
     throw new Error(
       'CCTV warmup baselines do not contain the declared fixture camera.',
     );
+  const warmupEntityCount =
+    resourceDiagnosticsSchema === CCTV_RESOURCE_DIAGNOSTICS_SCHEMA
+      ? report.warmup.enabled.diagnostics.entities
+      : report.warmup.enabled.diagnostics.dataSources;
   if (
     !report.warmup.enabled.cameraView?.containsFixture ||
     report.warmup.enabled.diagnostics.primitives < 1 ||
-    report.warmup.enabled.diagnostics.entities < 1
+    !Number.isSafeInteger(warmupEntityCount) ||
+    warmupEntityCount < 1
   )
     throw new Error(
       'CCTV fixture camera did not materialize visible scene geometry.',

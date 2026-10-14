@@ -30,6 +30,7 @@ function resourceCounts(metrics) {
   for (const [key, value] of Object.entries(resources)) {
     if (
       RESOURCE_GAUGES.has(key) &&
+      key !== 'pointPrimitiveCount' &&
       typeof value === 'number' &&
       Number.isFinite(value)
     )

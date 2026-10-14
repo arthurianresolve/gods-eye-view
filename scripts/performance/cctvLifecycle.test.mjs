@@ -1162,6 +1162,22 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
       .status,
     'passed',
   );
+  for (const schema of ['gev-cctv-lifecycle/v1', 'gev-cctv-lifecycle/v2']) {
+    for (const mode of ['zero', 'missing']) {
+      const invalidWarmup = structuredClone(legacyV2);
+      invalidWarmup.schema = schema;
+      const diagnostics = invalidWarmup.warmup.enabled.diagnostics;
+      if (mode === 'zero') diagnostics.dataSources = 0;
+      else delete diagnostics.dataSources;
+      assert.throws(
+        () =>
+          validateCctvLifecycleReport(invalidWarmup, {
+            fixtureSha256: fixture.sha256,
+          }),
+        /diagnostic dataSources|materialize visible scene geometry/,
+      );
+    }
+  }
   const unlabeledCurrent = structuredClone(report);
   delete unlabeledCurrent.resourceDiagnosticsSchema;
   assert.throws(
