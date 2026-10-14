@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { defineConfig, loadEnv } from 'vite';
 import { resolveAllowedHosts } from '../../build/allowedHosts.js';
 import { createBrowserViteConfig } from '../../build/vite.js';
@@ -8,6 +9,20 @@ import { apiNotFoundPlugin } from './api-not-found.js';
 import { standaloneVoiceTools } from './voiceTools.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
+
+/** Make local dev/preview artifacts identify the checkout they actually serve. */
+function checkoutCommit() {
+  try {
+    const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    return /^[a-f0-9]{40}$/.test(commit) ? commit : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Load this checkout's configuration and attach its local provider middleware. */
 export default defineConfig(({ command, mode }) => {
@@ -24,7 +39,8 @@ export default defineConfig(({ command, mode }) => {
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,
     cesiumToken: process.env.CESIUM_ION_TOKEN,
     mapillaryToken: process.env.MAPILLARY_CLIENT_TOKEN,
-    appCommit: process.env.GEV_APP_COMMIT || process.env.GITHUB_SHA || null,
+    appCommit:
+      process.env.GEV_APP_COMMIT || process.env.GITHUB_SHA || checkoutCommit(),
     host: process.env.HOST,
     port: process.env.PORT,
     allowedHosts: resolveAllowedHosts(process.env.GEV_ALLOWED_HOSTS),

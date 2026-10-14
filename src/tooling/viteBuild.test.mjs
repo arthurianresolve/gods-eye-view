@@ -95,6 +95,11 @@ test('root config retains existing named exports and standalone provider order',
   for (const [name, value] of Object.entries(providers))
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
+  assert.match(
+    config.define.__GEV_APP_COMMIT__,
+    /^"[a-f0-9]{40}"$|^null$/,
+    'standalone dev config must expose a real checkout commit when available',
+  );
   assert.deepEqual(
     config.plugins.slice(4, -4).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
