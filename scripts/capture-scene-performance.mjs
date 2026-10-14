@@ -3401,11 +3401,16 @@ try {
         await recordWeatherLayerFailure();
       throw error;
     }
-    const frameResults =
-      await weatherEffectsModule.prepareWeatherEffectsTimeline({
+    let frameResults;
+    try {
+      frameResults = await weatherEffectsModule.prepareWeatherEffectsTimeline({
         page,
         fixture: weatherEffectsWorkload,
       });
+    } catch (error) {
+      await recordWeatherLayerFailure();
+      throw error;
+    }
     weatherEffectsModule.assertWeatherEffectsWindState(
       frameResults.wind?.params,
       frameResults.wind?.stats,

@@ -1138,11 +1138,29 @@ export async function prepareWeatherEffectsTimelineInPage({
     );
   };
   const failIfTimelineIncomplete = () => {
+    const sliderMaximum = Number(slider.max);
+    const historyFrames = readHistoryFrames();
     if (
-      Number(slider.max) !== timeline.length - 1 ||
-      readHistoryFrames().some((count) => count !== timeline.length)
-    )
-      throw new Error('Weather history ended before its pinned timeline.');
+      sliderMaximum !== timeline.length - 1 ||
+      historyFrames.some((count) => count !== timeline.length)
+    ) {
+      const observed = {
+        sliderMaximum: Number.isSafeInteger(sliderMaximum)
+          ? sliderMaximum
+          : null,
+        historyFrames: historyFrames.map((count) =>
+          Number.isSafeInteger(count) && count >= 0 ? count : null,
+        ),
+        documentHidden:
+          typeof document.hidden === 'boolean' ? document.hidden : null,
+        reducedMotion:
+          window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ??
+          null,
+      };
+      throw new Error(
+        `Weather history ended before its pinned timeline: ${JSON.stringify(observed)}.`,
+      );
+    }
   };
 
   if (play.getAttribute('aria-pressed') === 'true') play.click();

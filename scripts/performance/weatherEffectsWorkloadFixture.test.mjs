@@ -434,7 +434,7 @@ test('serialized weather phase driver selects every source through the real cloc
     productEvidence.get('weather-lightning').historyFrames = 2;
     await assert.rejects(
       prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
-      /history ended before its pinned timeline/,
+      /history ended before its pinned timeline: .*"sliderMaximum":2,"historyFrames":\[3,3,2\]/,
     );
     productEvidence.get('weather-lightning').historyFrames =
       fixture.timeline.length;
