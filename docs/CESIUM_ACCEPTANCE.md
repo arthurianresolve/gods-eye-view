@@ -192,6 +192,8 @@ passes/failures/pending results, objective achievement and unsupported platforms
 Neither this policy amendment nor a green subset of CI means all work is done.
 
 The [14 October reconciliation](performance-evidence/main-reconciliation-20261014/README.md)
-adds upstream GBFS name parsing at merge `b6d30c37`. Focused checks pass; full
-integration for that later merge remains pending. Prior refs/results above remain
-historical and do not validate the new source.
+adds upstream GBFS name parsing at merge `b6d30c37`. Focused checks and [both-base integration at e53df518](performance-evidence/representative-pr-e53df518/README.md)
+pass, including release-artifact verification and published-token checks. The
+later test-only Windows ownership correction passes the full local suite at
+`d8506d3b`. Prior refs/results above retain their historical scope; final physical
+Windows qualification, dev promotion and VM deployment remain pending.

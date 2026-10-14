@@ -15,8 +15,9 @@ preserved. No existing development changes were discarded or rebased.
 At that clean merge, 23 GBFS/mobility checks and two unit-discovery checks pass;
 formatting passes for 1,656 adopted source files. The new source tests are
 included by normal recursive discovery. The upstream browser QA script is
-retained but was not run locally. Full integration for this merge remains
-pending; the prior c5802408 matrix does not validate this later patch.
+retained but was not run locally. Full integration now passes on containing source e53df518; see the
+[both-base CI and release verification](../representative-pr-e53df518/README.md).
+The prior c5802408 matrix remains bound to its original source.
 
 The change is on the isolated QA branch. Remote dev/main and VM105 have not
 been updated. Final promotion and deployment still require the current candidate

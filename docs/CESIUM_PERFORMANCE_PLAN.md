@@ -10,13 +10,19 @@ inventory now explicitly covers `preUpdate` work as well as render holds.
 Counts are **7/14 engineering closed (50%)**, **7/14 partial**, and
 **0/14 fully qualified**. Closed slices are S50, S51, S52, S53, S55, S56 and S57.
 
-[Both-base integration at `c5802408`](performance-evidence/representative-pr-c5802408/README.md)
+[Both-base integration at `e53df518`](performance-evidence/representative-pr-e53df518/README.md)
 passes all seven selected CI jobs and release-artifact verification on each
-base. Each Node 24/26 ordinary suite passes 7,817 tests with five platform skips;
-Node 24 also passes fourteen allocation checks. All thirty hosted recovery
-records pass. These results include the Windows cleanup changes and current
-aircraft snapshot audit. They do not qualify physical Windows rendering,
-performance or retention and do not publish a stable release.
+base, including the latest GBFS merge. Each Node 24/26 ordinary suite passes
+7,837 tests with five platform skips; Node 24 also passes fourteen allocation
+checks. All thirty hosted recovery records and both published-token checks pass.
+No stable release was published.
+
+The [Windows ownership fixture correction](performance-evidence/windows-owned-process-d8506d3b/README.md)
+at `d8506d3b` fixes a test assumption about independently owned processes without
+changing the production helper or timeout. Its six focused checks and full local
+suite pass: 7,832 ordinary passes, ten skips and fourteen allocation passes. The
+prior failed assertion remains recorded. These checks do not qualify physical
+Windows rendering, performance or retention.
 
 The [S53 fleet audit](performance-evidence/s53-aircraft-audit/root-51033433/README.md)
 now covers real producer membership, warmed cadence, write deltas, scratch
@@ -34,8 +40,8 @@ remains partial pending the broader review and rendered qualification.
 
 [The 14 October upstream update](performance-evidence/main-reconciliation-20261014/README.md)
 is merged into QA at `b6d30c37`: localized GBFS names, 23 focused passes and
-1,656-file formatting pass. This later merge needs fresh full integration;
-the c5802408 results remain bound to their original source. Dev promotion and
+1,656-file formatting pass. The containing e53df518 revision now passes full
+both-base integration above. Dev promotion and
 VM105 rollout still follow final candidate qualification. The [acceptance policy](CESIUM_ACCEPTANCE.md)
 keeps the physical Windows comparison, full-application visual/interaction
 checks and sixty-minute retention run mandatory. Earlier checkpoints below

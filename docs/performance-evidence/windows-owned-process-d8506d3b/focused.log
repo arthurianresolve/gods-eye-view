@@ -1,0 +1,14 @@
+✔ bounded child runner stops an owned process on timeout (362.9511ms)
+✔ bounded child runner stops an owned process when output exceeds its cap (204.4393ms)
+✔ bounded child runner stops a separately owned browser process (611.6732ms)
+✔ bounded child runner resets Windows cleanup confirmation when the owned PID changes (859.5135ms)
+✔ bounded child runner cleans the owned browser when the CLI exits with failure (650.9887ms)
+✔ bounded child failure keeps sanitized stderr and the latest capture progress (331.5126ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5082.8651

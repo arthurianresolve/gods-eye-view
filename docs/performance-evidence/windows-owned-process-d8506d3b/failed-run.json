@@ -1,0 +1,14 @@
+{
+  "source": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "node": "v24.16.0",
+  "started": "2026-10-14T03:23:57.021586+00:00",
+  "command": [
+    "node",
+    "scripts/run-unit-tests.mjs"
+  ],
+  "status": "completed",
+  "exitCode": 1,
+  "finished": "2026-10-14T03:31:43.987426+00:00",
+  "sourceAtEnd": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "statusAtEnd": ""
+}
