@@ -29,6 +29,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/mapStreamingFixtureDelivery.test.mjs',
   'scripts/performance/cctvViewshedRetention.mjs',
   'scripts/performance/cctvViewshedRetention.test.mjs',
+  'scripts/performance/s58PostProcessStageCensus.mjs',
+  'scripts/performance/s58PostProcessStageCensus.test.mjs',
   'scripts/fixtures/cctv-calibration-demand.js',
   'scripts/qa-hosted-capture.mjs',
   'scripts/performance/mapStreamingWorkloadContract.mjs',
