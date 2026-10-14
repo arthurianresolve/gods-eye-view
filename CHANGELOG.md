@@ -1,5 +1,11 @@
 # Changelog
 
+- Upstream `main` integration adds KartaView as a keyless Street Level provider
+  with bounded nearest-photo lookup, imagery and upload-date filters, paging,
+  context-loss recovery and accessible provider switching. It also adds the
+  opt-in NYC DOT Traffic Management Center CCTV pack with its required
+  operator-controlled agreement gate and attribution.
+
 - S31 adds a candidate matrix for formatting, package boundaries, the complete
   unit suite, production build and six browser journeys, including constrained
   WebGL rendering and resize recovery. The final local report
