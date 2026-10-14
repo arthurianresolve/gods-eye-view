@@ -2,7 +2,7 @@
 
 Policy: `gev-cesium-acceptance/2026-10-13`.
 
-This amendment governs the remaining S47–S60 work. It supersedes conflicting
+This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows
 UHD 620 machine and Linux VM105, and the experiment results already recorded.
@@ -53,7 +53,7 @@ Do not invent a percentage of code written or weight commits/tests as progress.
 The original fourteen partial ledger entries require a packet-by-packet audit
 under these definitions; this amendment itself closes none of them. The separate
 [13 October engineering audit](performance-evidence/closure-audit-20261013/README.md)
-has since closed S49, S50, S51, S52, S53, S55, S56, S57 and S58 engineering: 9/14 closed, 5/14 partial,
+has since closed S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 and S58 engineering: 11/14 closed, 3/14 partial,
 0/14 fully qualified. S50 closure includes the reviewed rendered retention
 comparison and the real-layer workspace restore integration. S57 includes the
 strict native production map/fault journeys and map ownership review.
@@ -62,7 +62,10 @@ preservation; its full application capture qualification remains pending.
 S51 closure includes the corrected dense/focus producer cadence, callback/owner
 inventory and current both-base integration; primary-machine qualification is
 still pending. S53 closes the snapshot/fleet mutation audit and finite split/blend
-decisions, with final rendered qualification pending. The fourteen-slice denominator is unchanged.
+decisions, with final rendered qualification pending. S48 closes the bounded
+diagnostics audit; S54 closes identity/ownership and finite renderer decisions
+after current hosted correctness. Their full physical qualification remains
+pending. The fourteen-slice denominator is unchanged.
 
 ## Requirements that remain mandatory
 

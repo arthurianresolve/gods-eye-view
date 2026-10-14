@@ -1,10 +1,31 @@
 # Engineering closure audit under the amended criteria
 
-S48, S49, S50, S51, S52, S53, S55, S56, S57 and S58 are **engineering closed**, with scoped component checks passed and
+S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 and S58 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **10/14 engineering closed (71.4%)**, **4/14 partial**
+their own audit. Counts are **11/14 engineering closed (78.6%)**, **3/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S54 infrastructure representation - 14 October review
+
+The [engineering review](s54-review.json) closes the finite implementation and
+experiment decisions. Current datacenter correctness passes all ten matched
+pairs, twenty independently decoded image hashes, native picks, complete
+population and both owner teardowns. Root passes 97 focused infrastructure tests.
+Eight runtime/ownership source files still match the earlier five-pair benefit
+comparison. Entity defaults remain; the optional datacenter renderer is available
+for final qualification, without automatic adoption.
+
+The earlier datacenter report improves whole activation and enabled JS heap,
+while its source-ready phase regresses and remains unattributed. Current single
+activation timings are diagnostic only. Dams retain Entities after the measured
+15.02% source-ready regression. Cables retain their existing representation after
+recurring pixel differences and failed lifecycle checks; neither rejected
+prototype is ported into the production factories. Those failures stay recorded.
+
+Mixed-layer, physical Windows, full-scene interaction and retention qualification
+remain mandatory and pending. Engineering closure does not claim a current
+application speedup or authorize default renderer adoption.
 
 ## S48 bounded diagnostics and ownership - 14 October review
 
@@ -84,7 +105,7 @@ This closes the named audit and experiment decisions, not full-scene performance
 Physical Windows selected-object, horizon, focus/fade equivalence, actual upload
 metrics if claimed, and the shared final candidate gates remain pending.
 
-## S51 render demand and callback ownership — 14 October review
+## S51 render demand and callback ownership â€” 14 October review
 
 The [review](s51-review.json) binds current source `c5802408`, the complete
 [owner inventory](../s51-render-demand/owner-audit.md), and the corrected

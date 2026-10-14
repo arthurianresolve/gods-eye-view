@@ -23,8 +23,8 @@ closes the render-demand implementation after the dense-cadence and independent
 focus-deadline corrections. All five affected files match the reviewed packet;
 its 74 focused checks and three negative controls remain valid. The callback
 inventory now explicitly covers `preUpdate` work as well as render holds.
-Counts are **10/14 engineering closed (71.4%)**, **4/14 partial**, and
-**0/14 fully qualified**. Closed slices are S48, S49, S50, S51, S52, S53, S55, S56, S57 and S58.
+Counts are **11/14 engineering closed (78.6%)**, **3/14 partial**, and
+**0/14 fully qualified**. Closed slices are S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 and S58.
 The [S48 owner audit](performance-evidence/s48-engineering-audit-20261014.md)
 closes bounded diagnostic implementation; production-browser cost attribution
 and reliable instrumentation-overhead conclusions remain unqualified.
@@ -46,8 +46,9 @@ Windows rendering, performance or retention.
 The [datacenter candidate integration](performance-evidence/s54-current-integration-20261014/README.md)
 at `352d985d` ports the reviewed collection option into current QA. Ninety-seven
 focused checks and package boundaries pass. Entity defaults remain; rejected
-dam/cable prototypes are excluded. Current rendered/mixed-layer and physical
-Windows acceptance remain pending, so S54 is still partial.
+dam/cable prototypes are excluded. The [subsequent S54 engineering review](performance-evidence/closure-audit-20261013/s54-review.json)
+closes implementation after current rendered correctness passes at `954b08f9`.
+Mixed-layer and physical Windows qualification remain pending.
 
 The [current S48 overhead audit](performance-evidence/s48-overhead-audit-20261014/README.md)
 finds unmatched route phases and incorrect detection-population reporting in
@@ -1421,7 +1422,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Engineering closed: corrected dense/core/focus cadence, scheduled demand, owner/callback inventory and enabled-empty fleet release; see the 14 October closure audit. | 74 focused checks and three negative controls reused with exact source hashes; both-base c5802408 integration passes. Hosted static probe passes with one frame, repeat zero. | Primary Windows static/periodic/tracking/visibility qualification pending. |
 | S52 overlay invalidation                 | Engineering closed under the [13 October audit](performance-evidence/closure-audit-20261013/README.md): retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Current component checks: 90/90 pass; source bytes and 13 original artifact hashes verified. Placement previously passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, no pair over +10%. Rejected paint failure preserved; merged full integration pending | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance                                                                                                      |
 | S53 collection uploads | Engineering closed: retained satellite scratch/write reuse; real snapshot/fleet mutation audits; natural-bounds split rejected and mixed blending retained. | Clean 51033433 fleet audit and 15 focused tests pass; prior coordinate/mutation and 24-pixel split attribution evidence reverified. | Physical selected/horizon/focus/fade qualification pending; no production GPU-upload benefit claimed. |
-| S54 infrastructure batching              | Partial: identity separation implemented; dam/cable prototypes rejected for promotion, datacenter candidate isolated; Entity defaults retained                                                                                                                                                                                                               | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs. Dams regress source-ready time 15.02%; cable camera-change mismatches recur and lifecycle runs fail. Failed experiments are preserved, without unchanged retries or relaxed gates                                                                                                                                                                             | Hosted Apple paravirtual Metal only. Datacenter physical Windows and mixed-layer acceptance remain pending; no full S54 or final-soak acceptance                                                           |
+| S54 infrastructure batching | Engineering closed: datacenter identity/collection ownership reviewed; retain the optional datacenter renderer and Entity defaults; reject dam/cable prototypes with evidence. | 97 current focused checks and ten hosted matched correctness pairs pass at `954b08f9`; twenty decoded image hashes match. Prior benefit sources remain byte-identical across eight runtime/ownership files. | Pending mixed-layer, physical Windows, current performance and final retention qualification; no default renderer adoption. |
 | S55 tracking updates                     | Engineering closed: shared tracked time/pose, independent fresh fleet queries and camera authority audited; 83 current checks and a failing duplicate-write control pass                                                                                                                                                                                                              | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame                                                                                                                                                                                                                                        | Pending tracking p95 and full camera-ownership comparison                                                                                                                                                  |
 | S56 fresh-frame capture                  | Engineering closed: shared fresh-frame ownership, real viewport/pointer caller cleanup, all three temporary surfaces released; explicitly retain preserveDrawingBuffer=true.                                                                                                                                                                                 | 199 frame/pointer/voice checks pass at d73f3c89, after fourteen before-fix sampler-surface failures. The real viewer destroy-pending component passes in native run 38439815077. Full app capture matrix remains separate.                                                                                                                                                                                                                                 | Historical isolated Windows viewer matrix passes at 47dbee4; current full application idle/moving/portrait/resized/restored/hidden qualification and any benefit claim remain pending.                     |
 | S57 map-resource lifetime                | Engineering closed: superseded imagery/terrain/tileset ownership, comparison leases, explicit retry after fallback, native fixture coverage and rendered fault controls; detail/cache defaults retained.                                                                                                                                                     | 50 map tests pass; current native production journeys and all three fault/recovery controls pass at e0710bd5. Historical streamed-tile component at e1a6f5e4 retains its original cancellation/cache/cleanup evidence. See the 13 October closure audit.                                                                                                                                                                                                   | Hosted native integration passed; physical Windows equivalent-detail, route-time and retention qualification pending.                                                                                      |
@@ -1969,7 +1970,7 @@ passes at `996a8d3b8b73da0d3f64392b993bdff81a1e857f`: 252 measured cycles in
 13 post-GC checkpoints, all 40 declared application resource gauges equal the
 warmed baseline. Browser listeners return from 629 to 629, with intermediate
 counts up to 639. Five checkpoints contain one newly submitted terrain worker
-task aged 10.0–15.5 ms; all final tasks are completed and none are pending. This
+task aged 10.0â€“15.5 ms; all final tasks are completed and none are pending. This
 does not claim every intermediate snapshot has zero work.
 
 Final-window retained heap grows 1.70%, below the unchanged 5% limit; peak growth
@@ -4618,7 +4619,7 @@ partial packet remains partial and cannot close the parent slice.
   not necessary triggers. Browser/compositor evidence remains needed before
   attributing this to an engine or driver defect. Production quality, engine
   version, capture deadline and render scheduling remain unchanged.
-- **Windows frame-delivery boundary, not a root-cause fix:** On the user’s
+- **Windows frame-delivery boundary, not a root-cause fix:** On the userâ€™s
   Chrome 154 / Intel UHD 620 D3D11 renderer, the original [paired run at
   `06da9de`](performance-evidence/import-batches-06da9de-failed.json) and a
   focused rerun at [`1d04d35`](performance-evidence/import-batches-1d04d35-paired-focus-failed.json)
@@ -4708,7 +4709,7 @@ partial packet remains partial and cannot close the parent slice.
   reaches and passes upgraded-application recovery, then times out reopening the
   frozen `6b896e2` rollback build in its final stage. All stored-asset checks up to
   that point pass; the overall run remains failed. The recovery-only fixture now
-  uses and reports a 960 × 640 viewport to bound software raster work on GPU-less
+  uses and reports a 960 Ã— 640 viewport to bound software raster work on GPU-less
   CI runners. Resolution scale, effects, data, assertions and timeouts are
   unchanged. This is not a performance configuration or proof of the timeout's
   cause; validation of the recovery fixture adjustment is pending.
