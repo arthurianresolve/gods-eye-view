@@ -217,6 +217,51 @@ test('large CSV preview retains complete batch-built bounds and accepted time ra
   ]);
 });
 
+test('CSV batch summaries exclude empty, invalid and duplicate rows without inventing times', async () => {
+  const mapped = {
+    id: 'id',
+    latitude: 'lat',
+    longitude: 'lon',
+    time: 'observed_at',
+  };
+  const empty = await previewCSV('id,lat,lon,observed_at\n', {
+    mapping: mapped,
+  });
+  assert.equal(empty.accepted, 0);
+  assert.equal(empty.rejected, 0);
+  assert.equal(empty.bounds, null);
+  assert.equal(empty.timeRange, null);
+
+  const invalid = await previewCSV(
+    'id,lat,lon,observed_at\na,91,0,2026-01-01T00:00:00Z\nb,0,181,2026-01-02T00:00:00Z',
+    {
+      mapping: mapped,
+    },
+  );
+  assert.equal(invalid.accepted, 0);
+  assert.equal(invalid.rejected, 2);
+  assert.equal(invalid.bounds, null);
+  assert.equal(invalid.timeRange, null);
+
+  const missingTime = await previewCSV('id,lat,lon\na,1,2', {
+    mapping: { id: 'id', latitude: 'lat', longitude: 'lon' },
+  });
+  assert.equal(missingTime.records[0].timeMs, null);
+  assert.equal(missingTime.timeRange, null);
+
+  const duplicate = await previewCSV(
+    'id,lat,lon,observed_at\nsame,1,2,2026-01-01T00:00:00Z\nsame,90,180,2026-12-31T00:00:00Z\nother,-5,-6,',
+    { mapping: mapped },
+  );
+  assert.equal(duplicate.accepted, 2);
+  assert.equal(duplicate.rejected, 1);
+  assert.deepEqual(duplicate.bounds, [-6, -5, 2, 1]);
+  assert.deepEqual(duplicate.timeRange, [
+    Date.UTC(2026, 0, 1),
+    Date.UTC(2026, 0, 1),
+  ]);
+});
+
 test('CSV parsing rejects missing mapping, malformed quoting and oversized files', async () => {
   await assert.rejects(previewCSV('a,b\n1,2'), { code: 'mapping-required' });
   await assert.rejects(

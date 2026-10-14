@@ -124,8 +124,8 @@ function buildImportPreview(
   });
 }
 
-export function createImportPreview(options, summary = null) {
-  return buildImportPreview(options, summary);
+export function createImportPreview(options) {
+  return buildImportPreview(options);
 }
 
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
@@ -422,7 +422,7 @@ export async function previewCSV(
     })(),
     { signal },
   );
-  return createImportPreview(
+  return buildImportPreview(
     {
       kind: 'csv',
       records,
