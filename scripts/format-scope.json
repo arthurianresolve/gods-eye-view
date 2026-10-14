@@ -1309,5 +1309,7 @@
   "src/voice/gevActions.js",
   "scripts/performance/trackingRoute.mjs",
   "scripts/performance/depthPickAttribution.mjs",
-  "scripts/performance/depthPickAttribution.test.mjs"
+  "scripts/performance/depthPickAttribution.test.mjs",
+  "src/sources/gbfsStations.test.mjs",
+  "scripts/qa-gbfs-names.mjs"
 ]

@@ -1209,6 +1209,19 @@ normal fallback chain. The existing declared media size ceiling remains 64 MiB.
 
 ## GBFS upstream bounds
 
+Station information is normalized in `src/sources/gbfsStations.js` for both the
+globe layer and `get_bike_share`. Names accept legacy strings or GBFS v3 Localized
+String arrays regardless of the reported feed version. Nonempty English text
+(including regional `en-*` tags, case-insensitive) takes precedence, then the first
+usable translation. An unusable `name` falls back to `short_name` with the same
+rules; if neither supplies text, the station remains available with an empty name
+(the globe uses its station-ID label and the tool returns `null`). Malformed
+translation entries do not interrupt loading of the other stations. This covers
+station names, not complete GBFS v3 support.
+`scripts/qa-gbfs-names.mjs` checks synthetic localized names through the real layer,
+station selection, keyboard dismissal, mobile cards and bike-share tool against
+either a dev or preview server (`--url` selects the target).
+
 The station reader addresses the proxy as `/api/gbfs/<encoded feed URL>`; the
 feed address is read from the path, and a query-string form is refused with a 400. GBFS refuses upstream redirects and enforces its 5 MiB response cap while
 streaming. The 12-second deadline includes reading the body, and rejected or
