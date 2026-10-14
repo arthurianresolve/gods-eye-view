@@ -50,16 +50,22 @@ export function normalizeLayerLoading(layer = {}) {
   // normal operation, never a batch failure — mirrors layerFeedState's carve-out
   // so a prompt stored alongside the status cannot turn the chip red.
   const guidance = GUIDANCE_STATUSES.includes(status);
-  const rawError = stoppingInstallations
-    ? null
-    : (!guidance && stats.error) ||
-      stats.lastError ||
-      stats.managerRefreshError ||
-      null;
+  const rawErrors = stoppingInstallations
+    ? []
+    : [
+        !guidance && stats.error,
+        stats.lastError,
+        stats.managerRefreshError,
+      ].filter(Boolean);
+  const rawError = rawErrors[0] || null;
   const keyRequired = stats.keyRequired === true || stats.missingKey === true;
   const configurationOnly =
-    keyRequired && isCredentialConfigurationError(rawError);
-  const error = configurationOnly ? null : rawError;
+    keyRequired && rawErrors.every(isCredentialConfigurationError);
+  const error = configurationOnly
+    ? null
+    : rawErrors.find(
+        (candidate) => !isCredentialConfigurationError(candidate),
+      ) || rawError;
   const unavailable =
     !configurationOnly &&
     !stoppingInstallations &&
