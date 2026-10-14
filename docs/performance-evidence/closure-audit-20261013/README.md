@@ -1,10 +1,36 @@
 # Engineering closure audit under the amended criteria
 
-S49, S50, S51, S52, S53, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
+S49, S50, S51, S52, S53, S55, S56, S57 and S58 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **8/14 engineering closed (57.1%)**, **6/14 partial**
+their own audit. Counts are **9/14 engineering closed (64.3%)**, **5/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S58 wind, weather and effect ownership - 14 October review
+
+The [review](s58-review.json) closes the named ownership audit. All five runtime
+files match the prior weather-image fix exactly; current full Node 24/26 and
+Windows tests include their pause/resume, reduced-motion, source-replacement,
+host-switch, late-result, transfer-failure and disposal checks.
+
+Equivalent wind fields reuse geometry and scalar textures. The three retained
+five-pair CPU reports preserve raster bytes; the changed-temperature regression
+in the first report is disclosed and did not recur in the two repeats. Hosted
+speed/temperature/pressure pixels preserve the declared 1,200 paths and 152,736
+vertices. Weather generations and bounded caches retire obsolete frames; the
+regional bitmap copy releases its displaced source explicitly. GPU wind changes
+uniforms during animation and sleeps when wholly invisible, with re-entry wakes.
+
+The [real-stage census](../s58-postprocess-stage-census/root-8d9d79bd/README.md)
+observes no redundant settled style stage. Its two-style state is the deliberate
+crossfade, with complete teardown. Retain crossfade and independent bloom/sharpen;
+no pass-removal change is justified by this census. Internal GPU pass counts and
+timings remain unavailable. This is a finite no-change decision for that named
+hypothesis, not a claim that all possible effect optimizations were exhausted.
+
+Engineering closure keeps the full physical Windows weather/effect visual,
+interaction and retention matrix pending. The completed component tests and
+CPU comparisons do not establish a full-scene performance gain.
 
 ## S49 lifecycle ownership - 14 October review
 
