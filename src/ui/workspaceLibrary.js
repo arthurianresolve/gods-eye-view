@@ -883,7 +883,12 @@ export function createWorkspaceLibraryPanel({
       try {
         while (refreshRequested && !disposed) {
           refreshRequested = false;
-          await refreshCurrent(refreshGeneration);
+          try {
+            await refreshCurrent(refreshGeneration);
+          } catch (error) {
+            if (refreshRequested && !disposed) continue;
+            throw error;
+          }
         }
       } finally {
         if (refreshTask === task) refreshTask = null;
@@ -898,8 +903,6 @@ export function createWorkspaceLibraryPanel({
     const generation = openGeneration;
     const owner = active;
     const ownerId = owner?.id || select.value;
-    const priorRevisionWorkspaceId = revisionSelectionWorkspaceId;
-    const priorRevision = revisions.value;
     const isCurrent = () =>
       !disposed &&
       refreshId === refreshGeneration &&
@@ -946,10 +949,11 @@ export function createWorkspaceLibraryPanel({
           ),
       ),
     ];
+    const currentRevision = revisions.value;
     const selectedRevision =
-      priorRevisionWorkspaceId === historyWorkspaceId &&
-      points.some((point) => String(point.revision) === String(priorRevision))
-        ? priorRevision
+      revisionSelectionWorkspaceId === historyWorkspaceId &&
+      points.some((point) => String(point.revision) === String(currentRevision))
+        ? currentRevision
         : '';
     replaceSelectOptionsIfChanged(revisions, revisionOptions, selectedRevision);
     revisionSelectionWorkspaceId = historyWorkspaceId;

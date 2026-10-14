@@ -637,6 +637,71 @@ test('failed refresh ownership retires so a later refresh can recover', async (t
   );
 });
 
+test('an obsolete failed refresh still services its queued latest request', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 1 });
+  t.after(() => fixture.restoreGlobals());
+  const callsBefore = fixture.storage.listCalls;
+  const gate = fixture.storage.gateNextList();
+  const obsolete = fixture.panel.refresh();
+  await gate.started;
+  const latest = fixture.panel.refresh();
+  gate.fail(new Error('obsolete list failure'));
+
+  await Promise.all([obsolete, latest]);
+  assert.equal(fixture.storage.listCalls - callsBefore, 2);
+  assert.equal(fixture.element('[data-workspace-select]').children.length, 2);
+});
+
+test('disposing during an owned refresh prevents publication and queued reads', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 1 });
+  t.after(() => fixture.restoreGlobals());
+  const callsBefore = fixture.storage.listCalls;
+  const optionWritesBefore = fixture.element(
+    '[data-workspace-select]',
+  ).replaceChildrenCalls;
+  const gate = fixture.storage.gateNextList();
+  const refreshing = fixture.panel.refresh();
+  await gate.started;
+  const queued = fixture.panel.refresh();
+  fixture.panel.destroy();
+  gate.release();
+
+  await Promise.all([refreshing, queued]);
+  assert.equal(fixture.storage.listCalls - callsBefore, 1);
+  assert.equal(
+    fixture.element('[data-workspace-select]').replaceChildrenCalls,
+    optionWritesBefore,
+  );
+});
+
+test('revision selection changes during a same-workspace read remain current', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 1 });
+  t.after(() => fixture.restoreGlobals());
+  await fixture.selectWorkspace('workspace-a');
+  await fixture.action('save');
+  await fixture.action('save');
+  await fixture.action('save');
+  await fixture.panel.refresh();
+  const revisionSelect = fixture.element('[data-revision-select]');
+  assert.deepEqual(
+    revisionSelect.children.map((option) => option.value),
+    ['', '2', '1'],
+    `saved history should expose revisions 2 and 1; current=${fixture.storage.records.get('workspace-a')?.manifest.revision}`,
+  );
+  revisionSelect.value = '2';
+
+  const gate = fixture.storage.gateNextRead(
+    (id, record) => id === 'workspace-a' && record?.manifest.revision === 3,
+  );
+  const refreshing = fixture.panel.refresh();
+  await gate.started;
+  revisionSelect.value = '1';
+  gate.release();
+  await refreshing;
+
+  assert.equal(revisionSelect.value, '1');
+});
+
 for (const selectionPhase of ['during-save', 'during-render']) {
   test(`a started save completes without overwriting a newer file selected ${selectionPhase}`, async (t) => {
     const fixture = await createPanel({ workspaceCount: 1 });
