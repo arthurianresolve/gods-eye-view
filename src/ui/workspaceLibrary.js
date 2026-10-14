@@ -24,6 +24,7 @@ import {
   createWorkspaceImportReadOwner,
   readOwnedWorkspaceFile,
 } from './workspaceImportRead.js';
+import { setTextIfChanged } from './textUpdate.js';
 
 const safeJson = (value) => JSON.stringify(value ?? null);
 
@@ -962,10 +963,12 @@ export function createWorkspaceLibraryPanel({
     revisionSelectionWorkspaceId = historyWorkspaceId;
     const estimate = await library.estimate();
     if (!isCurrent()) return;
-    usage.textContent =
+    setTextIfChanged(
+      usage,
       estimate?.usage != null && estimate?.quota != null
         ? `Local storage: ${Math.round(estimate.usage / 1024 / 1024)} MiB used of ${Math.round(estimate.quota / 1024 / 1024)} MiB.`
-        : 'Local storage usage is unavailable in this browser.';
+        : 'Local storage usage is unavailable in this browser.',
+    );
     lastAuthoredSignature = authoredSignature();
   }
 

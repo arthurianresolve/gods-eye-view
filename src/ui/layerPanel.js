@@ -9,6 +9,7 @@ import {
 } from '../keySetupCore.mjs';
 import { createWeatherPanel } from './weatherPanel.js';
 import { createInvestigationTimeline } from './investigationTimeline.js';
+import { setTextIfChanged } from './textUpdate.js';
 const FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
   loading: 'LOADING',
@@ -543,12 +544,12 @@ export class LayerPanel {
 
       const count = row.querySelector('.data-count');
       if (count) {
-        count.textContent = this._layerCountText(layer.stats);
+        setTextIfChanged(count, this._layerCountText(layer.stats));
       }
 
       const meta = row.querySelector('.data-toggle-meta');
       if (meta) {
-        meta.textContent = this._buildMetaText(layer);
+        setTextIfChanged(meta, this._buildMetaText(layer));
       }
 
       this._syncRowControls(
