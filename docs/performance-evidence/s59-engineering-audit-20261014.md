@@ -43,9 +43,11 @@ uses the checked-in `compareCsvSummaryImplementations.mjs` generator and five
 alternating pairs over the same deterministic 50,000-row, 2,653,380-byte
 fixture. Baseline and candidate outputs matched exactly. In the retained run,
 median total preview was 362.7 ms for baseline and 429.2 ms for candidate
-(+18.3%). A preceding exploratory run on the same machine had the opposite
-direction, confirming high timing variability. Treat this as diagnostic-only;
-it provides no performance-gain evidence. The report pins baseline commit
+(+18.3%). This retained run overlapped focused test activity on the same host,
+so the timing is confounded and diagnostic-only. A prior exploratory run's raw
+artifact was overwritten; only a console summary remains, so it cannot be
+reproduced or used to infer run-to-run variability. Treat the retained result as
+inconclusive, with no performance-gain evidence. The report pins baseline commit
 `e20a84b863bb5a91d809bbdd78de4e59ced1897b`, baseline source SHA256
 `b641993b975f53d4c396736d1079aa144e67754a4222fec713dde3bf972f492d`, and
 candidate source SHA256
@@ -109,3 +111,54 @@ summary scans are also unmeasured. The next evidence, if these paths are
 revisited, should use exact saved inputs and measure total preview plus
 interaction/selection behavior before retaining another optimization. This
 audit makes no browser/GPU or hardware-performance claim.
+
+## S59.2 refresh and UI maintenance follow-up
+
+The workspace UI follow-up is committed at `976cccea`, with race-edge coverage
+in `cc7fe5f8`. In
+[`workspaceLibrary.js`](../../src/ui/workspaceLibrary.js), workspace refresh is
+now single-flight with one latest pending pass: a newer request invalidates the
+current pass before it can publish and a burst shares one follow-up read. The
+existing refresh-generation, open-generation and active-owner checks remain in
+place. Refresh skips replacing select children when values and labels are
+unchanged, preserves a still-present recovery revision only while refreshing the
+same workspace using the value current at publication time, and clears that
+selection after switching workspaces. If an obsolete refresh fails while a
+newer request is queued, the current task proceeds to that latest pass; a
+failure from the latest owner still propagates and releases the in-flight slot.
+[`workspaceLibraryImport.test.mjs`](../../src/ui/workspaceLibraryImport.test.mjs)
+exercises overlapping requests, failed-read recovery, unchanged option lists,
+and same-workspace versus cross-workspace revision selection. The workspace
+import and read suites passed 31/31 tests. This establishes unit behavior, not
+a local-control p95 result.
+
+The rest of catalog/source ownership is distinct from a mutable catalog
+refresh. [`catalog.js`](../../src/app/catalog.js) captures an immutable app
+catalog at construction; [`data.js`](../../src/app/data.js) registers those
+instances and finalizes registration once. There is no dynamic catalog refresh
+producer in the current app to coalesce. Live source refreshes have their own
+owners: aircraft military classification uses a single-flight `_polling`
+guard, source lifetime and bounded request signal in
+[`classification.js`](../../src/layers/aircraft/classification.js); CCTV
+geometry refreshes use a generation-fenced pending-record queue and coalesced
+progress notifications in
+[`geometryQueue.js`](../../src/layers/cctv/geometryQueue.js). Their tests cover
+stale source/queue completion and retirement. These checks do not establish
+complete large-catalog import-to-render behavior.
+
+The separate `s59-csv-summary-pass-20261014.json` report records a 4.15% median
+reduction, but its source identities differ from the current final
+API-forwarding implementation and its exact fixture generator was not
+retained. It is not a comparable result or accepted gain. The reproducible
+comparison above is the only current replay; it was host-confounded and is
+inconclusive. No raw first-run result was recovered or reconstructed.
+
+Remaining S59 engineering limits are the indivisible synchronous CSV scan,
+GeoJSON decode/`JSON.parse`, and XML parse; KML/GPX summary scans also lack
+isolated attribution. The app catalog is static by construction, so any future
+requirement for dynamic catalog mutation needs an explicit producer/contract
+before implementing a refresh path. Final large real-file journeys, complete
+rendered data, browser interaction limits, and primary-machine p95 remain
+unqualified. This supports bounded maintenance/ownership work and a no-change
+decision on the tested parser alternatives, not S59 closure or a hardware
+performance claim.
