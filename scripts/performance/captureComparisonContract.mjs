@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { DENSE_FLIGHT_FIXTURE_ID } from './productionFlightFixture.mjs';
-import { assertInfrastructureClockObservation } from './infrastructureWorkloadContract.mjs';
+import {
+  assertInfrastructureClockObservation,
+  assertInfrastructureFixtureIdentity,
+} from './infrastructureWorkloadContract.mjs';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -13,6 +16,7 @@ import {
 } from './austinOperatingWorkloadContract.mjs';
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
+import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
@@ -344,7 +348,7 @@ export function createObservedInfrastructureComparisonContract({
   captures,
   scenarios,
 } = {}) {
-  assert.equal(fixture?.schema, 'gev-infrastructure-fixture-manifest/v1');
+  assertInfrastructureFixtureIdentity(fixture, 'infrastructure fixture');
   assert.ok(
     typeof fixture.id === 'string' && fixture.id,
     'infrastructure fixture identity is required',
@@ -459,6 +463,35 @@ export function createObservedInfrastructureComparisonContract({
     assert.ok(
       sample.cameraPath?.id,
       `capture ${index + 1} observed route is required`,
+    );
+    const scenarioRoute =
+      sample.scenario === 'idle'
+        ? {
+            id: 'parked-v1',
+            elapsedDurationMs: 60_000,
+            motionDistanceM: 0,
+          }
+        : sample.scenario === 'scripted-motion'
+          ? {
+              id: 'elapsed-move-right-v1',
+              elapsedDurationMs: 60_000,
+              motionDistanceM: 15_000,
+            }
+          : null;
+    assert.ok(scenarioRoute, `capture ${index + 1} scenario is unsupported`);
+    const radius = 6_378_137 + fixture.camera.altitudeM;
+    assertRouteDescriptorsEquivalent(
+      sample.cameraPath,
+      {
+        ...scenarioRoute,
+        start: {
+          position: { x: radius, y: 0, z: 0 },
+          direction: { x: -1, y: 0, z: 0 },
+          up: { x: 0, y: 0, z: 1 },
+          transform: [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, radius, 0, 0, 1],
+        },
+      },
+      `capture ${index + 1} infrastructure route differs from the pinned camera/scenario`,
     );
   }
   const settings = captures[0].settings?.before;

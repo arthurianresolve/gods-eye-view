@@ -23,8 +23,10 @@ import { validateAustinSatelliteEpochCaptureReport } from './austinSatelliteSamp
 import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
 import {
   assertInfrastructureClockObservation,
+  assertInfrastructureFixtureIdentity,
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './infrastructureWorkloadContract.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -89,6 +91,11 @@ function validateContract(report, label) {
     `${label}: fixed fixture time must be a valid timestamp`,
   );
   requireText(contract.workloadId, `${label}: workload identity`);
+  assert.ok(
+    contract.workloadId !== MAP_STREAMING_WORKLOAD_ID &&
+      contract.workloadId !== 'map-streaming',
+    `${label}: map-streaming has no eligible paired capture/export contract yet`,
+  );
   const contractDelivery = contract.fixtureDelivery;
   const austin = isAustinContract(contract);
   const weatherEffects = isWeatherEffectsContract(contract);
@@ -180,6 +187,10 @@ function validateContract(report, label) {
       );
     }
   } else if (infrastructure) {
+    assert.equal(
+      contract.fixtureDelivery.method,
+      'actual same-origin bundled asset response bodies SHA-256 verified',
+    );
     assert.equal(contract.fixtureDelivery.fixtureId, contract.fixture.id);
     assert.ok(Array.isArray(contract.fixture.assets));
     assert.ok(Array.isArray(contract.fixtureDelivery.assets));
@@ -1088,6 +1099,10 @@ function validateReport(report, side, expectedAppCommit) {
     );
   }
   if (infrastructure) {
+    assertInfrastructureFixtureIdentity(
+      workload?.fixture,
+      `${side} infrastructure fixture`,
+    );
     const rebuilt = createObservedInfrastructureComparisonContract({
       fixture: workload?.fixture,
       fixtureDelivery: report.fixtureDelivery,

@@ -171,6 +171,19 @@ test('paired reports reject a caller-only fixture descriptor without observed de
   );
 });
 
+test('map diagnostic identities cannot be promoted through the generic paired contract', () => {
+  for (const workloadId of ['map-streaming', 'austin-map-streaming-v1']) {
+    const baseline = makeReport(baselineCommit);
+    const candidate = makeReport(candidateCommit);
+    baseline.comparisonContract.workloadId = workloadId;
+    candidate.comparisonContract.workloadId = workloadId;
+    assert.throws(
+      () => validate(baseline, candidate),
+      /map-streaming has no eligible paired capture\/export contract yet/,
+    );
+  }
+});
+
 test('paired weather reports require five 30/60 runs with phase-bound sources and strict common capture identity', () => {
   const baseline = makeWeatherReport(baselineCommit);
   const candidate = makeWeatherReport(candidateCommit);

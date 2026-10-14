@@ -81,6 +81,23 @@ test('candidate readiness distinguishes failed required gates from pending envir
   );
 });
 
+test('a passed performance comparison cannot satisfy missing or failed retention', () => {
+  for (const retentionStatus of ['pending', 'failed']) {
+    const readiness = evaluateCandidateReadiness([
+      { id: 'performance-comparison', required: true, status: 'passed' },
+      {
+        id: 'performance-retention',
+        required: true,
+        status: retentionStatus,
+      },
+    ]);
+    assert.equal(readiness.releaseReady, false);
+    assert.equal(readiness.pendingCount, 1);
+    assert.equal(readiness.passed, retentionStatus !== 'failed');
+    assert.equal(readiness.failureCount, retentionStatus === 'failed' ? 1 : 0);
+  }
+});
+
 test('validation manifests require the exact candidate commit and bounded evidence', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-'));
   const artifact = path.join(dir, 'evidence.json');
@@ -228,7 +245,7 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
   assert.equal(
     parsed.performanceEvidence.comparison.acceptancePolicyId,
-    'gev-cesium-acceptance/2026-10-13',
+    'gev-cesium-acceptance/2026-10-14',
   );
   assert.deepEqual(
     formatPerformanceObjectiveNotes([

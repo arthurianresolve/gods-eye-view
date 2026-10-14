@@ -9,6 +9,8 @@ import {
   classifyRecordedRenderer,
   evaluateManifestPerformanceEvidence,
   PERFORMANCE_ACCEPTANCE_POLICY_ID,
+  PERFORMANCE_WORKLOAD_VALIDATION_MODES,
+  REQUIRED_PERFORMANCE_WORKLOADS,
 } from './candidatePerformanceEvidence.mjs';
 import { readValidationManifest } from '../qa-candidate.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
@@ -37,6 +39,10 @@ test('candidate workload mapping recognizes the Austin producer identity', () =>
   assert.equal(
     canonicalPerformanceWorkloadId('infrastructure-only'),
     'infrastructure-only',
+  );
+  assert.equal(
+    canonicalPerformanceWorkloadId('austin-map-streaming-v1'),
+    'austin-map-streaming-v1',
   );
 });
 
@@ -639,8 +645,6 @@ test('missing dense and tracking measurements stay pending and do not imply cove
     'operating-view',
     INFRASTRUCTURE_WORKLOAD_IDS[0],
     'weather-effects',
-    'lifecycle-stress',
-    'map-streaming',
   ])
     setup.evidence.comparisons.push(
       await createComparison(setup, { workloadId }),
@@ -699,6 +703,68 @@ test('infrastructure evaluator coverage rejects a tampered producer asset identi
   });
 });
 
+test('lifecycle stress is a retention mode and cannot fill timed workload coverage', async () => {
+  assert.equal(
+    PERFORMANCE_ACCEPTANCE_POLICY_ID,
+    'gev-cesium-acceptance/2026-10-14',
+  );
+  assert.equal(
+    PERFORMANCE_WORKLOAD_VALIDATION_MODES['lifecycle-stress'],
+    'full-soak-retention',
+  );
+  assert.deepEqual(Object.keys(PERFORMANCE_WORKLOAD_VALIDATION_MODES).sort(), [
+    'dense-investigation',
+    'infrastructure',
+    'lifecycle-stress',
+    'map-streaming',
+    'operating-view',
+    'selected-aircraft-tracking',
+    'weather-effects',
+  ]);
+  assert.ok(!REQUIRED_PERFORMANCE_WORKLOADS.includes('lifecycle-stress'));
+
+  const setup = await setupManifest();
+  setup.evidence.comparisons.push(await createComparison(setup));
+  setup.evidence.retention.push({
+    environmentId: 'windows-primary',
+    report: await setup.writeArtifact('primary-soak', makeRetentionReport()),
+  });
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.retentionOutcome.status, 'passed');
+  assert.equal(result.comparison.status, 'pending');
+  assert.deepEqual(
+    result.comparison.workloadValidationModes,
+    PERFORMANCE_WORKLOAD_VALIDATION_MODES,
+  );
+  assert.ok(result.comparison.missingWorkloads.includes('map-streaming'));
+  assert.ok(result.comparison.missingWorkloads.includes('infrastructure'));
+  assert.ok(!result.comparison.workloadIds.includes('lifecycle-stress'));
+
+  const lifecyclePair = await createComparison(setup, {
+    workloadId: 'lifecycle-stress',
+  });
+  const pairedSoakOnly = evaluateManifestPerformanceEvidence(
+    {
+      comparisons: [lifecyclePair],
+      retention: setup.evidence.retention,
+    },
+    { manifestPath: setup.manifestPath, candidateCommit },
+  );
+  assert.equal(pairedSoakOnly.retentionOutcome.status, 'passed');
+  assert.equal(pairedSoakOnly.comparison.status, 'failed');
+  assert.ok(
+    pairedSoakOnly.comparison.failures.some((message) =>
+      /only by the standalone full-soak retention report/.test(message),
+    ),
+  );
+  assert.ok(
+    !pairedSoakOnly.comparison.workloadIds.includes('lifecycle-stress'),
+  );
+});
+
 test('software-only comparisons cannot satisfy primary objective coverage', async () => {
   const setup = await setupManifest();
   for (const workloadId of [
@@ -706,8 +772,6 @@ test('software-only comparisons cannot satisfy primary objective coverage', asyn
     'operating-view',
     ...INFRASTRUCTURE_WORKLOAD_IDS,
     'weather-effects',
-    'lifecycle-stress',
-    'map-streaming',
   ]) {
     setup.evidence.comparisons.push(
       await createComparison(setup, {
@@ -801,15 +865,13 @@ test('raw retention is recomputed and requires source, duration, sorted checkpoi
   );
 });
 
-test('complete primary Windows evidence passes with supplemental software rows', async () => {
+test('complete available primary evidence keeps map-streaming pending', async () => {
   const setup = await setupManifest();
   for (const workloadId of [
     'dense-investigation',
     'operating-view',
     ...INFRASTRUCTURE_WORKLOAD_IDS,
     'weather-effects',
-    'lifecycle-stress',
-    'map-streaming',
   ]) {
     setup.evidence.comparisons.push(
       await createComparison(setup, {
@@ -881,9 +943,10 @@ test('complete primary Windows evidence passes with supplemental software rows',
   });
   assert.equal(
     result.comparison.status,
-    'passed',
+    'pending',
     JSON.stringify(result.comparison, null, 2),
   );
+  assert.deepEqual(result.comparison.missingWorkloads, ['map-streaming']);
   assert.equal(
     result.comparison.acceptancePolicyId,
     PERFORMANCE_ACCEPTANCE_POLICY_ID,
@@ -916,7 +979,7 @@ test('complete primary Windows evidence passes with supplemental software rows',
   const manifest = readValidationManifest(setup.manifestPath, {
     candidateCommit,
   });
-  assert.equal(manifest.performanceEvidence.comparison.status, 'passed');
+  assert.equal(manifest.performanceEvidence.comparison.status, 'pending');
   assert.equal(manifest.performanceEvidence.retentionOutcome.status, 'passed');
 });
 

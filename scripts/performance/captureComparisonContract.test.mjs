@@ -10,8 +10,8 @@ import {
   getCaptureReadinessReasons,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
-import { createInfrastructureWorkloadFixture } from './infrastructureWorkloadFixture.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
+import { makeInfrastructureReport } from './pairedReportTestFixtures.mjs';
 
 const fixture = createProductionFlightFixture({
   count: 2500,
@@ -327,79 +327,17 @@ test('missing diagnostics document observations are explicitly ineligible', () =
 });
 
 function makeInfrastructureObservation() {
-  const fixture = createInfrastructureWorkloadFixture(
+  const report = makeInfrastructureReport(
+    'a'.repeat(40),
     'infrastructure-datacenters',
-    '2026-10-08T12:00:00.000Z',
   );
-  const populations = Object.entries(fixture.expectedLayerCounts)
-    .map(([id, count]) => ({ id, enabled: true, count }))
-    .sort((left, right) => left.id.localeCompare(right.id));
-  const settings = {
-    qualityMode: 'manual',
-    densityPct: 75,
-    detectionMode: 'DENSE',
-    resolutionScale: 1,
-    msaaSamples: 4,
-    antialias: true,
-    fxaa: true,
-  };
-  const cesiumClock = {
-    currentTime: fixture.clock,
-    shouldAnimate: false,
-    multiplier: 0,
-  };
-  const assets = fixture.assets.map((asset) => ({
-    id: asset.id,
-    sha256: asset.sha256,
-    byteLength: asset.byteLength,
-    status: 200,
-    responseCount: 1,
-  }));
-  const fixtureDelivery = {
-    schema: 'gev-infrastructure-fixture-delivery-observation/v1',
-    status: 'observed',
-    method: 'actual same-origin bundled asset response bodies SHA-256 verified',
-    fixtureId: fixture.id,
-    fixtureSha256: fixture.sha256,
-    fixedTime: fixture.fixedTime,
-    assets,
-    populationsBefore: populations,
-    populationsAfter: populations,
-  };
-  const captures = ['idle', 'scripted-motion'].map((scenario) => ({
-    scenario,
-    run: 1,
-    documentRole: 'main-measured',
-    documentId: 'main-measured-document',
-    layers: populations,
-    settings: { before: settings, after: settings },
-    fixtureDelivery,
-    infrastructureFixtureClock: {
-      fixedTime: fixture.fixedTime,
-      wallClockBeforeMs: fixture.fixedTimeMs,
-      wallClockAfterMs: fixture.fixedTimeMs,
-      cesiumBefore: cesiumClock,
-      cesiumAfter: cesiumClock,
-    },
-    conditions: {
-      before: { environment: { layers: populations } },
-      after: { environment: { layers: populations } },
-    },
-    cameraPath: { id: `${scenario}-route-v1` },
-  }));
-  const environment = {
-    userAgent: 'Mozilla/5.0 Chrome/154.0.0.0 Safari/537.36',
-    layers: populations,
-    viewport: { width: 1440, height: 900, dpr: 1 },
-    drawingBuffer: { width: 1440, height: 900 },
-  };
   return {
-    fixture,
-    populations,
-    settings,
-    fixtureDelivery,
-    captures,
-    environment,
+    fixture: report.workload.fixture,
+    populations: report.environment.layers,
+    settings: report.captures[0].settings.before,
+    fixtureDelivery: report.fixtureDelivery,
+    captures: report.captures,
+    environment: report.environment,
   };
 }
 
@@ -830,5 +768,19 @@ test('infrastructure contract rejects altered source populations and clock', () 
   assert.throws(
     () => createObservedInfrastructureComparisonContract(unsupported),
     /selected-aircraft-tracking/,
+  );
+  const changedAsset = args();
+  changedAsset.fixture = structuredClone(observed.fixture);
+  changedAsset.fixture.assets[0].sha256 = 'f'.repeat(64);
+  assert.throws(
+    () => createObservedInfrastructureComparisonContract(changedAsset),
+    /fixture SHA-256|manifest differs/,
+  );
+  const changedRoute = args();
+  changedRoute.captures = structuredClone(observed.captures);
+  changedRoute.captures[0].cameraPath.start.position.x += 1;
+  assert.throws(
+    () => createObservedInfrastructureComparisonContract(changedRoute),
+    /route differs from the pinned camera\/scenario/,
   );
 });

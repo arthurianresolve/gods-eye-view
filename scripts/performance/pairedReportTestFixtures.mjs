@@ -448,6 +448,8 @@ export function makeInfrastructureReport(commit, workloadId) {
       captures.push({
         scenario,
         run,
+        documentRole: 'main-measured',
+        documentId: 'main-measured-document',
         durationMs: 60_005,
         frameCount: frameIntervalMs === null ? 0 : 100,
         frameIntervalMs:

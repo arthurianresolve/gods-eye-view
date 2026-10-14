@@ -12,12 +12,21 @@ export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'selected-aircraft-tracking',
   'infrastructure',
   'weather-effects',
-  'lifecycle-stress',
   'map-streaming',
 ]);
 
+export const PERFORMANCE_WORKLOAD_VALIDATION_MODES = Object.freeze({
+  'operating-view': 'five-pair-timed',
+  'dense-investigation': 'five-pair-timed',
+  'selected-aircraft-tracking': 'five-pair-timed',
+  infrastructure: 'five-pair-timed-all-four-variants',
+  'weather-effects': 'five-pair-timed',
+  'lifecycle-stress': 'full-soak-retention',
+  'map-streaming': 'five-pair-timed-contract-required',
+});
+
 export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
-  'gev-cesium-acceptance/2026-10-13';
+  'gev-cesium-acceptance/2026-10-14';
 
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
@@ -553,7 +562,11 @@ function comparisonOutcome(rows) {
   );
   const workloadIds = new Set(
     eligibleRows
-      .filter((row) => !INFRASTRUCTURE_WORKLOAD_IDS.includes(row.workloadId))
+      .filter(
+        (row) =>
+          !INFRASTRUCTURE_WORKLOAD_IDS.includes(row.workloadId) &&
+          row.workloadId !== 'lifecycle-stress',
+      )
       .map((row) => canonicalPerformanceWorkloadId(row.workloadId)),
   );
   if (missingInfrastructureVariants.length === 0)
@@ -609,6 +622,12 @@ function comparisonOutcome(rows) {
         : 'No verified physical Windows comparison environment is recorded.',
     );
   for (const row of rows) {
+    if (row.workloadId === 'lifecycle-stress') {
+      failures.push(
+        `${row.environmentId}/lifecycle-stress: lifecycle-stress is validated only by the standalone full-soak retention report.`,
+      );
+      continue;
+    }
     if (row.error) {
       failures.push(`${row.environmentId}/${row.workloadId}: ${row.error}`);
       continue;
@@ -657,6 +676,7 @@ function comparisonOutcome(rows) {
     performanceObjectives,
     missingWorkloads,
     workloadIds: [...workloadIds].sort(),
+    workloadValidationModes: { ...PERFORMANCE_WORKLOAD_VALIDATION_MODES },
     infrastructureVariantCoverage: {
       requiredVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
       observedVariants: observedInfrastructureVariants,
