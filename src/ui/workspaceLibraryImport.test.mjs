@@ -10,6 +10,7 @@ class Element {
   constructor(selector = '') {
     this.selector = selector;
     this.children = [];
+    this.replaceChildrenCalls = 0;
     this.listeners = new Map();
     this.dataset = {};
     this._value = '';
@@ -83,12 +84,16 @@ class Element {
   }
 
   replaceChildren(...nodes) {
+    this.replaceChildrenCalls += 1;
     this.children = [...nodes];
     if (
-      this.selector === '[data-workspace-select]' &&
-      !this.children.some((option) => String(option.value) === this._value)
+      [
+        '[data-workspace-select]',
+        '[data-revision-select]',
+        '[data-query-saved]',
+      ].includes(this.selector)
     )
-      this._value = '';
+      this._value = String(this.children[0]?.value ?? '');
   }
 
   get selectedOptions() {
@@ -134,12 +139,23 @@ function memoryStorage() {
   let commitGate = null;
   let commitStarted = null;
   let readGate = null;
+  let listGate = null;
+  let listStarted = null;
+  let listCalls = 0;
   return {
-    listWorkspaces: async () =>
-      [...records.keys()].map((id) => ({
+    listWorkspaces: async () => {
+      listCalls += 1;
+      if (listGate) {
+        const gate = listGate;
+        listGate = null;
+        listStarted.resolve();
+        await gate.promise;
+      }
+      return [...records.keys()].map((id) => ({
         id,
         kind: 'investigation-workspace',
-      })),
+      }));
+    },
     getWorkspace: async (id, { revision } = {}) => {
       const record =
         revision == null
@@ -205,7 +221,24 @@ function memoryStorage() {
       const gate = deferred();
       const started = deferred();
       readGate = { ...gate, matches, started };
-      return { started: started.promise, release: gate.resolve };
+      return {
+        started: started.promise,
+        release: gate.resolve,
+      };
+    },
+    gateNextList() {
+      const gate = deferred();
+      const started = deferred();
+      listGate = gate;
+      listStarted = started;
+      return {
+        started: started.promise,
+        release: gate.resolve,
+        fail: gate.reject,
+      };
+    },
+    get listCalls() {
+      return listCalls;
     },
     records,
     commitAttempts,
@@ -506,6 +539,102 @@ test('completed CSV preview can be rerun after choosing a different workspace', 
     /1 accepted/,
   );
   assert.equal(fixture.element('[data-action="apply-import"]').disabled, false);
+});
+
+test('refresh preserves a valid recovery selection only for its workspace and skips unchanged option writes', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 2 });
+  t.after(() => fixture.restoreGlobals());
+  await fixture.selectWorkspace('workspace-a');
+  const saving = fixture.action('save', { wait: false });
+  await waitFor(
+    () => fixture.storage.records.get('workspace-a').manifest.revision === 2,
+    'second workspace revision',
+  );
+
+  const revisionSelect = fixture.element('[data-revision-select]');
+  await waitFor(
+    () => revisionSelect.children.some((option) => option.value === '1'),
+    'prior revision option',
+  );
+  await saving;
+  const revisionOption = revisionSelect.children.find(
+    (option) => option.value !== '',
+  );
+  assert.ok(revisionOption, 'the opened workspace has a recovery revision');
+  revisionSelect.value = revisionOption.value;
+
+  const optionLists = [
+    fixture.element('[data-workspace-select]'),
+    revisionSelect,
+    fixture.element('[data-query-saved]'),
+  ];
+  const writesBeforeRefresh = optionLists.map(
+    (select) => select.replaceChildrenCalls,
+  );
+  await fixture.panel.refresh();
+  assert.equal(revisionSelect.value, revisionOption.value);
+  assert.deepEqual(
+    optionLists.map((select) => select.replaceChildrenCalls),
+    writesBeforeRefresh,
+    'equal option values and labels do not rebuild DOM children',
+  );
+
+  fixture.element('[data-workspace-select]').value = 'workspace-b';
+  await fixture.element('[data-workspace-select]').dispatch('change');
+  const openingSecondWorkspace = fixture.action('open', { wait: false });
+  await waitFor(
+    () => fixture.element('[data-status]').textContent.includes('Workspace 1'),
+    'second workspace open',
+  );
+  await openingSecondWorkspace;
+  await fixture.panel.refresh();
+  assert.equal(
+    revisionSelect.value,
+    '',
+    'a revision selection from another workspace is not carried over',
+  );
+});
+
+test('overlapping refresh requests coalesce to one latest owned refresh', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 1 });
+  t.after(() => fixture.restoreGlobals());
+  const callsBefore = fixture.storage.listCalls;
+  const gate = fixture.storage.gateNextList();
+
+  const first = fixture.panel.refresh();
+  await gate.started;
+  const superseding = fixture.panel.refresh();
+  const latest = fixture.panel.refresh();
+  gate.release();
+  await Promise.all([first, superseding, latest]);
+
+  assert.equal(
+    fixture.storage.listCalls - callsBefore,
+    2,
+    'one in-flight read is retired and the burst shares one latest refresh',
+  );
+  assert.equal(
+    fixture.element('[data-workspace-select]').children.length,
+    2,
+    'the latest refresh publishes the current workspace options',
+  );
+});
+
+test('failed refresh ownership retires so a later refresh can recover', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 1 });
+  t.after(() => fixture.restoreGlobals());
+  const gate = fixture.storage.gateNextList();
+  const failed = fixture.panel.refresh();
+  await gate.started;
+  gate.fail(new Error('fixture list failure'));
+  await assert.rejects(failed, /fixture list failure/);
+
+  await fixture.panel.refresh();
+  assert.equal(
+    fixture.element('[data-workspace-select]').children.length,
+    2,
+    'a later refresh starts and publishes after the failed owner retires',
+  );
 });
 
 for (const selectionPhase of ['during-save', 'during-render']) {

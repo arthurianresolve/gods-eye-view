@@ -169,12 +169,48 @@ export function createWorkspaceLibraryPanel({
   let renderController = null;
   let openGeneration = 0;
   let refreshGeneration = 0;
+  let refreshTask = null;
+  let refreshRequested = false;
+  let revisionSelectionWorkspaceId = null;
   let autosaveTimer = null;
   let workspaceSaveTail = Promise.resolve();
   let historyTimer = null;
   let pendingHistoryView = null;
   let lastAuthoredSignature = '';
   let disposed = false;
+  function replaceSelectOptionsIfChanged(
+    selectElement,
+    options,
+    selectedValue,
+  ) {
+    const currentOptions = Array.from(selectElement.children || []);
+    const unchanged =
+      currentOptions.length === options.length &&
+      currentOptions.every(
+        (option, index) =>
+          String(option.value ?? '') === String(options[index].value ?? '') &&
+          option.textContent === options[index].textContent,
+      );
+    if (unchanged) {
+      if (
+        selectedValue != null &&
+        options.some(
+          (option) => String(option.value) === String(selectedValue),
+        ) &&
+        selectElement.value !== String(selectedValue)
+      )
+        selectElement.value = String(selectedValue);
+      return false;
+    }
+    selectElement.replaceChildren(...options);
+    const nextValue = options.some(
+      (option) => String(option.value ?? '') === String(selectedValue ?? ''),
+    )
+      ? String(selectedValue ?? '')
+      : String(options[0]?.value ?? '');
+    if (selectElement.value !== nextValue) selectElement.value = nextValue;
+    return true;
+  }
   function cancelImportRendering() {
     renderController?.abort();
     renderController = null;
@@ -333,14 +369,18 @@ export function createWorkspaceLibraryPanel({
   }
   function renderSavedQueries() {
     const values = parseSavedQueryList(active?.chunks?.savedQueries || []);
-    savedQuerySelect.replaceChildren(
+    const options = [
       new Option(
         values.length ? 'Choose a saved query' : 'No saved queries',
         '',
       ),
+      ...values.map((item) => new Option(item.name, item.id)),
+    ];
+    replaceSelectOptionsIfChanged(
+      savedQuerySelect,
+      options,
+      savedQuerySelect.value,
     );
-    for (const item of values)
-      savedQuerySelect.append(new Option(item.name, item.id));
   }
   async function persistWorkspace({ chunks, pinnedEvidence } = {}) {
     const saveOwner = captureWorkspaceSaveOwner();
@@ -836,10 +876,30 @@ export function createWorkspaceLibraryPanel({
 
   async function refresh() {
     if (disposed) return;
-    const refreshId = ++refreshGeneration;
+    refreshGeneration += 1;
+    refreshRequested = true;
+    if (refreshTask) return refreshTask;
+    const task = (async () => {
+      try {
+        while (refreshRequested && !disposed) {
+          refreshRequested = false;
+          await refreshCurrent(refreshGeneration);
+        }
+      } finally {
+        if (refreshTask === task) refreshTask = null;
+      }
+    })();
+    refreshTask = task;
+    return task;
+  }
+
+  async function refreshCurrent(refreshId) {
+    if (disposed) return;
     const generation = openGeneration;
     const owner = active;
     const ownerId = owner?.id || select.value;
+    const priorRevisionWorkspaceId = revisionSelectionWorkspaceId;
+    const priorRevision = revisions.value;
     const isCurrent = () =>
       !disposed &&
       refreshId === refreshGeneration &&
@@ -849,20 +909,17 @@ export function createWorkspaceLibraryPanel({
     const rows = await library.list();
     if (!isCurrent()) return;
     const prior = ownerId;
-    select.replaceChildren();
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = rows.length
-      ? 'Choose an investigation'
-      : 'No saved investigations';
-    select.append(placeholder);
-    for (const row of rows) {
-      const option = document.createElement('option');
-      option.value = row.id;
-      option.textContent = `${row.title} · r${row.revision}`;
-      select.append(option);
-    }
-    if (rows.some((row) => row.id === prior)) select.value = prior;
+    const workspaceOptions = [
+      new Option(
+        rows.length ? 'Choose an investigation' : 'No saved investigations',
+        '',
+      ),
+      ...rows.map(
+        (row) => new Option(`${row.title} · r${row.revision}`, row.id),
+      ),
+    ];
+    const selectedWorkspace = rows.some((row) => row.id === prior) ? prior : '';
+    replaceSelectOptionsIfChanged(select, workspaceOptions, selectedWorkspace);
     if (!isCurrent()) return;
     invalidateWorkspaceOwnedPendingImport();
     syncImportApplyButton();
@@ -874,19 +931,28 @@ export function createWorkspaceLibraryPanel({
       ? await library.history(historyWorkspaceId)
       : [];
     if (!isCurrent() || historyWorkspaceId !== (active?.id || null)) return;
-    revisions.replaceChildren();
-    const noRevision = document.createElement('option');
-    noRevision.value = '';
-    noRevision.textContent = points.length
-      ? 'Choose a complete prior revision'
-      : 'No prior revision';
-    revisions.append(noRevision);
-    for (const point of points) {
-      const option = document.createElement('option');
-      option.value = String(point.revision);
-      option.textContent = `r${point.revision} · ${new Date(point.updatedAt).toLocaleString()}`;
-      revisions.append(option);
-    }
+    const revisionOptions = [
+      new Option(
+        points.length
+          ? 'Choose a complete prior revision'
+          : 'No prior revision',
+        '',
+      ),
+      ...points.map(
+        (point) =>
+          new Option(
+            `r${point.revision} · ${new Date(point.updatedAt).toLocaleString()}`,
+            String(point.revision),
+          ),
+      ),
+    ];
+    const selectedRevision =
+      priorRevisionWorkspaceId === historyWorkspaceId &&
+      points.some((point) => String(point.revision) === String(priorRevision))
+        ? priorRevision
+        : '';
+    replaceSelectOptionsIfChanged(revisions, revisionOptions, selectedRevision);
+    revisionSelectionWorkspaceId = historyWorkspaceId;
     const estimate = await library.estimate();
     if (!isCurrent()) return;
     usage.textContent =
