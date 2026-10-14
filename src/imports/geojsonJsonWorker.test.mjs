@@ -159,7 +159,10 @@ test('worker startup, runtime and protocol failures reject with bounded codes', 
   }
   await assert.rejects(
     parseJsonInWorker('{}', { WorkerConstructor: ConstructorFailure }),
-    { code: 'worker-start-failed', message: 'The JSON parser worker could not start.' },
+    {
+      code: 'worker-start-failed',
+      message: 'The JSON parser worker could not start.',
+    },
   );
 
   const { FakeWorker, workers } = fakeWorkerClass(function () {
@@ -196,7 +199,9 @@ test('worker startup, runtime and protocol failures reject with bounded codes', 
     }
 
     postMessage() {
-      this.onmessage?.({ data: { requestId: 1, value: 'not a protocol reply' } });
+      this.onmessage?.({
+        data: { requestId: 1, value: 'not a protocol reply' },
+      });
     }
   }
   await assert.rejects(
@@ -211,10 +216,11 @@ test('aborted or oversized input never starts the opt-in worker', async () => {
   const controller = new AbortController();
   controller.abort(new DOMException('Cancelled', 'AbortError'));
   assert.throws(
-    () => parseJsonInWorker('{}', {
-      signal: controller.signal,
-      WorkerConstructor: FakeWorker,
-    }),
+    () =>
+      parseJsonInWorker('{}', {
+        signal: controller.signal,
+        WorkerConstructor: FakeWorker,
+      }),
     { name: 'AbortError' },
   );
   await withGlobalWorker(FakeWorker, () =>

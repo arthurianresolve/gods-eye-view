@@ -19,7 +19,11 @@ export function parseJsonInWorker(
       'worker-unavailable',
       'This browser does not support the optional JSON parser worker.',
     );
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > WORKER_TIMEOUT_MS)
+  if (
+    !Number.isFinite(timeoutMs) ||
+    timeoutMs <= 0 ||
+    timeoutMs > WORKER_TIMEOUT_MS
+  )
     throw new RangeError('JSON parser worker timeout is outside its bound.');
 
   return new Promise((resolve, reject) => {
@@ -53,7 +57,10 @@ export function parseJsonInWorker(
       } catch (reason) {
         error = reason;
       }
-      settle(reject, error || workerError('aborted', 'JSON parsing was cancelled.'));
+      settle(
+        reject,
+        error || workerError('aborted', 'JSON parsing was cancelled.'),
+      );
     };
 
     try {
@@ -64,7 +71,10 @@ export function parseJsonInWorker(
     } catch {
       settle(
         reject,
-        workerError('worker-start-failed', 'The JSON parser worker could not start.'),
+        workerError(
+          'worker-start-failed',
+          'The JSON parser worker could not start.',
+        ),
       );
       return;
     }
@@ -78,7 +88,10 @@ export function parseJsonInWorker(
       ) {
         settle(
           reject,
-          workerError('worker-protocol-error', 'The JSON parser worker returned an invalid response.'),
+          workerError(
+            'worker-protocol-error',
+            'The JSON parser worker returned an invalid response.',
+          ),
         );
       } else if (response.ok) {
         settle(resolve, response.value);
@@ -90,7 +103,10 @@ export function parseJsonInWorker(
       } else {
         settle(
           reject,
-          workerError('worker-protocol-error', 'The JSON parser worker rejected the request.'),
+          workerError(
+            'worker-protocol-error',
+            'The JSON parser worker rejected the request.',
+          ),
         );
       }
     };
@@ -104,7 +120,10 @@ export function parseJsonInWorker(
     worker.onmessageerror = () =>
       settle(
         reject,
-        workerError('worker-message-error', 'The JSON parser worker response could not be read.'),
+        workerError(
+          'worker-message-error',
+          'The JSON parser worker response could not be read.',
+        ),
       );
     signal?.addEventListener('abort', onAbort, { once: true });
     if (signal?.aborted) {
@@ -115,7 +134,10 @@ export function parseJsonInWorker(
       () =>
         settle(
           reject,
-          workerError('worker-timeout', 'The JSON parser worker exceeded its time limit.'),
+          workerError(
+            'worker-timeout',
+            'The JSON parser worker exceeded its time limit.',
+          ),
         ),
       timeoutMs,
     );
@@ -128,7 +150,10 @@ export function parseJsonInWorker(
     } catch {
       settle(
         reject,
-        workerError('worker-post-failed', 'The JSON parser request could not be sent.'),
+        workerError(
+          'worker-post-failed',
+          'The JSON parser request could not be sent.',
+        ),
       );
     }
   });
