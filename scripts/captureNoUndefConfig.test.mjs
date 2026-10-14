@@ -26,6 +26,11 @@ test('Vite commit metadata is allowed only in the declared browser fixtures', ()
   const captureMessages = linter.verify('String(__GEV_APP_COMMIT__);', config, {
     filename: 'scripts/qa-hosted-capture.mjs',
   });
+  const inputFixtureMessages = linter.verify(
+    'String(__GEV_APP_COMMIT__);',
+    config,
+    { filename: 'scripts/fixtures/import-input-comparison.mjs' },
+  );
 
   assert.deepEqual(fixtureMessages, []);
   assert.deepEqual(
@@ -34,6 +39,7 @@ test('Vite commit metadata is allowed only in the declared browser fixtures', ()
     }),
     [],
   );
+  assert.deepEqual(inputFixtureMessages, []);
   assert.ok(captureMessages.some((message) => message.ruleId === 'no-undef'));
 });
 

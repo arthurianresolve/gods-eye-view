@@ -60,6 +60,7 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/overlayAttribution.test.mjs',
   'src/overlays/worldOverlayAllocation.worker.mjs',
   'src/imports/geojsonJson.worker.js',
+  'scripts/fixtures/import-input-comparison.mjs',
 ]);
 
 export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
@@ -87,6 +88,7 @@ export const CAPTURE_NO_UNDEF_FIXTURE_CONFIG = Object.freeze({
   files: [
     'scripts/fixtures/cctv-calibration-demand.js',
     'scripts/fixtures/infrastructure-runtime-collections.mjs',
+    'scripts/fixtures/import-input-comparison.mjs',
   ],
   languageOptions: {
     globals: {
