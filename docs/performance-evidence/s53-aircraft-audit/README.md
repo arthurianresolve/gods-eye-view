@@ -128,18 +128,25 @@ cost comparison.
 
 ## Fleet-tick producer audit
 
-The separate bounded current-path audit at
+The separate bounded current-path audit (`gev-aircraft-fleet-tick-audit/v2`) at
 [`aircraftFleetTickAudit.mjs`](../../../scripts/performance/aircraftFleetTickAudit.mjs)
 calls the real `createRendering(...)._fleetTick()` for both flights and military.
 Its fixture contains stationary and moving contacts, a tracked contact skipped by
-the ambient pass, a records-only suppressed contact, an opposite-side horizon
-contact, a controlled focus-fade contact and a ready in-memory model handoff.
+the ambient pass, a records-only contact without a billboard, an opposite-side
+horizon contact, a controlled focus-factor contact and a ready in-memory model
+handoff. The records-only observation does not assert suppression policy.
 The run uses real `FlightRecords`/`MilitaryFlightRecords`, a real Cesium 1.138
 `Camera` and `BillboardCollection`, and proxy counters around the returned
-billboards. The fixed receipt clock and full fixture descriptor are hashed; the
-report also binds source/harness revision and dirty status, input source hashes,
-the package lock and installed Cesium package. A same-cardinality remove/re-add
-control proves the identity/churn counter detects a replacement.
+billboards. Its hashed clock/input sequence calls a cold due tick, a call 40 ms
+later that must skip the 80 ms cadence, the next due tick, an equivalent warmed
+repeat, and a due tick after changing only the moving contact input. Each stage
+records setter deltas and collection identity. The report also records the
+number of distinct objects passed to the deterministic `_deadReckon`
+collaborator; it does not attribute that count to production allocations. The
+full fixture descriptor is hashed, and the report binds source/harness revision
+and dirty status, input source hashes, package lock and installed Cesium
+package. A same-cardinality remove/re-add control proves the identity/churn
+counter detects a replacement.
 
 This establishes only deterministic producer behavior for that bounded contact
 set. It explicitly leaves general JS/Cesium allocation totals, WebGL uploads,

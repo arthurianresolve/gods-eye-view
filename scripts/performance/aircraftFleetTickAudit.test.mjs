@@ -36,6 +36,38 @@ test('real flight and military fleet ticks cover representative mutation owners'
     assert.equal(run.tick.tickRemoves, 0);
     assert.equal(run.tick.identityPreserved, true);
     assert.deepEqual(Object.values(run.tick.witnesses), Array(7).fill(true));
+    assert.deepEqual(
+      run.stages.map(({ name }) => name),
+      [
+        'cold-due',
+        'sub-cadence-skip',
+        'next-due',
+        'warmed-repeat',
+        'changed-moving-input',
+      ],
+    );
+    const [cold, skipped, nextDue, warmed, changed] = run.stages;
+    assert.equal(cold.executed, true);
+    assert.equal(skipped.executed, false);
+    assert.equal(skipped.lastFleetTickMsAfter, cold.lastFleetTickMsAfter);
+    assert.equal(skipped.identityPreserved, true);
+    assert.equal(skipped.movingDeltaM, cold.movingDeltaM);
+    assert.equal(nextDue.executed, true);
+    assert.equal(nextDue.lastFleetTickMsAfter - cold.lastFleetTickMsAfter, 80);
+    assert.equal(warmed.executed, true);
+    assert.equal(warmed.identityPreserved, true);
+    assert.deepEqual(warmed.writeDeltas, nextDue.writeDeltas);
+    assert.equal(changed.executed, true);
+    assert.equal(changed.movingDeltaM, 10);
+    const movingId = report.fixture.descriptor.contacts.find(
+      ({ role }) => role === 'moving',
+    ).id;
+    assert.equal(
+      changed.writeDeltas.find(({ id }) => id === movingId).position,
+      1,
+    );
+    assert.equal(run.scratchArgumentUse.uniqueScratchArguments, 1);
+    assert.ok(run.scratchArgumentUse.deadReckonCalls > 0);
     assert.equal(run.churn.detectsChurn, true);
     assert.equal(run.churn.cardinalityBefore, run.churn.cardinalityAfter);
     assert.equal(run.cleanup.collectionDestroyed, true);
@@ -81,6 +113,12 @@ test('fleet fixture identity changes with altitude, completeness, order, and clo
   const changedClock = createAircraftFleetTickFixtureDescriptor({
     receiptClockMs: fixture.receiptClockMs + 1,
   });
+  const changedTickSequence = {
+    ...fixture,
+    tickSequence: fixture.tickSequence.map((stage, index) =>
+      index === 1 ? { ...stage, offsetMs: stage.offsetMs + 1 } : stage,
+    ),
+  };
   for (const variant of [
     changedAltitude,
     changedCompleteness,
@@ -88,6 +126,10 @@ test('fleet fixture identity changes with altitude, completeness, order, and clo
     changedClock,
   ])
     assert.notEqual(aircraftFleetTickFixtureSha256(variant), baseline);
+  assert.notEqual(
+    aircraftFleetTickFixtureSha256(changedTickSequence),
+    baseline,
+  );
 });
 
 test('fleet audit restores the deterministic receipt clock after a failure', () => {
@@ -100,5 +142,24 @@ test('fleet audit restores the deterministic receipt clock after a failure', () 
     () => createAircraftFleetTickAudit({ fixture: invalidFixture }),
     /id|contact/i,
   );
+  assert.equal(Date.now, originalNow);
+});
+
+test('setup failure destroys the owned billboard collection and restores clock', () => {
+  const originalNow = Date.now;
+  let createdCollection;
+  assert.throws(
+    () =>
+      createAircraftFleetTickAudit({
+        onCollectionCreated(counted) {
+          createdCollection = counted.collection;
+          throw new Error('injected setup failure');
+        },
+      }),
+    /injected setup failure/,
+  );
+  assert.ok(createdCollection);
+  assert.equal(createdCollection.isDestroyed(), true);
+  assert.equal(createdCollection.length, 0);
   assert.equal(Date.now, originalNow);
 });

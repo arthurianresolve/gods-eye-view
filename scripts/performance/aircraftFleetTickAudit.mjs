@@ -17,7 +17,7 @@ import { FLEET_DR_INTERVAL_MS } from '../../src/layers/flights/policy.js';
 import { FLEET_DR_INTERVAL_MS as MILITARY_FLEET_DR_INTERVAL_MS } from '../../src/layers/military/policy.js';
 
 export const AIRCRAFT_FLEET_TICK_AUDIT_SCHEMA =
-  'gev-aircraft-fleet-tick-audit/v1';
+  'gev-aircraft-fleet-tick-audit/v2';
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -37,6 +37,17 @@ const REQUIRED_CONTACTS = Object.freeze([
   'horizon-hidden',
   'fading',
   'model-handoff',
+]);
+const DEFAULT_TICK_SEQUENCE = Object.freeze([
+  Object.freeze({ name: 'cold-due', offsetMs: 0, movingDeltaM: 0 }),
+  Object.freeze({ name: 'sub-cadence-skip', offsetMs: 40, movingDeltaM: 0 }),
+  Object.freeze({ name: 'next-due', offsetMs: 80, movingDeltaM: 0 }),
+  Object.freeze({ name: 'warmed-repeat', offsetMs: 160, movingDeltaM: 0 }),
+  Object.freeze({
+    name: 'changed-moving-input',
+    offsetMs: 240,
+    movingDeltaM: 10,
+  }),
 ]);
 const SOURCE_FILES = Object.freeze([
   'scripts/performance/aircraftFleetTickAudit.mjs',
@@ -60,6 +71,7 @@ export function createAircraftFleetTickFixtureDescriptor({
   altitudeOffsetM = 0,
   stageOrder = REQUIRED_CONTACTS,
   complete = true,
+  tickSequence = DEFAULT_TICK_SEQUENCE,
 } = {}) {
   if (!Number.isSafeInteger(receiptClockMs) || receiptClockMs < 0)
     throw new TypeError('Fixture receipt clock must be a nonnegative integer.');
@@ -74,6 +86,19 @@ export function createAircraftFleetTickFixtureDescriptor({
     throw new TypeError('Fleet fixture order must include every contact once.');
   if (typeof complete !== 'boolean')
     throw new TypeError('Fixture completeness must be boolean.');
+  if (
+    !Array.isArray(tickSequence) ||
+    tickSequence.length !== DEFAULT_TICK_SEQUENCE.length ||
+    tickSequence.some(
+      (stage, index) =>
+        stage?.name !== DEFAULT_TICK_SEQUENCE[index].name ||
+        stage?.offsetMs !== DEFAULT_TICK_SEQUENCE[index].offsetMs ||
+        stage?.movingDeltaM !== DEFAULT_TICK_SEQUENCE[index].movingDeltaM,
+    )
+  )
+    throw new TypeError(
+      'Fleet tick sequence must match the bounded cadence fixture.',
+    );
 
   const contacts = [
     {
@@ -174,13 +199,14 @@ export function createAircraftFleetTickFixtureDescriptor({
   const orderedContacts = stageOrder.map((role) => contactsByRole.get(role));
 
   return {
-    schema: 'gev-aircraft-fleet-tick-fixture/v1',
+    schema: 'gev-aircraft-fleet-tick-fixture/v2',
     receiptClockMs,
     camera: { ...CAMERA },
     stageOrder: [...stageOrder],
     contacts: orderedContacts,
     cadenceMs: FLEET_DR_INTERVAL_MS,
     militaryCadenceMs: MILITARY_FLEET_DR_INTERVAL_MS,
+    tickSequence: tickSequence.map((stage) => ({ ...stage })),
     collaboratorAssumptions: {
       deadReckoning: 'fixed-per-contact-cartesian-offset-into-provided-scratch',
       focus: 'fixed-factor-by-contact-role',
@@ -202,9 +228,9 @@ export function aircraftFleetTickFixtureSha256(fixture) {
   return sha256(Buffer.from(JSON.stringify(fixture)));
 }
 
-function withClock(clockMs, operation) {
+function withClock(clock, operation) {
   const originalNow = Date.now;
-  Date.now = () => clockMs;
+  Date.now = () => (typeof clock === 'function' ? clock() : clock);
   try {
     return operation();
   } finally {
@@ -364,15 +390,31 @@ function createRecordOwner(kind, fixture, viewer) {
   return records;
 }
 
-function createRun(kind, fixture) {
+function createRun(kind, fixture, onCollectionCreated) {
+  const counted = countedBillboardCollection();
+  const owned = { records: null };
+  try {
+    onCollectionCreated?.(counted);
+    return createRunWithCollection(kind, fixture, counted, owned);
+  } catch (error) {
+    if (!counted.collection.isDestroyed()) counted.destroy();
+    owned.records?.data.clear();
+    owned.records?.missingPolls.clear();
+    throw error;
+  }
+}
+
+function createRunWithCollection(kind, fixture, counted, owned) {
   const { scene, camera } = sceneAndCamera(fixture.camera);
   const viewer = { scene, camera };
-  const counted = countedBillboardCollection();
   const records = createRecordOwner(kind, fixture, viewer);
+  owned.records = records;
   const billboards = new Map();
   const positionById = new Map();
   const factorById = new Map();
   const modelStates = new Map();
+  const scratchArguments = new Set();
+  let deadReckonCalls = 0;
   for (const contact of fixture.contacts) {
     const position = Cesium.Cartesian3.fromDegrees(
       contact.longitude,
@@ -474,8 +516,11 @@ function createRun(kind, fixture) {
   };
   const parts = {
     motion: {
-      _deadReckon: (id, result) =>
-        Cesium.Cartesian3.clone(positionById.get(id), result),
+      _deadReckon: (id, result) => {
+        deadReckonCalls += 1;
+        scratchArguments.add(result);
+        return Cesium.Cartesian3.clone(positionById.get(id), result);
+      },
       _floorGroundedDisplayPosition: (_id, _info, position) => position,
     },
     tracking: {
@@ -536,6 +581,10 @@ function createRun(kind, fixture) {
     renderer,
     positionById,
     factorById,
+    scratchUsage: () => ({
+      deadReckonCalls,
+      uniqueScratchArguments: scratchArguments.size,
+    }),
   };
 }
 
@@ -570,50 +619,82 @@ function snapshotRun(context, label) {
   };
 }
 
-function runLayer(kind, fixture) {
-  const context = createRun(kind, fixture);
+function runLayer(kind, fixture, clock, onCollectionCreated) {
+  const context = createRun(kind, fixture, onCollectionCreated);
   const cleanup = { modelMapEntriesBefore: context.modelStates.size };
   try {
     const identityBefore = context.counted.identity(context.billboards);
-    const addCountBefore = context.counted.totals.adds;
-    const removeCountBefore = context.counted.totals.removes;
-    const beforeWrites = new Map(
-      [...context.counted.attemptedWrites].map(([billboard, counts]) => [
-        billboard,
-        { ...counts },
-      ]),
-    );
-    context.state._lastFleetTickMs = fixture.receiptClockMs - fixture.cadenceMs;
-    context.renderer._fleetTick();
-    const tick = snapshotRun(context, 'fleet-tick');
-    tick.tickAdds = context.counted.totals.adds - addCountBefore;
-    tick.tickRemoves = context.counted.totals.removes - removeCountBefore;
-    tick.identityPreserved =
-      JSON.stringify(identityBefore) ===
-      JSON.stringify(context.counted.identity(context.billboards));
+    const moving = fixture.contacts.find(({ role }) => role === 'moving');
+    const movingPosition = context.positionById.get(moving.id);
+    const movingBasePosition = Cesium.Cartesian3.clone(movingPosition);
+    let appliedMovingDeltaM = 0;
+    const stages = [];
+    for (const stage of fixture.tickSequence) {
+      const identityBeforeStage = context.counted.identity(context.billboards);
+      const addCountBefore = context.counted.totals.adds;
+      const removeCountBefore = context.counted.totals.removes;
+      const beforeLastTickMs = context.state._lastFleetTickMs;
+      const beforeScratch = context.scratchUsage();
+      const beforeWrites = new Map(
+        [...context.counted.attemptedWrites].map(([billboard, counts]) => [
+          billboard,
+          { ...counts },
+        ]),
+      );
+      if (stage.movingDeltaM !== appliedMovingDeltaM) {
+        context.positionById.set(
+          moving.id,
+          Cesium.Cartesian3.add(
+            movingBasePosition,
+            new Cesium.Cartesian3(stage.movingDeltaM, 0, 0),
+            new Cesium.Cartesian3(),
+          ),
+        );
+        appliedMovingDeltaM = stage.movingDeltaM;
+      }
+      clock.nowMs = fixture.receiptClockMs + stage.offsetMs;
+      context.renderer._fleetTick();
+      const observed = snapshotRun(context, stage.name);
+      observed.name = stage.name;
+      observed.offsetMs = stage.offsetMs;
+      observed.movingDeltaM = stage.movingDeltaM;
+      observed.executed = context.state._lastFleetTickMs !== beforeLastTickMs;
+      observed.lastFleetTickMsBefore = beforeLastTickMs;
+      observed.lastFleetTickMsAfter = context.state._lastFleetTickMs;
+      observed.tickAdds = context.counted.totals.adds - addCountBefore;
+      observed.tickRemoves = context.counted.totals.removes - removeCountBefore;
+      observed.identityPreserved =
+        JSON.stringify(identityBeforeStage) ===
+        JSON.stringify(context.counted.identity(context.billboards));
+      observed.writeDeltas = observed.writes.map((row) => {
+        const billboard = context.billboards.get(row.id);
+        const prior = beforeWrites.get(billboard) || {};
+        return {
+          id: row.id,
+          position: row.position - (prior.position || 0),
+          color: row.color - (prior.color || 0),
+          scale: row.scale - (prior.scale || 0),
+          show: row.show - (prior.show || 0),
+          rotation: row.rotation - (prior.rotation || 0),
+          image: row.image - (prior.image || 0),
+        };
+      });
+      const afterScratch = context.scratchUsage();
+      observed.deadReckonCalls =
+        afterScratch.deadReckonCalls - beforeScratch.deadReckonCalls;
+      observed.uniqueScratchArguments = afterScratch.uniqueScratchArguments;
+      stages.push(observed);
+    }
+    const tick = stages[0];
     tick.suppressedRecordAbsent = !context.billboards.has(
       fixture.contacts.find(({ role }) => role === 'suppressed').id,
     );
-    tick.writeDeltas = tick.writes.map((row) => {
-      const billboard = context.billboards.get(row.id);
-      const prior = beforeWrites.get(billboard) || {};
-      return {
-        id: row.id,
-        position: row.position - (prior.position || 0),
-        color: row.color - (prior.color || 0),
-        scale: row.scale - (prior.scale || 0),
-        show: row.show - (prior.show || 0),
-        rotation: row.rotation - (prior.rotation || 0),
-        image: row.image - (prior.image || 0),
-      };
-    });
     const stationary = fixture.contacts.find(
       ({ role }) => role === 'stationary',
     );
     const modelContact = fixture.contacts.find(
       ({ role }) => role === 'model-handoff',
     );
-    const moving = fixture.contacts.find(({ role }) => role === 'moving');
     const selected = fixture.contacts.find(({ role }) => role === 'selected');
     const horizon = fixture.contacts.find(
       ({ role }) => role === 'horizon-hidden',
@@ -647,8 +728,15 @@ function runLayer(kind, fixture) {
         Buffer.from(JSON.stringify(identityBefore)),
       ),
       tick,
+      stages,
       churn,
       cleanup,
+      scratchArgumentUse: {
+        deadReckonCalls: context.scratchUsage().deadReckonCalls,
+        uniqueScratchArguments: context.scratchUsage().uniqueScratchArguments,
+        scope:
+          'arguments supplied to the deterministic _deadReckon collaborator only',
+      },
       allocations: {
         billboardCollectionAddsDuringFleetTick: tick.tickAdds,
         billboardIdentityChurnDuringFleetTick: !tick.identityPreserved,
@@ -737,23 +825,31 @@ function sourceMetadata() {
 
 export function createAircraftFleetTickAudit({
   fixture = createAircraftFleetTickFixtureDescriptor(),
+  onCollectionCreated,
 } = {}) {
   const originalNow = Date.now;
-  const report = withClock(fixture.receiptClockMs, () => ({
-    schema: AIRCRAFT_FLEET_TICK_AUDIT_SCHEMA,
-    fixture: {
-      descriptor: fixture,
-      sha256: aircraftFleetTickFixtureSha256(fixture),
-    },
-    source: sourceMetadata(),
-    runs: [runLayer('flights', fixture), runLayer('military', fixture)],
-    limitations: [
-      'Deterministic producer-path audit only; no WebGL context or rendered image comparison.',
-      'Only explicit Cesium BillboardCollection membership/add/remove and billboard setter attempts are counted.',
-      'General JavaScript allocation, Cesium Cartesian3 allocation, GPU upload count, uploaded bytes and frame time are unavailable.',
-      'The synthetic contact set is not a fleet-scale or external-feed population.',
-    ],
-  }));
+  const clock = { nowMs: fixture.receiptClockMs };
+  const report = withClock(
+    () => clock.nowMs,
+    () => ({
+      schema: AIRCRAFT_FLEET_TICK_AUDIT_SCHEMA,
+      fixture: {
+        descriptor: fixture,
+        sha256: aircraftFleetTickFixtureSha256(fixture),
+      },
+      source: sourceMetadata(),
+      runs: [
+        runLayer('flights', fixture, clock, onCollectionCreated),
+        runLayer('military', fixture, clock, onCollectionCreated),
+      ],
+      limitations: [
+        'Deterministic producer-path audit only; no WebGL context or rendered image comparison.',
+        'Only explicit Cesium BillboardCollection membership/add/remove and billboard setter attempts are counted.',
+        'Scratch reuse describes only result objects supplied to the deterministic dead-reckoning collaborator; general JavaScript allocation, Cesium Cartesian3 allocation, GPU upload count, uploaded bytes and frame time are unavailable.',
+        'The synthetic contact set is not a fleet-scale or external-feed population.',
+      ],
+    }),
+  );
   return {
     ...report,
     clock: {
