@@ -27,6 +27,7 @@ import {
   readOwnedWorkspaceFile,
 } from './workspaceImportRead.js';
 import { setTextIfChanged } from './textUpdate.js';
+import { consumeInBatches } from '../imports/cooperative.js';
 
 const safeJson = (value) => JSON.stringify(value ?? null);
 
@@ -160,6 +161,7 @@ export function createWorkspaceLibraryPanel({
   let latestComparison = null;
   let latestQueryResult = null;
   let queryController = null;
+  let queryRenderController = null;
   let queryGeneration = 0;
   let stagedFile = null;
   let stagedText = null;
@@ -486,11 +488,20 @@ export function createWorkspaceLibraryPanel({
     queryStatus.textContent = `Loaded “${item.name}”. Review and edit the query before running.`;
   }
 
-  function renderQueryResult(result, query) {
+  function cancelQueryRendering() {
+    queryRenderController?.abort('superseded-query-render');
+    queryRenderController = null;
+  }
+
+  async function renderQueryResult(result, query, generation) {
+    cancelQueryRendering();
+    const controller = new AbortController();
+    queryRenderController = controller;
     queryResultHost.replaceChildren();
     if (!result?.ok) {
       queryStatus.textContent = result?.error || 'Query could not run.';
-      return;
+      if (queryRenderController === controller) queryRenderController = null;
+      return false;
     }
     const metadata = result.resultMetadata || {};
     const coverage = metadata.records || {};
@@ -514,47 +525,71 @@ export function createWorkspaceLibraryPanel({
     head.append(header);
     table.append(head);
     const body = document.createElement('tbody');
-    for (const record of result.items || []) {
-      const row = document.createElement('tr');
-      const values = [
-        record.layerKey || '',
-        record.id == null ? '' : String(record.id),
-        Number.isFinite(record.lat) && Number.isFinite(record.lon)
-          ? `${record.lat}, ${record.lon}`
-          : 'not supplied',
-        record.time || record.observedAt || 'unknown',
-        record.evidence?.sourceId || 'record reference only',
-      ];
-      for (let index = 0; index < values.length; index++) {
-        const cell = document.createElement('td');
-        if (index === 4 && record.evidence?.entityRef?.id != null) {
-          const inspect = document.createElement('button');
-          inspect.type = 'button';
-          inspect.textContent = 'INSPECT';
-          inspect.setAttribute(
-            'aria-label',
-            `Inspect evidence for ${record.id}`,
-          );
-          inspect.addEventListener('click', () => {
-            window.dispatchEvent(
-              new CustomEvent('gev:evidence-record-opened', {
-                detail: { evidence: record.evidence, record },
-              }),
-            );
-          });
-          cell.append(inspect, document.createTextNode(` ${values[index]}`));
-        } else cell.textContent = values[index];
-        row.append(cell);
-      }
-      body.append(row);
-    }
     table.append(body);
     queryResultHost.append(table);
     const layers = document.createElement('p');
     layers.textContent = `Queried layers: ${(metadata.includedLayers || []).map((layer) => `${layer.layerKey} (${layer.status})`).join(', ') || query.layers.join(', ')}.`;
     queryResultHost.append(layers);
-    queryStatus.textContent =
-      'This result is a fixed snapshot. Editing the form does not change it; run again to capture a new result.';
+    const records = Array.isArray(result.items) ? result.items : [];
+    function* rows() {
+      for (const record of records) {
+        controller.signal.throwIfAborted();
+        const row = document.createElement('tr');
+        const values = [
+          record.layerKey || '',
+          record.id == null ? '' : String(record.id),
+          Number.isFinite(record.lat) && Number.isFinite(record.lon)
+            ? `${record.lat}, ${record.lon}`
+            : 'not supplied',
+          record.time || record.observedAt || 'unknown',
+          record.evidence?.sourceId || 'record reference only',
+        ];
+        for (let index = 0; index < values.length; index++) {
+          const cell = document.createElement('td');
+          if (index === 4 && record.evidence?.entityRef?.id != null) {
+            const inspect = document.createElement('button');
+            inspect.type = 'button';
+            inspect.textContent = 'INSPECT';
+            inspect.setAttribute(
+              'aria-label',
+              `Inspect evidence for ${record.id}`,
+            );
+            inspect.addEventListener('click', () => {
+              window.dispatchEvent(
+                new CustomEvent('gev:evidence-record-opened', {
+                  detail: { evidence: record.evidence, record },
+                }),
+              );
+            });
+            cell.append(inspect, document.createTextNode(` ${values[index]}`));
+          } else cell.textContent = values[index];
+          row.append(cell);
+        }
+        body.append(row);
+        yield row;
+      }
+    }
+    try {
+      await consumeInBatches(rows(), {
+        signal: controller.signal,
+        budgetMs: 4,
+        deferStart: true,
+      });
+      if (
+        controller.signal.aborted ||
+        generation !== queryGeneration ||
+        disposed
+      )
+        return false;
+      queryStatus.textContent =
+        'This result is a fixed snapshot. Editing the form does not change it; run again to capture a new result.';
+      return true;
+    } catch (error) {
+      if (controller.signal.aborted) return false;
+      throw error;
+    } finally {
+      if (queryRenderController === controller) queryRenderController = null;
+    }
   }
 
   async function runQuery() {
@@ -563,6 +598,7 @@ export function createWorkspaceLibraryPanel({
       return;
     }
     queryController?.abort('superseded-query');
+    cancelQueryRendering();
     queryController = new AbortController();
     const controller = queryController;
     const generation = ++queryGeneration;
@@ -580,7 +616,7 @@ export function createWorkspaceLibraryPanel({
       });
       if (controller.signal.aborted || generation !== queryGeneration) return;
       latestQueryResult = { result, query: parsed };
-      renderQueryResult(result, parsed.query);
+      await renderQueryResult(result, parsed.query, generation);
       if (!result.ok)
         queryStatus.textContent = result.error || 'Query unavailable.';
     } catch (error) {
@@ -1819,6 +1855,7 @@ export function createWorkspaceLibraryPanel({
       clearTimeout(autosaveTimer);
       clearTimeout(historyTimer);
       queryController?.abort('panel-destroyed');
+      cancelQueryRendering();
       unsubscribe();
       document.removeEventListener('keydown', onHistoryShortcut);
       for (const name of evidenceEvents)

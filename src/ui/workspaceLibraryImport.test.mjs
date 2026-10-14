@@ -245,7 +245,7 @@ function memoryStorage() {
   };
 }
 
-async function createPanel({ workspaceCount = 0 } = {}) {
+async function createPanel({ workspaceCount = 0, analystEngine = null } = {}) {
   const storage = memoryStorage();
   const seed = createWorkspaceLibrary({
     storage,
@@ -338,6 +338,7 @@ async function createPanel({ workspaceCount = 0 } = {}) {
         return [];
       },
     },
+    analystEngine,
     onImportedData: (...args) => renderHandler(...args),
     now: () => 200,
   });
@@ -364,6 +365,11 @@ async function createPanel({ workspaceCount = 0 } = {}) {
         'CSV preview',
       );
   };
+  const startAction = (name) => {
+    const target = element(`[data-action="${name}"]`);
+    target.dataset.action = name;
+    return root.dispatch('click', { target });
+  };
   const selectWorkspace = async (id) => {
     element('[data-workspace-select]').value = id;
     await element('[data-workspace-select]').dispatch('change');
@@ -375,6 +381,7 @@ async function createPanel({ workspaceCount = 0 } = {}) {
     root,
     element,
     action,
+    startAction,
     selectWorkspace,
     setRenderHandler(handler) {
       renderHandler = handler;
@@ -1368,5 +1375,60 @@ test('opening a stale captured view cannot adopt a concurrent external revision'
   assert.deepEqual(
     fixture.storage.commitAttempts.map((attempt) => attempt.expectedRevision),
     [1],
+  );
+});
+
+test('query result rows render cooperatively and stale renders cannot win', async (t) => {
+  let queryCalls = 0;
+  const fixture = await createPanel({
+    analystEngine: {
+      query: async () => {
+        queryCalls += 1;
+        const prefix = queryCalls === 1 ? 'stale' : 'current';
+        return {
+          ok: true,
+          count: 500,
+          scopeLabel: 'all loaded data',
+          resultMetadata: {
+            records: { returned: 500, truncated: false },
+            includedLayers: [{ layerKey: 'flights', status: 'ready' }],
+          },
+          items: Array.from({ length: 500 }, (_, index) => ({
+            layerKey: 'flights',
+            id: `${prefix}-${index}`,
+            lat: 10,
+            lon: 20,
+          })),
+        };
+      },
+    },
+  });
+  t.after(() => fixture.restoreGlobals());
+  fixture.element('[data-query-limit]').value = '500';
+  fixture.element('[data-query-scope]').value = 'anywhere';
+  fixture.element('[data-query-direction]').value = 'asc';
+
+  const first = fixture.startAction('run-query');
+  const second = fixture.startAction('run-query');
+  await Promise.all([first, second]);
+  await waitFor(
+    () =>
+      fixture
+        .element('[data-query-status]')
+        .textContent.includes('fixed snapshot'),
+    'cooperative query render',
+  );
+
+  const host = fixture.element('[data-query-result]');
+  const table = host.children.find((child) => child.selector === 'table');
+  assert.ok(table);
+  const body = table.children.find((child) => child.selector === 'tbody');
+  assert.ok(body);
+  assert.equal(body.children.length, 500);
+  assert.equal(body.children[0].children[1].textContent, 'current-0');
+  assert.equal(body.children.at(-1).children[1].textContent, 'current-499');
+  assert.match(
+    fixture.element('[data-query-status]').textContent,
+    /fixed snapshot/,
   );
 });
