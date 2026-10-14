@@ -5571,3 +5571,16 @@ does not claim that JSON/XML parsing or one indivisible 50,000-vertex geometry
 feature is below four milliseconds. Single-feature scheduling remains partial,
 and the broader catalog/workspace interaction journey, hardware interaction
 evidence and the S47/S60 gates remain pending.
+
+### S59 single-feature quantum disposition - 14 October 2026
+
+Candidate `72871597` grouped Cartesian preparation into sixteen-coordinate
+quanta. The five alternating pairs in
+`performance-evidence/import-geometry-s59-quantum16.json` preserve the exact
+line and polygon geometry hashes and reduce the median maximum batch from
+11.81/12.68 ms to 4.13/4.08 ms, but median completion rises from
+15.88/15.25 ms to 34.49/46.83 ms. The candidate is therefore rejected and
+reverted at `65fa2e4e`; the production path keeps its existing per-coordinate
+cooperative boundary until a comparison demonstrates both responsiveness and
+completion improvement. This is a supported no-change decision, not a claim
+that the single-feature interaction gate or hardware qualification has passed.
