@@ -286,6 +286,8 @@ export async function previewKML(input, { signal, attribution = '' } = {}) {
     xmlFail('KML is limited to 50,000 placemarks.');
   const records = [];
   const rejected = [];
+  const altitudeModes = new Set();
+  let hasTime = false;
   await consumeInBatches(
     (function* () {
       for (let i = 0; i < placemarks.length; i++) {
@@ -296,6 +298,9 @@ export async function previewKML(input, { signal, attribution = '' } = {}) {
           const geometry = kmlGeometry(placemark);
           const timeText =
             textOf(placemark, 'when') || textOf(placemark, 'begin');
+          if (timeText) hasTime = true;
+          const altitudeMode =
+            textOf(placemark, 'altitudemode') || 'unspecified';
           records.push(
             timed(
               {
@@ -304,13 +309,17 @@ export async function previewKML(input, { signal, attribution = '' } = {}) {
                 properties: {
                   name: textOf(placemark, 'name'),
                   description: textOf(placemark, 'description').slice(0, 500),
-                  altitudeMode:
-                    textOf(placemark, 'altitudemode') || 'unspecified',
+                  altitudeMode,
                 },
               },
               timeText,
             ),
           );
+          if (
+            altitudeMode !== 'unspecified' &&
+            altitudeMode !== 'clampToGround'
+          )
+            altitudeModes.add(altitudeMode);
         } catch (error) {
           rejected.push({
             row: i + 1,
@@ -321,21 +330,12 @@ export async function previewKML(input, { signal, attribution = '' } = {}) {
     })(),
     { signal },
   );
-  const altitudeModes = new Set(
-    records
-      .map((record) => record.properties.altitudeMode)
-      .filter((mode) => mode !== 'unspecified' && mode !== 'clampToGround'),
-  );
   return createImportPreview({
     kind: 'kml',
     records,
     rejected,
     attribution,
-    timeField: placemarks.some(
-      (node) => textOf(node, 'when') || textOf(node, 'begin'),
-    )
-      ? 'TimeStamp/TimeSpan'
-      : null,
+    timeField: hasTime ? 'TimeStamp/TimeSpan' : null,
     warnings: altitudeModes.size
       ? [
           `KML altitude mode ${[...altitudeModes].join(', ')} is retained as metadata; rendering does not reproduce that mode.`,
@@ -387,6 +387,7 @@ export async function previewGPX(input, { signal, attribution = '' } = {}) {
   if (root.local !== 'gpx') xmlFail('Expected a GPX root element.');
   const records = [];
   const rejected = [];
+  let hasTimedRouteOrTrack = false;
   const add = (id, feature, properties, row) => {
     try {
       const times = feature.times || [];
@@ -398,6 +399,7 @@ export async function previewGPX(input, { signal, attribution = '' } = {}) {
         properties: { ...properties, times },
         timeMs: times.find(Number.isSafeInteger) ?? null,
       });
+      if (times.some(Number.isSafeInteger)) hasTimedRouteOrTrack = true;
     } catch (error) {
       rejected.push({
         row,
@@ -482,10 +484,6 @@ export async function previewGPX(input, { signal, attribution = '' } = {}) {
     records,
     rejected,
     attribution,
-    timeField: records.some((record) =>
-      record.properties.times?.some(Number.isSafeInteger),
-    )
-      ? 'GPX point time'
-      : null,
+    timeField: hasTimedRouteOrTrack ? 'GPX point time' : null,
   });
 }
