@@ -94,6 +94,14 @@ destruction releases the pending render. The workspace import suite now covers
 large-import end-to-end interaction timing, and hardware acceptance remain
 pending.
 
+The follow-up at `d6800a5` hardens the capture-test child-process timeout for
+the concurrent performance harness; it changes no application or capture
+deadline. The complete software gate then passes **7,981 tests with 7,971
+passes, zero failures and ten skips**, the allocation gate passes, and all 13
+performance-harness checks pass. This is automatic validation only; it does
+not supply the required primary-machine capture, retention soak, or release
+candidate evidence.
+
 The [S47 producer audit](performance-evidence/s47-workload-audit-20261014.md)
 identifies real workload identity/export gaps in addition to absent physical
 Windows comparisons. The [S59 ownership audit](performance-evidence/s59-engineering-audit-20261014.md)
