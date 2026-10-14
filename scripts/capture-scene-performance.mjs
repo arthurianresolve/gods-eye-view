@@ -5438,6 +5438,11 @@ try {
           environment,
           captures,
           scenarios,
+          workload: {
+            warmupMs,
+            durationPerSampleMs: seconds * 1000,
+            runsPerScenario: runs,
+          },
         })
       : weatherEffectsComparisonRun
         ? createObservedWeatherEffectsComparisonContract({

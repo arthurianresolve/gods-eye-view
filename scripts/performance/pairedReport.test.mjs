@@ -2,11 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateMotionFrameBudget } from './motionBudget.mjs';
+import { createObservedInfrastructureComparisonContract } from './captureComparisonContract.mjs';
 
 import {
   baselineCommit,
   candidateCommit,
   makeReport,
+  makeInfrastructureReport,
   makeWeatherReport,
   routes,
   scenarios,
@@ -390,6 +392,48 @@ test('infrastructure-only workloads remain comparable without aircraft populatio
   assert.equal(result.status, 'comparable');
   assert.equal(result.workloadObjective.status, 'assessed');
   assert.equal(result.denseTrackingObjective.status, 'not-assessed');
+});
+
+test('one-second infrastructure diagnostics cannot satisfy the 60-second paired contract', () => {
+  const shortCapture = (report) => {
+    report.workload.warmupMs = 1000;
+    report.workload.durationPerSampleMs = 1000;
+    report.workload.runsPerScenario = 2;
+    report.captures = report.captures.filter((sample) => sample.run <= 2);
+    for (const sample of report.captures) {
+      sample.cameraPath.elapsedDurationMs = 1000;
+      if (sample.scenario === 'scripted-motion')
+        sample.cameraPath.motionDistanceM = 320;
+    }
+    report.comparisonContract = createObservedInfrastructureComparisonContract({
+      fixture: report.workload.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+      workload: report.workload,
+    });
+    return report;
+  };
+  const baseline = shortCapture(
+    makeInfrastructureReport(baselineCommit, 'infrastructure-datacenters'),
+  );
+  const candidate = shortCapture(
+    makeInfrastructureReport(candidateCommit, 'infrastructure-datacenters'),
+  );
+  assert.equal(baseline.comparisonContract.routes.idle.elapsedDurationMs, 1000);
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /warmup must be 30 seconds/,
+  );
 });
 
 test('malformed or incomplete evidence is rejected instead of treating unknown metrics as zero', () => {

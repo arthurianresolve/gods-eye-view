@@ -2948,6 +2948,13 @@ function validInfrastructureCaptureCliReport(
     shouldAnimate: false,
     multiplier: 0,
   };
+  const cameraRadius = 6_378_137 + fixture.camera.altitudeM;
+  const cameraStart = {
+    position: { x: cameraRadius, y: 0, z: 0 },
+    direction: { x: -1, y: 0, z: 0 },
+    up: { x: 0, y: 0, z: 1 },
+    transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  };
   let sampleDocumentIndex = 0;
   const captures = ['idle', 'scripted-motion'].flatMap((scenario) =>
     [1, 2].map((run) => ({
@@ -2969,7 +2976,12 @@ function validInfrastructureCaptureCliReport(
         after: { visible: true, focused: true, environment: { layers } },
       },
       foregroundThroughout: true,
-      cameraPath: { id: `${scenario}-v1` },
+      cameraPath: {
+        id: scenario === 'idle' ? 'parked-v1' : 'elapsed-move-right-v1',
+        start: structuredClone(cameraStart),
+        elapsedDurationMs: 1000,
+        motionDistanceM: scenario === 'idle' ? 0 : 320,
+      },
       frameCount: 60,
       renderedFrameCount: 61,
       frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
@@ -3068,6 +3080,7 @@ function validInfrastructureCaptureCliReport(
     environment,
     captures,
     scenarios: workload.scenarios,
+    workload,
   });
   const comparisonReadinessReasons = getCaptureComparisonIneligibilityReasons({
     contract: comparisonContract,
@@ -4931,6 +4944,7 @@ test('infrastructure capture requires rendered motion, consistent frame evidence
       environment: report.environment,
       captures: report.captures,
       scenarios: report.workload.scenarios,
+      workload: report.workload,
     });
     report.comparisonReadiness = {
       status: 'not-ready',
@@ -4951,6 +4965,16 @@ test('infrastructure capture requires rendered motion, consistent frame evidence
   };
 
   const valid = validInfrastructureCaptureCliReport();
+  assert.equal(valid.comparisonEligible, false);
+  assert.equal(
+    valid.comparisonContract.routes.idle.elapsedDurationMs,
+    valid.workload.durationPerSampleMs,
+  );
+  assert.equal(valid.workload.durationPerSampleMs, 1000);
+  assert.equal(
+    valid.comparisonContract.routes['scripted-motion'].elapsedDurationMs,
+    1000,
+  );
   assert.doesNotThrow(() =>
     validateCaptureCliReport(valid, makeExpected(valid)),
   );

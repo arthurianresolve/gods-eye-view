@@ -1109,6 +1109,11 @@ function validateReport(report, side, expectedAppCommit) {
       environment,
       captures,
       scenarios: workload?.scenarios,
+      workload: {
+        warmupMs: workload?.warmupMs,
+        durationPerSampleMs: workload?.durationPerSampleMs,
+        runsPerScenario: workload?.runsPerScenario,
+      },
     });
     equal(
       rebuilt,

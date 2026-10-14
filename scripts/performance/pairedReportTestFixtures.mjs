@@ -520,6 +520,11 @@ export function makeInfrastructureReport(commit, workloadId) {
     environment: report.environment,
     captures,
     scenarios: report.workload.scenarios,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
   });
   return report;
 }
@@ -539,7 +544,6 @@ function routesForInfrastructure(fixture) {
     y: -Math.sin(latitude) * Math.sin(longitude),
     z: Math.cos(latitude),
   };
-  const east = { x: -Math.sin(longitude), y: Math.cos(longitude), z: 0 };
   const position = Object.fromEntries(
     Object.entries(radial).map(([axis, value]) => [axis, value * radius]),
   );
@@ -549,23 +553,6 @@ function routesForInfrastructure(fixture) {
       Object.entries(radial).map(([axis, value]) => [axis, -value]),
     ),
     up: north,
-    transform: [
-      east.x,
-      east.y,
-      east.z,
-      0,
-      north.x,
-      north.y,
-      north.z,
-      0,
-      radial.x,
-      radial.y,
-      radial.z,
-      0,
-      position.x,
-      position.y,
-      position.z,
-      1,
-    ],
+    transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   };
 }

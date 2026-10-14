@@ -4076,6 +4076,11 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     environment: report.environment,
     captures: report.captures,
     scenarios: report.workload.scenarios,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
   });
   assert.deepEqual(report.workload.fixture, fixture);
   assert.deepEqual(report.comparisonContract, observedContract);

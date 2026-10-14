@@ -333,6 +333,11 @@ function makeInfrastructureObservation() {
   );
   return {
     fixture: report.workload.fixture,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
     populations: report.environment.layers,
     settings: report.captures[0].settings.before,
     fixtureDelivery: report.fixtureDelivery,
@@ -535,6 +540,7 @@ test('infrastructure comparison exports observed workloads without dense objecti
   const contract = createObservedInfrastructureComparisonContract({
     ...observed,
     scenarios: ['idle', 'scripted-motion'],
+    workload: observed.workload,
   });
   assert.equal(contract.workloadId, 'infrastructure-datacenters');
   assert.deepEqual(contract.populations, observed.populations);
@@ -548,6 +554,7 @@ test('infrastructure comparison exports observed workloads without dense objecti
     createObservedInfrastructureComparisonContract({
       ...alteredSampleDelivery,
       scenarios: ['idle', 'scripted-motion'],
+      workload: observed.workload,
     }),
   );
 });
@@ -700,11 +707,12 @@ test('infrastructure readiness binds one measured document across captures and s
     contract: createObservedInfrastructureComparisonContract({
       ...observed,
       scenarios: ['idle', 'scripted-motion'],
+      workload: observed.workload,
     }),
     workload: {
       startupRuns: 1,
       scenarios: ['idle', 'scripted-motion'],
-      runsPerScenario: 1,
+      runsPerScenario: observed.workload.runsPerScenario,
       injectedDelayMs: 0,
     },
     captures: observed.captures,
@@ -750,7 +758,11 @@ test('infrastructure readiness binds one measured document across captures and s
 
 test('infrastructure contract rejects altered source populations and clock', () => {
   const observed = makeInfrastructureObservation();
-  const args = () => ({ ...observed, scenarios: ['idle', 'scripted-motion'] });
+  const args = () => ({
+    ...observed,
+    scenarios: ['idle', 'scripted-motion'],
+    workload: observed.workload,
+  });
   const wrongPopulation = args();
   wrongPopulation.captures = structuredClone(observed.captures);
   wrongPopulation.captures[0].layers[0].count += 1;

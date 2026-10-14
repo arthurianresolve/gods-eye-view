@@ -347,6 +347,7 @@ export function createObservedInfrastructureComparisonContract({
   environment,
   captures,
   scenarios,
+  workload,
 } = {}) {
   assertInfrastructureFixtureIdentity(fixture, 'infrastructure fixture');
   assert.ok(
@@ -404,6 +405,29 @@ export function createObservedInfrastructureComparisonContract({
   assert.ok(browserMatch, 'browser identity was not observed');
   assert.ok(Array.isArray(captures) && captures.length > 0);
   assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+  assert.ok(
+    Number.isSafeInteger(workload?.durationPerSampleMs) &&
+      workload.durationPerSampleMs > 0,
+    'infrastructure sample duration must be declared',
+  );
+  assert.ok(
+    Number.isSafeInteger(workload?.runsPerScenario) &&
+      workload.runsPerScenario > 0,
+    'infrastructure run count must be declared',
+  );
+  assert.equal(
+    captures.length,
+    scenarios.length * workload.runsPerScenario,
+    'infrastructure captures must exactly cover declared runs',
+  );
+  for (const scenario of scenarios) {
+    const rows = captures.filter((sample) => sample.scenario === scenario);
+    assert.equal(rows.length, workload.runsPerScenario);
+    assert.deepEqual(
+      rows.map((sample) => sample.run).sort((a, b) => a - b),
+      Array.from({ length: workload.runsPerScenario }, (_, index) => index + 1),
+    );
+  }
 
   const expectedPopulations = Object.entries(fixture.expectedLayerCounts)
     .map(([id, count]) => ({ id, enabled: true, count }))
@@ -468,17 +492,23 @@ export function createObservedInfrastructureComparisonContract({
       sample.scenario === 'idle'
         ? {
             id: 'parked-v1',
-            elapsedDurationMs: 60_000,
+            elapsedDurationMs: workload.durationPerSampleMs,
             motionDistanceM: 0,
           }
         : sample.scenario === 'scripted-motion'
           ? {
               id: 'elapsed-move-right-v1',
-              elapsedDurationMs: 60_000,
-              motionDistanceM: 15_000,
+              elapsedDurationMs: workload.durationPerSampleMs,
+              motionDistanceM: sample.cameraPath?.motionDistanceM,
             }
           : null;
     assert.ok(scenarioRoute, `capture ${index + 1} scenario is unsupported`);
+    if (sample.scenario === 'scripted-motion')
+      assert.ok(
+        Number.isFinite(scenarioRoute.motionDistanceM) &&
+          scenarioRoute.motionDistanceM > 0,
+        `capture ${index + 1} scripted-motion distance must be observed`,
+      );
     const radius = 6_378_137 + fixture.camera.altitudeM;
     assertRouteDescriptorsEquivalent(
       sample.cameraPath,
@@ -488,7 +518,7 @@ export function createObservedInfrastructureComparisonContract({
           position: { x: radius, y: 0, z: 0 },
           direction: { x: -1, y: 0, z: 0 },
           up: { x: 0, y: 0, z: 1 },
-          transform: [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, radius, 0, 0, 1],
+          transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
         },
       },
       `capture ${index + 1} infrastructure route differs from the pinned camera/scenario`,
