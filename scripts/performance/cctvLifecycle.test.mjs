@@ -7,6 +7,7 @@ import {
   assertCctvCheckpoint,
   assertCctvCameraPose,
   assertCctvCycleReuse,
+  CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
   assertCctvRapidGeometryRevision,
   createCctvGeometryWorkerBoundaryInstaller,
   cctvLifecycleShareHash,
@@ -308,7 +309,8 @@ function validReport(cycles = 5) {
   const disabled = validCheckpoint(false, true);
   const direct = structuredClone(disabled);
   return {
-    schema: 'gev-cctv-lifecycle/v2',
+    schema: 'gev-cctv-lifecycle/v3',
+    resourceDiagnosticsSchema: CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
     status: 'passed',
     validationStatus: 'passed',
     applicationCommit: 'a'.repeat(40),
@@ -436,6 +438,30 @@ function validReport(cycles = 5) {
     failedPhase: null,
     error: null,
   };
+}
+
+function cctvReportCheckpoints(report) {
+  const checkpoints = [
+    report.warmup.enabled,
+    report.warmup.disabled,
+    report.directReinit.initializedDisabled,
+    report.directReinit.rewarmedEnabled,
+    report.directReinit.checkpoint,
+    ...report.cycles.flatMap((row) => [row.enabled, row.disabled]),
+  ];
+  if (report.rapidGeometryRevision?.checkpoints)
+    checkpoints.push(
+      ...Object.values(report.rapidGeometryRevision.checkpoints),
+    );
+  return checkpoints;
+}
+
+function emulateLegacyCctvResourceSemantics(report) {
+  delete report.resourceDiagnosticsSchema;
+  for (const checkpoint of cctvReportCheckpoints(report)) {
+    checkpoint.diagnostics.dataSources = checkpoint.diagnostics.entities;
+    delete checkpoint.diagnostics.entities;
+  }
 }
 
 test('serialized CCTV worker boundary holds the exact submitted geometry result and restores diagnostics', () => {
@@ -1119,10 +1145,41 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
   const legacyV1 = structuredClone(report);
   legacyV1.schema = 'gev-cctv-lifecycle/v1';
   delete legacyV1.rapidGeometryRevision;
+  emulateLegacyCctvResourceSemantics(legacyV1);
+  const legacyV1Result = validateCctvLifecycleReport(legacyV1, {
+    fixtureSha256: fixture.sha256,
+  });
+  assert.equal(legacyV1Result.status, 'passed');
   assert.equal(
-    validateCctvLifecycleReport(legacyV1, { fixtureSha256: fixture.sha256 })
+    legacyV1Result.resourceDiagnosticsSchema,
+    'legacy-cctv-diagnostics/dataSources-alias-entities-v1',
+  );
+  const legacyV2 = structuredClone(report);
+  legacyV2.schema = 'gev-cctv-lifecycle/v2';
+  emulateLegacyCctvResourceSemantics(legacyV2);
+  assert.equal(
+    validateCctvLifecycleReport(legacyV2, { fixtureSha256: fixture.sha256 })
       .status,
     'passed',
+  );
+  const unlabeledCurrent = structuredClone(report);
+  delete unlabeledCurrent.resourceDiagnosticsSchema;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(unlabeledCurrent, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /resource diagnostic semantics/,
+  );
+  const oldSchemaNewSemantics = structuredClone(legacyV2);
+  oldSchemaNewSemantics.resourceDiagnosticsSchema =
+    CCTV_RESOURCE_DIAGNOSTICS_SCHEMA;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(oldSchemaNewSemantics, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /resource diagnostic semantics/,
   );
   const missingCycle = structuredClone(report);
   missingCycle.cycles.pop();

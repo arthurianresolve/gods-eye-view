@@ -8,6 +8,7 @@ import {
   assertCctvCameraPose,
   assertCctvCheckpoint,
   assertCctvCycleReuse,
+  CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
   assertCctvStableDrain,
   assertCctvRapidGeometryRevision,
   assertExpectedCctvProbeResidue,
@@ -845,7 +846,8 @@ export async function runCctvLifecycle({
   const fixture = createCctvLifecycleFixture();
   const initialIdentity = deps.gitIdentity();
   const report = {
-    schema: 'gev-cctv-lifecycle/v2',
+    schema: 'gev-cctv-lifecycle/v3',
+    resourceDiagnosticsSchema: CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
     status: 'running',
     validationStatus: 'pending',
     startedAt: new Date().toISOString(),
@@ -1404,7 +1406,8 @@ const invoked = process.argv[1]
 if (import.meta.url === invoked) {
   let options;
   let report = {
-    schema: 'gev-cctv-lifecycle/v2',
+    schema: 'gev-cctv-lifecycle/v3',
+    resourceDiagnosticsSchema: CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
     status: 'failed',
     validationStatus: 'failed',
     phase: 'arguments',

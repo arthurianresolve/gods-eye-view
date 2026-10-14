@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto';
 
 const SHA1 = /^[a-f0-9]{40}$/i;
 const FIXTURE_ID = 'qa-cctv-lifecycle-v1';
+export const CCTV_RESOURCE_DIAGNOSTICS_SCHEMA =
+  'gev-cctv-resource-diagnostics/entities-v1';
+const LEGACY_CCTV_RESOURCE_DIAGNOSTICS_SCHEMA =
+  'legacy-cctv-diagnostics/dataSources-alias-entities-v1';
 const FIXTURE_CAMERA_ID = 'qa-cctv-lifecycle-camera-001';
 const FIXTURE_VIEW = Object.freeze({
   longitude: -97.7431,
@@ -937,7 +941,11 @@ export function summarizeCctvGeometryEvidence(evidence) {
 
 export function assertCctvRapidGeometryRevision(
   revision,
-  { expectedTaskErrors = null, warmup = null } = {},
+  {
+    expectedTaskErrors = null,
+    warmup = null,
+    resourceDiagnosticsSchema = CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
+  } = {},
 ) {
   const enabledCase = revision?.boundary?.enabledRelease;
   const disabledCase = revision?.boundary?.disabledRelease;
@@ -1251,7 +1259,10 @@ export function assertCctvRapidGeometryRevision(
     )
       throw new Error(`CCTV rapid geometry ${key} ownership changed.`);
     if (key !== 'disabledWithHeldResult')
-      assertCctvCheckpoint(checkpoint, { expectedTaskErrors });
+      assertCctvCheckpoint(checkpoint, {
+        expectedTaskErrors,
+        resourceDiagnosticsSchema,
+      });
   }
   const heldCheckpoint = revision.checkpoints.disabledWithHeldResult;
   if (
@@ -1461,9 +1472,24 @@ export function validateCctvLifecycleReport(
   { cycles = 5, fixtureSha256 } = {},
 ) {
   if (
-    !['gev-cctv-lifecycle/v1', 'gev-cctv-lifecycle/v2'].includes(report?.schema)
+    ![
+      'gev-cctv-lifecycle/v1',
+      'gev-cctv-lifecycle/v2',
+      'gev-cctv-lifecycle/v3',
+    ].includes(report?.schema)
   )
     throw new Error('Unsupported CCTV lifecycle report schema.');
+  const resourceDiagnosticsSchema =
+    report.schema === 'gev-cctv-lifecycle/v3'
+      ? CCTV_RESOURCE_DIAGNOSTICS_SCHEMA
+      : LEGACY_CCTV_RESOURCE_DIAGNOSTICS_SCHEMA;
+  if (
+    (report.schema === 'gev-cctv-lifecycle/v3' &&
+      report.resourceDiagnosticsSchema !== CCTV_RESOURCE_DIAGNOSTICS_SCHEMA) ||
+    (report.schema !== 'gev-cctv-lifecycle/v3' &&
+      report.resourceDiagnosticsSchema !== undefined)
+  )
+    throw new Error('CCTV resource diagnostic semantics are mislabeled.');
   if (report.status !== 'passed' || report.validationStatus !== 'passed')
     throw new Error(
       'CCTV lifecycle run did not complete with passing validation.',
@@ -1559,7 +1585,10 @@ export function validateCctvLifecycleReport(
     ...report.cycles.flatMap((row) => [row.enabled, row.disabled]),
   ];
   for (const row of snapshots) {
-    assertCctvCheckpoint(row, { expectedTaskErrors: allowedTaskErrors });
+    assertCctvCheckpoint(row, {
+      expectedTaskErrors: allowedTaskErrors,
+      resourceDiagnosticsSchema,
+    });
     if (row.appCommit !== report.applicationCommit)
       throw new Error(
         'CCTV checkpoint application commit differs from the report identity.',
@@ -1712,7 +1741,10 @@ export function validateCctvLifecycleReport(
     throw new Error(
       'CCTV direct module reinitialization did not rematerialize fixture geometry.',
     );
-  if (report.schema === 'gev-cctv-lifecycle/v2') {
+  if (
+    report.schema === 'gev-cctv-lifecycle/v2' ||
+    report.schema === 'gev-cctv-lifecycle/v3'
+  ) {
     if (
       report.rapidGeometryRevision?.applicationCommit !==
       report.applicationCommit
@@ -1724,6 +1756,7 @@ export function validateCctvLifecycleReport(
       expectedTaskErrors:
         report.workerPreflight?.expectedTaskErrorWorkers ?? null,
       warmup: report.warmup,
+      resourceDiagnosticsSchema,
     });
   }
   if (
@@ -1767,12 +1800,16 @@ export function validateCctvLifecycleReport(
     status: 'passed',
     cycles: cycles,
     scope: 'software-renderer-lifecycle-diagnostic',
+    resourceDiagnosticsSchema,
   };
 }
 
 export function assertCctvCheckpoint(
   checkpoint,
-  { expectedTaskErrors = null } = {},
+  {
+    expectedTaskErrors = null,
+    resourceDiagnosticsSchema = CCTV_RESOURCE_DIAGNOSTICS_SCHEMA,
+  } = {},
 ) {
   const count = checkpoint?.diagnostics;
   if (
@@ -1789,13 +1826,22 @@ export function assertCctvCheckpoint(
     'timers',
     'pendingJobs',
     'primitives',
-    'entities',
     'dataSources',
     'cacheEntries',
   ])
     if (!Number.isSafeInteger(count?.[key]) || count[key] < 0)
       throw new Error(`CCTV diagnostic ${key} is missing or invalid.`);
-  if (count.dataSources !== 0)
+  if (resourceDiagnosticsSchema === CCTV_RESOURCE_DIAGNOSTICS_SCHEMA) {
+    if (!Number.isSafeInteger(count.entities) || count.entities < 0)
+      throw new Error('CCTV diagnostic entities is missing or invalid.');
+  } else if (
+    resourceDiagnosticsSchema !== LEGACY_CCTV_RESOURCE_DIAGNOSTICS_SCHEMA
+  )
+    throw new Error('CCTV resource diagnostic semantics are unsupported.');
+  if (
+    resourceDiagnosticsSchema === CCTV_RESOURCE_DIAGNOSTICS_SCHEMA &&
+    count.dataSources !== 0
+  )
     throw new Error(
       'CCTV owner diagnostics must not report scene entities as data sources.',
     );
