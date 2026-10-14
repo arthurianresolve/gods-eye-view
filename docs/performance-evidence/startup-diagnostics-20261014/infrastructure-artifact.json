@@ -1,0 +1,20 @@
+{
+  "id": 11872670163,
+  "node_id": "MDg6QXJ0aWZhY3QxMTg3MjY3MDE2Mw==",
+  "name": "infrastructure-datacenters-comparison-38517129632",
+  "size_in_bytes": 3733,
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11872670163",
+  "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11872670163/zip",
+  "expired": false,
+  "digest": "sha256:67461e75799e8a408dd6d92f6a4ae38eb75f32de62219c67f9b2c99850b3cc88",
+  "created_at": "2026-10-14T05:33:38Z",
+  "updated_at": "2026-10-14T05:33:38Z",
+  "expires_at": "2026-10-17T05:33:36Z",
+  "workflow_run": {
+    "id": 38517129632,
+    "repository_id": 1362432886,
+    "head_repository_id": 1362432886,
+    "head_branch": "qa/s47-austin-receipt-only",
+    "head_sha": "b52c8abb279275f9085fefbfa49a9e2ea6f4a2a6"
+  }
+}
