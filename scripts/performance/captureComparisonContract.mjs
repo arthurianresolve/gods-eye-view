@@ -421,7 +421,32 @@ export function createObservedInfrastructureComparisonContract({
       expectedPopulations,
     );
     assert.deepEqual(sample.layers, after.environment.layers);
-    assert.deepEqual(sample.fixtureDelivery?.assets, fixtureDelivery.assets);
+    assert.equal(
+      sample.fixtureDelivery?.assets?.length,
+      fixtureDelivery.assets.length,
+    );
+    for (const [assetIndex, asset] of fixtureDelivery.assets.entries()) {
+      const sampleAsset = sample.fixtureDelivery.assets[assetIndex];
+      assert.deepEqual(
+        {
+          id: sampleAsset?.id,
+          sha256: sampleAsset?.sha256,
+          byteLength: sampleAsset?.byteLength,
+          contentType: sampleAsset?.contentType,
+        },
+        {
+          id: asset.id,
+          sha256: asset.sha256,
+          byteLength: asset.byteLength,
+          contentType: asset.contentType,
+        },
+      );
+      assert.ok(
+        Number.isInteger(sampleAsset.responseCount) &&
+          sampleAsset.responseCount > 0 &&
+          sampleAsset.responseCount <= asset.responseCount,
+      );
+    }
     assert.deepEqual(
       sample.fixtureDelivery?.populationsBefore,
       expectedPopulations,
@@ -538,6 +563,347 @@ export function createObservedInfrastructureComparisonContract({
     // the dense-flight 20% objective contract for moving/tracking scenarios.
     objectiveScenarios: [],
   };
+}
+
+/** Build the weather/effects comparison contract from timed UI phase observations. */
+export function createObservedWeatherEffectsComparisonContract({
+  fixture,
+  fixtureDelivery,
+  environment,
+  captures,
+  scenarios,
+  workload,
+} = {}) {
+  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
+  assert.equal(fixture?.id, 'weather-effects-austin-phased-v2');
+  assert.equal(fixture?.workloadId, 'austin-weather-effects-phased-v2');
+  assert.equal(fixture?.fixedTime, '2026-10-08T12:00:00.000Z');
+  assert.match(fixture?.sha256 || '', SHA256);
+  assert.deepEqual(fixture?.expectedLayerCounts, {
+    'weather-radar': 1,
+    'weather-satellite': 1,
+    'weather-lightning': 1,
+    wind: 65_160,
+  });
+  const phaseSchedule = fixture.phaseSchedule;
+  assert.equal(phaseSchedule?.schema, 'gev-weather-phase-schedule/v1');
+  assert.equal(phaseSchedule?.measurementMs, 60_000);
+  assert.equal(phaseSchedule?.maximumLatenessMs, 5_000);
+  assert.deepEqual(phaseSchedule?.offsetsMs, [0, 20_000, 40_000]);
+  assert.equal(fixture.timeline?.length, 3);
+  assert.deepEqual(
+    phaseSchedule.phases,
+    fixture.timeline.map((sourceTime, index) => ({
+      id: ['early-history', 'middle-history', 'latest-history'][index],
+      timelineIndex: index,
+      sourceTime,
+      offsetMs: phaseSchedule.offsetsMs[index],
+    })),
+  );
+  assert.equal(
+    fixtureDelivery?.schema,
+    'gev-weather-effects-fixture-delivery/v2',
+  );
+  assert.equal(fixtureDelivery?.status, 'observed');
+  assert.equal(fixtureDelivery?.workloadId, fixture.workloadId);
+  assert.equal(
+    fixtureDelivery?.method,
+    'same-origin-hash-pinned-weather-phase-fixture-v2',
+  );
+  assert.equal(fixtureDelivery?.fixtureId, fixture.id);
+  assert.equal(fixtureDelivery?.fixtureSha256, fixture.sha256);
+  assert.equal(fixtureDelivery?.fixedTime, fixture.fixedTime);
+  assert.deepEqual(fixtureDelivery.phaseSchedule, phaseSchedule);
+  const expectedAssets = fixture.assets.map(({ id, sha256, byteLength }) => ({
+    id,
+    sha256,
+    byteLength,
+  }));
+  assert.equal(fixtureDelivery.assets?.length, expectedAssets.length);
+  for (const [index, expected] of expectedAssets.entries()) {
+    const actual = fixtureDelivery.assets[index];
+    assert.deepEqual(
+      {
+        id: actual?.id,
+        sha256: actual?.sha256,
+        byteLength: actual?.byteLength,
+      },
+      expected,
+    );
+    assert.ok(
+      Number.isInteger(actual.responseCount) && actual.responseCount > 0,
+    );
+  }
+  assert.equal(
+    fixtureDelivery.fulfilledResponseCount,
+    fixtureDelivery.assets.reduce((sum, asset) => sum + asset.responseCount, 0),
+  );
+  assert.deepEqual(fixtureDelivery.routeErrors, []);
+  assert.ok(
+    Number.isInteger(fixtureDelivery.fulfilledResponseCount) &&
+      fixtureDelivery.fulfilledResponseCount > 0,
+  );
+  assert.ok(environment && typeof environment.userAgent === 'string');
+  const browserMatch = environment.userAgent.match(
+    /(HeadlessChrome|Chrome|Chromium)\/([\d.]+)/,
+  );
+  assert.ok(browserMatch, 'browser identity was not observed');
+  assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+  assert.equal(workload?.warmupMs, 30_000);
+  assert.equal(workload?.durationPerSampleMs, 60_000);
+  assert.equal(workload?.runsPerScenario, 5);
+  assert.equal(captures?.length, scenarios.length * workload.runsPerScenario);
+
+  const expectedPopulations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  assert.deepEqual(
+    enabledPopulations(environment.layers, 'weather environment'),
+    expectedPopulations,
+  );
+  assert.deepEqual(fixtureDelivery.populationsBefore, expectedPopulations);
+  assert.deepEqual(fixtureDelivery.populationsAfter, expectedPopulations);
+  const weatherVisual = {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  };
+  const routeByScenario = {};
+  const visualSettings = captures[0]?.settings?.before;
+  for (const field of [
+    'qualityMode',
+    'densityPct',
+    'detectionMode',
+    'resolutionScale',
+    'msaaSamples',
+    'antialias',
+    'fxaa',
+  ])
+    assert.notEqual(visualSettings?.[field], undefined);
+  assert.equal(visualSettings.qualityMode, 'manual');
+  assert.equal(visualSettings.densityPct, 75);
+  assert.equal(visualSettings.detectionMode, 'DENSE');
+  assert.deepEqual(
+    captures[0]?.settings?.before?.visualState?.detection?.density,
+    75,
+  );
+
+  for (const [index, sample] of captures.entries()) {
+    const label = `weather capture ${index + 1}`;
+    assert.ok(scenarios.includes(sample.scenario));
+    assert.ok(
+      Number.isInteger(sample.run) && sample.run >= 1 && sample.run <= 5,
+    );
+    assert.equal(sample.durationMs >= 60_000, true);
+    assert.equal(sample.foregroundThroughout, true);
+    assert.deepEqual(
+      enabledPopulations(
+        sample.conditions?.before?.environment?.layers,
+        `${label} before`,
+      ),
+      expectedPopulations,
+    );
+    assert.deepEqual(
+      enabledPopulations(
+        sample.conditions?.after?.environment?.layers,
+        `${label} after`,
+      ),
+      expectedPopulations,
+    );
+    assert.deepEqual(
+      enabledPopulations(sample.layers, `${label} layers`),
+      expectedPopulations,
+    );
+    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.deepEqual(sample.settings?.before, visualSettings);
+    assert.deepEqual(
+      sample.conditions?.before?.settings,
+      sample.settings?.before,
+    );
+    assert.deepEqual(
+      sample.conditions?.after?.settings,
+      sample.settings?.after,
+    );
+    assert.deepEqual(
+      sample.conditions?.before?.environment?.viewport,
+      environment.viewport,
+    );
+    assert.deepEqual(
+      sample.conditions?.after?.environment?.viewport,
+      environment.viewport,
+    );
+    assert.deepEqual(
+      sample.conditions?.before?.environment?.drawingBuffer,
+      environment.drawingBuffer,
+    );
+    assert.deepEqual(
+      sample.conditions?.after?.environment?.drawingBuffer,
+      environment.drawingBuffer,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.fixedHarnessTime,
+      fixture.fixedTime,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockBeforeMs,
+      fixture.fixedTimeMs,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockAfterMs,
+      fixture.fixedTimeMs,
+    );
+    assertWeatherEffectsRuntimeState(
+      sample.weatherEffectsClock?.weatherStateBefore,
+      expectedPopulations,
+      weatherVisual,
+      fixture,
+      `${label} before`,
+    );
+    assertWeatherEffectsRuntimeState(
+      sample.weatherEffectsClock?.weatherStateAfter,
+      expectedPopulations,
+      weatherVisual,
+      fixture,
+      `${label} after`,
+    );
+    assertWeatherPhaseObservation(
+      sample.weatherEffectsClock?.phaseObservations,
+      fixture,
+      label,
+    );
+    assert.equal(sample.fixtureDelivery?.schema, fixtureDelivery.schema);
+    assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
+    assert.equal(sample.fixtureDelivery?.method, fixtureDelivery.method);
+    assert.deepEqual(sample.fixtureDelivery?.assets, fixtureDelivery.assets);
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsBefore,
+      expectedPopulations,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsAfter,
+      expectedPopulations,
+    );
+    assert.ok(sample.cameraPath?.id);
+    routeByScenario[sample.scenario] ||= structuredClone(sample.cameraPath);
+    assert.deepEqual(sample.cameraPath, routeByScenario[sample.scenario]);
+  }
+  for (const scenario of scenarios)
+    assert.equal(
+      captures.filter((sample) => sample.scenario === scenario).length,
+      workload.runsPerScenario,
+    );
+  return {
+    schema: 'gev-performance-comparison-contract/v1',
+    workloadId: 'weather-effects',
+    fixture: {
+      schema: fixture.schema,
+      id: fixture.id,
+      sha256: fixture.sha256,
+      fixedTime: fixture.fixedTime,
+      expectedLayerCounts: structuredClone(fixture.expectedLayerCounts),
+      assets: expectedAssets,
+      phaseSchedule: structuredClone(phaseSchedule),
+      timeline: [...fixture.timeline],
+    },
+    fixtureDelivery: {
+      schema: fixtureDelivery.schema,
+      status: fixtureDelivery.status,
+      workloadId: fixtureDelivery.workloadId,
+      method: fixtureDelivery.method,
+      fixtureId: fixtureDelivery.fixtureId,
+      fixtureSha256: fixtureDelivery.fixtureSha256,
+      fixedTime: fixtureDelivery.fixedTime,
+      phaseSchedule: structuredClone(fixtureDelivery.phaseSchedule),
+      assets: structuredClone(fixtureDelivery.assets),
+      populationsBefore: structuredClone(fixtureDelivery.populationsBefore),
+      populationsAfter: structuredClone(fixtureDelivery.populationsAfter),
+      fulfilledResponseCount: fixtureDelivery.fulfilledResponseCount,
+      routeErrors: [],
+    },
+    routes: routeByScenario,
+    browser: { name: browserMatch[1], version: browserMatch[2] },
+    rendering: {
+      viewport: structuredClone(environment.viewport),
+      drawingBuffer: structuredClone(environment.drawingBuffer),
+    },
+    populations: expectedPopulations,
+    visual: {
+      ...structuredClone(visualSettings),
+      weatherEffects: weatherVisual,
+    },
+    objectiveScenarios: [],
+  };
+}
+
+function assertWeatherEffectsRuntimeState(
+  state,
+  expectedPopulations,
+  visual,
+  fixture,
+  label,
+) {
+  assert.ok(
+    state && typeof state === 'object',
+    `${label}: runtime state is required`,
+  );
+  assert.deepEqual(
+    state.visualState,
+    visual,
+    `${label}: weather settings differ`,
+  );
+  assert.deepEqual(
+    enabledPopulations(state.populations, `${label} populations`),
+    expectedPopulations,
+  );
+  assert.deepEqual(state.sourceObservationTimes, [
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+  ]);
+  assert.equal(state.clock?.mode, 'latest');
+  assert.equal(state.clock?.playing, false);
+  for (const row of state.populations) {
+    assert.equal(row.loading, false, `${label}: ${row.id} is loading`);
+    assert.equal(row.error, null, `${label}: ${row.id} has an error`);
+  }
+}
+
+function assertWeatherPhaseObservation(observations, fixture, label) {
+  assert.equal(observations?.schema, 'gev-weather-phase-observations/v1');
+  assert.equal(observations.durationMs, 60_000);
+  assert.equal(observations.fixtureSha256, fixture.sha256);
+  assert.equal(
+    observations.phases?.length,
+    fixture.phaseSchedule.phases.length,
+  );
+  for (const [index, phase] of fixture.phaseSchedule.phases.entries()) {
+    const actual = observations.phases[index];
+    assert.equal(actual.id, phase.id, `${label}: weather phase order differs`);
+    assert.equal(actual.fixtureSha256, fixture.sha256);
+    assert.equal(actual.expectedSourceTime, phase.sourceTime);
+    assert.equal(actual.scheduledAtMs, phase.offsetMs);
+    assert.ok(Number.isFinite(actual.observedAtElapsedMs));
+    assert.ok(actual.observedAtElapsedMs >= phase.offsetMs);
+    assert.ok(
+      actual.observedAtElapsedMs <=
+        phase.offsetMs + fixture.phaseSchedule.maximumLatenessMs,
+      `${label}: weather phase was late`,
+    );
+    assert.deepEqual(
+      actual.sourceObservationTimes,
+      Array(3).fill(phase.sourceTime),
+    );
+    assert.deepEqual(actual.clock, { mode: 'history', playing: false });
+    if (index > 0)
+      assert.ok(
+        actual.observedAtElapsedMs >
+          observations.phases[index - 1].observedAtElapsedMs,
+      );
+  }
 }
 
 /** Build the Austin operating contract from per-document native observations. */
@@ -1280,7 +1646,7 @@ export function getCaptureComparisonIneligibilityReasons({
   const infrastructureFixture =
     fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
   const weatherEffectsFixture =
-    fixture?.schema === 'gev-weather-effects-fixture/v1';
+    fixture?.schema === 'gev-weather-effects-fixture/v2';
   const austinOperatingFixture =
     fixture?.schema === 'gev-austin-operating-fixture/v1';
   const sharedDocumentFixture = infrastructureFixture || weatherEffectsFixture;
@@ -1391,7 +1757,7 @@ export function getCaptureComparisonIneligibilityReasons({
     !workload?.scenarios?.includes('selected-aircraft-tracking')
   )
     reasons.push('required-dense-objective-workloads-are-incomplete');
-  if (!austinOperatingFixture)
+  if (!austinOperatingFixture && !weatherEffectsFixture)
     reasons.push(
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     );

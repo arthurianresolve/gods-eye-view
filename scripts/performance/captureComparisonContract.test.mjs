@@ -5,11 +5,13 @@ import {
   getMainCaptureDocumentIdentity,
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
+  createObservedWeatherEffectsComparisonContract,
   getCaptureComparisonIneligibilityReasons,
   getCaptureReadinessReasons,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
 import { createInfrastructureWorkloadFixture } from './infrastructureWorkloadFixture.mjs';
+import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
 
 const fixture = createProductionFlightFixture({
   count: 2500,
@@ -401,6 +403,169 @@ function makeInfrastructureObservation() {
   };
 }
 
+function makeWeatherEffectsObservation() {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const populations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const weatherVisual = {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  };
+  const visualSettings = {
+    qualityMode: 'manual',
+    densityPct: 75,
+    detectionMode: 'DENSE',
+    resolutionScale: 1,
+    msaaSamples: 4,
+    antialias: false,
+    fxaa: true,
+    visualState: {
+      style: 'normal',
+      styleParams: {},
+      detection: { density: 75 },
+    },
+  };
+  const assets = fixture.assets.map((asset) => ({
+    id: asset.id,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+    contentType: asset.contentType,
+    responseCount: 1,
+  }));
+  const fixtureDelivery = {
+    schema: 'gev-weather-effects-fixture-delivery/v2',
+    status: 'observed',
+    workloadId: fixture.workloadId,
+    method: 'same-origin-hash-pinned-weather-phase-fixture-v2',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+    phaseSchedule: structuredClone(fixture.phaseSchedule),
+    assets,
+    populationsBefore: populations,
+    populationsAfter: populations,
+    fulfilledResponseCount: assets.length,
+    routeErrors: [],
+  };
+  const environment = {
+    userAgent: 'Mozilla/5.0 Chrome/154.0.0.0 Safari/537.36',
+    layers: populations,
+    viewport: { width: 1440, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1440, height: 900 },
+  };
+  const routes = {
+    idle: {
+      id: 'parked-v1',
+      start: {
+        position: { x: 1, y: 2, z: 3 },
+        direction: { x: 0, y: 1, z: 0 },
+        up: { x: 0, y: 0, z: 1 },
+        transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      },
+      elapsedDurationMs: 60_000,
+      motionDistanceM: 0,
+    },
+    'scripted-motion': {
+      id: 'elapsed-move-right-v1',
+      start: {
+        position: { x: 1, y: 2, z: 3 },
+        direction: { x: 0, y: 1, z: 0 },
+        up: { x: 0, y: 0, z: 1 },
+        transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      },
+      elapsedDurationMs: 60_000,
+      motionDistanceM: 19_200,
+    },
+  };
+  const captures = [];
+  for (const scenario of Object.keys(routes)) {
+    for (let run = 1; run <= 5; run += 1) {
+      const phaseObservations = {
+        schema: 'gev-weather-phase-observations/v1',
+        durationMs: 60_000,
+        fixtureSha256: fixture.sha256,
+        phases: fixture.phaseSchedule.phases.map((phase) => ({
+          id: phase.id,
+          fixtureSha256: fixture.sha256,
+          expectedSourceTime: phase.sourceTime,
+          scheduledAtMs: phase.offsetMs,
+          observedAtElapsedMs: phase.offsetMs + 100,
+          sourceObservationTimes: Array(3).fill(phase.sourceTime),
+          clock: { mode: 'history', playing: false },
+        })),
+      };
+      const weatherState = {
+        clock: { mode: 'latest', playing: false },
+        sourceObservationTimes: Array(3).fill(fixture.timeline.at(-1)),
+        visualState: weatherVisual,
+        populations: populations.map((row) => ({
+          ...row,
+          loading: false,
+          error: null,
+        })),
+      };
+      const sample = {
+        scenario,
+        run,
+        durationMs: 60_005,
+        foregroundThroughout: true,
+        cameraPath: structuredClone(routes[scenario]),
+        layers: populations,
+        settings: {
+          before: structuredClone(visualSettings),
+          after: structuredClone(visualSettings),
+        },
+        fixtureDelivery: structuredClone(fixtureDelivery),
+        conditions: {
+          before: {
+            settings: structuredClone(visualSettings),
+            environment: {
+              layers: populations,
+              viewport: environment.viewport,
+              drawingBuffer: environment.drawingBuffer,
+            },
+          },
+          after: {
+            settings: structuredClone(visualSettings),
+            environment: {
+              layers: populations,
+              viewport: environment.viewport,
+              drawingBuffer: environment.drawingBuffer,
+            },
+          },
+        },
+        weatherEffectsClock: {
+          fixedHarnessTime: fixture.fixedTime,
+          wallClockBeforeMs: fixture.fixedTimeMs,
+          wallClockAfterMs: fixture.fixedTimeMs,
+          weatherStateBefore: structuredClone(weatherState),
+          weatherStateAfter: structuredClone(weatherState),
+          phaseObservations,
+        },
+      };
+      captures.push(sample);
+    }
+  }
+  return {
+    fixture,
+    fixtureDelivery,
+    environment,
+    captures,
+    scenarios: ['idle', 'scripted-motion'],
+    workload: {
+      warmupMs: 30_000,
+      durationPerSampleMs: 60_000,
+      runsPerScenario: 5,
+    },
+  };
+}
+
 test('infrastructure comparison exports observed workloads without dense objective claims', () => {
   const observed = makeInfrastructureObservation();
   const contract = createObservedInfrastructureComparisonContract({
@@ -410,6 +575,51 @@ test('infrastructure comparison exports observed workloads without dense objecti
   assert.equal(contract.workloadId, 'infrastructure-datacenters');
   assert.deepEqual(contract.populations, observed.populations);
   assert.deepEqual(contract.objectiveScenarios, []);
+});
+
+test('weather comparison contract binds phase source, settings, populations and display geometry', () => {
+  const observed = makeWeatherEffectsObservation();
+  const create = (overrides = {}) =>
+    createObservedWeatherEffectsComparisonContract({
+      ...observed,
+      ...overrides,
+    });
+  const contract = create();
+  assert.equal(contract.workloadId, 'weather-effects');
+  assert.deepEqual(contract.objectiveScenarios, []);
+  assert.equal(contract.fixture.phaseSchedule.measurementMs, 60_000);
+  assert.deepEqual(
+    contract.populations,
+    observed.fixtureDelivery.populationsBefore,
+  );
+  for (const mutate of [
+    (value) =>
+      (value.captures[0].weatherEffectsClock.phaseObservations.phases[1].expectedSourceTime =
+        value.fixture.timeline[0]),
+    (value) =>
+      (value.captures[0].weatherEffectsClock.weatherStateAfter.visualState.windPaused = true),
+    (value) => {
+      value.captures[0].layers = structuredClone(value.captures[0].layers);
+      value.captures[0].layers[0].count += 1;
+    },
+    (value) => {
+      value.captures[0].settings.after = {
+        ...value.captures[0].settings.after,
+        resolutionScale: 0.5,
+      };
+    },
+  ]) {
+    const invalid = structuredClone(observed);
+    mutate(invalid);
+    assert.throws(() => create(invalid));
+  }
+  const legacy = structuredClone(observed);
+  legacy.fixture.schema = 'gev-weather-effects-fixture/v1';
+  legacy.fixture.id = 'weather-effects-austin-v1';
+  assert.throws(() => create(legacy), /gev-weather-effects-fixture\/v2/);
+  const short = structuredClone(observed);
+  short.workload.durationPerSampleMs = 30_000;
+  assert.throws(() => create(short));
 });
 
 test('infrastructure readiness binds one measured document across captures and setup diagnostics', () => {

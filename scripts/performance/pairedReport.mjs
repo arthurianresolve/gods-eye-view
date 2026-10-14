@@ -9,6 +9,7 @@ import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 import {
   createCaptureDocumentTopology,
   createObservedAustinOperatingComparisonContract,
+  createObservedWeatherEffectsComparisonContract,
 } from './captureComparisonContract.mjs';
 import {
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -54,6 +55,8 @@ const validCount = (value, label) =>
   );
 const isAustinContract = (contract) =>
   contract?.workloadId === AUSTIN_OPERATING_WORKLOAD_ID;
+const isWeatherEffectsContract = (contract) =>
+  contract?.workloadId === 'weather-effects';
 const hashCanonicalIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
@@ -81,11 +84,14 @@ function validateContract(report, label) {
   requireText(contract.workloadId, `${label}: workload identity`);
   const contractDelivery = contract.fixtureDelivery;
   const austin = isAustinContract(contract);
+  const weatherEffects = isWeatherEffectsContract(contract);
   assert.equal(
     contractDelivery?.schema,
     austin
       ? 'gev-austin-operating-capture-delivery/v1'
-      : 'gev-fixture-delivery-observation/v1',
+      : weatherEffects
+        ? 'gev-weather-effects-fixture-delivery/v2'
+        : 'gev-fixture-delivery-observation/v1',
     `${label}: observed fixture delivery contract is required`,
   );
   assert.equal(contractDelivery.status, 'observed');
@@ -103,6 +109,66 @@ function validateContract(report, label) {
       contract.fixture.expectedLayerCounts,
       AUSTIN_OPERATING_LAYER_COUNTS,
     );
+  } else if (weatherEffects) {
+    assert.equal(contract.fixture.id, 'weather-effects-austin-phased-v2');
+    assert.equal(contract.fixture.fixedTime, '2026-10-08T12:00:00.000Z');
+    assert.equal(contract.fixture.schema, 'gev-weather-effects-fixture/v2');
+    assert.equal(contract.fixtureDelivery.fixtureId, contract.fixture.id);
+    assert.equal(
+      contract.fixtureDelivery.method,
+      'same-origin-hash-pinned-weather-phase-fixture-v2',
+    );
+    assert.deepEqual(contract.fixture.expectedLayerCounts, {
+      'weather-radar': 1,
+      'weather-satellite': 1,
+      'weather-lightning': 1,
+      wind: 65_160,
+    });
+    assert.equal(
+      contract.fixture.phaseSchedule?.schema,
+      'gev-weather-phase-schedule/v1',
+    );
+    assert.deepEqual(
+      contract.fixture.phaseSchedule?.offsetsMs,
+      [0, 20_000, 40_000],
+    );
+    assert.equal(contract.fixture.phaseSchedule?.measurementMs, 60_000);
+    assert.equal(contract.fixture.phaseSchedule?.maximumLatenessMs, 5_000);
+    assert.deepEqual(
+      contract.fixture.timeline,
+      contract.fixture.phaseSchedule.phases.map((phase) => phase.sourceTime),
+    );
+    assert.deepEqual(contract.visual?.weatherEffects, {
+      satelliteProduct: 'clouds-regional',
+      satelliteInfrared: 'filtered',
+      radarOpacity: 'strong',
+      lightningOpacity: 'strong',
+      windModel: 'gfs',
+      windOverlay: 'speed',
+      windPaused: false,
+    });
+    assert.equal(
+      contract.fixtureDelivery.fixtureSha256,
+      contract.fixture.sha256,
+    );
+    assert.deepEqual(
+      contract.fixtureDelivery.phaseSchedule,
+      contract.fixture.phaseSchedule,
+    );
+    assert.equal(
+      contract.fixtureDelivery.assets?.length,
+      contract.fixture.assets?.length,
+    );
+    for (const [index, asset] of contract.fixture.assets.entries()) {
+      const deliveryAsset = contract.fixtureDelivery.assets[index];
+      assert.equal(deliveryAsset?.id, asset.id);
+      assert.equal(deliveryAsset?.sha256, asset.sha256);
+      assert.equal(deliveryAsset?.byteLength, asset.byteLength);
+      assert.ok(
+        Number.isInteger(deliveryAsset?.responseCount) &&
+          deliveryAsset.responseCount > 0,
+      );
+    }
   } else {
     requireText(contractDelivery.method, `${label}: delivery method`);
     validCount(
@@ -122,7 +188,7 @@ function validateContract(report, label) {
     Array.isArray(contract.objectiveScenarios),
     `${label}: objective scenarios are required`,
   );
-  if (!austin)
+  if (!austin && !weatherEffects)
     assert.ok(
       contract.objectiveScenarios.length,
       `${label}: objective scenarios must be declared`,
@@ -425,6 +491,95 @@ function validateFixtureDelivery(report, contract, label) {
     validateAustinSamplePopulationBindings(report, contract, label);
     return;
   }
+  if (isWeatherEffectsContract(contract)) {
+    assert.equal(
+      delivery?.schema,
+      'gev-weather-effects-fixture-delivery/v2',
+      `${label}: phased weather fixture delivery is required`,
+    );
+    assert.equal(delivery.status, 'observed');
+    assert.equal(delivery.workloadId, contract.fixtureDelivery.workloadId);
+    assert.equal(delivery.method, contract.fixtureDelivery.method);
+    assert.equal(delivery.fixtureId, contract.fixture.id);
+    assert.equal(delivery.fixtureSha256, contract.fixture.sha256);
+    assert.equal(delivery.fixedTime, contract.fixture.fixedTime);
+    assert.deepEqual(delivery.phaseSchedule, contract.fixture.phaseSchedule);
+    assert.deepEqual(delivery.assets, contract.fixtureDelivery.assets);
+    assert.deepEqual(
+      delivery.populationsBefore,
+      contract.fixtureDelivery.populationsBefore,
+    );
+    assert.deepEqual(
+      delivery.populationsAfter,
+      contract.fixtureDelivery.populationsAfter,
+    );
+    assert.deepEqual(delivery.routeErrors, []);
+    assert.ok(
+      Number.isInteger(delivery.fulfilledResponseCount) &&
+        delivery.fulfilledResponseCount > 0,
+    );
+    assert.equal(
+      delivery.fulfilledResponseCount,
+      delivery.assets.reduce((sum, asset) => sum + asset.responseCount, 0),
+    );
+    assert.equal(
+      delivery.fulfilledResponseCount,
+      contract.fixtureDelivery.fulfilledResponseCount,
+    );
+    for (const sample of report.captures) {
+      assert.equal(sample.fixtureDelivery?.schema, delivery.schema);
+      assert.equal(sample.fixtureDelivery?.fixtureId, delivery.fixtureId);
+      assert.equal(
+        sample.fixtureDelivery?.fixtureSha256,
+        delivery.fixtureSha256,
+      );
+      assert.equal(sample.fixtureDelivery?.method, delivery.method);
+      assert.deepEqual(
+        sample.fixtureDelivery?.phaseSchedule,
+        delivery.phaseSchedule,
+      );
+      assert.equal(
+        sample.fixtureDelivery?.assets?.length,
+        delivery.assets.length,
+      );
+      for (const [assetIndex, asset] of delivery.assets.entries()) {
+        const sampleAsset = sample.fixtureDelivery.assets[assetIndex];
+        assert.deepEqual(
+          {
+            id: sampleAsset?.id,
+            sha256: sampleAsset?.sha256,
+            byteLength: sampleAsset?.byteLength,
+            contentType: sampleAsset?.contentType,
+          },
+          {
+            id: asset.id,
+            sha256: asset.sha256,
+            byteLength: asset.byteLength,
+            contentType: asset.contentType,
+          },
+        );
+        assert.ok(
+          Number.isInteger(sampleAsset.responseCount) &&
+            sampleAsset.responseCount > 0 &&
+            sampleAsset.responseCount <= asset.responseCount,
+        );
+      }
+      assert.deepEqual(
+        sample.fixtureDelivery?.populationsBefore,
+        delivery.populationsBefore,
+      );
+      assert.deepEqual(
+        sample.fixtureDelivery?.populationsAfter,
+        delivery.populationsAfter,
+      );
+      assertWeatherPhaseEvidenceForPairedReport(
+        sample.weatherEffectsClock?.phaseObservations,
+        contract.fixture,
+        `${label} ${sample.scenario} run ${sample.run}`,
+      );
+    }
+    return;
+  }
   assert.equal(
     delivery?.schema,
     'gev-fixture-delivery-observation/v1',
@@ -538,6 +693,45 @@ function layerSignature(layers, label) {
       return { id: layer.id, enabled: true, count: layer.count };
     })
     .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function assertWeatherPhaseEvidenceForPairedReport(
+  observations,
+  fixture,
+  label,
+) {
+  const schedule = fixture.phaseSchedule;
+  assert.equal(observations?.schema, 'gev-weather-phase-observations/v1');
+  assert.equal(observations.durationMs, schedule.measurementMs);
+  assert.equal(observations.fixtureSha256, fixture.sha256);
+  assert.equal(observations.phases?.length, schedule.phases.length);
+  for (const [index, phase] of schedule.phases.entries()) {
+    const row = observations.phases[index];
+    assert.equal(
+      row?.id,
+      phase.id,
+      `${label}: weather phase identity/order differs`,
+    );
+    assert.equal(row.fixtureSha256, fixture.sha256);
+    assert.equal(row.expectedSourceTime, phase.sourceTime);
+    assert.equal(row.scheduledAtMs, phase.offsetMs);
+    assert.ok(Number.isFinite(row.observedAtElapsedMs));
+    assert.ok(row.observedAtElapsedMs >= phase.offsetMs);
+    assert.ok(
+      row.observedAtElapsedMs <= phase.offsetMs + schedule.maximumLatenessMs,
+      `${label}: weather phase was late`,
+    );
+    assert.deepEqual(
+      row.sourceObservationTimes,
+      Array(3).fill(phase.sourceTime),
+    );
+    assert.deepEqual(row.clock, { mode: 'history', playing: false });
+    if (index > 0)
+      assert.ok(
+        row.observedAtElapsedMs >
+          observations.phases[index - 1].observedAtElapsedMs,
+      );
+  }
 }
 function validateBuildProvenance(source, side) {
   const provenance = source?.buildProvenance;
@@ -765,6 +959,7 @@ function validateReport(report, side, expectedAppCommit) {
   validateFixtureDelivery(report, contract, side);
   const { workload, environment, captures } = report;
   const austin = isAustinContract(contract);
+  const weatherEffects = isWeatherEffectsContract(contract);
   if (austin) {
     const rebuilt = createObservedAustinOperatingComparisonContract({
       fixture: workload?.fixture,
@@ -789,6 +984,25 @@ function validateReport(report, side, expectedAppCommit) {
       durationPerSampleMs: workload.durationPerSampleMs,
       captures,
     });
+  }
+  if (weatherEffects) {
+    const rebuilt = createObservedWeatherEffectsComparisonContract({
+      fixture: workload?.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment,
+      captures,
+      scenarios: workload?.scenarios,
+      workload: {
+        warmupMs: workload?.warmupMs,
+        durationPerSampleMs: workload?.durationPerSampleMs,
+        runsPerScenario: workload?.runsPerScenario,
+      },
+    });
+    equal(
+      rebuilt,
+      contract,
+      `${side}: report weather contract is not derived from phased capture evidence`,
+    );
   }
   assert.equal(
     workload?.warmupMs,

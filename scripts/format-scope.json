@@ -1278,6 +1278,7 @@
   "scripts/performance/terminalViewerObservation.test.mjs",
   "scripts/performance/captureComparisonContract.mjs",
   "scripts/performance/captureComparisonContract.test.mjs",
+  "scripts/performance/pairedReport.mjs",
   "scripts/performance/commonSceneObserver.mjs",
   "scripts/performance/commonSceneObserver.test.mjs",
   "scripts/performance/infrastructureWorkloadFixture.mjs",

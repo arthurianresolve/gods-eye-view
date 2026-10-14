@@ -15,6 +15,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/austinOperatingWorkloadContract.mjs',
   'scripts/performance/austinOperatingWorkloadFixture.mjs',
   'scripts/performance/austinOperatingWorkloadFixture.test.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
   'scripts/performance/productionFlightFixture.mjs',
   'scripts/performance/productionFlightFixture.test.mjs',
   'scripts/performance/austinSatelliteSampledEpoch.mjs',
@@ -35,6 +37,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/qa-hosted-capture.mjs',
   'scripts/performance/mapStreamingWorkloadContract.mjs',
   'scripts/performance/captureComparisonContract.mjs',
+  'scripts/performance/pairedReport.mjs',
+  'scripts/performance/pairedReport.test.mjs',
   'scripts/performance/hostedRendererBackend.mjs',
   'scripts/performance/renderBoundaryObservation.mjs',
 ]);

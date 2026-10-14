@@ -6,8 +6,14 @@ import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 import { validateWeatherSnapshot } from '../../src/layers/weather/source.js';
 
-export const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
+export const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 export const WEATHER_EFFECTS_FIXED_TIME = '2026-10-08T12:00:00.000Z';
+export const WEATHER_EFFECTS_PHASE_POLICY = Object.freeze({
+  schema: 'gev-weather-phase-schedule/v1',
+  measurementMs: 60_000,
+  offsetsMs: Object.freeze([0, 20_000, 40_000]),
+  maximumLatenessMs: 5_000,
+});
 export const WEATHER_EFFECTS_LAYER_COUNTS = Object.freeze({
   'weather-radar': 1,
   'weather-satellite': 1,
@@ -180,11 +186,21 @@ export function createWeatherEffectsWorkloadFixture(
     gridUrl: '/api/wind/grid/gfs-weather-effects-v1.bin?model=gfs',
   };
   const serializable = {
-    schema: 'gev-weather-effects-fixture/v1',
-    id: 'weather-effects-austin-v1',
+    schema: 'gev-weather-effects-fixture/v2',
+    id: 'weather-effects-austin-phased-v2',
     workloadId: WEATHER_EFFECTS_WORKLOAD_ID,
     fixedTime,
     timeline: [...manifests.radar.times],
+    phaseSchedule: {
+      ...WEATHER_EFFECTS_PHASE_POLICY,
+      offsetsMs: [...WEATHER_EFFECTS_PHASE_POLICY.offsetsMs],
+      phases: manifests.radar.times.map((sourceTime, index) => ({
+        id: ['early-history', 'middle-history', 'latest-history'][index],
+        timelineIndex: index,
+        sourceTime,
+        offsetMs: WEATHER_EFFECTS_PHASE_POLICY.offsetsMs[index],
+      })),
+    },
     expectedLayerCounts: { ...WEATHER_EFFECTS_LAYER_COUNTS },
     selectedLayerIds: Object.keys(WEATHER_EFFECTS_LAYER_COUNTS),
     camera: { ...WEATHER_EFFECTS_CAMERA },
@@ -371,7 +387,7 @@ function isWeatherEffectsRoute(url, origin) {
 }
 
 export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
-  if (fixture?.schema !== 'gev-weather-effects-fixture/v1')
+  if (fixture?.schema !== 'gev-weather-effects-fixture/v2')
     throw new TypeError('A registered weather-effects fixture is required.');
   const origin = new URL(baseUrl).origin;
   const assets = new Map(fixture.assets.map((asset) => [asset.id, asset]));
@@ -598,11 +614,14 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
       for (const id of ['wind-manifest', 'wind-grid'])
         assert.ok(responses.get(id)?.count > 0);
       return {
-        schema: 'gev-weather-effects-fixture-delivery/v1',
+        schema: 'gev-weather-effects-fixture-delivery/v2',
         status: 'observed',
         workloadId: fixture.workloadId,
+        method: 'same-origin-hash-pinned-weather-phase-fixture-v2',
+        fixtureId: fixture.id,
         fixtureSha256: fixture.manifestSha256,
         fixedTime: fixture.fixedTime,
+        phaseSchedule: structuredClone(fixture.phaseSchedule),
         assets: fixture.assets.map((asset) => ({
           id: asset.id,
           sha256: asset.sha256,
@@ -612,6 +631,10 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
         })),
         populationsBefore: expectedPopulations,
         populationsAfter: expectedPopulations,
+        fulfilledResponseCount: [...responses.values()].reduce(
+          (sum, row) => sum + row.count,
+          0,
+        ),
         routeErrors: [],
       };
     },
@@ -859,8 +882,10 @@ export function createWeatherEffectsFixtureLifecycle({
   fixture,
   cameraObservation,
   timelinePreflight,
+  workload,
+  phaseObservationsBySample,
 }) {
-  if (fixture?.schema !== 'gev-weather-effects-fixture/v1')
+  if (fixture?.schema !== 'gev-weather-effects-fixture/v2')
     throw new TypeError('A registered weather-effects fixture is required.');
   if (
     !Array.isArray(timelinePreflight?.selectedTimes) ||
@@ -868,11 +893,20 @@ export function createWeatherEffectsFixtureLifecycle({
     timelinePreflight.sourceObservationTimes.length !== 3
   )
     throw new TypeError('Observed weather timeline evidence is incomplete.');
+  assert.ok(
+    Array.isArray(phaseObservationsBySample) &&
+      phaseObservationsBySample.length === workload?.runsPerScenario * 2,
+    'Observed weather phase runs are incomplete.',
+  );
+  for (const observations of phaseObservationsBySample)
+    assertWeatherPhaseRunSet(observations, fixture, {
+      durationMs: workload?.durationPerSampleMs,
+    });
   return {
     scope:
-      'one measured app document; bundled deterministic manifests, time-indexed imagery tiles and GFS grid are fulfilled only for exact same-origin GET routes; all three advertised history frames are selected through application timeline controls before timed samples',
+      'one measured app document; bundled deterministic manifests, time-indexed imagery tiles and GFS grid are fulfilled only for exact same-origin GET routes; every 60-second capture selects the three pinned source phases through application timeline controls at fixed measurement-relative offsets',
     fixedHarnessClock:
-      'Date.now and Cesium currentTime are pinned to the declared UTC fixture epoch; weather observation timestamps remain source times and wind animation remains enabled',
+      'Date.now and Cesium currentTime are pinned to the declared UTC fixture epoch; native history playback is paused, source timestamps are selected on the declared measurement-relative schedule, and wind animation remains enabled',
     camera: structuredClone(fixture.camera),
     observedCamera: structuredClone(cameraObservation),
     playback: structuredClone(timelinePreflight.playback),
@@ -880,7 +914,131 @@ export function createWeatherEffectsFixtureLifecycle({
     sourceObservationTimes: structuredClone(
       timelinePreflight.sourceObservationTimes,
     ),
+    phaseSchedule: structuredClone(fixture.phaseSchedule),
+    phaseObservationsBySample: structuredClone(phaseObservationsBySample),
     freshBrowserContextPerSample: false,
-    performanceAcceptanceEligible: false,
+  };
+}
+
+export function assertWeatherPhaseRunSet(
+  phaseObservations,
+  fixture,
+  options = {},
+) {
+  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
+  const schedule = fixture.phaseSchedule;
+  const durationMs = options.durationMs;
+  assert.equal(durationMs, WEATHER_EFFECTS_PHASE_POLICY.measurementMs);
+  assert.equal(phaseObservations?.schema, 'gev-weather-phase-observations/v1');
+  assert.equal(phaseObservations.durationMs, durationMs);
+  assert.equal(phaseObservations.fixtureSha256, fixture.sha256);
+  assert.equal(phaseObservations.phases?.length, schedule.phases.length);
+  for (const [index, phase] of schedule.phases.entries()) {
+    const observed = phaseObservations.phases[index];
+    assert.equal(observed.id, phase.id);
+    assert.equal(observed.fixtureSha256, fixture.sha256);
+    assert.equal(observed.expectedSourceTime, phase.sourceTime);
+    assert.equal(observed.scheduledAtMs, phase.offsetMs);
+    assert.ok(Number.isFinite(observed.observedAtElapsedMs));
+    assert.ok(observed.observedAtElapsedMs >= phase.offsetMs);
+    assert.ok(
+      observed.observedAtElapsedMs <=
+        phase.offsetMs + schedule.maximumLatenessMs,
+      `Weather phase ${phase.id} was late.`,
+    );
+    assert.deepEqual(
+      observed.sourceObservationTimes,
+      Array(3).fill(phase.sourceTime),
+    );
+    assert.deepEqual(observed.clock, { mode: 'history', playing: false });
+    if (index > 0)
+      assert.ok(
+        observed.observedAtElapsedMs >
+          phaseObservations.phases[index - 1].observedAtElapsedMs,
+      );
+  }
+  return true;
+}
+
+/** Select one pinned weather source phase through the page's visible timeline controls. */
+export async function selectWeatherEffectsPhaseInPage({
+  phase,
+  fixtureSha256,
+  maximumLatenessMs,
+} = {}) {
+  const startedAt = window.__gevWeatherMeasurementStartedAt;
+  const app = window.__godsEyeView;
+  const root = document.querySelector('.weather-readout');
+  const previous = root?.querySelector('button[title="Earlier observation"]');
+  const latest = root?.querySelector(
+    'button[title="Newest frame per product"]',
+  );
+  const play = root?.querySelector('button[title="Replay observed history"]');
+  if (
+    !Number.isFinite(startedAt) ||
+    !app?.dataManager?.layers?.get ||
+    !previous ||
+    !latest ||
+    !play ||
+    !phase ||
+    !Number.isInteger(phase.timelineIndex) ||
+    phase.timelineIndex < 0 ||
+    phase.timelineIndex > 2 ||
+    typeof phase.sourceTime !== 'string' ||
+    typeof fixtureSha256 !== 'string' ||
+    !/^[a-f0-9]{64}$/.test(fixtureSha256) ||
+    !Number.isFinite(maximumLatenessMs) ||
+    maximumLatenessMs <= 0
+  )
+    throw new Error('Weather phase selection inputs are invalid.');
+  const readTimes = () =>
+    ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+      (id) =>
+        app.dataManager.layers.get(id)?.module?.getStats?.()?.observedAt ??
+        null,
+    );
+  const readClock = () =>
+    app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
+      ?.clock;
+  if (play.getAttribute('aria-pressed') === 'true')
+    throw new Error('Native weather playback must remain paused.');
+  const targetElapsedMs = startedAt + phase.offsetMs;
+  if (performance.now() < targetElapsedMs)
+    await new Promise((resolve) =>
+      setTimeout(resolve, targetElapsedMs - performance.now()),
+    );
+  latest.click();
+  for (let index = 2; index > phase.timelineIndex; index -= 1) {
+    if (previous.disabled)
+      throw new Error('Weather timeline ended before the requested phase.');
+    previous.click();
+  }
+  const deadline = targetElapsedMs + maximumLatenessMs;
+  let sourceObservationTimes = readTimes();
+  while (
+    !sourceObservationTimes.every((time) => time === phase.sourceTime) &&
+    performance.now() < deadline
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    sourceObservationTimes = readTimes();
+  }
+  const observedAtElapsedMs = performance.now() - startedAt;
+  const clock = readClock();
+  if (
+    !sourceObservationTimes.every((time) => time === phase.sourceTime) ||
+    observedAtElapsedMs < phase.offsetMs ||
+    observedAtElapsedMs > phase.offsetMs + maximumLatenessMs ||
+    clock?.mode !== 'history' ||
+    clock?.playing !== false
+  )
+    throw new Error(`Weather phase ${phase.id} was missing, late or wrong.`);
+  return {
+    id: phase.id,
+    expectedSourceTime: phase.sourceTime,
+    scheduledAtMs: phase.offsetMs,
+    observedAtElapsedMs,
+    sourceObservationTimes,
+    clock: { mode: clock.mode, playing: clock.playing },
+    fixtureSha256,
   };
 }

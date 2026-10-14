@@ -113,6 +113,7 @@ import {
   createObservedDenseComparisonContract,
   createObservedAustinOperatingComparisonContract,
   createObservedInfrastructureComparisonContract,
+  createObservedWeatherEffectsComparisonContract,
   createCaptureDocumentTopology,
   getMainCaptureDocumentIdentity,
   getCaptureReadinessReasons,
@@ -158,7 +159,7 @@ const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const providerFixtureMode = option('--provider-fixture', null);
 const infrastructureWorkloadSelected =
   INFRASTRUCTURE_WORKLOAD_IDS.includes(providerFixtureMode);
-const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
+const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 const mapStreamingWorkloadSelected =
@@ -205,6 +206,10 @@ if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
   weatherEffectsWorkload =
     weatherEffectsModule.createWeatherEffectsWorkloadFixture(
       providerFixtureTime,
+    );
+  if (warmupMs !== 30_000 || seconds !== 60 || runs !== 5)
+    throw new TypeError(
+      'The phased weather/effects comparison requires 30-second warmup, 60-second samples and five runs per scenario.',
     );
 }
 if (!['diagnostic', 'prewarm', 'receipt-only'].includes(workerAuditMode))
@@ -374,9 +379,13 @@ if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
     'Prewarm worker auditing requires the verified dense production fixture.',
   );
-if (workerAuditMode === 'receipt-only' && !austinOperatingWorkloadSelected)
+if (
+  workerAuditMode === 'receipt-only' &&
+  !austinOperatingWorkloadSelected &&
+  !weatherEffectsWorkload
+)
   throw new Error(
-    'Receipt-only worker auditing requires the verified Austin operating fixture.',
+    'Receipt-only worker auditing requires the verified Austin operating or phased weather fixture.',
   );
 if (
   sceneFrameDiagnosticsEnabled &&
@@ -1584,7 +1593,8 @@ function finalizeAustinOperatingFixtureDelivery(owner, reason) {
 }
 
 function observeWeatherEffectsRuntimeState() {
-  const manager = window.__godsEyeView?.dataManager;
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
   if (!manager?.layers?.get)
     throw new Error('Weather source state is unavailable.');
   const layer = (id) => manager.layers.get(id)?.module;
@@ -1603,7 +1613,31 @@ function observeWeatherEffectsRuntimeState() {
     windOverlay: wind?.overlay,
     windPaused: wind?.paused,
   };
-  return { clock, sourceObservationTimes, visualState, wind };
+  const selectedIds = [
+    'weather-radar',
+    'weather-satellite',
+    'weather-lightning',
+    'wind',
+  ];
+  const layerRows = new Map(
+    (manager.getAll?.() || []).map((row) => [row.id, row]),
+  );
+  const populations = selectedIds.map((id) => ({
+    id,
+    enabled: layerRows.get(id)?.enabled ?? null,
+    count: layerRows.get(id)?.stats?.count ?? null,
+    loading: layer(id)?.getStats?.()?.loading ?? null,
+    error: layer(id)?.getStats?.()?.error ?? null,
+  }));
+  const visualSettings = app?.styleManager?.getVisualState?.() ?? null;
+  return {
+    clock,
+    sourceObservationTimes,
+    visualState,
+    visualSettings,
+    populations,
+    wind,
+  };
 }
 
 async function observeAustinOperatingRuntimeState(
@@ -3397,9 +3431,9 @@ try {
       }
       latest.click();
       observed.push(await waitForTimes(times.at(-1)));
-      play.click();
-      if (play.getAttribute('aria-pressed') !== 'true')
-        throw new Error('Weather playback did not enter its playing state.');
+      if (play.getAttribute('aria-pressed') === 'true') play.click();
+      if (play.getAttribute('aria-pressed') !== 'false')
+        throw new Error('Weather history playback must remain paused.');
       const app = window.__godsEyeView;
       const windLayer = app.dataManager.layers.get('wind')?.module;
       const wind = windLayer?.getParams?.();
@@ -3423,8 +3457,8 @@ try {
         radarParams?.opacity !== 'strong' ||
         lightningParams?.opacity !== 'strong' ||
         productStats.some((stats) => !times.includes(stats?.observedAt)) ||
-        clockState?.mode !== 'history' ||
-        clockState?.playing !== true
+        clockState?.mode !== 'latest' ||
+        clockState?.playing !== false
       )
         throw new Error(
           'Weather history or wind playback state did not match the fixture.',
@@ -3432,9 +3466,8 @@ try {
       return {
         selectedTimes: observed,
         playback: {
-          mode: 'history',
+          mode: 'latest',
           playing: clockState.playing,
-          intervalMs: 2_000,
           displayedAtStart: readTimes(),
           visualState: {
             satelliteProduct: satelliteParams?.product,
@@ -4388,7 +4421,7 @@ try {
       failureProgress.phase = 'measure-scene';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
-      const sample = await page.evaluate(
+      const samplePromise = page.evaluate(
         async ({
           durationMs,
           scenarioName,
@@ -4437,18 +4470,27 @@ try {
           let measurementTimer = null;
           let measurementTimerFiredPerformanceNowMs = null;
           let delayTimer = null;
+          let startedAt = null;
+          let resolveMeasurement = null;
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
           try {
             if (stagedClock) stagedClock.startMeasurement(expectedRunOrdinal);
-            const startedAt = performance.now();
+            startedAt = performance.now();
+            window.__gevWeatherMeasurementStartedAt = startedAt;
             const measurementWait = new Promise((resolve) => {
+              resolveMeasurement = resolve;
               measurementTimer = setTimeout(() => {
                 if (recordFrameWindow)
                   measurementTimerFiredPerformanceNowMs = performance.now();
                 resolve();
               }, durationMs);
             });
+            window.__gevWeatherMeasurementAbort = () => {
+              active = false;
+              clearTimeout(measurementTimer);
+              resolveMeasurement?.();
+            };
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
               // A timer-step route accumulates missed callbacks and makes a slow
@@ -4520,6 +4562,10 @@ try {
                 };
             window.removeEventListener('blur', onBackground);
             document.removeEventListener('visibilitychange', onVisibility);
+            if (window.__gevWeatherMeasurementStartedAt === startedAt) {
+              delete window.__gevWeatherMeasurementStartedAt;
+              delete window.__gevWeatherMeasurementAbort;
+            }
             observer
               ?.takeRecords?.()
               .forEach((entry) => longTasks.push(entry.duration));
@@ -4586,6 +4632,10 @@ try {
             scene.postRender.removeEventListener(onRender);
             window.removeEventListener('blur', onBackground);
             document.removeEventListener('visibilitychange', onVisibility);
+            if (window.__gevWeatherMeasurementStartedAt === startedAt) {
+              delete window.__gevWeatherMeasurementStartedAt;
+              delete window.__gevWeatherMeasurementAbort;
+            }
           }
         },
         {
@@ -4596,6 +4646,54 @@ try {
           expectedRunOrdinal: phaseRunOrdinal,
         },
       );
+      let weatherPhaseObservations = null;
+      let sample;
+      try {
+        if (weatherEffectsWorkload) {
+          await page.waitForFunction(
+            () => Number.isFinite(window.__gevWeatherMeasurementStartedAt),
+            { timeout: 5_000, polling: 20 },
+          );
+          const hostScheduleStart = performance.now();
+          const phases = [];
+          for (const phase of weatherEffectsWorkload.phaseSchedule.phases) {
+            const delayUntilPhase =
+              hostScheduleStart + phase.offsetMs - performance.now();
+            if (delayUntilPhase > 0)
+              await new Promise((resolve) =>
+                setTimeout(resolve, delayUntilPhase),
+              );
+            phases.push(
+              await page.evaluate(
+                weatherEffectsModule.selectWeatherEffectsPhaseInPage,
+                {
+                  phase,
+                  fixtureSha256: weatherEffectsWorkload.sha256,
+                  maximumLatenessMs:
+                    weatherEffectsWorkload.phaseSchedule.maximumLatenessMs,
+                },
+              ),
+            );
+          }
+          weatherPhaseObservations = {
+            schema: 'gev-weather-phase-observations/v1',
+            durationMs: seconds * 1000,
+            fixtureSha256: weatherEffectsWorkload.sha256,
+            phases,
+          };
+        }
+        sample = await samplePromise;
+      } catch (error) {
+        if (weatherEffectsWorkload) {
+          await page
+            .evaluate(() => window.__gevWeatherMeasurementAbort?.())
+            .catch(() => {});
+          await samplePromise.catch(() => {});
+        }
+        throw error;
+      }
+      if (weatherEffectsWorkload)
+        sample.weatherPhaseObservations = weatherPhaseObservations;
       failureProgress.current.measurement = sample;
       if (boundaryProgressBindingRecord)
         sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
@@ -5070,6 +5168,11 @@ try {
         failureProgress.fixtureDelivery = fixtureDelivery;
       }
       if (weatherEffectsWorkload) {
+        weatherEffectsModule.assertWeatherPhaseRunSet(
+          sample.weatherPhaseObservations,
+          weatherEffectsWorkload,
+          { durationMs: seconds * 1000 },
+        );
         weatherEffectsModule.assertWeatherEffectsClock(
           sceneBefore,
           weatherEffectsWorkload,
@@ -5088,6 +5191,8 @@ try {
           cesiumAfter: sceneAfter.cesiumClock,
           weatherPlayback: weatherTimelinePreflight.playback,
           selectedTimesPreflight: weatherTimelinePreflight.selectedTimes,
+          phaseSchedule: weatherEffectsWorkload.phaseSchedule,
+          phaseObservations: sample.weatherPhaseObservations,
           weatherStateBefore,
           weatherStateAfter,
         };
@@ -5385,9 +5490,9 @@ try {
           captures,
           scenarios,
         })
-      : austinOperatingWorkload
-        ? createObservedAustinOperatingComparisonContract({
-            fixture: austinOperatingWorkload,
+      : weatherEffectsWorkload
+        ? createObservedWeatherEffectsComparisonContract({
+            fixture: weatherEffectsWorkload,
             fixtureDelivery,
             environment,
             captures,
@@ -5398,7 +5503,20 @@ try {
               runsPerScenario: runs,
             },
           })
-        : null;
+        : austinOperatingWorkload
+          ? createObservedAustinOperatingComparisonContract({
+              fixture: austinOperatingWorkload,
+              fixtureDelivery,
+              environment,
+              captures,
+              scenarios,
+              workload: {
+                warmupMs,
+                durationPerSampleMs: seconds * 1000,
+                runsPerScenario: runs,
+              },
+            })
+          : null;
   if (page && activeDepthPickAttribution)
     await disposeDepthPickAttributionForPage(page, activeDepthPickAttribution);
   if (page)
@@ -5568,10 +5686,17 @@ try {
               fixture: weatherEffectsWorkload,
               cameraObservation: weatherCameraObservation,
               timelinePreflight: weatherTimelinePreflight,
+              workload: {
+                warmupMs,
+                durationPerSampleMs: seconds * 1000,
+                runsPerScenario: runs,
+              },
+              phaseObservationsBySample: captures.map(
+                (sample) => sample.weatherEffectsClock?.phaseObservations,
+              ),
             }),
         }
       : {}),
-    ...(weatherEffectsWorkload ? { performanceAcceptanceEligible: false } : {}),
     ...(mapStreamingWorkloadSelected
       ? mapStreamingModule.mapStreamingCaptureWorkloadFields(
           mapStreamingFinalEvidence,
@@ -5662,10 +5787,6 @@ try {
   if (nativeRenderingDiagnostic)
     comparisonReadinessReasons.push(
       'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
-    );
-  if (weatherEffectsWorkload)
-    comparisonReadinessReasons.push(
-      'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
     );
   if (mapStreamingWorkloadSelected)
     comparisonReadinessReasons.push(
