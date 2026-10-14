@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 2,
+  "phase": "pre-release",
+  "candidateCommit": "3a0e49be11a44a04b608e0b4b3cd2ff1f69bc958",
+  "checks": [
+    {
+      "id": "platform-installs",
+      "candidateCommit": "3a0e49be11a44a04b608e0b4b3cd2ff1f69bc958",
+      "status": "passed",
+      "environment": "GitHub standard ubuntu-latest, macos-latest and windows-latest runners; Windows onboarding included",
+      "timestamp": "2026-10-14T22:21:03.054Z",
+      "artifacts": [
+        "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38637636231"
+      ],
+      "notes": "All standard exact-commit CI jobs passed. Optional manual-dispatch performance jobs were outside this run."
+    },
+    {
+      "id": "mixed-use-soak",
+      "candidateCommit": "3a0e49be11a44a04b608e0b4b3cd2ff1f69bc958",
+      "status": "passed",
+      "environment": "Physical Windows 10 host, Intel UHD Graphics 620, ANGLE D3D11, Chrome 152.0.7977.75",
+      "timestamp": "2026-10-14T22:21:03.055Z",
+      "artifacts": [
+        "windows-uhd620-full-soak-3a0e49be.json",
+        "recording-rendered-soak-3a0e49be.gev-recording-bundle.json"
+      ],
+      "notes": "The exact-commit 60-minute run passed operations, retention, provenance, prewarm cleanup and natural shutdown."
+    },
+    {
+      "id": "hardware-matrix",
+      "candidateCommit": "3a0e49be11a44a04b608e0b4b3cd2ff1f69bc958",
+      "status": "pending",
+      "environment": "Primary physical Windows Intel UHD 620 available; physical discrete Windows GPU and macOS hardware unavailable",
+      "timestamp": "2026-10-14T22:21:03.055Z",
+      "artifacts": [
+        "windows-uhd620-full-soak-3a0e49be.json"
+      ],
+      "notes": "Primary Windows retention passed. Unavailable physical hardware is not replaced with hosted or software-rendered evidence."
+    },
+    {
+      "id": "accessibility-review",
+      "candidateCommit": "3a0e49be11a44a04b608e0b4b3cd2ff1f69bc958",
+      "status": "pending",
+      "environment": "External NVDA, VoiceOver and first-time participant reviews",
+      "timestamp": "2026-10-14T22:21:03.055Z",
+      "artifacts": [],
+      "notes": "Required human reviews remain unavailable and are not converted into passes."
+    }
+  ],
+  "performanceEvidence": {
+    "comparisons": [],
+    "retention": [
+      {
+        "environmentId": "windows-uhd620-physical",
+        "report": {
+          "path": "windows-uhd620-full-soak-3a0e49be.json",
+          "sha256": "7d1ab603bae176e41f472e4f65f2498ac0ffcf8bfe903365fad20816cf33ff52"
+        }
+      }
+    ]
+  }
+}
