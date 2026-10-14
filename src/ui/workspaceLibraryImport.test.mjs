@@ -588,10 +588,58 @@ test('refresh preserves a valid recovery selection only for its workspace and sk
   );
   await openingSecondWorkspace;
   await fixture.panel.refresh();
+  await fixture.action('save');
+  await fixture.panel.refresh();
+  assert.ok(
+    revisionSelect.children.some((option) => option.value === '1'),
+    'the second workspace exposes the same recovery revision identifier',
+  );
   assert.equal(
     revisionSelect.value,
     '',
     'a revision selection from another workspace is not carried over',
+  );
+});
+
+test('saved query selection does not transfer across workspaces with a shared query ID', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 2 });
+  t.after(() => fixture.restoreGlobals());
+  const sharedQuery = {
+    version: 1,
+    id: 'query-shared',
+    name: 'Shared query',
+    updatedAt: 100,
+    query: {
+      layers: ['flights'],
+      scope: { kind: 'anywhere' },
+      filters: [],
+      sortBy: null,
+      sortDir: 'asc',
+      limit: 50,
+    },
+  };
+  for (const id of ['workspace-a', 'workspace-b'])
+    fixture.storage.records.get(id).chunks = {
+      savedQueries: [structuredClone(sharedQuery)],
+    };
+
+  await fixture.selectWorkspace('workspace-a');
+  await fixture.panel.refresh();
+  const savedQuerySelect = fixture.element('[data-query-saved]');
+  assert.ok(
+    savedQuerySelect.children.some((option) => option.value === 'query-shared'),
+  );
+  savedQuerySelect.value = 'query-shared';
+  await fixture.selectWorkspace('workspace-b');
+  await fixture.panel.refresh();
+
+  assert.ok(
+    savedQuerySelect.children.some((option) => option.value === 'query-shared'),
+  );
+  assert.equal(
+    savedQuerySelect.value,
+    '',
+    'the same query ID in another workspace does not inherit the old selection',
   );
 });
 

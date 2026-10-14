@@ -172,6 +172,7 @@ export function createWorkspaceLibraryPanel({
   let refreshTask = null;
   let refreshRequested = false;
   let revisionSelectionWorkspaceId = null;
+  let savedQuerySelectionWorkspaceId = null;
   let autosaveTimer = null;
   let workspaceSaveTail = Promise.resolve();
   let historyTimer = null;
@@ -369,6 +370,11 @@ export function createWorkspaceLibraryPanel({
   }
   function renderSavedQueries() {
     const values = parseSavedQueryList(active?.chunks?.savedQueries || []);
+    const workspaceId = active?.id || null;
+    const selectedQuery =
+      savedQuerySelectionWorkspaceId === workspaceId
+        ? savedQuerySelect.value
+        : '';
     const options = [
       new Option(
         values.length ? 'Choose a saved query' : 'No saved queries',
@@ -376,11 +382,8 @@ export function createWorkspaceLibraryPanel({
       ),
       ...values.map((item) => new Option(item.name, item.id)),
     ];
-    replaceSelectOptionsIfChanged(
-      savedQuerySelect,
-      options,
-      savedQuerySelect.value,
-    );
+    replaceSelectOptionsIfChanged(savedQuerySelect, options, selectedQuery);
+    savedQuerySelectionWorkspaceId = workspaceId;
   }
   async function persistWorkspace({ chunks, pinnedEvidence } = {}) {
     const saveOwner = captureWorkspaceSaveOwner();
