@@ -20,6 +20,36 @@ function readKey(file) {
   return KEY_PATTERN.test(text) ? text : null;
 }
 
+/** Replace malformed contents without depending on Windows rename-over-file. */
+function publishRepairedKey(file, tmp, key) {
+  try {
+    fs.renameSync(tmp, file);
+    return key;
+  } catch (error) {
+    if (error.code !== 'EPERM') throw error;
+    // Under the repair lock, remove only the still-malformed destination and
+    // publish with link(), whose no-overwrite behavior resolves a concurrent
+    // first creator to one persisted winner.
+    let winner = null;
+    try {
+      winner = readKey(file);
+    } catch (readError) {
+      if (readError.code !== 'ENOENT') throw readError;
+    }
+    if (winner) return winner;
+    fs.rmSync(file, { force: true });
+    try {
+      fs.linkSync(tmp, file);
+      return key;
+    } catch (linkError) {
+      if (linkError.code !== 'EEXIST') throw linkError;
+      const concurrentWinner = readKey(file);
+      if (concurrentWinner) return concurrentWinner;
+      throw linkError;
+    }
+  }
+}
+
 /** Serialize malformed-file repair; ordinary first creation still uses link(). */
 function repairKey(file, tmp, key) {
   const lock = `${file}.repair-lock`;
@@ -47,8 +77,7 @@ function repairKey(file, tmp, key) {
     // A repair completed between our earlier read and acquiring the lock.
     const winner = readKey(file);
     if (winner) return winner;
-    fs.renameSync(tmp, file);
-    return key;
+    return publishRepairedKey(file, tmp, key);
   } finally {
     fs.closeSync(fd);
     fs.rmSync(lock, { force: true });

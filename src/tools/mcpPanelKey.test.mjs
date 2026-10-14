@@ -147,6 +147,15 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
       }
       return text;
     };
+    const rename = fs.renameSync;
+    fs.renameSync = function (from, to, ...args) {
+      if (to === file && from.endsWith('.tmp')) {
+        const error = new Error('injected destination replacement failure');
+        error.code = 'EPERM';
+        throw error;
+      }
+      return rename.call(this, from, to, ...args);
+    };
     const fallbackLogs = [];
     const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
     process.stdout.write(key);
@@ -210,6 +219,58 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
     true,
     `persisted panel key disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
   );
+  assert.equal(fs.existsSync(`${file}.repair-lock`), false);
+  assert.equal(
+    fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
+    false,
+  );
+});
+
+test('malformed-key repair falls back to no-overwrite publication when rename returns EPERM', async (t) => {
+  const file = tempKeyFile(t);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, 'not a key\n');
+  const script = `
+    import fs from 'node:fs';
+    const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
+    const [file] = process.argv.slice(1);
+    const rename = fs.renameSync;
+    fs.renameSync = function (from, to, ...args) {
+      if (to === file && from.endsWith('.tmp')) {
+        const error = new Error('injected destination replacement failure');
+        error.code = 'EPERM';
+        throw error;
+      }
+      return rename.call(this, from, to, ...args);
+    };
+    const fallbackLogs = [];
+    const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
+    process.stdout.write(JSON.stringify({ key, fallbackLogs }));
+  `;
+  const result = await new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      ['--input-type=module', '-e', script, file],
+      { stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    t.after(() => child.kill());
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (chunk) => (out += chunk));
+    child.stderr.on('data', (chunk) => (err += chunk));
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`exit ${code}: ${err}`));
+      try {
+        resolve(JSON.parse(out));
+      } catch {
+        reject(new Error('child repair result was malformed'));
+      }
+    });
+  });
+  assert.match(result.key, /^[A-Za-z0-9_-]{43}$/);
+  assert.deepEqual(result.fallbackLogs, []);
+  assert.equal(fs.readFileSync(file, 'utf8').trim(), result.key);
   assert.equal(fs.existsSync(`${file}.repair-lock`), false);
   assert.equal(
     fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
