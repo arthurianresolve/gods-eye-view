@@ -4,6 +4,7 @@ import test from 'node:test';
 import { previewCSV, previewGeoJSON } from '../imports/index.js';
 import {
   createWorkspaceImportReadOwner,
+  readOwnedWorkspaceBytes,
   readOwnedWorkspaceFile,
 } from './workspaceImportRead.js';
 
@@ -27,6 +28,17 @@ function file(name, contents) {
     size: contents.length,
     async text() {
       return contents;
+    },
+  };
+}
+
+function byteFile(name, contents) {
+  const bytes = new TextEncoder().encode(contents);
+  return {
+    name,
+    size: bytes.byteLength,
+    async arrayBuffer() {
+      return bytes.slice().buffer;
     },
   };
 }
@@ -121,6 +133,25 @@ test('cancel and disposal suppress late read completion', async () => {
     await readOwnedWorkspaceFile(disposed, () =>
       owner.isCurrent(disposedOwner, { disposed: true }),
     ),
+    { status: 'superseded' },
+  );
+});
+
+test('owned byte reads preserve cancellation ownership and feed the bounded decoder', async () => {
+  const owner = createWorkspaceImportReadOwner();
+  const current = byteFile(
+    'points.geojson',
+    '{"type":"FeatureCollection","features":[]}',
+  );
+  const currentOwner = owner.begin(current);
+  const read = await readOwnedWorkspaceBytes(current, () =>
+    owner.isCurrent(currentOwner),
+  );
+  assert.equal(read.status, 'ready');
+  assert.ok(read.bytes instanceof Uint8Array);
+  owner.begin(byteFile('new.geojson', '{}'));
+  assert.deepEqual(
+    await readOwnedWorkspaceBytes(current, () => owner.isCurrent(currentOwner)),
     { status: 'superseded' },
   );
 });

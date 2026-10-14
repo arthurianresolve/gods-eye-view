@@ -49,3 +49,15 @@ export async function readOwnedWorkspaceFile(file, isCurrent) {
     return isCurrent() ? { status: 'failed', error } : { status: 'superseded' };
   }
 }
+
+/** Read bytes for the bounded import decoder without publishing stale files. */
+export async function readOwnedWorkspaceBytes(file, isCurrent) {
+  try {
+    if (typeof file?.arrayBuffer !== 'function')
+      throw new TypeError('Import file does not expose arrayBuffer().');
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    return isCurrent() ? { status: 'ready', bytes } : { status: 'superseded' };
+  } catch (error) {
+    return isCurrent() ? { status: 'failed', error } : { status: 'superseded' };
+  }
+}

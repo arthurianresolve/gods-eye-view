@@ -14,6 +14,7 @@ import {
 } from '../evidence/comparison.js';
 import {
   IMPORT_LIMITS,
+  decodeImportText,
   parseCsvHeaders,
   previewCSV,
   previewGeoJSON,
@@ -22,6 +23,7 @@ import {
 } from '../imports/index.js';
 import {
   createWorkspaceImportReadOwner,
+  readOwnedWorkspaceBytes,
   readOwnedWorkspaceFile,
 } from './workspaceImportRead.js';
 import { setTextIfChanged } from './textUpdate.js';
@@ -161,6 +163,7 @@ export function createWorkspaceLibraryPanel({
   let queryGeneration = 0;
   let stagedFile = null;
   let stagedText = null;
+  let stagedBytes = null;
   let stagedPreview = null;
   const importReadOwner = createWorkspaceImportReadOwner();
   let stagedImportOwner = null;
@@ -232,6 +235,7 @@ export function createWorkspaceLibraryPanel({
     importController = null;
     stagedFile = null;
     stagedText = null;
+    stagedBytes = null;
     stagedPreview = null;
     importReview.hidden = true;
     importSummary.textContent = '';
@@ -1365,14 +1369,14 @@ export function createWorkspaceLibraryPanel({
   async function previewStagedImport() {
     const owner = stagedImportOwner;
     if (
-      !stagedText ||
+      (!stagedText && !stagedBytes) ||
       !stagedFile ||
       !owner ||
       owner.file !== stagedFile ||
       !importOwnerIsCurrent(owner)
     )
       return;
-    const text = stagedText;
+    const input = stagedBytes || stagedText;
     const file = stagedFile;
     stagedPreview = null;
     importReview.hidden = true;
@@ -1387,16 +1391,16 @@ export function createWorkspaceLibraryPanel({
       const extension = file.name.split('.').at(-1).toLowerCase();
       const preview =
         extension === 'csv'
-          ? await previewCSV(text, {
+          ? await previewCSV(input, {
               signal,
               attribution,
               mapping: selectedCsvMapping(),
             })
           : extension === 'kml'
-            ? await previewKML(text, { signal, attribution })
+            ? await previewKML(input, { signal, attribution })
             : extension === 'gpx'
-              ? await previewGPX(text, { signal, attribution })
-              : await previewGeoJSON(text, { signal, attribution });
+              ? await previewGPX(input, { signal, attribution })
+              : await previewGeoJSON(input, { signal, attribution });
       if (!signal.aborted && importOwnerIsCurrent(owner))
         showPreview(preview, owner);
     } catch (error) {
@@ -1464,7 +1468,7 @@ export function createWorkspaceLibraryPanel({
       if (stillOwnsInput) {
         importReview.hidden = true;
         geoFile.value = '';
-        stagedFile = stagedText = stagedPreview = null;
+        stagedFile = stagedText = stagedBytes = stagedPreview = null;
         stagedImportOwner = null;
         importReadOwner.invalidate();
         completionGeneration = ++importInputGeneration;
@@ -1520,16 +1524,24 @@ export function createWorkspaceLibraryPanel({
     stagedFile = file;
     importStatus.textContent = 'Reading import file…';
     try {
-      const read = await readOwnedWorkspaceFile(file, () =>
-        importOwnerIsCurrent(owner),
-      );
+      const read =
+        typeof file.arrayBuffer === 'function'
+          ? await readOwnedWorkspaceBytes(file, () =>
+              importOwnerIsCurrent(owner),
+            )
+          : await readOwnedWorkspaceFile(file, () =>
+              importOwnerIsCurrent(owner),
+            );
       if (read.status === 'superseded') return;
       if (read.status === 'failed') throw read.error;
       if (!importOwnerIsCurrent(owner)) return;
-      stagedText = read.text;
+      stagedText = read.text || null;
+      stagedBytes = read.bytes || null;
       const extension = owner.file.name.split('.').at(-1).toLowerCase();
       if (extension === 'csv') {
-        const headers = parseCsvHeaders(read.text);
+        const headers = parseCsvHeaders(
+          stagedText || decodeImportText(stagedBytes),
+        );
         if (!importOwnerIsCurrent(owner)) return;
         for (const field of ['latitude', 'longitude', 'id', 'time']) {
           const selectColumn = root.querySelector(`[data-column="${field}"]`);
