@@ -49,6 +49,14 @@ test('real flight and military fleet ticks cover representative mutation owners'
     const [cold, skipped, nextDue, warmed, changed] = run.stages;
     assert.equal(cold.executed, true);
     assert.equal(skipped.executed, false);
+    assert.equal(skipped.deadReckonCalls, 0);
+    for (const { id: _id, ...writes } of skipped.writeDeltas)
+      assert.deepEqual(Object.values(writes), Array(6).fill(0));
+    for (const stage of run.stages) {
+      assert.equal(stage.tickAdds, 0);
+      assert.equal(stage.tickRemoves, 0);
+      assert.equal(stage.identityPreserved, true);
+    }
     assert.equal(skipped.lastFleetTickMsAfter, cold.lastFleetTickMsAfter);
     assert.equal(skipped.identityPreserved, true);
     assert.equal(skipped.movingDeltaM, cold.movingDeltaM);

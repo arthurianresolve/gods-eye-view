@@ -620,6 +620,7 @@ function snapshotRun(context, label) {
 }
 
 function runLayer(kind, fixture, clock, onCollectionCreated) {
+  clock.nowMs = fixture.receiptClockMs;
   const context = createRun(kind, fixture, onCollectionCreated);
   const cleanup = { modelMapEntriesBefore: context.modelStates.size };
   try {
@@ -708,12 +709,15 @@ function runLayer(kind, fixture, clock, onCollectionCreated) {
         byId.get(selected.id)?.position === 0 &&
         byId.get(selected.id)?.show === 0,
       suppressedNotInCollection: tick.suppressedRecordAbsent,
-      horizonHidden: context.billboards.get(horizon.id)?.show === false,
+      horizonHidden:
+        tick.visibility.find(([id]) => id === horizon.id)?.[1] === false,
       focusFadeApplied:
-        context.billboards.get(fading.id)?.color.alpha === fading.focusFactor,
+        tick.colors.find(([id]) => id === fading.id)?.[1] ===
+        fading.focusFactor,
       modelHandoffCommitted:
-        context.modelStates.get(modelContact.id)?.show === true &&
-        context.billboards.get(modelContact.id)?.show === false,
+        tick.modelHandoffs.find(({ id }) => id === modelContact.id)
+          ?.modelShown === true &&
+        tick.visibility.find(([id]) => id === modelContact.id)?.[1] === false,
     };
     const churn = runChurnControl(context, fixture);
     const cleanupInfo = context.counted.destroy();
