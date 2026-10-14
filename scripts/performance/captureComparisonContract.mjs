@@ -15,6 +15,8 @@ import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvi
 import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
+  '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
 const hashCanonicalIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
@@ -557,6 +559,15 @@ export function createObservedWeatherEffectsComparisonContract({
     assert.deepEqual(fixture.mediaPreferences, {
       'prefers-reduced-motion': 'no-preference',
     });
+  if (fixture?.mediaPreferences === undefined) {
+    assert.equal(fixture?.sha256, LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256);
+    assert.equal(
+      fixture?.manifestSha256,
+      LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256,
+    );
+  } else {
+    assert.equal(fixture?.manifestSha256, fixture?.sha256);
+  }
   assert.match(fixture?.sha256 || '', SHA256);
   assert.deepEqual(fixture?.expectedLayerCounts, {
     'weather-radar': 1,

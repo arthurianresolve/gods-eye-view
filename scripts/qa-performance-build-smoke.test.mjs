@@ -4648,6 +4648,18 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
         (copy.workload.fixture.mediaPreferences['prefers-reduced-motion'] =
           'reduce'),
     ],
+    [
+      'new fixture identity cannot drop motion evidence',
+      (copy) => {
+        delete copy.workload.fixture.mediaPreferences;
+        for (const sample of copy.captures) {
+          delete sample.weatherEffectsClock.schema;
+          delete sample.weatherEffectsClock.motionPreferencePreflight;
+          delete sample.weatherEffectsClock.weatherStateBefore.motionPreference;
+          delete sample.weatherEffectsClock.weatherStateAfter.motionPreference;
+        }
+      },
+    ],
   ]) {
     const invalid = structuredClone(report);
     mutate(invalid);
@@ -4659,6 +4671,24 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   }
   const legacyReport = structuredClone(report);
   const legacyExpected = structuredClone(expected);
+  const legacyFixtureSha256 =
+    '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
+  const rewriteFixtureDigest = (value) => {
+    if (Array.isArray(value)) {
+      for (const item of value) rewriteFixtureDigest(item);
+    } else if (value && typeof value === 'object') {
+      for (const [key, child] of Object.entries(value)) {
+        if (
+          ['sha256', 'manifestSha256', 'fixtureSha256'].includes(key) &&
+          child === fixture.sha256
+        )
+          value[key] = legacyFixtureSha256;
+        else rewriteFixtureDigest(child);
+      }
+    }
+  };
+  rewriteFixtureDigest(legacyReport);
+  rewriteFixtureDigest(legacyExpected);
   delete legacyReport.workload.fixture.mediaPreferences;
   delete legacyExpected.weatherEffectsFixture.mediaPreferences;
   for (const sample of legacyReport.captures) {

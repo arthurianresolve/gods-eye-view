@@ -151,9 +151,9 @@ test('weather-effects descriptor pins source assets, populations, route and epoc
   );
   const previousDescriptor = structuredClone(manifestDescriptor);
   delete previousDescriptor.mediaPreferences;
-  assert.notEqual(
+  assert.equal(
     hash(Buffer.from(JSON.stringify(previousDescriptor))),
-    fixture.manifestSha256,
+    '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a',
   );
   assert.equal(fixture.phaseSchedule.schema, 'gev-weather-phase-schedule/v1');
   assert.deepEqual(

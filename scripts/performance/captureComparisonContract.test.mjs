@@ -634,6 +634,15 @@ test('weather comparison contract binds phase source, settings, populations and 
       value.fixture.mediaPreferences['prefers-reduced-motion'] = 'reduce';
     },
     (value) => {
+      delete value.fixture.mediaPreferences;
+      for (const sample of value.captures) {
+        delete sample.weatherEffectsClock.schema;
+        delete sample.weatherEffectsClock.motionPreferencePreflight;
+        delete sample.weatherEffectsClock.weatherStateBefore.motionPreference;
+        delete sample.weatherEffectsClock.weatherStateAfter.motionPreference;
+      }
+    },
+    (value) => {
       delete value.captures[0].weatherEffectsClock.motionPreferencePreflight;
     },
     (value) => {
@@ -656,6 +665,23 @@ test('weather comparison contract binds phase source, settings, populations and 
     assert.throws(() => create(invalid));
   }
   const legacyMotion = structuredClone(observed);
+  const legacyFixtureSha256 =
+    '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
+  const rewriteFixtureDigest = (value) => {
+    if (Array.isArray(value)) {
+      for (const item of value) rewriteFixtureDigest(item);
+    } else if (value && typeof value === 'object') {
+      for (const [key, child] of Object.entries(value)) {
+        if (
+          ['sha256', 'manifestSha256', 'fixtureSha256'].includes(key) &&
+          child === observed.fixture.sha256
+        )
+          value[key] = legacyFixtureSha256;
+        else rewriteFixtureDigest(child);
+      }
+    }
+  };
+  rewriteFixtureDigest(legacyMotion);
   delete legacyMotion.fixture.mediaPreferences;
   for (const sample of legacyMotion.captures) {
     delete sample.weatherEffectsClock.schema;

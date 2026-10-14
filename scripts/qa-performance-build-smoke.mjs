@@ -1418,6 +1418,8 @@ const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
   { scenario: 'scripted-motion', run: 1 },
 ]);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
+const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
+  '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
 
 function providerCpuProfileKey(target) {
   return target.scenario === 'idle'
@@ -3233,6 +3235,15 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     assert.deepEqual(fixture.mediaPreferences, {
       'prefers-reduced-motion': 'no-preference',
     });
+  if (fixture?.mediaPreferences === undefined) {
+    assert.equal(fixture?.sha256, LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256);
+    assert.equal(
+      fixture?.manifestSha256,
+      LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256,
+    );
+  } else {
+    assert.equal(fixture?.manifestSha256, fixture?.sha256);
+  }
   assert.equal(fixture?.fixedTime, expected.fixedTime);
   assert.equal(report.workload?.providerFixture, WEATHER_EFFECTS_WORKLOAD_ID);
   assert.equal(report.workload?.fixtureId, fixture.id);
