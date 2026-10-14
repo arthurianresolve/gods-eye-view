@@ -65,6 +65,26 @@ with tests in `scripts/performance/cctvLifecycle.test.mjs`,
 `src/performance/performanceSnapshot.test.mjs`, and
 `scripts/qa-mixed-use-soak.test.mjs`.
 
+## Owner inventory at the reviewed source revision
+
+The paths below are pinned to `9e0109f1d1720712fedb7e9249d9992d418198d4`.
+This inventory records the implemented observation surface; it does not imply
+that every engine object, browser listener, or rendered pass is counted.
+
+| Production owner (source SHA-256 at `9e0109f1`) | Reported fields or hook | What that observation means | Boundary |
+| --- | --- | --- | --- |
+| World overlay, `src/overlays/worldOverlay.js` (`a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582`) | `getWorldOverlayDiagnostics()`: candidate/projected/selected/fading/painted counts, `paintedBySource`, pool sizes; opt-in `overlay:frame`, `overlay:projection`, `overlay:placement`, and `overlay:paint` CPU spans | Work and synchronous stage time in the JavaScript overlay path | The matched comparison runs a deterministic mock-canvas worker; painted means the overlay code issued its paint path, not that the browser/GPU completed pixels. |
+| Detection workload, read by `src/overlays/worldOverlayAllocation.worker.mjs` (`029241fc006be6f72bac1ca29695895c4408f91ea53e0ee3e71c5d80d8d60e60`) | Profile/density, observations, candidates, visible/selected counts, label budget, solve revision | Population and selection witnesses around the paired CPU arm | These are workload counters; there is no separate detection-only stage timer in this packet. |
+| CCTV, `src/layers/cctv/controls.js` (`ed527cfd286100cabff0d9e22a082a20c26f5a0f564531e1978503734cb7768c`) and `src/layers/cctv/geometryQueue.js` (`a58bec28903c03aafcce4243d05e4ad09fa590fc787dca8b3238fba68132d446`) | `getPerformanceDiagnostics()`: listeners, timers, pending jobs, primitives, entities, cache entries; opt-in `cctv:geometry-prepare` span | Retained owner counts and synchronous per-record geometry preparation | Does not measure worker execution, GPU upload, or all page listeners. |
+| Satellite layer, `src/layers/satellites/lifecycle.js` (`7b38cf5e6fbee4c5a90a0e8dff7005ba92ff3ad5b2ba07d2a3aad01b72729a75`) | `getPerformanceDiagnostics()`: listeners, pending jobs, primitives, tracked entities, cache entries | Retained layer-owned resources at a snapshot boundary | No satellite-specific CPU span is emitted here; ownership counts do not establish per-frame mutation cost. |
+| Layer update dispatch, `src/data/lifecycle.js` (`22db1972b596076be89d8e0207e65b5419c8d96c7dac7a081337e489b02be42e`) | Opt-in `<layer-id>:update-sync` CPU span around synchronous `module.update()` | Synchronous duration of the update call only | Promise waiting and later asynchronous work are excluded. |
+| Application snapshot, `src/app/tools.js` (`97facae56bc1c2fcede674f1f07a0ca6273ca00fb093eb2f6ba6ed231902e908`) and `src/performance/performanceSnapshot.js` (`13067eda7083cdb9e2f63c27bd7857fd42260cabb8b07cea081ddcb9fc6e022e`) | `applicationCpu`, overlay projection/placement/paint values; bounded resources and completed-frame interval samples | App-visible stage/resource snapshot and wall time between completed frames | `gpuExecutionMs` is explicitly null; frame intervals can include intentional demand-render idle time. |
+
+The app snapshot assembles registered module diagnostics from the data-layer
+map plus map/import owners. It is not a browser-wide listener census: shared
+Cesium internals, unrelated DOM listeners, and engine/GPU allocations are not
+claimed as counted resources.
+
 ## What the matched CPU report says
 
 All four workloads have five pairs, 600 measured frames per arm, matching
