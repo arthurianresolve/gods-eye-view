@@ -17,6 +17,7 @@ import {
 export const IMPORTED_LAYER_ID = 'user-imports';
 export const MAX_RENDERED_IMPORT_FEATURES = 5_000;
 const MAX_IMPORTED_OVERLAY_LABELS = 180;
+const PREPARATION_COORDINATE_QUANTUM = 16;
 const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
 
 function position(coordinate) {
@@ -29,10 +30,14 @@ function position(coordinate) {
 
 function* preparedPositions(coordinates) {
   const output = [];
-  for (const coordinate of coordinates || []) {
-    output.push(position(coordinate));
-    // Keep one large imported line or ring interruptible. The surrounding
-    // loadAsync batcher controls the actual event-loop budget.
+  const source = coordinates || [];
+  let index = 0;
+  while (index < source.length) {
+    const end = Math.min(source.length, index + PREPARATION_COORDINATE_QUANTUM);
+    for (; index < end; index++) output.push(position(source[index]));
+    // Keep one large imported line or ring interruptible while avoiding one
+    // generator/timer bookkeeping step for every Cartesian conversion. The
+    // quantum is deliberately small enough for the shared four-ms batcher.
     yield;
   }
   return output;
