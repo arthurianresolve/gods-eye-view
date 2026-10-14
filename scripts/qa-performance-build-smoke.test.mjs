@@ -5734,7 +5734,7 @@ function captureDelayOutcome({
         fixtureId,
         fixture: { id: fixtureId, fixedTime: '2026-10-08T12:00:00.000Z' },
         warmupMs: 1000,
-        durationPerSampleMs: 10_000,
+        durationPerSampleMs: 1_000,
         runsPerScenario: 2,
         startupRuns: 1,
         scenarios: ['idle', 'scripted-motion'],
@@ -5766,13 +5766,13 @@ test('delay negative-control orchestration requires complete same-fixture expect
       phase: 'control',
       delayMs: 0,
       maxP95Ms: 250,
-      durationPerSampleMs: 10_000,
+      durationPerSampleMs: 1_000,
     },
     {
       phase: 'delayed',
       delayMs: 800,
       maxP95Ms: 250,
-      durationPerSampleMs: 10_000,
+      durationPerSampleMs: 1_000,
     },
   ]);
   assert.equal(summary.schema, 'gev-capture-delay-negative-control/v1');
@@ -5846,7 +5846,7 @@ test('delay negative-control CLI arms differ only by delay and their raw report 
     assert.equal(optionValue(args, '--runs'), '2');
     assert.equal(optionValue(args, '--startup-runs'), '1');
     assert.equal(optionValue(args, '--warmup-ms'), '1000');
-    assert.equal(optionValue(args, '--seconds'), '10');
+    assert.equal(optionValue(args, '--seconds'), '1');
     assert.equal(optionValue(args, '--max-p95-ms'), '250');
   }
   assert.equal(optionValue(control, '--inject-delay-ms'), '0');

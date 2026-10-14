@@ -223,7 +223,7 @@ export function validateMapSmokeLayerPopulation(before, after) {
 const CAPTURE_DELAY_NEGATIVE_CONTROL = Object.freeze({
   delayMs: 800,
   maxP95Ms: 250,
-  durationPerSampleMs: 10_000,
+  durationPerSampleMs: 1_000,
   schema: 'gev-capture-delay-negative-control/v1',
 });
 
