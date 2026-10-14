@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  IMPORT_LIMITS,
   decodeImportTextAsync,
   parseCsv,
   parseCsvHeaders,
@@ -8,6 +9,25 @@ import {
   previewCSV,
   previewGeoJSON,
 } from './geojsonCsv.js';
+
+test('string decoding validates UTF-8 size cooperatively without splitting surrogate pairs', async () => {
+  const text = 'a'.repeat(32_767) + '😀' + 'b'.repeat(32_768);
+  assert.equal(new TextEncoder().encode(text).byteLength, 32_767 + 4 + 32_768);
+  assert.equal(await decodeImportTextAsync(text), text);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 0);
+  try {
+    await assert.rejects(
+      decodeImportTextAsync('x'.repeat(IMPORT_LIMITS.bytes / 2), {
+        signal: controller.signal,
+      }),
+      { name: 'AbortError' },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+});
 
 test('bounded import decoding preserves UTF-8 across chunks and can be cancelled', async () => {
   const text = 'αβγ\n' + 'route,1,2\n'.repeat(128);

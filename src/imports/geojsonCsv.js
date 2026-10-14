@@ -33,6 +33,54 @@ export function decodeImportText(input) {
   }
 }
 
+async function validateStringByteLength(source, { signal } = {}) {
+  const encoder = new TextEncoder();
+  let byteLength = 0;
+  // UTF-8 byte length is independent for complete code-point chunks when the
+  // boundary carries at most one trailing high surrogate. Keeping a small
+  // overlap makes the check exact without allocating an encoded copy of the
+  // entire document in one task.
+  const chunkCodeUnits = 32 * 1024;
+  for (let offset = 0; offset < source.length;) {
+    signal?.throwIfAborted();
+    let end = Math.min(source.length, offset + chunkCodeUnits);
+    if (
+      end < source.length &&
+      end > offset &&
+      /[\uD800-\uDBFF]/.test(source[end - 1])
+    )
+      end++;
+    const chunk = source.slice(offset, end);
+    byteLength += encoder.encode(chunk).byteLength;
+    if (byteLength > IMPORT_LIMITS.bytes)
+      fail('file-too-large', 'Import files are limited to 8 MiB.');
+    await consumeInBatches(
+      (function* () {
+        signal?.throwIfAborted();
+        yield;
+      })(),
+      { signal, deferStart: true },
+    );
+    offset = end;
+  }
+  return byteLength;
+}
+
+async function joinDecodedChunks(chunks, { signal } = {}) {
+  let text = '';
+  await consumeInBatches(
+    (function* () {
+      for (const chunk of chunks) {
+        signal?.throwIfAborted();
+        text += chunk;
+        yield;
+      }
+    })(),
+    { signal, deferStart: true },
+  );
+  return text;
+}
+
 /**
  * Decode a file in bounded event-loop batches before parsing its document.
  *
@@ -51,15 +99,7 @@ export async function decodeImportTextAsync(
       ? chunkBytes
       : IMPORT_LIMITS.decodeChunkBytes;
   if (typeof input === 'string') {
-    if (new TextEncoder().encode(input).byteLength > IMPORT_LIMITS.bytes)
-      fail('file-too-large', 'Import files are limited to 8 MiB.');
-    await consumeInBatches(
-      (function* () {
-        signal?.throwIfAborted();
-        yield;
-      })(),
-      { signal, deferStart: true },
-    );
+    await validateStringByteLength(input, { signal });
     return input;
   }
   const bytes =
@@ -91,7 +131,7 @@ export async function decodeImportTextAsync(
   } catch {
     fail('invalid-encoding', 'Import file must be valid UTF-8.');
   }
-  return chunks.join('');
+  return joinDecodedChunks(chunks, { signal });
 }
 
 export function parseImportInstant(value) {
