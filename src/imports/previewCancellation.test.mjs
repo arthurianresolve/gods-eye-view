@@ -67,6 +67,7 @@ test('CSV parsing yields before cancellation and publishes no partial preview', 
     const outcome = await previewCSV(input, {
       signal: controller.signal,
       mapping: { id: 'id', latitude: 'lat', longitude: 'lon' },
+      cooperativeParsing: true,
       onProgress: () => progressCount++,
     }).then(
       (value) => ({ value }),

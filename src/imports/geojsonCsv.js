@@ -432,15 +432,21 @@ export function parseCsvHeaders(text) {
 /** Stage CSV points using explicit latitude/longitude and optional field mappings. */
 export async function previewCSV(
   input,
-  { signal, mapping = {}, attribution = '', onProgress = null } = {},
+  {
+    signal,
+    mapping = {},
+    attribution = '',
+    cooperativeParsing = false,
+    onProgress = null,
+  } = {},
 ) {
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
-  const { headers, rows } = await scanCsvCooperatively(text, {
-    signal,
-    onProgress,
-  });
+  const { headers, rows } =
+    cooperativeParsing === true
+      ? await scanCsvCooperatively(text, { signal, onProgress })
+      : scanCsv(text);
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;

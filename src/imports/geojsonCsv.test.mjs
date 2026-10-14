@@ -285,6 +285,7 @@ test('cooperative CSV preview matches sync decoding across quote and CRLF batch 
     const expected = parseCsv(csv);
     const preview = await previewCSV(csv, {
       mapping: { latitude: 'lat', longitude: 'lon' },
+      cooperativeParsing: true,
     });
     assert.equal(preview.accepted + preview.rejected, expected.rows.length);
     assert.equal(preview.rejected, 0);
@@ -332,6 +333,7 @@ test('CSV parse progress is bounded and malformed late input yields no partial p
   const progress = [];
   const outcome = await previewCSV(csv, {
     mapping,
+    cooperativeParsing: true,
     onProgress: (event) => progress.push(event),
   }).then(
     (value) => ({ value }),
@@ -358,6 +360,16 @@ test('CSV parse progress is bounded and malformed late input yields no partial p
     ),
   );
   assert.equal(progress.at(-1).processedCharacters, csv.length);
+});
+
+test('CSV preview keeps cooperative parsing opt-in', async () => {
+  const progress = [];
+  const preview = await previewCSV('lat,lon\n1,2', {
+    mapping: { latitude: 'lat', longitude: 'lon' },
+    onProgress: (event) => progress.push(event),
+  });
+  assert.equal(preview.accepted, 1);
+  assert.deepEqual(progress, []);
 });
 
 test('import previews honor cancellation before applying any records', async () => {
