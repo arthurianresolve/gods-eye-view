@@ -13,6 +13,23 @@ function finiteCount(value) {
   return Number.isFinite(number) && number >= 0 ? number : 0;
 }
 
+/**
+ * A few legacy layer adapters expose a missing/rejected credential through
+ * both `keyRequired` and their human-readable `error` field. Keep that
+ * guidance on the layer row without treating it as a failed feed. A genuine
+ * error is still retained when a layer reports keyRequired alongside an
+ * unrelated failure.
+ */
+function isCredentialConfigurationError(value) {
+  const text = String(value || '')
+    .trim()
+    .toLowerCase();
+  return (
+    !text ||
+    /\bkey\b|no[_ -]?key|\btoken\b|\bcredential(?:s)?\b|\bsecret\b/.test(text)
+  );
+}
+
 /** Normalize one manager layer into a small loading-feedback record. */
 export function normalizeLayerLoading(layer = {}) {
   const stats = layer.stats || {};
@@ -33,18 +50,21 @@ export function normalizeLayerLoading(layer = {}) {
   // normal operation, never a batch failure — mirrors layerFeedState's carve-out
   // so a prompt stored alongside the status cannot turn the chip red.
   const guidance = GUIDANCE_STATUSES.includes(status);
-  const error = stoppingInstallations
+  const rawError = stoppingInstallations
     ? null
     : (!guidance && stats.error) ||
       stats.lastError ||
       stats.managerRefreshError ||
       null;
+  const keyRequired = stats.keyRequired === true || stats.missingKey === true;
+  const configurationOnly =
+    keyRequired && isCredentialConfigurationError(rawError);
+  const error = configurationOnly ? null : rawError;
   const unavailable =
     !stoppingInstallations &&
     (stats.unavailable === true ||
       stats.available === false ||
       ['unavailable', 'offline', 'down', 'error'].includes(status));
-  const keyRequired = stats.keyRequired === true || stats.missingKey === true;
   const degraded = stats.degraded === true || Boolean(error);
   const accepted = Boolean(stats.lastUpdate) || count > 0;
   return {
