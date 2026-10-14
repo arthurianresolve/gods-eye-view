@@ -112,6 +112,7 @@ import {
 import {
   createObservedDenseComparisonContract,
   createObservedAustinOperatingComparisonContract,
+  createObservedMapStreamingComparisonContract,
   createObservedInfrastructureComparisonContract,
   createObservedWeatherEffectsComparisonContract,
   createCaptureDocumentTopology,
@@ -169,6 +170,7 @@ let mapStreamingModule = null;
 let mapStreamingDeliveryFactory = null;
 let mapStreamingFixture = null;
 let mapStreamingJourney = null;
+let mapStreamingJourneys = [];
 let mapStreamingCaptureReport = null;
 let mapStreamingFinalEvidence = null;
 const mapStreamingFixtureOwners = [];
@@ -218,6 +220,16 @@ if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
   throw new TypeError(
     '--weather-phase-diagnostic requires the phased weather/effects fixture.',
   );
+}
+if (mapStreamingWorkloadSelected) {
+  if (warmupMs !== 30_000 || seconds !== 60 || runs !== 5)
+    throw new TypeError(
+      'Map streaming comparison requires the exact 30s warmup, 60s measurement and five-run contract.',
+    );
+  if (delayMs !== 0)
+    throw new TypeError(
+      'Map streaming comparison cannot use an injected delay.',
+    );
 }
 if (!['diagnostic', 'prewarm', 'receipt-only'].includes(workerAuditMode))
   throw new Error(
@@ -3623,13 +3635,19 @@ try {
       manifestSha256: mapStreamingFixture.manifestSha256,
       routeId: mapStreamingModule.MAP_STREAMING_ROUTE.id,
     };
-    mapStreamingJourney = await mapStreamingModule.runNativeMapStreamingJourney(
-      page,
-      {
-        durationMs: mapStreamingModule.MAP_STREAMING_ROUTE.durationLimitMs,
-        route: mapStreamingModule.MAP_STREAMING_ROUTE,
-      },
-    );
+    mapStreamingJourneys = [];
+    for (let run = 1; run <= runs; run += 1) {
+      const journey = await mapStreamingModule.runNativeMapStreamingJourney(
+        page,
+        {
+          durationMs: mapStreamingModule.MAP_STREAMING_ROUTE.durationLimitMs,
+          route: mapStreamingModule.MAP_STREAMING_ROUTE,
+          warmupMs: mapStreamingModule.MAP_STREAMING_ROUTE.warmupMs,
+        },
+      );
+      mapStreamingJourneys.push({ run, ...journey });
+      if (!mapStreamingJourney) mapStreamingJourney = journey;
+    }
     failureProgress.workload.mapStreamingCapture = {
       status: 'journey-observed',
       fixtureId: mapStreamingFixture.id,
@@ -3637,6 +3655,7 @@ try {
       routeId: mapStreamingModule.MAP_STREAMING_ROUTE.id,
       route: mapStreamingJourney.route,
       transitionCount: mapStreamingJourney.transitions.length,
+      runCount: mapStreamingJourneys.length,
     };
   }
 
@@ -5428,13 +5447,14 @@ try {
     productionFlightFixture ||
     infrastructureWorkload ||
     weatherEffectsWorkload ||
-    austinOperatingWorkload;
+    austinOperatingWorkload ||
+    (mapStreamingWorkloadSelected ? mapStreamingFixture : null);
   const weatherEffectsComparisonRun =
     weatherEffectsWorkload &&
     warmupMs === 30_000 &&
     seconds === 60 &&
     runs === 5;
-  const comparisonContract = productionFlightFixture
+  let comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
         fixtureDelivery,
@@ -5499,6 +5519,7 @@ try {
       mapStreamingModule.createFinalizedMapStreamingCaptureEvidence({
         fixture: mapStreamingFixture,
         journey: mapStreamingJourney,
+        journeys: mapStreamingJourneys,
         profile: resolveMapFixtureBuildProfile(expectedBuildProfile),
         documentDeliveries,
       });
@@ -5508,6 +5529,16 @@ try {
     failureProgress.workload.mapStreamingFixtureDocuments =
       mapStreamingFinalEvidence.mapStreamingFixtureDocuments;
     failureProgress.workload.mapStreamingCapture = mapStreamingCaptureReport;
+    comparisonContract = createObservedMapStreamingComparisonContract({
+      fixture: mapStreamingFixture,
+      mapStreamingCapture: mapStreamingCaptureReport,
+      environment,
+      workload: {
+        warmupMs,
+        durationPerSampleMs: seconds * 1000,
+        runsPerScenario: runs,
+      },
+    });
   }
   if (austinOperatingWorkload) {
     for (const owner of austinOperatingFixtureDeliveries)
@@ -5760,10 +5791,6 @@ try {
   if (nativeRenderingDiagnostic)
     comparisonReadinessReasons.push(
       'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
-    );
-  if (mapStreamingWorkloadSelected)
-    comparisonReadinessReasons.push(
-      'map-streaming-fixture-is-a-diagnostic-not-performance-acceptance',
     );
   const comparisonEligible = comparisonReadinessReasons.length === 0;
   // These host/browser identity reads happen after all timed samples. Keep

@@ -43,6 +43,7 @@ export const MAP_STREAMING_ROUTE = Object.freeze({
   moveRightMetersPerSecond: 120,
   // src/camera.js schedules its default flight 500ms after app controls start.
   startupFlightDelayMs: 500,
+  warmupMs: 30_000,
   durationLimitMs: 60_000,
   declaredBounds: Object.freeze({
     west: -97.82,
@@ -1245,6 +1246,7 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
         durationMs: route.durationMs,
         elapsedMs: route.elapsedMs,
         startupFlightDelayMs,
+        warmupMs: route.warmupMs ?? null,
         startupFlightPreparationElapsedMs,
         startupFlightCancelled,
         moveRightMetersPerSecond: route.moveRightMetersPerSecond,
@@ -1286,6 +1288,7 @@ export function createMapStreamingJourneyValidationFailureEvidence({
         durationMs: journey?.route?.durationMs ?? null,
         elapsedMs: journey?.route?.elapsedMs ?? null,
         startupFlightDelayMs: journey?.route?.startupFlightDelayMs ?? null,
+        warmupMs: journey?.route?.warmupMs ?? null,
         startupFlightPreparationElapsedMs:
           journey?.route?.startupFlightPreparationElapsedMs ?? null,
         startupFlightCancelled:
@@ -1328,6 +1331,7 @@ export function createMapStreamingJourneyValidationFailureEvidence({
 export async function runNativeMapStreamingJourneyInPage({
   durationMs,
   route,
+  warmupMs = null,
   command = 'run',
   operationId = null,
 }) {
@@ -1484,6 +1488,13 @@ export async function runNativeMapStreamingJourneyInPage({
     durationMs > route.durationLimitMs
   )
     throw new Error('Map route duration is outside the declared bound.');
+  const effectiveWarmupMs = warmupMs ?? route.warmupMs ?? 0;
+  if (
+    !Number.isSafeInteger(effectiveWarmupMs) ||
+    effectiveWarmupMs < 0 ||
+    effectiveWarmupMs > 120_000
+  )
+    throw new Error('Map route warmup is outside the declared bound.');
   if (
     route?.id !== 'austin-map-rightward-v1' ||
     !Number.isFinite(route?.start?.longitude) ||
@@ -1491,7 +1502,8 @@ export async function runNativeMapStreamingJourneyInPage({
     !Number.isFinite(route?.start?.heightM) ||
     !Array.isArray(route?.stackSchedule) ||
     route.stackSchedule.length !== 4 ||
-    route.startupFlightDelayMs !== 500
+    route.startupFlightDelayMs !== 500 ||
+    route.warmupMs !== 30_000
   )
     throw new Error('Map route contract is malformed.');
 
@@ -2489,6 +2501,28 @@ export async function runNativeMapStreamingJourneyInPage({
     'initial-readiness',
   );
   initialReadinessComplete = true;
+  if (effectiveWarmupMs > 0) {
+    const warmupStartedAt = performance.now();
+    await new Promise((resolve, reject) => {
+      let timer = null;
+      const onAbort = () => {
+        if (timer !== null) clearTimeout(timer);
+        journeyAbort.signal.removeEventListener('abort', onAbort);
+        reject(cancellationError('Map journey warmup was cancelled.'));
+      };
+      journeyAbort.signal.addEventListener('abort', onAbort, { once: true });
+      if (journeyAbort.signal.aborted) {
+        onAbort();
+        return;
+      }
+      timer = setTimeout(() => {
+        journeyAbort.signal.removeEventListener('abort', onAbort);
+        resolve();
+      }, effectiveWarmupMs);
+    });
+    if (performance.now() - warmupStartedAt < effectiveWarmupMs)
+      throw new Error('Map journey warmup ended before its declared interval.');
+  }
   const transitions = [
     {
       stackId: 'photoreal',
@@ -2740,6 +2774,7 @@ export async function runNativeMapStreamingJourneyInPage({
         durationMs,
         elapsedMs: routeElapsedMs,
         startupFlightDelayMs: route.startupFlightDelayMs,
+        warmupMs: effectiveWarmupMs,
         startupFlightPreparationElapsedMs: cameraPreparationElapsedMs,
         startupFlightCancelled,
         moveRightMetersPerSecond: route.moveRightMetersPerSecond,
@@ -4018,28 +4053,45 @@ export function createMapStreamingCaptureReport({
   fixture,
   fixtureDelivery,
   journey,
+  journeys = null,
   profile,
   documentDeliveries,
 }) {
   validateDeterministicMapStreamingFixture(fixture);
+  const observedJourneys =
+    Array.isArray(journeys) && journeys.length
+      ? journeys.map((entry, index) => {
+          assert.ok(entry && typeof entry === 'object');
+          const run = entry.run ?? index + 1;
+          assert.ok(Number.isInteger(run) && run >= 1 && run <= 5);
+          const { run: _run, ...observed } = entry;
+          return { run, ...observed };
+        })
+      : null;
+  const primaryJourney = observedJourneys?.[0] || journey;
+  assert.ok(primaryJourney && typeof primaryJourney === 'object');
+  const performanceAcceptanceEligible = observedJourneys?.length === 5;
   const report = {
     schema: MAP_STREAMING_CAPTURE_SCHEMA,
     workloadId: MAP_STREAMING_WORKLOAD_ID,
     status: 'observed',
-    performanceAcceptanceEligible: false,
+    performanceAcceptanceEligible,
     fixtureId: fixture.id,
     manifestSha256: fixture.manifestSha256,
     buildProfile: profile,
-    route: journey.route,
-    initialState: journey.initialState,
-    transitions: journey.transitions,
-    finalState: journey.finalState,
-    settingsBefore: journey.settingsBefore,
-    settingsAfter: journey.settingsAfter,
-    terrainEvidence: journey.terrainEvidence,
+    route: primaryJourney.route,
+    initialState: primaryJourney.initialState,
+    transitions: primaryJourney.transitions,
+    finalState: primaryJourney.finalState,
+    settingsBefore: primaryJourney.settingsBefore,
+    settingsAfter: primaryJourney.settingsAfter,
+    terrainEvidence: primaryJourney.terrainEvidence,
     fixtureDelivery,
     documentDeliveries,
-    scope: 'full application map-stack diagnostic; no performance acceptance',
+    ...(observedJourneys ? { journeys: observedJourneys } : {}),
+    scope: performanceAcceptanceEligible
+      ? 'five-run timed application map-stack comparison contract'
+      : 'full application map-stack diagnostic; no performance acceptance',
   };
   validateMapStreamingCaptureReport(report, { fixture, profile });
   return report;
@@ -4049,6 +4101,7 @@ export function createMapStreamingCaptureReport({
 export function createFinalizedMapStreamingCaptureEvidence({
   fixture,
   journey,
+  journeys = null,
   profile,
   documentDeliveries,
 }) {
@@ -4060,6 +4113,7 @@ export function createFinalizedMapStreamingCaptureEvidence({
     fixture,
     fixtureDelivery,
     journey,
+    journeys,
     profile,
     documentDeliveries,
   });
@@ -4076,7 +4130,8 @@ export function mapStreamingCaptureWorkloadFields(evidence) {
   return {
     mapStreamingCapture: evidence.mapStreamingCapture,
     mapStreamingFixtureDocuments: evidence.mapStreamingFixtureDocuments,
-    performanceAcceptanceEligible: false,
+    performanceAcceptanceEligible:
+      evidence.mapStreamingCapture?.performanceAcceptanceEligible === true,
   };
 }
 
@@ -4598,6 +4653,11 @@ export function validateMapStreamingJourneyEvidence(journey, fixture) {
     MAP_STREAMING_ROUTE.startupFlightDelayMs,
     'Camera preparation matches the pinned startup-flight delay.',
   );
+  assert.equal(
+    report.route?.warmupMs,
+    MAP_STREAMING_ROUTE.warmupMs,
+    'Map route uses the declared 30-second warmup.',
+  );
   assert.ok(
     Number.isFinite(report.route?.startupFlightPreparationElapsedMs) &&
       report.route.startupFlightPreparationElapsedMs >=
@@ -4728,13 +4788,27 @@ export function validateMapStreamingCaptureReport(
   assert.equal(report?.schema, MAP_STREAMING_CAPTURE_SCHEMA);
   assert.equal(report.workloadId, MAP_STREAMING_WORKLOAD_ID);
   assert.equal(report.status, 'observed');
-  assert.equal(report.performanceAcceptanceEligible, false);
+  const journeys = Array.isArray(report.journeys)
+    ? report.journeys
+    : [{ run: 1, ...report }];
+  const performanceAcceptanceEligible = journeys.length === 5;
+  assert.equal(
+    report.performanceAcceptanceEligible,
+    performanceAcceptanceEligible,
+  );
+  const runIds = journeys.map((entry) => entry.run);
+  assert.deepEqual(
+    [...runIds].sort((left, right) => left - right),
+    Array.from({ length: journeys.length }, (_, index) => index + 1),
+    'Map timed journeys must have unique sequential run ids.',
+  );
   assert.equal(report.fixtureId, MAP_STREAMING_FIXTURE_ID);
   assert.equal(report.manifestSha256, fixture.manifestSha256);
   assert.deepEqual(report.buildProfile, profile);
   assert.equal(profile?.id, MAP_FIXTURE_BUILD_PROFILE_ID);
   assert.match(profile?.configurationSha256 || '', SHA256);
-  validateMapStreamingJourneyEvidence(report, fixture);
+  for (const journey of journeys)
+    validateMapStreamingJourneyEvidence(journey, fixture);
   const manifestAssets = new Map(
     fixture.manifest.assets.map((asset) => [asset.path, asset]),
   );

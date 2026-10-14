@@ -9,6 +9,7 @@ import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 import {
   createCaptureDocumentTopology,
   createObservedAustinOperatingComparisonContract,
+  createObservedMapStreamingComparisonContract,
   createObservedInfrastructureComparisonContract,
   createObservedWeatherEffectsComparisonContract,
 } from './captureComparisonContract.mjs';
@@ -66,6 +67,9 @@ const isWeatherEffectsContract = (contract) =>
   contract?.workloadId === 'weather-effects';
 const isInfrastructureContract = (contract) =>
   INFRASTRUCTURE_WORKLOAD_IDS.includes(contract?.workloadId);
+const isMapStreamingContract = (contract) =>
+  contract?.workloadId === MAP_STREAMING_WORKLOAD_ID ||
+  contract?.workloadId === 'map-streaming';
 const hashCanonicalIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
@@ -776,6 +780,116 @@ function validateFixtureDelivery(report, contract, label) {
   );
 }
 
+function validateMapStreamingReport(
+  report,
+  side,
+  expectedAppCommit,
+  buildRecipe,
+) {
+  const contract = report?.comparisonContract;
+  assert.equal(
+    contract?.schema,
+    COMPARISON_SCHEMA,
+    `${side}: map comparison contract is missing`,
+  );
+  assert.equal(
+    contract?.workloadId,
+    MAP_STREAMING_WORKLOAD_ID,
+    `${side}: unsupported map workload identity`,
+  );
+  assert.equal(
+    report.comparisonEligible,
+    true,
+    `${side}: map capture is not marked comparison-eligible`,
+  );
+  const workload = report.workload;
+  assert.equal(
+    workload?.warmupMs,
+    30_000,
+    `${side}: map warmup must be 30 seconds`,
+  );
+  assert.equal(
+    workload?.durationPerSampleMs,
+    60_000,
+    `${side}: map measurement must be 60 seconds`,
+  );
+  assert.equal(workload?.runsPerScenario, 5, `${side}: map requires five runs`);
+  assert.equal(
+    workload?.qualityMode,
+    'manual',
+    `${side}: map must use Manual quality`,
+  );
+  assert.equal(
+    workload?.expectedDensityPct,
+    75,
+    `${side}: map density must be 75%`,
+  );
+  assert.equal(
+    workload?.detectionMode,
+    'DENSE',
+    `${side}: map must use Dense detection`,
+  );
+  assert.equal(
+    workload?.injectedDelayMs,
+    0,
+    `${side}: map delay controls cannot qualify`,
+  );
+  const capture = workload?.mapStreamingCapture;
+  assert.ok(
+    capture && typeof capture === 'object',
+    `${side}: map capture evidence is required`,
+  );
+  assert.equal(capture.performanceAcceptanceEligible, true);
+  assert.equal(capture.fixtureId, contract.fixture.id);
+  assert.equal(capture.manifestSha256, contract.fixture.manifestSha256);
+  assert.deepEqual(
+    report.fixtureDelivery,
+    capture.fixtureDelivery,
+    `${side}: map fixture delivery is not bound to the captured map evidence`,
+  );
+  assert.ok(report.environment, `${side}: map environment identity is missing`);
+  requireText(report.environment.userAgent, `${side}: browser user agent`);
+  requireText(report.environment.platform, `${side}: platform`);
+  requireText(report.environment.renderer, `${side}: renderer`);
+  assert.equal(
+    report.environment.appCommit,
+    expectedAppCommit,
+    `${side}: report environment has the wrong application build`,
+  );
+  finitePositive(report.environment.viewport?.width, `${side}: viewport width`);
+  finitePositive(
+    report.environment.viewport?.height,
+    `${side}: viewport height`,
+  );
+  finitePositive(
+    report.environment.drawingBuffer?.width,
+    `${side}: drawing buffer width`,
+  );
+  finitePositive(
+    report.environment.drawingBuffer?.height,
+    `${side}: drawing buffer height`,
+  );
+  const rebuilt = createObservedMapStreamingComparisonContract({
+    fixture: {
+      id: workload.fixture?.id,
+      manifestSha256: workload.fixture?.sha256,
+    },
+    mapStreamingCapture: capture,
+    environment: report.environment,
+    workload,
+  });
+  equal(
+    rebuilt,
+    contract,
+    `${side}: map contract is not derived from the timed journey evidence`,
+  );
+  return {
+    contract,
+    mapRuns: contract.timing.runs,
+    buildRecipe,
+  };
+}
+
 function layerSignature(layers, label) {
   assert.ok(Array.isArray(layers), `${label}: layer populations are missing`);
   const enabled = layers.filter((layer) => layer?.enabled === true);
@@ -1047,6 +1161,14 @@ function validateReport(report, side, expectedAppCommit) {
     `${side}: source revision is not verifiable`,
   );
   const buildRecipe = validateBuildProvenance(report.source, side);
+
+  if (isMapStreamingContract(report.comparisonContract))
+    return validateMapStreamingReport(
+      report,
+      side,
+      expectedAppCommit,
+      buildRecipe,
+    );
 
   const contract = validateContract(report, side);
   validateFixtureDelivery(report, contract, side);
@@ -1507,6 +1629,116 @@ export function validatePairedPerformanceReports({
       next.buildRecipe[key],
       `Build toolchain differs: ${key}`,
     );
+  if (isMapStreamingContract(base.contract)) {
+    assert.equal(
+      isMapStreamingContract(next.contract),
+      true,
+      'Baseline and candidate map workload identifiers differ',
+    );
+    const { timing: baseTiming, ...baseStaticContract } = base.contract;
+    const { timing: candidateTiming, ...candidateStaticContract } =
+      next.contract;
+    equal(
+      baseStaticContract,
+      candidateStaticContract,
+      'Baseline and candidate map comparison contracts differ',
+    );
+    equal(
+      baseline.environment.userAgent,
+      candidate.environment.userAgent,
+      'Map browser identity differs',
+    );
+    equal(
+      baseline.environment.platform,
+      candidate.environment.platform,
+      'Map platform differs',
+    );
+    equal(
+      baseline.environment.renderer,
+      candidate.environment.renderer,
+      'Map renderer differs',
+    );
+    equal(
+      baseline.environment.vendor,
+      candidate.environment.vendor,
+      'Map renderer vendor differs',
+    );
+    equal(
+      baseline.environment.viewport,
+      candidate.environment.viewport,
+      'Map viewport or DPR differs',
+    );
+    equal(
+      baseline.environment.drawingBuffer,
+      candidate.environment.drawingBuffer,
+      'Map drawing buffer dimensions differ',
+    );
+    assert.equal(baseTiming?.metric, 'transition-readiness-p95-ms');
+    assert.equal(candidateTiming?.metric, baseTiming.metric);
+    const baseRuns = baseTiming.runs;
+    const candidateRuns = candidateTiming.runs;
+    assert.equal(baseRuns.length, 5);
+    assert.equal(candidateRuns.length, 5);
+    equal(
+      baseRuns.map((row) => row.run),
+      candidateRuns.map((row) => row.run),
+      'Map timed run identities differ',
+    );
+    const baselineMedianP95Ms = median(baseRuns.map((row) => row.p95Ms));
+    const candidateMedianP95Ms = median(candidateRuns.map((row) => row.p95Ms));
+    const changePct =
+      ((candidateMedianP95Ms - baselineMedianP95Ms) / baselineMedianP95Ms) *
+      100;
+    assert.ok(
+      baselineMedianP95Ms > 0 && Number.isFinite(changePct),
+      'Map transition-readiness medians are invalid',
+    );
+    const scenario = {
+      status: 'measured',
+      baselineMedianP95Ms,
+      candidateMedianP95Ms,
+      changePct,
+      regressionOver10Pct: changePct > 10,
+    };
+    return {
+      status: 'comparable',
+      evidenceScope:
+        'report-integrity-only; hardware provenance requires independent verification',
+      workloadObjective: {
+        status: 'not-assessed',
+        achieved: null,
+        targetImprovementPct: 20,
+        scenarios: {},
+      },
+      denseTrackingObjective: {
+        status: 'not-assessed',
+        achieved: null,
+        targetImprovementPct: 20,
+        scenarios: {},
+      },
+      scenarios: { 'map-streaming-route': scenario },
+      mapStreaming: {
+        metric: baseTiming.metric,
+        baselineRuns: baseRuns,
+        candidateRuns,
+      },
+      fixtureDeliveryDiagnostics: {
+        baseline: {
+          fulfilledResponseCount:
+            baseline.fixtureDelivery?.fulfilledAckCount ?? null,
+          perSample: null,
+        },
+        candidate: {
+          fulfilledResponseCount:
+            candidate.fixtureDelivery?.fulfilledAckCount ?? null,
+          perSample: null,
+        },
+      },
+      regressionsOver10Pct: scenario.regressionOver10Pct
+        ? ['map-streaming-route']
+        : [],
+    };
+  }
   const { routes: baseRoutes, ...baseContract } = base.contract;
   const { routes: candidateRoutes, ...candidateContract } = next.contract;
   equal(

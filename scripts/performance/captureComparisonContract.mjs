@@ -17,6 +17,10 @@ import {
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
+import {
+  MAP_STREAMING_WORKLOAD_ID,
+  MAP_STREAMING_CAPTURE_SCHEMA,
+} from './mapStreamingWorkloadContract.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
@@ -34,6 +38,8 @@ const OBJECTIVE_SCENARIOS = Object.freeze([
   'scripted-motion',
   'selected-aircraft-tracking',
 ]);
+const MAP_STREAMING_SCENARIO = 'map-streaming-route';
+const MAP_STREAMING_TIMED_METRIC = 'transition-readiness-p95-ms';
 
 /** Read the page-reported wait duration from a settled render boundary. */
 export function readSettledRenderBoundaryElapsedMs(boundary, label) {
@@ -1691,6 +1697,167 @@ export function createObservedAustinOperatingComparisonContract({
   };
 }
 
+function mapTransitionReadinessP95(journey, label) {
+  assert.ok(
+    Array.isArray(journey?.transitions) && journey.transitions.length >= 2,
+    `${label}: map stack transitions are required`,
+  );
+  const values = journey.transitions.slice(1).map((transition, index) => {
+    const actualStartMs = transition?.actualStartMs;
+    const settledAtMs = transition?.settledAtMs;
+    assert.ok(
+      Number.isFinite(actualStartMs) && Number.isFinite(settledAtMs),
+      `${label}: transition ${index + 1} timing is missing`,
+    );
+    const elapsedMs = settledAtMs - actualStartMs;
+    assert.ok(
+      Number.isFinite(elapsedMs) && elapsedMs >= 0,
+      `${label}: transition ${index + 1} timing is invalid`,
+    );
+    return elapsedMs;
+  });
+  const sorted = [...values].sort((left, right) => left - right);
+  const p95 = sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)];
+  return { values, p95 };
+}
+
+/** Build a five-run map-streaming contract from the native route evidence. */
+export function createObservedMapStreamingComparisonContract({
+  fixture,
+  mapStreamingCapture,
+  environment,
+  workload,
+} = {}) {
+  assert.equal(fixture?.id, mapStreamingCapture?.fixtureId);
+  assert.equal(fixture?.manifestSha256, mapStreamingCapture?.manifestSha256);
+  assert.equal(mapStreamingCapture?.schema, MAP_STREAMING_CAPTURE_SCHEMA);
+  assert.equal(mapStreamingCapture?.workloadId, MAP_STREAMING_WORKLOAD_ID);
+  assert.equal(mapStreamingCapture?.status, 'observed');
+  assert.equal(mapStreamingCapture?.performanceAcceptanceEligible, true);
+  assert.equal(workload?.warmupMs, 30_000);
+  assert.equal(workload?.durationPerSampleMs, 60_000);
+  assert.equal(workload?.runsPerScenario, 5);
+  const journeys = mapStreamingCapture.journeys;
+  assert.ok(Array.isArray(journeys) && journeys.length === 5);
+  assert.deepEqual(
+    journeys.map((entry) => entry.run),
+    [1, 2, 3, 4, 5],
+    'Map timed journey run ids must be 1 through 5.',
+  );
+  // The native map capture adapter validates every journey against the full
+  // fixture before this contract is built. The comparison contract itself is
+  // intentionally Cesium-free so CLI rejection paths can run before Cesium
+  // is imported.
+  assert.ok(environment && typeof environment.userAgent === 'string');
+  const browserMatch = environment.userAgent.match(
+    /(HeadlessChrome|Chrome|Chromium)\/([\d.]+)/,
+  );
+  assert.ok(browserMatch, 'map browser identity was not observed');
+  const first = journeys[0];
+  const firstSettings = first.settingsBefore;
+  assert.equal(first.route?.warmupMs, 30_000);
+  assert.equal(firstSettings?.qualityMode, 'manual');
+  assert.equal(firstSettings?.densityPct, 75);
+  assert.equal(firstSettings?.detectionMode, 'DENSE');
+  for (const [index, journey] of journeys.entries()) {
+    assert.deepEqual(
+      journey.settingsBefore,
+      firstSettings,
+      `map journey ${index + 1} visual settings differ`,
+    );
+    assert.deepEqual(
+      journey.settingsAfter,
+      firstSettings,
+      `map journey ${index + 1} final settings differ`,
+    );
+    assert.equal(journey.route?.id, first.route?.id);
+    assert.equal(journey.route?.durationMs, 60_000);
+    assert.equal(
+      journey.route?.startupFlightDelayMs,
+      first.route.startupFlightDelayMs,
+    );
+    assert.equal(
+      journey.route?.warmupMs,
+      first.route.warmupMs,
+      `map journey ${index + 1} warmup differs`,
+    );
+    assert.equal(
+      journey.route?.moveRightMetersPerSecond,
+      first.route.moveRightMetersPerSecond,
+    );
+    assert.deepEqual(journey.route?.declaredBounds, first.route.declaredBounds);
+  }
+  const timingRuns = journeys.map((journey) => {
+    const timing = mapTransitionReadinessP95(
+      journey,
+      `map journey ${journey.run}`,
+    );
+    return {
+      run: journey.run,
+      transitionReadinessMs: timing.values,
+      p95Ms: timing.p95,
+    };
+  });
+  const delivery = mapStreamingCapture.fixtureDelivery;
+  assert.equal(delivery?.status, 'observed');
+  assert.equal(delivery?.fixtureId, fixture.id);
+  assert.equal(delivery?.manifestSha256, fixture.manifestSha256);
+  assert.equal(delivery?.cleanupConfirmed, true);
+  const assets = (delivery.assets || []).map((asset) => ({
+    path: asset.path,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+  }));
+  assert.ok(assets.length > 0, 'map fixture delivery assets are required');
+  return {
+    schema: 'gev-performance-comparison-contract/v1',
+    workloadId: MAP_STREAMING_WORKLOAD_ID,
+    fixture: {
+      id: fixture.id,
+      manifestSha256: fixture.manifestSha256,
+      routeId: first.route.id,
+      routeBounds: structuredClone(first.route.declaredBounds),
+      buildProfile: structuredClone(mapStreamingCapture.buildProfile),
+    },
+    fixtureDelivery: {
+      schema: delivery.schema,
+      status: delivery.status,
+      fixtureId: delivery.fixtureId,
+      manifestSha256: delivery.manifestSha256,
+      cleanupConfirmed: delivery.cleanupConfirmed,
+      assets,
+    },
+    routes: {
+      [MAP_STREAMING_SCENARIO]: {
+        id: first.route.id,
+        durationMs: first.route.durationMs,
+        startupFlightDelayMs: first.route.startupFlightDelayMs,
+        warmupMs: first.route.warmupMs,
+        moveRightMetersPerSecond: first.route.moveRightMetersPerSecond,
+        headingRadians: first.route.headingRadians,
+        pitchRadians: first.route.pitchRadians,
+        declaredBounds: structuredClone(first.route.declaredBounds),
+        stackSchedule: first.transitions.map((transition) => ({
+          stackId: transition.stackId,
+          scheduledAtMs: transition.scheduledAtMs,
+        })),
+      },
+    },
+    browser: { name: browserMatch[1], version: browserMatch[2] },
+    rendering: {
+      viewport: structuredClone(environment.viewport),
+      drawingBuffer: structuredClone(environment.drawingBuffer),
+    },
+    populations: [],
+    visual: structuredClone(firstSettings),
+    objectiveScenarios: [],
+    timing: {
+      metric: MAP_STREAMING_TIMED_METRIC,
+      runs: timingRuns,
+    },
+  };
+}
+
 /** Return concrete reasons a capture is diagnostic-only or incomplete. */
 export function getCaptureComparisonIneligibilityReasons({
   contract = null,
@@ -1765,6 +1932,18 @@ export function getCaptureComparisonIneligibilityReasons({
     fixture?.schema === 'gev-weather-effects-fixture/v2';
   const austinOperatingFixture =
     fixture?.schema === 'gev-austin-operating-fixture/v1';
+  const mapStreamingFixture =
+    fixture?.manifest?.schema === 'gev-map-streaming-fixture/v4';
+  if (mapStreamingFixture) {
+    if (workload?.mapStreamingCapture?.performanceAcceptanceEligible !== true)
+      reasons.push('map-streaming-five-run-contract-is-incomplete');
+    if (
+      !Array.isArray(workload?.mapStreamingCapture?.journeys) ||
+      workload.mapStreamingCapture.journeys.length !== 5
+    )
+      reasons.push('map-streaming-journey-evidence-is-incomplete');
+    return [...new Set(reasons)];
+  }
   const sharedDocumentFixture = infrastructureFixture || weatherEffectsFixture;
   if (fixture && diagnosticsDocuments.length > 0) {
     const expectedRoles = [

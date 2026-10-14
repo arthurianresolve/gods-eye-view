@@ -3116,6 +3116,25 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
   assert.equal(report.fixtureDelivery.assets.length, requiredAssets.length);
   assert.ok(report.route.elapsedMs >= report.route.durationMs);
 
+  const timedFinalized = createFinalizedMapStreamingCaptureEvidence({
+    fixture,
+    journey,
+    journeys: Array.from({ length: 5 }, (_, index) => ({
+      run: index + 1,
+      ...structuredClone(journey),
+    })),
+    profile,
+    documentDeliveries: [row],
+  });
+  assert.equal(
+    timedFinalized.mapStreamingCapture.performanceAcceptanceEligible,
+    true,
+  );
+  assert.deepEqual(
+    timedFinalized.mapStreamingCapture.journeys.map(({ run }) => run),
+    [1, 2, 3, 4, 5],
+  );
+
   const zeroCacheSettings = structuredClone(report);
   const settingsSnapshots = [
     zeroCacheSettings.settingsBefore,
