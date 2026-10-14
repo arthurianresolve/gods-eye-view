@@ -1,5 +1,9 @@
 # Changelog
 
+- Bing Aerial and Bing Labels request HTTPS tiles on HTTP localhost through
+  their ion-backed providers, retaining ion and per-tile attribution without
+  widening the Content Security Policy.
+
 - Upstream `main` integration adds KartaView as a keyless Street Level provider
   with bounded nearest-photo lookup, imagery and upload-date filters, paging,
   context-loss recovery and accessible provider switching. It also adds the
@@ -89,7 +93,6 @@
   `[object Object]` or interrupt station loading; legacy string names remain
   supported in the globe and bike-share tools. Thanks to
   [Kristóf Kékesi](https://github.com/KristofKekesi) (#61).
-
 - Treat explicitly current, complete empty vessel coverage as a successful update,
   clearing obsolete contacts while retaining stale or incomplete snapshots.
 

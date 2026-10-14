@@ -5200,6 +5200,12 @@ photoreal globe is hidden.
 
 Map credentials are passed to each source constructor rather than changing SDK-wide Google or ion defaults.
 
+Bing Aerial and Bing Labels resolve their ion imagery endpoint with the supplied
+token, then construct the Bing provider with `tileProtocol: 'https'`. Both styles
+request HTTPS tiles even on HTTP localhost, with the existing Content Security
+Policy unchanged. Ion attribution and Bing's per-tile credits are preserved;
+other ion imagery assets continue through the SDK's standard ion factory.
+
 The controller accepts other source registries without adding provider branches.
 Each instance caches source construction, ignores superseded scene changes and
 releases imagery layers/listeners on replacement. Destroy invalidates pending
