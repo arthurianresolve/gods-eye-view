@@ -138,6 +138,29 @@ test('share links preserve bounded investigation time and local recording refere
   share.destroy();
 });
 
+test('temporal share context exposes local recording handoff without exposing payloads', () => {
+  const context = {
+    source: 'recording',
+    targetMs: 1_700_000_000_000,
+    recordingId: 'recording-rendered-soak',
+    observations: [{ sensitive: true }],
+  };
+  const manager = makeManager('', {
+    investigationTime: { getTemporalContext: () => context },
+  });
+  assert.deepEqual(manager.getTemporalContext(), {
+    source: 'recording',
+    targetMs: context.targetMs,
+    recordingId: context.recordingId,
+  });
+  assert.equal(
+    Object.hasOwn(manager.getTemporalContext(), 'observations'),
+    false,
+  );
+  manager.destroy();
+  assert.equal(manager.getTemporalContext(), null);
+});
+
 test('recording share restoration selects only the referenced local source', async () => {
   const calls = [];
   const manager = makeManager('', {

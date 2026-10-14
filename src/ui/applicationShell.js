@@ -1551,8 +1551,15 @@ export class StyleManager extends ShellFacade {
   _initShareButton() {
     this._lifetime.listen(this._shareBtn, 'click', async () => {
       const success = await this.shareLinkManager.copyLink();
-      if (!this._disposed)
-        this._showToast(success ? 'Link copied!' : 'Copy failed');
+      if (!this._disposed) {
+        const temporal = this.shareLinkManager.getTemporalContext?.();
+        const message = !success
+          ? 'Copy failed'
+          : temporal?.source === 'recording'
+            ? 'Link copied. Import the recording bundle separately.'
+            : 'Link copied!';
+        this._showToast(message);
+      }
     });
   }
 

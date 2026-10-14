@@ -221,6 +221,25 @@ export class ShareLinkManager {
     return params ? viewFromParams(params) : null;
   }
 
+  /**
+   * Return the small temporal portion needed by UI affordances that explain
+   * local recording links. Recording observations stay in browser storage and
+   * are never copied into a share URL.
+   */
+  getTemporalContext() {
+    if (this._destroyed) return null;
+    const temporal = this._investigationTime?.getTemporalContext?.();
+    if (!temporal || typeof temporal !== 'object') return null;
+    return Object.freeze({
+      source: typeof temporal.source === 'string' ? temporal.source : null,
+      targetMs: Number.isSafeInteger(temporal.targetMs)
+        ? temporal.targetMs
+        : null,
+      recordingId:
+        typeof temporal.recordingId === 'string' ? temporal.recordingId : null,
+    });
+  }
+
   /** Subscribe to settled share-state changes, coalesced with URL updates. */
   subscribeViewChanges(listener) {
     if (typeof listener !== 'function')
