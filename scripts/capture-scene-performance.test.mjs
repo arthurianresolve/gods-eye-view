@@ -24,7 +24,12 @@ function invoke(args, { loaderPath = null } = {}) {
     {
       cwd: ROOT,
       encoding: 'utf8',
-      timeout: 15_000,
+      // This file is also run beside the browser-heavy performance harness.
+      // Process creation can be delayed by that shared load even though the
+      // provenance rejection itself happens before Cesium/browser startup.
+      // Keep the test bounded, but do not turn host contention into a false
+      // CLI failure at the old 15-second child-process timeout.
+      timeout: 60_000,
       windowsHide: true,
     },
   );
