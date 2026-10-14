@@ -1,0 +1,43 @@
+[
+  {
+    "name": "census",
+    "command": [
+      "node",
+      "scripts/performance/s58PostProcessStageCensus.mjs"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "focused",
+    "command": [
+      "node",
+      "--test",
+      "scripts/performance/s58PostProcessStageCensus.test.mjs",
+      "src/ui/visualEffects.test.mjs",
+      "scripts/captureNoUndefConfig.test.mjs",
+      "scripts/run-unit-tests.test.mjs"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "scripts/check-capture-no-undef.mjs"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "format",
+    "command": [
+      "node",
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "scripts/performance/s58PostProcessStageCensus.mjs",
+      "scripts/performance/s58PostProcessStageCensus.test.mjs",
+      "scripts/captureNoUndefConfig.mjs",
+      "scripts/run-unit-tests.mjs"
+    ],
+    "exitCode": 0
+  }
+]

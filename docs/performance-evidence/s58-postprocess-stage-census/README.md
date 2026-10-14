@@ -41,3 +41,6 @@ Focused validation:
 ```powershell
 node --test scripts/performance/s58PostProcessStageCensus.test.mjs
 ```
+
+[Root validation at `8d9d79bd`](root-8d9d79bd/README.md) retains the clean-source
+census and passing effect/config/discovery checks.
