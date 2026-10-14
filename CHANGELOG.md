@@ -19,6 +19,8 @@
   opt-in NYC DOT Traffic Management Center CCTV pack with its required
   operator-controlled agreement gate and attribution.
 
+- Weather records keep missing conditions unknown and refuse summaries without a measured temperature.
+
 - Tool string length validation counts Unicode characters correctly, including characters outside the basic multilingual plane.
 
 - Director timeline seeks cross the dateline along the short longitude arc.
