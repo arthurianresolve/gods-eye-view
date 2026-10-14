@@ -1,0 +1,33 @@
+{
+  "schema": "gev-s59-engineering-closure/v1",
+  "status": "engineering-closed",
+  "startingRevision": "d838802e556d69c664171973bc93a682781fbb40",
+  "scope": "cooperative ingestion, rendering and stale-work ownership",
+  "sourceSha256": {
+    "src/imports/cooperative.js": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+    "src/imports/geojsonCsv.js": "583b333a20f5fed3f86d213abaf3f7beeebb81fce296d85a15aa115c697f79e9",
+    "src/imports/kmlGpx.js": "c42c089292656f95630bbef9bb9e033d1d160943273e480761c7d65c69e2422a",
+    "src/imports/runtimeLayer.js": "31852fc88dcddc1b0bde215fe5b2ab560423ee9849ff9767e433c6b6319f8b65",
+    "src/ui/workspaceLibrary.js": "cb56dc4aba936513c5e0775333474813ccb987e39cf8ac6ad8770a3775ba2113",
+    "src/ui/textUpdate.js": "d1a0caa125abf46c5419966a1a8a82d23f8a7e4030d186bcc4ceed9665bd9c3f",
+    "src/ui/layerPanel.js": "24a43f12acbdbd61fa8c18d94bd688c86040d7b82fa2baef3b9744126ce33269"
+  },
+  "validation": {
+    "passed": 84,
+    "failed": 0,
+    "skipped": 0
+  },
+  "retainedNoChangeDecisions": [
+    "CSV summary optimization did not show repeatable benefit",
+    "sixteen-coordinate preparation quanta improved batch size but materially regressed completion time",
+    "application catalog is immutable and has no dynamic refresh producer"
+  ],
+  "hardwareQualified": false,
+  "remainingQualification": [
+    "complete large-file import-to-render browser journey",
+    "local-control p95 at or below 100 ms",
+    "loaded replay-seek p95 at or below 250 ms",
+    "visual completeness on the frozen candidate",
+    "final frozen-candidate retention and release verification"
+  ]
+}
