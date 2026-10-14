@@ -19,6 +19,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/productionFlightFixture.test.mjs',
   'scripts/performance/austinSatelliteSampledEpoch.mjs',
   'scripts/performance/austinSatelliteSampledEpoch.test.mjs',
+  'scripts/performance/aircraftFleetTickAudit.mjs',
+  'scripts/performance/aircraftFleetTickAudit.test.mjs',
   'scripts/performance/mapStreamingCapture.mjs',
   'scripts/performance/mapStreamingCapture.test.mjs',
   'scripts/performance/mapStreamingFixture.mjs',

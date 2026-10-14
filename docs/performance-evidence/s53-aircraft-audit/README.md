@@ -7,10 +7,9 @@ scratch/write suppression. Reject the tested natural-bounds collection split;
 do not override Cesium command bounds or claim GPU upload savings. The available
 evidence does not justify an opaque-only or frequency-based replacement. The
 aircraft snapshot path has stable billboard ownership and bounded absence
-retention, but no paired allocation/mutation measurement. A small current-path
-audit is the remaining finite engineering evidence; it must not be described as
-a before/after optimization comparison because no prior aircraft optimization
-has been identified.
+retention. The current-path snapshot and fleet-tick audits now measure bounded
+producer behavior and attempted writes without claiming a before/after
+optimization comparison; no prior aircraft optimization has been identified.
 
 ## Retained satellite behavior
 
@@ -127,15 +126,34 @@ membership or allocation measurement. Existing tracking ownership tests cover
 layer ownership and selected transitions, not a paired aircraft collection
 cost comparison.
 
+## Fleet-tick producer audit
+
+The separate bounded current-path audit at
+[`aircraftFleetTickAudit.mjs`](../../../scripts/performance/aircraftFleetTickAudit.mjs)
+calls the real `createRendering(...)._fleetTick()` for both flights and military.
+Its fixture contains stationary and moving contacts, a tracked contact skipped by
+the ambient pass, a records-only suppressed contact, an opposite-side horizon
+contact, a controlled focus-fade contact and a ready in-memory model handoff.
+The run uses real `FlightRecords`/`MilitaryFlightRecords`, a real Cesium 1.138
+`Camera` and `BillboardCollection`, and proxy counters around the returned
+billboards. The fixed receipt clock and full fixture descriptor are hashed; the
+report also binds source/harness revision and dirty status, input source hashes,
+the package lock and installed Cesium package. A same-cardinality remove/re-add
+control proves the identity/churn counter detects a replacement.
+
+This establishes only deterministic producer behavior for that bounded contact
+set. It explicitly leaves general JS/Cesium allocation totals, WebGL uploads,
+uploaded bytes, rendered-pixel equivalence and frame time unavailable. Focus is
+provided as a fixed deterministic collaborator factor, so this is not an
+end-to-end focus-transition or visual comparison. It does not replace selected-
+object/horizon/focus/fading rendered qualification or a fleet-scale measurement.
+
 ## Remaining qualification evidence
 
-S53 engineering remains partial. The remaining bounded engineering audit is the
-actual flights/military `_fleetTick` path: count attempted position/presentation
-writes, identity changes and application-owned allocations across stationary,
-moving, selected, horizon, fading and model-handoff contacts at unchanged cadence.
-Existing snapshot counts do not cover that path. Use this measurement to decide
-whether a further change is justified; no arbitrary collection redesign is
-required after the supported split rejection.
+S53 engineering remains partial. Snapshot and fleet-tick producer paths now have
+separate bounded identity/write audits. The aircraft fixture is not fleet-scale,
+and the two audits do not form a paired before/after optimization comparison.
+No further runtime change is justified by these absolute current-path counts.
 
 This current-path snapshot/record audit is not a population-scale timing run
 or before/after aircraft optimization comparison. It cannot establish WebGL
