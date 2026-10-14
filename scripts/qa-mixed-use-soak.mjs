@@ -18,6 +18,7 @@ export async function runMixedUseSoak({
   url = 'http://localhost:4174',
   browserOptions = {},
   expectedCommit,
+  prewarmApplication = false,
   checkpointIntervalMs = 5 * 60_000,
   intervalMs = 250,
   recordingBundleOut = null,
@@ -29,6 +30,7 @@ export async function runMixedUseSoak({
   driver ||= await createRenderedSoakDriver(url, {
     browserOptions,
     expectedCommit,
+    prewarmApplication,
   });
   let report, runFailure;
   const exportRecordingBundle = async () => {
@@ -82,6 +84,7 @@ export async function runMixedUseSoak({
       environment: driver.environment || null,
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
+      startupPrewarm: driver.startupPrewarm || null,
       warmupIterations: driver.warmupIterations || 0,
       firstRetainedMetrics,
       checkpoints,
@@ -215,6 +218,7 @@ if (
   try {
     report = await runMixedUseSoak({
       expectedCommit: commit,
+      prewarmApplication: hasFlag('--prewarm-application'),
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
       recordingBundleOut: value('--recording-bundle-out', null),

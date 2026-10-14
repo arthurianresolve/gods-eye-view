@@ -5,6 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
+import { isRecoverableApplicationPrewarmFailure } from './qa-rendered-soak-driver.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import {
   bootFixturePage,
@@ -477,6 +478,39 @@ test('startup failures include application readiness and renderer error diagnost
   assert.deepEqual(readinessOptions, { timeout: 90_000, polling: 100 });
 });
 
+test('only a bounded cold module-graph timeout is recoverable during application prewarm', () => {
+  const expected = new Error('startup timeout');
+  expected.name = 'TimeoutError';
+  expected.fixtureStartupDiagnostics = {
+    state: {
+      readyState: 'interactive',
+      applicationPresent: false,
+      workspacePanelPresent: false,
+      canvasCount: 2,
+    },
+    errors: [],
+    messages: [],
+  };
+  assert.equal(isRecoverableApplicationPrewarmFailure(expected), true);
+
+  const applicationStarted = {
+    name: expected.name,
+    message: expected.message,
+    fixtureStartupDiagnostics: structuredClone(
+      expected.fixtureStartupDiagnostics,
+    ),
+  };
+  applicationStarted.fixtureStartupDiagnostics.state.applicationPresent = true;
+  assert.equal(
+    isRecoverableApplicationPrewarmFailure(applicationStarted),
+    false,
+  );
+  assert.equal(
+    isRecoverableApplicationPrewarmFailure(new Error('connection refused')),
+    false,
+  );
+});
+
 test('rendered soak owns a longer bounded cold-application startup allowance', async () => {
   const source = await readFile(
     new URL('./qa-rendered-soak-driver.mjs', import.meta.url),
@@ -704,6 +738,7 @@ test('soak reports completed driver operations and labels short runs as smoke', 
     intervalMs: 0,
     now: () => now,
     driver: {
+      startupPrewarm: { status: 'passed', durationMs: 12 },
       runCycle: async () => {
         now += 50;
         return {
@@ -721,6 +756,10 @@ test('soak reports completed driver operations and labels short runs as smoke', 
   assert.equal(report.sourceToggles, 4);
   assert.equal(report.fullSoak, false);
   assert.equal(report.hardwareRenderingValidated, false);
+  assert.deepEqual(report.startupPrewarm, {
+    status: 'passed',
+    durationMs: 12,
+  });
 });
 
 test('requested soak recording output is portable and reported without embedding it in the soak report', async () => {

@@ -10,20 +10,62 @@ import { createOwnedSoakCloser } from './performance/hostedSoakSession.mjs';
 import {
   launchFixtureBrowser,
   prepareFixturePage,
+  cleanupFixturePageDiagnostics,
   bootFixturePage,
   clickControl,
   openWorkspace,
   importFixtureGeometry,
   runWorkspaceFixturePhase,
 } from './qa-application-fixtures.mjs';
+import { closeTargetBeforeFixtureInterceptionRelease } from './performance/fixtureInterception.mjs';
+
+export function isRecoverableApplicationPrewarmFailure(error) {
+  const state = error?.fixtureStartupDiagnostics?.state;
+  return Boolean(
+    /timeout/i.test(error?.name || error?.message || '') &&
+    state &&
+    ['interactive', 'complete'].includes(state.readyState) &&
+    state.applicationPresent === false &&
+    state.workspacePanelPresent === false,
+  );
+}
+
+async function prewarmRenderedApplication(browser, base) {
+  const startedAt = Date.now();
+  let fixture;
+  let outcome = { status: 'passed' };
+  try {
+    fixture = await prepareFixturePage(browser, base);
+    await bootFixturePage(fixture.page, base);
+  } catch (error) {
+    if (!isRecoverableApplicationPrewarmFailure(error)) throw error;
+    outcome = {
+      status: 'timed-out',
+      reason: 'cold-module-graph-application-not-ready',
+      diagnostics: error.fixtureStartupDiagnostics,
+    };
+  } finally {
+    if (fixture) {
+      await cleanupFixturePageDiagnostics(fixture.page);
+      const cleanup = await closeTargetBeforeFixtureInterceptionRelease(
+        fixture.page,
+        fixture.interception,
+      );
+      if (!cleanup.confirmed)
+        throw cleanup.error || new Error('Application prewarm cleanup failed.');
+    }
+  }
+  return { ...outcome, durationMs: Date.now() - startedAt };
+}
 
 /** Exercise the actual application, renderer, layer lifecycle and UI controllers. */
 export async function createRenderedSoakDriver(
   base,
-  { browserOptions = {}, expectedCommit } = {},
+  { browserOptions = {}, expectedCommit, prewarmApplication = false } = {},
 ) {
   const browser = await launchFixtureBrowser(browserOptions);
   const closeBrowser = createOwnedSoakCloser(browser);
+  let startupPrewarm = null;
   let cameraFailure = true;
   let archiveFailure = true;
   let archiveCalls = 0;
@@ -37,6 +79,11 @@ export async function createRenderedSoakDriver(
     body: JSON.stringify(payload),
   });
   try {
+    if (prewarmApplication) {
+      console.log('SOAK prewarm application');
+      startupPrewarm = await prewarmRenderedApplication(browser, base);
+      console.log(`SOAK prewarm ${startupPrewarm.status}`);
+    }
     const { page, errors, verifyNetwork } = await prepareFixturePage(
       browser,
       base,
@@ -586,6 +633,7 @@ export async function createRenderedSoakDriver(
       renderer,
       graphics,
       renderingEvidence,
+      startupPrewarm,
       environment: readHostEnvironment(),
       hardwareRenderingValidated: renderingEvidence.accelerationVerified,
       browserVersion: await browser.version(),

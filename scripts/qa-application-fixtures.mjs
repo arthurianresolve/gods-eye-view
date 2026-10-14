@@ -459,13 +459,18 @@ export async function bootFixturePage(
             ?.textContent?.slice(0, 500) || null,
       }))
       .catch(() => null);
+    const startupDiagnostics = {
+      state,
+      errors: diagnostics?.errors
+        ?.slice(-5)
+        .map((value) => sanitizeDiagnosticText(value, 240)),
+      messages: diagnostics?.startupMessages,
+    };
+    // Keep a structured, bounded diagnostic for harness decisions. The message
+    // remains backward compatible for logs and existing assertions.
+    error.fixtureStartupDiagnostics = startupDiagnostics;
     error.message +=
-      '; startup diagnostics: ' +
-      JSON.stringify({
-        state,
-        errors: diagnostics?.errors?.slice(-5),
-        messages: diagnostics?.startupMessages,
-      });
+      '; startup diagnostics: ' + JSON.stringify(startupDiagnostics);
     throw error;
   }
   onProgress('initial-view-restore');
