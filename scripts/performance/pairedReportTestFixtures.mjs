@@ -1,5 +1,9 @@
-import { createObservedWeatherEffectsComparisonContract } from './captureComparisonContract.mjs';
+import {
+  createObservedInfrastructureComparisonContract,
+  createObservedWeatherEffectsComparisonContract,
+} from './captureComparisonContract.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
+import { createInfrastructureWorkloadFixture } from './infrastructureWorkloadFixture.mjs';
 
 export const baselineCommit = 'a'.repeat(40);
 export const candidateCommit = 'b'.repeat(40);
@@ -385,4 +389,181 @@ export function makeWeatherReport(commit) {
   });
   report.comparisonEligible = true;
   return report;
+}
+
+/** Build a paired fixture from the registered infrastructure producer contract. */
+export function makeInfrastructureReport(commit, workloadId) {
+  const report = makeReport(commit);
+  const fixture = createInfrastructureWorkloadFixture(
+    workloadId,
+    '2026-10-08T12:00:00.000Z',
+  );
+  const populations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const settings = structuredClone(
+    report.captures[0].conditions.before.settings,
+  );
+  const assets = fixture.assets.map(({ id, sha256, byteLength }) => ({
+    id,
+    sha256,
+    byteLength,
+    status: 200,
+    responseCount: 1,
+  }));
+  const fixtureDelivery = {
+    schema: 'gev-infrastructure-fixture-delivery-observation/v1',
+    status: 'observed',
+    method: 'actual same-origin bundled asset response bodies SHA-256 verified',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+    assets,
+    populationsBefore: populations,
+    populationsAfter: populations,
+  };
+  const clock = {
+    currentTime: fixture.clock,
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  const routes = {
+    idle: {
+      id: 'parked-v1',
+      start: structuredClone(routesForInfrastructure(fixture)),
+      elapsedDurationMs: 60_000,
+      motionDistanceM: 0,
+    },
+    'scripted-motion': {
+      id: 'elapsed-move-right-v1',
+      start: structuredClone(routesForInfrastructure(fixture)),
+      elapsedDurationMs: 60_000,
+      motionDistanceM: 15_000,
+    },
+  };
+  const captures = [];
+  for (const scenario of Object.keys(routes))
+    for (let run = 1; run <= 5; run += 1) {
+      const frameIntervalMs = scenario === 'idle' ? null : 38 + run;
+      captures.push({
+        scenario,
+        run,
+        durationMs: 60_005,
+        frameCount: frameIntervalMs === null ? 0 : 100,
+        frameIntervalMs:
+          frameIntervalMs === null
+            ? { p50: null, p95: null, max: null, samples: 0 }
+            : {
+                p50: frameIntervalMs,
+                p95: frameIntervalMs,
+                max: frameIntervalMs,
+                samples: 100,
+              },
+        conditions: {
+          before: {
+            ...structuredClone(report.captures[0].conditions.before),
+            environment: {
+              ...structuredClone(
+                report.captures[0].conditions.before.environment,
+              ),
+              layers: structuredClone(populations),
+            },
+          },
+          after: {
+            ...structuredClone(report.captures[0].conditions.after),
+            environment: {
+              ...structuredClone(
+                report.captures[0].conditions.after.environment,
+              ),
+              layers: structuredClone(populations),
+            },
+          },
+        },
+        foregroundThroughout: true,
+        cameraPath: structuredClone(routes[scenario]),
+        layers: structuredClone(populations),
+        settings: {
+          before: structuredClone(settings),
+          after: structuredClone(settings),
+        },
+        fixtureDelivery: structuredClone(fixtureDelivery),
+        infrastructureFixtureClock: {
+          fixedTime: fixture.fixedTime,
+          wallClockBeforeMs: fixture.fixedTimeMs,
+          wallClockAfterMs: fixture.fixedTimeMs,
+          cesiumBefore: structuredClone(clock),
+          cesiumAfter: structuredClone(clock),
+        },
+      });
+    }
+  report.captures = captures;
+  report.fixtureDelivery = structuredClone(fixtureDelivery);
+  report.environment.layers = structuredClone(populations);
+  report.workload = {
+    warmupMs: 30_000,
+    durationPerSampleMs: 60_000,
+    runsPerScenario: 5,
+    scenarios: Object.keys(routes),
+    fixture,
+    qualityMode: 'manual',
+    expectedDensityPct: 75,
+    detectionMode: 'DENSE',
+    injectedDelayMs: 0,
+    populationStableAcrossSamples: true,
+    cameraPathStableAcrossSamples: true,
+  };
+  report.comparisonContract = createObservedInfrastructureComparisonContract({
+    fixture,
+    fixtureDelivery,
+    environment: report.environment,
+    captures,
+    scenarios: report.workload.scenarios,
+  });
+  return report;
+}
+
+function routesForInfrastructure(fixture) {
+  const { longitudeDeg, latitudeDeg, altitudeM } = fixture.camera;
+  const longitude = (longitudeDeg * Math.PI) / 180;
+  const latitude = (latitudeDeg * Math.PI) / 180;
+  const radius = 6_378_137 + altitudeM;
+  const radial = {
+    x: Math.cos(latitude) * Math.cos(longitude),
+    y: Math.cos(latitude) * Math.sin(longitude),
+    z: Math.sin(latitude),
+  };
+  const north = {
+    x: -Math.sin(latitude) * Math.cos(longitude),
+    y: -Math.sin(latitude) * Math.sin(longitude),
+    z: Math.cos(latitude),
+  };
+  const east = { x: -Math.sin(longitude), y: Math.cos(longitude), z: 0 };
+  const position = Object.fromEntries(
+    Object.entries(radial).map(([axis, value]) => [axis, value * radius]),
+  );
+  return {
+    position,
+    direction: Object.fromEntries(
+      Object.entries(radial).map(([axis, value]) => [axis, -value]),
+    ),
+    up: north,
+    transform: [
+      east.x,
+      east.y,
+      east.z,
+      0,
+      north.x,
+      north.y,
+      north.z,
+      0,
+      radial.x,
+      radial.y,
+      radial.z,
+      0,
+      position.x,
+      position.y,
+      position.z,
+      1,
+    ],
+  };
 }

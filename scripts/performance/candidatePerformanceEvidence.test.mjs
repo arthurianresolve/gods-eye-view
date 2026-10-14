@@ -16,6 +16,7 @@ import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mj
 import {
   baselineCommit,
   candidateCommit,
+  makeInfrastructureReport,
   makeReport,
   makeWeatherReport,
 } from './pairedReportTestFixtures.mjs';
@@ -129,14 +130,19 @@ async function createComparison(
     patch,
   } = {},
 ) {
-  const reportFactory =
-    workloadId === 'weather-effects' ? makeWeatherReport : makeReport;
+  const reportFactory = INFRASTRUCTURE_WORKLOAD_IDS.includes(workloadId)
+    ? (commit) => makeInfrastructureReport(commit, workloadId)
+    : workloadId === 'weather-effects'
+      ? makeWeatherReport
+      : makeReport;
   const baseline = reportFactory(baselineCommit);
-  const candidate = reportFactory(
-    candidateCommit,
-    [30, 31, 29, 30, 32],
-    [35, 36, 34, 35, 37],
-  );
+  const candidate = INFRASTRUCTURE_WORKLOAD_IDS.includes(workloadId)
+    ? reportFactory(candidateCommit)
+    : reportFactory(
+        candidateCommit,
+        [30, 31, 29, 30, 32],
+        [35, 36, 34, 35, 37],
+      );
   for (const report of [baseline, candidate]) {
     report.comparisonContract.workloadId = workloadId;
     report.graphics = {
@@ -664,6 +670,33 @@ test('missing dense and tracking measurements stay pending and do not imply cove
   assert.ok(
     result.comparison.missingWorkloads.includes('selected-aircraft-tracking'),
   );
+});
+
+test('infrastructure evaluator coverage rejects a tampered producer asset identity', async () => {
+  const setup = await setupManifest();
+  setup.evidence.comparisons.push(
+    await createComparison(setup, {
+      workloadId: INFRASTRUCTURE_WORKLOAD_IDS[0],
+      patch: (_baseline, candidate) => {
+        candidate.fixtureDelivery.assets[0].sha256 = 'f'.repeat(64);
+      },
+    }),
+  );
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.comparison.status, 'failed');
+  assert.ok(
+    result.comparison.failures.some((message) =>
+      /infrastructure-datacenters/.test(message),
+    ),
+  );
+  assert.deepEqual(result.comparison.infrastructureVariantCoverage, {
+    requiredVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
+    observedVariants: [],
+    missingVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
+  });
 });
 
 test('software-only comparisons cannot satisfy primary objective coverage', async () => {

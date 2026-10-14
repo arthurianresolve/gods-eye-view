@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { twoline2satrec } from 'satellite.js';
 import { createOrbits } from '../../src/layers/satellites/orbits.js';
 import {
@@ -12,6 +15,7 @@ import {
   AUSTIN_OPERATING_ROUTE,
   AUSTIN_OPERATING_VISUAL_STATE,
   AUSTIN_OPERATING_WIND_VALID_TIME,
+  AUSTIN_OPERATING_WORKLOAD_ID,
 } from './austinOperatingWorkloadContract.mjs';
 import {
   createAustinOperatingFixtureDelivery,
@@ -27,6 +31,7 @@ import {
   summarizeAustinNativePopulations,
 } from './austinOperatingPopulationEvidence.mjs';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import { evaluateManifestPerformanceEvidence } from './candidatePerformanceEvidence.mjs';
 import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
 import {
   deriveAustinSatelliteSampledEpoch,
@@ -541,6 +546,90 @@ test('Austin comparison contract is built from real fixture delivery acknowledgm
       (row) => row.populations.before.length === 6,
     ),
   );
+});
+
+test('candidate coverage consumes the actual Austin producer contract and rejects its ineligible form', async () => {
+  const input = await makeObservedPairInput();
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-austin-candidate-'),
+  );
+  try {
+    const manifestPath = path.join(directory, 'manifest.json');
+    const writeReport = async (name, report) => {
+      const bytes = Buffer.from(JSON.stringify(report));
+      await writeFile(path.join(directory, `${name}.json`), bytes);
+      return {
+        path: `${name}.json`,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      };
+    };
+    const nativeReport = (commit) => {
+      const report = asPairedReport(input, commit);
+      report.environment.renderer = 'Intel UHD 620';
+      report.environment.vendor = 'Intel';
+      report.graphics = {
+        featureStatus: { webgl: 'enabled', webgl2: 'enabled' },
+        devices: [{ vendor: 'Intel', device: 'UHD 620', driver: '31.0' }],
+      };
+      report.hostEnvironment = {
+        platform: 'win32',
+        architecture: 'x64',
+        osRelease: '10.0.26200',
+        cpu: 'Intel Core i7',
+        memoryBytes: 16 * 1024 ** 3,
+        hosted: false,
+      };
+      for (const sample of report.captures)
+        for (const boundary of ['before', 'after']) {
+          sample.conditions[boundary].environment.renderer = 'Intel UHD 620';
+          sample.conditions[boundary].environment.vendor = 'Intel';
+        }
+      return report;
+    };
+    const evaluate = async (comparisonEligible) => {
+      const baseline = nativeReport(baselineCommit);
+      const candidate = nativeReport(candidateCommit);
+      baseline.comparisonEligible = comparisonEligible;
+      candidate.comparisonEligible = comparisonEligible;
+      const baselineArtifact = await writeReport('austin-baseline', baseline);
+      const candidateArtifact = await writeReport(
+        'austin-candidate',
+        candidate,
+      );
+      return evaluateManifestPerformanceEvidence(
+        {
+          comparisons: [
+            {
+              environmentId: 'windows-uhd620',
+              baselineCommit,
+              baseline: baselineArtifact,
+              candidate: candidateArtifact,
+            },
+          ],
+          retention: [],
+        },
+        { manifestPath, candidateCommit },
+      );
+    };
+
+    const eligible = await evaluate(true);
+    assert.equal(
+      eligible.comparisons[0].workloadId,
+      AUSTIN_OPERATING_WORKLOAD_ID,
+    );
+    assert.equal(eligible.comparisons[0].validation.status, 'comparable');
+    assert.ok(eligible.comparison.workloadIds.includes('operating-view'));
+    assert.ok(!eligible.comparison.missingWorkloads.includes('operating-view'));
+
+    const diagnostic = await evaluate(false);
+    assert.ok(!diagnostic.comparison.workloadIds.includes('operating-view'));
+    assert.ok(
+      diagnostic.comparison.missingWorkloads.includes('operating-view'),
+    );
+    assert.equal(diagnostic.comparison.environments[0].status, 'failed');
+  } finally {
+    await rm(directory, { recursive: true, force: false });
+  }
 });
 
 test('Austin rendering contract matches observed viewer defaults and labels changed AA settings', async () => {

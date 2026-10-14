@@ -9,6 +9,7 @@ import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 import {
   createCaptureDocumentTopology,
   createObservedAustinOperatingComparisonContract,
+  createObservedInfrastructureComparisonContract,
   createObservedWeatherEffectsComparisonContract,
 } from './captureComparisonContract.mjs';
 import {
@@ -20,6 +21,10 @@ import {
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateAustinSatelliteEpochCaptureReport } from './austinSatelliteSampledEpoch.mjs';
 import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
+import {
+  assertInfrastructureClockObservation,
+  INFRASTRUCTURE_WORKLOAD_IDS,
+} from './infrastructureWorkloadContract.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -57,6 +62,8 @@ const isAustinContract = (contract) =>
   contract?.workloadId === AUSTIN_OPERATING_WORKLOAD_ID;
 const isWeatherEffectsContract = (contract) =>
   contract?.workloadId === 'weather-effects';
+const isInfrastructureContract = (contract) =>
+  INFRASTRUCTURE_WORKLOAD_IDS.includes(contract?.workloadId);
 const hashCanonicalIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
@@ -85,13 +92,16 @@ function validateContract(report, label) {
   const contractDelivery = contract.fixtureDelivery;
   const austin = isAustinContract(contract);
   const weatherEffects = isWeatherEffectsContract(contract);
+  const infrastructure = isInfrastructureContract(contract);
   assert.equal(
     contractDelivery?.schema,
     austin
       ? 'gev-austin-operating-capture-delivery/v1'
       : weatherEffects
         ? 'gev-weather-effects-fixture-delivery/v2'
-        : 'gev-fixture-delivery-observation/v1',
+        : infrastructure
+          ? 'gev-infrastructure-fixture-delivery-observation/v1'
+          : 'gev-fixture-delivery-observation/v1',
     `${label}: observed fixture delivery contract is required`,
   );
   assert.equal(contractDelivery.status, 'observed');
@@ -169,6 +179,31 @@ function validateContract(report, label) {
           deliveryAsset.responseCount > 0,
       );
     }
+  } else if (infrastructure) {
+    assert.equal(contract.fixtureDelivery.fixtureId, contract.fixture.id);
+    assert.ok(Array.isArray(contract.fixture.assets));
+    assert.ok(Array.isArray(contract.fixtureDelivery.assets));
+    assert.equal(
+      contract.fixtureDelivery.assets.length,
+      contract.fixture.assets.length,
+    );
+    assert.deepEqual(
+      contract.fixtureDelivery.populationsBefore,
+      contract.populations,
+    );
+    assert.deepEqual(
+      contract.fixtureDelivery.populationsAfter,
+      contract.populations,
+    );
+    for (const [index, asset] of contract.fixture.assets.entries()) {
+      const delivered = contract.fixtureDelivery.assets[index];
+      assert.equal(delivered?.id, asset.id);
+      assert.equal(delivered?.sha256, asset.sha256);
+      assert.equal(delivered?.byteLength, asset.byteLength);
+      assert.equal(delivered?.status, 200);
+      validCount(delivered?.responseCount, `${label}: asset response count`);
+      assert.ok(delivered.responseCount > 0);
+    }
   } else {
     requireText(contractDelivery.method, `${label}: delivery method`);
     validCount(
@@ -188,7 +223,7 @@ function validateContract(report, label) {
     Array.isArray(contract.objectiveScenarios),
     `${label}: objective scenarios are required`,
   );
-  if (!austin && !weatherEffects)
+  if (!austin && !weatherEffects && !infrastructure)
     assert.ok(
       contract.objectiveScenarios.length,
       `${label}: objective scenarios must be declared`,
@@ -580,6 +615,53 @@ function validateFixtureDelivery(report, contract, label) {
     }
     return;
   }
+  if (isInfrastructureContract(contract)) {
+    assert.equal(
+      delivery?.schema,
+      'gev-infrastructure-fixture-delivery-observation/v1',
+      `${label}: observed infrastructure fixture delivery is required`,
+    );
+    assert.equal(delivery.status, 'observed');
+    assert.equal(delivery.fixtureId, contract.fixture.id);
+    assert.equal(delivery.fixtureSha256, contract.fixture.sha256);
+    assert.equal(delivery.fixedTime, contract.fixture.fixedTime);
+    assert.equal(delivery.method, contract.fixtureDelivery.method);
+    assert.deepEqual(delivery.assets, contract.fixtureDelivery.assets);
+    assert.deepEqual(
+      delivery.populationsBefore,
+      contract.fixtureDelivery.populationsBefore,
+    );
+    assert.deepEqual(
+      delivery.populationsAfter,
+      contract.fixtureDelivery.populationsAfter,
+    );
+    for (const sample of report.captures) {
+      assert.deepEqual(sample.fixtureDelivery, delivery);
+      assertInfrastructureClockObservation(
+        sample.infrastructureFixtureClock?.cesiumBefore,
+        report.workload?.fixture,
+        `${label} ${sample.scenario} run ${sample.run} before`,
+      );
+      assertInfrastructureClockObservation(
+        sample.infrastructureFixtureClock?.cesiumAfter,
+        report.workload?.fixture,
+        `${label} ${sample.scenario} run ${sample.run} after`,
+      );
+      assert.equal(
+        sample.infrastructureFixtureClock?.fixedTime,
+        report.workload?.fixture?.fixedTime,
+      );
+      assert.equal(
+        sample.infrastructureFixtureClock?.wallClockBeforeMs,
+        report.workload?.fixture?.fixedTimeMs,
+      );
+      assert.equal(
+        sample.infrastructureFixtureClock?.wallClockAfterMs,
+        report.workload?.fixture?.fixedTimeMs,
+      );
+    }
+    return;
+  }
   assert.equal(
     delivery?.schema,
     'gev-fixture-delivery-observation/v1',
@@ -960,6 +1042,7 @@ function validateReport(report, side, expectedAppCommit) {
   const { workload, environment, captures } = report;
   const austin = isAustinContract(contract);
   const weatherEffects = isWeatherEffectsContract(contract);
+  const infrastructure = isInfrastructureContract(contract);
   if (austin) {
     const rebuilt = createObservedAustinOperatingComparisonContract({
       fixture: workload?.fixture,
@@ -1002,6 +1085,20 @@ function validateReport(report, side, expectedAppCommit) {
       rebuilt,
       contract,
       `${side}: report weather contract is not derived from phased capture evidence`,
+    );
+  }
+  if (infrastructure) {
+    const rebuilt = createObservedInfrastructureComparisonContract({
+      fixture: workload?.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment,
+      captures,
+      scenarios: workload?.scenarios,
+    });
+    equal(
+      rebuilt,
+      contract,
+      `${side}: report infrastructure contract is not derived from its fixture and capture evidence`,
     );
   }
   assert.equal(
