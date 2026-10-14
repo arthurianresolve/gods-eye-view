@@ -124,8 +124,8 @@ function buildImportPreview(
   });
 }
 
-export function createImportPreview(options) {
-  return buildImportPreview(options);
+export function createImportPreview(options, summary = null) {
+  return buildImportPreview(options, summary);
 }
 
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
@@ -347,6 +347,9 @@ export async function previewCSV(
   const records = [];
   const rejected = [];
   const ids = new Set();
+  const summaryBounds = [Infinity, Infinity, -Infinity, -Infinity];
+  let minTime = Infinity;
+  let maxTime = -Infinity;
   await consumeInBatches(
     (function* () {
       for (let i = 0; i < rows.length; i++) {
@@ -401,6 +404,14 @@ export async function previewCSV(
             properties[header] = cells[index].slice(0, 500);
         }
         ids.add(id);
+        summaryBounds[0] = Math.min(summaryBounds[0], longitude);
+        summaryBounds[1] = Math.min(summaryBounds[1], latitude);
+        summaryBounds[2] = Math.max(summaryBounds[2], longitude);
+        summaryBounds[3] = Math.max(summaryBounds[3], latitude);
+        if (Number.isSafeInteger(timeMs)) {
+          minTime = Math.min(minTime, timeMs);
+          maxTime = Math.max(maxTime, timeMs);
+        }
         records.push({
           id,
           geometry: { type: 'Point', coordinates: [longitude, latitude] },
@@ -411,11 +422,18 @@ export async function previewCSV(
     })(),
     { signal },
   );
-  return createImportPreview({
-    kind: 'csv',
-    records,
-    rejected,
-    attribution,
-    timeField: timeColumn >= 0 ? headers[timeColumn] : null,
-  });
+  return createImportPreview(
+    {
+      kind: 'csv',
+      records,
+      rejected,
+      attribution,
+      timeField: timeColumn >= 0 ? headers[timeColumn] : null,
+    },
+    {
+      bounds: records.length ? summaryBounds : null,
+      minTime,
+      maxTime,
+    },
+  );
 }

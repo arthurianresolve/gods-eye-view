@@ -183,6 +183,40 @@ test('CSV preview supports quoted cells and rejects ambiguous local dates and ba
   assert.equal(preview.records[0].geometry.coordinates[0], 179);
 });
 
+test('large CSV preview retains complete batch-built bounds and accepted time range', async () => {
+  const rowCount = 10_000;
+  const firstTime = Date.UTC(2026, 0, 1);
+  const rows = Array.from({ length: rowCount }, (_, index) => {
+    const latitude =
+      index === 0 ? -90 : index === rowCount - 1 ? 90 : (index % 179) - 89;
+    const longitude =
+      index === 0 ? -180 : index === rowCount - 1 ? 180 : (index % 359) - 179;
+    const time = new Date(firstTime + index * 60_000).toISOString();
+    return `row-${index},${latitude},${longitude},${time}`;
+  });
+  rows.push('invalid,91,0,2026-12-31T00:00:00Z');
+  const preview = await previewCSV(
+    `id,latitude,longitude,observed_at\n${rows.join('\n')}`,
+    {
+      mapping: {
+        id: 'id',
+        latitude: 'latitude',
+        longitude: 'longitude',
+        time: 'observed_at',
+      },
+    },
+  );
+
+  assert.equal(preview.accepted, rowCount);
+  assert.equal(preview.rejected, 1);
+  assert.equal(preview.records.length, rowCount);
+  assert.deepEqual(preview.bounds, [-180, -90, 180, 90]);
+  assert.deepEqual(preview.timeRange, [
+    firstTime,
+    firstTime + (rowCount - 1) * 60_000,
+  ]);
+});
+
 test('CSV parsing rejects missing mapping, malformed quoting and oversized files', async () => {
   await assert.rejects(previewCSV('a,b\n1,2'), { code: 'mapping-required' });
   await assert.rejects(
