@@ -165,3 +165,14 @@ rendered data, browser interaction limits, and primary-machine p95 remain
 unqualified. This supports bounded maintenance/ownership work and a no-change
 decision on the tested parser alternatives, not S59 closure or a hardware
 performance claim.
+
+## Subsequent CSV summary disposition
+
+The [independent replay and decision](s59-csv-summary-decision-20261014/README.md)
+preserve all five exact-source pairs at `da7a3308`. The median changes by -1.9%,
+but four of five candidate pairs are slower. No repeatable benefit is established;
+the CSV summary experiment is removed while existing GeoJSON batching/summary
+and workspace fixes remain. Earlier implementation descriptions above apply to
+their named revisions. The replay driver pins that experimental revision and
+records the running harness separately. This is an explicit no-change decision
+for the summary experiment, not a throughput claim or S59 closure.
