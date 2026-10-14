@@ -11,6 +11,7 @@ import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
+import { createHostedNavigationDiagnostics } from './performance/hostedNavigationDiagnostics.mjs';
 import { DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
@@ -321,15 +322,26 @@ try {
         'layerId',
         DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
       );
-      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(
-        () => document.querySelector('#result')?.textContent,
-        { timeout: 360_000, polling: 100 },
-      );
-      report.infrastructureDatacenters = await page.$eval(
-        '#result',
-        (element) => JSON.parse(element.textContent),
-      );
+      const navigationDiagnostics = createHostedNavigationDiagnostics(page, {
+        origin: infrastructureUrl.origin,
+      });
+      try {
+        await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
+        await page.waitForFunction(
+          () => document.querySelector('#result')?.textContent,
+          { timeout: 360_000, polling: 100 },
+        );
+        report.infrastructureDatacenters = await page.$eval(
+          '#result',
+          (element) => JSON.parse(element.textContent),
+        );
+      } catch (error) {
+        report.infrastructureDatacentersNavigationFailure =
+          await navigationDiagnostics.snapshot();
+        throw error;
+      } finally {
+        navigationDiagnostics.dispose();
+      }
       report.infrastructureDatacentersGraphics =
         await readBrowserGraphicsInfo(browser);
       report.infrastructureDatacentersRenderingEvidence = classifyRenderer(

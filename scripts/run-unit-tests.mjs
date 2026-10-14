@@ -19,6 +19,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/hostedRendererBackend.test.mjs',
   'scripts/performance/pairedReport.test.mjs',
   'scripts/performance/hostedSourceProvenance.test.mjs',
+  'scripts/performance/hostedNavigationDiagnostics.test.mjs',
   'scripts/performance/hostedSoakSession.test.mjs',
   'scripts/performance/candidatePerformanceEvidence.test.mjs',
   'scripts/performance/webglFrameDelivery.test.mjs',

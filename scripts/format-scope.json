@@ -1062,6 +1062,8 @@
   "scripts/performance/streamedTileNetworkEvidence.mjs",
   "scripts/performance/streamedTileNetworkEvidence.test.mjs",
   "scripts/qa-hosted-capture.mjs",
+  "scripts/performance/hostedNavigationDiagnostics.mjs",
+  "scripts/performance/hostedNavigationDiagnostics.test.mjs",
   "scripts/performance/hostedSourceProvenance.mjs",
   "scripts/performance/hostedSourceProvenance.test.mjs",
   "scripts/performance/hostedSoakSession.mjs",
