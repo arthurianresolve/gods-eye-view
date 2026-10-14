@@ -213,3 +213,23 @@ pass, including release-artifact verification and published-token checks. The
 later test-only Windows ownership correction passes the full local suite at
 `d8506d3b`. Prior refs/results above retain their historical scope; final physical
 Windows qualification, dev promotion and VM deployment remain pending.
+
+## 14 October 2026 primary Windows update
+
+The exact candidate `0431412adb46f45497079fdd9e08c04b6e6c8b76` now has a
+passing physical Windows UHD 620 mixed-use retention run. The run used native
+ANGLE D3D11/WebGL 2 hardware rendering for 60 minutes and completed 252
+iterations, 504 workspace reloads, 252 imports, 252 replay seeks, 252 archive
+failure/recovery exercises and 252 camera recovery exercises. Post-GC retained
+heap growth was 2.21%, warmed listeners remained at 644, and no worker or
+application-owned pending jobs remained at the final checkpoint. This upgrades
+the applicable S49/S60 hardware-retention status from pending to passed.
+
+The state-predicate polling correction that made the run repeatable is covered
+by focused tests. A prior run that stopped when the headed page became hidden
+is preserved as a failed diagnostic; it is not counted as acceptance evidence.
+S47 still needs the five matched workload captures and full settings/population
+comparison. S60 still needs the final exact-candidate comparison, release
+artifact/attestation verification and deployment reconciliation. Missing
+physical macOS and discrete-Windows evidence remains unavailable rather than
+passed, and the 20% performance objective remains unassessed.

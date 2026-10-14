@@ -5591,3 +5591,33 @@ The subsequent full software gate at `4db28f17` passes 7,983 ordinary tests
 decoder packet and the rejected geometry experiment's reverted production
 path; it does not convert the retained comparison into a performance result or
 provide primary Windows GPU/soak evidence.
+
+## S47/S49/S60 primary Windows retention qualification - 14 October 2026
+
+The exact-candidate storage-recovery and soak-harness correction is committed at
+`0431412adb46f45497079fdd9e08c04b6e6c8b76`. Workspace state reads and commits
+now retry once after a closed IndexedDB connection, and the mixed-use fixture
+uses bounded timer polling for application-state predicates. The latter is
+important for headed runs: Chromium can pause animation-frame polling when the
+page is occluded even though the import state is already ready. The earlier
+15-minute failure is retained as diagnostic evidence and remains a failed run;
+it was a harness visibility/polling failure, not a passed soak.
+
+The [Windows UHD 620 evidence packet](performance-evidence/windows-gpu-20261014/README.md)
+records a clean native-GPU run on the physical Intel UHD 620 machine. The
+60-minute report completes with `operationStatus: passed`, `fullSoak: true`,
+`hardwareRenderingValidated: true`, and `stability.status: passed`. Retained
+post-GC heap growth is 2.21%; the warmed listener count stays at 644, worker
+pending counts finish at zero, and application-owned pending jobs remain zero.
+The run covers 252 mixed-use iterations, 504 workspace reloads, 252 imports,
+252 replay seeks, 252 archive failures/recoveries and 252 camera recoveries.
+This closes the primary Windows retention/recovery evidence for the applicable
+S49 and S60 portions. It does not establish the 20% motion-p95 objective,
+matched baseline/candidate performance, GPU timing, unavailable physical
+discrete-GPU or macOS coverage, or final release promotion.
+
+The evidence is hardware validation only, not an automatic claim that every
+S47/S60 acceptance row is complete. S47 remains partial pending its matched
+workload captures and broader route/settings matrix; S60 remains partial pending
+the final exact-candidate comparison, artifact/release verification and
+deployment reconciliation.
