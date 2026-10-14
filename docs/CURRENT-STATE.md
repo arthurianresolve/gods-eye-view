@@ -1146,6 +1146,9 @@ Automatic collapse remains presentation only, prioritizes the latest explicit
 panel, and honors keyboard focus on the right. Mobile layout still releases
 desktop allocation styles. Stable Display allocation avoids unnecessary style
 writes. This extraction does not change panel positions or layout defaults.
+The right rail skips panels hidden by other CSS (computed `display: none`), but
+keeps the collapsed panels its own exclusive presentation hides, so automatic
+collapse can still be undone.
 
 ## Surface keyboard lifecycle
 
