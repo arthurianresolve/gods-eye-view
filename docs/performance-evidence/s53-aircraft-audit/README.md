@@ -2,7 +2,7 @@
 
 ## Disposition
 
-S53 remains partial. Keep the current mixed point collection and satellite
+S53 engineering is closed by the [14 October root review](../closure-audit-20261013/s53-review.json); final physical qualification remains pending. Keep the current mixed point collection and satellite
 scratch/write suppression. Reject the tested natural-bounds collection split;
 do not override Cesium command bounds or claim GPU upload savings. The available
 evidence does not justify an opaque-only or frequency-based replacement. The
@@ -22,9 +22,8 @@ advance by a bounded round-robin chunk with a 300-frame full-pass target
 `_propagateDenseChunk`.
 
 A later S51 producer audit found that the one-second scheduler can starve this
-per-frame dense budget when no continuous owner remains. That is a separate
-known cadence regression under correction; the mutation counts below do not
-validate its wall-clock refresh rate. See the
+per-frame dense budget when no continuous owner remains. That separate cadence regression is corrected in the S51 closure packet;
+the mutation counts below do not themselves validate its wall-clock refresh rate. See the
 [S51 owner audit](../s51-render-demand/owner-audit.md).
 
 The retained mutation audit compares actual Cesium 1.138 point primitives at
@@ -157,7 +156,8 @@ object/horizon/focus/fading rendered qualification or a fleet-scale measurement.
 
 ## Remaining qualification evidence
 
-S53 engineering remains partial. Snapshot and fleet-tick producer paths now have
+The [root fleet packet](root-51033433/README.md) passes 15 focused tests.
+Snapshot and fleet-tick producer paths now have
 separate bounded identity/write audits. The aircraft fixture is not fleet-scale,
 and the two audits do not form a paired before/after optimization comparison.
 No further runtime change is justified by these absolute current-path counts.

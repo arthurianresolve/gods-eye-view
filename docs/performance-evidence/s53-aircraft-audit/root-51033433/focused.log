@@ -1,0 +1,23 @@
+✔ flight and military snapshot producers retain Billboard identity through absence policy (197.5646ms)
+✔ complete aircraft fixture descriptor binds every stage and receipt-clock assumption (1.3648ms)
+✔ audit receipt clock instrumentation restores Date.now after success and failure (227.8559ms)
+✔ real flight and military fleet ticks cover representative mutation owners (224.4092ms)
+✔ fleet fixture identity changes with altitude, completeness, order, and clock (1.0761ms)
+✔ fleet audit restores the deterministic receipt clock after a failure (203.8425ms)
+✔ setup failure destroys the owned billboard collection and restores clock (132.5045ms)
+✔ aircraft recession is a no-op below the limb-relative start threshold (4.2431ms)
+✔ aircraft recession reaches the tunable scale and haze floors at the limb (0.4037ms)
+✔ aircraft recession is a globe-view no-op instead of a global distance fade (0.2747ms)
+✔ globe-view transition eases to identity without a threshold pop (0.6612ms)
+✔ aircraft billboard wire writes scale and alpha only for the far treatment (0.5534ms)
+✔ combined focus and haze product is clamped at the composed alpha floor (0.2361ms)
+✔ applyAircraftBillboardTreatment returns its documented module singleton (0.5421ms)
+✔ ambient model presentation receives composed alpha without changing blend semantics (0.5594ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3149.0597

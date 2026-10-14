@@ -1,10 +1,37 @@
 # Engineering closure audit under the amended criteria
 
-S50, S51, S52, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
+S50, S51, S52, S53, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **6/14 engineering closed (42.9%)**, **8/14 partial**
+their own audit. Counts are **7/14 engineering closed (50%)**, **7/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S53 collections and producer mutation - 14 October review
+
+The [review](s53-review.json) closes this engineering audit under the finite
+criteria. Root passes 15 focused tests and retains a [clean-source fleet report](../s53-aircraft-audit/root-51033433/README.md).
+Snapshot and fleet audits exercise actual production factories and record stores
+with real Cesium billboard objects; they separate absence/membership, cadence,
+position/presentation writes and tracked-object ownership. Their bounded
+collaborators and unavailable GPU/general-allocation metrics are explicit.
+
+The retained satellite comparison measures fewer returned Cartesian objects and
+setter attempts at unchanged final coordinates. It does not claim fewer Cesium
+dirty notifications for equal positions or fewer GPU uploads. The fleet audit
+confirms one reused motion result argument, stable membership and no redundant
+warmed position/color/scale/rotation/image assignments in its fixture. Existing
+visibility/model ownership writes remain without a new cost-reduction claim.
+
+The frequency-split experiment is rejected: changing command bounds changes
+24 pixels, while the diagnostic mixed-bounds control isolates the cause. All
+retained packet hashes were reverified. Private bound overrides are absent from
+the application. Mixed alpha, outlines and dynamic focus rule out the proposed
+opaque-only specialization; retain the supported mixed representation.
+No replacement experiment is required solely to meet a conversion quota.
+
+This closes the named audit and experiment decisions, not full-scene performance.
+Physical Windows selected-object, horizon, focus/fade equivalence, actual upload
+metrics if claimed, and the shared final candidate gates remain pending.
 
 ## S51 render demand and callback ownership — 14 October review
 

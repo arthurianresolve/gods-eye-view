@@ -7,8 +7,8 @@ closes the render-demand implementation after the dense-cadence and independent
 focus-deadline corrections. All five affected files match the reviewed packet;
 its 74 focused checks and three negative controls remain valid. The callback
 inventory now explicitly covers `preUpdate` work as well as render holds.
-Counts are **6/14 engineering closed (42.9%)**, **8/14 partial**, and
-**0/14 fully qualified**. Closed slices are S50, S51, S52, S55, S56 and S57.
+Counts are **7/14 engineering closed (50%)**, **7/14 partial**, and
+**0/14 fully qualified**. Closed slices are S50, S51, S52, S53, S55, S56 and S57.
 
 [Both-base integration at `c5802408`](performance-evidence/representative-pr-c5802408/README.md)
 passes all seven selected CI jobs and release-artifact verification on each
@@ -18,11 +18,13 @@ records pass. These results include the Windows cleanup changes and current
 aircraft snapshot audit. They do not qualify physical Windows rendering,
 performance or retention and do not publish a stable release.
 
-The [S53 snapshot audit](performance-evidence/s53-aircraft-audit/root-14d24ca3/README.md)
-now binds complete fixture stages, receipt clock, source and installed engine
-identity. Root passes eleven focused tests. Its remaining engineering work is
-the actual per-frame aircraft fleet path; snapshot counters do not substitute
-for that path. No GPU-upload or speedup claim is made by either audit.
+The [S53 fleet audit](performance-evidence/s53-aircraft-audit/root-51033433/README.md)
+now covers real producer membership, warmed cadence, write deltas, scratch
+argument reuse and failure cleanup alongside the snapshot audit. Root passes
+15 focused checks. The [engineering review](performance-evidence/closure-audit-20261013/s53-review.json)
+retains measured satellite scratch/write reuse and rejects the split/opaque-only
+experiments with their documented reasons. No GPU-upload or aircraft speedup
+claim is made. Physical visual/performance qualification remains pending.
 
 Main reconciliation is already included in QA; dev promotion and VM105 rollout
 still follow final candidate qualification. The [acceptance policy](CESIUM_ACCEPTANCE.md)
