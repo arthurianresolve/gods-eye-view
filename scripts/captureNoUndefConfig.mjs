@@ -35,6 +35,20 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/s58PostProcessStageCensus.test.mjs',
   'scripts/fixtures/cctv-calibration-demand.js',
   'scripts/qa-hosted-capture.mjs',
+  'scripts/fixtures/infrastructure-runtime-collections.mjs',
+  'scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs',
+  'scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs',
+  'scripts/fixtures/infrastructureFixtureCamera.mjs',
+  'scripts/fixtures/infrastructureFixtureCamera.test.mjs',
+  'scripts/fixtures/infrastructureFixtureLayer.mjs',
+  'scripts/fixtures/infrastructureNativePickOwnership.mjs',
+  'scripts/fixtures/infrastructureNativePickOwnership.test.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs',
+  'scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs',
+  'scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs',
+  'scripts/performance/infrastructureRuntimeComparison.mjs',
+  'scripts/performance/infrastructureRuntimeComparison.test.mjs',
   'scripts/performance/mapStreamingWorkloadContract.mjs',
   'scripts/performance/captureComparisonContract.mjs',
   'scripts/performance/pairedReport.mjs',
@@ -62,10 +76,13 @@ export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
   },
 });
 
-// Vite replaces this diagnostic-only identifier in the CCTV fixture build.
-// Keep it scoped to that fixture so other capture files still catch typos.
+// Vite replaces this identifier in the listed browser fixture builds only.
+// Other capture files must still catch missing commit variables.
 export const CAPTURE_NO_UNDEF_FIXTURE_CONFIG = Object.freeze({
-  files: ['scripts/fixtures/cctv-calibration-demand.js'],
+  files: [
+    'scripts/fixtures/cctv-calibration-demand.js',
+    'scripts/fixtures/infrastructure-runtime-collections.mjs',
+  ],
   languageOptions: {
     globals: {
       __GEV_APP_COMMIT__: 'readonly',

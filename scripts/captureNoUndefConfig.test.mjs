@@ -17,7 +17,7 @@ test('capture no-undef config accepts standard Node and browser globals', () => 
   assert.deepEqual(messages, []);
 });
 
-test('Vite commit metadata is allowed only in the CCTV fixture', () => {
+test('Vite commit metadata is allowed only in the declared browser fixtures', () => {
   const linter = new Linter({ configType: 'flat' });
   const config = [CAPTURE_NO_UNDEF_CONFIG, CAPTURE_NO_UNDEF_FIXTURE_CONFIG];
   const fixtureMessages = linter.verify('String(__GEV_APP_COMMIT__);', config, {
@@ -28,6 +28,12 @@ test('Vite commit metadata is allowed only in the CCTV fixture', () => {
   });
 
   assert.deepEqual(fixtureMessages, []);
+  assert.deepEqual(
+    linter.verify('String(__GEV_APP_COMMIT__);', config, {
+      filename: 'scripts/fixtures/infrastructure-runtime-collections.mjs',
+    }),
+    [],
+  );
   assert.ok(captureMessages.some((message) => message.ruleId === 'no-undef'));
 });
 

@@ -10,6 +10,8 @@ import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
+import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
+import { DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { validateCctvViewshedRetentionReport } from './performance/cctvViewshedRetention.mjs';
@@ -30,6 +32,9 @@ if (process.env.GITHUB_ACTIONS !== 'true')
     'Run this hosted-renderer probe in GitHub Actions. Local Chrome validation uses the visible fixture.',
   );
 const commit = process.env.GITHUB_SHA;
+const datacenterRuntimeRequested = process.argv.includes(
+  '--infrastructure-datacenters',
+);
 let server;
 let serverError = null;
 const url = 'http://127.0.0.1:4184/scripts/fixtures/capture-matrix.html';
@@ -128,8 +133,13 @@ try {
   if (!report.webglAvailable) {
     report.reason =
       'Standard runner exposes no WebGL 2 context; hardware evidence remains pending.';
-    if (process.argv.includes('--viewshed-retention'))
-      throw new Error('Viewshed retention requires a working WebGL 2 context.');
+    if (
+      process.argv.includes('--viewshed-retention') ||
+      datacenterRuntimeRequested
+    )
+      throw new Error(
+        'The selected rendering diagnostic requires a working WebGL 2 context.',
+      );
   } else {
     await page.click('#run');
     await page.waitForFunction(
@@ -166,11 +176,12 @@ try {
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
     if (
-      process.argv.includes('--viewshed-retention') &&
+      (process.argv.includes('--viewshed-retention') ||
+        datacenterRuntimeRequested) &&
       !report.hardwareRenderingAvailable
     )
       throw new Error(
-        'Viewshed retention requires verified accelerated rendering.',
+        'The selected rendering diagnostic requires verified accelerated rendering.',
       );
     const importUrl = new URL(
       url.replace('capture-matrix.html', 'import-batches.html'),
@@ -292,6 +303,48 @@ try {
         );
       validateInfrastructureCollectionReport(report.infrastructureCollections, {
         expectedCommit: commit,
+      });
+    }
+    if (datacenterRuntimeRequested && report.hardwareRenderingAvailable) {
+      await page.setViewport({
+        width: 1200,
+        height: 960,
+        deviceScaleFactor: 1,
+      });
+      const infrastructureUrl = new URL(
+        url.replace(
+          'capture-matrix.html',
+          'infrastructure-runtime-collections.html',
+        ),
+      );
+      infrastructureUrl.searchParams.set(
+        'layerId',
+        DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+      );
+      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 360_000, polling: 100 },
+      );
+      report.infrastructureDatacenters = await page.$eval(
+        '#result',
+        (element) => JSON.parse(element.textContent),
+      );
+      report.infrastructureDatacentersGraphics =
+        await readBrowserGraphicsInfo(browser);
+      report.infrastructureDatacentersRenderingEvidence = classifyRenderer(
+        report.infrastructureDatacenters.environment?.renderer,
+        report.infrastructureDatacentersGraphics,
+      );
+      if (
+        !report.infrastructureDatacentersRenderingEvidence.accelerationVerified
+      )
+        throw new Error(
+          'Datacenter viewer did not retain verified acceleration.',
+        );
+      validateInfrastructureRuntimeReport(report.infrastructureDatacenters, {
+        expectedCommit: commit,
+        expectedLayerId: DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
@@ -656,6 +709,7 @@ try {
   }
   if (
     process.argv.includes('--infrastructure') ||
+    datacenterRuntimeRequested ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--viewshed-retention') ||
