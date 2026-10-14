@@ -62,6 +62,11 @@ test('infrastructure factory preserves identity and creates independent state wi
   const first = createInfrastructureLayers(services());
   const second = createInfrastructureLayers(services());
   assert.deepEqual(
+    first.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+    ['entities', 'entities'],
+    'the application default remains Entity-backed',
+  );
+  assert.deepEqual(
     first.map(({ id, name, source }) => ({ id, name, source })),
     [
       {
@@ -86,6 +91,18 @@ test('infrastructure factory preserves identity and creates independent state wi
     });
     second[index].destroy();
   });
+});
+
+test('infrastructure factory scopes the opt-in surface renderer to datacenters only', () => {
+  const layers = createInfrastructureLayers({
+    ...services(),
+    datacenterSurfaceRenderer: 'primitive-collections',
+  });
+  assert.deepEqual(
+    layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+    ['primitive-collections', 'entities'],
+  );
+  layers.forEach((layer) => layer.destroy());
 });
 
 test('dataset URLs still name the complete bundled sources', () => {

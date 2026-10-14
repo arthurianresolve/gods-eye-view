@@ -9,6 +9,8 @@ import { INFRASTRUCTURE_DATA_URLS } from '../sources/infrastructureData.js';
 export function createInfrastructureLayers(services) {
   const datacentersUrl = INFRASTRUCTURE_DATA_URLS['local-datacenters'];
   const damsUrl = INFRASTRUCTURE_DATA_URLS['local-dams'];
+  const datacenterSurfaceRenderer =
+    services.datacenterSurfaceRenderer ?? 'entities';
   const datacenters = createLocalGeoJsonLayer(
     {
       id: 'local-datacenters',
@@ -22,6 +24,7 @@ export function createInfrastructureLayers(services) {
       labels: true,
       labelMax: 700,
       labelGridPx: 138,
+      surfaceRenderer: datacenterSurfaceRenderer,
     },
     services,
   );
