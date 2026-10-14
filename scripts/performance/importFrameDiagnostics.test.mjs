@@ -56,6 +56,51 @@ test('failure frame timings separate event spans, bound records and dispose owne
   assert.equal(trace.stop(), report);
 });
 
+test('failure frame counts expose incomplete render and errors without retaining payloads', () => {
+  const listeners = new Map();
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender', 'renderError'].map(
+      (name) => [
+        name,
+        {
+          addEventListener(callback) {
+            listeners.set(name, callback);
+            return () => listeners.delete(name);
+          },
+        },
+      ],
+    ),
+  );
+  const trace = createSceneFrameTimingDiagnostics(scene, {
+    now: () => 100,
+    PerformanceObserverClass: null,
+  });
+  listeners.get('preUpdate')();
+  listeners.get('postUpdate')();
+  listeners.get('preRender')();
+  listeners.get('renderError')(scene, new Error('private URL omitted'));
+  const result = trace.stop();
+  assert.deepEqual(result.counts, { update: 1, render: 0 });
+  assert.deepEqual(result.eventCounts, {
+    preUpdate: 1,
+    postUpdate: 1,
+    preRender: 1,
+    postRender: 0,
+    renderError: 1,
+  });
+  assert.equal(JSON.stringify(result).includes('private URL'), false);
+  assert.equal(listeners.size, 0);
+  assert.equal(trace.stop(), result);
+  const unavailable = createSceneFrameTimingDiagnostics(
+    {},
+    {
+      now: () => 0,
+      PerformanceObserverClass: null,
+    },
+  ).stop();
+  assert.equal(unavailable.eventCounts.renderError, null);
+});
+
 test('failure frame observer drains only current entries and excludes script identities', () => {
   const instances = [];
   class Observer {

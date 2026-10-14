@@ -7,6 +7,10 @@ import { INFRASTRUCTURE_DATA_URLS } from '../../src/sources/infrastructureData.j
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
+  createSceneFrameTimingDiagnostics,
+  observeImportFrameHealth,
+} from '../performance/importFrameDiagnostics.mjs';
+import {
   assertInfrastructureSourceInventory,
   assertInfrastructureRuntimeLayerIdentity,
   DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
@@ -776,24 +780,39 @@ async function captureFrame(
             requestRenderMode: viewer.scene.requestRenderMode,
           }
         : null;
-      const canvas = await captureFreshCesiumFrame(viewer, {
-        timeoutMs,
-        signal,
-        onDiagnostic: frameFailureDiagnosticEnabled
-          ? (outcome) => {
-              if (outcome.status !== 'completed' && !frameFailure)
-                frameFailure = {
-                  outcome,
-                  before,
-                  after: {
-                    visibility: document.visibilityState,
-                    focused: document.hasFocus(),
-                  },
-                  scope: 'failure-only; not GPU or performance acceptance',
-                };
-            }
-          : undefined,
-      });
+      const frameTiming = frameFailureDiagnosticEnabled
+        ? createSceneFrameTimingDiagnostics(viewer.scene)
+        : null;
+      let canvas, outcome, frameWindow;
+      try {
+        canvas = await captureFreshCesiumFrame(viewer, {
+          timeoutMs,
+          signal,
+          onDiagnostic: frameFailureDiagnosticEnabled
+            ? (value) => {
+                outcome = value;
+              }
+            : undefined,
+        });
+      } finally {
+        frameWindow = frameTiming?.stop();
+      }
+      if (!canvas && frameFailureDiagnosticEnabled && !frameFailure) {
+        frameFailure = {
+          outcome,
+          before,
+          after: {
+            visibility: document.visibilityState,
+            focused: document.hasFocus(),
+            defaultRenderLoop: viewer.useDefaultRenderLoop,
+          },
+          frameWindow,
+          scope: 'failure-only; not GPU or performance acceptance',
+        };
+        // The capture has already failed. Observe scheduling without retrying
+        // capture, rendering manually, or changing its 400 ms deadline.
+        frameFailure.schedulingAfterFailure = await observeImportFrameHealth();
+      }
       check(canvas, 'Fresh completed frame was unavailable.');
       return canvas;
     },

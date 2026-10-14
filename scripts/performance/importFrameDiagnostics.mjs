@@ -38,6 +38,11 @@ export function createSceneFrameTimingDiagnostics(
     update: sceneEventAvailability.update ? 0 : null,
     render: sceneEventAvailability.render ? 0 : null,
   };
+  const eventCounts = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender', 'renderError'].map(
+      (name) => [name, scene?.[name]?.addEventListener ? 0 : null],
+    ),
+  );
   const starts = { update: null, render: null };
   const removers = [];
   const observers = [];
@@ -125,9 +130,13 @@ export function createSceneFrameTimingDiagnostics(
       ['render', 'preRender', 'postRender'],
     ]) {
       add(before, scene?.[before], () => {
-        if (active) starts[name] = now();
+        if (active) {
+          eventCounts[before]++;
+          starts[name] = now();
+        }
       });
       add(after, scene?.[after], () => {
+        if (active) eventCounts[after]++;
         if (!active || starts[name] === null) return;
         counts[name]++;
         overflow[name] ||= counts[name] > maxEntries;
@@ -138,6 +147,9 @@ export function createSceneFrameTimingDiagnostics(
         starts[name] = null;
       });
     }
+    add('renderError', scene?.renderError, () => {
+      if (active) eventCounts.renderError++;
+    });
     for (const type of Object.keys(entries)) {
       if (!PerformanceObserverClass?.supportedEntryTypes?.includes(type))
         continue;
@@ -200,6 +212,7 @@ export function createSceneFrameTimingDiagnostics(
         elapsedMs: Math.max(0, now() - startedAt),
         sceneEventAvailability,
         counts,
+        eventCounts,
         spans,
         overflow,
         entries,
