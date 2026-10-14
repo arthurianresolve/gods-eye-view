@@ -321,7 +321,16 @@ async function parseGeoJSONFeatureArray(source, start, { signal } = {}) {
 /** Parse a GeoJSON FeatureCollection incrementally at top-level feature boundaries. */
 async function parseGeoJSONFeatureCollection(source, { signal } = {}) {
   let index = jsonWhitespace(source, 0);
-  if (source[index] !== '{') invalidJson();
+  if (source[index] !== '{') {
+    const end = await scanJsonValueEnd(source, index, { signal });
+    if (jsonWhitespace(source, end) !== source.length) invalidJson();
+    try {
+      JSON.parse(source.slice(index, end));
+    } catch {
+      invalidJson();
+    }
+    return { type: null, features: null };
+  }
   index = jsonWhitespace(source, index + 1);
   let type = null;
   let features = null;

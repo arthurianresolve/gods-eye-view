@@ -110,6 +110,8 @@ test('incremental GeoJSON parsing can be cancelled before feature normalization 
 
 test('incremental GeoJSON parsing preserves JSON and collection errors', async () => {
   await assert.rejects(previewGeoJSON('{}'), { code: 'invalid-geojson' });
+  await assert.rejects(previewGeoJSON('[]'), { code: 'invalid-geojson' });
+  await assert.rejects(previewGeoJSON('null'), { code: 'invalid-geojson' });
   await assert.rejects(previewGeoJSON('{"type":"FeatureCollection"}'), {
     code: 'invalid-geojson',
   });
