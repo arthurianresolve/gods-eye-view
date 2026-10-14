@@ -15,7 +15,9 @@ import {
   assertRendererLoopRetirementEvidence,
   assertProviderFixtureCaptureClock,
   buildCaptureCliValidationExpectations,
+  buildCaptureDelayNegativeControlArgs,
   compactCaptureCliFailure,
+  executeCaptureDelayNegativeControlPair,
   executeCaptureCliWithReportArtifact,
   parseSmokeArguments,
   preserveCaptureCliReportArtifact,
@@ -39,6 +41,7 @@ import {
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
+  validateCaptureDelayNegativeControlPair,
   validateRendererBackendEvidence,
   projectMapStreamingJourneyFailureForSmoke,
   projectMapStreamingJourneyValidationFailureForSmoke,
@@ -403,6 +406,38 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
       shaderProgramAttribution: true,
       providerFixture: 'dense-investigation',
     },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-delay-negative-control',
+      'enabled',
+      '--provider-fixture',
+      'infrastructure-datacenters',
+    ]),
+    {
+      captureDelayNegativeControl: true,
+      providerFixture: 'infrastructure-datacenters',
+    },
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-delay-negative-control',
+        'enabled',
+        '--provider-fixture',
+        'dense-investigation',
+      ]),
+    /requires an infrastructure fixture/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-delay-negative-control',
+        'maybe',
+        '--provider-fixture',
+        'infrastructure-datacenters',
+      ]),
+    /must be enabled or disabled/,
   );
   assert.deepEqual(
     parseSmokeArguments([
@@ -4979,6 +5014,23 @@ test('infrastructure capture requires rendered motion, consistent frame evidence
     validateCaptureCliReport(valid, makeExpected(valid)),
   );
 
+  const twoSecondDiagnostic = validInfrastructureCaptureCliReport();
+  twoSecondDiagnostic.workload.durationPerSampleMs = 2000;
+  for (const sample of twoSecondDiagnostic.captures)
+    sample.cameraPath.elapsedDurationMs = 2000;
+  refreshDerivedComparison(twoSecondDiagnostic);
+  const twoSecondExpected = makeExpected(twoSecondDiagnostic);
+  twoSecondExpected.durationPerSampleMs = 2000;
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(twoSecondDiagnostic, twoSecondExpected),
+  );
+  assert.throws(() =>
+    validateCaptureCliReport(
+      twoSecondDiagnostic,
+      makeExpected(twoSecondDiagnostic),
+    ),
+  );
+
   const zeroMotion = validInfrastructureCaptureCliReport();
   const motion = zeroMotion.captures.find(
     (sample) => sample.scenario === 'scripted-motion',
@@ -5607,6 +5659,206 @@ test('capture CLI preserves hash-bound raw reports on success and failure', asyn
     },
   );
   assert.deepEqual(await readFile(failedArtifactPath), failedRaw);
+});
+
+function captureDelayOutcome({
+  delayed = false,
+  exitCode = delayed ? 1 : 0,
+  fixtureId = 'infrastructure-datacenters-v1',
+  sampleCount = 4,
+  failureReason = 'budget-exceeded',
+} = {}) {
+  const captures = Array.from({ length: sampleCount }, (_, index) => {
+    const scenario = index < 2 ? 'idle' : 'scripted-motion';
+    const run = (index % 2) + 1;
+    const p95 = delayed && scenario === 'scripted-motion' ? 700 : 16;
+    return {
+      scenario,
+      run,
+      frameIntervalMs: { p95 },
+      settings: {
+        before: { qualityMode: 'manual', densityPct: 75 },
+        after: { qualityMode: 'manual', densityPct: 75 },
+      },
+      quality: { mode: 'manual' },
+      detection: { mode: 'DENSE' },
+      layers: [{ id: 'local-datacenters', enabled: true, count: 4362 }],
+      totalObjects: 4362,
+      cameraPath: {
+        id: scenario === 'idle' ? 'parked-v1' : 'elapsed-move-right-v1',
+      },
+    };
+  });
+  const motionCaptures = captures.filter(
+    (sample) => sample.scenario === 'scripted-motion',
+  );
+  const failures = delayed
+    ? motionCaptures.map((sample) => ({
+        run: sample.run,
+        p95FrameMs:
+          failureReason === 'budget-exceeded'
+            ? sample.frameIntervalMs.p95
+            : null,
+        reason: failureReason,
+      }))
+    : [];
+  return {
+    exitCode,
+    signal: null,
+    stopReason: null,
+    cleanupConfirmed: true,
+    artifact: {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'preserved',
+      childStatus: delayed ? 'failed' : 'completed',
+      childExitCode: exitCode,
+      childSignal: null,
+      cleanupConfirmed: true,
+      stopReason: null,
+      fileName: delayed ? 'delay.json' : 'control.json',
+      byteLength: 512,
+      sha256: (delayed ? 'd' : 'c').repeat(64),
+    },
+    report: {
+      schema: 'gev-performance-capture/v1',
+      comparisonEligible: false,
+      source: {
+        appCommit: 'a'.repeat(40),
+        harnessCommit: 'b'.repeat(40),
+        buildProvenance: { receiptSha256: 'c'.repeat(64) },
+      },
+      environment: { renderer: 'Google SwiftShader', vendor: 'Google Inc.' },
+      integrity: { status: 'passed', sampleCount },
+      workload: {
+        providerFixture: 'infrastructure-datacenters',
+        fixtureId,
+        fixture: { id: fixtureId, fixedTime: '2026-10-08T12:00:00.000Z' },
+        warmupMs: 1000,
+        durationPerSampleMs: 10_000,
+        runsPerScenario: 2,
+        startupRuns: 1,
+        scenarios: ['idle', 'scripted-motion'],
+        qualityMode: 'manual',
+        expectedDensityPct: 75,
+        detectionMode: 'DENSE',
+        injectedDelayMs: delayed ? 800 : 0,
+      },
+      motionBudget: {
+        maxP95FrameMs: 250,
+        status: delayed ? 'failed' : 'passed',
+        failures,
+      },
+      captures,
+    },
+  };
+}
+
+test('delay negative-control orchestration requires complete same-fixture expected gate rejection', async () => {
+  const calls = [];
+  const summary = await executeCaptureDelayNegativeControlPair({
+    runCapture: async (input) => {
+      calls.push(input);
+      return captureDelayOutcome({ delayed: input.phase === 'delayed' });
+    },
+  });
+  assert.deepEqual(calls, [
+    {
+      phase: 'control',
+      delayMs: 0,
+      maxP95Ms: 250,
+      durationPerSampleMs: 10_000,
+    },
+    {
+      phase: 'delayed',
+      delayMs: 800,
+      maxP95Ms: 250,
+      durationPerSampleMs: 10_000,
+    },
+  ]);
+  assert.equal(summary.schema, 'gev-capture-delay-negative-control/v1');
+  assert.equal(summary.status, 'passed');
+  assert.equal(summary.comparisonEligible, false);
+
+  for (const mutate of [
+    (delayed) => (delayed.exitCode = 0),
+    (delayed) => (delayed.cleanupConfirmed = false),
+    (delayed) => (delayed.report.motionBudget.status = 'incomplete'),
+    (delayed) =>
+      (delayed.report.motionBudget.failures[0].reason = 'metric-unavailable'),
+    (delayed) => delayed.report.captures.pop(),
+    (delayed) => (delayed.report.workload.fixtureId = 'different-fixture'),
+    (delayed) => (delayed.report.captures[1].settings.before.densityPct = 50),
+  ]) {
+    const control = captureDelayOutcome();
+    const delayed = captureDelayOutcome({ delayed: true });
+    mutate(delayed);
+    assert.throws(() =>
+      validateCaptureDelayNegativeControlPair({ control, delayed }),
+    );
+  }
+  const failedControl = captureDelayOutcome({ exitCode: 1 });
+  assert.throws(() =>
+    validateCaptureDelayNegativeControlPair({
+      control: failedControl,
+      delayed: captureDelayOutcome({ delayed: true }),
+    }),
+  );
+});
+
+test('delay negative-control CLI arms differ only by delay and their raw report destination', () => {
+  const base = [
+    'capture-scene-performance.mjs',
+    '--url',
+    'http://127.0.0.1:4173/',
+    '--provider-fixture',
+    'infrastructure-datacenters',
+    '--provider-fixture-time',
+    '2026-10-08T12:00:00.000Z',
+    '--runs',
+    '2',
+    '--startup-runs',
+    '1',
+    '--warmup-ms',
+    '1000',
+    '--seconds',
+    '1',
+    '--out',
+    'ordinary.json',
+  ];
+  const control = buildCaptureDelayNegativeControlArgs(base, {
+    phase: 'control',
+    reportPath: 'control.json',
+  });
+  const delayed = buildCaptureDelayNegativeControlArgs(base, {
+    phase: 'delayed',
+    reportPath: 'delayed.json',
+  });
+  const optionValue = (args, option) => args[args.indexOf(option) + 1];
+  for (const args of [control, delayed]) {
+    assert.equal(
+      optionValue(args, '--provider-fixture'),
+      'infrastructure-datacenters',
+    );
+    assert.equal(
+      optionValue(args, '--provider-fixture-time'),
+      '2026-10-08T12:00:00.000Z',
+    );
+    assert.equal(optionValue(args, '--runs'), '2');
+    assert.equal(optionValue(args, '--startup-runs'), '1');
+    assert.equal(optionValue(args, '--warmup-ms'), '1000');
+    assert.equal(optionValue(args, '--seconds'), '10');
+    assert.equal(optionValue(args, '--max-p95-ms'), '250');
+  }
+  assert.equal(optionValue(control, '--inject-delay-ms'), '0');
+  assert.equal(optionValue(delayed, '--inject-delay-ms'), '800');
+  assert.equal(optionValue(control, '--out'), 'control.json');
+  assert.equal(optionValue(delayed, '--out'), 'delayed.json');
+  assert.throws(() =>
+    buildCaptureDelayNegativeControlArgs(base, {
+      phase: 'unrecognized',
+      reportPath: 'bad.json',
+    }),
+  );
 });
 
 test('capture CLI report sidecar marks missing, malformed, and oversized reports', async (t) => {

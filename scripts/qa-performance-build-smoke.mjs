@@ -220,6 +220,340 @@ export function validateMapSmokeLayerPopulation(before, after) {
   };
 }
 
+const CAPTURE_DELAY_NEGATIVE_CONTROL = Object.freeze({
+  delayMs: 800,
+  maxP95Ms: 250,
+  durationPerSampleMs: 10_000,
+  schema: 'gev-capture-delay-negative-control/v1',
+});
+
+function captureDelayIdentity(report) {
+  return {
+    source: {
+      appCommit: report.source?.appCommit,
+      harnessCommit: report.source?.harnessCommit,
+      receiptSha256: report.source?.buildProvenance?.receiptSha256,
+    },
+    renderer: {
+      name: report.environment?.renderer,
+      vendor: report.environment?.vendor,
+    },
+    workload: {
+      providerFixture: report.workload?.providerFixture,
+      fixtureId: report.workload?.fixtureId,
+      fixture: report.workload?.fixture,
+      warmupMs: report.workload?.warmupMs,
+      durationPerSampleMs: report.workload?.durationPerSampleMs,
+      runsPerScenario: report.workload?.runsPerScenario,
+      startupRuns: report.workload?.startupRuns,
+      scenarios: report.workload?.scenarios,
+      qualityMode: report.workload?.qualityMode,
+      expectedDensityPct: report.workload?.expectedDensityPct,
+      detectionMode: report.workload?.detectionMode,
+    },
+    captures: (report.captures || []).map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      settings: sample.settings,
+      quality: sample.quality,
+      detectionMode: sample.detection?.mode,
+      layers: sample.layers,
+      totalObjects: sample.totalObjects,
+      cameraPathId: sample.cameraPath?.id,
+    })),
+  };
+}
+
+function assertCaptureDelayArtifact(outcome) {
+  assert.equal(
+    outcome?.artifact?.schema,
+    'gev-smoke-capture-cli-report-artifact/v1',
+  );
+  assert.equal(outcome.artifact.status, 'preserved');
+  assert.ok(Number.isSafeInteger(outcome.artifact.byteLength));
+  assert.ok(outcome.artifact.byteLength > 0);
+  assert.ok(
+    outcome.artifact.byteLength <= MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+  );
+  assert.match(outcome.artifact.sha256 || '', /^[a-f0-9]{64}$/);
+}
+
+/** Strictly verifies the paired expected failure; a nonzero exit alone is insufficient. */
+export function validateCaptureDelayNegativeControlPair({
+  control,
+  delayed,
+  expectedDelayMs = CAPTURE_DELAY_NEGATIVE_CONTROL.delayMs,
+  maxP95Ms = CAPTURE_DELAY_NEGATIVE_CONTROL.maxP95Ms,
+}) {
+  assert.ok(Number.isSafeInteger(expectedDelayMs) && expectedDelayMs > 0);
+  assert.ok(Number.isFinite(maxP95Ms) && maxP95Ms > 0);
+  for (const [name, outcome] of [
+    ['control', control],
+    ['delayed', delayed],
+  ]) {
+    assert.equal(outcome?.report?.schema, 'gev-performance-capture/v1');
+    assert.equal(outcome.report.comparisonEligible, false);
+    assert.notEqual(
+      outcome.report.workload?.performanceAcceptanceEligible,
+      true,
+    );
+    assert.deepEqual(outcome.report.integrity, {
+      status: 'passed',
+      sampleCount: 4,
+    });
+    assert.equal(outcome.report.captures?.length, 4);
+    assert.equal(
+      outcome.report.workload?.providerFixture?.startsWith('infrastructure'),
+      true,
+    );
+    assert.equal(
+      outcome.report.workload?.durationPerSampleMs,
+      CAPTURE_DELAY_NEGATIVE_CONTROL.durationPerSampleMs,
+    );
+    assert.equal(outcome.report.workload?.runsPerScenario, 2);
+    assert.equal(outcome.report.motionBudget?.maxP95FrameMs, maxP95Ms);
+    assert.ok(Array.isArray(outcome.report.motionBudget?.failures));
+    assertCaptureDelayArtifact(outcome);
+    assert.equal(
+      outcome.artifact.childStatus,
+      name === 'control' ? 'completed' : 'failed',
+    );
+    assert.equal(outcome.stopReason, null);
+    assert.equal(outcome.artifact.childExitCode, outcome.exitCode);
+    assert.equal(outcome.artifact.childSignal, outcome.signal);
+    assert.equal(outcome.artifact.cleanupConfirmed, true);
+  }
+
+  assert.equal(control.exitCode, 0);
+  assert.equal(control.signal, null);
+  assert.equal(control.cleanupConfirmed, true);
+  assert.equal(control.report.workload.injectedDelayMs, 0);
+  assert.equal(control.report.motionBudget.status, 'passed');
+  assert.deepEqual(control.report.motionBudget.failures, []);
+  for (const sample of control.report.captures.filter(
+    (entry) => entry.scenario === 'scripted-motion',
+  ))
+    assert.ok(sample.frameIntervalMs.p95 <= maxP95Ms);
+
+  assert.equal(delayed.exitCode, 1);
+  assert.equal(delayed.signal, null);
+  assert.equal(delayed.cleanupConfirmed, true);
+  assert.equal(delayed.report.workload.injectedDelayMs, expectedDelayMs);
+  assert.equal(delayed.report.motionBudget.status, 'failed');
+  const motionSamples = delayed.report.captures.filter(
+    (sample) => sample.scenario === 'scripted-motion',
+  );
+  assert.equal(motionSamples.length, 2);
+  assert.deepEqual(
+    delayed.report.motionBudget.failures
+      .map(({ run, p95FrameMs, reason }) => ({ run, p95FrameMs, reason }))
+      .sort((left, right) => left.run - right.run),
+    motionSamples.map((sample) => ({
+      run: sample.run,
+      p95FrameMs: sample.frameIntervalMs.p95,
+      reason: 'budget-exceeded',
+    })),
+  );
+  for (const sample of motionSamples) {
+    assert.ok(Number.isFinite(sample.frameIntervalMs?.p95));
+    assert.ok(sample.frameIntervalMs.p95 > maxP95Ms);
+    assert.ok(
+      delayed.report.motionBudget.failures.some(
+        (failure) =>
+          failure.run === sample.run &&
+          failure.reason === 'budget-exceeded' &&
+          failure.p95FrameMs === sample.frameIntervalMs.p95,
+      ),
+    );
+  }
+  assert.deepEqual(
+    captureDelayIdentity(delayed.report),
+    captureDelayIdentity(control.report),
+  );
+  assert.notEqual(control.artifact.fileName, delayed.artifact.fileName);
+  assert.notEqual(control.artifact.sha256, delayed.artifact.sha256);
+
+  return {
+    schema: CAPTURE_DELAY_NEGATIVE_CONTROL.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    control: {
+      exitCode: control.exitCode,
+      artifact: control.artifact,
+      motionBudget: control.report.motionBudget,
+    },
+    delayed: {
+      exitCode: delayed.exitCode,
+      injectedDelayMs: expectedDelayMs,
+      artifact: delayed.artifact,
+      motionBudget: delayed.report.motionBudget,
+    },
+  };
+}
+
+export async function executeCaptureDelayNegativeControlPair({
+  runCapture,
+  expectedDelayMs = CAPTURE_DELAY_NEGATIVE_CONTROL.delayMs,
+  maxP95Ms = CAPTURE_DELAY_NEGATIVE_CONTROL.maxP95Ms,
+  durationPerSampleMs = CAPTURE_DELAY_NEGATIVE_CONTROL.durationPerSampleMs,
+}) {
+  assert.equal(typeof runCapture, 'function');
+  const control = await runCapture({
+    phase: 'control',
+    delayMs: 0,
+    maxP95Ms,
+    durationPerSampleMs,
+  });
+  const delayed = await runCapture({
+    phase: 'delayed',
+    delayMs: expectedDelayMs,
+    maxP95Ms,
+    durationPerSampleMs,
+  });
+  return validateCaptureDelayNegativeControlPair({
+    control,
+    delayed,
+    expectedDelayMs,
+    maxP95Ms,
+  });
+}
+
+export function buildCaptureDelayNegativeControlArgs(
+  baseArgs,
+  { phase, reportPath } = {},
+) {
+  assert.ok(Array.isArray(baseArgs));
+  assert.ok(phase === 'control' || phase === 'delayed');
+  assert.ok(typeof reportPath === 'string' && reportPath.length > 0);
+  return replaceCliOptions(baseArgs, {
+    '--out': reportPath,
+    '--seconds': CAPTURE_DELAY_NEGATIVE_CONTROL.durationPerSampleMs / 1000,
+    '--inject-delay-ms':
+      phase === 'delayed' ? CAPTURE_DELAY_NEGATIVE_CONTROL.delayMs : 0,
+    '--max-p95-ms': CAPTURE_DELAY_NEGATIVE_CONTROL.maxP95Ms,
+  });
+}
+
+async function runCaptureDelayNegativeControl({
+  args,
+  tempRoot,
+  artifactBasePath,
+  browserPidPath,
+  remainingBudgetMs,
+  validationExpected,
+}) {
+  const childTimeoutMs = 60_000;
+  let controlArtifact = null;
+  const runOne = async (kind, delayMs) => {
+    assert.equal(
+      delayMs,
+      kind === 'control' ? 0 : CAPTURE_DELAY_NEGATIVE_CONTROL.delayMs,
+    );
+    const reportPath = path.join(tempRoot, `capture-delay-${kind}.json`);
+    const artifactPath = `${artifactBasePath}.delay-${kind}.json`;
+    const probeArgs = buildCaptureDelayNegativeControlArgs(args, {
+      phase: kind,
+      reportPath,
+    });
+    const availableMs = remainingBudgetMs() - 15_000;
+    if (availableMs < 1)
+      throw new Error(
+        'Outer smoke budget expired before delay-control capture.',
+      );
+    let result = null;
+    let childError = null;
+    try {
+      result = await executeCaptureCliWithReportArtifact({
+        runChild: () =>
+          runBoundedChild(process.execPath, probeArgs, {
+            timeoutMs: Math.min(childTimeoutMs, availableMs),
+            maxOutputBytes: 64 * 1024,
+            ownedPidFile: browserPidPath,
+          }),
+        reportPath,
+        artifactPath,
+      });
+    } catch (error) {
+      childError = error;
+    }
+    const outcome = {
+      report: result?.report || childError?.captureCliReport || null,
+      artifact:
+        result?.artifact || childError?.captureCliReportArtifact || null,
+      exitCode: result ? 0 : (childError?.childExitCode ?? null),
+      signal: result ? null : (childError?.childSignal ?? null),
+      stopReason: result ? null : (childError?.stopReason ?? null),
+      cleanupConfirmed: result ? true : childError?.cleanupConfirmed === true,
+    };
+    try {
+      assert.ok(outcome.report, `Delay-control ${kind} report is unavailable.`);
+      validateCaptureCliReport(outcome.report, validationExpected);
+    } catch (error) {
+      error.captureDelayNegativeControlPartial = {
+        schema: CAPTURE_DELAY_NEGATIVE_CONTROL.schema,
+        status: 'failed',
+        [kind]: {
+          artifact: outcome.artifact,
+          exitCode: outcome.exitCode,
+          signal: outcome.signal,
+          cleanupConfirmed: outcome.cleanupConfirmed,
+        },
+      };
+      if (kind === 'delayed')
+        error.captureDelayNegativeControlPartial.controlArtifact =
+          controlArtifact;
+      throw error;
+    }
+    return outcome;
+  };
+
+  let control = null;
+  try {
+    return await executeCaptureDelayNegativeControlPair({
+      runCapture: async ({ phase, delayMs }) => {
+        const outcome = await runOne(phase, delayMs);
+        if (phase === 'control') {
+          control = outcome;
+          controlArtifact = outcome.artifact;
+        }
+        return outcome;
+      },
+    });
+  } catch (error) {
+    if (!error.captureDelayNegativeControlPartial)
+      error.captureDelayNegativeControlPartial = {
+        schema: CAPTURE_DELAY_NEGATIVE_CONTROL.schema,
+        status: 'failed',
+        ...(control
+          ? {
+              control: {
+                artifact: control.artifact,
+                exitCode: control.exitCode,
+                signal: control.signal,
+                cleanupConfirmed: control.cleanupConfirmed,
+              },
+            }
+          : {}),
+      };
+    throw error;
+  }
+}
+
+function replaceCliOptions(args, replacements) {
+  const result = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (Object.hasOwn(replacements, argument)) {
+      index += 1;
+      continue;
+    }
+    result.push(argument);
+  }
+  for (const [option, value] of Object.entries(replacements))
+    result.push(option, String(value));
+  return result;
+}
+
 export async function runNativeMapJourneyForSmoke({
   page,
   revision,
@@ -1410,6 +1744,7 @@ const OPTION_KEYS = new Map([
   ['--capture-depth-pick-attribution', 'depthPickAttribution'],
   ['--capture-shader-program-attribution', 'shaderProgramAttribution'],
   ['--capture-renderer-backend', 'captureRendererBackend'],
+  ['--capture-delay-negative-control', 'captureDelayNegativeControl'],
 ]);
 
 const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
@@ -1642,6 +1977,13 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(
         'Shader program attribution must be enabled or disabled.',
       );
+    if (
+      flag === '--capture-delay-negative-control' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Capture delay negative control must be enabled or disabled.',
+      );
     output[key] = value;
   }
   if (
@@ -1658,6 +2000,13 @@ export function parseSmokeArguments(argv) {
   )
     throw new TypeError(
       'Receipt-only worker auditing requires the Austin operating fixture.',
+    );
+  if (
+    output.captureDelayNegativeControl === 'enabled' &&
+    !output.providerFixture?.startsWith('infrastructure')
+  )
+    throw new TypeError(
+      'Capture delay negative control requires an infrastructure fixture.',
     );
   if (
     output.sceneFrameDiagnostics === 'enabled' &&
@@ -1692,6 +2041,9 @@ export function parseSmokeArguments(argv) {
   if (output.shaderProgramAttribution)
     output.shaderProgramAttribution =
       output.shaderProgramAttribution === 'enabled';
+  if (output.captureDelayNegativeControl)
+    output.captureDelayNegativeControl =
+      output.captureDelayNegativeControl === 'enabled';
   if (
     output.firstMotionCpuProfile &&
     output.providerFixture &&
@@ -1991,6 +2343,10 @@ export function runBoundedChild(
           `Child process ${stopReason || `exited ${code}`}; ${detail || diagnostics.progressLines.join(' | ') || 'no child diagnostics'}; cleanup ${cleanupConfirmed ? 'confirmed' : 'unconfirmed'} (${signal || code}).`,
         );
         error.childDiagnostics = diagnostics;
+        error.childExitCode = code;
+        error.childSignal = signal;
+        error.stopReason = stopReason;
+        error.cleanupConfirmed = cleanupConfirmed;
         reject(error);
       } else {
         settled = true;
@@ -4025,7 +4381,12 @@ function validateInfrastructureCaptureCliReport(report, expected) {
   assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
   assert.equal(report.workerAuditMode, 'diagnostic');
   assert.equal(report.comparisonEligible, false);
-  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  const runsPerScenario = expected.runsPerScenario || 2;
+  const expectedSampleCount = 2 * runsPerScenario;
+  assert.deepEqual(report.integrity, {
+    status: 'passed',
+    sampleCount: expectedSampleCount,
+  });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
   assert.equal(
@@ -4061,8 +4422,11 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     false,
   );
   assert.equal(report.workload?.warmupMs, 1000);
-  assert.equal(report.workload?.durationPerSampleMs, 1000);
-  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(
+    report.workload?.durationPerSampleMs,
+    expected.durationPerSampleMs || 1000,
+  );
+  assert.equal(report.workload?.runsPerScenario, runsPerScenario);
   assert.equal(report.workload?.startupRuns, 1);
   assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
   assert.equal(report.environment?.startup?.runCount, 1);
@@ -4225,13 +4589,16 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     assert.ok(report.environment?.renderer);
   else assert.match(report.environment?.renderer || '', /swiftshader/i);
   assert.equal(report.environment?.hardwareEligible, false);
-  assert.equal(report.captures?.length, 4);
+  assert.equal(report.captures?.length, expectedSampleCount);
   for (const scenario of report.workload.scenarios) {
     const samples = report.captures.filter(
       (sample) => sample.scenario === scenario,
     );
-    assert.equal(samples.length, 2);
-    assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
+    assert.equal(samples.length, runsPerScenario);
+    assert.deepEqual(
+      samples.map((sample) => sample.run).sort(),
+      Array.from({ length: runsPerScenario }, (_, index) => index + 1),
+    );
     for (const sample of samples) {
       const expectedLayers = Object.entries(fixture.expectedLayerCounts)
         .map(([id, count]) => ({ id, enabled: true, count }))
@@ -4535,8 +4902,9 @@ export async function executeCaptureCliWithReportArtifact({
   shaderAttributionExpectedProvenance = null,
 }) {
   let childError = null;
+  let childResult = null;
   try {
-    await runChild();
+    childResult = await runChild();
   } catch (error) {
     childError = error;
   }
@@ -4545,6 +4913,13 @@ export async function executeCaptureCliWithReportArtifact({
     artifactPath,
   );
   artifact.childStatus = childError ? 'failed' : 'completed';
+  artifact.childExitCode =
+    childError?.childExitCode ?? childResult?.code ?? null;
+  artifact.childSignal = childError?.childSignal ?? childResult?.signal ?? null;
+  artifact.stopReason = childError?.stopReason ?? null;
+  artifact.cleanupConfirmed = childError
+    ? childError.cleanupConfirmed === true
+    : true;
   let shaderAttributionArtifact = null;
   let shaderAttributionCheckpoint = null;
   let shaderAttributionCheckpointSummary = null;
@@ -4651,6 +5026,13 @@ export async function executeCaptureCliWithReportArtifact({
   if (childError) {
     childError.captureCliReport = report;
     childError.captureCliReportArtifact = artifact;
+    if (artifact.childExitCode !== null)
+      childError.childExitCode = artifact.childExitCode;
+    if (artifact.childSignal !== null)
+      childError.childSignal = artifact.childSignal;
+    if (artifact.stopReason !== null)
+      childError.stopReason = artifact.stopReason;
+    childError.cleanupConfirmed = artifact.cleanupConfirmed;
     if (shaderAttributionArtifact) {
       childError.shaderProgramAttributionArtifact = shaderAttributionArtifact;
       childError.shaderProgramAttributionCheckpoint =
@@ -4663,6 +5045,9 @@ export async function executeCaptureCliWithReportArtifact({
   return {
     report,
     artifact,
+    childExitCode: artifact.childExitCode,
+    childSignal: artifact.childSignal,
+    cleanupConfirmed: artifact.cleanupConfirmed,
     shaderProgramAttributionArtifact: shaderAttributionArtifact,
     shaderProgramAttributionCheckpoint: shaderAttributionCheckpoint,
     shaderProgramAttributionCheckpointSummary:
@@ -5083,6 +5468,7 @@ export function buildCaptureCliValidationExpectations({
   mapStreamingFixture,
   warmupMs = 1000,
   durationPerSampleMs = 1000,
+  runsPerScenario = 2,
   validateMapStreamingCapture,
   receiptOnlyWorkerContract,
 }) {
@@ -5098,7 +5484,7 @@ export function buildCaptureCliValidationExpectations({
     durationPerSampleMs: weatherEffectsDiagnostic
       ? 60_000
       : durationPerSampleMs,
-    runsPerScenario: weatherEffectsDiagnostic ? 1 : 2,
+    runsPerScenario: weatherEffectsDiagnostic ? 1 : runsPerScenario,
     fixedTime: fixture?.fixedTime || null,
     ...(providerFixture.startsWith('infrastructure')
       ? { infrastructureFixture: fixture }
@@ -5147,6 +5533,7 @@ async function runCandidateCaptureCli({
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
   shaderProgramAttribution = false,
+  captureDelayNegativeControl = false,
   captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   startedAt,
@@ -5256,6 +5643,7 @@ async function runCandidateCaptureCli({
   let captureReport = null;
   let captureCliReportArtifact = null;
   let shaderProgramAttributionArtifact = null;
+  let captureDelayNegativeControlEvidence = null;
   try {
     const captureCliResult = await executeCaptureCliWithReportArtifact({
       runChild: () =>
@@ -5360,9 +5748,40 @@ async function runCandidateCaptureCli({
         );
       }
     }
+    if (captureDelayNegativeControl) {
+      const delayControlExpected = buildCaptureCliValidationExpectations({
+        build,
+        commit,
+        harnessCommit,
+        fixture,
+        providerFixture,
+        workerAuditMode,
+        captureRendererBackend,
+        sceneFrameDiagnostics: false,
+        firstMotionCpuProfile: false,
+        depthPickAttribution: false,
+        shaderProgramAttribution: false,
+        receiptOnlyWorkerContract: expectedReceiptOnlyWorkerContract,
+        warmupMs: 1000,
+        durationPerSampleMs: CAPTURE_DELAY_NEGATIVE_CONTROL.durationPerSampleMs,
+        runsPerScenario: 2,
+      });
+      captureDelayNegativeControlEvidence =
+        await runCaptureDelayNegativeControl({
+          args,
+          tempRoot,
+          artifactBasePath: captureCliReportArtifactPath,
+          browserPidPath,
+          remainingBudgetMs: () => budgetMs - (Date.now() - startedAt),
+          validationExpected: delayControlExpected,
+        });
+    }
     return {
       ...validated,
       captureCliReportArtifact,
+      ...(captureDelayNegativeControlEvidence
+        ? { captureDelayNegativeControl: captureDelayNegativeControlEvidence }
+        : {}),
       ...(shaderProgramAttributionArtifact
         ? { shaderProgramAttributionArtifact }
         : {}),
@@ -5382,6 +5801,9 @@ async function runCandidateCaptureCli({
     }
     if (captureCliReportArtifact)
       captureCliFailure.captureCliReportArtifact = captureCliReportArtifact;
+    if (error.captureDelayNegativeControlPartial)
+      captureCliFailure.captureDelayNegativeControl =
+        error.captureDelayNegativeControlPartial;
     if (shaderProgramAttributionArtifact)
       captureCliFailure.shaderProgramAttributionArtifact =
         shaderProgramAttributionArtifact;
@@ -5412,6 +5834,7 @@ async function runRevision({
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
   shaderProgramAttribution = false,
+  captureDelayNegativeControl = false,
   captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
@@ -6074,6 +6497,8 @@ async function runRevision({
         firstMotionCpuProfile,
         depthPickAttribution,
         shaderProgramAttribution,
+        captureDelayNegativeControl:
+          label === 'candidate' && captureDelayNegativeControl,
         captureCliReportArtifactPath,
         profileArtifactDirectory,
         startedAt,
@@ -6409,6 +6834,7 @@ async function main() {
     firstMotionCpuProfile = false,
     depthPickAttribution = false,
     shaderProgramAttribution = false,
+    captureDelayNegativeControl = false,
     captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   } = parseSmokeArguments(process.argv.slice(2));
   assertSha(candidateSha, 'Candidate SHA');
@@ -6478,6 +6904,7 @@ async function main() {
     firstMotionCpuProfile,
     depthPickAttribution,
     shaderProgramAttribution,
+    captureDelayNegativeControl,
     ...(firstMotionCpuProfile
       ? {
           cpuProfileArtifactDirectory: path.basename(
@@ -6500,6 +6927,11 @@ async function main() {
       captureRendererBackend === DEFAULT_CAPTURE_RENDERER_BACKEND
         ? 'Software rendering is explicit SwiftShader and cannot support hardware performance claims.'
         : 'Native rendering on a hosted macOS runner is a reachability diagnostic; Metal may be paravirtualized and is not physical desktop or paired performance evidence.',
+      ...(captureDelayNegativeControl
+        ? [
+            'The candidate-only injected-delay control is a bounded gate negative control; it is not paired acceptance evidence.',
+          ]
+        : []),
     ],
     failure: null,
   };
@@ -6573,6 +7005,7 @@ async function main() {
           firstMotionCpuProfile,
           depthPickAttribution,
           shaderProgramAttribution,
+          captureDelayNegativeControl: captureDelayNegativeControl,
           captureCliReportArtifactPath: `${outputPath}.capture-cli-report-${label}.json`,
           profileArtifactDirectory: firstMotionCpuProfile
             ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
