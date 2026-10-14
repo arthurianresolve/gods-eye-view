@@ -1,0 +1,142 @@
+{
+  "schema": "gev-s59-xml-import-current-path/v1",
+  "status": "diagnostic-only",
+  "performanceAcceptanceEligible": false,
+  "capturedAt": "2026-10-14T06:01:31.728Z",
+  "sources": {
+    "commit": "0bde5882087d4059f265e51da881c6c0a544f2ec",
+    "importSourcePaths": ["src/imports/kmlGpx.js", "src/imports/geojsonCsv.js"],
+    "importSourceSha256": {
+      "kmlGpx": "c7c72cab1b585cc65a373e16de7d3304dc73e16a518e2d558337669d5ad9a57f",
+      "geojsonCsv": "45c9fe3097a768ee81b8dbc3d965be5baf8324ef71bb6e287e705a4ab14dc34f"
+    },
+    "packageLockSha256": "632eab4fec411920456fe4da43a3564d5cdfe0eb0bfa6b66e862c1465217fd36",
+    "harnessPath": "scripts/performance/measureXmlImportSummary.mjs",
+    "harnessSha256": "3976eba8547a37f0a12e471b18ad36ee48ef0ac4295b18b9a0b33b87cb2c69ea",
+    "importSourcePathsCleanAtRun": true
+  },
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "fixtures": {
+    "kml": {
+      "generator": "createKML in scripts/performance/measureXmlImportSummary.mjs",
+      "records": 4000,
+      "byteLength": 917681,
+      "sha256": "952a278f0fbf4c3d8055262c245b2acfe60a996ac375d13721b83d5f056c7d72",
+      "firstId": "kml-0",
+      "lastId": "kml-3999",
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    "gpx": {
+      "generator": "createGPX in scripts/performance/measureXmlImportSummary.mjs",
+      "records": 8000,
+      "byteLength": 808417,
+      "sha256": "6e8f722a371c625e479acc97653c31b2cccab0f214c4d81deea8dcd614baf2fa",
+      "firstId": "gpx-0",
+      "lastId": "gpx-7999",
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    }
+  },
+  "warmupCallsPerKind": 1,
+  "measuredPairs": 5,
+  "samples": [
+    {
+      "pair": 0,
+      "kind": "kml",
+      "synchronousPrefixMs": 57.164499999999975,
+      "totalPreviewMs": 124.69059999999996,
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    {
+      "pair": 0,
+      "kind": "gpx",
+      "synchronousPrefixMs": 58.93469999999991,
+      "totalPreviewMs": 114.88119999999992,
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    },
+    {
+      "pair": 1,
+      "kind": "gpx",
+      "synchronousPrefixMs": 57.76679999999999,
+      "totalPreviewMs": 103.93539999999996,
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    },
+    {
+      "pair": 1,
+      "kind": "kml",
+      "synchronousPrefixMs": 79.69450000000006,
+      "totalPreviewMs": 124.16570000000002,
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    {
+      "pair": 2,
+      "kind": "kml",
+      "synchronousPrefixMs": 43.96519999999998,
+      "totalPreviewMs": 79.32199999999989,
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    {
+      "pair": 2,
+      "kind": "gpx",
+      "synchronousPrefixMs": 70.0476000000001,
+      "totalPreviewMs": 117.91350000000011,
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    },
+    {
+      "pair": 3,
+      "kind": "gpx",
+      "synchronousPrefixMs": 69.89969999999994,
+      "totalPreviewMs": 116.84169999999995,
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    },
+    {
+      "pair": 3,
+      "kind": "kml",
+      "synchronousPrefixMs": 39.396200000000135,
+      "totalPreviewMs": 83.48990000000003,
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    {
+      "pair": 4,
+      "kind": "kml",
+      "synchronousPrefixMs": 50.61739999999986,
+      "totalPreviewMs": 81.8907999999999,
+      "outputSha256": "bc5de8b5d5284e088b9722cb05bf9035a722fabe49e4921fc76d248b594dc915"
+    },
+    {
+      "pair": 4,
+      "kind": "gpx",
+      "synchronousPrefixMs": 64.19090000000006,
+      "totalPreviewMs": 115.3569,
+      "outputSha256": "6072c52402639253c37675db39d86aa98588921f86699c44f5c4791de19cffc2"
+    }
+  ],
+  "mediansMs": {
+    "kml": {
+      "synchronousPrefix": 50.61739999999986,
+      "totalPreview": 83.48990000000003
+    },
+    "gpx": {
+      "synchronousPrefix": 64.19090000000006,
+      "totalPreview": 115.3569
+    }
+  },
+  "cancellation": {
+    "kml": {
+      "status": "aborted-without-partial-result",
+      "synchronousPrefixMs": 43.82479999999987
+    },
+    "gpx": {
+      "status": "aborted-without-partial-result",
+      "synchronousPrefixMs": 60.57510000000002
+    }
+  },
+  "scope": "Current-path Node CPU diagnostic only. Prefix includes synchronous UTF-8 decode, restricted XML parsing and the first cooperative batch; total includes complete feature conversion and preview summary. No browser, rendering, GPU, storage or interaction qualification.",
+  "limitations": [
+    "The measurement does not isolate KML altitude/time summary scans from parsing and feature conversion.",
+    "Cancellation is observed after the synchronous prefix; it cannot preempt decoding or XML parsing.",
+    "The synthetic fixtures exercise bounded valid records and do not qualify arbitrary customer files."
+  ]
+}
