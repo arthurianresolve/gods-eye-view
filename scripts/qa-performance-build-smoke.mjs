@@ -3475,7 +3475,11 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
       sample.weatherEffectsClock?.weatherStateAfter?.clock?.playing,
       false,
     );
-    assert.equal(sample.durationMs, 60_000);
+    // The requested window is exact; measured elapsed time also includes the
+    // completed-frame boundary and must not be rounded into a nominal duration.
+    assert.ok(
+      Number.isFinite(sample.durationMs) && sample.durationMs >= 60_000,
+    );
     const phaseObservations = sample.weatherEffectsClock?.phaseObservations;
     assert.equal(
       phaseObservations?.schema,

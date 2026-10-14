@@ -3394,7 +3394,7 @@ async function validWeatherEffectsCaptureCliReport() {
     const sourceTimes = fixture.timeline.at(-1);
     sample.documentRole = 'main-measured';
     sample.documentId = topology.samples[0].documentId;
-    sample.durationMs = 60_000;
+    sample.durationMs = 60_000.75;
     sample.layers = layers;
     sample.settings.before = {
       ...sample.settings.before,
@@ -4604,6 +4604,11 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   assert.equal(result.status, 'passed');
   assert.equal(result.captureCount, 2);
   assert.equal(result.comparisonEligible, false);
+  for (const durationMs of [59_999.99, NaN, Infinity, null, '60000']) {
+    const invalidDuration = structuredClone(report);
+    invalidDuration.captures[0].durationMs = durationMs;
+    assert.throws(() => validateCaptureCliReport(invalidDuration, expected));
+  }
   const inFlightAtShutdown = structuredClone(report);
   inFlightAtShutdown.workload.fixtureInterceptionReleases[0].stop.pendingAtStop = 2;
   inFlightAtShutdown.workload.fixtureInterceptionReleases[0].interception.interception.pendingCommandsAtStop = 1;
