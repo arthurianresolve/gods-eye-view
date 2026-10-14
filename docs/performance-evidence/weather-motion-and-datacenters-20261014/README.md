@@ -47,3 +47,23 @@ underlying intermittent filesystem cause. Fresh Node 24/26 CI remains required.
 The raw reports and logs retain their original bytes. Downloaded ZIP digests match
 GitHub artifact metadata; individual stored files are bound by [SHA-256](sha256.json).
 No physical Windows performance, retention or final qualification pass is claimed.
+
+## Follow-up at 6263fb70 and 1fef88b3
+
+The [first motion-fix run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38519947619)
+fails before timeline validation: the new diagnostic writes to a cleared
+`failureProgress.current` record. Both Node versions also expose four failures
+because the shared paired-report test producer still emits the old weather-clock
+shape with the new fixture identity. These are introduced harness/test defects;
+the strict evidence validator correctly rejects the incomplete synthetic reports.
+The Cesium copy-path check passes on both Node versions in this run.
+
+Correction `1fef88b3` records diagnostics only when a sample is owned and updates
+the shared paired-report producer to the complete current format. The null-state
+regression and all affected comparison/candidate consumers pass: 150 focused tests,
+zero failures, plus 60-file capture lint. The next
+[weather run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38520776837)
+tests this exact source. Its outcome is pending; the failed originals stay failed.
+
+A fresh remote read still finds fork main `9beadbda`, fork dev `e8ccc268` and
+upstream main `132b9e96`, already contained in QA. No new reconciliation is needed.

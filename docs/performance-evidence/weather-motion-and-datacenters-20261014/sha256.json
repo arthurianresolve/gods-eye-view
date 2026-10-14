@@ -1,4 +1,5 @@
 {
+  "ci-6263fb70-failure-summary.json": "b82a9e14f196b281e5713af66600463ad2978aad8fd0ea9ce208ab08a87d275f",
   "collision-copy-followup.log": "3a7afc7f781f4f072c58e7e28abf141e7cd3b844f80d0742f69dcd553778bc8d",
   "datacenters-954b08f9.json": "ec54ee69c5c02677fb2fc496778a2d1eb32a4c4663a8222f3b0231c1b2baf936",
   "datacenters-artifact.json": "bb1dc2337c7f168890b9cfc161a24bd4175d0bed643396b10495703ccf43f6ab",
@@ -11,7 +12,11 @@
   "run-38517121741.json": "69556c8993a913d467047c714b9dbcfd8a2f51bb9c853dbaa942aa174680cd5d",
   "run-38517121797.json": "84cd6ee7a908797994f58d1567de8ec39cfe635fe3ff6df2d8e71f0de3ee6f72",
   "weather-4700e9a5.json": "d0cb39e4feeda0559423d7153d85032002d81d582bf06472e057c5ff6bedb273",
+  "weather-6263fb70-artifact.json": "0c49f3c565eb469e12283ddf4ffecf7ada36a98d431da349a9d30c2699d1253d",
+  "weather-6263fb70.json": "ee4333ca4d1a4fc8cc4de64dae50acfc556071647a378670c4ce101e984bfef4",
   "weather-artifact.json": "94ae6b4740bf69c5c7b9ca08783e674cc4c081cb40da204d48daa4090746b091",
   "weather-cli-4700e9a5.json": "8295aa3a7fb390b844582e8da27345b35d2d3665e3b589aa9b18be10cbdb9e20",
+  "weather-cli-6263fb70.json": "d7b48d28f1a988d4e699835fc016785210e732f8c28c52bf86fea44c820ea210",
+  "weather-consumer-tests.log": "2ce21ad7294533c9e6dcdc5e50eba38781d080ac024048a16176813f41b1d167",
   "weather-motion-tests.log": "ca77d910dcb0544515b239125489406755b2437098fb59f902c8b47bfd0532ee"
 }
