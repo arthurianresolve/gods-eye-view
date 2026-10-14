@@ -4437,6 +4437,7 @@ try {
           let measurementTimer = null;
           let measurementTimerFiredPerformanceNowMs = null;
           let delayTimer = null;
+          let initialDelayTimer = null;
           let startedAt = null;
           let resolveMeasurement = null;
           let motionFinished = Promise.resolve();
@@ -4496,10 +4497,18 @@ try {
               });
             }
             if (delay > 0) {
-              delayTimer = setInterval(() => {
+              const runInjectedDelay = () => {
                 const start = performance.now();
                 while (performance.now() - start < delay) {}
-              }, 1000);
+              };
+              // Fire inside the first quarter of a short diagnostic window so
+              // the negative control cannot pass merely because its first
+              // one-second interval occurs after measurement has ended.
+              initialDelayTimer = setTimeout(
+                runInjectedDelay,
+                Math.min(250, Math.max(1, Math.floor(durationMs / 4))),
+              );
+              delayTimer = setInterval(runInjectedDelay, 1000);
             }
             await measurementWait;
             const clockEnd =
@@ -4507,6 +4516,7 @@ try {
             active = false;
             await motionFinished;
             clearInterval(delayTimer);
+            clearTimeout(initialDelayTimer);
             // Slow frames must still reach the same absolute route endpoint.
             finishMotion();
             await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -4595,6 +4605,7 @@ try {
             active = false;
             clearTimeout(measurementTimer);
             clearInterval(delayTimer);
+            clearTimeout(initialDelayTimer);
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
             window.removeEventListener('blur', onBackground);
