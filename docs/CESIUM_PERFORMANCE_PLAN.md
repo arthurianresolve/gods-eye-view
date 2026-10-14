@@ -8,8 +8,10 @@ diagnostics, versioned resource gauges, and the S59 CSV throughput tradeoff.
 Browser comparisons reject default activation of the CSV and JSON-worker experiments:
 both shorten the initial blocking prefix but regress total completion in every
 measured pair. Current plain-RAF/WebGL controls reproduce the frame-delivery slowdown
-outside Cesium. Counts below are unchanged; new both-base CI and hosted weather
-results are still required after the report compatibility and Windows key-repair fixes.
+outside Cesium. The [subsequent integration result](performance-evidence/integration-followup-20261014/README.md)
+passes both PR matrices and release-artifact verification at `9487a57c`, including
+the report compatibility and Windows key-repair fixes. Later weather-preflight and
+infrastructure-readiness diagnostic changes still require new hosted results.
 
 The [S51 engineering review](performance-evidence/closure-audit-20261013/README.md)
 closes the render-demand implementation after the dense-cadence and independent
