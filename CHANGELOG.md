@@ -1,5 +1,7 @@
 # Changelog
 
+- Coordinate searches refuse empty latitude or longitude components instead of navigating to an unintended location.
+
 - Bing Aerial and Bing Labels request HTTPS tiles on HTTP localhost through
   their ion-backed providers, retaining ion and per-tile attribution without
   widening the Content Security Policy.
