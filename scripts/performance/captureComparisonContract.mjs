@@ -553,6 +553,10 @@ export function createObservedWeatherEffectsComparisonContract({
   assert.equal(fixture?.id, 'weather-effects-austin-phased-v2');
   assert.equal(fixture?.workloadId, 'austin-weather-effects-phased-v2');
   assert.equal(fixture?.fixedTime, '2026-10-08T12:00:00.000Z');
+  if (fixture?.mediaPreferences !== undefined)
+    assert.deepEqual(fixture.mediaPreferences, {
+      'prefers-reduced-motion': 'no-preference',
+    });
   assert.match(fixture?.sha256 || '', SHA256);
   assert.deepEqual(fixture?.expectedLayerCounts, {
     'weather-radar': 1,
@@ -732,6 +736,24 @@ export function createObservedWeatherEffectsComparisonContract({
       sample.weatherEffectsClock?.wallClockAfterMs,
       fixture.fixedTimeMs,
     );
+    const weatherClockSchema = sample.weatherEffectsClock?.schema;
+    if (
+      weatherClockSchema !== undefined ||
+      fixture.mediaPreferences !== undefined
+    ) {
+      assert.equal(weatherClockSchema, 'gev-weather-effects-clock/v2');
+      const motionObservations = [
+        sample.weatherEffectsClock?.motionPreferencePreflight,
+        sample.weatherEffectsClock?.weatherStateBefore?.motionPreference,
+        sample.weatherEffectsClock?.weatherStateAfter?.motionPreference,
+      ];
+      for (const observation of motionObservations) {
+        assert.deepEqual(observation, {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        });
+      }
+    }
     assertWeatherEffectsRuntimeState(
       sample.weatherEffectsClock?.weatherStateBefore,
       expectedPopulations,

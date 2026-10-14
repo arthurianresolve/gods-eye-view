@@ -506,6 +506,10 @@ function makeWeatherEffectsObservation() {
         })),
       };
       const weatherState = {
+        motionPreference: {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        },
         clock: { mode: 'latest', playing: false },
         sourceObservationTimes: Array(3).fill(fixture.timeline.at(-1)),
         visualState: weatherVisual,
@@ -554,9 +558,14 @@ function makeWeatherEffectsObservation() {
           },
         },
         weatherEffectsClock: {
+          schema: 'gev-weather-effects-clock/v2',
           fixedHarnessTime: fixture.fixedTime,
           wallClockBeforeMs: fixture.fixedTimeMs,
           wallClockAfterMs: fixture.fixedTimeMs,
+          motionPreferencePreflight: {
+            schema: 'gev-weather-motion-preference/v1',
+            reducedMotion: false,
+          },
           weatherStateBefore: structuredClone(weatherState),
           weatherStateAfter: {
             ...structuredClone(weatherState),
@@ -620,6 +629,41 @@ test('weather comparison contract binds phase source, settings, populations and 
     contract.populations,
     observed.fixtureDelivery.populationsBefore,
   );
+  for (const mutate of [
+    (value) => {
+      value.fixture.mediaPreferences['prefers-reduced-motion'] = 'reduce';
+    },
+    (value) => {
+      delete value.captures[0].weatherEffectsClock.motionPreferencePreflight;
+    },
+    (value) => {
+      value.captures[0].weatherEffectsClock.motionPreferencePreflight.reducedMotion = true;
+    },
+    (value) => {
+      delete value.captures[0].weatherEffectsClock.weatherStateBefore
+        .motionPreference;
+    },
+    (value) => {
+      value.captures[0].weatherEffectsClock.weatherStateAfter.motionPreference.schema =
+        'unknown';
+    },
+    (value) => {
+      value.captures[0].weatherEffectsClock.schema = 'unknown';
+    },
+  ]) {
+    const invalid = structuredClone(observed);
+    mutate(invalid);
+    assert.throws(() => create(invalid));
+  }
+  const legacyMotion = structuredClone(observed);
+  delete legacyMotion.fixture.mediaPreferences;
+  for (const sample of legacyMotion.captures) {
+    delete sample.weatherEffectsClock.schema;
+    delete sample.weatherEffectsClock.motionPreferencePreflight;
+    delete sample.weatherEffectsClock.weatherStateBefore.motionPreference;
+    delete sample.weatherEffectsClock.weatherStateAfter.motionPreference;
+  }
+  assert.doesNotThrow(() => create(legacyMotion));
   for (const mutate of [
     (value) =>
       (value.captures[0].weatherEffectsClock.weatherStateBefore.clock.mode =

@@ -1636,8 +1636,16 @@ function observeWeatherEffectsRuntimeState() {
     loading: layer(id)?.getStats?.()?.loading ?? null,
     error: layer(id)?.getStats?.()?.error ?? null,
   }));
+  const motionPreference = {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion:
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : null,
+  };
   const visualSettings = app?.styleManager?.getVisualState?.() ?? null;
   return {
+    motionPreference,
     clock,
     sourceObservationTimes,
     visualState,
@@ -2494,6 +2502,10 @@ try {
     deliveryObserver = null,
     { documentRole = 'unclassified', documentId = null } = {},
   ) {
+    if (weatherEffectsWorkload)
+      await weatherEffectsModule.configureWeatherEffectsMotionPreference(
+        auditPage,
+      );
     await auditPage.setViewport({
       width: 1440,
       height: 900,
@@ -2575,6 +2587,10 @@ try {
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
     const context = await browser.createBrowserContext();
     const startupPage = await context.newPage();
+    if (weatherEffectsWorkload)
+      await weatherEffectsModule.configureWeatherEffectsMotionPreference(
+        startupPage,
+      );
     await startupPage.setViewport({
       width: 1440,
       height: 900,
@@ -3265,6 +3281,16 @@ try {
   let weatherTimelinePreflight = null;
   if (weatherEffectsWorkload) {
     failureProgress.phase = 'configure-weather-effects-fixture';
+    const observedMotionPreference = await page.evaluate(
+      weatherEffectsModule.observeWeatherEffectsMotionPreference,
+    );
+    failureProgress.current.weatherMotionPreferencePreflight =
+      observedMotionPreference;
+    const motionPreference =
+      weatherEffectsModule.assertWeatherEffectsMotionPreference(
+        observedMotionPreference,
+        'weather preflight',
+      );
     const before = await page.evaluate(
       async ({ fixture, qualityMode: mode, detectionMode: requestedMode }) => {
         const app = window.__godsEyeView;
@@ -3415,7 +3441,7 @@ try {
       frameResults.wind?.params,
       frameResults.wind?.stats,
     );
-    weatherTimelinePreflight = frameResults;
+    weatherTimelinePreflight = { ...frameResults, motionPreference };
     await weatherEffectsFixtureDelivery.waitForRequiredAssets(
       fixtureTimeoutMs,
       { signal: weatherEffectsFixtureAbortController?.signal },
@@ -5098,6 +5124,7 @@ try {
           `${scenario} run ${run} after`,
         );
         sample.weatherEffectsClock = {
+          schema: 'gev-weather-effects-clock/v2',
           fixedHarnessTime: weatherEffectsWorkload.fixedTime,
           wallClockBeforeMs: sceneBefore.wallClockEpochMs,
           wallClockAfterMs: sceneAfter.wallClockEpochMs,
@@ -5105,6 +5132,7 @@ try {
           cesiumAfter: sceneAfter.cesiumClock,
           weatherPlayback: weatherTimelinePreflight.playback,
           selectedTimesPreflight: weatherTimelinePreflight.selectedTimes,
+          motionPreferencePreflight: weatherTimelinePreflight.motionPreference,
           phaseSchedule: weatherEffectsWorkload.phaseSchedule,
           phaseObservations: sample.weatherPhaseObservations,
           weatherStateBefore,

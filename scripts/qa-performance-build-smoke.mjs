@@ -3229,6 +3229,10 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   );
   assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
   assert.equal(fixture?.workloadId, WEATHER_EFFECTS_WORKLOAD_ID);
+  if (fixture?.mediaPreferences !== undefined)
+    assert.deepEqual(fixture.mediaPreferences, {
+      'prefers-reduced-motion': 'no-preference',
+    });
   assert.equal(fixture?.fixedTime, expected.fixedTime);
   assert.equal(report.workload?.providerFixture, WEATHER_EFFECTS_WORKLOAD_ID);
   assert.equal(report.workload?.fixtureId, fixture.id);
@@ -3459,6 +3463,23 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     assert.equal(sample.settings?.before?.qualityMode, 'manual');
     assert.equal(sample.settings?.before?.densityPct, 75);
     assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+    const weatherClockSchema = sample.weatherEffectsClock?.schema;
+    if (
+      weatherClockSchema !== undefined ||
+      fixture.mediaPreferences !== undefined
+    ) {
+      assert.equal(weatherClockSchema, 'gev-weather-effects-clock/v2');
+      for (const motionPreference of [
+        sample.weatherEffectsClock?.motionPreferencePreflight,
+        sample.weatherEffectsClock?.weatherStateBefore?.motionPreference,
+        sample.weatherEffectsClock?.weatherStateAfter?.motionPreference,
+      ]) {
+        assert.deepEqual(motionPreference, {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        });
+      }
+    }
     assert.equal(
       sample.weatherEffectsClock?.weatherStateBefore?.clock?.mode,
       'latest',

@@ -35,6 +35,9 @@ import {
   WEATHER_EFFECTS_FIXED_TIME,
   WEATHER_EFFECTS_LAYER_COUNTS,
   assertWeatherEffectsWindState,
+  configureWeatherEffectsMotionPreference,
+  observeWeatherEffectsMotionPreference,
+  assertWeatherEffectsMotionPreference,
 } from './weatherEffectsWorkloadFixture.mjs';
 
 const BASE = 'http://127.0.0.1:4173/';
@@ -51,6 +54,8 @@ test('capture producer resolves weather fixture operations from its lazy module 
     { name: 'resetWeatherEffectsToLatest', invoked: true },
     { name: 'prepareWeatherEffectsTimeline', invoked: true },
     { name: 'observeWeatherEffectsLayerState', invoked: false },
+    { name: 'configureWeatherEffectsMotionPreference', invoked: true },
+    { name: 'observeWeatherEffectsMotionPreference', invoked: false },
     { name: 'waitForWeatherEffectsReadiness', invoked: true },
     { name: 'assertWeatherEffectsWindState', invoked: true },
     { name: 'assertWeatherEffectsClock', invoked: true },
@@ -79,10 +84,77 @@ test('capture producer resolves weather fixture operations from its lazy module 
   );
 });
 
+test('weather capture pins and observes the effective reduced-motion preference', async () => {
+  let configured;
+  await configureWeatherEffectsMotionPreference({
+    async emulateMediaFeatures(features) {
+      configured = features;
+    },
+  });
+  assert.deepEqual(configured, [
+    { name: 'prefers-reduced-motion', value: 'no-preference' },
+  ]);
+
+  const observed = (matches) =>
+    JSON.parse(
+      JSON.stringify(
+        runInNewContext(
+          `(${observeWeatherEffectsMotionPreference.toString()})()`,
+          { window: { matchMedia: () => ({ matches }) } },
+        ),
+      ),
+    );
+  const preference = observed(false);
+  assert.deepEqual(preference, {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion: false,
+  });
+  assertWeatherEffectsMotionPreference(preference, 'test');
+  assert.throws(
+    () => assertWeatherEffectsMotionPreference(observed(true), 'reduced'),
+    /reduced motion must be disabled/,
+  );
+  assert.throws(
+    () =>
+      assertWeatherEffectsMotionPreference(
+        observedUnavailableMotionPreference(),
+        'unavailable',
+      ),
+    /false/,
+  );
+});
+
+function observedUnavailableMotionPreference() {
+  return runInNewContext(
+    `(${observeWeatherEffectsMotionPreference.toString()})()`,
+    { window: {} },
+  );
+}
+
 test('weather-effects descriptor pins source assets, populations, route and epoch', () => {
   const fixture = createWeatherEffectsWorkloadFixture();
   assert.equal(fixture.schema, 'gev-weather-effects-fixture/v2');
   assert.equal(fixture.workloadId, 'austin-weather-effects-phased-v2');
+  assert.deepEqual(fixture.mediaPreferences, {
+    'prefers-reduced-motion': 'no-preference',
+  });
+  const {
+    fixedTimeMs: _fixedTimeMs,
+    manifestSha256: _manifestSha256,
+    sha256: _sha256,
+    clock: _clock,
+    ...manifestDescriptor
+  } = fixture;
+  assert.equal(
+    hash(Buffer.from(JSON.stringify(manifestDescriptor))),
+    fixture.manifestSha256,
+  );
+  const previousDescriptor = structuredClone(manifestDescriptor);
+  delete previousDescriptor.mediaPreferences;
+  assert.notEqual(
+    hash(Buffer.from(JSON.stringify(previousDescriptor))),
+    fixture.manifestSha256,
+  );
   assert.equal(fixture.phaseSchedule.schema, 'gev-weather-phase-schedule/v1');
   assert.deepEqual(
     fixture.phaseSchedule.phases.map(({ id, offsetMs, sourceTime }) => ({
@@ -1014,7 +1086,7 @@ test('weather failure snapshot is page-serializable and exposes only bounded sel
     JSON.stringify(
       runInNewContext(
         `(${weatherEffectsFixtureApi.observeWeatherEffectsLayerState.toString()})()`,
-        { window },
+        { window: { ...window, matchMedia: () => ({ matches: false }) } },
       ),
     ),
   );
@@ -1024,6 +1096,10 @@ test('weather failure snapshot is page-serializable and exposes only bounded sel
     ['weather-radar', 'weather-satellite', 'weather-lightning', 'wind'],
   );
   assert.equal(observed.layers[0].loading, true);
+  assert.deepEqual(observed.motionPreference, {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion: false,
+  });
   assert.equal(observed.layers[0].error, 'source unavailable at [url]');
   assert.equal(observed.layers[1].product, 'clouds-regional');
   assert.deepEqual(observed.clock, {

@@ -3416,20 +3416,33 @@ async function validWeatherEffectsCaptureCliReport() {
         0,
       );
     sample.weatherEffectsClock = {
+      schema: 'gev-weather-effects-clock/v2',
       fixedHarnessTime: fixture.fixedTime,
       wallClockBeforeMs: Date.parse(fixture.fixedTime),
       wallClockAfterMs: Date.parse(fixture.fixedTime),
+      motionPreferencePreflight: {
+        schema: 'gev-weather-motion-preference/v1',
+        reducedMotion: false,
+      },
       cesiumBefore: cesiumClock,
       cesiumAfter: cesiumClock,
       weatherPlayback: playback,
       selectedTimesPreflight: timeline,
       weatherStateBefore: {
+        motionPreference: {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        },
         clock: { mode: 'latest', playing: false },
         sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
         visualState,
         wind: { model: 'gfs', overlay: 'speed', paused: false },
       },
       weatherStateAfter: {
+        motionPreference: {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        },
         clock: { mode: 'history', playing: false },
         sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
         visualState,
@@ -4604,6 +4617,60 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   assert.equal(result.status, 'passed');
   assert.equal(result.captureCount, 2);
   assert.equal(result.comparisonEligible, false);
+  for (const [label, mutate] of [
+    [
+      'missing preflight motion preference',
+      (copy) =>
+        delete copy.captures[0].weatherEffectsClock.motionPreferencePreflight,
+    ],
+    [
+      'reduced motion enabled at sample start',
+      (copy) =>
+        (copy.captures[0].weatherEffectsClock.weatherStateBefore.motionPreference.reducedMotion = true),
+    ],
+    [
+      'motion preference unavailable at sample end',
+      (copy) =>
+        (copy.captures[0].weatherEffectsClock.weatherStateAfter.motionPreference.reducedMotion =
+          null),
+    ],
+    [
+      'unknown weather clock schema',
+      (copy) => (copy.captures[0].weatherEffectsClock.schema = 'unknown'),
+    ],
+    [
+      'missing weather clock schema for pinned preference',
+      (copy) => delete copy.captures[0].weatherEffectsClock.schema,
+    ],
+    [
+      'fixture does not pin no-preference',
+      (copy) =>
+        (copy.workload.fixture.mediaPreferences['prefers-reduced-motion'] =
+          'reduce'),
+    ],
+  ]) {
+    const invalid = structuredClone(report);
+    mutate(invalid);
+    assert.throws(
+      () => validateCaptureCliReport(invalid, expected),
+      undefined,
+      label,
+    );
+  }
+  const legacyReport = structuredClone(report);
+  const legacyExpected = structuredClone(expected);
+  delete legacyReport.workload.fixture.mediaPreferences;
+  delete legacyExpected.weatherEffectsFixture.mediaPreferences;
+  for (const sample of legacyReport.captures) {
+    delete sample.weatherEffectsClock.schema;
+    delete sample.weatherEffectsClock.motionPreferencePreflight;
+    delete sample.weatherEffectsClock.weatherStateBefore.motionPreference;
+    delete sample.weatherEffectsClock.weatherStateAfter.motionPreference;
+  }
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(legacyReport, legacyExpected),
+  );
+
   for (const durationMs of [59_999.99, NaN, Infinity, null, '60000']) {
     const invalidDuration = structuredClone(report);
     invalidDuration.captures[0].durationMs = durationMs;

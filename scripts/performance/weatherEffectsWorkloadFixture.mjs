@@ -28,6 +28,41 @@ export const WEATHER_EFFECTS_CAMERA = Object.freeze({
   headingDeg: 20,
   pitchDeg: -45,
 });
+export const WEATHER_EFFECTS_MOTION_PREFERENCE_SCHEMA =
+  'gev-weather-motion-preference/v1';
+export const WEATHER_EFFECTS_MEDIA_PREFERENCES = Object.freeze({
+  'prefers-reduced-motion': 'no-preference',
+});
+
+/** Pin the ephemeral benchmark document to the condition that keeps weather history advancing. */
+export async function configureWeatherEffectsMotionPreference(page) {
+  assert.equal(typeof page?.emulateMediaFeatures, 'function');
+  await page.emulateMediaFeatures([
+    { name: 'prefers-reduced-motion', value: 'no-preference' },
+  ]);
+}
+
+/** Read only the media preference used by the weather clock's suspension policy. */
+export function observeWeatherEffectsMotionPreference() {
+  const reducedMotion =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : null;
+  return {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion,
+  };
+}
+
+export function assertWeatherEffectsMotionPreference(observation, label) {
+  assert.equal(observation?.schema, WEATHER_EFFECTS_MOTION_PREFERENCE_SCHEMA);
+  assert.equal(
+    observation?.reducedMotion,
+    false,
+    `${label}: reduced motion must be disabled`,
+  );
+  return observation;
+}
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -189,6 +224,7 @@ export function createWeatherEffectsWorkloadFixture(
     schema: 'gev-weather-effects-fixture/v2',
     id: 'weather-effects-austin-phased-v2',
     workloadId: WEATHER_EFFECTS_WORKLOAD_ID,
+    mediaPreferences: { ...WEATHER_EFFECTS_MEDIA_PREFERENCES },
     fixedTime,
     timeline: [...manifests.radar.times],
     phaseSchedule: {
@@ -649,10 +685,22 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
 
 /** Small failure-only snapshot for the four selected weather/wind layers. */
 export function observeWeatherEffectsLayerState() {
+  const motionPreference = {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion:
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : null,
+  };
   const app = window.__godsEyeView;
   const manager = app?.dataManager;
   if (!manager?.layers?.get || !manager?.getAll)
-    return { status: 'unavailable', layers: [], clock: null };
+    return {
+      status: 'unavailable',
+      layers: [],
+      clock: null,
+      motionPreference,
+    };
   const ids = [
     'weather-radar',
     'weather-satellite',
@@ -724,6 +772,7 @@ export function observeWeatherEffectsLayerState() {
   return {
     status: 'observed',
     layers,
+    motionPreference,
     clock: clock
       ? {
           mode: typeof clock.mode === 'string' ? clock.mode.slice(0, 16) : null,
