@@ -1,3 +1,6 @@
+import { createObservedWeatherEffectsComparisonContract } from './captureComparisonContract.mjs';
+import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
+
 export const baselineCommit = 'a'.repeat(40);
 export const candidateCommit = 'b'.repeat(40);
 export const harnessCommit = 'c'.repeat(40);
@@ -204,7 +207,7 @@ export function makeReport(
         observedFlightsCount: 2500,
       },
       routes: structuredClone(routes),
-      browser: { name: 'Chrome', version: '152.0' },
+      browser: { name: 'Chrome', version: '152.0.7977.75' },
       rendering: {
         viewport: { width: 1440, height: 900, dpr: 1 },
         drawingBuffer: { width: 1440, height: 900 },
@@ -257,4 +260,120 @@ export function makeReport(
     },
     captures,
   };
+}
+
+export function makeWeatherReport(commit) {
+  const report = makeReport(commit);
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const populations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const deliveryAssets = fixture.assets.map((asset) => ({
+    id: asset.id,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+    contentType: asset.contentType,
+    responseCount: 1,
+  }));
+  const delivery = {
+    schema: 'gev-weather-effects-fixture-delivery/v2',
+    status: 'observed',
+    workloadId: fixture.workloadId,
+    method: 'same-origin-hash-pinned-weather-phase-fixture-v2',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+    phaseSchedule: structuredClone(fixture.phaseSchedule),
+    assets: deliveryAssets,
+    populationsBefore: populations,
+    populationsAfter: populations,
+    fulfilledResponseCount: deliveryAssets.length,
+    routeErrors: [],
+  };
+  report.captures = report.captures
+    .filter(
+      (sample) =>
+        sample.scenario === 'idle' || sample.scenario === 'scripted-motion',
+    )
+    .map((sample) => {
+      const visualSettings = structuredClone(sample.conditions.before.settings);
+      const phaseObservations = {
+        schema: 'gev-weather-phase-observations/v1',
+        durationMs: 60_000,
+        fixtureSha256: fixture.sha256,
+        phases: fixture.phaseSchedule.phases.map((phase) => ({
+          id: phase.id,
+          fixtureSha256: fixture.sha256,
+          expectedSourceTime: phase.sourceTime,
+          scheduledAtMs: phase.offsetMs,
+          observedAtElapsedMs: phase.offsetMs + 100,
+          sourceObservationTimes: Array(3).fill(phase.sourceTime),
+          clock: { mode: 'history', playing: false },
+        })),
+      };
+      const state = {
+        clock: { mode: 'latest', playing: false },
+        sourceObservationTimes: Array(3).fill(fixture.timeline.at(-1)),
+        visualState: {
+          satelliteProduct: 'clouds-regional',
+          satelliteInfrared: 'filtered',
+          radarOpacity: 'strong',
+          lightningOpacity: 'strong',
+          windModel: 'gfs',
+          windOverlay: 'speed',
+          windPaused: false,
+        },
+        populations: populations.map((row) => ({
+          ...row,
+          loading: false,
+          error: null,
+        })),
+      };
+      sample.layers = structuredClone(populations);
+      sample.settings = {
+        before: structuredClone(visualSettings),
+        after: structuredClone(visualSettings),
+      };
+      for (const boundary of ['before', 'after']) {
+        sample.conditions[boundary].settings = structuredClone(visualSettings);
+        sample.conditions[boundary].environment.layers =
+          structuredClone(populations);
+      }
+      sample.fixtureDelivery = structuredClone(delivery);
+      sample.weatherEffectsClock = {
+        fixedHarnessTime: fixture.fixedTime,
+        wallClockBeforeMs: Date.parse(fixture.fixedTime),
+        wallClockAfterMs: Date.parse(fixture.fixedTime),
+        weatherStateBefore: structuredClone(state),
+        weatherStateAfter: {
+          ...structuredClone(state),
+          clock: { mode: 'history', playing: false },
+        },
+        phaseObservations,
+      };
+      return sample;
+    });
+  report.environment.layers = structuredClone(populations);
+  report.fixtureDelivery = delivery;
+  report.workload.scenarios = ['idle', 'scripted-motion'];
+  report.workload.fixture = fixture;
+  report.workload.qualityMode = 'manual';
+  report.workload.expectedDensityPct = 75;
+  report.workload.detectionMode = 'DENSE';
+  report.workload.populationStableAcrossSamples = true;
+  report.workload.cameraPathStableAcrossSamples = true;
+  report.comparisonContract = createObservedWeatherEffectsComparisonContract({
+    fixture,
+    fixtureDelivery: delivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
+  });
+  report.comparisonEligible = true;
+  return report;
 }

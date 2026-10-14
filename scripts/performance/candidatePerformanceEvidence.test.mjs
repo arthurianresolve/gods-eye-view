@@ -14,6 +14,7 @@ import {
   baselineCommit,
   candidateCommit,
   makeReport,
+  makeWeatherReport,
 } from './pairedReportTestFixtures.mjs';
 
 const digest = (value) =>
@@ -111,8 +112,10 @@ async function createComparison(
     patch,
   } = {},
 ) {
-  const baseline = makeReport(baselineCommit);
-  const candidate = makeReport(
+  const reportFactory =
+    workloadId === 'weather-effects' ? makeWeatherReport : makeReport;
+  const baseline = reportFactory(baselineCommit);
+  const candidate = reportFactory(
     candidateCommit,
     [30, 31, 29, 30, 32],
     [35, 36, 34, 35, 37],

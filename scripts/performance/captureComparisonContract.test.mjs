@@ -558,7 +558,10 @@ function makeWeatherEffectsObservation() {
           wallClockBeforeMs: fixture.fixedTimeMs,
           wallClockAfterMs: fixture.fixedTimeMs,
           weatherStateBefore: structuredClone(weatherState),
-          weatherStateAfter: structuredClone(weatherState),
+          weatherStateAfter: {
+            ...structuredClone(weatherState),
+            clock: { mode: 'history', playing: false },
+          },
           phaseObservations,
         },
       };
@@ -618,6 +621,12 @@ test('weather comparison contract binds phase source, settings, populations and 
     observed.fixtureDelivery.populationsBefore,
   );
   for (const mutate of [
+    (value) =>
+      (value.captures[0].weatherEffectsClock.weatherStateBefore.clock.mode =
+        'history'),
+    (value) =>
+      (value.captures[0].weatherEffectsClock.weatherStateAfter.clock.mode =
+        'latest'),
     (value) =>
       (value.captures[0].weatherEffectsClock.phaseObservations.phases[1].expectedSourceTime =
         value.fixture.timeline[0]),

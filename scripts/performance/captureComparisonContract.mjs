@@ -738,6 +738,7 @@ export function createObservedWeatherEffectsComparisonContract({
       weatherVisual,
       fixture,
       `${label} before`,
+      'latest',
     );
     assertWeatherEffectsRuntimeState(
       sample.weatherEffectsClock?.weatherStateAfter,
@@ -745,6 +746,7 @@ export function createObservedWeatherEffectsComparisonContract({
       weatherVisual,
       fixture,
       `${label} after`,
+      'history',
     );
     assertWeatherPhaseObservation(
       sample.weatherEffectsClock?.phaseObservations,
@@ -862,6 +864,7 @@ function assertWeatherEffectsRuntimeState(
   visual,
   fixture,
   label,
+  expectedMode,
 ) {
   assert.ok(
     state && typeof state === 'object',
@@ -881,7 +884,7 @@ function assertWeatherEffectsRuntimeState(
     fixture.timeline.at(-1),
     fixture.timeline.at(-1),
   ]);
-  assert.equal(state.clock?.mode, 'latest');
+  assert.equal(state.clock?.mode, expectedMode);
   assert.equal(state.clock?.playing, false);
   for (const row of state.populations) {
     assert.equal(row.loading, false, `${label}: ${row.id} is loading`);
