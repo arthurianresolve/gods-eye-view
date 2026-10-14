@@ -572,7 +572,9 @@ export async function importFixtureGeometry(
           document
             .querySelector('.workspace-library [data-import-summary]')
             ?.textContent.includes('1 accepted'),
-        { timeout: timeoutMs },
+        // Timer polling continues when a headed page is occluded or hidden;
+        // the predicate is application state, not a rendered-frame condition.
+        { timeout: timeoutMs, polling: 50 },
       ),
     phaseOptions,
   );
@@ -591,7 +593,7 @@ export async function importFixtureGeometry(
           document
             .querySelector('.workspace-library [data-import-status]')
             ?.textContent.includes('Imported 1 features'),
-        { timeout: timeoutMs },
+        { timeout: timeoutMs, polling: 50 },
       ),
     phaseOptions,
   );
@@ -603,7 +605,7 @@ export async function importFixtureGeometry(
         () =>
           window.__godsEyeView.importedGeometryLayer.getState().featureCount >=
           1,
-        { timeout: timeoutMs },
+        { timeout: timeoutMs, polling: 50 },
       ),
     phaseOptions,
   );
@@ -615,6 +617,7 @@ export async function seedPersistentWorkspace(page) {
     () =>
       document.querySelector('.workspace-library [data-workspace-select]')
         .value,
+    { polling: 50 },
   );
   await importFixtureGeometry(page);
   return page.evaluate(async (workspaceAssetText) => {
