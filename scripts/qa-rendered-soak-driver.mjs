@@ -14,6 +14,7 @@ import {
   clickControl,
   openWorkspace,
   importFixtureGeometry,
+  runWorkspaceFixturePhase,
 } from './qa-application-fixtures.mjs';
 
 /** Exercise the actual application, renderer, layer lifecycle and UI controllers. */
@@ -130,6 +131,14 @@ export async function createRenderedSoakDriver(
       },
     );
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
+    // Save-as uses a native prompt in production. The application normally
+    // replaces window.prompt during fixture boot, but keep the soak setup
+    // deterministic if a browser/renderer leaves the native dialog in place.
+    page.on('dialog', async (dialog) => {
+      if (dialog.type() === 'prompt')
+        await dialog.accept('Rendered soak workspace');
+      else await dialog.accept();
+    });
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
     console.log('SOAK application ready');
@@ -179,28 +188,56 @@ export async function createRenderedSoakDriver(
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
     console.log('SOAK application ready');
-    await clickControl(page, '.workspace-library [data-action="save-as"]');
-    await page.waitForFunction(
+    const soakPhase = (phase, operation, diagnosticContext) =>
+      runWorkspaceFixturePhase(page, phase, operation, {
+        diagnosticContext,
+        onProgress: (progress) => console.log(`SOAK ${progress}`),
+      });
+    await soakPhase('workspace-save-as-click', () =>
+      clickControl(page, '.workspace-library [data-action="save-as"]'),
+    );
+    await soakPhase('workspace-save-as-selection', () =>
+      page.waitForFunction(
+        () =>
+          document.querySelector('.workspace-library [data-workspace-select]')
+            ?.value,
+        { polling: 100, timeout: 30000 },
+      ),
+    );
+    const firstId = await soakPhase('workspace-first-id-read', () =>
+      page.$eval(
+        '.workspace-library [data-workspace-select]',
+        (node) => node.value,
+      ),
+    );
+    await soakPhase(
+      'workspace-duplicate-click',
+      () => clickControl(page, '.workspace-library [data-action="duplicate"]'),
+      { targetWorkspaceId: firstId },
+    );
+    await soakPhase(
+      'workspace-duplicate-status',
       () =>
-        document.querySelector('.workspace-library [data-workspace-select]')
-          .value,
+        page.waitForFunction(
+          () =>
+            document
+              .querySelector('.workspace-library [data-status]')
+              ?.textContent.startsWith('Created'),
+          { polling: 100, timeout: 30000 },
+        ),
+      { targetWorkspaceId: firstId },
     );
-    const firstId = await page.$eval(
-      '.workspace-library [data-workspace-select]',
-      (node) => node.value,
-    );
-    await clickControl(page, '.workspace-library [data-action="duplicate"]');
-    await page.waitForFunction(() =>
-      document
-        .querySelector('.workspace-library [data-status]')
-        ?.textContent.startsWith('Created'),
-    );
-    await page.waitForFunction(
-      (id) =>
-        document.querySelector('.workspace-library [data-workspace-select]')
-          .value !== id,
-      {},
-      firstId,
+    await soakPhase(
+      'workspace-duplicate-selection',
+      () =>
+        page.waitForFunction(
+          (id) =>
+            document.querySelector('.workspace-library [data-workspace-select]')
+              ?.value !== id,
+          { polling: 100, timeout: 30000 },
+          firstId,
+        ),
+      { targetWorkspaceId: firstId },
     );
     const secondId = await page.$eval(
       '.workspace-library [data-workspace-select]',

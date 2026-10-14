@@ -209,6 +209,10 @@ export function collectWorkspaceImportDiagnostics(input) {
     },
     workspace: {
       status: text('[data-status]'),
+      errorCode:
+        root?.querySelector('[data-status]')?.dataset?.errorCode || null,
+      errorCause:
+        root?.querySelector('[data-status]')?.dataset?.errorCause || null,
       expectedWorkspaceId: /^[A-Za-z0-9_-]{1,100}$/.test(
         targetWorkspaceId || '',
       )

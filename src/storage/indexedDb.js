@@ -219,6 +219,42 @@ export function createWorkspaceStorage({
     return opening;
   }
 
+  function isClosedDatabaseError(error) {
+    const cause = error?.cause || error;
+    return (
+      cause?.name === 'InvalidStateError' ||
+      /database connection is closing|database is closed/i.test(
+        String(cause?.message || error?.message || ''),
+      )
+    );
+  }
+
+  function discardClosedDatabase(candidate) {
+    if (database !== candidate) return;
+    try {
+      candidate.close();
+    } catch {
+      // The connection is already closing; dropping our reference is enough.
+    }
+    database = null;
+    opening = null;
+  }
+
+  async function retryClosedDatabase(operation) {
+    let retried = false;
+    while (true) {
+      const db = await open();
+      if (!db) return { db: null, value: null };
+      try {
+        return { db, value: await operation(db) };
+      } catch (error) {
+        if (retried || !isClosedDatabaseError(error)) throw error;
+        retried = true;
+        discardClosedDatabase(db);
+      }
+    }
+  }
+
   function makeManifest(prepared, previous, revision) {
     const refsFor = (records, previousRefs = []) =>
       records.map(({ name, checksum, bytes }) => {
@@ -404,83 +440,85 @@ export function createWorkspaceStorage({
     assertOpen();
     const key = validateWorkspaceId(id);
     if (!persistent) return memoryWorkspace(key, revision, verify);
-    const db = await open();
-    if (!db) return memoryWorkspace(key, revision, verify);
-    return await new Promise((resolve, reject) => {
-      let transaction;
-      try {
-        transaction = db.transaction(
-          ['workspaces', 'revisions', 'chunks', 'assets'],
-          'readonly',
-        );
-      } catch (error) {
-        reject(storageError(error));
-        return;
-      }
-      let manifest = null;
-      let failed = null;
-      const chunks = new Map();
-      const assets = new Map();
-      let contentCount = 0;
-      let received = 0;
-      const root =
-        revision === undefined
-          ? transaction.objectStore('workspaces').get(key)
-          : transaction
-              .objectStore('revisions')
-              .get(revisionKey(key, revision));
-      root.onerror = () => {
-        failed = storageError(root.error);
-        transaction.abort();
-      };
-      root.onsuccess = () => {
-        manifest = root.result || null;
-        if (!manifest) return;
-        const enqueue = (storeName, refs, output) => {
-          for (const ref of refs || []) {
-            contentCount++;
-            const request = transaction.objectStore(storeName).get(ref.key);
-            request.onerror = () => {
-              failed = storageError(request.error);
-              transaction.abort();
-            };
-            request.onsuccess = () => {
-              output.set(ref.name, request.result || null);
-              received++;
-            };
+    const read = (db) =>
+      new Promise((resolve, reject) => {
+        let transaction;
+        try {
+          transaction = db.transaction(
+            ['workspaces', 'revisions', 'chunks', 'assets'],
+            'readonly',
+          );
+        } catch (error) {
+          reject(storageError(error));
+          return;
+        }
+        let manifest = null;
+        let failed = null;
+        const chunks = new Map();
+        const assets = new Map();
+        let contentCount = 0;
+        let received = 0;
+        const root =
+          revision === undefined
+            ? transaction.objectStore('workspaces').get(key)
+            : transaction
+                .objectStore('revisions')
+                .get(revisionKey(key, revision));
+        root.onerror = () => {
+          failed = storageError(root.error);
+          transaction.abort();
+        };
+        root.onsuccess = () => {
+          manifest = root.result || null;
+          if (!manifest) return;
+          const enqueue = (storeName, refs, output) => {
+            for (const ref of refs || []) {
+              contentCount++;
+              const request = transaction.objectStore(storeName).get(ref.key);
+              request.onerror = () => {
+                failed = storageError(request.error);
+                transaction.abort();
+              };
+              request.onsuccess = () => {
+                output.set(ref.name, request.result || null);
+                received++;
+              };
+            }
+          };
+          enqueue('chunks', manifest.chunkRefs, chunks);
+          enqueue('assets', manifest.assetRefs, assets);
+        };
+        transaction.oncomplete = async () => {
+          if (failed) {
+            reject(failed);
+            return;
+          }
+          if (!manifest) {
+            resolve(null);
+            return;
+          }
+          if (received !== contentCount) {
+            reject(
+              new WorkspaceStorageError(
+                'integrity',
+                'Workspace content references are incomplete',
+              ),
+            );
+            return;
+          }
+          try {
+            resolve(await materialize(manifest, chunks, assets, verify, true));
+          } catch (error) {
+            reject(storageError(error, 'integrity'));
           }
         };
-        enqueue('chunks', manifest.chunkRefs, chunks);
-        enqueue('assets', manifest.assetRefs, assets);
-      };
-      transaction.oncomplete = async () => {
-        if (failed) {
-          reject(failed);
-          return;
-        }
-        if (!manifest) {
-          resolve(null);
-          return;
-        }
-        if (received !== contentCount) {
-          reject(
-            new WorkspaceStorageError(
-              'integrity',
-              'Workspace content references are incomplete',
-            ),
-          );
-          return;
-        }
-        try {
-          resolve(await materialize(manifest, chunks, assets, verify, true));
-        } catch (error) {
-          reject(storageError(error, 'integrity'));
-        }
-      };
-      transaction.onabort = () =>
-        reject(failed || storageError(transaction.error));
-      transaction.onerror = () => {};
-    });
+        transaction.onabort = () =>
+          reject(failed || storageError(transaction.error));
+        transaction.onerror = () => {};
+      });
+    const result = await retryClosedDatabase(read);
+    if (!result.db) return memoryWorkspace(key, revision, verify);
+    return result.value;
   }
 
   async function materialize(manifest, chunkMap, assetMap, verify, saved) {
@@ -792,9 +830,11 @@ export function createWorkspaceStorage({
       maxBytes: byteLimit,
       cryptoRef,
     });
-    const db = await open();
-    if (!db) return commitMemory(prepared, expectedRevision);
-    return commitIndexedDb(db, prepared, expectedRevision);
+    const result = await retryClosedDatabase((db) =>
+      commitIndexedDb(db, prepared, expectedRevision),
+    );
+    if (!result.db) return commitMemory(prepared, expectedRevision);
+    return result.value;
   }
 
   return Object.freeze({

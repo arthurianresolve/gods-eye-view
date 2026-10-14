@@ -850,6 +850,10 @@ export function createWorkspaceLibraryPanel({
   function setStatus(message, state = 'info') {
     status.textContent = message;
     status.dataset.state = state;
+    if (state !== 'error') {
+      delete status.dataset.errorCode;
+      delete status.dataset.errorCause;
+    }
   }
 
   function refreshHistoryControls() {
@@ -1081,7 +1085,16 @@ export function createWorkspaceLibraryPanel({
           'Another tab saved a newer revision. Open it again or use Save as to keep both versions.',
           'conflict',
         );
-      else setStatus(`Save failed: ${error.message}`, 'error');
+      else {
+        status.dataset.errorCode = String(error.code || error.name || '').slice(
+          0,
+          80,
+        );
+        status.dataset.errorCause = String(
+          error.cause?.message || error.cause?.name || '',
+        ).slice(0, 240);
+        setStatus(`Save failed: ${error.message}`, 'error');
+      }
     } finally {
       applying = false;
     }
