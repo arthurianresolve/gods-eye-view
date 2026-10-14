@@ -19,6 +19,8 @@
   opt-in NYC DOT Traffic Management Center CCTV pack with its required
   operator-controlled agreement gate and attribution.
 
+- Director timeline seeks cross the dateline along the short longitude arc.
+
 - S31 adds a candidate matrix for formatting, package boundaries, the complete
   unit suite, production build and six browser journeys, including constrained
   WebGL rendering and resize recovery. The final local report
