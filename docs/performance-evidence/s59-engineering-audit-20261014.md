@@ -115,7 +115,7 @@ audit makes no browser/GPU or hardware-performance claim.
 ## S59.2 refresh and UI maintenance follow-up
 
 The workspace UI follow-up is committed at `976cccea`, with race-edge coverage
-in `cc7fe5f8`. In
+in `cc7fe5f8` and saved-query ownership coverage in `a65ac748`. In
 [`workspaceLibrary.js`](../../src/ui/workspaceLibrary.js), workspace refresh is
 now single-flight with one latest pending pass: a newer request invalidates the
 current pass before it can publish and a burst shares one follow-up read. The
@@ -123,13 +123,16 @@ existing refresh-generation, open-generation and active-owner checks remain in
 place. Refresh skips replacing select children when values and labels are
 unchanged, preserves a still-present recovery revision only while refreshing the
 same workspace using the value current at publication time, and clears that
-selection after switching workspaces. If an obsolete refresh fails while a
+selection after switching workspaces. Saved-query selection uses the same
+workspace identity rule, even when two workspaces expose the same query ID. If
+an obsolete refresh fails while a
 newer request is queued, the current task proceeds to that latest pass; a
 failure from the latest owner still propagates and releases the in-flight slot.
 [`workspaceLibraryImport.test.mjs`](../../src/ui/workspaceLibraryImport.test.mjs)
 exercises overlapping requests, failed-read recovery, unchanged option lists,
-and same-workspace versus cross-workspace revision selection. The workspace
-import and read suites passed 31/31 tests. This establishes unit behavior, not
+same-workspace versus cross-workspace revision selection, and duplicate query
+IDs across workspaces. The workspace import and read suites passed 32/32 tests.
+This establishes unit behavior, not
 a local-control p95 result.
 
 The rest of catalog/source ownership is distinct from a mutable catalog
