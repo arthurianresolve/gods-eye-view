@@ -14,20 +14,23 @@ the report compatibility and Windows key-repair fixes. The [subsequent diagnosti
 review](performance-evidence/weather-motion-and-datacenters-20261014/README.md)
 passes current datacenter correctness at `954b08f9` and identifies inherited
 reduced motion as the weather benchmark's preflight failure. The benchmark-only
-motion fix now completes two hosted 60-second captures at `1fef88b3`; the outer
-validator rejects an outdated timestamp sequence. Correction `ea1692e8` passes
-independent replay of that saved report and three negative controls. The original
-hosted failure remains unchanged. Both PR matrices at `6263fb70` pass onboarding,
-all three recovery platforms and the Street Level gate, but fail four shared
-weather test-fixture checks on both Node versions; both release workflows stop
-on the same tests. The shared fixture correction and all 150 affected checks pass
-locally. Fresh both-base integration and end-to-end weather validation are pending.
+motion fix and corrected timeline validator pass the complete hosted weather
+journey at `da7a3308`, including two 60-second samples. The [current integration
+packet](performance-evidence/integration-da7a3308-20261014/README.md) records both
+Node versions passing on both bases; one entire PR matrix and its release
+verification pass. The other matrix fails a Windows mock deadline test, corrected
+with exact controlled timers and 78 passing checks. Its release run fails a GitHub
+artifact metadata request with insufficient original diagnostics; safe failure
+classification is now added, but that original cause remains unresolved.
+Historical failures stay failed. The combined later corrections require fresh CI.
 
 The [S47 producer audit](performance-evidence/s47-workload-audit-20261014.md)
 identifies real workload identity/export gaps in addition to absent physical
 Windows comparisons. The [S59 ownership audit](performance-evidence/s59-engineering-audit-20261014.md)
 records refresh coalescing and stale-selection fixes; all 68 broader import and
-workspace checks pass. S47, S59 and S60 remain partial.
+workspace checks pass. The [subsequent CSV summary decision](performance-evidence/s59-csv-summary-decision-20261014/README.md)
+removes that experiment after no repeatable benefit was demonstrated; all 49
+affected checks pass. S47, S59 and S60 remain partial.
 
 The [S51 engineering review](performance-evidence/closure-audit-20261013/README.md)
 closes the render-demand implementation after the dense-cadence and independent
@@ -1982,7 +1985,7 @@ passes at `996a8d3b8b73da0d3f64392b993bdff81a1e857f`: 252 measured cycles in
 13 post-GC checkpoints, all 40 declared application resource gauges equal the
 warmed baseline. Browser listeners return from 629 to 629, with intermediate
 counts up to 639. Five checkpoints contain one newly submitted terrain worker
-task aged 10.0Ã¢â‚¬â€œ15.5 ms; all final tasks are completed and none are pending. This
+task aged 10.0â€“15.5 ms; all final tasks are completed and none are pending. This
 does not claim every intermediate snapshot has zero work.
 
 Final-window retained heap grows 1.70%, below the unchanged 5% limit; peak growth
@@ -4631,7 +4634,7 @@ partial packet remains partial and cannot close the parent slice.
   not necessary triggers. Browser/compositor evidence remains needed before
   attributing this to an engine or driver defect. Production quality, engine
   version, capture deadline and render scheduling remain unchanged.
-- **Windows frame-delivery boundary, not a root-cause fix:** On the userÃ¢â‚¬â„¢s
+- **Windows frame-delivery boundary, not a root-cause fix:** On the userâ€™s
   Chrome 154 / Intel UHD 620 D3D11 renderer, the original [paired run at
   `06da9de`](performance-evidence/import-batches-06da9de-failed.json) and a
   focused rerun at [`1d04d35`](performance-evidence/import-batches-1d04d35-paired-focus-failed.json)
@@ -4721,7 +4724,7 @@ partial packet remains partial and cannot close the parent slice.
   reaches and passes upgraded-application recovery, then times out reopening the
   frozen `6b896e2` rollback build in its final stage. All stored-asset checks up to
   that point pass; the overall run remains failed. The recovery-only fixture now
-  uses and reports a 960 Ãƒâ€” 640 viewport to bound software raster work on GPU-less
+  uses and reports a 960 Ã— 640 viewport to bound software raster work on GPU-less
   CI runners. Resolution scale, effects, data, assertions and timeouts are
   unchanged. This is not a performance configuration or proof of the timeout's
   cause; validation of the recovery fixture adjustment is pending.
