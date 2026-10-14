@@ -272,6 +272,7 @@ test('serialized weather phase driver selects every source through the real cloc
   const fixture = createWeatherEffectsWorkloadFixture();
   const clock = createWeatherClock();
   const modules = new Map();
+  const productEvidence = new Map();
   const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
   const unregister = ids.map((id) => {
     let shown = null;
@@ -287,9 +288,23 @@ test('serialized weather phase driver selects every source through the real cloc
       },
     };
     const remove = clock.register(product);
+    const evidence = {
+      historyFrames: fixture.timeline.length,
+      observedAtOverride: null,
+    };
+    productEvidence.set(id, evidence);
     modules.set(id, {
-      getStats: () => ({ observedAt: shown, loading: false }),
-      getDiagnostics: () => ({ clock: clock.getState() }),
+      getStats: () => ({
+        observedAt: evidence.observedAtOverride ?? shown,
+        loading: false,
+      }),
+      getDiagnostics: () => {
+        const { mode, target, playing } = clock.getState();
+        return {
+          clock: { mode, target, playing },
+          historyFrames: evidence.historyFrames,
+        };
+      },
       getParams: () =>
         id === 'weather-satellite'
           ? { product: 'clouds-regional', infrared: 'filtered' }
@@ -415,6 +430,22 @@ test('serialized weather phase driver selects every source through the real cloc
       Array.from(startupPreflight.reset.sourceObservationTimes),
       Array(3).fill(fixture.timeline.at(-1)),
     );
+
+    productEvidence.get('weather-lightning').historyFrames = 2;
+    await assert.rejects(
+      prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
+      /history ended before its pinned timeline/,
+    );
+    productEvidence.get('weather-lightning').historyFrames =
+      fixture.timeline.length;
+
+    productEvidence.get('weather-lightning').observedAtOverride =
+      fixture.timeline[0];
+    await assert.rejects(
+      prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
+      /did not settle at latest/,
+    );
+    productEvidence.get('weather-lightning').observedAtOverride = null;
 
     const observations = [];
     for (const phase of fixture.phaseSchedule.phases) {

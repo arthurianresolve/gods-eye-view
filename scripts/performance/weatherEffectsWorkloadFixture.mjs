@@ -1111,6 +1111,12 @@ export async function prepareWeatherEffectsTimelineInPage({
   const readClock = () =>
     app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
       ?.clock;
+  const readHistoryFrames = () =>
+    productIds.map(
+      (id) =>
+        app.dataManager.layers.get(id)?.module?.getDiagnostics?.()
+          ?.historyFrames ?? null,
+    );
   const waitForState = async (sourceTime, mode) => {
     const deadline = performance.now() + timeoutMs;
     let times = readTimes();
@@ -1132,12 +1138,9 @@ export async function prepareWeatherEffectsTimelineInPage({
     );
   };
   const failIfTimelineIncomplete = () => {
-    const clock = readClock();
     if (
       Number(slider.max) !== timeline.length - 1 ||
-      !Array.isArray(clock?.timeline) ||
-      clock.timeline.length !== timeline.length ||
-      timeline.some((time, index) => clock.timeline[index] !== time)
+      readHistoryFrames().some((count) => count !== timeline.length)
     )
       throw new Error('Weather history ended before its pinned timeline.');
   };
