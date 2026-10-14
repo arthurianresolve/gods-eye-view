@@ -398,7 +398,14 @@ export async function bootFixturePage(
 ) {
   onProgress('navigation');
   await page.goto(base + '/?welcome=0' + hash, {
-    waitUntil: 'domcontentloaded',
+    // The standalone entry point has a large ESM graph.  A dev-server
+    // navigation can receive the document promptly while Chromium is still
+    // compiling/evaluating that graph; waiting for DOMContentLoaded here
+    // makes the harness spend its whole navigation deadline on module work
+    // before it can reach the application-state gate below.  `commit` keeps
+    // navigation tied to the delivered document and lets the existing
+    // application-ready wait provide the actual readiness contract.
+    waitUntil: 'commit',
   });
   try {
     onProgress('application-ready');
