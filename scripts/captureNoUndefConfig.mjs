@@ -59,6 +59,7 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/overlayAttributionContract.mjs',
   'scripts/performance/overlayAttribution.test.mjs',
   'src/overlays/worldOverlayAllocation.worker.mjs',
+  'src/imports/geojsonJson.worker.js',
 ]);
 
 export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({

@@ -1,4 +1,5 @@
 import { consumeInBatches } from './cooperative.js';
+import { parseJsonInWorker } from './geojsonJsonWorker.js';
 import { validatePackGeoJSONFeature } from '../director/packs/geojson.js';
 import { PACK_LIMITS } from '../director/packs/manifest.js';
 
@@ -131,16 +132,31 @@ export function createImportPreview(options) {
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
 export async function previewGeoJSON(
   input,
-  { signal, attribution = '', timeField = null } = {},
+  {
+    signal,
+    attribution = '',
+    timeField = null,
+    workerParsing = false,
+  } = {},
 ) {
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
   let value;
-  try {
-    value = JSON.parse(text);
-  } catch {
-    fail('invalid-json', 'GeoJSON is not valid JSON.');
+  if (workerParsing === true) {
+    try {
+      value = await parseJsonInWorker(text, { signal });
+    } catch (error) {
+      if (error?.code === 'invalid-json')
+        fail('invalid-json', 'GeoJSON is not valid JSON.');
+      throw error;
+    }
+  } else {
+    try {
+      value = JSON.parse(text);
+    } catch {
+      fail('invalid-json', 'GeoJSON is not valid JSON.');
+    }
   }
   if (value?.type !== 'FeatureCollection' || !Array.isArray(value.features))
     fail('invalid-geojson', 'Expected a GeoJSON FeatureCollection.');
