@@ -1,5 +1,4 @@
 import { consumeInBatches } from './cooperative.js';
-import { parseJsonInWorker } from './geojsonJsonWorker.js';
 import { validatePackGeoJSONFeature } from '../director/packs/geojson.js';
 import { PACK_LIMITS } from '../director/packs/manifest.js';
 
@@ -132,26 +131,16 @@ export function createImportPreview(options) {
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
 export async function previewGeoJSON(
   input,
-  { signal, attribution = '', timeField = null, workerParsing = false } = {},
+  { signal, attribution = '', timeField = null } = {},
 ) {
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
   let value;
-  if (workerParsing === true) {
-    try {
-      value = await parseJsonInWorker(text, { signal });
-    } catch (error) {
-      if (error?.code === 'invalid-json')
-        fail('invalid-json', 'GeoJSON is not valid JSON.');
-      throw error;
-    }
-  } else {
-    try {
-      value = JSON.parse(text);
-    } catch {
-      fail('invalid-json', 'GeoJSON is not valid JSON.');
-    }
+  try {
+    value = JSON.parse(text);
+  } catch {
+    fail('invalid-json', 'GeoJSON is not valid JSON.');
   }
   if (value?.type !== 'FeatureCollection' || !Array.isArray(value.features))
     fail('invalid-geojson', 'Expected a GeoJSON FeatureCollection.');
@@ -251,20 +240,12 @@ export async function previewGeoJSON(
   );
 }
 
-const CSV_PARSE_BATCH_CHARS = 64 * 1024;
-const CSV_PARSE_SLICE_MS = 4;
-const CSV_PARSE_CLOCK_CHECK_CHARS = 1024;
-
 /** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */
-function createCsvScanner(text, headersOnly = false) {
+function scanCsv(text, headersOnly = false) {
   const rows = [];
   let row = [],
     cell = '',
-    quoted = false,
-    index = 0,
-    result = null,
-    finished = false;
-  const source = text.replace(/^\uFEFF/, '');
+    quoted = false;
   const pushCell = () => {
     if (cell.length > IMPORT_LIMITS.cellChars)
       fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
@@ -285,140 +266,38 @@ function createCsvScanner(text, headersOnly = false) {
     }
     return null;
   };
-
-  function advance({ maxChars = Infinity, budgetMs = Infinity, now } = {}) {
-    const started = now?.() ?? 0;
-    let processed = 0;
-    let nextClockCheck = CSV_PARSE_CLOCK_CHECK_CHARS;
-    while (index < source.length && processed < maxChars) {
-      if (processed >= nextClockCheck && now && now() - started >= budgetMs)
-        break;
-      while (processed >= nextClockCheck)
-        nextClockCheck += CSV_PARSE_CLOCK_CHECK_CHARS;
-      const char = source[index];
-      if (quoted) {
-        if (char === '"' && source[index + 1] === '"') {
-          cell += '"';
-          index += 2;
-          processed += 2;
-        } else {
-          if (char === '"') quoted = false;
-          else cell += char;
-          index += 1;
-          processed += 1;
-        }
-        continue;
-      }
-      if (char === '"' && cell === '') {
-        quoted = true;
-        index += 1;
-        processed += 1;
-      } else if (char === ',') {
-        pushCell();
-        index += 1;
-        processed += 1;
-      } else if (char === '\n') {
-        const headers = pushRow();
-        index += 1;
-        processed += 1;
-        if (headers) {
-          result = headers;
-          finished = true;
-          break;
-        }
-      } else if (char === '\r') {
-        const hasLineFeed = source[index + 1] === '\n';
-        const headers = pushRow();
-        index += hasLineFeed ? 2 : 1;
-        processed += hasLineFeed ? 2 : 1;
-        if (headers) {
-          result = headers;
-          finished = true;
-          break;
-        }
-      } else {
-        cell += char;
-        index += 1;
-        processed += 1;
-      }
-      if (cell.length > IMPORT_LIMITS.cellChars)
-        fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
+  const source = text.replace(/^\uFEFF/, '');
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    if (quoted) {
+      if (char === '"' && source[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (char === '"') quoted = false;
+      else cell += char;
+      continue;
     }
-    return { processed, position: index, finished };
-  }
-
-  function finish() {
-    if (finished) return result;
-    if (index < source.length)
-      throw new Error(
-        'CSV scanner cannot finish before its input is consumed.',
-      );
-    if (quoted) fail('invalid-csv', 'CSV ends inside a quoted cell.');
-    if (cell || row.length) {
+    if (char === '"' && cell === '') quoted = true;
+    else if (char === ',') pushCell();
+    else if (char === '\n') {
       const headers = pushRow();
-      if (headers) {
-        result = headers;
-        finished = true;
-        return result;
-      }
-    }
-    if (!rows.length) fail('invalid-csv', 'CSV needs a header row.');
-    const headers = validateCsvHeaders(rows[0]);
-    result = headersOnly ? headers : { headers, rows: rows.slice(1) };
-    finished = true;
-    return result;
+      if (headers) return headers;
+    } else if (char === '\r') {
+      if (source[i + 1] === '\n') i++;
+      const headers = pushRow();
+      if (headers) return headers;
+    } else cell += char;
+    if (cell.length > IMPORT_LIMITS.cellChars)
+      fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
   }
-
-  return {
-    advance,
-    finish,
-    get finished() {
-      return finished;
-    },
-    get position() {
-      return index;
-    },
-    get length() {
-      return source.length;
-    },
-  };
-}
-
-function scanCsv(text, headersOnly = false) {
-  const scanner = createCsvScanner(text, headersOnly);
-  scanner.advance();
-  return scanner.finish();
-}
-
-export async function scanCsvCooperatively(
-  text,
-  {
-    signal,
-    onProgress,
-    now = () => globalThis.performance?.now?.() ?? Date.now(),
-    yieldControl = () => new Promise((resolve) => setTimeout(resolve, 0)),
-  } = {},
-) {
-  const scanner = createCsvScanner(text);
-  while (!scanner.finished && scanner.position < scanner.length) {
-    signal?.throwIfAborted();
-    scanner.advance({
-      maxChars: CSV_PARSE_BATCH_CHARS,
-      budgetMs: CSV_PARSE_SLICE_MS,
-      now,
-    });
-    onProgress?.({
-      phase: 'csv-parse',
-      processedCharacters: scanner.position,
-      totalCharacters: scanner.length,
-    });
-    if (!scanner.finished && scanner.position < scanner.length) {
-      await yieldControl();
-      signal?.throwIfAborted();
-    }
+  if (quoted) fail('invalid-csv', 'CSV ends inside a quoted cell.');
+  if (cell || row.length) {
+    const headers = pushRow();
+    if (headers) return headers;
   }
-  signal?.throwIfAborted();
-  return scanner.finish();
+  if (!rows.length) fail('invalid-csv', 'CSV needs a header row.');
+  const headers = validateCsvHeaders(rows[0]);
+  return headersOnly ? headers : { headers, rows: rows.slice(1) };
 }
 
 function validateCsvHeaders(row) {
@@ -443,21 +322,12 @@ export function parseCsvHeaders(text) {
 /** Stage CSV points using explicit latitude/longitude and optional field mappings. */
 export async function previewCSV(
   input,
-  {
-    signal,
-    mapping = {},
-    attribution = '',
-    cooperativeParsing = false,
-    onProgress = null,
-  } = {},
+  { signal, mapping = {}, attribution = '' } = {},
 ) {
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
-  const { headers, rows } =
-    cooperativeParsing === true
-      ? await scanCsvCooperatively(text, { signal, onProgress })
-      : scanCsv(text);
+  const { headers, rows } = parseCsv(text);
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;

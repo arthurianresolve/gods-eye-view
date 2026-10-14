@@ -65,8 +65,6 @@
     "modules": [
       "src/imports/index.js",
       "src/imports/geojsonCsv.js",
-      "src/imports/geojsonJsonWorker.js",
-      "src/imports/geojsonJson.worker.js",
       "src/imports/kmlGpx.js",
       "src/imports/cooperative.js",
       "src/director/packs/geojson.js",
@@ -1573,8 +1571,6 @@
       "src/data/savedQueries.js",
       "src/imports/index.js",
       "src/imports/geojsonCsv.js",
-      "src/imports/geojsonJsonWorker.js",
-      "src/imports/geojsonJson.worker.js",
       "src/imports/kmlGpx.js",
       "src/imports/cooperative.js",
       "src/imports/runtimeLayer.js",
