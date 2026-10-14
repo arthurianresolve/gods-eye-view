@@ -1,0 +1,23 @@
+{
+  "source": "352d985dfa643852523636810ac793fd70e17cb9",
+  "portedFrom": "5ba9a9408017771a2c91cb4b1f93610a6c73a1d6",
+  "byteIdenticalSourceFiles": {
+    "src/data/infrastructure.js": "21b3f8041ae3d562d11d4647fecb58921cb0edfdbfbf24e6628d93cfcd527c20",
+    "src/data/infrastructure.test.mjs": "d6ec4eb8ffd22ce9df39dcc17d14c3c246faa4c146e539a81c422ae966db7a85",
+    "src/data/localGeojsonCore.js": "81a4e32bcc83ac8e0b5028b7bbfc8438b7082eb0dea410722fd2f1814634f778",
+    "src/data/localGeojson.test.mjs": "af5ded88cffd3618624de7a3e33fff24b64f7ddff2be1e33b1165c4b0d30532e",
+    "src/data/localGeojsonLifecycle.test.mjs": "69528fa84e1735ef0ab366a39ae3775f9ff1460cf985f94bf3349d3ffc7a7525"
+  },
+  "focusedTests": {
+    "pass": 97,
+    "fail": 0,
+    "skip": 0,
+    "command": "node --test src/data/infrastructure.test.mjs src/data/localGeojson.test.mjs src/data/localGeojsonLifecycle.test.mjs src/data/localGeojson.analyst.test.mjs src/data/localGeojsonLod.test.mjs src/tools/queries/infrastructure.test.mjs"
+  },
+  "productionDefault": "entities",
+  "datacenterCandidate": "opt-in via caller service",
+  "damAndCablePrototypePorted": false,
+  "currentRenderedValidation": "pending",
+  "fullIntegration": "pending",
+  "physicalWindowsQualification": "pending"
+}
