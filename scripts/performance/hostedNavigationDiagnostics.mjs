@@ -1,6 +1,5 @@
 const MAX_EVENTS = 24;
 const MAX_PENDING = 24;
-const MAX_RESULT_TEXT_LENGTH = 256_000;
 const MAX_OUTPUT_TEXT_LENGTH = 16_000;
 const PAGE_STATE_TIMEOUT_MS = 500;
 const SENSITIVE_KEY =
@@ -44,7 +43,7 @@ function boundedValue(value, state, depth = 0) {
   }
   if (Array.isArray(value)) {
     return value
-      .slice(0, 24)
+      .slice(0, 32)
       .map((item) => boundedValue(item, state, depth + 1));
   }
   if (typeof value !== 'object') return null;
@@ -99,6 +98,8 @@ export function summarizeInfrastructureResultElement(element) {
     Number.isSafeInteger(value) && value >= 0 ? value : null;
   const safeHash = (value) =>
     typeof value === 'string' && /^[a-f0-9]{64}$/.test(value) ? value : null;
+  const safeCommit = (value) =>
+    typeof value === 'string' && /^[a-f0-9]{40}$/.test(value) ? value : null;
   const safeReadiness = (value) => {
     if (!value || typeof value !== 'object') return null;
     const counts = {};
@@ -183,8 +184,8 @@ export function summarizeInfrastructureResultElement(element) {
     result: {
       schema: safeText(report.schema, 100),
       status: safeStatuses.has(report.status) ? report.status : 'unknown',
-      applicationCommit: safeHash(report.applicationCommit),
-      harnessCommit: safeHash(report.harnessCommit),
+      applicationCommit: safeCommit(report.applicationCommit),
+      harnessCommit: safeCommit(report.harnessCommit),
       error: safeError(report.error),
       lifetimes: Array.isArray(report.lifetimes)
         ? report.lifetimes.slice(0, 2).map((lifetime) => ({

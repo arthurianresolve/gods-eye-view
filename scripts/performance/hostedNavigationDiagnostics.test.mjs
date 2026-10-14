@@ -73,8 +73,8 @@ test('navigation diagnostics retain bounded same-origin state and detach listene
   page.state.result = {
     schema: 'gev-infrastructure-runtime-renderers/v4',
     status: 'failed',
-    applicationCommit: 'a'.repeat(64),
-    harnessCommit: 'b'.repeat(64),
+    applicationCommit: 'a'.repeat(40),
+    harnessCommit: 'b'.repeat(40),
     error: { name: 'Error', message: 'module failed at token=private' },
     lifetimes: [
       {
@@ -131,8 +131,8 @@ test('navigation diagnostics retain bounded same-origin state and detach listene
   assert.deepEqual(state.pageState.result, {
     schema: 'gev-infrastructure-runtime-renderers/v4',
     status: 'failed',
-    applicationCommit: 'a'.repeat(64),
-    harnessCommit: 'b'.repeat(64),
+    applicationCommit: 'a'.repeat(40),
+    harnessCommit: 'b'.repeat(40),
     error: { name: 'Error', message: 'module failed at [redacted]' },
     lifetimes: [
       {
@@ -286,7 +286,7 @@ test('navigation diagnostics bound noisy failures and clear pending state on dis
   assert.equal(afterDispose.requests.pendingOmitted, 0);
 });
 
-test('in-page projection preserves bounded readiness and omits image payloads', () => {
+test('in-page projection preserves bounded readiness and omits image payloads', async () => {
   const projection = summarizeInfrastructureResultElement({
     textContent: JSON.stringify({
       schema: 'gev-infrastructure-runtime-renderers/v4',
@@ -321,6 +321,18 @@ test('in-page projection preserves bounded readiness and omits image payloads', 
   assert.equal(history.observations.length, 32);
   assert.equal(history.observations[0].sequence, 9);
   assert.doesNotMatch(JSON.stringify(projection), /pngBase64|secret image/);
+  const page = new FakePage();
+  page.state.result = projection.result;
+  const diagnostic = createHostedNavigationDiagnostics(page, {
+    origin: 'http://127.0.0.1:4184',
+  });
+  const state = await diagnostic.snapshot();
+  assert.equal(
+    state.pageState.result.lifetimes[0].failedSample.readinessHistory
+      .observations.length,
+    32,
+  );
+  diagnostic.dispose();
   assert.deepEqual(
     summarizeInfrastructureResultElement({ textContent: 'x'.repeat(256_001) }),
     { resultState: 'too-large', result: null },
