@@ -63,7 +63,40 @@ the shared paired-report producer to the complete current format. The null-state
 regression and all affected comparison/candidate consumers pass: 150 focused tests,
 zero failures, plus 60-file capture lint. The next
 [weather run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38520776837)
-tests this exact source. Its outcome is pending; the failed originals stay failed.
+tests this exact source. It completes both 60-second captures but fails the outer
+validator on its outdated preflight timestamp sequence; the failed originals stay failed.
 
 A fresh remote read still finds fork main `9beadbda`, fork dev `e8ccc268` and
 upstream main `132b9e96`, already contained in QA. No new reconciliation is needed.
+
+## Completed captures and current correction
+
+The second weather run records all three history frames for all three sources,
+verified build identity before and after both samples, 248 fixture fulfillments,
+and no routing errors. Its actual timeline journey is latest startup, all three
+history phases in order, then latest reset. The wrapper incorrectly expected the
+older four-observation journey. Correction `ea1692e8` requires the actual five
+observations and rejects missing, reordered and wrong-source observations.
+
+[Independent replay](weather-1fef88b3-replay.json) passes the saved CLI report
+through that corrected validator and rejects three corrupted controls. The replay
+uses the receipt digest recorded in the capture; receipt bytes were not separately
+downloaded. It remains comparison-ineligible diagnostic evidence. The original
+hosted workflow remains failed; a new end-to-end hosted pass is required.
+All 150 affected fixture, CLI, paired-report and candidate-consumer tests pass,
+along with capture lint. Raw producer and wrapper reports are preserved here.
+
+Both PR matrices at `6263fb70` finish with the same four shared weather test-fixture
+failures on Node 24 and 26. Each ordinary suite records 7,942 passes, four failures
+and five skips. The other five jobs on each base pass: Windows onboarding,
+Windows/Linux/macOS recovery, and the Street Level browser gate. Both release
+verification runs stop at source verification on those same four tests, before
+artifact attestation or downloaded-release validation. The correction in `1fef88b3`
+updates the shared fixture instead of weakening the validator. Final job records
+are preserved, and fresh both-base integration is required.
+
+Workspace changes `533cdf3f`, `af1895df` and `7947e0c5` coalesce refreshes, preserve
+only same-workspace valid selections, suppress unchanged option writes, and reject
+stale completions. The broader import/workspace integration suite passes all 68
+checks, including same-ID cross-workspace races, obsolete failures and disposal.
+These behavior checks are not a browser responsiveness or throughput claim.
