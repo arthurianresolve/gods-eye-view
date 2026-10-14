@@ -10,8 +10,13 @@ both shorten the initial blocking prefix but regress total completion in every
 measured pair. Current plain-RAF/WebGL controls reproduce the frame-delivery slowdown
 outside Cesium. The [subsequent integration result](performance-evidence/integration-followup-20261014/README.md)
 passes both PR matrices and release-artifact verification at `9487a57c`, including
-the report compatibility and Windows key-repair fixes. Later weather-preflight and
-infrastructure-readiness diagnostic changes still require new hosted results.
+the report compatibility and Windows key-repair fixes. The [subsequent diagnostic
+review](performance-evidence/weather-motion-and-datacenters-20261014/README.md)
+passes current datacenter correctness at `954b08f9` and identifies inherited
+reduced motion as the weather benchmark's preflight failure. The benchmark-only
+motion fix requires a fresh hosted result. At `b52c8abb`, one PR matrix passes
+and the other fails during native copying of a Cesium test fixture; its focused
+copy-path correction passes locally, with new full integration still pending.
 
 The [S51 engineering review](performance-evidence/closure-audit-20261013/README.md)
 closes the render-demand implementation after the dense-cadence and independent
