@@ -20,6 +20,15 @@ function readKey(file) {
   return KEY_PATTERN.test(text) ? text : null;
 }
 
+function readKeyIfPresent(file) {
+  try {
+    return readKey(file);
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
 /** Replace malformed contents without depending on Windows rename-over-file. */
 function publishRepairedKey(file, tmp, key) {
   try {
@@ -30,12 +39,7 @@ function publishRepairedKey(file, tmp, key) {
     // Under the repair lock, remove only the still-malformed destination and
     // publish with link(), whose no-overwrite behavior resolves a concurrent
     // first creator to one persisted winner.
-    let winner = null;
-    try {
-      winner = readKey(file);
-    } catch (readError) {
-      if (readError.code !== 'ENOENT') throw readError;
-    }
+    const winner = readKeyIfPresent(file);
     if (winner) return winner;
     fs.rmSync(file, { force: true });
     try {
@@ -43,7 +47,7 @@ function publishRepairedKey(file, tmp, key) {
       return key;
     } catch (linkError) {
       if (linkError.code !== 'EEXIST') throw linkError;
-      const concurrentWinner = readKey(file);
+      const concurrentWinner = readKeyIfPresent(file);
       if (concurrentWinner) return concurrentWinner;
       throw linkError;
     }
@@ -63,7 +67,7 @@ function repairKey(file, tmp, key) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
       // Another repair may already have published a usable key.
-      const winner = readKey(file);
+      const winner = readKeyIfPresent(file);
       if (winner) return winner;
       if (Date.now() >= deadline) {
         throw Object.assign(new Error('panel key repair is busy'), {
@@ -75,7 +79,7 @@ function repairKey(file, tmp, key) {
   }
   try {
     // A repair completed between our earlier read and acquiring the lock.
-    const winner = readKey(file);
+    const winner = readKeyIfPresent(file);
     if (winner) return winner;
     return publishRepairedKey(file, tmp, key);
   } finally {
@@ -132,8 +136,8 @@ export function sharedPanelKey({
       fs.linkSync(tmp, file);
       return key;
     } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      const winner = readKey(file);
+      if (error.code !== 'EEXIST' && error.code !== 'EPERM') throw error;
+      const winner = readKeyIfPresent(file);
       if (winner) return winner;
       return repairKey(file, tmp, key);
     }

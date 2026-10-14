@@ -123,21 +123,22 @@ test('processes starting at the same moment agree on one key', async (t) => {
   assert.equal(fs.readFileSync(file, 'utf8').trim(), keys[0]);
 });
 
-test('concurrent malformed-file repairs return the same persisted key', async (t) => {
-  const file = tempKeyFile(t);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, 'not a key\n');
-  const script = `
+for (const forceRenameEperm of [false, true]) {
+  test(`concurrent malformed-file repairs converge (${forceRenameEperm ? 'rename EPERM' : 'natural rename'})`, async (t) => {
+    const file = tempKeyFile(t);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, 'not a key\n');
+    const script = `
     import fs from 'node:fs';
     const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
-    const [file, marker, other] = process.argv.slice(1);
+    const [file, marker, other, forceRenameEperm] = process.argv.slice(1);
     const original = fs.readFileSync;
     let reads = 0;
     fs.readFileSync = function (target, ...args) {
       const text = original.call(this, target, ...args);
       if (target === file && ++reads === 2) {
-        // Both processes capture the actual malformed contents before either
-        // can replace them. The old unchecked rename returns two different keys.
+        // Both processes capture the malformed contents before either can
+        // repair it, so this exercises the contended replacement path.
         fs.writeFileSync(marker, 'ready');
         const deadline = Date.now() + 5000;
         while (!fs.existsSync(other)) {
@@ -149,7 +150,7 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
     };
     const rename = fs.renameSync;
     fs.renameSync = function (from, to, ...args) {
-      if (to === file && from.endsWith('.tmp')) {
+      if (forceRenameEperm === '1' && to === file && from.endsWith('.tmp')) {
         const error = new Error('injected destination replacement failure');
         error.code = 'EPERM';
         throw error;
@@ -161,19 +162,112 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
     process.stdout.write(key);
     process.stderr.write(JSON.stringify({ fallbackLogs }));
   `;
-  const run = (index) =>
-    new Promise((resolve, reject) => {
-      const marker = (id) => path.join(path.dirname(file), `ready-${id}`);
+    const run = (index) =>
+      new Promise((resolve, reject) => {
+        const marker = (id) => path.join(path.dirname(file), `ready-${id}`);
+        const child = spawn(
+          process.execPath,
+          [
+            '--input-type=module',
+            '-e',
+            script,
+            file,
+            marker(index),
+            marker(1 - index),
+            forceRenameEperm ? '1' : '0',
+          ],
+          { stdio: ['ignore', 'pipe', 'pipe'] },
+        );
+        t.after(() => child.kill());
+        let out = '';
+        let err = '';
+        child.stdout.on('data', (chunk) => (out += chunk));
+        child.stderr.on('data', (chunk) => (err += chunk));
+        child.on('error', reject);
+        child.on('close', (code) => {
+          if (code !== 0) return reject(new Error(`exit ${code}`));
+          let diagnostics;
+          try {
+            diagnostics = JSON.parse(err);
+          } catch {
+            return reject(
+              new Error('child fallback diagnostics were malformed'),
+            );
+          }
+          resolve({ key: out, diagnostics });
+        });
+      });
+    const children = await Promise.all([run(0), run(1)]);
+    const childDiagnostics = children.map(({ diagnostics }, index) => ({
+      child: index,
+      fallbackLogs: diagnostics.fallbackLogs,
+    }));
+    const safeDiagnostics = JSON.stringify(childDiagnostics);
+    assert.equal(
+      children.every(({ key }) => /^[A-Za-z0-9_-]{43}$/.test(key)),
+      true,
+      `child output was not a panel key; safe fallback diagnostics: ${safeDiagnostics}`,
+    );
+    assert.equal(
+      children.every(({ key }) => !safeDiagnostics.includes(key)),
+      true,
+      'fallback diagnostics must not contain any panel key values',
+    );
+    assert.equal(
+      new Set(children.map(({ key }) => key)).size,
+      1,
+      `concurrent panel-key children disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
+    );
+    assert.equal(
+      fs.readFileSync(file, 'utf8').trim() === children[0].key,
+      true,
+      `persisted panel key disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
+    );
+    assert.equal(fs.existsSync(`${file}.repair-lock`), false);
+    assert.equal(
+      fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
+      false,
+    );
+  });
+}
+
+for (const failureOperation of ['rename', 'link']) {
+  test(`malformed-key repair recovers when ${failureOperation} returns EPERM`, async (t) => {
+    const file = tempKeyFile(t);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, 'not a key\n');
+    const script = `
+    import fs from 'node:fs';
+    const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
+    const [file, failureOperation] = process.argv.slice(1);
+    const rename = fs.renameSync;
+    fs.renameSync = function (from, to, ...args) {
+      if (failureOperation === 'rename' && to === file && from.endsWith('.tmp')) {
+        const error = new Error('injected destination replacement failure');
+        error.code = 'EPERM';
+        throw error;
+      }
+      return rename.call(this, from, to, ...args);
+    };
+    const link = fs.linkSync;
+    let injectedLinkFailure = false;
+    fs.linkSync = function (from, to) {
+      if (failureOperation === 'link' && to === file && !injectedLinkFailure) {
+        injectedLinkFailure = true;
+        const error = new Error('injected publication failure');
+        error.code = 'EPERM';
+        throw error;
+      }
+      return link.call(this, from, to);
+    };
+    const fallbackLogs = [];
+    const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
+    process.stdout.write(JSON.stringify({ key, fallbackLogs }));
+  `;
+    const result = await new Promise((resolve, reject) => {
       const child = spawn(
         process.execPath,
-        [
-          '--input-type=module',
-          '-e',
-          script,
-          file,
-          marker(index),
-          marker(1 - index),
-        ],
+        ['--input-type=module', '-e', script, file, failureOperation],
         { stdio: ['ignore', 'pipe', 'pipe'] },
       );
       t.after(() => child.kill());
@@ -183,74 +277,63 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
       child.stderr.on('data', (chunk) => (err += chunk));
       child.on('error', reject);
       child.on('close', (code) => {
-        if (code !== 0) return reject(new Error(`exit ${code}`));
-        let diagnostics;
+        if (code !== 0) return reject(new Error(`exit ${code}: ${err}`));
         try {
-          diagnostics = JSON.parse(err);
+          resolve(JSON.parse(out));
         } catch {
-          return reject(new Error('child fallback diagnostics were malformed'));
+          reject(new Error('child repair result was malformed'));
         }
-        resolve({ key: out, diagnostics });
       });
     });
-  const children = await Promise.all([run(0), run(1)]);
-  const childDiagnostics = children.map(({ diagnostics }, index) => ({
-    child: index,
-    fallbackLogs: diagnostics.fallbackLogs,
-  }));
-  const safeDiagnostics = JSON.stringify(childDiagnostics);
-  assert.equal(
-    children.every(({ key }) => /^[A-Za-z0-9_-]{43}$/.test(key)),
-    true,
-    `child output was not a panel key; safe fallback diagnostics: ${safeDiagnostics}`,
-  );
-  assert.equal(
-    children.every(({ key }) => !safeDiagnostics.includes(key)),
-    true,
-    'fallback diagnostics must not contain any panel key values',
-  );
-  assert.equal(
-    new Set(children.map(({ key }) => key)).size,
-    1,
-    `concurrent panel-key children disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
-  );
-  assert.equal(
-    fs.readFileSync(file, 'utf8').trim() === children[0].key,
-    true,
-    `persisted panel key disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
-  );
-  assert.equal(fs.existsSync(`${file}.repair-lock`), false);
-  assert.equal(
-    fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
-    false,
-  );
-});
+    assert.match(result.key, /^[A-Za-z0-9_-]{43}$/);
+    assert.deepEqual(result.fallbackLogs, []);
+    assert.equal(fs.readFileSync(file, 'utf8').trim(), result.key);
+    assert.equal(fs.existsSync(`${file}.repair-lock`), false);
+    assert.equal(
+      fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
+      false,
+    );
+  });
+}
 
-test('malformed-key repair falls back to no-overwrite publication when rename returns EPERM', async (t) => {
+test('repair readers wait through a malformed-file unlink/link gap without falling back', async (t) => {
   const file = tempKeyFile(t);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, 'not a key\n');
+  fs.writeFileSync(`${file}.repair-lock`, 'held by test');
+  const ready = `${file}.ready`;
+  const missing = `${file}.missing`;
+  const winner = `${'w'.repeat(43)}\n`;
   const script = `
     import fs from 'node:fs';
     const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
-    const [file] = process.argv.slice(1);
-    const rename = fs.renameSync;
-    fs.renameSync = function (from, to, ...args) {
-      if (to === file && from.endsWith('.tmp')) {
-        const error = new Error('injected destination replacement failure');
-        error.code = 'EPERM';
+    const [file, ready, missing] = process.argv.slice(1);
+    const original = fs.readFileSync;
+    let reads = 0;
+    fs.readFileSync = function (target, ...args) {
+      if (target === file && ++reads === 2) {
+        fs.writeFileSync(ready, 'ready');
+        const deadline = Date.now() + 5000;
+        while (fs.existsSync(file)) {
+          if (Date.now() >= deadline) throw new Error('unlink-gap barrier timed out');
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+        }
+      }
+      try {
+        return original.call(this, target, ...args);
+      } catch (error) {
+        if (target === file && error.code === 'ENOENT') fs.writeFileSync(missing, 'missing');
         throw error;
       }
-      return rename.call(this, from, to, ...args);
     };
     const fallbackLogs = [];
     const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
     process.stdout.write(JSON.stringify({ key, fallbackLogs }));
   `;
-  const result = await new Promise((resolve, reject) => {
+  const childResult = new Promise((resolve, reject) => {
     const child = spawn(
       process.execPath,
-      ['--input-type=module', '-e', script, file],
+      ['--input-type=module', '-e', script, file, ready, missing],
       { stdio: ['ignore', 'pipe', 'pipe'] },
     );
     t.after(() => child.kill());
@@ -268,14 +351,23 @@ test('malformed-key repair falls back to no-overwrite publication when rename re
       }
     });
   });
-  assert.match(result.key, /^[A-Za-z0-9_-]{43}$/);
+  const waitForMarker = async (marker) => {
+    const deadline = Date.now() + 5000;
+    while (!fs.existsSync(marker)) {
+      if (Date.now() >= deadline)
+        throw new Error('repair gap marker timed out');
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+  };
+  await waitForMarker(ready);
+  fs.rmSync(file);
+  await waitForMarker(missing);
+  fs.writeFileSync(file, winner);
+  const result = await childResult;
+  assert.equal(result.key, winner.trim());
   assert.deepEqual(result.fallbackLogs, []);
-  assert.equal(fs.readFileSync(file, 'utf8').trim(), result.key);
-  assert.equal(fs.existsSync(`${file}.repair-lock`), false);
-  assert.equal(
-    fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
-    false,
-  );
+  assert.equal(fs.readFileSync(file, 'utf8'), winner);
+  assert.equal(fs.existsSync(`${file}.repair-lock`), true);
 });
 
 test('an unavailable repair lock falls back without hanging or removing its owner’s lock', (t) => {
