@@ -2,6 +2,13 @@
 
 ## Current execution checkpoint - 14 October 2026
 
+The [latest integration follow-up](performance-evidence/resume-validation-20261014/README.md)
+records the corrected weather preflight and candidate fixtures, matched S48 CPU
+diagnostics, versioned resource gauges, and the S59 CSV throughput tradeoff.
+The CSV experiment remains opt-in pending browser validation. The Windows
+fresh-frame failure remains under diagnosis. Counts below are unchanged;
+new both-base CI and hosted weather results are still required.
+
 The [S51 engineering review](performance-evidence/closure-audit-20261013/README.md)
 closes the render-demand implementation after the dense-cadence and independent
 focus-deadline corrections. All five affected files match the reviewed packet;
