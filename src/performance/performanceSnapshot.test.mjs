@@ -39,6 +39,7 @@ test('performance monitor records frames and releases its listener', () => {
           },
         },
       },
+      entities: { values: [{}, {}, {}, {}, {}, {}] },
       dataSources: { length: 2 },
       imageryLayers: { length: 1 },
     },
@@ -75,6 +76,7 @@ test('performance monitor records frames and releases its listener', () => {
   assert.equal(report.samples[0].durationMs, 20);
   assert.equal(report.settings.densityPct, 75);
   assert.equal(report.resources.dataSources, 2);
+  assert.equal(report.resources.entities, 6);
   assert.equal(report.timings.overlayProjectionMs, 2.5);
   assert.deepEqual(report.resources.ownerResources, {
     cctv: {

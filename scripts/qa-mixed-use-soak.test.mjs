@@ -25,7 +25,18 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
   JSEventListeners: listeners,
   application: {
     workers: { instrumented: true, overflow: false, pending: 0, workers: [] },
-    resources: { primitives: 3, ownerResources: { fixture: { pendingJobs } } },
+    resources: {
+      primitives: 3,
+      entities: 0,
+      ownerResources: {
+        fixture: {
+          pendingJobs,
+          pointPrimitiveCount: 0,
+          pointPrimitiveCountUnit: 'instances',
+          pointPrimitiveCoverage: 'owned-import-point-collection',
+        },
+      },
+    },
   },
 });
 
@@ -517,6 +528,36 @@ test('retention compares owned gauges rather than cumulative provider activity',
     result.failures.some((reason) => reason.includes('providerCacheReuses')),
     false,
   );
+});
+
+test('retention gates scene entities and explicitly scoped import point instances', () => {
+  const entities = stableReport();
+  entities.checkpoints.at(-1).metrics.application.resources.entities = 1;
+  assert.match(
+    evaluateSoakStability(entities).failures.join(' '),
+    /Resource entities grew from 0 to 1/,
+  );
+
+  const points = stableReport();
+  points.checkpoints.at(
+    -1,
+  ).metrics.application.resources.ownerResources.fixture.pointPrimitiveCount =
+    1;
+  const pointResult = evaluateSoakStability(points);
+  assert.match(
+    pointResult.failures.join(' '),
+    /fixture\.pointPrimitiveCount grew from 0 to 1/,
+  );
+
+  const missingUnit = stableReport();
+  delete missingUnit.checkpoints[4].metrics.application.resources.ownerResources
+    .fixture.pointPrimitiveCountUnit;
+  assert.equal(evaluateSoakStability(missingUnit).status, 'pending');
+
+  const wrongCoverage = stableReport();
+  wrongCoverage.checkpoints[4].metrics.application.resources.ownerResources.fixture.pointPrimitiveCoverage =
+    'all-scene-primitives';
+  assert.equal(evaluateSoakStability(wrongCoverage).status, 'pending');
 });
 
 test('operation failure preserves completed counts and retained checkpoints', async () => {

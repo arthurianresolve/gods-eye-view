@@ -9,6 +9,7 @@ const RESOURCE_GAUGES = new Set([
   'timers',
   'pendingJobs',
   'primitives',
+  'entities',
   'groundPrimitives',
   'dataSources',
   'dataLayers',
@@ -17,7 +18,10 @@ const RESOURCE_GAUGES = new Set([
   'renderHolds',
   'scheduledUpdates',
   'estimatedTileBytes',
+  'pointPrimitiveCount',
 ]);
+const POINT_PRIMITIVE_COUNT_UNIT = 'instances';
+const POINT_PRIMITIVE_COVERAGE = 'owned-import-point-collection';
 
 function resourceCounts(metrics) {
   const resources = metrics?.application?.resources;
@@ -33,6 +37,15 @@ function resourceCounts(metrics) {
   }
   for (const [owner, owned] of Object.entries(resources.ownerResources)) {
     for (const [key, value] of Object.entries(owned)) {
+      if (
+        key === 'pointPrimitiveCount' &&
+        (owned.pointPrimitiveCountUnit !== POINT_PRIMITIVE_COUNT_UNIT ||
+          owned.pointPrimitiveCoverage !== POINT_PRIMITIVE_COVERAGE ||
+          !Number.isSafeInteger(value) ||
+          value < 0 ||
+          value > 5_000)
+      )
+        continue;
       if (
         RESOURCE_GAUGES.has(key) &&
         typeof value === 'number' &&

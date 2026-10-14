@@ -96,6 +96,7 @@ function readResourceCounts({
   const count = (value) => (Number.isFinite(value) ? value : null);
   return {
     dataSources: count(viewer?.dataSources?.length),
+    entities: count(viewer?.entities?.values?.length),
     primitives: count(scene?.primitives?.length),
     groundPrimitives: count(scene?.groundPrimitives?.length),
     imageryLayers: count(viewer?.imageryLayers?.length),
