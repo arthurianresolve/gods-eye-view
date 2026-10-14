@@ -27,8 +27,15 @@ function position(coordinate) {
   );
 }
 
-function positions(coordinates) {
-  return coordinates.map(position);
+function* preparedPositions(coordinates) {
+  const output = [];
+  for (const coordinate of coordinates || []) {
+    output.push(position(coordinate));
+    // Keep one large imported line or ring interruptible. The surrounding
+    // loadAsync batcher controls the actual event-loop budget.
+    yield;
+  }
+  return output;
 }
 
 /** Render a bounded user-imported cohort with the shared evidence inspector. */
@@ -179,9 +186,10 @@ export function createImportedGeometryLayer({
         geometry?.type === 'LineString' &&
         geometry.coordinates.length >= 2
       ) {
+        const linePositions = yield* preparedPositions(geometry.coordinates);
         shape = {
           polyline: {
-            positions: positions(geometry.coordinates),
+            positions: linePositions,
             width: 3,
             material: Cesium.Color.CYAN,
             clampToGround: true,
@@ -191,13 +199,15 @@ export function createImportedGeometryLayer({
         geometry?.type === 'Polygon' &&
         geometry.coordinates?.[0]?.length >= 4
       ) {
+        const rings = [];
+        for (const ring of geometry.coordinates) {
+          rings.push(yield* preparedPositions(ring));
+        }
         shape = {
           polygon: {
             hierarchy: new Cesium.PolygonHierarchy(
-              positions(geometry.coordinates[0]),
-              geometry.coordinates
-                .slice(1)
-                .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
+              rings[0],
+              rings.slice(1).map((ring) => new Cesium.PolygonHierarchy(ring)),
             ),
             material: Cesium.Color.CYAN.withAlpha(0.18),
             outline: true,

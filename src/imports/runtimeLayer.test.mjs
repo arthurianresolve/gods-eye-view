@@ -325,6 +325,45 @@ test('cooperative imports yield after four ms and preserve complete entity and e
   assert.equal(env.timers.size, 0);
 });
 
+test('large line and polygon preparation yields before creating Cesium geometry', async (t) => {
+  const env = fixture(t, { advancePreparationClock: true });
+  const coordinates = Array.from({ length: 2_000 }, (_, index) => [
+    10 + index / 10_000,
+    40,
+  ]);
+  const input = [
+    {
+      id: 'large',
+      kind: 'geojson',
+      records: [
+        {
+          id: 'line',
+          geometry: { type: 'LineString', coordinates },
+          properties: {},
+        },
+        {
+          id: 'polygon',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [...coordinates.slice(0, 100), coordinates[0]],
+            ],
+          },
+          properties: {},
+        },
+      ],
+    },
+  ];
+  const pending = env.layer.loadAsync(input, { workspaceId: 'large' });
+  assert.equal(env.entities.values.length, 0);
+  assert.equal(env.timers.size, 1);
+  env.flush();
+  assert.deepEqual(await pending, { drawn: 2, omitted: 0 });
+  assert.equal(env.entities.values.length, 2);
+  env.layer.clear();
+  assert.equal(env.entities.values.length, 0);
+});
+
 test('superseded imports cannot remove or repopulate the replacement workspace', async (t) => {
   const env = fixture(t);
   const old = env.layer.loadAsync(records(20), { workspaceId: 'old' });
