@@ -3,6 +3,7 @@ import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
+import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -16,6 +17,12 @@ export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
 
 export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
   'gev-cesium-acceptance/2026-10-13';
+
+export function canonicalPerformanceWorkloadId(id) {
+  if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
+  if (id === 'infrastructure-only') return 'infrastructure';
+  return id;
+}
 
 const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -533,10 +540,8 @@ function comparisonOutcome(rows) {
   const eligibleRows = rows.filter(
     (row) => row.environmentId === primaryEnvironmentId && !row.error,
   );
-  const canonicalWorkload = (id) =>
-    id === 'infrastructure-only' ? 'infrastructure' : id;
   const workloadIds = new Set(
-    eligibleRows.map((row) => canonicalWorkload(row.workloadId)),
+    eligibleRows.map((row) => canonicalPerformanceWorkloadId(row.workloadId)),
   );
   const denseRow = eligibleRows.find(
     (row) => row.workloadId === 'dense-investigation',

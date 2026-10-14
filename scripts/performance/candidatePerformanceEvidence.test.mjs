@@ -5,11 +5,13 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  canonicalPerformanceWorkloadId,
   classifyRecordedRenderer,
   evaluateManifestPerformanceEvidence,
   PERFORMANCE_ACCEPTANCE_POLICY_ID,
 } from './candidatePerformanceEvidence.mjs';
 import { readValidationManifest } from '../qa-candidate.mjs';
+import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import {
   baselineCommit,
   candidateCommit,
@@ -21,6 +23,18 @@ const digest = (value) =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const EVIDENCE_TEMP_PREFIX = 'gev-performance-evidence-';
 const ownedEvidenceDirectories = new Set();
+
+test('candidate workload mapping recognizes the Austin producer identity', () => {
+  assert.equal(AUSTIN_OPERATING_WORKLOAD_ID, 'austin-operating-v1');
+  assert.equal(
+    canonicalPerformanceWorkloadId(AUSTIN_OPERATING_WORKLOAD_ID),
+    'operating-view',
+  );
+  assert.equal(
+    canonicalPerformanceWorkloadId('infrastructure-only'),
+    'infrastructure',
+  );
+});
 
 after(async () => {
   for (const directory of ownedEvidenceDirectories) {
