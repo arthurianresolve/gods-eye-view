@@ -1,10 +1,18 @@
 # Engineering closure audit under the amended criteria
 
-S49, S50, S51, S52, S53, S55, S56, S57 and S58 are **engineering closed**, with scoped component checks passed and
+S48, S49, S50, S51, S52, S53, S55, S56, S57 and S58 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **9/14 engineering closed (64.3%)**, **5/14 partial**
+their own audit. Counts are **10/14 engineering closed (71.4%)**, **4/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S48 bounded diagnostics and ownership - 14 October review
+
+The [root review](s48-review.json) and [owner inventory](../s48-engineering-audit-20261014.md)
+close diagnostic implementation under the engineering column. The matched CPU
+comparison is now valid but too variable to establish a reliable overhead ratio.
+Production-browser workload attribution remains in the qualification column and
+is pending; no GPU timing or hardware pass is inferred.
 
 ## S58 wind, weather and effect ownership - 14 October review
 

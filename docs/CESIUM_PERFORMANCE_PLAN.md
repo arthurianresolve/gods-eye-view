@@ -16,8 +16,11 @@ closes the render-demand implementation after the dense-cadence and independent
 focus-deadline corrections. All five affected files match the reviewed packet;
 its 74 focused checks and three negative controls remain valid. The callback
 inventory now explicitly covers `preUpdate` work as well as render holds.
-Counts are **9/14 engineering closed (64.3%)**, **5/14 partial**, and
-**0/14 fully qualified**. Closed slices are S49, S50, S51, S52, S53, S55, S56, S57 and S58.
+Counts are **10/14 engineering closed (71.4%)**, **4/14 partial**, and
+**0/14 fully qualified**. Closed slices are S48, S49, S50, S51, S52, S53, S55, S56, S57 and S58.
+The [S48 owner audit](performance-evidence/s48-engineering-audit-20261014.md)
+closes bounded diagnostic implementation; production-browser cost attribution
+and reliable instrumentation-overhead conclusions remain unqualified.
 
 [Both-base integration at `e53df518`](performance-evidence/representative-pr-e53df518/README.md)
 passes all seven selected CI jobs and release-artifact verification on each

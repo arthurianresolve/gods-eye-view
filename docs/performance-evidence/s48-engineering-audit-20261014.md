@@ -2,7 +2,7 @@
 
 This is a review note for the S48 engineering row in `docs/CESIUM_ACCEPTANCE.md`.
 It separates delivered diagnostic machinery from the still-unresolved cost
-evidence. It does not change the acceptance ledger or declare S48 closed.
+evidence. The independent findings are followed by the root engineering disposition below.
 
 ## Source and evidence identity
 
@@ -127,7 +127,18 @@ identify leading costs of rendered frames. GPU execution timing must remain
 unavailable unless a supported measured source is introduced. The final
 browser/hardware matrix and any repeated overhead conclusion remain pending.
 
-This note does not close S48 or change any historical result. A reviewer should
-decide whether the engineering row can close with this limitation explicitly
-recorded, or whether the production-browser leading-cost diagnostic is a
-prerequisite for that closure.
+## Root engineering disposition
+
+Under the existing amended acceptance table, S48 engineering is closed. Bounded
+opt-in timings, owner inventory, disabled behavior, matched instrumentation
+comparison, and unavailable-metric handling are implemented and checked. The
+production-browser leading-cost matrix is explicitly in the separate qualification
+column; it remains pending. Wide overhead variation remains inconclusive and does
+not support a negligible-overhead claim or qualify performance. This decision does
+not waive a gate or change historical outcomes.
+
+Root verified the reviewed source hashes against the current tree. The full local
+Windows Node 24 suite at `9487a57c` passes 7,948 ordinary tests, ten platform skips,
+and fourteen allocation checks. Both hosted Node 24/26 jobs at that revision pass;
+full PR matrices are still completing. S48 automatic validation is scoped-passed;
+primary Windows qualification and the final workload attribution matrix are pending.
