@@ -1045,6 +1045,191 @@ export async function resetWeatherEffectsToLatest({
   });
 }
 
+/** Prime all three pinned source phases through the real observed-history UI. */
+export async function prepareWeatherEffectsTimeline({
+  page,
+  fixture,
+  timeoutMs = 15_000,
+} = {}) {
+  if (
+    !page?.evaluate ||
+    fixture?.schema !== 'gev-weather-effects-fixture/v2' ||
+    !/^[a-f0-9]{64}$/.test(fixture.sha256) ||
+    !Array.isArray(fixture.timeline) ||
+    fixture.timeline.length !== 3 ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 15_000
+  )
+    throw new TypeError('Weather timeline preflight inputs are invalid.');
+  return page.evaluate(prepareWeatherEffectsTimelineInPage, {
+    fixtureSha256: fixture.sha256,
+    timeline: fixture.timeline,
+    timeoutMs,
+  });
+}
+
+export async function prepareWeatherEffectsTimelineInPage({
+  fixtureSha256,
+  timeline,
+  timeoutMs,
+} = {}) {
+  const app = window.__godsEyeView;
+  const root = document.querySelector('.weather-readout');
+  const slider = root?.querySelector('input[aria-label="Observed history"]');
+  const latest = root?.querySelector(
+    'button[title="Newest frame per product"]',
+  );
+  const play = root?.querySelector('button[title="Replay observed history"]');
+  const productIds = [
+    'weather-radar',
+    'weather-satellite',
+    'weather-lightning',
+  ];
+  if (
+    !app?.dataManager?.layers?.get ||
+    !slider ||
+    !latest ||
+    !play ||
+    typeof fixtureSha256 !== 'string' ||
+    !/^[a-f0-9]{64}$/.test(fixtureSha256) ||
+    !Array.isArray(timeline) ||
+    timeline.length !== 3 ||
+    !timeline.every((time) => typeof time === 'string') ||
+    new Set(timeline).size !== 3 ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 15_000
+  )
+    throw new Error('Weather timeline preflight controls are unavailable.');
+  const readTimes = () =>
+    productIds.map(
+      (id) =>
+        app.dataManager.layers.get(id)?.module?.getStats?.()?.observedAt ??
+        null,
+    );
+  const readClock = () =>
+    app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
+      ?.clock;
+  const waitForState = async (sourceTime, mode) => {
+    const deadline = performance.now() + timeoutMs;
+    let times = readTimes();
+    let clock = readClock();
+    while (performance.now() < deadline) {
+      if (
+        times.every((time) => time === sourceTime) &&
+        clock?.mode === mode &&
+        clock?.playing === false &&
+        (mode !== 'history' || clock?.target === sourceTime)
+      )
+        return { times, clock };
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      times = readTimes();
+      clock = readClock();
+    }
+    throw new Error(
+      `Weather timeline preflight did not settle at ${mode}:${sourceTime}.`,
+    );
+  };
+  const failIfTimelineIncomplete = () => {
+    const clock = readClock();
+    if (
+      Number(slider.max) !== timeline.length - 1 ||
+      !Array.isArray(clock?.timeline) ||
+      clock.timeline.length !== timeline.length ||
+      timeline.some((time, index) => clock.timeline[index] !== time)
+    )
+      throw new Error('Weather history ended before its pinned timeline.');
+  };
+
+  if (play.getAttribute('aria-pressed') === 'true') play.click();
+  if (play.getAttribute('aria-pressed') !== 'false')
+    throw new Error('Weather history playback must remain paused.');
+  latest.click();
+  const latestState = await waitForState(timeline.at(-1), 'latest');
+  failIfTimelineIncomplete();
+  const phases = [];
+  for (const [timelineIndex, sourceTime] of timeline.entries()) {
+    failIfTimelineIncomplete();
+    slider.value = String(timelineIndex);
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+    const selected = await waitForState(sourceTime, 'history');
+    phases.push({
+      timelineIndex,
+      sourceTime,
+      sourceObservationTimes: selected.times,
+      clock: { mode: selected.clock.mode, playing: selected.clock.playing },
+      fixtureSha256,
+    });
+  }
+  latest.click();
+  const reset = await waitForState(timeline.at(-1), 'latest');
+  if (play.getAttribute('aria-pressed') !== 'false')
+    throw new Error('Weather history playback must remain paused.');
+  const windLayer = app.dataManager.layers.get('wind')?.module;
+  const wind = windLayer?.getParams?.();
+  const windStats = windLayer?.getStats?.();
+  const productLayers = productIds.map(
+    (id) => app.dataManager.layers.get(id)?.module,
+  );
+  const productStats = productLayers.map((layer) => layer?.getStats?.());
+  const satelliteParams = productLayers[1]?.getParams?.();
+  const radarParams = productLayers[0]?.getParams?.();
+  const lightningParams = productLayers[2]?.getParams?.();
+  if (
+    !wind ||
+    typeof wind.model !== 'string' ||
+    wind.model.toLowerCase() !== 'gfs' ||
+    wind.overlay !== 'speed' ||
+    wind.paused !== false ||
+    satelliteParams?.product !== 'clouds-regional' ||
+    satelliteParams?.infrared !== 'filtered' ||
+    radarParams?.opacity !== 'strong' ||
+    lightningParams?.opacity !== 'strong' ||
+    productStats.some((stats) => !timeline.includes(stats?.observedAt))
+  )
+    throw new Error(
+      'Weather history or wind playback state did not match the fixture.',
+    );
+  return {
+    schema: 'gev-weather-history-preflight/v1',
+    fixtureSha256,
+    startup: {
+      sourceObservationTimes: latestState.times,
+      clock: {
+        mode: latestState.clock.mode,
+        playing: latestState.clock.playing,
+      },
+    },
+    phases,
+    reset: {
+      sourceObservationTimes: reset.times,
+      clock: { mode: reset.clock.mode, playing: reset.clock.playing },
+    },
+    selectedTimes: [
+      latestState.times,
+      ...phases.map(({ sourceObservationTimes }) => sourceObservationTimes),
+      reset.sourceObservationTimes,
+    ],
+    playback: {
+      mode: reset.clock.mode,
+      playing: reset.clock.playing,
+      displayedAtStart: reset.times,
+      visualState: {
+        satelliteProduct: satelliteParams.product,
+        satelliteInfrared: satelliteParams.infrared,
+        radarOpacity: radarParams.opacity,
+        lightningOpacity: lightningParams.opacity,
+        windModel: wind.model.toLowerCase(),
+        windOverlay: wind.overlay,
+        windPaused: wind.paused,
+      },
+    },
+    sourceObservationTimes: productStats.map((stats) => stats.observedAt),
+    wind: { params: wind, stats: windStats },
+  };
+}
+
 /** Select one pinned weather source phase through the page's visible timeline controls. */
 export async function selectWeatherEffectsPhaseInPage({
   phase,

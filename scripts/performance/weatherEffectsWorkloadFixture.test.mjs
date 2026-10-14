@@ -29,6 +29,7 @@ import {
   createWeatherEffectsWorkloadFixture,
   runWeatherEffectsPhaseSchedule,
   resetWeatherEffectsToLatest,
+  prepareWeatherEffectsTimeline,
   selectWeatherEffectsPhaseInPage,
   waitForWeatherEffectsReadiness,
   WEATHER_EFFECTS_FIXED_TIME,
@@ -48,6 +49,7 @@ test('capture producer resolves weather fixture operations from its lazy module 
     { name: 'createWeatherEffectsWorkloadFixture', invoked: true },
     { name: 'createWeatherEffectsFixtureDelivery', invoked: true },
     { name: 'resetWeatherEffectsToLatest', invoked: true },
+    { name: 'prepareWeatherEffectsTimeline', invoked: true },
     { name: 'observeWeatherEffectsLayerState', invoked: false },
     { name: 'waitForWeatherEffectsReadiness', invoked: true },
     { name: 'assertWeatherEffectsWindState', invoked: true },
@@ -288,6 +290,10 @@ test('serialized weather phase driver selects every source through the real cloc
     modules.set(id, {
       getStats: () => ({ observedAt: shown, loading: false }),
       getDiagnostics: () => ({ clock: clock.getState() }),
+      getParams: () =>
+        id === 'weather-satellite'
+          ? { product: 'clouds-regional', infrared: 'filtered' }
+          : { opacity: 'strong' },
     });
     return remove;
   });
@@ -333,7 +339,22 @@ test('serialized weather phase driver selects every source through the real cloc
     __gevWeatherMeasurementStartedAt: 100,
     __godsEyeView: {
       dataManager: {
-        layers: { get: (id) => ({ module: modules.get(id) }) },
+        layers: {
+          get: (id) => ({
+            module:
+              modules.get(id) ||
+              (id === 'wind'
+                ? {
+                    getParams: () => ({
+                      model: 'GFS',
+                      overlay: 'speed',
+                      paused: false,
+                    }),
+                    getStats: () => ({ loading: false, gridCells: 65_160 }),
+                  }
+                : null),
+          }),
+        },
       },
     },
   };
@@ -359,6 +380,34 @@ test('serialized weather phase driver selects every source through the real cloc
       }),
   };
   try {
+    const startupPreflight = await prepareWeatherEffectsTimeline({
+      page,
+      fixture,
+    });
+    assert.equal(startupPreflight.schema, 'gev-weather-history-preflight/v1');
+    assert.deepEqual(
+      Array.from(startupPreflight.phases, ({ timelineIndex, sourceTime }) => ({
+        timelineIndex,
+        sourceTime,
+      })),
+      fixture.phaseSchedule.phases.map(({ timelineIndex, sourceTime }) => ({
+        timelineIndex,
+        sourceTime,
+      })),
+    );
+    assert.deepEqual(
+      Array.from(startupPreflight.phases, ({ sourceObservationTimes }) =>
+        Array.from(sourceObservationTimes),
+      ),
+      fixture.timeline.map((time) => Array(3).fill(time)),
+    );
+    assert.equal(startupPreflight.startup.clock.mode, 'latest');
+    assert.equal(startupPreflight.reset.clock.mode, 'latest');
+    assert.deepEqual(
+      Array.from(startupPreflight.reset.sourceObservationTimes),
+      Array(3).fill(fixture.timeline.at(-1)),
+    );
+
     const observations = [];
     for (const phase of fixture.phaseSchedule.phases) {
       const result = await runInNewContext(

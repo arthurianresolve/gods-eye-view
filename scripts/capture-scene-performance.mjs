@@ -3401,95 +3401,11 @@ try {
         await recordWeatherLayerFailure();
       throw error;
     }
-    const frameResults = await page.evaluate(async (times) => {
-      const root = document.querySelector('.weather-readout');
-      const previous = root?.querySelector(
-        'button[title="Earlier observation"]',
-      );
-      const latest = root?.querySelector(
-        'button[title="Newest frame per product"]',
-      );
-      const play = root?.querySelector(
-        'button[title="Replay observed history"]',
-      );
-      const readTimes = () =>
-        ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
-          (id) =>
-            window.__godsEyeView.dataManager.layers.get(id)?.module.getStats()
-              .observedAt ?? null,
-        );
-      const waitForTimes = async (target) => {
-        const deadline = performance.now() + 15_000;
-        while (performance.now() < deadline) {
-          const observed = readTimes();
-          if (observed.every((time) => time === target)) return observed;
-          await new Promise((resolve) => setTimeout(resolve, 25));
-        }
-        throw new Error(`Weather source did not display ${target}.`);
-      };
-      if (!previous || !latest || !play)
-        throw new Error('Observed-history timeline controls are unavailable.');
-      const observed = [readTimes()];
-      for (const target of [...times].reverse().slice(1)) {
-        if (previous.disabled)
-          throw new Error('Weather history ended before its pinned timeline.');
-        previous.click();
-        observed.push(await waitForTimes(target));
-      }
-      latest.click();
-      observed.push(await waitForTimes(times.at(-1)));
-      if (play.getAttribute('aria-pressed') === 'true') play.click();
-      if (play.getAttribute('aria-pressed') !== 'false')
-        throw new Error('Weather history playback must remain paused.');
-      const app = window.__godsEyeView;
-      const windLayer = app.dataManager.layers.get('wind')?.module;
-      const wind = windLayer?.getParams?.();
-      const windStats = windLayer?.getStats?.();
-      const productLayers = [
-        'weather-radar',
-        'weather-satellite',
-        'weather-lightning',
-      ].map((id) => app.dataManager.layers.get(id)?.module);
-      const productStats = productLayers.map((layer) => layer?.getStats?.());
-      const clockState = app.dataManager.layers
-        .get('weather-radar')
-        ?.module?.getDiagnostics?.()?.clock;
-      const satelliteParams = productLayers[1]?.getParams?.();
-      const radarParams = productLayers[0]?.getParams?.();
-      const lightningParams = productLayers[2]?.getParams?.();
-      if (
-        !wind ||
-        satelliteParams?.product !== 'clouds-regional' ||
-        satelliteParams?.infrared !== 'filtered' ||
-        radarParams?.opacity !== 'strong' ||
-        lightningParams?.opacity !== 'strong' ||
-        productStats.some((stats) => !times.includes(stats?.observedAt)) ||
-        clockState?.mode !== 'latest' ||
-        clockState?.playing !== false
-      )
-        throw new Error(
-          'Weather history or wind playback state did not match the fixture.',
-        );
-      return {
-        selectedTimes: observed,
-        playback: {
-          mode: 'latest',
-          playing: clockState.playing,
-          displayedAtStart: readTimes(),
-          visualState: {
-            satelliteProduct: satelliteParams?.product,
-            satelliteInfrared: satelliteParams?.infrared,
-            radarOpacity: radarParams?.opacity,
-            lightningOpacity: lightningParams?.opacity,
-            windModel: wind.model.toLowerCase(),
-            windOverlay: wind.overlay,
-            windPaused: wind.paused,
-          },
-        },
-        sourceObservationTimes: productStats.map((stats) => stats.observedAt),
-        wind: { params: wind, stats: windStats },
-      };
-    }, weatherEffectsWorkload.timeline);
+    const frameResults =
+      await weatherEffectsModule.prepareWeatherEffectsTimeline({
+        page,
+        fixture: weatherEffectsWorkload,
+      });
     weatherEffectsModule.assertWeatherEffectsWindState(
       frameResults.wind?.params,
       frameResults.wind?.stats,
