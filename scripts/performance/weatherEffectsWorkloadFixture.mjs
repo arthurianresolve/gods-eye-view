@@ -951,6 +951,13 @@ export function createWeatherEffectsFixtureLifecycle({
     timelinePreflight.sourceObservationTimes.length !== 3
   )
     throw new TypeError('Observed weather timeline evidence is incomplete.');
+  assert.deepEqual(
+    timelinePreflight.selectedTimes,
+    [fixture.timeline.at(-1), ...fixture.timeline, fixture.timeline.at(-1)].map(
+      (time) => Array(3).fill(time),
+    ),
+    'Weather startup, ordered history, and latest reset must match the fixture timeline.',
+  );
   assert.ok(
     Array.isArray(phaseObservationsBySample) &&
       phaseObservationsBySample.length === workload?.runsPerScenario * 2,

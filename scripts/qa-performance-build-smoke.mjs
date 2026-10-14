@@ -3307,10 +3307,14 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   );
   const expectedTimes = [
     fixture.timeline.at(-1),
-    fixture.timeline.at(-2),
-    fixture.timeline.at(0),
+    ...fixture.timeline,
     fixture.timeline.at(-1),
   ];
+  assert.deepEqual(
+    report.fixtureDelivery?.timelinePreflight?.selectedTimes,
+    expectedTimes.map((time) => Array(3).fill(time)),
+    'Weather timeline preflight must observe startup latest, every history entry in order, then latest reset.',
+  );
   assert.deepEqual(
     lifecycle?.timeline?.map((row) => row[0]),
     expectedTimes,

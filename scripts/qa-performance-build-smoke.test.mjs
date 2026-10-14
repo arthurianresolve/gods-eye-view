@@ -3142,8 +3142,7 @@ async function validWeatherEffectsCaptureCliReport() {
   const rawDelivery = delivery.summarize(layers, layers);
   const timeline = [
     fixture.timeline.at(-1),
-    fixture.timeline.at(-2),
-    fixture.timeline.at(0),
+    ...fixture.timeline,
     fixture.timeline.at(-1),
   ].map((time) => [time, time, time]);
   const visualState = {
@@ -4808,6 +4807,22 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   repeatedFrames.fixtureDelivery.timelinePreflight.selectedTimes[1] =
     repeatedFrames.fixtureDelivery.timelinePreflight.selectedTimes[0];
   assert.throws(() => validateCaptureCliReport(repeatedFrames, expected));
+
+  for (const mutate of [
+    (selectedTimes) => selectedTimes.splice(2, 2),
+    (selectedTimes) =>
+      selectedTimes.splice(1, 2, selectedTimes[2], selectedTimes[1]),
+    (selectedTimes) => {
+      selectedTimes[2] = Array(3).fill(fixture.timeline.at(-1));
+    },
+  ]) {
+    const invalidPreflight = structuredClone(report);
+    mutate(invalidPreflight.fixtureDelivery.timelinePreflight.selectedTimes);
+    assert.throws(
+      () => validateCaptureCliReport(invalidPreflight, expected),
+      /timeline|deep-equal|deepStrictEqual/,
+    );
+  }
 
   const wrongSourceTime = structuredClone(report);
   wrongSourceTime.captures[0].weatherEffectsClock.weatherStateBefore.sourceObservationTimes[0] =
