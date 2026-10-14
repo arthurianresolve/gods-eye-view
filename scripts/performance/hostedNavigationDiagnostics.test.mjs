@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
-import { createHostedNavigationDiagnostics } from './hostedNavigationDiagnostics.mjs';
+import {
+  createHostedNavigationDiagnostics,
+  summarizeInfrastructureResultElement,
+} from './hostedNavigationDiagnostics.mjs';
 
 class FakePage extends EventEmitter {
   state = {
@@ -20,6 +23,12 @@ class FakePage extends EventEmitter {
       resultState: tooLarge ? 'too-large' : this.state.resultState,
       result: tooLarge ? null : this.state.result,
     };
+  }
+
+  async $eval(_selector, projector) {
+    return projector({
+      textContent: JSON.stringify(this.state.result ?? null),
+    });
   }
 }
 
@@ -59,11 +68,51 @@ test('navigation diagnostics retain bounded same-origin state and detach listene
         'Error: private\n    at http://127.0.0.1:4184/assets/app.js?token=private:10:2',
     }),
   );
+  page.state.status =
+    'Preparing https://127.0.0.1:4184/fixture?token=private credential=hidden';
   page.state.result = {
-    phase: 'viewer-create',
-    errorCode: 'MODULE_IMPORT_FAILED',
-    requestUrl: 'http://127.0.0.1:4184/private?token=secret',
-    detail: 'https://third-party.invalid/path?secret=private',
+    schema: 'gev-infrastructure-runtime-renderers/v4',
+    status: 'failed',
+    applicationCommit: 'a'.repeat(64),
+    harnessCommit: 'b'.repeat(64),
+    error: { name: 'Error', message: 'module failed at token=private' },
+    lifetimes: [
+      {
+        mode: 'entities',
+        status: 'failed',
+        failedSample: {
+          caseId: 'default-style',
+          pair: 0,
+          completedCaptures: 2,
+          stableFrames: 1,
+          geometryReady: false,
+          observedGeometry: 'c'.repeat(64),
+          readinessHistory: {
+            schema: 'gev-infrastructure-readiness-history/v1',
+            limit: 32,
+            counts: {
+              observations: 1,
+              pixelChanges: 1,
+              geometryChanges: 0,
+              notReadyObservations: 1,
+              readinessResets: 1,
+              invalidSignatures: 0,
+            },
+            observations: [
+              {
+                sequence: 1,
+                pixelSha256: 'd'.repeat(64),
+                geometrySha256: 'c'.repeat(64),
+                inputsReady: false,
+                stableFrames: 1,
+              },
+            ],
+          },
+          image: { pngBase64: 'must not be transported' },
+        },
+      },
+    ],
+    image: 'must not be transported',
   };
   const state = await diagnostic.snapshot();
   assert.deepEqual(state.lifecycle, {
@@ -77,11 +126,54 @@ test('navigation diagnostics retain bounded same-origin state and detach listene
   assert.deepEqual(state.moduleErrors, [
     { kind: 'page-error', name: 'Error', path: '/assets/app.js' },
   ]);
-  assert.equal(state.pageState.status, 'Preparing infrastructure fixture');
+  assert.match(state.pageState.status, /\[redacted-url\]/);
+  assert.doesNotMatch(state.pageState.status, /private|token|hidden/);
   assert.deepEqual(state.pageState.result, {
-    phase: 'viewer-create',
-    errorCode: 'MODULE_IMPORT_FAILED',
-    detail: '[redacted-url]',
+    schema: 'gev-infrastructure-runtime-renderers/v4',
+    status: 'failed',
+    applicationCommit: 'a'.repeat(64),
+    harnessCommit: 'b'.repeat(64),
+    error: { name: 'Error', message: 'module failed at [redacted]' },
+    lifetimes: [
+      {
+        mode: 'entities',
+        status: 'failed',
+        error: null,
+        failedSample: {
+          caseId: 'default-style',
+          pair: 0,
+          stableFrames: 1,
+          completedCaptures: 2,
+          pickSearches: null,
+          geometryReady: false,
+          observedGeometry: 'c'.repeat(64),
+          changedGeometryFrom: null,
+          sourceReady: null,
+          sceneReadiness: null,
+          readinessHistory: {
+            schema: 'gev-infrastructure-readiness-history/v1',
+            limit: 32,
+            counts: {
+              observations: 1,
+              pixelChanges: 1,
+              geometryChanges: 0,
+              notReadyObservations: 1,
+              readinessResets: 1,
+              invalidSignatures: 0,
+            },
+            observations: [
+              {
+                sequence: 1,
+                pixelSha256: 'd'.repeat(64),
+                geometrySha256: 'c'.repeat(64),
+                inputsReady: false,
+                stableFrames: 1,
+              },
+            ],
+          },
+        },
+      },
+    ],
   });
   assert.doesNotMatch(
     JSON.stringify(state),
@@ -89,12 +181,13 @@ test('navigation diagnostics retain bounded same-origin state and detach listene
   );
 
   diagnostic.dispose();
+  assert.deepEqual((await diagnostic.snapshot()).requests.pending, []);
   assert.deepEqual(page.eventNames(), []);
   page.emit('request', request('http://127.0.0.1:4184/after.js'));
   assert.deepEqual((await diagnostic.snapshot()).requests.pending, []);
 });
 
-test('navigation diagnostics bound noisy failures and preserve pending same-origin paths', async () => {
+test('navigation diagnostics bound noisy failures and clear pending state on dispose', async () => {
   const page = new FakePage();
   const diagnostic = createHostedNavigationDiagnostics(page, {
     origin: 'http://127.0.0.1:4184',
@@ -118,28 +211,120 @@ test('navigation diagnostics bound noisy failures and preserve pending same-orig
       }),
     });
   }
-  const waiting = request(
-    'http://127.0.0.1:4184/assets/waiting.js?secret=hidden',
-    {
-      type: 'script',
-    },
-  );
-  page.emit('request', waiting);
+  const pendingRequests = [];
+  for (let index = 0; index < 40; index += 1) {
+    const pending = request(
+      `http://127.0.0.1:4184/assets/waiting-${index}.js?secret=hidden`,
+      { type: 'script' },
+    );
+    pendingRequests.push(pending);
+    page.emit('request', pending);
+  }
+  for (const pending of pendingRequests.slice(24, 30)) {
+    page.emit('requestfinished', pending);
+    page.emit('requestfinished', pending);
+  }
   page.state.status = 'x'.repeat(900);
-  page.state.result = { phase: 'x'.repeat(20_000) };
+  page.state.result = {
+    schema: 'gev-infrastructure-runtime-renderers/v4',
+    status: 'failed',
+    error: { name: 'Error', message: 'renderer readiness failed' },
+    lifetimes: [
+      {
+        mode: 'entities',
+        status: 'failed',
+        failedSample: {
+          caseId: 'default-style',
+          observedGeometry: 'f'.repeat(64),
+          readinessHistory: {
+            schema: 'gev-infrastructure-readiness-history/v1',
+            limit: 32,
+            counts: { observations: 1 },
+            observations: [
+              {
+                sequence: 1,
+                pixelSha256: 'e'.repeat(64),
+                geometrySha256: 'f'.repeat(64),
+                inputsReady: false,
+                stableFrames: 0,
+              },
+            ],
+          },
+          pngBase64: 'x'.repeat(30_000),
+        },
+      },
+    ],
+    pngBase64: 'x'.repeat(30_000),
+  };
   const state = await diagnostic.snapshot();
   assert.equal(state.requests.failed.length, 24);
   assert.equal(state.requests.failedOmitted, 16);
-  assert.deepEqual(state.requests.pending, [
-    { path: '/assets/waiting.js', script: true },
-  ]);
+  assert.equal(state.requests.pending.length, 24);
+  assert.equal(state.requests.pendingOmitted, 10);
   assert.equal(state.moduleErrors.length, 24);
   assert.equal(state.moduleErrorsOmitted, 16);
   assert.equal(state.pageState.status.length, 512);
-  assert.equal(state.pageState.resultState, 'too-large');
-  assert.equal(state.pageState.result, null);
+  assert.equal(state.pageState.resultState, 'parsed');
+  assert.equal(
+    state.pageState.result.error.message,
+    'renderer readiness failed',
+  );
+  assert.equal(
+    state.pageState.result.lifetimes[0].failedSample.observedGeometry,
+    'f'.repeat(64),
+  );
+  assert.equal(
+    state.pageState.result.lifetimes[0].failedSample.readinessHistory
+      .observations.length,
+    1,
+  );
+  assert.doesNotMatch(JSON.stringify(state.pageState.result), /pngBase64|xxxx/);
   assert.doesNotMatch(JSON.stringify(state), /secret=hidden|private-[0-9]+/);
   diagnostic.dispose();
+  const afterDispose = await diagnostic.snapshot();
+  assert.deepEqual(afterDispose.requests.pending, []);
+  assert.equal(afterDispose.requests.pendingOmitted, 0);
+});
+
+test('in-page projection preserves bounded readiness and omits image payloads', () => {
+  const projection = summarizeInfrastructureResultElement({
+    textContent: JSON.stringify({
+      schema: 'gev-infrastructure-runtime-renderers/v4',
+      status: 'failed',
+      lifetimes: [
+        {
+          mode: 'primitive-collections',
+          status: 'failed',
+          failedSample: {
+            caseId: 'camera-lod-update',
+            readinessHistory: {
+              schema: 'gev-infrastructure-readiness-history/v1',
+              limit: 32,
+              counts: { observations: 40 },
+              observations: Array.from({ length: 40 }, (_, index) => ({
+                sequence: index + 1,
+                pixelSha256: 'a'.repeat(64),
+                geometrySha256: 'b'.repeat(64),
+                inputsReady: true,
+                stableFrames: 3,
+              })),
+            },
+            pngBase64: 'secret image content',
+          },
+        },
+      ],
+      pngBase64: 'secret image content',
+    }),
+  });
+  assert.equal(projection.resultState, 'parsed');
+  const history = projection.result.lifetimes[0].failedSample.readinessHistory;
+  assert.equal(history.observations.length, 32);
+  assert.equal(history.observations[0].sequence, 9);
+  assert.doesNotMatch(JSON.stringify(projection), /pngBase64|secret image/);
+  assert.deepEqual(
+    summarizeInfrastructureResultElement({ textContent: 'x'.repeat(256_001) }),
+    { resultState: 'too-large', result: null },
+  );
 });
 
 test('unavailable page execution still returns lifecycle and request evidence', async () => {

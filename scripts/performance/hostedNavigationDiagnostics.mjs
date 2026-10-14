@@ -1,10 +1,13 @@
 const MAX_EVENTS = 24;
 const MAX_PENDING = 24;
-const MAX_RESULT_TEXT_LENGTH = 16_000;
+const MAX_RESULT_TEXT_LENGTH = 256_000;
+const MAX_OUTPUT_TEXT_LENGTH = 16_000;
 const PAGE_STATE_TIMEOUT_MS = 500;
 const SENSITIVE_KEY =
   /(?:url|token|secret|credential|authorization|cookie|body)/i;
 const URL_TEXT = /(?:https?:\/\/|data:|file:)[^\s"'<>]*/gi;
+const CREDENTIAL_TEXT =
+  /\b(?:token|secret|credential|authorization|cookie|password)=?[^\s&,;]*/gi;
 const ERROR_NAMES = new Set([
   'Error',
   'TypeError',
@@ -28,11 +31,14 @@ function safePath(value, expectedOrigin) {
 
 function boundedValue(value, state, depth = 0) {
   if (state.remaining <= 0) return '[omitted]';
-  if (depth > 4) return '[depth-limit]';
+  if (depth > 7) return '[depth-limit]';
   if (value === null || typeof value === 'boolean') return value;
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'string') {
-    const safe = value.replace(URL_TEXT, '[redacted-url]').slice(0, 512);
+    const safe = value
+      .replace(URL_TEXT, '[redacted-url]')
+      .replace(CREDENTIAL_TEXT, '[redacted]')
+      .slice(0, 512);
     state.remaining -= safe.length;
     return safe;
   }
@@ -50,34 +56,166 @@ function boundedValue(value, state, depth = 0) {
   return output;
 }
 
+/** Puppeteer-serializable projection for the infrastructure fixture's result element. */
+export function summarizeInfrastructureResultElement(element) {
+  const text =
+    typeof element?.textContent === 'string' ? element.textContent : '';
+  if (!text) return { resultState: 'missing', result: null };
+  if (text.length > 256_000) return { resultState: 'too-large', result: null };
+  let report;
+  try {
+    report = JSON.parse(text);
+  } catch {
+    return { resultState: 'invalid-json', result: null };
+  }
+  if (!report || typeof report !== 'object' || Array.isArray(report))
+    return { resultState: 'invalid-json', result: null };
+  const safeText = (value, maximum = 240) =>
+    typeof value === 'string'
+      ? value
+          .replace(/(?:https?:\/\/|data:|file:)[^\s"'<>]*/gi, '[redacted-url]')
+          .replace(
+            /\b(?:token|secret|credential|authorization|cookie|password)=?[^\s&,;]*/gi,
+            '[redacted]',
+          )
+          .slice(0, maximum)
+      : null;
+  const safeError = (value) => {
+    if (!value || typeof value !== 'object') return null;
+    const allowedNames = new Set([
+      'Error',
+      'TypeError',
+      'ReferenceError',
+      'SyntaxError',
+      'RangeError',
+      'DeveloperError',
+    ]);
+    return {
+      name: allowedNames.has(value.name) ? value.name : 'Error',
+      message: safeText(value.message),
+    };
+  };
+  const safeCount = (value) =>
+    Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const safeHash = (value) =>
+    typeof value === 'string' && /^[a-f0-9]{64}$/.test(value) ? value : null;
+  const safeReadiness = (value) => {
+    if (!value || typeof value !== 'object') return null;
+    const counts = {};
+    for (const key of [
+      'observations',
+      'pixelChanges',
+      'geometryChanges',
+      'notReadyObservations',
+      'readinessResets',
+      'invalidSignatures',
+    ])
+      counts[key] = safeCount(value.counts?.[key]);
+    return {
+      schema:
+        value.schema === 'gev-infrastructure-readiness-history/v1'
+          ? value.schema
+          : null,
+      limit: value.limit === 32 ? 32 : null,
+      counts,
+      observations: Array.isArray(value.observations)
+        ? value.observations.slice(-32).map((row) => ({
+            sequence: safeCount(row?.sequence),
+            pixelSha256: safeHash(row?.pixelSha256),
+            geometrySha256: safeHash(row?.geometrySha256),
+            inputsReady:
+              typeof row?.inputsReady === 'boolean' ? row.inputsReady : null,
+            stableFrames: safeCount(row?.stableFrames),
+          }))
+        : [],
+    };
+  };
+  const safeFailedSample = (value) => {
+    if (!value || typeof value !== 'object') return null;
+    const allowedCases = new Set([
+      'default-style',
+      'camera-lod-update-baseline',
+      'camera-lod-update',
+    ]);
+    const readiness = safeReadiness(value.readinessHistory);
+    return {
+      caseId: allowedCases.has(value.caseId) ? value.caseId : null,
+      pair:
+        Number.isInteger(value.pair) && value.pair >= 0 && value.pair < 5
+          ? value.pair
+          : null,
+      stableFrames: safeCount(value.stableFrames),
+      completedCaptures: safeCount(value.completedCaptures),
+      pickSearches: safeCount(value.pickSearches),
+      geometryReady:
+        typeof value.geometryReady === 'boolean' ? value.geometryReady : null,
+      observedGeometry: safeHash(value.observedGeometry),
+      changedGeometryFrom: safeHash(value.changedGeometryFrom),
+      sourceReady:
+        typeof value.sourceReady === 'boolean' ? value.sourceReady : null,
+      sceneReadiness:
+        value.sceneReadiness && typeof value.sceneReadiness === 'object'
+          ? {
+              dataSourcesReady:
+                typeof value.sceneReadiness.dataSourcesReady === 'boolean'
+                  ? value.sceneReadiness.dataSourcesReady
+                  : null,
+              globeTilesLoaded:
+                typeof value.sceneReadiness.globeTilesLoaded === 'boolean'
+                  ? value.sceneReadiness.globeTilesLoaded
+                  : null,
+            }
+          : null,
+      readinessHistory: readiness,
+    };
+  };
+  const safeModes = new Set(['entities', 'primitive-collections']);
+  const safeStatuses = new Set([
+    'running',
+    'passed',
+    'failed',
+    'not-triggered',
+    'diagnostic-error',
+    'partial-or-diagnostic-error',
+  ]);
+  return {
+    resultState: 'parsed',
+    result: {
+      schema: safeText(report.schema, 100),
+      status: safeStatuses.has(report.status) ? report.status : 'unknown',
+      applicationCommit: safeHash(report.applicationCommit),
+      harnessCommit: safeHash(report.harnessCommit),
+      error: safeError(report.error),
+      lifetimes: Array.isArray(report.lifetimes)
+        ? report.lifetimes.slice(0, 2).map((lifetime) => ({
+            mode: safeModes.has(lifetime?.mode) ? lifetime.mode : 'unknown',
+            status: safeStatuses.has(lifetime?.status)
+              ? lifetime.status
+              : 'unknown',
+            error: safeError(lifetime?.error),
+            failedSample: safeFailedSample(lifetime?.failedSample),
+          }))
+        : [],
+    },
+  };
+}
+
 async function readPageState(page) {
   let timer;
-  const pageRead = Promise.resolve()
-    .then(() =>
-      page.evaluate((maxLength) => {
-        const text = document.querySelector('#result')?.textContent ?? '';
-        let result = null;
-        let resultState = 'missing';
-        if (text.length > maxLength) resultState = 'too-large';
-        else if (text.length > 0) {
-          try {
-            result = JSON.parse(text);
-            resultState = 'parsed';
-          } catch {
-            resultState = 'invalid-json';
-          }
-        }
-        return {
-          readyState: document.readyState,
-          status: (document.querySelector('#status')?.textContent ?? '').slice(
-            0,
-            512,
-          ),
-          resultState,
-          result,
-        };
-      }, MAX_RESULT_TEXT_LENGTH),
-    )
+  const pageRead = Promise.all([
+    page.evaluate(() => ({
+      readyState: document.readyState,
+      status: (document.querySelector('#status')?.textContent ?? '').slice(
+        0,
+        512,
+      ),
+    })),
+    page.$eval('#result', summarizeInfrastructureResultElement).catch(() => ({
+      resultState: 'missing',
+      result: null,
+    })),
+  ])
+    .then(([state, result]) => ({ ...state, ...result }))
     .catch(() => null);
   const timeout = new Promise((resolve) => {
     timer = setTimeout(() => resolve(null), PAGE_STATE_TIMEOUT_MS);
@@ -85,7 +223,7 @@ async function readPageState(page) {
   const state = await Promise.race([pageRead, timeout]);
   clearTimeout(timer);
   if (!state) return { available: false };
-  const resultBudget = { remaining: MAX_RESULT_TEXT_LENGTH };
+  const statusBudget = { remaining: 512 };
   return {
     available: true,
     readyState: ['loading', 'interactive', 'complete'].includes(
@@ -93,7 +231,7 @@ async function readPageState(page) {
     )
       ? state.readyState
       : 'unknown',
-    status: String(state.status || '').slice(0, 512),
+    status: boundedValue(String(state.status || ''), statusBudget),
     resultState: ['missing', 'too-large', 'invalid-json', 'parsed'].includes(
       state.resultState,
     )
@@ -101,7 +239,9 @@ async function readPageState(page) {
       : 'unknown',
     result:
       state.resultState === 'parsed'
-        ? boundedValue(state.result, resultBudget)
+        ? boundedValue(state.result, {
+            remaining: MAX_OUTPUT_TEXT_LENGTH,
+          })
         : null,
   };
 }
@@ -268,6 +408,8 @@ export function createHostedNavigationDiagnostics(
       page.off('response', onResponse);
       page.off('console', onConsole);
       page.off('pageerror', onPageError);
+      pending.clear();
+      omittedPending = 0;
     },
   };
 }
