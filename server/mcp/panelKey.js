@@ -15,18 +15,42 @@ const newKey = () => randomBytes(32).toString('base64url');
 const notShared = (error) =>
   `panel key not shared (${error.code || error.message}); using a key of this process`;
 
+function readKeyState(file) {
+  try {
+    const text = fs.readFileSync(file, 'utf8').trim();
+    return KEY_PATTERN.test(text)
+      ? { kind: 'valid', key: text }
+      : { kind: 'malformed', key: null };
+  } catch (error) {
+    if (error.code === 'ENOENT') return { kind: 'absent', key: null };
+    throw error;
+  }
+}
+
 function readKey(file) {
-  const text = fs.readFileSync(file, 'utf8').trim();
-  return KEY_PATTERN.test(text) ? text : null;
+  return readKeyState(file).key;
 }
 
 function readKeyIfPresent(file) {
-  try {
-    return readKey(file);
-  } catch (error) {
-    if (error.code === 'ENOENT') return null;
-    throw error;
+  return readKeyState(file).key;
+}
+
+/** Publish only if absent; a late first creator always wins. */
+function publishIfAbsent(file, tmp, key) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      fs.linkSync(tmp, file);
+      return key;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const state = readKeyState(file);
+      if (state.kind === 'valid') return state.key;
+      if (state.kind === 'malformed') return publishRepairedKey(file, tmp, key);
+    }
   }
+  throw Object.assign(new Error('panel key publication kept racing'), {
+    code: 'EAGAIN',
+  });
 }
 
 /** Replace malformed contents without depending on Windows rename-over-file. */
@@ -39,18 +63,11 @@ function publishRepairedKey(file, tmp, key) {
     // Under the repair lock, remove only the still-malformed destination and
     // publish with link(), whose no-overwrite behavior resolves a concurrent
     // first creator to one persisted winner.
-    const winner = readKeyIfPresent(file);
-    if (winner) return winner;
+    const state = readKeyState(file);
+    if (state.kind === 'valid') return state.key;
+    if (state.kind === 'absent') return publishIfAbsent(file, tmp, key);
     fs.rmSync(file, { force: true });
-    try {
-      fs.linkSync(tmp, file);
-      return key;
-    } catch (linkError) {
-      if (linkError.code !== 'EEXIST') throw linkError;
-      const concurrentWinner = readKeyIfPresent(file);
-      if (concurrentWinner) return concurrentWinner;
-      throw linkError;
-    }
+    return publishIfAbsent(file, tmp, key);
   }
 }
 
@@ -79,8 +96,9 @@ function repairKey(file, tmp, key) {
   }
   try {
     // A repair completed between our earlier read and acquiring the lock.
-    const winner = readKeyIfPresent(file);
-    if (winner) return winner;
+    const state = readKeyState(file);
+    if (state.kind === 'valid') return state.key;
+    if (state.kind === 'absent') return publishIfAbsent(file, tmp, key);
     return publishRepairedKey(file, tmp, key);
   } finally {
     fs.closeSync(fd);

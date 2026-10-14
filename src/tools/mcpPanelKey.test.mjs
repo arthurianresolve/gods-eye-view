@@ -370,6 +370,133 @@ test('repair readers wait through a malformed-file unlink/link gap without falli
   assert.equal(fs.existsSync(`${file}.repair-lock`), true);
 });
 
+test('an absent post-lock path cannot overwrite a concurrent first creator', async (t) => {
+  const file = tempKeyFile(t);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const ready = `${file}.publish-ready`;
+  const proceed = `${file}.publish-proceed`;
+  const winner = `${'x'.repeat(43)}\n`;
+  const script = `
+    import fs from 'node:fs';
+    const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
+    const [file, ready, proceed] = process.argv.slice(1);
+    const link = fs.linkSync;
+    let calls = 0;
+    fs.linkSync = function (from, to) {
+      if (to === file && ++calls === 1) {
+        const error = new Error('injected link collision');
+        error.code = 'EEXIST';
+        throw error;
+      }
+      if (to === file && calls === 2) {
+        fs.writeFileSync(ready, 'ready');
+        const deadline = Date.now() + 5000;
+        while (!fs.existsSync(proceed)) {
+          if (Date.now() >= deadline) throw new Error('first-creator barrier timed out');
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+        }
+      }
+      return link.call(this, from, to);
+    };
+    const fallbackLogs = [];
+    const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
+    process.stdout.write(JSON.stringify({ key, fallbackLogs }));
+  `;
+  const childResult = new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      ['--input-type=module', '-e', script, file, ready, proceed],
+      { stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    t.after(() => child.kill());
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (chunk) => (out += chunk));
+    child.stderr.on('data', (chunk) => (err += chunk));
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`exit ${code}: ${err}`));
+      try {
+        resolve(JSON.parse(out));
+      } catch {
+        reject(new Error('child repair result was malformed'));
+      }
+    });
+  });
+  const deadline = Date.now() + 5000;
+  while (!fs.existsSync(ready)) {
+    if (Date.now() >= deadline)
+      throw new Error('first-creator ready marker timed out');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  fs.writeFileSync(file, winner);
+  fs.writeFileSync(proceed, 'continue');
+  const result = await childResult;
+  assert.equal(result.key, winner.trim());
+  assert.deepEqual(result.fallbackLogs, []);
+  assert.equal(fs.readFileSync(file, 'utf8'), winner);
+  assert.equal(fs.existsSync(`${file}.repair-lock`), false);
+  assert.equal(
+    fs.readdirSync(path.dirname(file)).some((name) => name.endsWith('.tmp')),
+    false,
+  );
+});
+
+test('EPERM replacement preserves a first creator published in the unlink gap', async (t) => {
+  const file = tempKeyFile(t);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, 'not a key\n');
+  const winner = `${'y'.repeat(43)}\n`;
+  const script = `
+    import fs from 'node:fs';
+    const { sharedPanelKey } = await import(${JSON.stringify(PANEL_KEY_MODULE)});
+    const [file, winner] = process.argv.slice(1);
+    const rename = fs.renameSync;
+    fs.renameSync = function (from, to, ...args) {
+      if (to === file && from.endsWith('.tmp')) {
+        const error = new Error('injected destination replacement failure');
+        error.code = 'EPERM';
+        throw error;
+      }
+      return rename.call(this, from, to, ...args);
+    };
+    const remove = fs.rmSync;
+    fs.rmSync = function (target, ...args) {
+      const result = remove.call(this, target, ...args);
+      if (target === file) fs.writeFileSync(file, winner);
+      return result;
+    };
+    const fallbackLogs = [];
+    const key = sharedPanelKey({ file, log: (line) => fallbackLogs.push(line) });
+    process.stdout.write(JSON.stringify({ key, fallbackLogs }));
+  `;
+  const result = await new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      ['--input-type=module', '-e', script, file, winner],
+      { stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    t.after(() => child.kill());
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (chunk) => (out += chunk));
+    child.stderr.on('data', (chunk) => (err += chunk));
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`exit ${code}: ${err}`));
+      try {
+        resolve(JSON.parse(out));
+      } catch {
+        reject(new Error('child repair result was malformed'));
+      }
+    });
+  });
+  assert.equal(result.key, winner.trim());
+  assert.deepEqual(result.fallbackLogs, []);
+  assert.equal(fs.readFileSync(file, 'utf8'), winner);
+  assert.equal(fs.existsSync(`${file}.repair-lock`), false);
+});
+
 test('an unavailable repair lock falls back without hanging or removing its owner’s lock', (t) => {
   const file = tempKeyFile(t);
   fs.mkdirSync(path.dirname(file), { recursive: true });
