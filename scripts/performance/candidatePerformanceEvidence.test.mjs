@@ -12,6 +12,7 @@ import {
 } from './candidatePerformanceEvidence.mjs';
 import { readValidationManifest } from '../qa-candidate.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
+import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
 import {
   baselineCommit,
   candidateCommit,
@@ -30,9 +31,11 @@ test('candidate workload mapping recognizes the Austin producer identity', () =>
     canonicalPerformanceWorkloadId(AUSTIN_OPERATING_WORKLOAD_ID),
     'operating-view',
   );
+  for (const workloadId of INFRASTRUCTURE_WORKLOAD_IDS)
+    assert.equal(canonicalPerformanceWorkloadId(workloadId), 'infrastructure');
   assert.equal(
     canonicalPerformanceWorkloadId('infrastructure-only'),
-    'infrastructure',
+    'infrastructure-only',
   );
 });
 
@@ -628,7 +631,7 @@ test('missing dense and tracking measurements stay pending and do not imply cove
   const setup = await setupManifest();
   for (const workloadId of [
     'operating-view',
-    'infrastructure-only',
+    INFRASTRUCTURE_WORKLOAD_IDS[0],
     'weather-effects',
     'lifecycle-stress',
     'map-streaming',
@@ -648,6 +651,16 @@ test('missing dense and tracking measurements stay pending and do not imply cove
     ['unassessed', 'unassessed'],
   );
   assert.ok(result.comparison.missingWorkloads.includes('dense-investigation'));
+  assert.deepEqual(result.comparison.infrastructureVariantCoverage, {
+    requiredVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
+    observedVariants: [INFRASTRUCTURE_WORKLOAD_IDS[0]],
+    missingVariants: INFRASTRUCTURE_WORKLOAD_IDS.slice(1),
+  });
+  assert.ok(
+    result.comparison.pending.some((message) =>
+      INFRASTRUCTURE_WORKLOAD_IDS.slice(1).every((id) => message.includes(id)),
+    ),
+  );
   assert.ok(
     result.comparison.missingWorkloads.includes('selected-aircraft-tracking'),
   );
@@ -658,7 +671,7 @@ test('software-only comparisons cannot satisfy primary objective coverage', asyn
   for (const workloadId of [
     'dense-investigation',
     'operating-view',
-    'infrastructure-only',
+    ...INFRASTRUCTURE_WORKLOAD_IDS,
     'weather-effects',
     'lifecycle-stress',
     'map-streaming',
@@ -760,7 +773,7 @@ test('complete primary Windows evidence passes with supplemental software rows',
   for (const workloadId of [
     'dense-investigation',
     'operating-view',
-    'infrastructure-only',
+    ...INFRASTRUCTURE_WORKLOAD_IDS,
     'weather-effects',
     'lifecycle-stress',
     'map-streaming',
@@ -849,6 +862,11 @@ test('complete primary Windows evidence passes with supplemental software rows',
     ['missed', 'missed'],
   );
   assert.equal(result.comparison.environments.at(-1).status, 'supplemental');
+  assert.deepEqual(result.comparison.infrastructureVariantCoverage, {
+    requiredVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
+    observedVariants: [...INFRASTRUCTURE_WORKLOAD_IDS].sort(),
+    missingVariants: [],
+  });
   assert.equal(result.retentionOutcome.status, 'passed');
   assert.equal(result.retentionOutcome.environments[0].status, 'passed');
   assert.equal(result.retentionOutcome.environments[1].status, 'supplemental');

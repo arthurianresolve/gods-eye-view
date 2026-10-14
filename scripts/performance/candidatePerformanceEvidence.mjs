@@ -4,6 +4,7 @@ import path from 'node:path';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
+import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -20,7 +21,7 @@ export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
 
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
-  if (id === 'infrastructure-only') return 'infrastructure';
+  if (INFRASTRUCTURE_WORKLOAD_IDS.includes(id)) return 'infrastructure';
   return id;
 }
 
@@ -540,9 +541,23 @@ function comparisonOutcome(rows) {
   const eligibleRows = rows.filter(
     (row) => row.environmentId === primaryEnvironmentId && !row.error,
   );
-  const workloadIds = new Set(
-    eligibleRows.map((row) => canonicalPerformanceWorkloadId(row.workloadId)),
+  const infrastructureVariants = eligibleRows
+    .filter((row) => row.validation?.status === 'comparable')
+    .map((row) => row.workloadId)
+    .filter((id) => INFRASTRUCTURE_WORKLOAD_IDS.includes(id));
+  const observedInfrastructureVariants = [
+    ...new Set(infrastructureVariants),
+  ].sort();
+  const missingInfrastructureVariants = INFRASTRUCTURE_WORKLOAD_IDS.filter(
+    (id) => !observedInfrastructureVariants.includes(id),
   );
+  const workloadIds = new Set(
+    eligibleRows
+      .filter((row) => !INFRASTRUCTURE_WORKLOAD_IDS.includes(row.workloadId))
+      .map((row) => canonicalPerformanceWorkloadId(row.workloadId)),
+  );
+  if (missingInfrastructureVariants.length === 0)
+    workloadIds.add('infrastructure');
   const denseRow = eligibleRows.find(
     (row) => row.workloadId === 'dense-investigation',
   );
@@ -628,6 +643,10 @@ function comparisonOutcome(rows) {
     pending.push(
       `Required comparison workloads missing: ${missingWorkloads.join(', ')}.`,
     );
+  if (missingInfrastructureVariants.length)
+    pending.push(
+      `Infrastructure comparison variants missing: ${missingInfrastructureVariants.join(', ')}.`,
+    );
   if (!rows.length)
     pending.push('No raw paired comparison reports were supplied.');
   return {
@@ -638,6 +657,11 @@ function comparisonOutcome(rows) {
     performanceObjectives,
     missingWorkloads,
     workloadIds: [...workloadIds].sort(),
+    infrastructureVariantCoverage: {
+      requiredVariants: [...INFRASTRUCTURE_WORKLOAD_IDS],
+      observedVariants: observedInfrastructureVariants,
+      missingVariants: missingInfrastructureVariants,
+    },
     environments: rows.map((row) => ({
       environmentId: row.environmentId,
       workloadId: row.workloadId,
