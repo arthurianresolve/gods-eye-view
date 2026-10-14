@@ -397,16 +397,23 @@ export async function bootFixturePage(
   { onProgress = () => {}, hash = '' } = {},
 ) {
   onProgress('navigation');
-  await page.goto(base + '/?welcome=0' + hash, {
-    // The standalone entry point has a large ESM graph.  A dev-server
-    // navigation can receive the document promptly while Chromium is still
-    // compiling/evaluating that graph; waiting for DOMContentLoaded here
-    // makes the harness spend its whole navigation deadline on module work
-    // before it can reach the application-state gate below.  `commit` keeps
-    // navigation tied to the delivered document and lets the existing
-    // application-ready wait provide the actual readiness contract.
-    waitUntil: 'commit',
-  });
+  try {
+    await page.goto(base + '/?welcome=0' + hash, {
+      // The standalone entry point has a large ESM graph. A dev-server
+      // navigation can receive the document while Chromium is still
+      // compiling/evaluating that graph, so the application-state gate below
+      // remains the readiness contract rather than DOMContentLoaded alone.
+      waitUntil: 'domcontentloaded',
+    });
+  } catch (error) {
+    // Puppeteer rejects a navigation when the parser is still waiting for a
+    // module graph after its navigation deadline. The document can continue
+    // evaluating and become application-ready; let the state gate below
+    // decide whether it really recovered. Other navigation failures remain
+    // fatal and retain their original diagnostics.
+    if (!/Navigation timeout/i.test(error?.message || '')) throw error;
+    onProgress('navigation-deferred');
+  }
   try {
     onProgress('application-ready');
     await page.waitForFunction(
