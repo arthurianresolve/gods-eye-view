@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as Cesium from 'cesium';
 import { performance as cpuClock } from 'node:perf_hooks';
 import {
@@ -1169,8 +1170,143 @@ function advanceWorkload(positions, drifts, frame) {
   }
 }
 
+function readAttributionPopulation({ detectionActive, workload }) {
+  if (detectionActive) {
+    const diagnostics = getDetectionDiagnostics();
+    return {
+      kind: 'detection-observations',
+      profile: diagnostics?.profile ?? null,
+      densityPct: diagnostics?.densityPct ?? null,
+      observationCount: diagnostics?.observationCount ?? null,
+      candidateCount: diagnostics?.candidateCount ?? null,
+      visibleCount: diagnostics?.visibleCount ?? null,
+      selectedCount: diagnostics?.selectedCount ?? null,
+      collectiveLabelBudget: diagnostics?.collectiveLabelBudget ?? null,
+      solveRevision: diagnostics?.solveRevision ?? null,
+    };
+  }
+  const diagnostics = getWorldOverlayDiagnostics();
+  return {
+    kind: 'world-overlay',
+    candidateCount: diagnostics.candidateCount,
+    paintedCount: diagnostics.paintedCount,
+    paintedBySource: diagnostics.paintedBySource,
+    workloadSourceIds: workload.registrations
+      ? workload.registrations.map(({ sourceId }) => sourceId).sort()
+      : ['alloc-probe'],
+  };
+}
+
+function runMatchedCpuArm({
+  enabled,
+  sourceCommit,
+  pairIndex,
+  settleFrames,
+  measuredFrames,
+  detectionActive,
+  workload,
+  frame,
+}) {
+  const profile = PROFILE;
+  const descriptor = {
+    schema: 'gev-overlay-attribution-fixture/v1',
+    sourceCommit,
+    profile,
+    entryCount: ENTRY_COUNT,
+    pairIndex,
+    viewportWidth: VIEWPORT_WIDTH,
+    viewportHeight: VIEWPORT_HEIGHT,
+    dpr: 2,
+    frameMs: FRAME_MS,
+    virtualStartTimeMs: 0,
+    solveIntervalMs: Number(process.env.GEV_ALLOC_SOLVE_MS) || 125,
+    warmupFrames: WARMUP_FRAMES,
+    settleFrames,
+    measuredFrames,
+    cameraPath: 'fixed-scene-camera',
+    motionPath: 'seeded-sinusoidal-frame-v1',
+  };
+  const fixture = {
+    schema: 'gev-overlay-attribution-fixture/v1',
+    descriptor,
+    sha256: createHash('sha256')
+      .update(JSON.stringify(descriptor))
+      .digest('hex'),
+  };
+  const tick = () => {
+    advanceWorkload(workload.positions, workload.drifts, frame.value);
+    workload.env.advanceTime(FRAME_MS);
+    workload.env.postRender.raise();
+    frame.value++;
+  };
+  for (let index = 0; index < settleFrames; index++) tick();
+  setCpuTimingsEnabled(enabled, { now: () => cpuClock.now() });
+  const start = {
+    frame: frame.value,
+    virtualTimeMs: frame.value * FRAME_MS,
+    population: readAttributionPopulation({ detectionActive, workload }),
+  };
+  const started = cpuClock.now();
+  for (let index = 0; index < measuredFrames; index++) tick();
+  const cpuMs = cpuClock.now() - started;
+  const end = {
+    frame: frame.value,
+    virtualTimeMs: frame.value * FRAME_MS,
+    population: readAttributionPopulation({ detectionActive, workload }),
+  };
+  const cpuTimings = getCpuTimings();
+  setCpuTimingsEnabled(false);
+  const result = {
+    ok: true,
+    schema: 'gev-overlay-cpu-arm/v1',
+    status: 'complete',
+    sourceCommit,
+    profile,
+    entryCount: ENTRY_COUNT,
+    pairIndex,
+    timingEnabled: enabled,
+    fixture,
+    start,
+    end,
+    frames: measuredFrames,
+    cpuMs,
+    cpuMsPerFrame: cpuMs / measuredFrames,
+    cpuTimings,
+  };
+  if (detectionActive) destroyDetection();
+  destroyWorldOverlay();
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+}
+
 function main() {
   const cpuOnly = process.env.GEV_OVERLAY_CPU === '1';
+  const matchedCpuArm = process.env.GEV_ALLOC_MATCHED_ARM;
+  if (matchedCpuArm && !['enabled', 'disabled'].includes(matchedCpuArm))
+    throw new Error('Invalid matched CPU timing arm.');
+  if (matchedCpuArm && !cpuOnly)
+    throw new Error('Matched CPU timing arms require CPU mode.');
+  const matchedSourceCommit = process.env.GEV_ALLOC_SOURCE_COMMIT || '';
+  const matchedPairIndex = Number(process.env.GEV_ALLOC_PAIR_INDEX);
+  const matchedSettleFrames = Number(
+    process.env.GEV_ALLOC_MATCHED_SETTLE_FRAMES ?? 200,
+  );
+  const matchedMeasuredFrames = Number(
+    process.env.GEV_ALLOC_MATCHED_MEASURE_FRAMES ?? 600,
+  );
+  if (
+    matchedCpuArm &&
+    (!/^[a-f0-9]{40}$/.test(matchedSourceCommit) ||
+      !Number.isSafeInteger(matchedPairIndex) ||
+      matchedPairIndex < 0 ||
+      matchedPairIndex >= 5 ||
+      !Number.isSafeInteger(matchedSettleFrames) ||
+      matchedSettleFrames < 0 ||
+      matchedSettleFrames > 5_000 ||
+      !Number.isSafeInteger(matchedMeasuredFrames) ||
+      matchedMeasuredFrames < 1 ||
+      matchedMeasuredFrames > 6_000)
+  )
+    throw new Error('Invalid matched CPU timing fixture.');
   if (!cpuOnly && typeof globalThis.gc !== 'function') {
     process.stdout.write(`${JSON.stringify({ ok: false, reason: 'no-gc' })}\n`);
     return;
@@ -1259,6 +1395,20 @@ function main() {
   // CPU attribution is a separate run: no forced GC and no claim about GPU,
   // browser layout or Canvas2D execution (this fixture uses a silent context).
   if (cpuOnly) {
+    if (matchedCpuArm) {
+      const frame = { value: WARMUP_FRAMES };
+      runMatchedCpuArm({
+        enabled: matchedCpuArm === 'enabled',
+        sourceCommit: matchedSourceCommit,
+        pairIndex: matchedPairIndex,
+        settleFrames: matchedSettleFrames,
+        measuredFrames: matchedMeasuredFrames,
+        detectionActive,
+        workload: { ...workload, env },
+        frame,
+      });
+      return;
+    }
     const samples = [];
     for (let run = 0; run < 5; run++) {
       for (const enabled of run % 2 ? [true, false] : [false, true]) {

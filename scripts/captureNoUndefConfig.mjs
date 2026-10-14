@@ -55,6 +55,10 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/pairedReport.test.mjs',
   'scripts/performance/hostedRendererBackend.mjs',
   'scripts/performance/renderBoundaryObservation.mjs',
+  'scripts/performance/overlayAttribution.mjs',
+  'scripts/performance/overlayAttributionContract.mjs',
+  'scripts/performance/overlayAttribution.test.mjs',
+  'src/overlays/worldOverlayAllocation.worker.mjs',
 ]);
 
 export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
