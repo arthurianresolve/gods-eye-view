@@ -277,6 +277,10 @@ async function loadSource(bytes, name) {
   mkdirSync(directory, { recursive: true });
   cpSync(path.join(sourceRoot, 'Source'), path.join(directory, 'Source'), {
     recursive: true,
+    // Traverse through Node's JS copy path. The Node 24 native recursive path
+    // failed while materializing a fresh Source/Scene directory in hosted CI.
+    // Copy every entry and keep filesystem errors fatal; do not retry or omit it.
+    filter: () => true,
   });
   writeFileSync(
     path.join(directory, 'package.json'),
