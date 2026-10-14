@@ -10,6 +10,7 @@ import {
   parseReleaseArgs,
 } from './stage-release.mjs';
 import {
+  requestCandidateArtifactMetadata,
   validateCandidateArchiveEntries,
   validateCandidateArtifactMetadata,
   validateCandidateArtifactZip,
@@ -108,6 +109,81 @@ function candidateMetadata(overrides = {}) {
     ...overrides,
   };
 }
+
+test('artifact metadata transport and malformed bodies fail distinctly without disclosing stderr', () => {
+  let calls = 0;
+  const expected = candidateMetadata();
+  const actual = requestCandidateArtifactMetadata('owner/repository', 123, {
+    run(binary, args, options) {
+      calls += 1;
+      assert.equal(binary, 'gh');
+      assert.deepEqual(args, [
+        'api',
+        'repos/owner/repository/actions/artifacts/123',
+      ]);
+      assert.deepEqual(options.stdio, ['ignore', 'pipe', 'pipe']);
+      assert.equal(options.maxBuffer, 1024 * 1024);
+      return JSON.stringify(expected);
+    },
+  });
+  assert.deepEqual(actual, expected);
+  assert.equal(calls, 1);
+
+  for (const stderr of [
+    'gh: private body token-secret (HTTP 404) https://private.example/?secret=x',
+    Buffer.from('gh: private body token-secret (HTTP 404)'),
+  ]) {
+    calls = 0;
+    assert.throws(
+      () =>
+        requestCandidateArtifactMetadata('owner/repository', 123, {
+          run() {
+            calls += 1;
+            throw Object.assign(new Error('secret process command'), {
+              status: 1,
+              stderr,
+            });
+          },
+        }),
+      (error) => {
+        assert.equal(
+          error.message,
+          'GitHub artifact metadata request failed (HTTP 404; exit 1; process unknown).',
+        );
+        assert.doesNotMatch(JSON.stringify(error), /secret|private/);
+        return true;
+      },
+    );
+    assert.equal(calls, 1, 'diagnostics must not silently retry requests');
+  }
+  assert.throws(
+    () =>
+      requestCandidateArtifactMetadata('owner/repository', 123, {
+        run() {
+          throw Object.assign(new Error('private executable path'), {
+            code: 'ENOENT',
+            stderr: 'secret',
+          });
+        },
+      }),
+    /HTTP unknown; exit unknown; process ENOENT/,
+  );
+  assert.throws(
+    () =>
+      requestCandidateArtifactMetadata('owner/repository', 123, {
+        run() {
+          return '<html>private response token-secret</html>';
+        },
+      }),
+    (error) => {
+      assert.equal(
+        error.message,
+        'GitHub artifact metadata response is not valid JSON.',
+      );
+      return true;
+    },
+  );
+});
 
 test('candidate REST metadata binds artifact ID, run, repository, name, source and both upload digests', () => {
   const verified = validateCandidateArtifactMetadata(

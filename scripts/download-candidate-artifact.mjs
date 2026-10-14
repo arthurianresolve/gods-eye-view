@@ -150,17 +150,45 @@ function parseInputs(args) {
   return Object.fromEntries(values);
 }
 
-function requestMetadata(repository, artifactId) {
+export function requestCandidateArtifactMetadata(
+  repository,
+  artifactId,
+  { run = execFileSync } = {},
+) {
   const endpoint = `repos/${repository}/actions/artifacts/${artifactId}`;
+  let text;
   try {
-    const text = execFileSync('gh', ['api', endpoint], {
+    text = run('gh', ['api', endpoint], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       maxBuffer: 1024 * 1024,
     });
+  } catch (error) {
+    // Preserve only fixed fields, never gh stderr, response bodies or tokens.
+    const stderr =
+      typeof error?.stderr === 'string'
+        ? error.stderr.slice(0, 4096)
+        : Buffer.isBuffer(error?.stderr)
+          ? error.stderr.subarray(0, 4096).toString('utf8')
+          : '';
+    const httpStatus = /\(HTTP ([1-5]\d{2})\)/.exec(stderr)?.[1] || 'unknown';
+    const exitCode =
+      Number.isSafeInteger(error?.status) && error.status >= 0
+        ? error.status
+        : 'unknown';
+    const processError = ['ENOENT', 'EACCES', 'ETIMEDOUT', 'ENOBUFS'].includes(
+      error?.code,
+    )
+      ? error.code
+      : 'unknown';
+    throw new Error(
+      `GitHub artifact metadata request failed (HTTP ${httpStatus}; exit ${exitCode}; process ${processError}).`,
+    );
+  }
+  try {
     return JSON.parse(text);
   } catch {
-    throw new Error('GitHub artifact metadata request or JSON parsing failed.');
+    throw new Error('GitHub artifact metadata response is not valid JSON.');
   }
 }
 
@@ -225,7 +253,7 @@ async function main() {
   const uploadDigest = process.env.UPLOAD_ARTIFACT_DIGEST || '';
   if (!process.env.GH_TOKEN)
     throw new Error('GitHub API token is unavailable.');
-  const metadata = requestMetadata(repository, artifactId);
+  const metadata = requestCandidateArtifactMetadata(repository, artifactId);
   const verifiedMetadata = validateCandidateArtifactMetadata(metadata, {
     artifactId,
     runId,
