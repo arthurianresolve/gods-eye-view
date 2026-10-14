@@ -108,6 +108,14 @@ test('primitive point mode preserves Entity metadata, exact style, and native pi
   assert.equal(env.entities.values.length, 0);
   assert.equal(env.layer.getState().featureCount, 3);
   assert.equal(env.layer.getPerformanceDiagnostics().pointPrimitiveCount, 3);
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().pointPrimitiveCountUnit,
+    'instances',
+  );
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().pointPrimitiveCoverage,
+    'owned-import-point-collection',
+  );
   const snapshot = env.layer.getPointRendererSnapshot();
   assert.equal(snapshot.pointCount, 3);
   assert.deepEqual(
@@ -285,6 +293,15 @@ test('cooperative imports yield after four ms and preserve complete entity and e
   assert.equal(
     env.layer.getPerformanceDiagnostics().pointRepresentation,
     'entity',
+  );
+  assert.equal(env.layer.getPerformanceDiagnostics().pointPrimitiveCount, 0);
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().pointPrimitiveCountUnit,
+    'instances',
+  );
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().pointPrimitiveCoverage,
+    'owned-import-point-collection',
   );
   assert.equal(env.layer.getPointRendererSnapshot(), null);
   assert.equal(env.primitives.length, 0);

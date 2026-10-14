@@ -5,6 +5,7 @@ const OWNER_RESOURCE_FIELDS = Object.freeze([
   'timers',
   'pendingJobs',
   'primitives',
+  'entities',
   'dataSources',
   'cacheEntries',
   'imageryLayers',
@@ -13,6 +14,11 @@ const OWNER_RESOURCE_FIELDS = Object.freeze([
   'providerCacheReuses',
   'providerLoadFailures',
 ]);
+const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
+// Match runtimeLayer's MAX_RENDERED_IMPORT_FEATURES bound without importing its Cesium-facing module.
+const POINT_PRIMITIVE_COUNT_MAX = 5_000;
+const POINT_PRIMITIVE_COUNT_UNIT = 'instances';
+const POINT_PRIMITIVE_COVERAGE = 'owned-import-point-collection';
 
 function finite(value) {
   return Number.isFinite(value) ? value : null;
@@ -118,6 +124,20 @@ function readOwnerResources(value) {
         counts[field] = Math.floor(amount);
       else if (amount === null) counts[field] = null;
     }
+    if (POINT_REPRESENTATIONS.has(rawCounts.pointRepresentation))
+      counts.pointRepresentation = rawCounts.pointRepresentation;
+    const pointPrimitiveCount = rawCounts.pointPrimitiveCount;
+    if (
+      pointPrimitiveCount === null ||
+      (Number.isSafeInteger(pointPrimitiveCount) &&
+        pointPrimitiveCount >= 0 &&
+        pointPrimitiveCount <= POINT_PRIMITIVE_COUNT_MAX)
+    )
+      counts.pointPrimitiveCount = pointPrimitiveCount;
+    if (rawCounts.pointPrimitiveCountUnit === POINT_PRIMITIVE_COUNT_UNIT)
+      counts.pointPrimitiveCountUnit = POINT_PRIMITIVE_COUNT_UNIT;
+    if (rawCounts.pointPrimitiveCoverage === POINT_PRIMITIVE_COVERAGE)
+      counts.pointPrimitiveCoverage = POINT_PRIMITIVE_COVERAGE;
     if (Object.keys(counts).length) result[owner] = counts;
   }
   return Object.keys(result).length ? result : null;

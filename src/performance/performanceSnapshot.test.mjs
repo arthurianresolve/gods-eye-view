@@ -48,7 +48,19 @@ test('performance monitor records frames and releases its listener', () => {
     readSettings: () => ({ densityPct: 75 }),
     readTimings: () => ({ overlayProjectionMs: 2.5 }),
     readOwnership: () => ({
-      cctv: { listeners: 2, pendingJobs: 3, cacheEntries: 4 },
+      cctv: {
+        listeners: 2,
+        pendingJobs: 3,
+        entities: 6,
+        dataSources: 0,
+        cacheEntries: 4,
+      },
+      imports: {
+        pointRepresentation: 'primitive-collection',
+        pointPrimitiveCount: 2,
+        pointPrimitiveCountUnit: 'instances',
+        pointPrimitiveCoverage: 'owned-import-point-collection',
+      },
       invalid: { listeners: -1, secretUrl: 'discarded' },
     }),
   });
@@ -65,10 +77,46 @@ test('performance monitor records frames and releases its listener', () => {
   assert.equal(report.resources.dataSources, 2);
   assert.equal(report.timings.overlayProjectionMs, 2.5);
   assert.deepEqual(report.resources.ownerResources, {
-    cctv: { listeners: 2, pendingJobs: 3, cacheEntries: 4 },
+    cctv: {
+      listeners: 2,
+      pendingJobs: 3,
+      entities: 6,
+      dataSources: 0,
+      cacheEntries: 4,
+    },
+    imports: {
+      pointRepresentation: 'primitive-collection',
+      pointPrimitiveCount: 2,
+      pointPrimitiveCountUnit: 'instances',
+      pointPrimitiveCoverage: 'owned-import-point-collection',
+    },
   });
   monitor.destroy();
   assert.equal(removed, 1);
+});
+
+test('owner projection keeps only bounded import point diagnostics with explicit scope', () => {
+  const monitor = createPerformanceMonitor({
+    viewer: { scene: { postRender: { addEventListener: () => () => {} } } },
+    readOwnership: () => ({
+      imports: {
+        pendingJobs: 0,
+        pointRepresentation: 'unexpected',
+        pointPrimitiveCount: 5_001,
+        pointPrimitiveCountUnit: 'bytes',
+        pointPrimitiveCoverage: 'all-scene-primitives',
+        secretUrl: 'https://private.invalid/provider?key=discarded',
+      },
+    }),
+  });
+  const owner = monitor.getSnapshot().resources.ownerResources.imports;
+  assert.deepEqual(owner, { pendingJobs: 0 });
+  assert.equal(Object.hasOwn(owner, 'pointRepresentation'), false);
+  assert.equal(Object.hasOwn(owner, 'pointPrimitiveCount'), false);
+  assert.equal(Object.hasOwn(owner, 'pointPrimitiveCountUnit'), false);
+  assert.equal(Object.hasOwn(owner, 'pointPrimitiveCoverage'), false);
+  assert.equal(Object.hasOwn(owner, 'secretUrl'), false);
+  monitor.destroy();
 });
 
 test('performance monitor can be disabled without installing a render listener', () => {

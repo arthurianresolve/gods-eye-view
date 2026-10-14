@@ -331,6 +331,8 @@ export function createImportedGeometryLayer({
       cacheEntries: ownedEntities.size,
       pointRepresentation,
       pointPrimitiveCount: pointPrimitiveCollection?.length || 0,
+      pointPrimitiveCountUnit: 'instances',
+      pointPrimitiveCoverage: 'owned-import-point-collection',
     }),
     getPointRendererSnapshot() {
       if (pointRepresentation !== 'primitive-collection') return null;
