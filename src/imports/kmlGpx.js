@@ -2,7 +2,7 @@ import { consumeInBatches } from './cooperative.js';
 import {
   IMPORT_LIMITS,
   createImportPreview,
-  decodeImportText,
+  decodeImportTextAsync,
   parseImportInstant,
 } from './geojsonCsv.js';
 
@@ -64,8 +64,8 @@ function attributes(source) {
 }
 
 /** Parse a restricted XML tree. DTDs, entities, scripts and remote links never execute. */
-function parseSafeXML(input) {
-  const source = decodeImportText(input);
+async function parseSafeXML(input, { signal } = {}) {
+  const source = await decodeImportTextAsync(input, { signal });
   if (/<!DOCTYPE|<!ENTITY|<\s*script\b/i.test(source))
     xmlFail('DTD, custom entities and script elements are unsupported.');
   const root = {
@@ -254,7 +254,7 @@ function kmlGeometry(placemark) {
 
 /** Stage the documented KML subset without fetching links or network resources. */
 export async function previewKML(input, { signal, attribution = '' } = {}) {
-  const root = parseSafeXML(input);
+  const root = await parseSafeXML(input, { signal });
   if (root.local !== 'kml') xmlFail('Expected a KML root element.');
   const placemarks = descendants(root, 'placemark');
   if (placemarks.length > IMPORT_LIMITS.rows)
@@ -358,7 +358,7 @@ function gpxLine(points) {
 
 /** Stage GPX waypoints, routes and track segments; missing point times remain unknown. */
 export async function previewGPX(input, { signal, attribution = '' } = {}) {
-  const root = parseSafeXML(input);
+  const root = await parseSafeXML(input, { signal });
   if (root.local !== 'gpx') xmlFail('Expected a GPX root element.');
   const records = [];
   const rejected = [];

@@ -1,11 +1,36 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  decodeImportTextAsync,
   parseCsv,
   parseCsvHeaders,
   previewCSV,
   previewGeoJSON,
 } from './geojsonCsv.js';
+
+test('bounded import decoding preserves UTF-8 across chunks and can be cancelled', async () => {
+  const text = 'αβγ\n' + 'route,1,2\n'.repeat(128);
+  const bytes = new TextEncoder().encode(text);
+  assert.equal(await decodeImportTextAsync(bytes, { chunkBytes: 3 }), text);
+  await assert.rejects(
+    decodeImportTextAsync(new Uint8Array([0xff]), { chunkBytes: 1 }),
+    { code: 'invalid-encoding' },
+  );
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 0);
+  try {
+    await assert.rejects(
+      decodeImportTextAsync(new Uint8Array(512 * 1024), {
+        signal: controller.signal,
+        chunkBytes: 1024,
+      }),
+      { name: 'AbortError' },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+});
 
 test('GeoJSON preview validates WGS84 geometry and leaves invalid features staged as rejections', async () => {
   const input = JSON.stringify({

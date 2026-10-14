@@ -4,6 +4,7 @@ import { PACK_LIMITS } from '../director/packs/manifest.js';
 
 export const IMPORT_LIMITS = Object.freeze({
   bytes: 8 * 1024 * 1024,
+  decodeChunkBytes: 64 * 1024,
   rows: 50_000,
   columns: 64,
   positions: Math.min(PACK_LIMITS.positions, 250_000),
@@ -30,6 +31,67 @@ export function decodeImportText(input) {
   } catch {
     fail('invalid-encoding', 'Import file must be valid UTF-8.');
   }
+}
+
+/**
+ * Decode a file in bounded event-loop batches before parsing its document.
+ *
+ * The synchronous decoder remains available for small, already-buffered
+ * callers. Preview paths use this adapter so a large UTF-8 file can be
+ * cancelled or superseded while it is being decoded. Parsing/normalization
+ * still owns the same limits and output contract as the synchronous path.
+ */
+export async function decodeImportTextAsync(
+  input,
+  { signal, chunkBytes = IMPORT_LIMITS.decodeChunkBytes } = {},
+) {
+  signal?.throwIfAborted();
+  const size =
+    Number.isSafeInteger(chunkBytes) && chunkBytes > 0
+      ? chunkBytes
+      : IMPORT_LIMITS.decodeChunkBytes;
+  if (typeof input === 'string') {
+    if (new TextEncoder().encode(input).byteLength > IMPORT_LIMITS.bytes)
+      fail('file-too-large', 'Import files are limited to 8 MiB.');
+    await consumeInBatches(
+      (function* () {
+        signal?.throwIfAborted();
+        yield;
+      })(),
+      { signal, deferStart: true },
+    );
+    return input;
+  }
+  const bytes =
+    input instanceof Uint8Array ? input : new Uint8Array(input || []);
+  if (bytes.byteLength > IMPORT_LIMITS.bytes)
+    fail('file-too-large', 'Import files are limited to 8 MiB.');
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  const chunks = [];
+  await consumeInBatches(
+    (function* () {
+      for (let offset = 0; offset < bytes.byteLength; offset += size) {
+        signal?.throwIfAborted();
+        const end = Math.min(bytes.byteLength, offset + size);
+        try {
+          chunks.push(
+            decoder.decode(bytes.subarray(offset, end), { stream: true }),
+          );
+        } catch {
+          fail('invalid-encoding', 'Import file must be valid UTF-8.');
+        }
+        yield;
+      }
+    })(),
+    { signal, deferStart: true },
+  );
+  signal?.throwIfAborted();
+  try {
+    chunks.push(decoder.decode());
+  } catch {
+    fail('invalid-encoding', 'Import file must be valid UTF-8.');
+  }
+  return chunks.join('');
 }
 
 export function parseImportInstant(value) {
@@ -134,7 +196,7 @@ export async function previewGeoJSON(
   { signal, attribution = '', timeField = null } = {},
 ) {
   signal?.throwIfAborted();
-  const text = decodeImportText(input);
+  const text = await decodeImportTextAsync(input, { signal });
   signal?.throwIfAborted();
   let value;
   try {
@@ -325,7 +387,7 @@ export async function previewCSV(
   { signal, mapping = {}, attribution = '' } = {},
 ) {
   signal?.throwIfAborted();
-  const text = decodeImportText(input);
+  const text = await decodeImportTextAsync(input, { signal });
   signal?.throwIfAborted();
   const { headers, rows } = parseCsv(text);
   const column = (field) => {

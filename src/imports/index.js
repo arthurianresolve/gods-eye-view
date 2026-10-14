@@ -2,6 +2,7 @@ export {
   IMPORT_LIMITS,
   createImportPreview,
   decodeImportText,
+  decodeImportTextAsync,
   parseCsv,
   parseCsvHeaders,
   parseImportInstant,
