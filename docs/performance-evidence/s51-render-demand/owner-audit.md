@@ -1,8 +1,10 @@
 # S51 render-demand owner audit
 
-This is a source-and-test inventory for the finite S51 render-demand slice. It
-does not qualify the app's GPU, settle a measured idle-frame target, or close
-S51. The empty-flight/military conditional-hold change is committed at
+The 14 October [engineering review](../closure-audit-20261013/README.md)
+closes S51 engineering at `c5802408`, with physical Windows qualification still
+pending. This inventory describes ownership and tested behavior; it does not
+qualify the app's GPU or its final static/animated workload matrix.
+The empty-flight/military conditional-hold change is committed at
 `85020ccb520dbc0b0068ea856e60560db3a02ad0`, integrated as `106918ee`.
 The [matched application diagnostic](paired-6786-1069/README.md) now observes
 18 completed frames before and one after in ten foreground seconds. The
@@ -14,8 +16,8 @@ The later [dense-cadence correction](dense-cadence-9a2517af/README.md) restores
 per-frame propagation ownership for visible dense populations. The reviewed
 [focus follow-up at `22a08416`](focus-22a08416/README.md) uses separate core and
 focus deadlines and retires stale/no-op work. Root passes 74 focused checks and
-three deliberate negative controls. Full current integration remains pending;
-the preceding Windows suite's three failures are retained, not reclassified.
+three deliberate negative controls. [Current both-base standard integration](../representative-pr-c5802408/README.md)
+passes; the preceding Windows suite's three failures are retained, not reclassified.
 The historical checkpoints below keep their original validation scope.
 
 ## Governor behavior and app wake/disposal
@@ -84,8 +86,8 @@ not evidence of OS/browser tab occlusion.
 
 ## Periodic and discrete owners
 
-Satellite and vessel lifecycle paths use `scheduleRenderUpdate` for periodic
-motion rather than holding the renderer continuously when untracked
+Core-only satellite and vessel lifecycle paths use `scheduleRenderUpdate` for
+periodic motion rather than holding the renderer continuously when untracked
 (`src/layers/satellites/lifecycle.js`, `src/layers/vessels/lifecycle.js`).
 Satellite tracking acquires the continuous hold and releases it on stop or
 destroy (`src/layers/satellites/tracking.js`). Discrete source polls,
@@ -114,7 +116,22 @@ entries update per scheduled second, rather than per frame. Current main
 earlier dev scheduler, not the latest main reconciliation. The initial lifecycle
 test verifies scheduling ownership with a simulated callback and does not catch
 this real producer cadence. A bounded correction and producer-path regression
-are in progress. No S51 closure is claimed until that defect is addressed.
+now address this defect; the dense and focus packets above retain the exact
+implementation and checks.
+
+## Pre-update callback review
+
+Explicit rendering does not stop Cesium update callbacks. The remaining
+`preUpdate` owners are inspected separately: civil/military tracked-model work
+returns when there is no active tracked model regime; cockpit entry maintenance
+runs at most every 250 ms and its DOM writes are change-only. Active cockpit
+camera/HUD work retains its existing cadence. Camera-orientation animation owns
+its callback only for a bounded transition and cancels on target replacement or
+destruction. The tracked-camera guard relinquishes ownership when tracking
+changes and leaves safe established frames to Cesium EntityView. Launch replay
+owns its callback only while its token/selected replay is current and releases
+it on replay retirement. These retained paths perform necessary transition or
+follow work; their existence is not a reason to add an unconditional render hold.
 
 ## Additional owner and callback dispositions
 

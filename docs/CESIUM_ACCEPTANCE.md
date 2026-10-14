@@ -53,12 +53,15 @@ Do not invent a percentage of code written or weight commits/tests as progress.
 The original fourteen partial ledger entries require a packet-by-packet audit
 under these definitions; this amendment itself closes none of them. The separate
 [13 October engineering audit](performance-evidence/closure-audit-20261013/README.md)
-has since closed S50, S52, S55, S56 and S57 engineering: 5/14 closed, 9/14 partial,
+has since closed S50, S51, S52, S55, S56 and S57 engineering: 6/14 closed, 8/14 partial,
 0/14 fully qualified. S50 closure includes the reviewed rendered retention
 comparison and the real-layer workspace restore integration. S57 includes the
 strict native production map/fault journeys and map ownership review.
 S56 closes the real caller cleanup gaps and explicitly retains framebuffer
 preservation; its full application capture qualification remains pending.
+S51 closure includes the corrected dense/focus producer cadence, callback/owner
+inventory and current both-base integration; primary-machine qualification is
+still pending. The fourteen-slice denominator is unchanged.
 
 ## Requirements that remain mandatory
 

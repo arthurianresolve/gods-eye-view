@@ -1,10 +1,36 @@
 # Engineering closure audit under the amended criteria
 
-S50, S52, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
+S50, S51, S52, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **5/14 engineering closed (35.7%)**, **9/14 partial**
+their own audit. Counts are **6/14 engineering closed (42.9%)**, **8/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
+
+## S51 render demand and callback ownership — 14 October review
+
+The [review](s51-review.json) binds current source `c5802408`, the complete
+[owner inventory](../s51-render-demand/owner-audit.md), and the corrected
+satellite producer paths. The five files in the prior focus packet match this
+source exactly; all packet hashes were reverified. Its 74 focused passes and
+three failing negative controls remain valid component evidence. Current
+[both-base integration](../representative-pr-c5802408/README.md) passes all seven
+standard jobs per base, including Node 24/26 and production builds.
+
+| Engineering requirement | Reviewed disposition |
+| --- | --- |
+| Disposable continuous, scheduled and explicit demands | The existing governor coalesces scheduled owners, preserves independent deadlines and releases timers/listeners on disposal. A generation boundary rejects stale callbacks; releasing the final hold requests a settling frame. |
+| Remove unjustified permanent holds | Enabled empty aircraft fleets release their holds; accepted snapshot membership reacquires demand before delayed follow-up work. The matched hosted component changes 18 idle frames to one, with a same-candidate zero-frame repeat. |
+| Preserve required update cadence | Core-only satellites retain one-second position/orbit updates. Dense populations retain per-frame round-robin propagation; tracking retains per-frame ownership. Focus wakes immediately and then at the existing 80 ms cadence without postponing core updates. Settled/no-op/empty focus work retires. |
+| Retain necessary continuous animation | The inventory records camera follow/orbit, cockpit, dense/moving populations, CCTV projection, route flow, annotation pulses and active transitions. Those owners change visible output and retain their existing cadence. |
+| Gate update callbacks and hidden work | Inactive tracked-model callbacks return before pose work. Cockpit entry maintenance is throttled and writes only changed DOM values. Orientation and tracked-camera callbacks own bounded/current transitions. Hidden standalone satellite points/orbits skip preparation. Hidden documents suspend the application's render loop while source state is retained. |
+| Wake and teardown | Explicit mutations, source arrival and visibility restoration request frames; camera/resize/tile changes retain Cesium's wake behavior. Tests cover source and tracking transitions, focus throttling, disappearing points, disable/destroy and stale notifications. The app component confirms simulated visibility resume and retirement of application render owners. |
+
+This closes S51 engineering under the amended finite criteria. It does not
+promote the hosted idle component into a visual or hardware result: that fixture
+blocks OSM and simulates document visibility. Final physical Windows static,
+periodic/animated, tracking and actual tab-resume qualification remains pending,
+as do the shared performance and retention gates. Historical scheduler and
+Windows test failures retain their original results.
 
 ## S50 geometry construction and ownership
 

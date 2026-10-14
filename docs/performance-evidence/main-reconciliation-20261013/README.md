@@ -19,6 +19,12 @@ pending. No further main reconciliation is needed on QA.
 
 ## Prior validation checkpoints
 
+The 14 October review additionally records [both-base validation at `c5802408`](../representative-pr-c5802408/README.md),
+which includes the later Windows cleanup/test changes and aircraft snapshot
+audit. All seven standard jobs and release-artifact verification pass on each
+base. Dev/main synthetic merge trees both equal the tested source tree; no new
+main reconciliation or history rewrite is required by those results.
+
 The [earlier representative PR evidence](../representative-pr-8c0b6f64/README.md)
 passes all seven standard jobs and downloaded-release verification against both
 bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token

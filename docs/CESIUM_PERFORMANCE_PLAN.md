@@ -1,6 +1,36 @@
 # Cesium performance plan
 
-## Current execution checkpoint - 13 October 2026
+## Current execution checkpoint - 14 October 2026
+
+The [S51 engineering review](performance-evidence/closure-audit-20261013/README.md)
+closes the render-demand implementation after the dense-cadence and independent
+focus-deadline corrections. All five affected files match the reviewed packet;
+its 74 focused checks and three negative controls remain valid. The callback
+inventory now explicitly covers `preUpdate` work as well as render holds.
+Counts are **6/14 engineering closed (42.9%)**, **8/14 partial**, and
+**0/14 fully qualified**. Closed slices are S50, S51, S52, S55, S56 and S57.
+
+[Both-base integration at `c5802408`](performance-evidence/representative-pr-c5802408/README.md)
+passes all seven selected CI jobs and release-artifact verification on each
+base. Each Node 24/26 ordinary suite passes 7,817 tests with five platform skips;
+Node 24 also passes fourteen allocation checks. All thirty hosted recovery
+records pass. These results include the Windows cleanup changes and current
+aircraft snapshot audit. They do not qualify physical Windows rendering,
+performance or retention and do not publish a stable release.
+
+The [S53 snapshot audit](performance-evidence/s53-aircraft-audit/root-14d24ca3/README.md)
+now binds complete fixture stages, receipt clock, source and installed engine
+identity. Root passes eleven focused tests. Its remaining engineering work is
+the actual per-frame aircraft fleet path; snapshot counters do not substitute
+for that path. No GPU-upload or speedup claim is made by either audit.
+
+Main reconciliation is already included in QA; dev promotion and VM105 rollout
+still follow final candidate qualification. The [acceptance policy](CESIUM_ACCEPTANCE.md)
+keeps the physical Windows comparison, full-application visual/interaction
+checks and sixty-minute retention run mandatory. Earlier checkpoints below
+retain their original revisions and outcomes.
+
+## Earlier execution checkpoint - 13 October 2026
 
 The [S55 engineering audit](performance-evidence/closure-audit-20261013/README.md#s55-tracked-frame-work-and-camera-ownership)
 now closes the tracking slice's implementation requirements. The current

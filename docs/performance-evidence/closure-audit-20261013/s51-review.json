@@ -1,0 +1,55 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S51",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "c5802408c7612857d5e1f09c3a938e0bda824ca7",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped-and-standard-integration",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "sourceHashes": {
+    "src/renderGovernor.js": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+    "src/app/tools.js": "97facae56bc1c2fcede674f1f07a0ca6273ca00fb093eb2f6ba6ed231902e908",
+    "src/layers/fleetRenderDemand.js": "179795220a9da59e058d83dcd6e9c81d1a0a1e7ce12d3568bc213fa69a064b0a",
+    "src/layers/flights/lifecycle.js": "97a4a1bb018a6e36d6e4ec897e7726431a4c70042df9ba6558856c756fdb6f5d",
+    "src/layers/flights/ingestion.js": "f528caeb9d20fa2c30a660b2b842dc42d53aa9abff2dd1c26b1e7f7b573fb0e5",
+    "src/layers/military/lifecycle.js": "cd9e0ad352b229a5d72a611a569def96502227f97e61aa709ee873388a0b2f79",
+    "src/layers/military/ingestion.js": "080bdf31df14d289663de4effe0a19b416692efffe43c63a0e9f5f980307db93",
+    "src/layers/satellites/lifecycle.js": "39a99315f8ecbc0cc466cd92cb6b933b35d6e9226a4794765e6f1f7a4b8f508f",
+    "src/layers/satellites/catalog.js": "2a70a3a865cc4c5b7cf45a66c86892f078b5a2f0e206a2fc0ef2c85c80ecfc66",
+    "src/layers/satellites/controls.js": "87ba258bf943d4abff7bf849e260471dc421234b653cc9e414997f439efe7717",
+    "src/layers/satellites/rendering.js": "76ae53ab8eee09d6ba0222d2feb779282c65e9ef4de976bee23a36dc21674619",
+    "src/layers/satellites/tracking.js": "7820c43b3d59c6a2492489a4642cfc45baedc579f4c114e862bb4ec924748948",
+    "src/layers/vessels/lifecycle.js": "2f9b9e1772c979f29524eba08051f6f754d4e2e6ae61d5f61ec7f177a0774f98",
+    "src/layers/vessels/rendering.js": "6520b41768bdade4b9fcdb5f760b76a8ae01c5790e0690c12440607af1942f5b",
+    "src/layers/launches/renderDemand.js": "40071aaebffa1a9fab5add46bcb089d1546b97259b1c9c194aa27cfdb6f9601f",
+    "src/layers/launches/orbitRendering.js": "db9c543c698be9e2b208448cf4299114ddef0a36704fa603d927ebce374b0a5c",
+    "src/ui/cockpitCamera.js": "b452dbc9cd7b8fcbf47f5901080f7fa7d3d81e7f92d0513dfc8004d2a4372638",
+    "src/ui/cockpitTrackingController.js": "bcff23bd4c91ea474e86f3db92b9e491e3ffcff63ba22004333ce240bb88f0a2",
+    "src/ui/cameraOrientationControls.js": "e9ad23c736b013720f4c339c36941dd0af360ee7ee335d6f46e24441b7c530d6",
+    "src/data/trackedCamera.js": "86eebfd4c72bcac8425fc165bb565271dab3f054317271db237147bd14dc224d",
+    "src/data/detectionRenderDemand.js": "78119abb4e9ac632af2b3e05186b6391aea70717ae0e070d731637806193967a"
+  },
+  "reusedFocusedEvidence": {
+    "source": "22a084168692dc5e79d4d84fb6e7b0c06c98b067",
+    "checks": 74,
+    "negativeControls": 3,
+    "allStoredHashesVerified": true,
+    "affectedSourceHashesMatchCurrent": true
+  },
+  "standardIntegration": {
+    "dev": 38467537539,
+    "main": 38467542226,
+    "passedJobsPerBase": 7
+  },
+  "releaseArtifactVerification": {
+    "dev": 38467537591,
+    "main": 38467542185,
+    "stablePublished": false
+  },
+  "limitations": [
+    "No new hardware or latency measurement was performed by this engineering audit.",
+    "Earlier idle component uses hosted SwiftShader with blocked OSM, and its visibility change is simulated.",
+    "Final physical Windows static/periodic/animated and resumed-visible qualification remains pending."
+  ]
+}
