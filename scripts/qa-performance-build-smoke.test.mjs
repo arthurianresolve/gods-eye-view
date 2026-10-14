@@ -5185,16 +5185,28 @@ test('bounded child runner stops a separately owned browser process', async (t) 
     }
     await rm(tempRoot, { recursive: true, force: true });
   });
-  const code = [
-    "const { spawn } = require('node:child_process');",
-    "const fs = require('node:fs');",
-    "const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: process.platform !== 'win32', stdio: 'ignore' });",
-    `fs.writeFileSync(${JSON.stringify(pidPath)}, String(child.pid));`,
-    'setInterval(() => {}, 1000);',
-  ].join('\n');
+  // Establish independent ownership before the CLI deadline begins. A browser
+  // spawned inside the CLI is also in its Windows taskkill tree, and its PID
+  // file can become visible only after that tree has already been terminated.
+  const browser = spawn(
+    process.execPath,
+    ['-e', 'setInterval(() => {}, 1000)'],
+    {
+      detached: process.platform !== 'win32',
+      stdio: 'ignore',
+      windowsHide: true,
+    },
+  );
+  ownedPid = browser.pid;
+  await new Promise((resolve, reject) => {
+    browser.once('spawn', resolve);
+    browser.once('error', reject);
+  });
+  assert.ok(Number.isSafeInteger(ownedPid) && ownedPid > 0);
+  await writeFile(pidPath, String(ownedPid));
   const syncCommands = [];
   await assert.rejects(
-    runBoundedChild(process.execPath, ['-e', code], {
+    runBoundedChild(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
       timeoutMs: 200,
       maxOutputBytes: 2048,
       ownedPidFile: pidPath,
@@ -5211,7 +5223,7 @@ test('bounded child runner stops a separately owned browser process', async (t) 
     }),
     /timed out; .*cleanup confirmed/,
   );
-  ownedPid = Number((await readFile(pidPath, 'utf8')).trim());
+  assert.equal(Number((await readFile(pidPath, 'utf8')).trim()), ownedPid);
   if (process.platform === 'win32') {
     assert.equal(
       syncCommands.filter((entry) => entry.command === 'taskkill').length,
