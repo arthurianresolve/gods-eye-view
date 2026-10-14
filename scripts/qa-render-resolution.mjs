@@ -102,7 +102,10 @@ try {
   await page.setViewport({ width: 1280, height: 720 });
   await page.waitForFunction(
     () => window.__godsEyeView.viewer.resolutionScale >= 1.49,
-    { timeout: 10_000 },
+    // Headless/background pages do not always advance requestAnimationFrame
+    // while the browser applies a viewport resize. Poll the observable state
+    // on a bounded interval so the fixture cannot miss a valid resize update.
+    { polling: 50, timeout: 10_000 },
   );
   const resized = await page.evaluate(async () => {
     const viewer = window.__godsEyeView.viewer;
