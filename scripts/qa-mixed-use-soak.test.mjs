@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import vm from 'node:vm';
 import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
@@ -704,6 +707,55 @@ test('soak reports completed driver operations and labels short runs as smoke', 
   assert.equal(report.sourceToggles, 4);
   assert.equal(report.fullSoak, false);
   assert.equal(report.hardwareRenderingValidated, false);
+});
+
+test('requested soak recording output is portable and reported without embedding it in the soak report', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'gev-soak-bundle-'));
+  const output = path.join(
+    directory,
+    'recording-rendered-soak.gev-recording-bundle.json',
+  );
+  let now = 0;
+  const bundle = {
+    format: 'gods-eye-view-recording-bundle',
+    version: 1,
+    document: { id: 'recording-rendered-soak', kind: 'aircraft-recording' },
+    chunks: [],
+    manifest: { sha256: 'a'.repeat(64) },
+  };
+  try {
+    const report = await runMixedUseSoak({
+      durationMs: 100,
+      intervalMs: 0,
+      now: () => now,
+      recordingBundleOut: output,
+      driver: {
+        runCycle: async () => {
+          now += 50;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+        exportRecordingBundle: async () => bundle,
+      },
+    });
+    assert.deepEqual(report.recordingBundleExport, {
+      path: output,
+      format: bundle.format,
+      version: bundle.version,
+      recordingId: bundle.document.id,
+      bytes: Buffer.byteLength(JSON.stringify(bundle)),
+    });
+    assert.deepEqual(JSON.parse(await readFile(output, 'utf8')), bundle);
+    assert.equal(JSON.stringify(report).includes('manifest'), false);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('software renderer detection rejects known fallback strings', async () => {

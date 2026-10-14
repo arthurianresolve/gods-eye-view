@@ -20,6 +20,7 @@ export async function runMixedUseSoak({
   expectedCommit,
   checkpointIntervalMs = 5 * 60_000,
   intervalMs = 250,
+  recordingBundleOut = null,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
@@ -30,6 +31,30 @@ export async function runMixedUseSoak({
     expectedCommit,
   });
   let report, runFailure;
+  const exportRecordingBundle = async () => {
+    if (!recordingBundleOut) return null;
+    if (typeof driver.exportRecordingBundle !== 'function')
+      throw new Error(
+        'A recording bundle output was requested, but the soak driver cannot export one.',
+      );
+    const bundle = await driver.exportRecordingBundle();
+    if (!bundle)
+      throw new Error(
+        'The rendered soak did not contain the expected recording-rendered-soak bundle.',
+      );
+    const target = path.resolve(recordingBundleOut);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, JSON.stringify(bundle, null, 2) + '\n', {
+      flag: 'wx',
+    });
+    return {
+      path: target,
+      format: bundle.format,
+      version: bundle.version,
+      recordingId: bundle.document?.id || null,
+      bytes: Buffer.byteLength(JSON.stringify(bundle)),
+    };
+  };
   try {
     for (let i = 0; i < (driver.warmupIterations || 0); i++)
       await driver.runCycle(i);
@@ -115,6 +140,8 @@ export async function runMixedUseSoak({
       report.operationStatus = 'passed';
       updateReport();
       report.stability = evaluateSoakStability(report);
+      if (recordingBundleOut)
+        report.recordingBundleExport = await exportRecordingBundle();
       return report;
     } catch (error) {
       updateReport();
@@ -128,6 +155,16 @@ export async function runMixedUseSoak({
         report.failureMetrics = null;
       }
       report.stability = evaluateSoakStability(report);
+      if (recordingBundleOut) {
+        try {
+          report.recordingBundleExport = await exportRecordingBundle();
+        } catch (bundleError) {
+          report.recordingBundleExport = {
+            status: 'failed',
+            error: bundleError.message,
+          };
+        }
+      }
       error.soakReport = report;
       throw error;
     }
@@ -180,6 +217,7 @@ if (
       expectedCommit: commit,
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
+      recordingBundleOut: value('--recording-bundle-out', null),
       browserOptions: hasFlag('--headed')
         ? {
             headless: false,

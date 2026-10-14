@@ -585,6 +585,23 @@ export async function createRenderedSoakDriver(
       browserVersion: await browser.version(),
       runCycle: cycle,
       metrics: () => page.metrics(),
+      /**
+       * Export the synthetic recording used by the soak as a portable bundle.
+       * The rendered soak runs in an isolated browser context, so a share URL
+       * containing only `ir=recording-rendered-soak` cannot be reopened from
+       * the operator's normal Chrome profile unless this bundle is transferred.
+       */
+      async exportRecordingBundle(id = 'recording-rendered-soak') {
+        return page.evaluate(async (recordingId) => {
+          const app = window.__godsEyeView;
+          const recording =
+            await app?.aircraftRecording?.exportRecording?.(recordingId);
+          if (!recording) return null;
+          const { createRecordingBundle } =
+            await import('/src/recording/bundle.js');
+          return createRecordingBundle(recording);
+        }, id);
+      },
       async retainedMetrics() {
         await session.send('HeapProfiler.collectGarbage');
         const application = await page.evaluate(() => {

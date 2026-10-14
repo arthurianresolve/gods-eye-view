@@ -2,6 +2,15 @@
 
 ## Current execution checkpoint - 14 October 2026
 
+The rendered-soak driver now supports an explicit `--recording-bundle-out`
+artifact. Soak share URLs refer to browser-local recording IDs and cannot carry
+their observations; the new output makes the synthetic recording portable for
+manual replay in another Chrome profile. A one-second rendered smoke produced
+and checksum-validated `recording-rendered-soak` (2,545 bytes) on the current
+candidate. The report stores only the artifact path and identity, never the
+recording payload. This closes the observed handoff failure; it does not turn
+the local recording into a server-hosted share or change retention policy.
+
 The [latest integration follow-up](performance-evidence/resume-validation-20261014/README.md)
 records the corrected weather preflight and candidate fixtures, matched S48 CPU
 diagnostics, versioned resource gauges, and the S59 CSV throughput tradeoff.
