@@ -5666,6 +5666,12 @@ Current candidate `c943fa855762815c133b1fc4f6f5e7778ca4f4ce` contains upstream
 passes all standard Node 24/26, build, browser, onboarding and three-OS recovery
 jobs at that exact commit.
 
+The hash-bound pre-release candidate report in the Windows packet passes every
+automated code, build, browser, install and retention check with zero failures.
+It reports `pending-evidence`, rather than `ready`, because matched performance
+comparisons, unavailable additional physical hardware and external human review
+remain pending.
+
 The [current Windows UHD 620 evidence packet](performance-evidence/windows-gpu-20261014/README.md)
 records a clean 3,604,427 ms native ANGLE/D3D11 run on Chrome 152. It completes
 253 mixed-use iterations with `operationStatus: passed`, `fullSoak: true`,

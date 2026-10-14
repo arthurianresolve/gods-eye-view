@@ -46,6 +46,15 @@ The adjacent `validation-manifest-c943fa85.json` binds the exact CI and retentio
 evidence to this commit while leaving matched comparisons, unavailable physical
 hardware, and external accessibility review pending.
 
+The formal pre-release candidate run is `candidate-c943fa85.json` (SHA-256
+`ed967fa6eb096c7f70eb2b768719ede89c8e0e7cf480b210f8c190b1e9288b4c`). It
+passes the exact-tree check, formatting, package boundaries, the complete unit
+and allocation suites, production build, all eight browser journeys, install
+recovery, and the physical Windows retention gate. Its `pending-evidence`
+status has zero failures and three pre-release pending checks: matched workload
+comparisons, the unavailable additional physical hardware matrix, and external
+accessibility/usability review.
+
 ## Historical exact candidate
 
 - Application and harness commit: `0431412adb46f45497079fdd9e08c04b6e6c8b76`

@@ -9,6 +9,9 @@ job. The [physical Windows UHD 620 packet](performance-evidence/windows-gpu-2026
 records an exact-commit 60-minute native D3D11 retention pass with 2.01% final
 window heap growth, stable listeners and zero pending workers. Matched performance,
 final artifact/attestation verification and deployment remain separate.
+The formal candidate report passes every automated pre-release check with zero
+failures and keeps comparison, additional-hardware and external-review evidence
+pending.
 
 Current 13 October follow-up: [QA head 8c0b6f64](performance-evidence/representative-pr-8c0b6f64/README.md)
 passes all seven standard jobs, published-token checks and release verification
