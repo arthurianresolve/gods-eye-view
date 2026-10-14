@@ -2,7 +2,7 @@ import * as Cesium from 'cesium';
 import { requestWithDeadline } from '../../sources/requestDeadline.js';
 import { resolveRoadMode, ROAD_SOURCE_LABELS } from './roadModes.js';
 import { phaseTiming } from '../../sources/phaseTiming.js';
-import { RoadRequestError, roadRequestError } from './source.js';
+import { RoadRequestError, roadRequestError } from './errors.js';
 import {
   isUnavailableCapability,
   sourceResponseError,

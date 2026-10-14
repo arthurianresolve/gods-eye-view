@@ -497,6 +497,8 @@
   "src/layers/traffic/lifecycle.js",
   "src/layers/traffic/viewport.js",
   "src/layers/traffic/controls.js",
+  "src/layers/traffic/errors.js",
+  "src/layers/traffic/factory.js",
   "src/layers/traffic/source.js",
   "src/layers/traffic/state.js",
   "src/layers/traffic/policy.js",
