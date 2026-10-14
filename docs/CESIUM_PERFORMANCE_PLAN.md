@@ -47,6 +47,16 @@ unchanged text now causes no DOM write. Focused layer-panel, workspace-import,
 ownership and text-update checks pass. This is a narrow maintenance slice, not
 the full interaction or catalog-journey acceptance.
 
+The workspace byte-input follow-up at `5a8bc0f6` carries browser `File` reads
+through the bounded import decoder instead of eagerly converting the entire
+file to a string. CSV mapping still decodes only the header setup needed for
+the controls; the preview receives the original bytes and retains file and
+workspace ownership checks. Text-only test doubles keep the compatibility
+fallback. Focused workspace import and parser suites pass. This removes the
+production path's avoidable eager-copy gap, but JSON parsing, geometry
+normalization, broader catalog maintenance and end-to-end interaction timing
+remain pending.
+
 The [S47 producer audit](performance-evidence/s47-workload-audit-20261014.md)
 identifies real workload identity/export gaps in addition to absent physical
 Windows comparisons. The [S59 ownership audit](performance-evidence/s59-engineering-audit-20261014.md)
@@ -1465,7 +1475,7 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture                  | Engineering closed: shared fresh-frame ownership, real viewport/pointer caller cleanup, all three temporary surfaces released; explicitly retain preserveDrawingBuffer=true.                                                                                                                                                                                 | 199 frame/pointer/voice checks pass at d73f3c89, after fourteen before-fix sampler-surface failures. The real viewer destroy-pending component passes in native run 38439815077. Full app capture matrix remains separate.                                                                                                                                                                                                                                 | Historical isolated Windows viewer matrix passes at 47dbee4; current full application idle/moving/portrait/resized/restored/hidden qualification and any benefit claim remain pending.                     |
 | S57 map-resource lifetime                | Engineering closed: superseded imagery/terrain/tileset ownership, comparison leases, explicit retry after fallback, native fixture coverage and rendered fault controls; detail/cache defaults retained.                                                                                                                                                     | 50 map tests pass; current native production journeys and all three fault/recovery controls pass at e0710bd5. Historical streamed-tile component at e1a6f5e4 retains its original cancellation/cache/cleanup evidence. See the 13 October closure audit.                                                                                                                                                                                                   | Hosted native integration passed; physical Windows equivalent-detail, route-time and retention qualification pending.                                                                                      |
 | S58 weather/effects | Engineering closed: wind/scalar reuse, weather/image/cache ownership and effect-stage census reviewed; preserve required crossfade and effects | Current full integration and focused ownership tests pass; three five-pair raster CPU reports and real-stage census retained | Hosted component pixels retained; full physical Windows weather/effect matrix and final qualification pending |
-| S59 cooperative ingestion                | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards, header-only CSV setup, cancellable 64 KiB UTF-8 decoding at `435bf103`, cooperative CSV scanning and bounded restricted-XML tokenization at `8f039571`, and unchanged catalog/status DOM-write suppression at `42b34101`; JSON.parse, single-feature preparation and broader UI maintenance remain | All seven integration jobs pass at `9a665b2`; bounded-decoder, cooperative CSV/XML and text-update focused tests cover split UTF-8, malformed input, cancellation, parser parity, quoted records and unchanged-write behavior; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S59 cooperative ingestion                | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards, header-only CSV setup, cancellable 64 KiB UTF-8 decoding at `435bf103`, cooperative CSV scanning and bounded restricted-XML tokenization at `8f039571`, byte-backed workspace preview delivery at `5a8bc0f6`, and unchanged catalog/status DOM-write suppression at `42b34101`; JSON.parse, single-feature preparation and broader UI maintenance remain | All seven integration jobs pass at `9a665b2`; bounded-decoder, cooperative CSV/XML, byte-read ownership and text-update focused tests cover split UTF-8, malformed input, cancellation, parser parity, quoted records and unchanged-write behavior; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate                      | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending                                                                                                                                                                                                                                                   | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below                                                                                                                                                                                                                                                                                                                                 | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental                                                                                                    |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -3005,6 +3015,21 @@ including large CSV cancellation and quoted-record parity. This closes only
 scan/tokenization responsiveness. `JSON.parse`, geometry normalization and the
 broader catalog/UI interaction journey remain pending; no four-millisecond
 end-to-end or hardware-performance claim follows.
+
+### S59.4 byte-backed workspace previews - 14 October 2026
+
+The workspace file-selection path now uses `readOwnedWorkspaceBytes` when the
+browser `File` exposes `arrayBuffer()`. The staged preview retains the bytes,
+checks the same file/workspace owner before publication, and passes them to the
+bounded UTF-8 decoder and cooperative scanners. CSV controls decode only the
+header text required to populate mappings. Older text-only test doubles still
+use the original reader, so this is additive and does not change the saved
+workspace format or preview output.
+
+The focused workspace import, ownership, CSV, GeoJSON and cancellation suites
+pass. The remaining JSON/XML parse and geometry-preparation work is still
+unqualified; this slice does not claim that a worker is the default or that
+the four-millisecond target is met end to end.
 
 ### S59.2 unchanged catalog/status writes - 14 October 2026
 
