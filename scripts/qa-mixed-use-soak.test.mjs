@@ -452,9 +452,11 @@ test('Fetch events settle without a Network event, and throwing fixtures abort t
 });
 
 test('startup failures include application readiness and renderer error diagnostics', async () => {
+  let broughtToFront = 0;
   await assert.rejects(
     bootFixturePage(
       {
+        bringToFront: async () => broughtToFront++,
         goto: async () => {},
         waitForFunction: async () => {
           throw new Error('startup timeout');
@@ -469,6 +471,7 @@ test('startup failures include application readiness and renderer error diagnost
     ),
     /startup timeout; startup diagnostics: .*WebGL unavailable/,
   );
+  assert.equal(broughtToFront, 1);
 });
 
 test('stability accepts a complete plateau and leaves short/missing evidence pending', () => {

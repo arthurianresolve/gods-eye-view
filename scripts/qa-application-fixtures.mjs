@@ -396,6 +396,11 @@ export async function bootFixturePage(
   base,
   { onProgress = () => {}, hash = '' } = {},
 ) {
+  // Headed hardware runs can start behind another Chrome window. Chromium may
+  // then stop delivering GPU-backed frames on Windows even when timer
+  // throttling is disabled. Make the fixture page the active browser target
+  // before navigation; this is a no-op for headless callers.
+  await page.bringToFront?.();
   onProgress('navigation');
   try {
     await page.goto(base + '/?welcome=0' + hash, {
