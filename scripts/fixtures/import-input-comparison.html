@@ -7,7 +7,9 @@
     <style>
       :root {
         color-scheme: dark;
-        font: 14px/1.5 system-ui, sans-serif;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
         background: #07111b;
         color: #d8e6f2;
       }
@@ -39,9 +41,9 @@
     <h1>Import parser comparison</h1>
     <p>
       Diagnostic only: compares the current synchronous CSV/GeoJSON paths with
-      opt-in cooperative CSV parsing and the opt-in GeoJSON parser worker.
-      The fixed synthetic inputs are capped at 8 MiB. The run stops at 60
-      seconds. It does not measure Cesium, rendering, GPU work, or acceptance
+      opt-in cooperative CSV parsing and the opt-in GeoJSON parser worker. The
+      fixed synthetic inputs are capped at 8 MiB. The run stops at 60 seconds.
+      It does not measure Cesium, rendering, GPU work, or acceptance
       performance.
     </p>
     <button id="run" type="button">Run comparison</button>

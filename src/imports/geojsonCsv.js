@@ -132,12 +132,7 @@ export function createImportPreview(options) {
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
 export async function previewGeoJSON(
   input,
-  {
-    signal,
-    attribution = '',
-    timeField = null,
-    workerParsing = false,
-  } = {},
+  { signal, attribution = '', timeField = null, workerParsing = false } = {},
 ) {
   signal?.throwIfAborted();
   const text = decodeImportText(input);
