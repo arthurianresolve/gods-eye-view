@@ -5,6 +5,7 @@ import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -31,6 +32,7 @@ export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
   if (INFRASTRUCTURE_WORKLOAD_IDS.includes(id)) return 'infrastructure';
+  if (id === MAP_STREAMING_WORKLOAD_ID) return 'map-streaming';
   return id;
 }
 

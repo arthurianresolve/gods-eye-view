@@ -15,10 +15,12 @@ import {
 import { readValidationManifest } from '../qa-candidate.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
 import {
   baselineCommit,
   candidateCommit,
   makeInfrastructureReport,
+  makeMapReport,
   makeReport,
   makeWeatherReport,
 } from './pairedReportTestFixtures.mjs';
@@ -41,8 +43,8 @@ test('candidate workload mapping recognizes the Austin producer identity', () =>
     'infrastructure-only',
   );
   assert.equal(
-    canonicalPerformanceWorkloadId('austin-map-streaming-v1'),
-    'austin-map-streaming-v1',
+    canonicalPerformanceWorkloadId(MAP_STREAMING_WORKLOAD_ID),
+    'map-streaming',
   );
 });
 
@@ -138,9 +140,11 @@ async function createComparison(
 ) {
   const reportFactory = INFRASTRUCTURE_WORKLOAD_IDS.includes(workloadId)
     ? (commit) => makeInfrastructureReport(commit, workloadId)
-    : workloadId === 'weather-effects'
-      ? makeWeatherReport
-      : makeReport;
+    : workloadId === MAP_STREAMING_WORKLOAD_ID
+      ? (commit) => makeMapReport(commit, commit === candidateCommit ? 15 : 20)
+      : workloadId === 'weather-effects'
+        ? makeWeatherReport
+        : makeReport;
   const baseline = reportFactory(baselineCommit);
   const candidate = INFRASTRUCTURE_WORKLOAD_IDS.includes(workloadId)
     ? reportFactory(candidateCommit)
@@ -865,13 +869,14 @@ test('raw retention is recomputed and requires source, duration, sorted checkpoi
   );
 });
 
-test('complete available primary evidence keeps map-streaming pending', async () => {
+test('complete available primary evidence covers every timed family', async () => {
   const setup = await setupManifest();
   for (const workloadId of [
     'dense-investigation',
     'operating-view',
     ...INFRASTRUCTURE_WORKLOAD_IDS,
     'weather-effects',
+    MAP_STREAMING_WORKLOAD_ID,
   ]) {
     setup.evidence.comparisons.push(
       await createComparison(setup, {
@@ -943,10 +948,10 @@ test('complete available primary evidence keeps map-streaming pending', async ()
   });
   assert.equal(
     result.comparison.status,
-    'pending',
+    'passed',
     JSON.stringify(result.comparison, null, 2),
   );
-  assert.deepEqual(result.comparison.missingWorkloads, ['map-streaming']);
+  assert.deepEqual(result.comparison.missingWorkloads, []);
   assert.equal(
     result.comparison.acceptancePolicyId,
     PERFORMANCE_ACCEPTANCE_POLICY_ID,
@@ -979,7 +984,7 @@ test('complete available primary evidence keeps map-streaming pending', async ()
   const manifest = readValidationManifest(setup.manifestPath, {
     candidateCommit,
   });
-  assert.equal(manifest.performanceEvidence.comparison.status, 'pending');
+  assert.equal(manifest.performanceEvidence.comparison.status, 'passed');
   assert.equal(manifest.performanceEvidence.retentionOutcome.status, 'passed');
 });
 

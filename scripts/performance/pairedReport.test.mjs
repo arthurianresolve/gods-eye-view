@@ -3,132 +3,17 @@ import assert from 'node:assert/strict';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateMotionFrameBudget } from './motionBudget.mjs';
 import { createObservedInfrastructureComparisonContract } from './captureComparisonContract.mjs';
-import { createObservedMapStreamingComparisonContract } from './captureComparisonContract.mjs';
 
 import {
   baselineCommit,
   candidateCommit,
   makeReport,
   makeInfrastructureReport,
+  makeMapReport,
   makeWeatherReport,
   routes,
   scenarios,
 } from './pairedReportTestFixtures.mjs';
-
-function makeMapReport(commit, readinessMs = 20) {
-  const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
-    manifestSha256: 'f'.repeat(64),
-  };
-  const route = {
-    id: 'austin-map-rightward-v1',
-    durationMs: 60_000,
-    startupFlightDelayMs: 500,
-    warmupMs: 30_000,
-    moveRightMetersPerSecond: 120,
-    headingRadians: 0,
-    pitchRadians: -Math.PI / 2,
-    declaredBounds: { west: -97.82, south: 30.2, east: -97.58, north: 30.34 },
-  };
-  const settings = {
-    qualityMode: 'manual',
-    densityPct: 75,
-    detectionMode: 'DENSE',
-    resolutionScale: 1,
-    msaaSamples: 4,
-    antialias: false,
-    fxaa: true,
-  };
-  const delivery = {
-    schema: 'gev-map-streaming-delivery/v1',
-    status: 'observed',
-    fixtureId: fixture.id,
-    manifestSha256: fixture.manifestSha256,
-    cleanupConfirmed: true,
-    assets: [
-      { path: 'tileset/tileset.json', sha256: 'a'.repeat(64), byteLength: 10 },
-    ],
-  };
-  const journeys = Array.from({ length: 5 }, (_, index) => ({
-    run: index + 1,
-    route,
-    settingsBefore: settings,
-    settingsAfter: settings,
-    transitions: [
-      {
-        stackId: 'photoreal',
-        scheduledAtMs: 0,
-        actualStartMs: 0,
-        settledAtMs: 0,
-      },
-      {
-        stackId: 'esri-imagery',
-        scheduledAtMs: 15_000,
-        actualStartMs: 15_000,
-        settledAtMs: 15_000 + readinessMs,
-      },
-      {
-        stackId: 'osm',
-        scheduledAtMs: 30_000,
-        actualStartMs: 30_000,
-        settledAtMs: 30_000 + readinessMs,
-      },
-      {
-        stackId: 'photoreal',
-        scheduledAtMs: 45_000,
-        actualStartMs: 45_000,
-        settledAtMs: 45_000 + readinessMs,
-      },
-    ],
-  }));
-  const mapStreamingCapture = {
-    schema: 'gev-map-streaming-capture/v1',
-    workloadId: 'austin-map-streaming-v1',
-    status: 'observed',
-    performanceAcceptanceEligible: true,
-    fixtureId: fixture.id,
-    manifestSha256: fixture.manifestSha256,
-    buildProfile: {
-      id: 'austin-map-streaming-v1',
-      configurationSha256: 'b'.repeat(64),
-    },
-    fixtureDelivery: delivery,
-    journeys,
-  };
-  const environment = {
-    appCommit: commit,
-    userAgent: 'Mozilla/5.0 Chrome/152.0.7977.75',
-    platform: 'Win32',
-    renderer: 'Intel UHD 620',
-    vendor: 'Intel',
-    viewport: { width: 1440, height: 900, dpr: 1 },
-    drawingBuffer: { width: 1440, height: 900 },
-  };
-  const workload = {
-    warmupMs: 30_000,
-    durationPerSampleMs: 60_000,
-    runsPerScenario: 5,
-    qualityMode: 'manual',
-    expectedDensityPct: 75,
-    detectionMode: 'DENSE',
-    injectedDelayMs: 0,
-    fixture: { id: fixture.id, sha256: fixture.manifestSha256, byteLength: 1 },
-    mapStreamingCapture,
-  };
-  const report = makeReport(commit);
-  report.comparisonContract = createObservedMapStreamingComparisonContract({
-    fixture,
-    mapStreamingCapture,
-    environment,
-    workload,
-  });
-  report.comparisonEligible = true;
-  report.fixtureDelivery = delivery;
-  report.environment = environment;
-  report.workload = workload;
-  report.captures = [];
-  return report;
-}
 function validate(
   baseline = makeReport(baselineCommit),
   candidate = makeReport(
