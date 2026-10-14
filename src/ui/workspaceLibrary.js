@@ -163,6 +163,8 @@ export function createWorkspaceLibraryPanel({
   let queryController = null;
   let queryRenderController = null;
   let queryGeneration = 0;
+  let comparisonRenderController = null;
+  let comparisonGeneration = 0;
   let stagedFile = null;
   let stagedText = null;
   let stagedBytes = null;
@@ -491,6 +493,11 @@ export function createWorkspaceLibraryPanel({
   function cancelQueryRendering() {
     queryRenderController?.abort('superseded-query-render');
     queryRenderController = null;
+  }
+
+  function cancelComparisonRendering() {
+    comparisonRenderController?.abort('superseded-comparison-render');
+    comparisonRenderController = null;
   }
 
   async function renderQueryResult(result, query, generation) {
@@ -1678,7 +1685,9 @@ export function createWorkspaceLibraryPanel({
     }
   }
 
-  function showComparison() {
+  async function showComparison() {
+    cancelComparisonRendering();
+    const generation = ++comparisonGeneration;
     const a = active?.pinnedEvidence?.find(
       (item) => item.slot === 'A',
     )?.snapshot;
@@ -1693,27 +1702,54 @@ export function createWorkspaceLibraryPanel({
       return;
     }
     latestComparison = compareEvidenceSnapshots(a, b);
+    const controller = new AbortController();
+    comparisonRenderController = controller;
     const host = root.querySelector('[data-comparison-results]');
     host.replaceChildren();
     const table = document.createElement('table');
     table.innerHTML =
       '<thead><tr><th>Change</th><th>Entity</th><th>Interpretation</th></tr></thead>';
     const body = document.createElement('tbody');
-    for (const row of latestComparison.rows) {
-      const tr = document.createElement('tr');
-      for (const value of [row.status, row.key, row.explanation || '']) {
-        const td = document.createElement('td');
-        td.textContent = value;
-        tr.append(td);
-      }
-      body.append(tr);
-    }
     table.append(body);
     host.append(table);
-    setStatus(
-      `Compared ${latestComparison.rows.length} evidence records. Uncovered absence is labeled not observed.`,
-      'saved',
-    );
+    function* rows() {
+      for (const row of latestComparison.rows) {
+        controller.signal.throwIfAborted();
+        const tr = document.createElement('tr');
+        for (const value of [row.status, row.key, row.explanation || '']) {
+          const td = document.createElement('td');
+          td.textContent = value;
+          tr.append(td);
+        }
+        body.append(tr);
+        yield tr;
+      }
+    }
+    try {
+      await consumeInBatches(rows(), {
+        signal: controller.signal,
+        budgetMs: 4,
+        deferStart: true,
+      });
+      if (
+        controller.signal.aborted ||
+        generation !== comparisonGeneration ||
+        disposed
+      )
+        return false;
+      setStatus(
+        `Compared ${latestComparison.rows.length} evidence records. Uncovered absence is labeled not observed.`,
+        'saved',
+      );
+      return true;
+    } catch (error) {
+      if (controller.signal.aborted) return false;
+      setStatus(`Comparison could not be rendered: ${error.message}`, 'error');
+      return false;
+    } finally {
+      if (comparisonRenderController === controller)
+        comparisonRenderController = null;
+    }
   }
 
   root.addEventListener('click', (event) => {
@@ -1724,6 +1760,7 @@ export function createWorkspaceLibraryPanel({
     openGeneration++;
     restore.cancel('workspace-selection-changed');
     cancelImportRendering();
+    cancelComparisonRendering();
     applying = false;
     active = null;
     invalidateWorkspaceOwnedPendingImport();
@@ -1851,6 +1888,7 @@ export function createWorkspaceLibraryPanel({
       disposed = true;
       openGeneration++;
       cancelImportRendering();
+      cancelComparisonRendering();
       resetStagedImport({ clearFile: true });
       clearTimeout(autosaveTimer);
       clearTimeout(historyTimer);

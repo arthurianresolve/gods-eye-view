@@ -5,6 +5,7 @@ import { createWorkspaceLibraryPanel } from './workspaceLibrary.js';
 import { createWorkspaceLibrary } from '../workspaces/library.js';
 import { createView } from '../view/index.js';
 import { WorkspaceRevisionConflict } from '../storage/codec.js';
+import { createEvidenceSnapshot } from '../evidence/comparison.js';
 
 class Element {
   constructor(selector = '') {
@@ -245,7 +246,11 @@ function memoryStorage() {
   };
 }
 
-async function createPanel({ workspaceCount = 0, analystEngine = null } = {}) {
+async function createPanel({
+  workspaceCount = 0,
+  analystEngine = null,
+  pinnedEvidence = [],
+} = {}) {
   const storage = memoryStorage();
   const seed = createWorkspaceLibrary({
     storage,
@@ -262,7 +267,7 @@ async function createPanel({ workspaceCount = 0, analystEngine = null } = {}) {
       view,
       filters: {},
       annotations: [],
-      pinnedEvidence: [],
+      pinnedEvidence,
       assetRefs: [],
       directorProjectRef: 'director-project-v1',
       chunks: {},
@@ -1430,5 +1435,67 @@ test('query result rows render cooperatively and stale renders cannot win', asyn
   assert.match(
     fixture.element('[data-query-status]').textContent,
     /fixed snapshot/,
+  );
+});
+
+test('large evidence comparisons render cooperatively and cancel on replacement', async (t) => {
+  const records = (status) =>
+    Array.from({ length: 1_000 }, (_, index) => ({
+      layerKey: 'fixture',
+      id: `record-${index}`,
+      status,
+    }));
+  const snapshotA = createEvidenceSnapshot({
+    id: 'snapshot-a',
+    title: 'A',
+    capturedAt: 200,
+    records: records('before'),
+  });
+  const snapshotB = createEvidenceSnapshot({
+    id: 'snapshot-b',
+    title: 'B',
+    capturedAt: 300,
+    records: records('after'),
+  });
+  const fixture = await createPanel({
+    workspaceCount: 1,
+    pinnedEvidence: [
+      {
+        id: 'pin-a',
+        slot: 'A',
+        sourceId: 'fixture',
+        capturedAt: 200,
+        snapshot: snapshotA,
+      },
+      {
+        id: 'pin-b',
+        slot: 'B',
+        sourceId: 'fixture',
+        capturedAt: 300,
+        snapshot: snapshotB,
+      },
+    ],
+  });
+  t.after(() => fixture.restoreGlobals());
+  await fixture.selectWorkspace('workspace-a');
+
+  const first = fixture.startAction('compare');
+  const second = fixture.startAction('compare');
+  await Promise.all([first, second]);
+  await waitFor(
+    () => fixture.element('[data-status]').textContent.startsWith('Compared'),
+    'cooperative comparison render',
+  );
+
+  const host = fixture.element('[data-comparison-results]');
+  const table = host.children.find((child) => child.selector === 'table');
+  assert.ok(table);
+  const body = table.children.find((child) => child.selector === 'tbody');
+  assert.ok(body);
+  assert.equal(body.children.length, 1_000);
+  assert.equal(body.children[0].children[1].textContent, 'fixture:record-0');
+  assert.equal(
+    body.children.at(-1).children[1].textContent,
+    'fixture:record-999',
   );
 });
