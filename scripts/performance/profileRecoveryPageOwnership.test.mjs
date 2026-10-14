@@ -974,15 +974,29 @@ test('owned page closes before browser close and leaves zero open pages', async 
   assert.deepEqual(order, ['page-close', 'browser-close']);
 });
 
-test('wedged owned-page close is bounded and reported as incomplete', async () => {
+test('wedged owned-page close is bounded and reported as incomplete', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const owned = {
     isClosed: () => false,
     close: () => new Promise(() => {}),
   };
   const browser = { pages: async () => [owned] };
-  const started = Date.now();
-  const outcome = await closeOwnedRecoveryPage(owned, browser, 20);
-  assert.ok(Date.now() - started < 500);
+  let settled = false;
+  const pending = closeOwnedRecoveryPage(owned, browser, 20).then((result) => {
+    settled = true;
+    return result;
+  });
+  t.mock.timers.tick(19);
+  await new Promise(setImmediate);
+  assert.equal(settled, false);
+  t.mock.timers.tick(1);
+  await new Promise(setImmediate);
+  assert.equal(
+    settled,
+    true,
+    'the declared deadline must settle the operation',
+  );
+  const outcome = await pending;
   assert.deepEqual(outcome, { closeCompleted: false, openPageCount: null });
 });
 
@@ -2066,8 +2080,8 @@ for (const platform of ['darwin', 'linux']) {
 test('close trace ignores unrelated and pre-close protocol text without retaining it', () => {
   let now = 10;
   const trace = createRecoveryBrowserCloseTrace({ now: () => now });
-  const send = trace.logger('puppeteer:protocol:SEND ▶');
-  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  const send = trace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
+  const receive = trace.logger('puppeteer:protocol:RECV Ã¢â€”â‚¬');
   const unrelated = trace.logger('puppeteer:error');
   assert.equal(unrelated, undefined);
   send(JSON.stringify({ method: 'Browser.close', id: 4, secret: 'before' }));
@@ -2090,8 +2104,8 @@ test('close trace ignores unrelated and pre-close protocol text without retainin
 test('close trace correlates Browser.close acknowledgement but keeps process wait separate', async () => {
   const child = fakeBrowserProcess();
   const trace = createRecoveryBrowserCloseTrace();
-  const send = trace.logger('puppeteer:protocol:SEND ▶');
-  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  const send = trace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
+  const receive = trace.logger('puppeteer:protocol:RECV Ã¢â€”â‚¬');
   const browser = new EventEmitter();
   browser.process = () => child;
   browser.close = () => {
@@ -2133,8 +2147,8 @@ test('close trace correlates Browser.close acknowledgement but keeps process wai
 test('close trace distinguishes missing and late acknowledgements and bounds messages', () => {
   let now = 0;
   const trace = createRecoveryBrowserCloseTrace({ now: () => now });
-  const send = trace.logger('puppeteer:protocol:SEND ▶');
-  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  const send = trace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
+  const receive = trace.logger('puppeteer:protocol:RECV Ã¢â€”â‚¬');
   trace.begin();
   send(JSON.stringify({ method: 'Browser.close', id: 12 }));
   now = 25;
@@ -2144,8 +2158,8 @@ test('close trace distinguishes missing and late acknowledgements and bounds mes
   assert.equal(late.browserCloseAcknowledgementLate, true);
 
   const errorTrace = createRecoveryBrowserCloseTrace({ now: () => now });
-  const errorSend = errorTrace.logger('puppeteer:protocol:SEND ▶');
-  const errorReceive = errorTrace.logger('puppeteer:protocol:RECV ◀');
+  const errorSend = errorTrace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
+  const errorReceive = errorTrace.logger('puppeteer:protocol:RECV Ã¢â€”â‚¬');
   errorTrace.begin();
   errorSend(JSON.stringify({ method: 'Browser.close', id: 13 }));
   errorReceive(
@@ -2157,7 +2171,7 @@ test('close trace distinguishes missing and late acknowledgements and bounds mes
   assert.equal(JSON.stringify(rejectedAck).includes('sensitive'), false);
 
   const missingTrace = createRecoveryBrowserCloseTrace({ now: () => now });
-  const missingSend = missingTrace.logger('puppeteer:protocol:SEND ▶');
+  const missingSend = missingTrace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
   missingTrace.begin();
   missingSend('{ malformed Browser.close');
   const missing = missingTrace.finish(20);
@@ -2167,7 +2181,7 @@ test('close trace distinguishes missing and late acknowledgements and bounds mes
   assert.equal(missing.protocolObservationComplete, true);
 
   const boundedTrace = createRecoveryBrowserCloseTrace({ now: () => now });
-  const boundedSend = boundedTrace.logger('puppeteer:protocol:SEND ▶');
+  const boundedSend = boundedTrace.logger('puppeteer:protocol:SEND Ã¢â€“Â¶');
   boundedTrace.begin();
   for (let index = 0; index < 65; index++)
     boundedSend(JSON.stringify({ method: 'Page.reload', id: index }));
@@ -2177,11 +2191,13 @@ test('close trace distinguishes missing and late acknowledgements and bounds mes
   assert.equal(bounded.protocolObservationComplete, false);
 });
 
-test('an exited process with an unresolved close acknowledgement remains a failure', async () => {
+test('an exited process with an unresolved close acknowledgement remains a failure', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const child = fakeBrowserProcess();
-  const started = Date.now();
+  let elapsedMs = 0;
   let forced = false;
-  const outcome = await closeRecoveryBrowser(
+  let settled = false;
+  const pending = closeRecoveryBrowser(
     {
       process: () => child,
       close: () => {
@@ -2192,13 +2208,33 @@ test('an exited process with an unresolved close acknowledgement remains a failu
     },
     {
       timeoutMs: 20,
+      now: () => elapsedMs,
       forceProcess: async () => {
         forced = true;
         return { attempted: true, confirmed: true };
       },
     },
+  ).then((result) => {
+    settled = true;
+    return result;
+  });
+  await new Promise(setImmediate);
+  elapsedMs = 19;
+  t.mock.timers.tick(19);
+  await new Promise(setImmediate);
+  assert.equal(settled, false);
+  assert.equal(forced, false);
+  elapsedMs = 20;
+  t.mock.timers.tick(1);
+  await new Promise(setImmediate);
+  assert.equal(
+    settled,
+    true,
+    'the declared deadline must settle the operation',
   );
-  assert.ok(Date.now() - started < 500);
+  const outcome = await pending;
+  assert.equal(outcome.observation.closeDeadlineMs, 20);
+  assert.equal(outcome.observation.closeElapsedMs, 20);
   assert.equal(outcome.closeCompleted, false);
   assert.equal(outcome.forcedProcessTermination, false);
   assert.equal(forced, false);
@@ -2210,27 +2246,99 @@ test('an exited process with an unresolved close acknowledgement remains a failu
   assert.equal(child.listenerCount('exit'), 0);
 });
 
-test('a live process timeout invokes bounded owned-process cleanup and stays failed', async () => {
+test('a live process timeout invokes bounded owned-process cleanup and stays failed', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const child = fakeBrowserProcess();
-  let forced = false;
-  const started = Date.now();
-  const outcome = await closeRecoveryBrowser(
+  let forced = 0;
+  let elapsedMs = 0;
+  let settled = false;
+  const pending = closeRecoveryBrowser(
     { process: () => child, close: () => new Promise(() => {}) },
     {
       timeoutMs: 20,
+      now: () => elapsedMs,
       forceProcess: async () => {
-        forced = true;
+        forced += 1;
         return { attempted: true, confirmed: true };
       },
     },
+  ).then((result) => {
+    settled = true;
+    return result;
+  });
+  await new Promise(setImmediate);
+  elapsedMs = 19;
+  t.mock.timers.tick(19);
+  await new Promise(setImmediate);
+  assert.equal(settled, false);
+  assert.equal(forced, 0);
+  elapsedMs = 20;
+  t.mock.timers.tick(1);
+  await new Promise(setImmediate);
+  assert.equal(
+    settled,
+    true,
+    'the declared deadline must settle the operation',
   );
-  assert.ok(Date.now() - started < 500);
-  assert.equal(forced, true);
+  const outcome = await pending;
+  assert.equal(outcome.observation.closeDeadlineMs, 20);
+  assert.equal(outcome.observation.closeElapsedMs, 20);
+  assert.equal(forced, 1);
   assert.equal(outcome.closeCompleted, false);
   assert.equal(outcome.forcedProcessTermination, true);
   assert.equal(outcome.observation.processExit, null);
   assert.equal(outcome.observation.forceProcessStatus, 'confirmed');
   assert.equal(outcome.observation.forceProcessAttempted, true);
+  assert.equal(child.listenerCount('exit'), 0);
+  t.mock.timers.tick(100);
+  await new Promise(setImmediate);
+  assert.equal(forced, 1);
+});
+
+test('a hung force callback receives its own bounded deadline after close times out', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const child = fakeBrowserProcess();
+  let forced = 0;
+  let elapsedMs = 0;
+  let settled = false;
+  const pending = closeRecoveryBrowser(
+    { process: () => child, close: () => new Promise(() => {}) },
+    {
+      timeoutMs: 20,
+      now: () => elapsedMs,
+      forceProcess: () => {
+        forced += 1;
+        return new Promise(() => {});
+      },
+    },
+  ).then((result) => {
+    settled = true;
+    return result;
+  });
+  await new Promise(setImmediate);
+  elapsedMs = 20;
+  t.mock.timers.tick(20);
+  await new Promise(setImmediate);
+  assert.equal(forced, 1);
+  assert.equal(settled, false);
+  elapsedMs = 39;
+  t.mock.timers.tick(19);
+  await new Promise(setImmediate);
+  assert.equal(settled, false);
+  elapsedMs = 40;
+  t.mock.timers.tick(1);
+  await new Promise(setImmediate);
+  assert.equal(
+    settled,
+    true,
+    'the declared deadline must settle the operation',
+  );
+  const outcome = await pending;
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(outcome.observation.closeElapsedMs, 20);
+  assert.equal(outcome.observation.forceProcessElapsedMs, 20);
+  assert.equal(outcome.observation.forceProcessStatus, 'timed-out');
   assert.equal(child.listenerCount('exit'), 0);
 });
 

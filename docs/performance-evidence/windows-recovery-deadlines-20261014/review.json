@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "da7a33082644d6c1200dc7df66d300941170ce8c",
+  "failedRun": 38522620105,
+  "failedJob": 115715569217,
+  "failure": "Mocked close/cleanup unit completed in 589.96ms; wall-clock assertion required <500ms. No browser setup or real recovery journey ran in this failed job.",
+  "fix": "Control the timer and injected measurement clock. Assert unresolved at 19ms and resolved at the declared 20ms, correct fallback ownership, separate bounded cleanup deadline, and listener retirement.",
+  "runtimeChanged": false,
+  "tests": {
+    "total": 78,
+    "passed": 78,
+    "failed": 0
+  },
+  "mutation": {
+    "operation": "Increase only the close/cleanup settle timer by 1ms through Node module loader",
+    "expectedFailures": 2,
+    "actualFailures": 2,
+    "cancelled": 0,
+    "initialDriverLimitation": "An earlier mutation control awaited unresolved work and hit its 20-second outer process limit. Assertions now check settlement before awaiting, so the mutated tests fail promptly."
+  },
+  "hashes": {
+    "hosted-failure.log": "3cfea81e77048014ff67257b526f3bb8d7f08ef1e108281a3239b46c47c8f9e7",
+    "negative-loader.mjs": "74207a9991c28f8545fc1cdbebb3f447e958469b6f6e18147c56e50f34795d1c",
+    "negative.log": "c06f4a23edf3065a48f6fdd0b7cde99e1b16b94e3940dc485cc7c3b5e667cf86",
+    "tests.log": "234f8120e48b95369648f918fb1da1f3fb7bc0882dec11fd5ecc1274c3260c39",
+    "runtimeGitBlobSha256": "979e99a836cb46f63b6cdbbe6becb77e6b1574692113a94be826694e54940400"
+  }
+}
