@@ -1,5 +1,14 @@
-import { IMPORT_LIMITS, previewCSV, previewGeoJSON } from '../../src/imports/geojsonCsv.js';
-import { createImportInputComparisonFixtures } from './import-input-comparison-fixtures.mjs';
+import {
+  IMPORT_LIMITS,
+  previewCSV,
+  previewGeoJSON,
+} from '../../src/imports/geojsonCsv.js';
+import {
+  createImportComparisonPageStateTracker,
+  createImportInputComparisonFixtures,
+  IMPORT_INPUT_COMPARISON_FIXTURE_SHA256,
+  runAndRecordImportComparisonPair,
+} from './import-input-comparison-fixtures.mjs';
 
 const RUN_LIMIT_MS = 60_000;
 const TRIALS = 5;
@@ -12,15 +21,24 @@ let activeController = null;
 let latestReport = null;
 
 function appCommit() {
-  return typeof __GEV_APP_COMMIT__ === 'string'
-    ? __GEV_APP_COMMIT__
-    : null;
+  return typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null;
 }
 
 function ensureTime(signal, deadlineAt) {
   signal.throwIfAborted();
   if (performance.now() >= deadlineAt)
-    throw new DOMException('The 60-second run limit was reached.', 'TimeoutError');
+    throw new DOMException(
+      'The 60-second run limit was reached.',
+      'TimeoutError',
+    );
+}
+
+function pageStateError() {
+  const error = new Error(
+    'The page must stay visible and focused during each comparison arm.',
+  );
+  error.name = 'PageVisibilityError';
+  return error;
 }
 
 async function sha256(bytes) {
@@ -30,75 +48,133 @@ async function sha256(bytes) {
   ).join('');
 }
 
-async function runPreview(fixture, mode, signal, deadlineAt) {
-  ensureTime(signal, deadlineAt);
+async function runPreview(fixture, mode, signal, deadlineAt, onArmFinished) {
+  const pageState = createImportComparisonPageStateTracker();
   const startedAt = performance.now();
-  let pending;
-  if (fixture.kind === 'csv') {
-    pending = previewCSV(fixture.text, {
-      signal,
-      mapping: { id: 'id', latitude: 'latitude', longitude: 'longitude' },
-      cooperativeParsing: mode === 'cooperative',
-    });
-  } else {
-    pending = previewGeoJSON(fixture.text, {
-      signal,
-      workerParsing: mode === 'worker',
-    });
+  let result = null;
+  let failure = null;
+  let synchronousPrefixMs = null;
+  try {
+    ensureTime(signal, deadlineAt);
+    if (
+      pageState.start.visibilityState !== 'visible' ||
+      !pageState.start.hasFocus
+    )
+      throw pageStateError();
+    let pending;
+    if (fixture.kind === 'csv') {
+      pending = previewCSV(fixture.text, {
+        signal,
+        mapping: { id: 'id', latitude: 'latitude', longitude: 'longitude' },
+        cooperativeParsing: mode === 'cooperative',
+      });
+    } else {
+      pending = previewGeoJSON(fixture.text, {
+        signal,
+        workerParsing: mode === 'worker',
+      });
+    }
+    synchronousPrefixMs = performance.now() - startedAt;
+    const preview = await pending;
+    const totalMs = performance.now() - startedAt;
+    ensureTime(signal, deadlineAt);
+    const first = preview.records[0]?.id ?? null;
+    const last = preview.records.at(-1)?.id ?? null;
+    if (
+      preview.accepted !== fixture.count ||
+      preview.rejected !== 0 ||
+      first !== fixture.firstId ||
+      last !== fixture.lastId
+    )
+      throw new Error(
+        `${fixture.kind}/${mode} preview failed its record contract.`,
+      );
+    const resultSha256 = await sha256(
+      new TextEncoder().encode(JSON.stringify(preview)),
+    );
+    ensureTime(signal, deadlineAt);
+    result = {
+      mode,
+      synchronousPrefixMs,
+      totalMs,
+      accepted: preview.accepted,
+      rejected: preview.rejected,
+      firstId: first,
+      lastId: last,
+      resultSha256,
+    };
+  } catch (error) {
+    failure = error;
   }
-  const synchronousPrefixMs = performance.now() - startedAt;
-  const preview = await pending;
-  const totalMs = performance.now() - startedAt;
-  ensureTime(signal, deadlineAt);
-  const first = preview.records[0]?.id ?? null;
-  const last = preview.records.at(-1)?.id ?? null;
-  if (
-    preview.accepted !== fixture.count ||
-    preview.rejected !== 0 ||
-    first !== fixture.firstId ||
-    last !== fixture.lastId
-  )
-    throw new Error(`${fixture.kind}/${mode} preview failed its record contract.`);
-  const resultSha256 = await sha256(
-    new TextEncoder().encode(JSON.stringify(preview)),
-  );
-  ensureTime(signal, deadlineAt);
-  return {
+  const observation = pageState.finish();
+  onArmFinished({
     mode,
+    status: !observation.valid
+      ? 'invalid-page-state'
+      : failure
+        ? 'failed'
+        : 'passed',
+    elapsedMs: performance.now() - startedAt,
     synchronousPrefixMs,
-    totalMs,
-    accepted: preview.accepted,
-    rejected: preview.rejected,
-    firstId: first,
-    lastId: last,
-    resultSha256,
-  };
+    pageState: observation,
+  });
+  if (!observation.valid) throw pageStateError();
+  if (failure) throw failure;
+  return { ...result, pageState: observation };
 }
 
-async function compareFixture(fixture, signal, deadlineAt) {
+async function compareFixture(fixture, signal, deadlineAt, workload) {
   const defaultMode = 'synchronous';
   const alternateMode = fixture.kind === 'csv' ? 'cooperative' : 'worker';
-  const warmup = {
-    synchronous: await runPreview(fixture, defaultMode, signal, deadlineAt),
-    alternate: await runPreview(fixture, alternateMode, signal, deadlineAt),
-  };
+  const recordArm =
+    (stage, trial = null) =>
+    (arm) => {
+      workload.armEvidence.push({ stage, trial, ...arm });
+    };
+  const warmup = (workload.warmup = {
+    synchronous: null,
+    alternate: null,
+  });
+  warmup.synchronous = await runPreview(
+    fixture,
+    defaultMode,
+    signal,
+    deadlineAt,
+    recordArm('warmup'),
+  );
+  warmup.alternate = await runPreview(
+    fixture,
+    alternateMode,
+    signal,
+    deadlineAt,
+    recordArm('warmup'),
+  );
   if (warmup.synchronous.resultSha256 !== warmup.alternate.resultSha256)
     throw new Error(`${fixture.kind} warmup outputs differ.`);
-  const pairs = [];
+  const pairs = (workload.pairs = []);
   for (let trial = 0; trial < TRIALS; trial++) {
     const order =
       trial % 2 === 0
         ? [defaultMode, alternateMode]
         : [alternateMode, defaultMode];
-    const observed = {};
-    for (const mode of order)
-      observed[mode] = await runPreview(fixture, mode, signal, deadlineAt);
-    const equal =
-      observed[defaultMode].resultSha256 === observed[alternateMode].resultSha256;
-    pairs.push({ trial: trial + 1, order, equal, ...observed });
-    if (!equal) throw new Error(`${fixture.kind} trial ${trial + 1} outputs differ.`);
+    const pair = await runAndRecordImportComparisonPair({
+      pairs,
+      trial: trial + 1,
+      order,
+      synchronousMode: defaultMode,
+      alternateMode,
+      runArm: (mode) =>
+        runPreview(
+          fixture,
+          mode,
+          signal,
+          deadlineAt,
+          recordArm('trial', trial + 1),
+        ),
+    });
+    if (!pair.equal)
+      throw new Error(`${fixture.kind} trial ${trial + 1} outputs differ.`);
   }
-  return { warmup, pairs };
 }
 
 function publish(report) {
@@ -114,7 +190,13 @@ async function run() {
   const controller = new AbortController();
   activeController = controller;
   const deadlineTimer = setTimeout(
-    () => controller.abort(new DOMException('The 60-second run limit was reached.', 'TimeoutError')),
+    () =>
+      controller.abort(
+        new DOMException(
+          'The 60-second run limit was reached.',
+          'TimeoutError',
+        ),
+      ),
     RUN_LIMIT_MS,
   );
   runButton.disabled = true;
@@ -135,23 +217,31 @@ async function run() {
     warmupTrialsPerMode: 1,
     scope:
       'Synthetic parser comparison only; no Cesium, GPU, rendering, user-file data, or performance acceptance claim.',
+    pageStatePolicy:
+      'Each arm records DOM visibility and focus at start/end; hidden or blurred arms invalidate the run. OS-level occlusion is not checked.',
     status: 'running',
     workloads: [],
   };
   try {
     if (!/^[a-f0-9]{40}$/i.test(buildCommit || ''))
-      throw new Error('A full Vite build commit is required for this comparison.');
+      throw new Error(
+        'A full Vite build commit is required for this comparison.',
+      );
     const fixtures = createImportInputComparisonFixtures();
     for (const fixture of fixtures) {
       ensureTime(controller.signal, deadlineAt);
       const bytes = new TextEncoder().encode(fixture.text);
       if (bytes.byteLength > IMPORT_LIMITS.bytes)
-        throw new Error(`${fixture.kind} fixture exceeds the import byte limit.`);
+        throw new Error(
+          `${fixture.kind} fixture exceeds the import byte limit.`,
+        );
       const workload = {
         kind: fixture.kind,
         records: fixture.count,
         bytes: bytes.byteLength,
         fixtureSha256: await sha256(bytes),
+        expectedFixtureSha256:
+          IMPORT_INPUT_COMPARISON_FIXTURE_SHA256[fixture.kind],
         firstId: fixture.firstId,
         lastId: fixture.lastId,
         modeNames:
@@ -159,29 +249,44 @@ async function run() {
             ? { synchronous: 'synchronous', alternate: 'cooperative' }
             : { synchronous: 'synchronous', alternate: 'worker' },
         status: 'running',
+        armEvidence: [],
       };
       report.workloads.push(workload);
+      if (workload.fixtureSha256 !== workload.expectedFixtureSha256)
+        throw new Error(
+          `${fixture.kind} fixture hash differs from its pinned value.`,
+        );
       statusNode.textContent = `Comparing ${fixture.kind}…`;
-      const samples = await compareFixture(fixture, controller.signal, deadlineAt);
-      workload.warmup = samples.warmup;
-      workload.pairs = samples.pairs;
+      await compareFixture(fixture, controller.signal, deadlineAt, workload);
       workload.status = 'passed';
     }
     report.status = 'completed';
   } catch (error) {
     report.status =
-      error?.name === 'TimeoutError'
-        ? 'timed-out'
-        : error?.name === 'AbortError'
-          ? 'cancelled'
-          : 'failed';
+      error?.name === 'PageVisibilityError'
+        ? 'invalid-page-state'
+        : error?.name === 'TimeoutError'
+          ? 'timed-out'
+          : error?.name === 'AbortError'
+            ? 'cancelled'
+            : 'failed';
     report.failure = {
       name: String(error?.name || 'Error').slice(0, 40),
       code: String(error?.code || '').slice(0, 60) || null,
-      message: String(error?.message || 'Input comparison failed.').slice(0, 180),
+      message: String(error?.message || 'Input comparison failed.').slice(
+        0,
+        180,
+      ),
     };
     const last = report.workloads.at(-1);
-    if (last?.status === 'running') last.status = 'failed';
+    if (last?.status === 'running') {
+      last.status =
+        report.status === 'invalid-page-state' ? report.status : 'failed';
+      const partialPair = last.pairs?.at(-1);
+      if (partialPair?.status === 'running')
+        partialPair.status =
+          report.status === 'invalid-page-state' ? report.status : 'failed';
+    }
   } finally {
     clearTimeout(deadlineTimer);
     report.wallTimeMs = performance.now() - startedAt;
