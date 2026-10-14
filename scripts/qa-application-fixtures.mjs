@@ -394,8 +394,20 @@ export async function runWorkspaceFixturePhase(
 export async function bootFixturePage(
   page,
   base,
-  { onProgress = () => {}, hash = '' } = {},
+  {
+    onProgress = () => {},
+    hash = '',
+    applicationReadyTimeoutMs = 90_000,
+  } = {},
 ) {
+  if (
+    !Number.isFinite(applicationReadyTimeoutMs) ||
+    applicationReadyTimeoutMs < 1_000 ||
+    applicationReadyTimeoutMs > 300_000
+  )
+    throw new RangeError(
+      'Application readiness timeout must be between 1 and 300 seconds.',
+    );
   // Headed hardware runs can start behind another Chrome window. Chromium may
   // then stop delivering GPU-backed frames on Windows even when timer
   // throttling is disabled. Make the fixture page the active browser target
@@ -426,7 +438,7 @@ export async function bootFixturePage(
       // This is an application-state gate, not a rendered-frame gate. Chromium
       // can defer animation callbacks while an otherwise responsive software
       // renderer is busy; timer polling keeps the same condition and deadline.
-      { timeout: 90000, polling: 100 },
+      { timeout: applicationReadyTimeoutMs, polling: 100 },
     );
   } catch (error) {
     const diagnostics = fixtureDiagnostics.get(page);

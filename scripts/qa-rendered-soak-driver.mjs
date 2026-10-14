@@ -140,7 +140,13 @@ export async function createRenderedSoakDriver(
       else await dialog.accept();
     });
     console.log('SOAK boot application');
-    await bootFixturePage(page, base);
+    await bootFixturePage(page, base, {
+      // A cold Vite development graph can take more than 90 seconds to compile
+      // on the primary UHD 620 qualification host. This remains a bounded cold
+      // activation allowance outside the measured soak interval; ordinary
+      // browser gates retain the stricter shared default.
+      applicationReadyTimeoutMs: 180_000,
+    });
     console.log('SOAK application ready');
     const applicationCommit = await page.evaluate(
       () =>

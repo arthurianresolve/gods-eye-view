@@ -453,12 +453,14 @@ test('Fetch events settle without a Network event, and throwing fixtures abort t
 
 test('startup failures include application readiness and renderer error diagnostics', async () => {
   let broughtToFront = 0;
+  let readinessOptions = null;
   await assert.rejects(
     bootFixturePage(
       {
         bringToFront: async () => broughtToFront++,
         goto: async () => {},
-        waitForFunction: async () => {
+        waitForFunction: async (_predicate, options) => {
+          readinessOptions = options;
           throw new Error('startup timeout');
         },
         evaluate: async () => ({
@@ -472,6 +474,15 @@ test('startup failures include application readiness and renderer error diagnost
     /startup timeout; startup diagnostics: .*WebGL unavailable/,
   );
   assert.equal(broughtToFront, 1);
+  assert.deepEqual(readinessOptions, { timeout: 90_000, polling: 100 });
+});
+
+test('rendered soak owns a longer bounded cold-application startup allowance', async () => {
+  const source = await readFile(
+    new URL('./qa-rendered-soak-driver.mjs', import.meta.url),
+    'utf8',
+  );
+  assert.match(source, /applicationReadyTimeoutMs:\s*180_000/);
 });
 
 test('stability accepts a complete plateau and leaves short/missing evidence pending', () => {
