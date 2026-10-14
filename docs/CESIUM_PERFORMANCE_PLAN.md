@@ -5553,3 +5553,21 @@ population is correct, but the static fixture uses an existing advancing wall
 clock adapter while requiring a frozen epoch. The failed report and source
 attribution are preserved. The adapter requires correction; no timestamp check
 is relaxed and no performance claim is made from this setup run.
+
+## S59 cooperative document finalization - 14 October 2026
+
+The raw import decoder now validates string-backed UTF-8 byte limits in bounded
+32 KiB code-unit chunks and assembles byte-backed decoded chunks through the
+shared cancellable batch consumer. A chunk boundary is extended across a
+trailing high surrogate so the byte-limit decision remains identical to a
+single `TextEncoder` call. The change is implemented at `1bf9d966` with
+focused coverage for surrogate boundaries, cancellation, invalid UTF-8,
+GeoJSON/CSV/KML/GPX semantics and error precedence.
+
+Automatic validation at this revision passes 84 focused import, runtime and
+workspace tests, formatting, package boundaries and `git diff --check`. This
+closes the unbounded decoder size-check and decoded-string assembly packet; it
+does not claim that JSON/XML parsing or one indivisible 50,000-vertex geometry
+feature is below four milliseconds. Single-feature scheduling remains partial,
+and the broader catalog/workspace interaction journey, hardware interaction
+evidence and the S47/S60 gates remain pending.
