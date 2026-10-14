@@ -60,7 +60,7 @@ header scan instead of a synchronous setup parse. JSON parsing, geometry
 normalization, broader catalog maintenance and end-to-end interaction timing
 remain pending.
 
-The S59.6 GeoJSON parser follow-up at `ca003b6e` removes the whole-document
+The S59.6 GeoJSON parser follow-up at `59d0ff78` removes the whole-document
 `JSON.parse` from the browser preview path. It validates the top-level JSON
 structure incrementally, parses one Feature value at a time, and feeds the
 existing feature validator through the same cancellation and batch ownership
