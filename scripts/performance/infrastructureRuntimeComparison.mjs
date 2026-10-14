@@ -577,16 +577,56 @@ export function countInfrastructureGraphics(entities, surfaceEntities) {
 }
 
 /** A failed native pick is retried only after a new stable rendered state. */
-export function createInfrastructureSampleReadiness() {
+export function createInfrastructureSampleReadiness({
+  diagnostics = false,
+} = {}) {
   let previous = null;
   let stableFrames = 0;
   let pickAttempted = false;
+  const history = diagnostics ? [] : null;
+  const counts = diagnostics
+    ? {
+        observations: 0,
+        pixelChanges: 0,
+        geometryChanges: 0,
+        notReadyObservations: 0,
+        readinessResets: 0,
+        invalidSignatures: 0,
+      }
+    : null;
+  let priorHashes = null;
+  function record(signature, inputsReady) {
+    if (!history) return;
+    const hashes =
+      typeof signature === 'string' &&
+      /^[a-f0-9]{64}:[a-f0-9]{64}$/.test(signature)
+        ? signature.split(':')
+        : null;
+    counts.observations++;
+    if (!hashes) counts.invalidSignatures++;
+    if (!inputsReady) counts.notReadyObservations++;
+    if (hashes && priorHashes) {
+      if (hashes[0] !== priorHashes[0]) counts.pixelChanges++;
+      if (hashes[1] !== priorHashes[1]) counts.geometryChanges++;
+    }
+    priorHashes = hashes;
+    history.push({
+      sequence: counts.observations,
+      pixelSha256: hashes?.[0] ?? null,
+      geometrySha256: hashes?.[1] ?? null,
+      inputsReady: Boolean(inputsReady),
+      stableFrames,
+    });
+    if (history.length > 32) history.shift();
+  }
   return {
     observe(signature, { inputsReady = true } = {}) {
       if (!inputsReady) {
+        if (counts && previous !== null) counts.readinessResets++;
         previous = null;
         stableFrames = 0;
         pickAttempted = false;
+        record(signature, inputsReady);
         return 0;
       }
       if (signature !== previous) {
@@ -594,12 +634,25 @@ export function createInfrastructureSampleReadiness() {
         pickAttempted = false;
       } else stableFrames++;
       previous = signature;
+      record(signature, inputsReady);
       return stableFrames;
     },
     takePickAttempt() {
       if (stableFrames < 3 || pickAttempted) return false;
       pickAttempted = true;
       return true;
+    },
+    diagnostics() {
+      return history
+        ? {
+            schema: 'gev-infrastructure-readiness-history/v1',
+            scope:
+              'bounded fixture readiness diagnosis; not performance acceptance',
+            limit: 32,
+            counts: { ...counts },
+            observations: history.map((row) => ({ ...row })),
+          }
+        : null;
     },
   };
 }

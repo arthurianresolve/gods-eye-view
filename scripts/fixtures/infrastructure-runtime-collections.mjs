@@ -1140,7 +1140,9 @@ async function runLayerLifetime(
       const deadline = performance.now() + 8000;
       const currentUpdateGeneration =
         currentUpdateReadinessObserver?.beginGeneration().generation ?? null;
-      const readiness = createInfrastructureSampleReadiness();
+      const readiness = createInfrastructureSampleReadiness({
+        diagnostics: true,
+      });
       let completedCaptures = 0;
       let pickSearches = 0;
       let pickDiagnostics = null;
@@ -1335,6 +1337,7 @@ async function runLayerLifetime(
         lifetime.failedSample = {
           caseId,
           pair,
+          readinessHistory: readiness.diagnostics(),
           stableFrames,
           completedCaptures,
           pickSearches,

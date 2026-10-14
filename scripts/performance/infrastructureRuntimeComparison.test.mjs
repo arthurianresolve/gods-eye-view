@@ -839,6 +839,65 @@ test('stable pixels from a prior camera revision cannot satisfy the sample gate'
   assert.equal(gate.takePickAttempt(), false);
 });
 
+test('readiness diagnostics distinguish pixel churn, geometry changes and unready resets without changing picks', () => {
+  const control = createInfrastructureSampleReadiness();
+  const observed = createInfrastructureSampleReadiness({ diagnostics: true });
+  const a = 'a'.repeat(64),
+    b = 'b'.repeat(64);
+  for (const [signature, inputsReady] of [
+    [`${a}:${a}`, true],
+    [`${a}:${a}`, true],
+    [`${a}:${a}`, true],
+    [`${b}:${a}`, true],
+    [`${b}:${a}`, true],
+    [`${b}:${b}`, true],
+    [`${b}:${b}`, false],
+    [`${b}:${b}`, true],
+    [`${b}:${b}`, true],
+    [`${b}:${b}`, true],
+  ]) {
+    assert.equal(
+      observed.observe(signature, { inputsReady }),
+      control.observe(signature, { inputsReady }),
+    );
+    assert.equal(observed.takePickAttempt(), control.takePickAttempt());
+  }
+  assert.equal(control.diagnostics(), null);
+  const result = observed.diagnostics();
+  assert.deepEqual(result.counts, {
+    observations: 10,
+    pixelChanges: 1,
+    geometryChanges: 1,
+    notReadyObservations: 1,
+    readinessResets: 1,
+    invalidSignatures: 0,
+  });
+  assert.deepEqual(
+    result.observations.map((row) => row.stableFrames),
+    [1, 2, 3, 1, 2, 1, 0, 1, 2, 3],
+  );
+  for (let index = 0; index < 40; index++) observed.observe(`${b}:${b}`);
+  const bounded = observed.diagnostics();
+  assert.equal(bounded.observations.length, 32);
+  assert.equal(bounded.observations[0].sequence, 19);
+  assert.equal(bounded.counts.observations, 50);
+  bounded.observations[0].stableFrames = -1;
+  bounded.counts.pixelChanges = -1;
+  assert.notEqual(observed.diagnostics().observations[0].stableFrames, -1);
+  assert.equal(observed.diagnostics().counts.pixelChanges, 1);
+});
+
+test('readiness diagnostic history retains hashes only, never arbitrary signature payloads', () => {
+  const gate = createInfrastructureSampleReadiness({ diagnostics: true });
+  const privatePayload = 'https://private.invalid/path?credential=fixture-only';
+  gate.observe(privatePayload);
+  const report = gate.diagnostics();
+  assert.equal(report.counts.invalidSignatures, 1);
+  assert.equal(report.observations[0].pixelSha256, null);
+  assert.equal(report.observations[0].geometrySha256, null);
+  assert.equal(JSON.stringify(report).includes(privatePayload), false);
+});
+
 test('camera readiness requires consumed geometry and the current finite pose', () => {
   const observed = {
     computed: true,
