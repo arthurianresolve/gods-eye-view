@@ -69,6 +69,70 @@ test('large CSV scanning can be cancelled before normalization completes', async
   }
 });
 
+test('GeoJSON feature arrays parse incrementally and preserve feature order', async () => {
+  const features = Array.from({ length: 256 }, (_, index) => ({
+    type: 'Feature',
+    id: `feature-${index}`,
+    properties: { label: `item-${index}` },
+    geometry: { type: 'Point', coordinates: [-97 + index / 1000, 30] },
+  }));
+  const preview = await previewGeoJSON(
+    JSON.stringify({
+      metadata: { source: 'fixture' },
+      features,
+      type: 'FeatureCollection',
+    }),
+  );
+  assert.equal(preview.accepted, features.length);
+  assert.equal(preview.records[0].id, 'feature-0');
+  assert.equal(preview.records.at(-1).id, 'feature-255');
+});
+
+test('incremental GeoJSON parsing can be cancelled before feature normalization completes', async () => {
+  const input = JSON.stringify({
+    type: 'FeatureCollection',
+    features: Array.from({ length: 50_000 }, (_, index) => ({
+      type: 'Feature',
+      id: `feature-${index}`,
+      geometry: { type: 'Point', coordinates: [-97, 30] },
+    })),
+  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 0);
+  try {
+    await assert.rejects(previewGeoJSON(input, { signal: controller.signal }), {
+      name: 'AbortError',
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+});
+
+test('incremental GeoJSON parsing preserves JSON and collection errors', async () => {
+  await assert.rejects(previewGeoJSON('{}'), { code: 'invalid-geojson' });
+  await assert.rejects(previewGeoJSON('{"type":"FeatureCollection"}'), {
+    code: 'invalid-geojson',
+  });
+  await assert.rejects(
+    previewGeoJSON('{"type":"FeatureCollection","features":[}'),
+    {
+      code: 'invalid-json',
+    },
+  );
+  await assert.rejects(
+    previewGeoJSON('{"type":"FeatureCollection","features":['),
+    {
+      code: 'invalid-json',
+    },
+  );
+  await assert.rejects(
+    previewGeoJSON('{"type":"FeatureCollection","features":[]} trailing'),
+    {
+      code: 'invalid-json',
+    },
+  );
+});
+
 test('GeoJSON preview validates WGS84 geometry and leaves invalid features staged as rejections', async () => {
   const input = JSON.stringify({
     type: 'FeatureCollection',

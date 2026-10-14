@@ -186,6 +186,194 @@ function buildImportPreview(
   });
 }
 
+function invalidJson() {
+  fail('invalid-json', 'GeoJSON is not valid JSON.');
+}
+
+function jsonWhitespace(source, index) {
+  while (index < source.length && /[\s]/.test(source[index])) index++;
+  return index;
+}
+
+/**
+ * Find one JSON value without parsing the complete document in one task.
+ * The returned cursor is validated by JSON.parse at the value boundary;
+ * this scanner only owns nesting and string boundaries so the event loop can
+ * yield while a large feature or metadata object is being located.
+ */
+async function scanJsonValueEnd(source, start, { signal } = {}) {
+  return consumeInBatches(scanJsonValueEndIterator(source, start, { signal }), {
+    signal,
+    deferStart: true,
+  });
+}
+
+function* scanJsonValueEndIterator(source, start, { signal } = {}) {
+  let index = jsonWhitespace(source, start);
+  if (index >= source.length) invalidJson();
+  const first = source[index];
+  if (first === '"') {
+    index++;
+    while (index < source.length) {
+      signal?.throwIfAborted();
+      const character = source[index++];
+      if (character === '\\') {
+        if (index >= source.length) invalidJson();
+        index++;
+      } else if (character === '"') {
+        return index;
+      }
+      yield;
+    }
+    invalidJson();
+  }
+  if (first === '{' || first === '[') {
+    const stack = [first === '{' ? '}' : ']'];
+    index++;
+    let inString = false;
+    while (index < source.length && stack.length) {
+      signal?.throwIfAborted();
+      const character = source[index++];
+      if (inString) {
+        if (character === '\\') {
+          if (index >= source.length) invalidJson();
+          index++;
+        } else if (character === '"') inString = false;
+      } else if (character === '"') inString = true;
+      else if (character === '{') stack.push('}');
+      else if (character === '[') stack.push(']');
+      else if (character === '}' || character === ']') {
+        if (stack.at(-1) !== character) invalidJson();
+        stack.pop();
+      }
+      yield;
+    }
+    if (inString || stack.length) invalidJson();
+    return index;
+  }
+  const primitiveStart = index;
+  while (index < source.length && !',]}'.includes(source[index])) {
+    signal?.throwIfAborted();
+    index++;
+    yield;
+  }
+  const token = source.slice(primitiveStart, index).trim();
+  if (!token) invalidJson();
+  try {
+    JSON.parse(token);
+  } catch {
+    invalidJson();
+  }
+  return index;
+}
+
+async function parseJsonStringEnd(source, start, { signal } = {}) {
+  const end = await scanJsonValueEnd(source, start, { signal });
+  if (source[jsonWhitespace(source, start)] !== '"') invalidJson();
+  return end;
+}
+
+async function parseGeoJSONFeatureArray(source, start, { signal } = {}) {
+  let index = jsonWhitespace(source, start);
+  if (source[index] !== '[') invalidJson();
+  index = jsonWhitespace(source, index + 1);
+  const features = [];
+  if (source[index] === ']') return { features, next: index + 1 };
+  let next = null;
+  await consumeInBatches(
+    (function* () {
+      let cursor = index;
+      while (cursor < source.length) {
+        signal?.throwIfAborted();
+        const end = yield* scanJsonValueEndIterator(source, cursor, {
+          signal,
+        });
+        let feature;
+        try {
+          feature = JSON.parse(source.slice(cursor, end));
+        } catch {
+          invalidJson();
+        }
+        features.push(feature);
+        if (features.length > IMPORT_LIMITS.rows)
+          fail(
+            'too-many-rows',
+            `GeoJSON is limited to ${IMPORT_LIMITS.rows} features.`,
+          );
+        cursor = jsonWhitespace(source, end);
+        if (source[cursor] === ']') {
+          next = cursor + 1;
+          return;
+        }
+        if (source[cursor] !== ',') invalidJson();
+        cursor = jsonWhitespace(source, cursor + 1);
+        if (source[cursor] === ']') invalidJson();
+        yield;
+      }
+      invalidJson();
+    })(),
+    { signal, deferStart: true },
+  );
+  if (next == null) invalidJson();
+  return { features, next };
+}
+
+/** Parse a GeoJSON FeatureCollection incrementally at top-level feature boundaries. */
+async function parseGeoJSONFeatureCollection(source, { signal } = {}) {
+  let index = jsonWhitespace(source, 0);
+  if (source[index] !== '{') invalidJson();
+  index = jsonWhitespace(source, index + 1);
+  let type = null;
+  let features = null;
+  let closed = false;
+  if (source[index] === '}') {
+    index++;
+    closed = true;
+  }
+  while (index < source.length) {
+    signal?.throwIfAborted();
+    const keyStart = index;
+    const keyEnd = await parseJsonStringEnd(source, keyStart, { signal });
+    let key;
+    try {
+      key = JSON.parse(source.slice(keyStart, keyEnd));
+    } catch {
+      invalidJson();
+    }
+    index = jsonWhitespace(source, keyEnd);
+    if (source[index] !== ':') invalidJson();
+    index = jsonWhitespace(source, index + 1);
+    if (key === 'features' && source[index] === '[') {
+      const parsed = await parseGeoJSONFeatureArray(source, index, { signal });
+      features = parsed.features;
+      index = parsed.next;
+    } else {
+      const end = await scanJsonValueEnd(source, index, { signal });
+      let value;
+      try {
+        value = JSON.parse(source.slice(index, end));
+      } catch {
+        invalidJson();
+      }
+      if (key === 'type') type = value;
+      if (key === 'features') features = value;
+      index = end;
+    }
+    index = jsonWhitespace(source, index);
+    if (source[index] === '}') {
+      index++;
+      closed = true;
+      break;
+    }
+    if (source[index] !== ',') invalidJson();
+    index = jsonWhitespace(source, index + 1);
+    if (source[index] === '}') invalidJson();
+  }
+  if (!closed) invalidJson();
+  if (jsonWhitespace(source, index) !== source.length) invalidJson();
+  return { type, features };
+}
+
 export function createImportPreview(options) {
   return buildImportPreview(options);
 }
@@ -198,19 +386,9 @@ export async function previewGeoJSON(
   signal?.throwIfAborted();
   const text = await decodeImportTextAsync(input, { signal });
   signal?.throwIfAborted();
-  let value;
-  try {
-    value = JSON.parse(text);
-  } catch {
-    fail('invalid-json', 'GeoJSON is not valid JSON.');
-  }
+  const value = await parseGeoJSONFeatureCollection(text, { signal });
   if (value?.type !== 'FeatureCollection' || !Array.isArray(value.features))
     fail('invalid-geojson', 'Expected a GeoJSON FeatureCollection.');
-  if (value.features.length > IMPORT_LIMITS.rows)
-    fail(
-      'too-many-rows',
-      `GeoJSON is limited to ${IMPORT_LIMITS.rows} features.`,
-    );
   const records = [];
   const rejected = [];
   const seen = new Set();
