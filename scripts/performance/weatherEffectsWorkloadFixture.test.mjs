@@ -404,6 +404,14 @@ test('serialized weather phase driver selects every source through the real cloc
     assert.equal(startupPreflight.startup.clock.mode, 'latest');
     assert.equal(startupPreflight.reset.clock.mode, 'latest');
     assert.deepEqual(
+      Array.from(startupPreflight.selectedTimes, (times) => Array.from(times)),
+      [
+        fixture.timeline.at(-1),
+        ...fixture.timeline,
+        fixture.timeline.at(-1),
+      ].map((time) => Array(3).fill(time)),
+    );
+    assert.deepEqual(
       Array.from(startupPreflight.reset.sourceObservationTimes),
       Array(3).fill(fixture.timeline.at(-1)),
     );

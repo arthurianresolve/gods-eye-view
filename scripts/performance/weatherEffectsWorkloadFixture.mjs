@@ -1209,7 +1209,7 @@ export async function prepareWeatherEffectsTimelineInPage({
     selectedTimes: [
       latestState.times,
       ...phases.map(({ sourceObservationTimes }) => sourceObservationTimes),
-      reset.sourceObservationTimes,
+      reset.times,
     ],
     playback: {
       mode: reset.clock.mode,
