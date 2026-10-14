@@ -4150,6 +4150,17 @@ try {
         });
       // Start the fixture epoch only after observer setup so its host cost is
       // outside both warmup and measurement render-boundary deadlines.
+      let weatherSampleReset = null;
+      if (weatherEffectsWorkload) {
+        failureProgress.phase = 'reset-weather-latest-before-warmup';
+        failureProgress.current.phase = failureProgress.phase;
+        weatherSampleReset =
+          await weatherEffectsModule.resetWeatherEffectsToLatest({
+            page,
+            fixture: weatherEffectsWorkload,
+          });
+        failureProgress.current.weatherSampleReset = weatherSampleReset;
+      }
       const hasPhasedFixtureClock = Boolean(
         productionFlightFixture || austinOperatingWorkload,
       );

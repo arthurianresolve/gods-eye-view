@@ -28,6 +28,7 @@ import {
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsWorkloadFixture,
   runWeatherEffectsPhaseSchedule,
+  resetWeatherEffectsToLatest,
   selectWeatherEffectsPhaseInPage,
   waitForWeatherEffectsReadiness,
   WEATHER_EFFECTS_FIXED_TIME,
@@ -46,6 +47,7 @@ test('capture producer resolves weather fixture operations from its lazy module 
   const dynamicOperations = [
     { name: 'createWeatherEffectsWorkloadFixture', invoked: true },
     { name: 'createWeatherEffectsFixtureDelivery', invoked: true },
+    { name: 'resetWeatherEffectsToLatest', invoked: true },
     { name: 'observeWeatherEffectsLayerState', invoked: false },
     { name: 'waitForWeatherEffectsReadiness', invoked: true },
     { name: 'assertWeatherEffectsWindState', invoked: true },
@@ -345,6 +347,17 @@ test('serialized weather phase driver selects every source through the real cloc
     queueMicrotask(resolve);
     return 1;
   };
+  const page = {
+    evaluate: (operation, args) =>
+      runInNewContext(`(${operation.toString()})(${JSON.stringify(args)})`, {
+        window,
+        document,
+        performance,
+        setTimeout,
+        clearTimeout: () => {},
+        Event,
+      }),
+  };
   try {
     const observations = [];
     for (const phase of fixture.phaseSchedule.phases) {
@@ -380,6 +393,46 @@ test('serialized weather phase driver selects every source through the real cloc
     assert.equal(clock.getState().mode, 'history');
     assert.equal(clock.getState().target, fixture.timeline.at(-1));
     const slider = root.querySelector('input[aria-label="Observed history"]');
+
+    const firstReset = await resetWeatherEffectsToLatest({ page, fixture });
+    assert.equal(firstReset.mode, 'latest');
+    assert.equal(firstReset.playing, false);
+    assert.equal(firstReset.fixtureSha256, fixture.sha256);
+    assert.deepEqual(
+      Array.from(firstReset.sourceObservationTimes),
+      Array(3).fill(fixture.timeline.at(-1)),
+    );
+
+    window.__gevWeatherMeasurementStartedAt = 40_100;
+    now = 40_100;
+    const repeatedPhase = await runInNewContext(
+      `(${selectWeatherEffectsPhaseInPage.toString()})(${JSON.stringify({
+        phase: fixture.phaseSchedule.phases[1],
+        fixtureSha256: fixture.sha256,
+        maximumLatenessMs: fixture.phaseSchedule.maximumLatenessMs,
+        measurementStartedAt: 40_100,
+      })})`,
+      {
+        window,
+        document,
+        performance,
+        setTimeout,
+        clearTimeout: () => {},
+        Event,
+      },
+    );
+    assert.equal(repeatedPhase.clock.mode, 'history');
+    assert.deepEqual(
+      Array.from(repeatedPhase.sourceObservationTimes),
+      Array(3).fill(fixture.timeline[1]),
+    );
+    const secondReset = await resetWeatherEffectsToLatest({ page, fixture });
+    assert.equal(secondReset.mode, 'latest');
+    assert.deepEqual(
+      Array.from(secondReset.sourceObservationTimes),
+      Array(3).fill(fixture.timeline.at(-1)),
+    );
+
     window.__gevWeatherMeasurementStartedAt = 101;
     await assert.rejects(
       runInNewContext(

@@ -960,6 +960,91 @@ export function assertWeatherPhaseRunSet(
   return true;
 }
 
+/** Reset the real timeline to latest and wait for exact, paused source state. */
+export async function resetWeatherEffectsToLatestInPage({
+  fixtureSha256,
+  expectedSourceTime,
+  timeoutMs = 5_000,
+} = {}) {
+  const app = window.__godsEyeView;
+  const root = document.querySelector('.weather-readout');
+  const latest = root?.querySelector(
+    'button[title="Newest frame per product"]',
+  );
+  if (
+    !app?.dataManager?.layers?.get ||
+    !latest ||
+    typeof fixtureSha256 !== 'string' ||
+    !/^[a-f0-9]{64}$/.test(fixtureSha256) ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 5_000 ||
+    typeof expectedSourceTime !== 'string' ||
+    !Number.isFinite(Date.parse(expectedSourceTime))
+  )
+    throw new Error('Weather latest reset inputs are invalid.');
+
+  const readTimes = () =>
+    ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+      (id) =>
+        app.dataManager.layers.get(id)?.module?.getStats?.()?.observedAt ??
+        null,
+    );
+  const readClock = () =>
+    app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
+      ?.clock;
+  const deadline = performance.now() + timeoutMs;
+  latest.click();
+  let sourceObservationTimes = readTimes();
+  let clock = readClock();
+  while (
+    (clock?.mode !== 'latest' ||
+      clock?.playing !== false ||
+      !sourceObservationTimes.every((time) => time === expectedSourceTime)) &&
+    performance.now() < deadline
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    sourceObservationTimes = readTimes();
+    clock = readClock();
+  }
+  if (
+    clock?.mode !== 'latest' ||
+    clock?.playing !== false ||
+    !sourceObservationTimes.every((time) => time === expectedSourceTime)
+  )
+    throw new Error(
+      'Weather sample reset did not settle at the latest source.',
+    );
+  return {
+    fixtureSha256,
+    mode: clock.mode,
+    playing: clock.playing,
+    target: clock.target,
+    sourceObservationTimes,
+  };
+}
+
+export async function resetWeatherEffectsToLatest({
+  page,
+  fixture,
+  timeoutMs = 5_000,
+} = {}) {
+  if (
+    !page?.evaluate ||
+    fixture?.schema !== 'gev-weather-effects-fixture/v2' ||
+    !fixture.timeline?.length ||
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 5_000
+  )
+    throw new TypeError('Weather sample reset inputs are invalid.');
+  return page.evaluate(resetWeatherEffectsToLatestInPage, {
+    fixtureSha256: fixture.sha256,
+    expectedSourceTime: fixture.timeline.at(-1),
+    timeoutMs,
+  });
+}
+
 /** Select one pinned weather source phase through the page's visible timeline controls. */
 export async function selectWeatherEffectsPhaseInPage({
   phase,
