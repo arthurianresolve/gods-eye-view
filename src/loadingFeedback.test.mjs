@@ -397,6 +397,23 @@ test('an unrelated failure is preserved even when a key is also required', () =>
   assert.equal(state.batchOutcome, 'error');
 });
 
+test('a refresh failure is not hidden by a legacy key label', () => {
+  const summary = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: {
+      loading: false,
+      keyRequired: true,
+      error: 'KEY REQUIRED',
+      managerRefreshError: 'proxy refresh failed',
+    },
+  }]);
+  assert.equal(summary.records[0].error, 'proxy refresh failed');
+  assert.equal(summary.records[0].unavailable, false);
+});
+
 test('retains the worst terminal outcome until every concurrent load drains', () => {
   const both = aggregateLayerLoading([
     { id: 'a', name: 'A', lifecycleState: 'enabling' },
