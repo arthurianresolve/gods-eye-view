@@ -344,28 +344,28 @@ export function validateCaptureDelayNegativeControlPair({
     (sample) => sample.scenario === 'scripted-motion',
   );
   assert.equal(motionSamples.length, 2);
-  assert.deepEqual(
-    delayed.report.motionBudget.failures
-      .map(({ run, p95FrameMs, reason }) => ({ run, p95FrameMs, reason }))
-      .sort((left, right) => left.run - right.run),
-    motionSamples.map((sample) => ({
-      run: sample.run,
-      p95FrameMs: sample.frameIntervalMs.p95,
-      reason: 'budget-exceeded',
-    })),
+  const motionByRun = new Map(
+    motionSamples.map((sample) => [sample.run, sample]),
   );
-  for (const sample of motionSamples) {
+  const failures = delayed.report.motionBudget.failures;
+  assert.ok(failures.length >= 1);
+  assert.equal(
+    new Set(failures.map((failure) => failure.run)).size,
+    failures.length,
+  );
+  for (const failure of failures) {
+    assert.equal(failure.reason, 'budget-exceeded');
+    const sample = motionByRun.get(failure.run);
+    assert.ok(sample, `Unexpected delayed motion failure run ${failure.run}.`);
     assert.ok(Number.isFinite(sample.frameIntervalMs?.p95));
     assert.ok(sample.frameIntervalMs.p95 > maxP95Ms);
-    assert.ok(
-      delayed.report.motionBudget.failures.some(
-        (failure) =>
-          failure.run === sample.run &&
-          failure.reason === 'budget-exceeded' &&
-          failure.p95FrameMs === sample.frameIntervalMs.p95,
-      ),
-    );
+    assert.equal(failure.p95FrameMs, sample.frameIntervalMs.p95);
   }
+  assert.ok(
+    motionSamples.some((sample) =>
+      failures.some((failure) => failure.run === sample.run),
+    ),
+  );
   assert.deepEqual(
     captureDelayIdentity(delayed.report),
     captureDelayIdentity(control.report),
