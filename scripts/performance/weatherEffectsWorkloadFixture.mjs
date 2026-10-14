@@ -64,6 +64,15 @@ export function assertWeatherEffectsMotionPreference(observation, label) {
   return observation;
 }
 
+/** Attach a preflight observation only to an already-owned failure record. */
+export function recordWeatherMotionPreferencePreflight(
+  failureProgress,
+  observation,
+) {
+  if (failureProgress?.current)
+    failureProgress.current.weatherMotionPreferencePreflight = observation;
+}
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '../..',

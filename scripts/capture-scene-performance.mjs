@@ -3284,8 +3284,10 @@ try {
     const observedMotionPreference = await page.evaluate(
       weatherEffectsModule.observeWeatherEffectsMotionPreference,
     );
-    failureProgress.current.weatherMotionPreferencePreflight =
-      observedMotionPreference;
+    weatherEffectsModule.recordWeatherMotionPreferencePreflight(
+      failureProgress,
+      observedMotionPreference,
+    );
     const motionPreference =
       weatherEffectsModule.assertWeatherEffectsMotionPreference(
         observedMotionPreference,

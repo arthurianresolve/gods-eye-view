@@ -313,6 +313,10 @@ export function makeWeatherReport(commit) {
       };
       const state = {
         clock: { mode: 'latest', playing: false },
+        motionPreference: {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        },
         sourceObservationTimes: Array(3).fill(fixture.timeline.at(-1)),
         visualState: {
           satelliteProduct: 'clouds-regional',
@@ -341,9 +345,14 @@ export function makeWeatherReport(commit) {
       }
       sample.fixtureDelivery = structuredClone(delivery);
       sample.weatherEffectsClock = {
+        schema: 'gev-weather-effects-clock/v2',
         fixedHarnessTime: fixture.fixedTime,
         wallClockBeforeMs: Date.parse(fixture.fixedTime),
         wallClockAfterMs: Date.parse(fixture.fixedTime),
+        motionPreferencePreflight: {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        },
         weatherStateBefore: structuredClone(state),
         weatherStateAfter: {
           ...structuredClone(state),

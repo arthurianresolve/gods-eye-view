@@ -37,6 +37,7 @@ import {
   assertWeatherEffectsWindState,
   configureWeatherEffectsMotionPreference,
   observeWeatherEffectsMotionPreference,
+  recordWeatherMotionPreferencePreflight,
   assertWeatherEffectsMotionPreference,
 } from './weatherEffectsWorkloadFixture.mjs';
 
@@ -121,6 +122,26 @@ test('weather capture pins and observes the effective reduced-motion preference'
         'unavailable',
       ),
     /false/,
+  );
+});
+
+test('weather preflight failure recording does not invent a cleared progress sample', () => {
+  const observation = {
+    schema: 'gev-weather-motion-preference/v1',
+    reducedMotion: false,
+  };
+  const cleared = { phase: 'configure-weather-effects-fixture', current: null };
+
+  assert.doesNotThrow(() =>
+    recordWeatherMotionPreferencePreflight(cleared, observation),
+  );
+  assert.equal(cleared.current, null);
+
+  const active = { current: { phase: 'configure-weather-effects-fixture' } };
+  recordWeatherMotionPreferencePreflight(active, observation);
+  assert.deepEqual(
+    active.current.weatherMotionPreferencePreflight,
+    observation,
   );
 });
 
