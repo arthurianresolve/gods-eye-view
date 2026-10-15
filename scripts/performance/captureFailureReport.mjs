@@ -130,6 +130,39 @@ function sourceIdentity(source) {
   };
 }
 
+function compactOversizedSection(value, label) {
+  const output = {
+    evidenceOmittedReason: `${label}-exceeded-bounded-failure-report-budget`,
+  };
+  if (!value || typeof value !== 'object') return output;
+  const retainedKeys = [];
+  for (const [key, entry] of Object.entries(value)) {
+    if (retainedKeys.length >= 32) break;
+    if (
+      entry === null ||
+      typeof entry === 'boolean' ||
+      (typeof entry === 'number' && Number.isFinite(entry)) ||
+      (typeof entry === 'string' && entry.length <= 256)
+    ) {
+      output[key] = boundedValue(entry);
+      retainedKeys.push(key);
+    } else if (
+      Array.isArray(entry) &&
+      entry.length <= 32 &&
+      entry.every((item) => typeof item === 'string' && item.length <= 128)
+    ) {
+      output[key] = [...entry];
+      retainedKeys.push(key);
+    }
+  }
+  output.retainedKeyCount = retainedKeys.length;
+  output.omittedKeyCount = Math.max(
+    0,
+    Object.keys(value).length - retainedKeys.length,
+  );
+  return output;
+}
+
 /** Build a bounded failure-only artifact; it is not a capture report. */
 export function createCaptureFailureReport({
   capturedAt = new Date().toISOString(),
@@ -256,6 +289,26 @@ export function createCaptureFailureReport({
         }
       : null;
     report.failure.message = safeText(report.failure.message, 240);
+    truncated = true;
+  }
+  if (reportBytes() > MAX_CAPTURE_FAILURE_REPORT_BYTES) {
+    report.workload = compactOversizedSection(workload, 'workload');
+    report.fixtureDelivery = compactOversizedSection(
+      fixtureDelivery,
+      'fixture-delivery',
+    );
+    report.failure.actual = undefined;
+    report.failure.expected = undefined;
+    truncated = true;
+  }
+  if (reportBytes() > MAX_CAPTURE_FAILURE_REPORT_BYTES) {
+    report.progress.completedSamples = [];
+    report.progress.startupSamples = [];
+    report.progress.completedSamplesRetained = 0;
+    report.progress.startupSamplesRetained = 0;
+    report.progress.current = current
+      ? { phase: safeText(current.phase || '', 80) }
+      : null;
     truncated = true;
   }
   report.evidenceTruncated = truncated;

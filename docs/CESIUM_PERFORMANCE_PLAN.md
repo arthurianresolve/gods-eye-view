@@ -5753,3 +5753,12 @@ remainder, with four bounded attempts, and still rejects a clock that does not
 advance. This work remains outside the timed sample and does not change the
 60-second measurement, application debounce, render deadline, or source
 readiness checks.
+
+A later baseline reached the fifth motion sample, but its underlying failure was
+masked when the bounded failure writer exceeded 256 KiB. Removing completed
+samples was insufficient because accumulated Austin workload and fixture
+delivery sections could independently exceed the cap. The writer now compacts
+only those oversized sections to identity summaries, then retains the original
+phase, scenario, run and error. A synthetic oversized regression verifies the
+hard cap. The masked run remains failed and provides no application-performance
+result.

@@ -213,14 +213,28 @@ test('failure projection retains flattened Austin readiness history through oute
   assert.equal(history.samples[0].documentId, 'sample-1');
   assert.equal(history.samples[0].snapshotJson, snapshotJson);
   assert.deepEqual(JSON.parse(history.samples[0].snapshotJson).layers[1], [
-    'cctv', true, 250, true, 17, 250, 'geometry-loading', null, 0, 3, 2, 0,
+    'cctv',
+    true,
+    250,
+    true,
+    17,
+    250,
+    'geometry-loading',
+    null,
+    0,
+    3,
+    2,
+    0,
   ]);
 
   const outer = compactCaptureCliFailure(report);
   const outerHistory = outer.rawReport.workload.austinOperatingReadinessHistory;
   assert.equal(outerHistory.samples[0].snapshotJson, snapshotJson);
   assert.equal(outerHistory.documents[0].documentRole, 'provider-sample');
-  assert.equal(outer.rawReport.failure.message, 'existing source readiness timeout');
+  assert.equal(
+    outer.rawReport.failure.message,
+    'existing source readiness timeout',
+  );
 });
 
 test('post-cleanup failure refresh is atomic and preserves the initial artifact on rejection', async () => {
@@ -275,4 +289,50 @@ test('failure artifact redacts secrets and stays within its hard byte cap', () =
   assert.equal(serialized.includes('user:password'), false);
   assert.equal(serialized.includes('private'), false);
   assert.equal(serialized.includes('secret.invalid'), false);
+});
+
+test('oversized workload and delivery evidence fall back to bounded summaries', () => {
+  const rows = Array.from({ length: 256 }, (_, index) => ({
+    index,
+    text: 'x'.repeat(1024),
+    nested: Array.from({ length: 32 }, () => 'y'.repeat(1024)),
+  }));
+  const report = createCaptureFailureReport({
+    source,
+    phase: 'prepare-fresh-provider-document',
+    scenario: 'scripted-motion',
+    run: 5,
+    error: new Error('original capture failure'),
+    workload: {
+      providerFixture: 'austin-operating-v1',
+      warmupMs: 30_000,
+      scenarios: ['idle', 'scripted-motion'],
+      fixtureDocuments: rows,
+      readinessHistory: rows,
+    },
+    fixtureDelivery: {
+      schema: 'gev-austin-operating-delivery/v1',
+      status: 'observed',
+      fixtureId: 'austin-operating-composed-v1',
+      deliveredAssets: rows,
+      sourcePopulationIds: rows,
+    },
+    completedSamples: rows,
+  });
+
+  const serialized = `${JSON.stringify(report, null, 2)}\n`;
+  assert.ok(
+    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
+  assert.equal(report.failure.message, 'original capture failure');
+  assert.equal(report.failure.scenario, 'scripted-motion');
+  assert.equal(report.failure.run, 5);
+  assert.equal(report.workload.providerFixture, 'austin-operating-v1');
+  assert.match(report.workload.evidenceOmittedReason, /workload-exceeded/);
+  assert.equal(report.fixtureDelivery.status, 'observed');
+  assert.match(
+    report.fixtureDelivery.evidenceOmittedReason,
+    /fixture-delivery-exceeded/,
+  );
+  assert.equal(report.evidenceTruncated, true);
 });
