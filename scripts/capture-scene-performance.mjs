@@ -144,6 +144,7 @@ import {
 } from './performance/austinOperatingPopulationEvidence.mjs';
 import { waitForPostMeasurementSourceDrain } from './performance/postMeasurementSourceDrain.mjs';
 import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
+import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -4437,14 +4438,17 @@ try {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
           const stagedClock = window.__gevPhasedMonotonicWallClockV1;
-          let foregroundThroughout = document.hasFocus() && !document.hidden;
-          const onBackground = () => {
-            foregroundThroughout = false;
+          const focusedAtStart = document.hasFocus();
+          const visibleAtStart = !document.hidden;
+          let focusInterruptionCount = 0;
+          let visibleThroughout = visibleAtStart;
+          const onBlur = () => {
+            focusInterruptionCount += 1;
           };
           const onVisibility = () => {
-            if (document.hidden) onBackground();
+            if (document.hidden) visibleThroughout = false;
           };
-          window.addEventListener('blur', onBackground);
+          window.addEventListener('blur', onBlur);
           document.addEventListener('visibilitychange', onVisibility);
           const intervals = [];
           const longTasks = [];
@@ -4575,7 +4579,9 @@ try {
                   usedJsHeapBytes: null,
                   reason: 'performance.memory is unavailable in this browser',
                 };
-            window.removeEventListener('blur', onBackground);
+            const focusedAtEnd = document.hasFocus();
+            const visibleAtEnd = !document.hidden;
+            window.removeEventListener('blur', onBlur);
             document.removeEventListener('visibilitychange', onVisibility);
             if (window.__gevWeatherMeasurementStartedAt === startedAt) {
               delete window.__gevWeatherMeasurementStartedAt;
@@ -4606,8 +4612,8 @@ try {
               memory,
               layers: [],
               totalObjects: null,
-              focused: document.hasFocus(),
-              visible: !document.hidden,
+              focused: focusedAtEnd,
+              visible: visibleAtEnd,
               trackedAircraftId: viewer.trackedEntity?.gevTrackedId || null,
               injectedDelayMs: delay || 0,
               quality: null,
@@ -4619,7 +4625,16 @@ try {
               performanceSnapshot: null,
               performanceSnapshotReason:
                 'Candidate-only runtime snapshots are disabled for comparable capture.',
-              foregroundThroughout,
+              focusContinuity: {
+                focusedAtStart,
+                focusedAtEnd,
+                interruptionCount: focusInterruptionCount,
+              },
+              visibilityContinuity: {
+                visibleAtStart,
+                visibleAtEnd,
+                visibleThroughout,
+              },
               cameraPath: {
                 id:
                   scenarioName === 'scripted-motion'
@@ -4646,7 +4661,7 @@ try {
             clearTimeout(initialDelayTimer);
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
-            window.removeEventListener('blur', onBackground);
+            window.removeEventListener('blur', onBlur);
             document.removeEventListener('visibilitychange', onVisibility);
             if (window.__gevWeatherMeasurementStartedAt === startedAt) {
               delete window.__gevWeatherMeasurementStartedAt;
@@ -4683,6 +4698,9 @@ try {
         }
         throw error;
       }
+      const foregroundContinuity = evaluateForegroundSampleContinuity(sample);
+      sample.foregroundContinuity = foregroundContinuity;
+      sample.foregroundThroughout = foregroundContinuity.foregroundThroughout;
       if (weatherEffectsWorkload)
         sample.weatherPhaseObservations = weatherPhaseObservations;
       failureProgress.current.measurement = sample;

@@ -5722,3 +5722,24 @@ automatic validation remain separately recorded. S47 and S60 stay partial
 until the required matched baseline/candidate workload matrix is captured and
 evaluated; release artifact/attestation verification for the final frozen
 candidate and VM105 deployment reconciliation also remain outstanding.
+
+## S47 foreground evidence criterion correction - 15 October 2026
+
+The first exact-head matched baseline attempt exposed two distinct focus
+conditions. A fresh browser-context page could begin warmup without input
+focus, and a later sample recorded a transient window `blur` even though it was
+focused at both measurement boundaries, remained visible throughout, completed
+the exact phased clock, and returned to focus without harness intervention.
+Treating any input-focus event as proof that GPU rendering was backgrounded is
+not supported by those observations. The capture browser already disables
+occluded-window, renderer-background and timer throttling.
+
+The amended criterion explicitly activates every fresh measured page and
+requires it to be visible and focused before warmup. A timed sample remains
+eligible only when it starts and ends focused and no hidden visibility state is
+observed. Transient input-focus interruptions are counted and retained as
+diagnostic evidence, but no longer fail an otherwise visible sample by
+themselves. A hidden interval or an unfocused boundary remains a failure. This
+does not claim OS-level foreground visibility that the DOM cannot establish;
+the hardware renderer, browser flags, frame evidence and operator conditions
+remain part of the report.
