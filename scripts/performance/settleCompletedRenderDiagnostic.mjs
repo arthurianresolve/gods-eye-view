@@ -56,6 +56,14 @@ export function settleCompletedRenderDiagnostic(
         renderRequestAvailable,
         renderRequestStarted: false,
         renderRequestCompleted: false,
+        manualRenderFallback: {
+          available: typeof viewer?.render === 'function',
+          scheduled: false,
+          delayMs: null,
+          started: false,
+          completed: false,
+          errorName: null,
+        },
         postRenderObserved: false,
         postRenderElapsedMs: null,
         renderLoopRetirement: retireViewerRenderLoop
@@ -93,7 +101,11 @@ export function settleCompletedRenderDiagnostic(
             }
           : null,
         pageTimerFired: false,
-        cleanup: { timerCleared: false, listenerRemoved: false },
+        cleanup: {
+          timerCleared: false,
+          fallbackTimerCleared: false,
+          listenerRemoved: false,
+        },
       },
     });
   }
@@ -104,6 +116,7 @@ export function settleCompletedRenderDiagnostic(
     let listener = null;
     let removeListener = null;
     let followupRenderTimer = null;
+    let manualRenderFallbackTimer = null;
     const startedAt = globalThis.performance?.now?.();
     const diagnostics = {
       phase: 'page-entry',
@@ -116,6 +129,14 @@ export function settleCompletedRenderDiagnostic(
       renderRequestStartElapsedMs: null,
       renderRequestCompleted: false,
       renderRequestCompleteElapsedMs: null,
+      manualRenderFallback: {
+        available: typeof viewer?.render === 'function',
+        scheduled: false,
+        delayMs: null,
+        started: false,
+        completed: false,
+        errorName: null,
+      },
       postRenderObserved: false,
       postRenderElapsedMs: null,
       renderLoopRetirement: retireViewerRenderLoop
@@ -154,7 +175,11 @@ export function settleCompletedRenderDiagnostic(
         : null,
       pageTimerFired: false,
       pageTimerElapsedMs: null,
-      cleanup: { timerCleared: false, listenerRemoved: false },
+      cleanup: {
+        timerCleared: false,
+        fallbackTimerCleared: false,
+        listenerRemoved: false,
+      },
     };
     const elapsed = () => {
       const current = globalThis.performance?.now?.();
@@ -167,6 +192,11 @@ export function settleCompletedRenderDiagnostic(
       done = true;
       clearTimeout(timer);
       diagnostics.cleanup.timerCleared = true;
+      if (manualRenderFallbackTimer !== null) {
+        clearTimeout(manualRenderFallbackTimer);
+        manualRenderFallbackTimer = null;
+      }
+      diagnostics.cleanup.fallbackTimerCleared = true;
       if (followupRenderTimer !== null) {
         clearTimeout(followupRenderTimer);
         followupRenderTimer = null;
@@ -450,6 +480,23 @@ export function settleCompletedRenderDiagnostic(
           renderRequestCompleted: true,
           pageElapsedMs: diagnostics.renderRequestCompleteElapsedMs,
         });
+      }
+      if (diagnostics.manualRenderFallback.available && !done) {
+        const fallback = diagnostics.manualRenderFallback;
+        fallback.scheduled = true;
+        fallback.delayMs = Math.max(1, Math.min(500, timeoutMs / 2));
+        manualRenderFallbackTimer = setTimeout(() => {
+          manualRenderFallbackTimer = null;
+          if (done || diagnostics.postRenderObserved) return;
+          fallback.started = true;
+          try {
+            viewer.render();
+            fallback.completed = true;
+          } catch (error) {
+            fallback.errorName = String(error?.name || 'Error').slice(0, 80);
+            finish(error);
+          }
+        }, fallback.delayMs);
       }
     } catch (error) {
       finish(error);

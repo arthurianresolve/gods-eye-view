@@ -31,6 +31,7 @@ class Event {
 
 function viewer({
   render = false,
+  fallbackRender = false,
   requestRender = true,
   renderLoop = undefined,
   refuseRetirement = false,
@@ -45,6 +46,7 @@ function viewer({
     };
   }
   const subject = { scene };
+  if (fallbackRender) subject.render = () => postRender.fire();
   if (renderLoop !== undefined) {
     let current = renderLoop;
     Object.defineProperty(subject, 'useDefaultRenderLoop', {
@@ -67,9 +69,25 @@ test('diagnostic render probe records request, postRender and owned cleanup', as
   assert.equal(result.diagnostics.renderRequestAvailable, true);
   assert.equal(result.diagnostics.renderRequestStarted, true);
   assert.equal(result.diagnostics.renderRequestCompleted, true);
+  assert.equal(result.diagnostics.manualRenderFallback.started, false);
   assert.equal(result.diagnostics.postRenderObserved, true);
   assert.equal(result.diagnostics.cleanup.timerCleared, true);
   assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('a bounded direct render recovers a scheduled frame that never arrives', async () => {
+  const subject = viewer({ fallbackRender: true });
+  const result = await settleCompletedRenderDiagnostic(subject, 100);
+  assert.equal(result.status, 'settled');
+  assert.equal(result.diagnostics.renderRequestCompleted, true);
+  assert.equal(result.diagnostics.manualRenderFallback.available, true);
+  assert.equal(result.diagnostics.manualRenderFallback.scheduled, true);
+  assert.equal(result.diagnostics.manualRenderFallback.started, true);
+  assert.equal(result.diagnostics.manualRenderFallback.completed, true);
+  assert.equal(result.diagnostics.manualRenderFallback.errorName, null);
+  assert.equal(result.diagnostics.postRenderObserved, true);
+  assert.equal(result.diagnostics.cleanup.fallbackTimerCleared, true);
   assert.equal(subject.scene.postRender.handlers.size, 0);
 });
 
