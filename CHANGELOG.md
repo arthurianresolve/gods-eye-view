@@ -19,6 +19,9 @@
   opt-in NYC DOT Traffic Management Center CCTV pack with its required
   operator-controlled agreement gate and attribution.
 
+- Directions no longer shows a truncation notice for a route with exactly 200
+  turns, and a roundabout at the 200th turn keeps its exit distance.
+
 - Weather records keep missing conditions unknown and refuse summaries without a measured temperature.
 
 - Tool string length validation counts Unicode characters correctly, including characters outside the basic multilingual plane.

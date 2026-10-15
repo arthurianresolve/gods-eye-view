@@ -3404,9 +3404,10 @@ rate limit from the routing service is reported as one instead of as "no route
 found". `src/data/routeSteps.js` turns OSRM maneuver type / modifier / exit /
 road name into one plain-English sentence per decision, folding
 `exit roundabout` steps into the roundabout they leave, and caps one route at
-200 maneuvers — a route past that cap is reported as cut off, in the row
-summary and as the last line of the list, because the arrival step is among
-the ones dropped.
+200 maneuvers — a route with more is reported as cut off, in the row summary
+and as the last line of the list, because the arrival step is among the ones
+dropped. A route of exactly 200 is complete, and a roundabout exit after the
+200th keeps folding into it.
 
 A step's card opens from its dot on the globe or from its line in the list, and
 the list covers every step including departure and arrival, which have no dot.
