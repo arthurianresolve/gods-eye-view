@@ -11,6 +11,42 @@ import { MAP_FIXTURE_BUILD_PROFILE_ID } from './performance/buildProvenance.mjs'
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
 
+test('startup and main documents are foregrounded before viewer readiness', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const startupNavigation = source.indexOf('await startupPage.goto(');
+  const startupActivation = source.indexOf(
+    'await activateForegroundPage(startupPage)',
+    startupNavigation,
+  );
+  const startupReadiness = source.indexOf(
+    'await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer',
+    startupNavigation,
+  );
+  assert.ok(
+    startupNavigation >= 0 &&
+      startupActivation > startupNavigation &&
+      startupReadiness > startupActivation,
+  );
+
+  const mainNavigation = source.indexOf(
+    'await page.goto(url,',
+    startupReadiness,
+  );
+  const mainActivation = source.indexOf(
+    'await activateForegroundPage(page)',
+    mainNavigation,
+  );
+  const mainReadiness = source.indexOf(
+    'await page.waitForFunction(() => !!window.__godsEyeView?.viewer',
+    mainNavigation,
+  );
+  assert.ok(
+    mainNavigation >= 0 &&
+      mainActivation > mainNavigation &&
+      mainReadiness > mainActivation,
+  );
+});
+
 function invoke(args, { loaderPath = null } = {}) {
   return spawnSync(
     process.execPath,

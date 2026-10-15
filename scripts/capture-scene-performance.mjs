@@ -2671,6 +2671,12 @@ try {
           'Startup navigation redirected outside the verified application entry point.',
         );
     }
+    const startupForegroundActivation =
+      await activateForegroundPage(startupPage);
+    failureProgress.startupForegroundActivation = {
+      run,
+      ...startupForegroundActivation,
+    };
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
@@ -2725,6 +2731,7 @@ try {
     startupSamples.push({
       run,
       cacheDisabled: true,
+      foregroundActivation: startupForegroundActivation,
       appReadyMs,
       initialSettleMs,
       ...details,
@@ -2832,6 +2839,7 @@ try {
         'Capture navigation redirected outside the verified application entry point.',
       );
   }
+  failureProgress.mainForegroundActivation = await activateForegroundPage(page);
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });

@@ -23,6 +23,19 @@ window and proves the viewer loop cannot retire early; all 24 boundary/drain
 checks pass. The original full report remains failed evidence. Fresh exact-head
 short and full baseline/candidate captures are still required.
 
+Fresh baseline smoke attempts at harness `cc65a887` then reproduced a separate
+Windows startup timeout twice before any timing sample. The verified build and
+Austin fixture path both booted in four to five seconds in isolated visible and
+headless probes. The difference was lifecycle ownership: ordinary startup and
+main capture documents did not call the existing foreground activator before
+waiting for the viewer, although measured warmups did. Both navigation paths
+now bring their page forward and prove visible input focus immediately after
+the verified same-origin redirect check and before viewer readiness. Startup
+samples retain that activation evidence. The two 90-second reports remain
+failed evidence; 37 focused CLI, activation, source-drain and render-boundary
+checks plus the capture no-undefined gate pass. Fresh exact-head captures remain
+required.
+
 The map-streaming producer now has an executable five-run comparison contract.
 Each native route run records a declared 30-second warmup, a 60-second timed
 route, stable Manual/75%/DENSE settings, fixture delivery hashes and transition
