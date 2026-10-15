@@ -7,6 +7,7 @@ import { createAustinOperatingWorkloadFixture } from './austinOperatingWorkloadF
 import {
   deriveAustinSatelliteSampledEpoch,
   loadAustinSatelliteEpochReference,
+  validateAustinSatelliteSampledEpoch,
   validateAustinSatelliteEpochCaptureReport,
 } from './austinSatelliteSampledEpoch.mjs';
 
@@ -42,10 +43,16 @@ function derive(records, epochMs = boundaryEpochMs) {
 }
 
 test('derives one cached fleet epoch and verifies every pinned satellite record', () => {
-  const records = recordsAt(boundaryEpochMs - 768);
+  const records = recordsAt(boundaryEpochMs);
   const evidence = derive(records);
   assert.equal(evidence.recordCount, 828);
-  assert.equal(evidence.ageMs, 768);
+  assert.equal(evidence.ageMs, 0);
+  assert.equal(evidence.derivedEpochMs, boundaryEpochMs);
+  assert.equal(evidence.performanceAcceptanceEligible, true);
+  assert.equal(
+    evidence.numericalBoundStatus,
+    'exact-boundary-and-node-recomputed',
+  );
   assert.ok(evidence.maximumResidualMeters <= 0.001);
   assert.equal(evidence.records.length, 828);
   assert.equal(evidence.documentRole, document.role);
@@ -76,7 +83,7 @@ test('derives one cached fleet epoch and verifies every pinned satellite record'
 });
 
 test('rejects missing, duplicate, wrong-identity, stale, mixed-epoch and changed positions', () => {
-  const records = recordsAt(boundaryEpochMs - 500);
+  const records = recordsAt(boundaryEpochMs);
   assert.throws(() => derive(records.slice(1)), /828/);
   assert.throws(() => derive([...records, records[0]]), /828/);
   assert.throws(
@@ -102,7 +109,10 @@ test('rejects missing, duplicate, wrong-identity, stale, mixed-epoch and changed
     (row) => row.id === mixedEpoch[0].id,
   );
   Object.assign(mixedEpoch[0], mixedPosition);
-  assert.throws(() => derive(mixedEpoch), /does not match|unique epoch/i);
+  assert.throws(
+    () => derive(mixedEpoch),
+    /does not match|unique epoch|declared fixture boundary/i,
+  );
   const changed = records.map((row) => ({ ...row }));
   changed[0].latitude += 0.00001;
   assert.throws(() => derive(changed), /does not match|unique epoch/i);
@@ -129,13 +139,48 @@ test('rejects fixture metadata that no longer binds the exact acquired TLE bytes
   );
 });
 
+test('historical v1 sampled epochs remain verifiable but ineligible', () => {
+  const legacyEpochMs = boundaryEpochMs - 768;
+  const exactAtLegacyEpoch = deriveAustinSatelliteSampledEpoch({
+    reference,
+    records: recordsAt(legacyEpochMs),
+    boundaryEpochMs: legacyEpochMs,
+    boundary: 'warmup-held',
+    documentRole: document.role,
+    documentId: document.id,
+    runOrdinal: 1,
+  });
+  const legacy = {
+    ...exactAtLegacyEpoch,
+    schema: 'gev-austin-satellite-sampled-epoch/v1',
+    numericalBoundStatus: 'provisional-not-cross-engine-validated',
+    performanceAcceptanceEligible: false,
+    boundaryEpochMs,
+    derivedEpochMs: legacyEpochMs,
+    ageMs: boundaryEpochMs - legacyEpochMs,
+  };
+  assert.equal(
+    validateAustinSatelliteSampledEpoch({
+      fixture,
+      reference,
+      evidence: legacy,
+      expectedBoundary: 'warmup-held',
+      expectedBoundaryEpochMs: boundaryEpochMs,
+      expectedDocumentRole: document.role,
+      expectedDocumentId: document.id,
+      expectedRunOrdinal: 1,
+    }),
+    true,
+  );
+});
+
 test('capture report validation binds both raw boundaries to the owning sample document', () => {
   const documentId = document.id;
-  const warmupEvidence = derive(recordsAt(boundaryEpochMs - 500));
+  const warmupEvidence = derive(recordsAt(boundaryEpochMs));
   const measurementEpochMs = boundaryEpochMs + 60_000;
   const measurementEvidence = deriveAustinSatelliteSampledEpoch({
     reference,
-    records: recordsAt(measurementEpochMs - 300),
+    records: recordsAt(measurementEpochMs),
     boundaryEpochMs: measurementEpochMs,
     boundary: 'measurement-complete',
     documentRole: document.role,

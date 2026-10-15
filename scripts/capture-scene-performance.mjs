@@ -164,6 +164,13 @@ const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 const weatherPhaseDiagnostic = args.includes('--weather-phase-diagnostic');
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
+if (
+  austinOperatingWorkloadSelected &&
+  (warmupMs % 1000 !== 0 || (seconds * 1000) % 1000 !== 0)
+)
+  throw new TypeError(
+    'Austin operating capture requires whole-second warmup and measurement durations.',
+  );
 const mapStreamingWorkloadSelected =
   providerFixtureMode === MAP_STREAMING_WORKLOAD_ID;
 let mapStreamingModule = null;
@@ -1459,7 +1466,11 @@ async function configureAustinOperatingFixturePage(
     page,
     austinOperatingWorkload.fixedTimeMs,
     { infrastructure: !phasedClock, phasedClock },
-    phasedClock ? [warmupMs, seconds * 1000] : [],
+    // Satellite fleet propagation is intentionally one-second cadence. Step
+    // fixture wall time on the same boundaries so baseline and candidate
+    // snapshots cannot inherit different sub-second preRender schedules.
+    // performance.now(), RAF delivery and measured durations remain native.
+    phasedClock ? [warmupMs, seconds * 1000, 1000] : [],
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);

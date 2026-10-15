@@ -5657,3 +5657,31 @@ S47/S60 acceptance row is complete. S47 remains partial pending its matched
 workload captures and broader route/settings matrix; S60 remains partial pending
 the final exact-candidate comparison, artifact/release verification and
 deployment reconciliation.
+
+## S47 Austin boundary determinism - 15 October 2026
+
+The first current-baseline hardware probe exposed a permanent comparison
+readiness veto in the Austin operating workload. Satellite point positions are
+updated by the production layer on a one-second `preRender` cadence, while the
+phased fixture clock previously advanced continuously. The held warmup and
+measurement snapshots therefore inherited whichever sub-second update happened
+last; the physical Windows observation reconstructed lags of 715-891 ms across
+otherwise valid boundaries. This was a fixture determinism defect, not an
+application performance result.
+
+The Austin-only phased clock now advances wall time in explicit one-second
+quanta. Native `performance.now()`, requestAnimationFrame delivery and measured
+durations remain unchanged. The final requested render at each held boundary
+therefore runs the existing production satellite update at the exact declared
+epoch. Non-whole-second Austin durations reject before browser launch.
+
+Exact-boundary evidence uses additive sampled-epoch schema v2, requires the
+derived epoch to equal the declared boundary, and is independently recomputed
+from all 828 pinned TLE records. Historical v1 evidence remains readable and
+explicitly ineligible. Comparison readiness removes the cadence reason only
+when every captured boundary supplies valid v2 evidence; absent, legacy, stale
+or substituted records remain failures. Sixty-one focused clock, producer,
+validator, provenance and CLI checks pass, together with formatting, package
+boundaries and the capture-harness undefined-reference check. A fresh matched
+30-second/60-second/five-run physical Windows baseline/candidate capture is
+still required before S47/S60 performance acceptance.

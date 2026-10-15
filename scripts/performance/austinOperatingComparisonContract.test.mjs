@@ -233,8 +233,8 @@ async function makeObservedPairInput({ responseVariant = true } = {}) {
           altitudeM: position.altitude,
         };
       });
-    const rawSatelliteRowsBefore = positionRowsAt(before - 500 - ordinal);
-    const rawSatelliteRowsAfter = positionRowsAt(after - 300 - ordinal);
+    const rawSatelliteRowsBefore = positionRowsAt(before);
+    const rawSatelliteRowsAfter = positionRowsAt(after);
     const sampledEpochOptions = {
       reference: satelliteReference,
       documentRole: `provider-sample-${ordinal}`,
@@ -974,10 +974,8 @@ test('paired Austin validation recomputes raw satellite rows against the pinned 
   );
 });
 
-test('paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged', async () => {
-  const baselineInput = await makeObservedPairInput();
+test('Austin evidence producer rejects a coherent alternate boundary epoch', async () => {
   const candidateInput = await makeObservedPairInput();
-  const baseline = asPairedReport(baselineInput, baselineCommit);
   const candidate = asPairedReport(candidateInput, candidateCommit);
   const sample = candidate.captures[0];
   const evidence =
@@ -998,30 +996,17 @@ test('paired Austin validation rejects a coherent alternate epoch when captured 
       altitudeM: position.altitude,
     };
   });
-  sample.austinOperatingClock.satelliteSampledEpochs.warmupHeld =
-    deriveAustinSatelliteSampledEpoch({
-      reference,
-      records,
-      boundaryEpochMs: evidence.boundaryEpochMs,
-      boundary: evidence.boundary,
-      documentRole: sample.documentRole,
-      documentId: sample.documentId,
-      runOrdinal: sample.austinOperatingClock.runOrdinal,
-    });
-  assert.equal(
-    sample.austinOperatingClock.satelliteSampledEpochs.warmupHeld.ageMs,
-    1000,
-  );
   assert.throws(
     () =>
-      validatePairedPerformanceReports({
-        baseline,
-        candidate,
-        expectedAppCommits: {
-          baseline: baselineCommit,
-          candidate: candidateCommit,
-        },
+      deriveAustinSatelliteSampledEpoch({
+        reference,
+        records,
+        boundaryEpochMs: evidence.boundaryEpochMs,
+        boundary: evidence.boundary,
+        documentRole: sample.documentRole,
+        documentId: sample.documentId,
+        runOrdinal: sample.austinOperatingClock.runOrdinal,
       }),
-    /warmup satellite records differ from the captured native position digest/,
+    /declared fixture boundary/,
   );
 });

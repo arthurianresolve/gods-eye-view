@@ -10,6 +10,8 @@ import { CATALOG_GROUPS } from '../../src/layers/satellites/policy.js';
 import { createOrbits } from '../../src/layers/satellites/orbits.js';
 
 export const AUSTIN_SATELLITE_EPOCH_SCHEMA =
+  'gev-austin-satellite-sampled-epoch/v2';
+export const AUSTIN_SATELLITE_EPOCH_LEGACY_SCHEMA =
   'gev-austin-satellite-sampled-epoch/v1';
 export const AUSTIN_SATELLITE_SAMPLE_COUNT = 828;
 export const AUSTIN_SATELLITE_EPOCH_MAX_AGE_MS = 1000;
@@ -215,15 +217,18 @@ export function loadAustinSatelliteEpochReference(fixture) {
 }
 
 /** Derive a unique cached fleet epoch from public positions and pinned TLEs. */
-export function deriveAustinSatelliteSampledEpoch({
-  reference,
-  records,
-  boundaryEpochMs,
-  boundary,
-  documentRole,
-  documentId,
-  runOrdinal,
-} = {}) {
+function deriveAustinSatelliteSampledEpochVersion(
+  {
+    reference,
+    records,
+    boundaryEpochMs,
+    boundary,
+    documentRole,
+    documentId,
+    runOrdinal,
+  },
+  legacy = false,
+) {
   assert.equal(reference?.schema, 'gev-austin-satellite-epoch-reference/v1');
   assert.ok(Number.isSafeInteger(boundaryEpochMs) && boundaryEpochMs > 0);
   assert.ok(['warmup-held', 'measurement-complete'].includes(boundary));
@@ -265,6 +270,12 @@ export function deriveAustinSatelliteSampledEpoch({
     'cached ISS position has no unique epoch within the one-second cadence',
   );
   const derivedEpochMs = candidates[0];
+  if (!legacy)
+    assert.equal(
+      derivedEpochMs,
+      boundaryEpochMs,
+      'cached satellite positions were not propagated at the declared fixture boundary',
+    );
   let maximumResidualMeters = 0;
   for (const row of canonical) {
     const predicted = propagateCartesian(
@@ -282,12 +293,16 @@ export function deriveAustinSatelliteSampledEpoch({
   }
 
   return {
-    schema: AUSTIN_SATELLITE_EPOCH_SCHEMA,
+    schema: legacy
+      ? AUSTIN_SATELLITE_EPOCH_LEGACY_SCHEMA
+      : AUSTIN_SATELLITE_EPOCH_SCHEMA,
     method:
       'public-cached-iss-position-integer-ms-search-plus-all-record-sgp4-check',
     epochKind: 'derived-from-cached-public-positions',
-    numericalBoundStatus: 'provisional-not-cross-engine-validated',
-    performanceAcceptanceEligible: false,
+    numericalBoundStatus: legacy
+      ? 'provisional-not-cross-engine-validated'
+      : 'exact-boundary-and-node-recomputed',
+    performanceAcceptanceEligible: !legacy,
     boundary,
     documentRole,
     documentId,
@@ -305,6 +320,11 @@ export function deriveAustinSatelliteSampledEpoch({
   };
 }
 
+/** Derive exact-boundary evidence from the quantized Austin fixture clock. */
+export function deriveAustinSatelliteSampledEpoch(options = {}) {
+  return deriveAustinSatelliteSampledEpochVersion(options, false);
+}
+
 /** Independently recompute a serialized boundary record from its raw rows. */
 export function validateAustinSatelliteSampledEpoch({
   fixture,
@@ -316,7 +336,14 @@ export function validateAustinSatelliteSampledEpoch({
   expectedRunOrdinal,
   reference = loadAustinSatelliteEpochReference(fixture),
 } = {}) {
-  assert.equal(evidence?.schema, AUSTIN_SATELLITE_EPOCH_SCHEMA);
+  assert.ok(
+    [
+      AUSTIN_SATELLITE_EPOCH_SCHEMA,
+      AUSTIN_SATELLITE_EPOCH_LEGACY_SCHEMA,
+    ].includes(evidence?.schema),
+    'unsupported Austin satellite sampled-epoch schema',
+  );
+  const legacy = evidence.schema === AUSTIN_SATELLITE_EPOCH_LEGACY_SCHEMA;
   assert.equal(
     evidence.method,
     'public-cached-iss-position-integer-ms-search-plus-all-record-sgp4-check',
@@ -324,9 +351,11 @@ export function validateAustinSatelliteSampledEpoch({
   assert.equal(evidence.epochKind, 'derived-from-cached-public-positions');
   assert.equal(
     evidence.numericalBoundStatus,
-    'provisional-not-cross-engine-validated',
+    legacy
+      ? 'provisional-not-cross-engine-validated'
+      : 'exact-boundary-and-node-recomputed',
   );
-  assert.equal(evidence.performanceAcceptanceEligible, false);
+  assert.equal(evidence.performanceAcceptanceEligible, !legacy);
   assert.equal(evidence.boundary, expectedBoundary);
   assert.equal(evidence.boundaryEpochMs, expectedBoundaryEpochMs);
   assert.equal(evidence.documentRole, expectedDocumentRole);
@@ -337,15 +366,18 @@ export function validateAustinSatelliteSampledEpoch({
     AUSTIN_SATELLITE_EPOCH_TOLERANCE_METERS,
   );
   assert.deepEqual(evidence.tleAssetSha256s, reference.tleAssetSha256s);
-  const recomputed = deriveAustinSatelliteSampledEpoch({
-    reference,
-    records: evidence.records,
-    boundaryEpochMs: expectedBoundaryEpochMs,
-    boundary: expectedBoundary,
-    documentRole: expectedDocumentRole,
-    documentId: expectedDocumentId,
-    runOrdinal: expectedRunOrdinal,
-  });
+  const recomputed = deriveAustinSatelliteSampledEpochVersion(
+    {
+      reference,
+      records: evidence.records,
+      boundaryEpochMs: expectedBoundaryEpochMs,
+      boundary: expectedBoundary,
+      documentRole: expectedDocumentRole,
+      documentId: expectedDocumentId,
+      runOrdinal: expectedRunOrdinal,
+    },
+    legacy,
+  );
   assert.deepEqual(evidence, recomputed);
   return true;
 }

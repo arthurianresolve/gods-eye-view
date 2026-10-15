@@ -97,6 +97,23 @@ test('capture CLI recognizes an infrastructure workload before browser startup',
   );
 });
 
+test('Austin comparison rejects subsecond fixture boundaries before browser startup', () => {
+  const result = invoke([
+    '--provider-fixture',
+    'austin-operating-v1',
+    '--warmup-ms',
+    '30500',
+    '--seconds',
+    '60.5',
+  ]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /whole-second warmup and measurement durations/);
+  assert.doesNotMatch(
+    result.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+});
+
 test('map workload requires its named build profile before loading Cesium infrastructure', async () => {
   await withForbiddenCesiumLoader(async (loaderPath) => {
     const missingProfile = invoke(

@@ -1328,7 +1328,7 @@ export function installPhasedMonotonicWallClock(
   fixedTimeMs,
   warmupMs,
   measurementMs,
-  target = globalThis,
+  targetOrQuantumMs = globalThis,
 ) {
   if (!Number.isSafeInteger(fixedTimeMs) || fixedTimeMs < 1)
     throw new TypeError('Phased wall clock epoch must be a positive integer.');
@@ -1339,6 +1339,26 @@ export function installPhasedMonotonicWallClock(
     measurementMs <= 0
   )
     throw new TypeError('Phased wall clock durations are invalid.');
+  const clockOptions =
+    targetOrQuantumMs &&
+    typeof targetOrQuantumMs === 'object' &&
+    'target' in targetOrQuantumMs
+      ? targetOrQuantumMs
+      : null;
+  const wallTimeQuantumMs = Number.isSafeInteger(targetOrQuantumMs)
+    ? targetOrQuantumMs
+    : (clockOptions?.wallTimeQuantumMs ?? 1);
+  const target = Number.isSafeInteger(targetOrQuantumMs)
+    ? globalThis
+    : (clockOptions?.target ?? targetOrQuantumMs);
+  if (
+    wallTimeQuantumMs < 1 ||
+    warmupMs % wallTimeQuantumMs !== 0 ||
+    measurementMs % wallTimeQuantumMs !== 0
+  )
+    throw new TypeError(
+      'Phased wall-clock quantum must be positive and divide both phase durations.',
+    );
   const nativeDate = target.Date;
   const nativeNow = target.performance?.now?.bind(target.performance);
   if (typeof nativeNow !== 'function')
@@ -1369,7 +1389,9 @@ export function installPhasedMonotonicWallClock(
             )
           : 0);
     else if (phase === 'complete') elapsed = warmupMs + measurementMs;
-    return fixedTimeMs + elapsed;
+    return (
+      fixedTimeMs + Math.floor(elapsed / wallTimeQuantumMs) * wallTimeQuantumMs
+    );
   };
   const FixedDate = new Proxy(nativeDate, {
     apply(ctor) {
@@ -1395,6 +1417,7 @@ export function installPhasedMonotonicWallClock(
     elapsedMs: Math.floor(now() - fixedTimeMs),
     warmupMs,
     measurementMs,
+    wallTimeQuantumMs,
     warmupNativeElapsedMs:
       phase === 'warmup'
         ? Math.max(0, nativeNow() - phaseStartedAt)

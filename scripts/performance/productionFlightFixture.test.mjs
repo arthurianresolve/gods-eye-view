@@ -1256,6 +1256,40 @@ test('phased wall clock advances only through declared forward phases and caps b
   assert.equal(target.performance.now(), performanceTime);
 });
 
+test('phased wall clock can step Date on one-second Austin boundaries without replacing monotonic time', () => {
+  let performanceTime = 10.25;
+  const target = { Date, performance: { now: () => performanceTime } };
+  const fixed = Date.parse('2026-10-12T18:00:00.000Z');
+  installPhasedMonotonicWallClock(fixed, 30_000, 60_000, {
+    target,
+    wallTimeQuantumMs: 1000,
+  });
+  const clock = target.__gevPhasedMonotonicWallClockV1;
+  assert.equal(clock.snapshot().wallTimeQuantumMs, 1000);
+  clock.startWarmup();
+  performanceTime += 999.5;
+  assert.equal(target.Date.now(), fixed);
+  assert.equal(target.performance.now(), 1009.75);
+  performanceTime += 0.5;
+  assert.equal(target.Date.now(), fixed + 1000);
+  performanceTime += 29_000;
+  assert.equal(clock.holdWarmupBoundary().epochMs, fixed + 30_000);
+  clock.startMeasurement();
+  performanceTime += 60_000;
+  const complete = clock.finishMeasurement();
+  assert.equal(complete.epochMs, fixed + 90_000);
+  assert.equal(complete.wallTimeQuantumMs, 1000);
+
+  assert.throws(
+    () =>
+      installPhasedMonotonicWallClock(fixed, 30_500, 60_000, {
+        target: { Date, performance: { now: () => 0 } },
+        wallTimeQuantumMs: 1000,
+      }),
+    /quantum.*divide/i,
+  );
+});
+
 test('phased clock rejects callbacks retained from a prior completed run', () => {
   let performanceTime = 10;
   const target = { Date, performance: { now: () => performanceTime } };

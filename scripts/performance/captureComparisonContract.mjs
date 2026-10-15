@@ -1147,7 +1147,7 @@ export function createObservedAustinOperatingComparisonContract({
     const sampledEpochs = clock.satelliteSampledEpochs;
     assert.equal(
       sampledEpochs?.warmupHeld?.schema,
-      'gev-austin-satellite-sampled-epoch/v1',
+      'gev-austin-satellite-sampled-epoch/v2',
     );
     assert.equal(sampledEpochs?.warmupHeld?.boundary, 'warmup-held');
     assert.equal(
@@ -1156,7 +1156,7 @@ export function createObservedAustinOperatingComparisonContract({
     );
     assert.equal(
       sampledEpochs?.measurementComplete?.schema,
-      'gev-austin-satellite-sampled-epoch/v1',
+      'gev-austin-satellite-sampled-epoch/v2',
     );
     assert.equal(
       sampledEpochs?.measurementComplete?.boundary,
@@ -1184,9 +1184,14 @@ export function createObservedAustinOperatingComparisonContract({
       assert.equal(boundary.epochKind, 'derived-from-cached-public-positions');
       assert.equal(
         boundary.numericalBoundStatus,
-        'provisional-not-cross-engine-validated',
+        'exact-boundary-and-node-recomputed',
       );
-      assert.equal(boundary.performanceAcceptanceEligible, false);
+      assert.equal(boundary.performanceAcceptanceEligible, true);
+      assert.equal(
+        boundary.derivedEpochMs,
+        boundary.boundaryEpochMs,
+        'Austin satellite positions must be sampled at the declared boundary',
+      );
       assert.ok(Number.isSafeInteger(boundary.derivedEpochMs));
       assert.ok(
         Number.isSafeInteger(boundary.ageMs) &&
@@ -2037,9 +2042,23 @@ export function getCaptureComparisonIneligibilityReasons({
           : 'required-weather-effects-objective-workloads-are-incomplete',
       );
   } else if (austinOperatingFixture) {
-    reasons.push(
-      'austin-satellite-boundary-sampling-remains-frame-cadence-dependent',
-    );
+    const deterministicSatelliteBoundaries =
+      captures.length > 0 &&
+      captures.every((sample) => {
+        const sampled = sample?.austinOperatingClock?.satelliteSampledEpochs;
+        return [sampled?.warmupHeld, sampled?.measurementComplete].every(
+          (boundary) =>
+            boundary?.performanceAcceptanceEligible === true &&
+            boundary?.schema === 'gev-austin-satellite-sampled-epoch/v2' &&
+            boundary?.numericalBoundStatus ===
+              'exact-boundary-and-node-recomputed' &&
+            boundary?.derivedEpochMs === boundary?.boundaryEpochMs,
+        );
+      });
+    if (!deterministicSatelliteBoundaries)
+      reasons.push(
+        'austin-satellite-boundary-sampling-remains-frame-cadence-dependent',
+      );
     if (
       !workload?.scenarios?.includes('idle') ||
       !workload?.scenarios?.includes('scripted-motion')
