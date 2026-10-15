@@ -888,14 +888,16 @@ function installationResponseBytes(fixture, url) {
 
 function installationRequestVariant(url, response) {
   const bounds = response.requestBounds;
+  const exact = url.searchParams.get('exact') === '1';
+  const responseSha256 = sha256(response.bytes);
   return {
     key: JSON.stringify({
-      bounds,
-      exact: url.searchParams.get('exact') === '1',
+      responseSha256,
+      exact,
     }),
     bounds,
-    exact: url.searchParams.get('exact') === '1',
-    sha256: sha256(response.bytes),
+    exact,
+    sha256: responseSha256,
     byteLength: response.bytes.length,
     responseBounds: response.responseBounds,
     elementCount: response.elementCount,

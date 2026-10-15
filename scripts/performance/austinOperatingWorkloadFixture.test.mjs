@@ -498,37 +498,61 @@ test('required asset summaries reject unknown IDs and missing installation deliv
   );
 });
 
-test('installation delivery has a hard 32-variant bound', async () => {
+test('installation delivery coalesces equivalent snapped responses', async () => {
   const fixture = createAustinOperatingWorkloadFixture();
   const delivery = createAustinOperatingFixtureDelivery(fixture, baseUrl);
   for (let index = 0; index < 33; index += 1) {
-    const south = 30.3 + index / 1000;
+    const south = 30.3 + index / 1_000_000;
     const url = new URL('/api/military-installations', baseUrl);
-    url.searchParams.set('south', south.toFixed(5));
+    url.searchParams.set('south', south.toFixed(6));
     url.searchParams.set('west', '-97.75');
-    url.searchParams.set('north', (south + 0.01).toFixed(5));
+    url.searchParams.set('north', (south + 0.01).toFixed(6));
     url.searchParams.set('east', '-97.74');
+    const response = await delivery.respond(url.href, { method: 'GET' });
+    delivery.onFulfilled({
+      url: url.href,
+      method: 'GET',
+      status: response.status,
+      bodyBase64: response.body.toString('base64'),
+    });
+  }
+  const summary = delivery.summarize({ requiredAssetIds: ['installations'] });
+  assert.equal(summary.installations.responseVariants.length, 1);
+  assert.equal(summary.installations.responseVariants[0].responseCount, 33);
+  assert.equal(summary.installations.responseVariantOverflowCount, 0);
+});
+
+test('installation delivery has a hard 32-distinct-payload bound', async () => {
+  const fixture = createAustinOperatingWorkloadFixture();
+  const delivery = createAustinOperatingFixtureDelivery(fixture, baseUrl);
+  const catalogUrl = new URL('/api/military-installations', baseUrl);
+  catalogUrl.searchParams.set('south', fixture.route.south.toFixed(8));
+  catalogUrl.searchParams.set('west', fixture.route.west.toFixed(8));
+  catalogUrl.searchParams.set('north', fixture.route.north.toFixed(8));
+  catalogUrl.searchParams.set('east', fixture.route.east.toFixed(8));
+  catalogUrl.searchParams.set('exact', '1');
+  const catalogResponse = await delivery.respond(catalogUrl.href, {
+    method: 'GET',
+  });
+  const catalog = JSON.parse(catalogResponse.body.toString('utf8'));
+  assert.ok(catalog.elements.length >= 33);
+  for (const [index, element] of catalog.elements.slice(0, 33).entries()) {
+    const url = new URL('/api/military-installations', baseUrl);
+    url.searchParams.set('south', (element.lat - 0.00001).toFixed(8));
+    url.searchParams.set('west', (element.lon - 0.00001).toFixed(8));
+    url.searchParams.set('north', (element.lat + 0.00001).toFixed(8));
+    url.searchParams.set('east', (element.lon + 0.00001).toFixed(8));
     url.searchParams.set('exact', '1');
     const response = await delivery.respond(url.href, { method: 'GET' });
-    if (index < 32) {
+    const fulfill = () =>
       delivery.onFulfilled({
         url: url.href,
         method: 'GET',
         status: response.status,
         bodyBase64: response.body.toString('base64'),
       });
-    } else {
-      assert.throws(
-        () =>
-          delivery.onFulfilled({
-            url: url.href,
-            method: 'GET',
-            status: response.status,
-            bodyBase64: response.body.toString('base64'),
-          }),
-        /response-variant bound exceeded/,
-      );
-    }
+    if (index < 32) fulfill();
+    else assert.throws(fulfill, /response-variant bound exceeded/);
   }
 });
 
