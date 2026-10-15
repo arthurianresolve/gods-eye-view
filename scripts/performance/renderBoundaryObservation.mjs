@@ -42,6 +42,7 @@ export function createBoundaryProgressRecorder(record, field) {
           elapsedMs: details.fixtureClockElapsedMs,
           warmupMs: details.fixtureClockWarmupMs,
           measurementMs: details.fixtureClockMeasurementMs,
+          wallTimeQuantumMs: details.fixtureClockWallTimeQuantumMs,
           warmupNativeElapsedMs: details.fixtureClockWarmupNativeElapsedMs,
           measurementNativeElapsedMs:
             details.fixtureClockMeasurementNativeElapsedMs,
@@ -260,6 +261,7 @@ function boundedProgressDetails(details) {
     'fixtureClockRunOrdinal',
     'fixtureClockWarmupMs',
     'fixtureClockMeasurementMs',
+    'fixtureClockWallTimeQuantumMs',
     'fixtureClockWarmupNativeElapsedMs',
     'fixtureClockMeasurementNativeElapsedMs',
     'fixtureClockStartCount',
@@ -274,6 +276,7 @@ function boundedProgressDetails(details) {
       key === 'fixtureClockElapsedMs' ||
       key === 'fixtureClockWarmupMs' ||
       key === 'fixtureClockMeasurementMs' ||
+      key === 'fixtureClockWallTimeQuantumMs' ||
       key === 'fixtureClockWarmupNativeElapsedMs' ||
       key === 'fixtureClockMeasurementNativeElapsedMs'
     ) {

@@ -361,6 +361,7 @@ export function settleCompletedRenderDiagnostic(
               fixtureClockRunOrdinal: fixtureClock.runOrdinal,
               fixtureClockWarmupMs: fixtureClock.warmupMs,
               fixtureClockMeasurementMs: fixtureClock.measurementMs,
+              fixtureClockWallTimeQuantumMs: fixtureClock.wallTimeQuantumMs,
               fixtureClockWarmupNativeElapsedMs:
                 fixtureClock.warmupNativeElapsedMs,
               fixtureClockMeasurementNativeElapsedMs:

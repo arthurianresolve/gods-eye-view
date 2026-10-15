@@ -1145,9 +1145,13 @@ export function createObservedAustinOperatingComparisonContract({
       workload.warmupMs + workload.durationPerSampleMs,
     );
     const sampledEpochs = clock.satelliteSampledEpochs;
-    assert.equal(
-      sampledEpochs?.warmupHeld?.schema,
-      'gev-austin-satellite-sampled-epoch/v2',
+    const sampledEpochSchema = sampledEpochs?.warmupHeld?.schema;
+    assert.ok(
+      [
+        'gev-austin-satellite-sampled-epoch/v1',
+        'gev-austin-satellite-sampled-epoch/v2',
+      ].includes(sampledEpochSchema),
+      'Austin satellite sampled-epoch schema is unsupported',
     );
     assert.equal(sampledEpochs?.warmupHeld?.boundary, 'warmup-held');
     assert.equal(
@@ -1156,7 +1160,7 @@ export function createObservedAustinOperatingComparisonContract({
     );
     assert.equal(
       sampledEpochs?.measurementComplete?.schema,
-      'gev-austin-satellite-sampled-epoch/v2',
+      sampledEpochSchema,
     );
     assert.equal(
       sampledEpochs?.measurementComplete?.boundary,
@@ -1182,16 +1186,21 @@ export function createObservedAustinOperatingComparisonContract({
       assert.match(boundary.identitySha256 || '', SHA256);
       assert.match(boundary.positionSha256 || '', SHA256);
       assert.equal(boundary.epochKind, 'derived-from-cached-public-positions');
+      const legacySampledEpoch =
+        sampledEpochSchema === 'gev-austin-satellite-sampled-epoch/v1';
       assert.equal(
         boundary.numericalBoundStatus,
-        'exact-boundary-and-node-recomputed',
+        legacySampledEpoch
+          ? 'provisional-not-cross-engine-validated'
+          : 'exact-boundary-and-node-recomputed',
       );
-      assert.equal(boundary.performanceAcceptanceEligible, true);
-      assert.equal(
-        boundary.derivedEpochMs,
-        boundary.boundaryEpochMs,
-        'Austin satellite positions must be sampled at the declared boundary',
-      );
+      assert.equal(boundary.performanceAcceptanceEligible, !legacySampledEpoch);
+      if (!legacySampledEpoch)
+        assert.equal(
+          boundary.derivedEpochMs,
+          boundary.boundaryEpochMs,
+          'Austin satellite positions must be sampled at the declared boundary',
+        );
       assert.ok(Number.isSafeInteger(boundary.derivedEpochMs));
       assert.ok(
         Number.isSafeInteger(boundary.ageMs) &&
