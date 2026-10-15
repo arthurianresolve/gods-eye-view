@@ -143,6 +143,7 @@ import {
   summarizeAustinNativePopulations,
 } from './performance/austinOperatingPopulationEvidence.mjs';
 import { waitForPostMeasurementSourceDrain } from './performance/postMeasurementSourceDrain.mjs';
+import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -4064,6 +4065,10 @@ try {
       );
       const trackingSetup = trackingResult?.trackedAircraftId ?? null;
       failureProgress.current.trackingSetup = trackingSetup;
+      failureProgress.phase = 'activate-sample-foreground';
+      failureProgress.current.phase = failureProgress.phase;
+      failureProgress.current.foregroundActivation =
+        await activateForegroundPage(page);
       let boundaryProgressBindingRecord = null;
       if (productionFlightFixture) {
         failureProgress.phase = 'prepare-render-boundary-binding';
