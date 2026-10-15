@@ -5743,3 +5743,11 @@ themselves. A hidden interval or an unfocused boundary remains a failure. This
 does not claim OS-level foreground visibility that the DOM cannot establish;
 the hardware renderer, browser flags, frame evidence and operator conditions
 remain part of the report.
+
+The first full candidate attempt then reached scripted motion but failed its
+post-measurement source drain because Windows delivered the 250 ms host timer
+slightly before the measured bound. The drain now waits only the measured
+remainder, with four bounded attempts, and still rejects a clock that does not
+advance. This work remains outside the timed sample and does not change the
+60-second measurement, application debounce, render deadline, or source
+readiness checks.

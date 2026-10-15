@@ -18,14 +18,23 @@ export async function waitForPostMeasurementSourceDrain({
       'Post-measurement source drain must be between 1 and 2000 ms.',
     );
   const startedAt = now();
-  await wait(minimumMs);
-  const elapsedMs = now() - startedAt;
+  let elapsedMs = 0;
+  let waitAttempts = 0;
+  while (elapsedMs < minimumMs && waitAttempts < 4) {
+    await wait(Math.max(1, Math.ceil(minimumMs - elapsedMs)));
+    waitAttempts += 1;
+    elapsedMs = now() - startedAt;
+    if (!Number.isFinite(elapsedMs)) break;
+  }
   if (!Number.isFinite(elapsedMs) || elapsedMs < minimumMs)
-    throw new Error('Post-measurement source drain ended before its bound.');
+    throw new Error(
+      `Post-measurement source drain ended before its bound after ${waitAttempts} waits (${elapsedMs} ms).`,
+    );
   return {
     schema: 'gev-post-measurement-source-drain/v1',
     minimumMs,
     elapsedMs,
+    waitAttempts,
     scope:
       'host wait after the timed sample and before completed-render/source-readiness validation',
   };
