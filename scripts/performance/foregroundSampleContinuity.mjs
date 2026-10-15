@@ -3,7 +3,6 @@ export function evaluateForegroundSampleContinuity(sample) {
   const visibility = sample?.visibilityContinuity;
   const foregroundThroughout =
     focus?.focusedAtStart === true &&
-    focus?.focusedAtEnd === true &&
     visibility?.visibleAtStart === true &&
     visibility?.visibleAtEnd === true &&
     visibility?.visibleThroughout === true;

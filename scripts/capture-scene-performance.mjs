@@ -4706,6 +4706,14 @@ try {
       failureProgress.current.measurement = sample;
       if (boundaryProgressBindingRecord)
         sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
+      if (sample.visible && !sample.focused) {
+        failureProgress.phase = 'reactivate-post-measurement-foreground';
+        failureProgress.current.phase = failureProgress.phase;
+        sample.postMeasurementForegroundActivation =
+          await activateForegroundPage(page);
+        failureProgress.current.postMeasurementForegroundActivation =
+          sample.postMeasurementForegroundActivation;
+      }
       if (productionFlightFixture || austinOperatingWorkload) {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;

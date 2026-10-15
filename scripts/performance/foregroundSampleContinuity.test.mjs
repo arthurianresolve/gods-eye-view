@@ -37,13 +37,22 @@ test('accepts a visible sample with focused boundaries and records transient blu
   );
 });
 
+test('accepts visible rendering when input focus ends elsewhere', () => {
+  const result = evaluateForegroundSampleContinuity(
+    sample({ focusedAtEnd: false, interruptionCount: 1 }),
+  );
+  assert.equal(result.foregroundThroughout, true);
+  assert.equal(result.focusInterrupted, true);
+  assert.equal(result.focusInterruptionCount, 1);
+  assert.equal(result.hiddenObserved, false);
+});
+
 test('rejects hidden samples and unfocused boundaries', () => {
   for (const input of [
     { visibleThroughout: false },
     { visibleAtStart: false },
     { visibleAtEnd: false },
     { focusedAtStart: false },
-    { focusedAtEnd: false },
   ])
     assert.equal(
       evaluateForegroundSampleContinuity(sample(input)).foregroundThroughout,

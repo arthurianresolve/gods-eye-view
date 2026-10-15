@@ -5735,14 +5735,16 @@ not supported by those observations. The capture browser already disables
 occluded-window, renderer-background and timer throttling.
 
 The amended criterion explicitly activates every fresh measured page and
-requires it to be visible and focused before warmup. A timed sample remains
-eligible only when it starts and ends focused and no hidden visibility state is
-observed. Transient input-focus interruptions are counted and retained as
-diagnostic evidence, but no longer fail an otherwise visible sample by
-themselves. A hidden interval or an unfocused boundary remains a failure. This
-does not claim OS-level foreground visibility that the DOM cannot establish;
-the hardware renderer, browser flags, frame evidence and operator conditions
-remain part of the report.
+requires it to be visible and focused before warmup and at measurement start. A
+timed sample remains eligible only when no hidden visibility state is observed.
+Input-focus interruptions and the end state are counted and retained as
+diagnostic evidence, but do not fail otherwise visible rendering by themselves.
+If input focus ends elsewhere, the harness reactivates and verifies the page
+after timing and before render/source boundary validation. A hidden interval,
+an unfocused start, or failed reactivation remains a failure. This does not
+claim OS-level foreground visibility that the DOM cannot establish; the
+hardware renderer, browser flags, frame evidence and operator conditions remain
+part of the report.
 
 The first full candidate attempt then reached scripted motion but failed its
 post-measurement source drain because Windows delivered the 250 ms host timer
