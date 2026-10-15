@@ -407,11 +407,13 @@ if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   );
 if (
   workerAuditMode === 'receipt-only' &&
+  providerFixtureMode !== 'dense-investigation' &&
+  !infrastructureWorkloadSelected &&
   !austinOperatingWorkloadSelected &&
   !weatherEffectsWorkload
 )
   throw new Error(
-    'Receipt-only worker auditing requires the verified Austin operating or phased weather fixture.',
+    'Receipt-only worker auditing requires a verified dense, infrastructure, Austin operating, or phased weather fixture.',
   );
 if (
   sceneFrameDiagnosticsEnabled &&

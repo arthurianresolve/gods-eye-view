@@ -1946,6 +1946,7 @@ export function getCaptureComparisonIneligibilityReasons({
     fixture?.schema === 'gev-weather-effects-fixture/v2';
   const austinOperatingFixture =
     fixture?.schema === 'gev-austin-operating-fixture/v1';
+  const denseFixture = contract?.workloadId === 'dense-investigation';
   const mapStreamingFixture =
     fixture?.manifest?.schema === 'gev-map-streaming-fixture/v4';
   if (mapStreamingFixture) {
@@ -2031,7 +2032,15 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
-  if (fixture && !sharedDocumentFixture && !austinOperatingFixture)
+  const receiptOnlyAuditValidated =
+    workerBlobAuditMode === 'receipt-only' &&
+    !reasons.includes('receipt-only-worker-audit-evidence-is-incomplete');
+  if (
+    fixture &&
+    !sharedDocumentFixture &&
+    !austinOperatingFixture &&
+    (!denseFixture || !receiptOnlyAuditValidated)
+  )
     reasons.push(
       'provider-fixture-is-static-count-only-not-trajectory-equivalent',
     );
@@ -2080,7 +2089,11 @@ export function getCaptureComparisonIneligibilityReasons({
     !workload?.scenarios?.includes('selected-aircraft-tracking')
   )
     reasons.push('required-dense-objective-workloads-are-incomplete');
-  if (!austinOperatingFixture && !weatherEffectsFixture)
+  if (
+    !austinOperatingFixture &&
+    !weatherEffectsFixture &&
+    (!receiptOnlyAuditValidated || (!denseFixture && !infrastructureFixture))
+  )
     reasons.push(
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     );

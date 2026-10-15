@@ -280,6 +280,109 @@ test('diagnostic-only captures retain explicit reasons and allow an unsupported 
   );
 });
 
+test('validated receipt-only evidence clears the historical dense and infrastructure latency blockers', async () => {
+  const {
+    createReceiptOnlyWorkerAuditDocument,
+    validateReceiptOnlyWorkerAuditEnvelope,
+  } = await import('./receiptOnlyWorkerAudit.mjs');
+  const appCommit = 'a'.repeat(40);
+  const harnessCommit = 'b'.repeat(40);
+  const receiptSha256 = 'c'.repeat(64);
+  const expectedAssetPaths = [
+    'index.html',
+    'assets/app.js',
+    'cesium/Cesium.js',
+  ];
+  const embeddedWorkerContract = {
+    schema: 'gev-cesium-embedded-worker-contract/v1',
+    bundlePath: 'cesium/Cesium.js',
+    bundleSha256: 'd'.repeat(64),
+    workerSourceSha256: 'e'.repeat(64),
+    allowedModuleCount: 12,
+  };
+  const expectedDocuments = [
+    { documentRole: 'provider-sample-1', documentId: 'provider-document-1' },
+  ];
+  const document = createReceiptOnlyWorkerAuditDocument({
+    ...expectedDocuments[0],
+    appCommit,
+    harnessCommit,
+    receiptSha256,
+    baseUrl: 'http://127.0.0.1:4173/',
+    expectedAssetPaths,
+    requestedAssetPaths: ['assets/app.js', 'cesium/Cesium.js'],
+    workerTargetUrls: ['http://127.0.0.1:4173/cesium/Cesium.js'],
+    blobRequestUrls: [],
+    embeddedWorkerContract,
+  });
+  const pageAssetAudit = {
+    schema: 'gev-receipt-only-worker-audit/v1',
+    status: 'all-document-receipt-paths-validated',
+    workerAuditMode: 'receipt-only',
+    appCommit,
+    harnessCommit,
+    receiptSha256,
+    liveBlobBodyAttestation: 'unavailable-by-design',
+    pageInstrumentation: structuredClone(document.pageInstrumentation),
+    workerSource: structuredClone(document.workerSource),
+    loadedAssetPaths: [...document.requestedAssetPaths],
+    unexpectedAssetPaths: [],
+    workerAuditDocuments: [document],
+  };
+  const receiptOnlyWorkerAuditEvidence = {
+    pageAssetAudit,
+    expectedDocuments,
+    expectedAssetPaths,
+    bundleSha256: embeddedWorkerContract.bundleSha256,
+    workerSourceSha256: embeddedWorkerContract.workerSourceSha256,
+    allowedModuleCount: embeddedWorkerContract.allowedModuleCount,
+  };
+  assert.equal(
+    validateReceiptOnlyWorkerAuditEnvelope({
+      pageAssetAudit,
+      appCommit,
+      harnessCommit,
+      receiptSha256,
+      ...receiptOnlyWorkerAuditEvidence,
+    }),
+    true,
+  );
+  const source = {
+    buildProvenance: { appCommit, harnessCommit, receiptSha256 },
+  };
+  for (const { fixture, contract } of [
+    { fixture: {}, contract: { workloadId: 'dense-investigation' } },
+    {
+      fixture: { schema: 'gev-infrastructure-fixture-manifest/v1' },
+      contract: { workloadId: 'infrastructure-datacenters' },
+    },
+  ]) {
+    const reasons = getCaptureReadinessReasons({
+      workerAuditMode: 'receipt-only',
+      receiptOnlyWorkerAuditEvidence,
+      source,
+      fixture,
+      contract,
+    });
+    assert.equal(
+      reasons.includes('receipt-only-worker-audit-evidence-is-incomplete'),
+      false,
+    );
+    assert.equal(
+      reasons.includes(
+        'provider-fixture-is-static-count-only-not-trajectory-equivalent',
+      ),
+      false,
+    );
+    assert.equal(
+      reasons.includes(
+        'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+      ),
+      false,
+    );
+  }
+});
+
 test('prewarm audit readiness names the unobservable late-creation limitation', () => {
   const reasons = getCaptureComparisonIneligibilityReasons({
     workerBlobAuditMode: 'prewarm',

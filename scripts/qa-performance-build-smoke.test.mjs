@@ -569,17 +569,31 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         '--capture-worker-audit-mode',
         'prewarm',
       ]),
-    /diagnostic worker auditing only/,
+    /diagnostic or receipt-only worker auditing/,
   );
-  assert.throws(
-    () =>
-      parseSmokeArguments([
-        '--capture-worker-audit-mode',
-        'receipt-only',
-        '--provider-fixture',
-        'dense-investigation',
-      ]),
-    /Austin operating fixture/,
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-worker-audit-mode',
+      'receipt-only',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    {
+      captureWorkerAuditMode: 'receipt-only',
+      providerFixture: 'dense-investigation',
+    },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-worker-audit-mode',
+      'receipt-only',
+      '--provider-fixture',
+      'infrastructure-datacenters',
+    ]),
+    {
+      captureWorkerAuditMode: 'receipt-only',
+      providerFixture: 'infrastructure-datacenters',
+    },
   );
 });
 

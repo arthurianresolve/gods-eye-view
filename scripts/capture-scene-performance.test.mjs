@@ -97,6 +97,36 @@ test('capture CLI recognizes an infrastructure workload before browser startup',
   );
 });
 
+test('receipt-only worker auditing is accepted for dense and infrastructure comparisons before provenance validation', () => {
+  for (const args of [
+    [
+      '--provider-fixture',
+      'dense-investigation',
+      '--mixed-layers',
+      '--worker-audit-mode',
+      'receipt-only',
+    ],
+    [
+      '--provider-fixture',
+      'infrastructure-datacenters',
+      '--worker-audit-mode',
+      'receipt-only',
+    ],
+  ]) {
+    const result = invoke(args);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(
+      result.stderr,
+      /Comparison fixtures require verified build provenance options/,
+    );
+    assert.doesNotMatch(result.stderr, /Receipt-only worker auditing requires/);
+    assert.doesNotMatch(
+      result.stderr,
+      /Browser was not found|Could not find Chrome/,
+    );
+  }
+});
+
 test('Austin comparison rejects subsecond fixture boundaries before browser startup', () => {
   const result = invoke([
     '--provider-fixture',

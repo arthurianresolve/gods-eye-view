@@ -1989,17 +1989,20 @@ export function parseSmokeArguments(argv) {
   if (
     output.providerFixture?.startsWith('infrastructure') &&
     output.captureWorkerAuditMode &&
-    output.captureWorkerAuditMode !== 'diagnostic'
+    !['diagnostic', 'receipt-only'].includes(output.captureWorkerAuditMode)
   )
     throw new TypeError(
-      'Infrastructure provider fixtures support diagnostic worker auditing only.',
+      'Infrastructure provider fixtures support diagnostic or receipt-only worker auditing.',
     );
   if (
     output.captureWorkerAuditMode === 'receipt-only' &&
+    output.providerFixture !== 'dense-investigation' &&
+    !INFRASTRUCTURE_WORKLOAD_IDS.includes(output.providerFixture) &&
+    output.providerFixture !== WEATHER_EFFECTS_WORKLOAD_ID &&
     output.providerFixture !== AUSTIN_OPERATING_WORKLOAD_ID
   )
     throw new TypeError(
-      'Receipt-only worker auditing requires the Austin operating fixture.',
+      'Receipt-only worker auditing requires a dense, infrastructure, phased weather, or Austin operating fixture.',
     );
   if (
     output.captureDelayNegativeControl === 'enabled' &&
