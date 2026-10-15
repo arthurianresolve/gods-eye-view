@@ -2412,6 +2412,11 @@ timed sample, and only then enters the readiness boundary that waits for loading
 to finish and observes a follow-up render. The source timeout and application
 debounce are unchanged.
 
+The first exact-revision retry failed before the trigger render because its new
+bounded progress field was not yet registered with the boundary recorder. The
+field is now explicitly allowlisted and covered by the same owner-binding test;
+no render deadline or readiness predicate changed.
+
 The [raw rendered report](performance-evidence/calibration-38083654918.json)
 passes five alternating pairs, with 1,433 total legacy-control idle frames versus
 zero candidate idle frames. All native drags, current-geometry readiness, exact
