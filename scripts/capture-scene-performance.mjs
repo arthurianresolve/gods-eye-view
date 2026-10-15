@@ -5392,6 +5392,7 @@ try {
             'external-puppeteer-request-and-worker-target-events-only',
         },
         workerSource: receiptOnlyWorkerAuditDocuments[0]?.workerSource || null,
+        scriptRequestCount,
         loadedAssetPaths: [...loadedScriptAssets].sort(),
         unexpectedAssetPaths: [...unexpectedScriptAssets].sort(),
         workerAuditDocuments: receiptOnlyWorkerAuditDocuments,

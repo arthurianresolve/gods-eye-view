@@ -438,7 +438,9 @@ export function validateReceiptOnlyWorkerAuditEnvelope({
         document.documentId.length > 160,
     ) ||
     !Array.isArray(pageAssetAudit.workerAuditDocuments) ||
-    pageAssetAudit.workerAuditDocuments.length !== expectedDocuments.length
+    pageAssetAudit.workerAuditDocuments.length !== expectedDocuments.length ||
+    !Number.isSafeInteger(pageAssetAudit.scriptRequestCount) ||
+    pageAssetAudit.scriptRequestCount < 1
   )
     return false;
   let assetPaths;

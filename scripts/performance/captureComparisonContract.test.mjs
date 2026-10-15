@@ -325,6 +325,7 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
     liveBlobBodyAttestation: 'unavailable-by-design',
     pageInstrumentation: structuredClone(document.pageInstrumentation),
     workerSource: structuredClone(document.workerSource),
+    scriptRequestCount: document.requestedAssetPaths.length,
     loadedAssetPaths: [...document.requestedAssetPaths],
     unexpectedAssetPaths: [],
     workerAuditDocuments: [document],

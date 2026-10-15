@@ -56,6 +56,7 @@ function makeEnvelope() {
       observation: 'external-puppeteer-request-and-worker-target-events-only',
     },
     workerSource: document.workerSource,
+    scriptRequestCount: identity.requestedAssetPaths.length,
     loadedAssetPaths: [...identity.requestedAssetPaths],
     unexpectedAssetPaths: [],
     workerAuditDocuments: [document],
@@ -95,6 +96,12 @@ test('receipt-only audit records receipt-derived worker identity without page ho
   for (const value of Object.values(document.pageInstrumentation))
     if (typeof value === 'boolean') assert.equal(value, false);
   assert.equal(validate(makeEnvelope()), true);
+});
+
+test('receipt-only audit rejects a missing script request count', () => {
+  const envelope = makeEnvelope();
+  delete envelope.scriptRequestCount;
+  assert.equal(validate(envelope), false);
 });
 
 test('receipt-only audit consumes the actual receipt-derived Cesium worker contract', () => {
