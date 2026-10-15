@@ -7,6 +7,7 @@ const commit = 'a'.repeat(40);
 const options = {
   expectedCommit: commit,
   qualityMode: 'manual',
+  expectedDensityPct: 75,
   expectedCounts: { flights: 2500 },
 };
 function sample(scenario = 'scripted-motion', run = 1) {
@@ -91,6 +92,9 @@ test('wrong builds, missing populations, changed settings and background samples
     },
     (s) => {
       s.conditions.after.settings.densityPct = 50;
+    },
+    (s) => {
+      s.conditions.after.settings.visualState.detection.density = 50;
     },
     (s) => {
       s.conditions.after.settings.msaaSamples = 1;
@@ -307,7 +311,7 @@ test('repeat runs with different settings or route endpoints cannot pass', () =>
   );
   assert.throws(
     () => assertCaptureIntegrity([sample(), second], options),
-    /repeated workload changed/,
+    /wrong density/,
   );
 });
 

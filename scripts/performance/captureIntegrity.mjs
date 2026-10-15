@@ -77,11 +77,15 @@ export function assertCaptureIntegrity(
         `${label}: density is unavailable`,
       );
       if (qualityMode !== 'auto' && Number.isFinite(expectedDensityPct))
-        assert.equal(
-          settings.densityPct,
-          expectedDensityPct,
-          `${label}: wrong density`,
-        );
+        for (const [actual, source] of [
+          [settings.densityPct, 'engine'],
+          [settings.visualState?.detection?.density, 'visual state'],
+        ])
+          assert.equal(
+            actual,
+            expectedDensityPct,
+            `${label}: wrong density (${source})`,
+          );
       assert.ok(
         settings.resolutionScale > 0 && Number.isFinite(settings.msaaSamples),
         `${label}: resolution or MSAA is unavailable`,

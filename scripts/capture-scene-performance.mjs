@@ -2906,6 +2906,7 @@ try {
           count,
           mode,
           detectionMode,
+          densityPct,
           productionProvider,
           fixtureId,
           fixtureSha256,
@@ -2956,15 +2957,36 @@ try {
               'Auto/Quality/Performance profiles are unavailable in this app revision',
             );
           const services = app.styleManager?.services;
+          const densityControl = document.getElementById(
+            'detection-density-slider',
+          );
           if (
             typeof services?.setDetectionModeByLabel !== 'function' ||
+            typeof services?.getDetectionTuning !== 'function' ||
             typeof services?.getDetectionMode !== 'function' ||
-            typeof services?.readDetectionDiagnostics !== 'function'
+            typeof services?.readDetectionDiagnostics !== 'function' ||
+            !densityControl
           )
             throw new Error('Detection workload controls are unavailable');
           services.setDetectionModeByLabel(detectionMode);
-          if (services.getDetectionMode() !== detectionMode)
-            throw new Error(`Detection mode did not become ${detectionMode}`);
+          const requestedDensity = Number.isFinite(densityPct)
+            ? densityPct
+            : services.getDetectionTuning()?.densityPct;
+          if (!Number.isFinite(requestedDensity))
+            throw new Error('Detection density is unavailable');
+          densityControl.value = String(requestedDensity);
+          densityControl.dispatchEvent(new Event('input', { bubbles: true }));
+          const visualDetection = app.styleManager.getVisualState()?.detection;
+          if (
+            services.getDetectionMode() !== detectionMode ||
+            services.getDetectionTuning()?.densityPct !== requestedDensity ||
+            densityControl.value !== String(requestedDensity) ||
+            visualDetection?.mode !== detectionMode ||
+            visualDetection?.density !== requestedDensity
+          )
+            throw new Error(
+              `Detection settings did not become ${detectionMode}/${requestedDensity}`,
+            );
           const viewer = app.viewer;
           const center = { latitude: 30.2672, longitude: -97.7431 };
           const radians = Math.PI / 180;
@@ -3003,6 +3025,7 @@ try {
           count: effectiveFixtureAircraftCount,
           mode: qualityMode,
           detectionMode,
+          densityPct: expectedDensityPct,
           productionProvider: Boolean(productionFlightFixture),
           fixtureId: productionFlightFixture?.id || null,
           fixtureSha256: productionFlightFixture?.sha256 || null,
