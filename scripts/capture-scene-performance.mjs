@@ -2009,7 +2009,10 @@ async function settleProviderRenderAtBoundary(
   return observeRenderBoundary({
     label,
     timeoutMs,
-    hostGraceMs: 1000,
+    // Keep the page execution budget independent from Windows CDP delivery.
+    // A late host receipt cannot turn a page-side timeout into a pass because
+    // the returned page status is still validated below.
+    hostGraceMs: 2000,
     progressBinding,
     evaluate: (pageTimeoutMs, progressBinding) =>
       evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
@@ -4105,7 +4108,7 @@ try {
       failureProgress.current.foregroundActivation =
         await activateCapturePage(page);
       let boundaryProgressBindingRecord = null;
-      if (productionFlightFixture) {
+      if (productionFlightFixture || austinOperatingWorkload) {
         failureProgress.phase = 'prepare-render-boundary-binding';
         failureProgress.current.phase = failureProgress.phase;
         boundaryProgressBindingRecord = {

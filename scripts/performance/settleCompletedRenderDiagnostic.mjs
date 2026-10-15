@@ -93,6 +93,14 @@ export function settleCompletedRenderDiagnostic(
               followupRenderRequestStarted: false,
               followupRenderRequestCompleted: false,
               followupRenderRequestErrorName: null,
+              followupManualRenderFallback: {
+                available: typeof viewer?.render === 'function',
+                scheduled: false,
+                delayMs: null,
+                started: false,
+                completed: false,
+                errorName: null,
+              },
               acceptedAfterFollowupRender: false,
               stabilityMs: postRenderConditionStabilityMs,
               stabilityTimerStarted: false,
@@ -104,6 +112,7 @@ export function settleCompletedRenderDiagnostic(
         cleanup: {
           timerCleared: false,
           fallbackTimerCleared: false,
+          followupFallbackTimerCleared: false,
           listenerRemoved: false,
         },
       },
@@ -116,6 +125,7 @@ export function settleCompletedRenderDiagnostic(
     let listener = null;
     let removeListener = null;
     let followupRenderTimer = null;
+    let followupManualRenderFallbackTimer = null;
     let manualRenderFallbackTimer = null;
     const startedAt = globalThis.performance?.now?.();
     const diagnostics = {
@@ -166,6 +176,14 @@ export function settleCompletedRenderDiagnostic(
             followupRenderRequestStarted: false,
             followupRenderRequestCompleted: false,
             followupRenderRequestErrorName: null,
+            followupManualRenderFallback: {
+              available: typeof viewer?.render === 'function',
+              scheduled: false,
+              delayMs: null,
+              started: false,
+              completed: false,
+              errorName: null,
+            },
             acceptedAfterFollowupRender: false,
             stabilityMs: postRenderConditionStabilityMs,
             stabilityTimerStarted: false,
@@ -178,6 +196,7 @@ export function settleCompletedRenderDiagnostic(
       cleanup: {
         timerCleared: false,
         fallbackTimerCleared: false,
+        followupFallbackTimerCleared: false,
         listenerRemoved: false,
       },
     };
@@ -201,6 +220,11 @@ export function settleCompletedRenderDiagnostic(
         clearTimeout(followupRenderTimer);
         followupRenderTimer = null;
       }
+      if (followupManualRenderFallbackTimer !== null) {
+        clearTimeout(followupManualRenderFallbackTimer);
+        followupManualRenderFallbackTimer = null;
+      }
+      diagnostics.cleanup.followupFallbackTimerCleared = true;
       try {
         if (typeof removeListener === 'function') {
           removeListener();
@@ -333,6 +357,32 @@ export function settleCompletedRenderDiagnostic(
                 return;
               }
               condition.followupRenderRequestCompleted = true;
+              const fallback = condition.followupManualRenderFallback;
+              if (fallback.available && !done) {
+                fallback.scheduled = true;
+                fallback.delayMs = Math.max(1, Math.min(500, timeoutMs / 4));
+                followupManualRenderFallbackTimer = setTimeout(() => {
+                  followupManualRenderFallbackTimer = null;
+                  if (
+                    done ||
+                    condition.acceptedBoundaryObserved ||
+                    !condition.followupRenderRequested ||
+                    !condition.followupRenderRequestCompleted
+                  )
+                    return;
+                  fallback.started = true;
+                  try {
+                    viewer.render();
+                    fallback.completed = true;
+                  } catch (error) {
+                    fallback.errorName = String(error?.name || 'Error').slice(
+                      0,
+                      80,
+                    );
+                    finish(error);
+                  }
+                }, fallback.delayMs);
+              }
             };
             if (postRenderConditionStabilityMs > 0) {
               condition.stabilityTimerStarted = true;

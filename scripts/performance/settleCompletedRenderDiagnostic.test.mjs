@@ -91,6 +91,50 @@ test('a bounded direct render recovers a scheduled frame that never arrives', as
   assert.equal(subject.scene.postRender.handlers.size, 0);
 });
 
+test('a bounded direct render recovers a follow-up readiness frame that never arrives', async () => {
+  const subject = viewer({ fallbackRender: true });
+  let renderRequests = 0;
+  subject.scene.requestRender = () => {
+    renderRequests += 1;
+    if (renderRequests === 1)
+      queueMicrotask(() => subject.scene.postRender.fire());
+  };
+  const result = await settleCompletedRenderDiagnostic(
+    subject,
+    200,
+    null,
+    null,
+    false,
+    null,
+    [],
+    null,
+    [],
+    () => true,
+  );
+  assert.equal(result.status, 'settled');
+  assert.equal(renderRequests, 2);
+  assert.equal(
+    result.diagnostics.postRenderCondition.followupManualRenderFallback
+      .scheduled,
+    true,
+  );
+  assert.equal(
+    result.diagnostics.postRenderCondition.followupManualRenderFallback.started,
+    true,
+  );
+  assert.equal(
+    result.diagnostics.postRenderCondition.followupManualRenderFallback
+      .completed,
+    true,
+  );
+  assert.equal(
+    result.diagnostics.postRenderCondition.acceptedAfterFollowupRender,
+    true,
+  );
+  assert.equal(result.diagnostics.cleanup.followupFallbackTimerCleared, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
 test('page timer and missing render request stay explicit without relaxing settle', async () => {
   const subject = viewer({ requestRender: false });
   const result = await settleCompletedRenderDiagnostic(subject, 5);
