@@ -4784,17 +4784,37 @@ try {
                 activeRenderBoundaryProgressBinding,
               );
             },
-            waitForDrain: async () => {
+            settleSourceReadinessBoundary: async () => {
+              failureProgress.phase =
+                'post-measurement-source-readiness-render-wait';
+              failureProgress.current.phase = failureProgress.phase;
+              return settleProviderRenderAtBoundary(
+                page,
+                'Post-measurement source readiness boundary',
+                5000,
+                createBoundaryProgressRecorder(
+                  failureProgress.current,
+                  'postMeasurementSourceReadinessBoundaryObservation',
+                ),
+                activeRenderBoundaryProgressBinding,
+                {
+                  postRenderConditionFunction:
+                    observeAustinInstallationsReadyForRenderBoundary,
+                },
+              );
+            },
+            waitForDrain: async (drainPhase) => {
               failureProgress.phase = 'post-measurement-source-debounce-drain';
               failureProgress.current.phase = failureProgress.phase;
-              return waitForPostMeasurementSourceDrain();
+              const drain = await waitForPostMeasurementSourceDrain();
+              return { ...drain, phase: drainPhase };
             },
           });
           sample.postMeasurementSourceSettle = sourceSettle;
-          sample.postMeasurementSourceDrain = sourceSettle.drain;
+          sample.postMeasurementSourceDrain = sourceSettle.readinessDrain;
           failureProgress.current.postMeasurementSourceSettle = sourceSettle;
           failureProgress.current.postMeasurementSourceDrain =
-            sourceSettle.drain;
+            sourceSettle.readinessDrain;
         }
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;

@@ -2417,6 +2417,14 @@ bounded progress field was not yet registered with the boundary recorder. The
 field is now explicitly allowlisted and covered by the same owner-binding test;
 no render deadline or readiness predicate changed.
 
+The next exact diagnostic showed that Cesium raised the viewport change during
+the first readiness render, after the trigger drain. Source settling therefore
+now uses two non-timed stabilization stages: trigger render and drain, then a
+non-retiring readiness render and drain, followed by the existing final
+readiness render that retires the viewer loop. Both drains retain their phase
+and elapsed time. The final boundary still fails on loading, source error,
+timeout, or a missing follow-up render.
+
 The [raw rendered report](performance-evidence/calibration-38083654918.json)
 passes five alternating pairs, with 1,433 total legacy-control idle frames versus
 zero candidate idle frames. All native drags, current-geometry readiness, exact

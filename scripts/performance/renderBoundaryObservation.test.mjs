@@ -430,6 +430,15 @@ test('boundary progress recorder remains bound to the invocation owner after cur
     original.postMeasurementSourceTriggerBoundaryObservation.invocationId,
     'source-trigger',
   );
+  const sourceReadiness = createBoundaryProgressRecorder(
+    original,
+    'postMeasurementSourceReadinessBoundaryObservation',
+  );
+  sourceReadiness({ invocationId: 'source-readiness', status: 'settled' });
+  assert.equal(
+    original.postMeasurementSourceReadinessBoundaryObservation.invocationId,
+    'source-readiness',
+  );
   assert.throws(
     () => createBoundaryProgressRecorder({}, 'arbitraryPayload'),
     /owner is invalid/,

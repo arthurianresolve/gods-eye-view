@@ -69,16 +69,27 @@ test('source settling renders the final camera pose before draining debounce wor
       order.push('render');
       return { status: 'settled' };
     },
-    waitForDrain: async () => {
-      order.push('drain');
+    settleSourceReadinessBoundary: async () => {
+      order.push('readiness');
+      return { status: 'ready' };
+    },
+    waitForDrain: async (phase) => {
+      order.push(`drain:${phase}`);
       return { elapsedMs: 250 };
     },
   });
-  assert.deepEqual(order, ['render', 'drain']);
+  assert.deepEqual(order, [
+    'render',
+    'drain:trigger-render',
+    'readiness',
+    'drain:readiness-render',
+  ]);
   assert.deepEqual(result, {
     schema: 'gev-post-measurement-source-settle/v1',
     sourceTriggerBoundary: { status: 'settled' },
-    drain: { elapsedMs: 250 },
+    triggerDrain: { elapsedMs: 250 },
+    sourceReadinessBoundary: { status: 'ready' },
+    readinessDrain: { elapsedMs: 250 },
   });
 });
 
@@ -89,6 +100,7 @@ test('source settling does not drain when the trigger render fails', async () =>
       settleSourceTriggerBoundary: async () => {
         throw new Error('trigger render failed');
       },
+      settleSourceReadinessBoundary: async () => {},
       waitForDrain: async () => {
         drained = true;
       },
@@ -96,4 +108,21 @@ test('source settling does not drain when the trigger render fails', async () =>
     /trigger render failed/,
   );
   assert.equal(drained, false);
+});
+
+test('source settling stops before the final drain when readiness fails', async () => {
+  let drainCount = 0;
+  await assert.rejects(
+    settlePostMeasurementSourceChanges({
+      settleSourceTriggerBoundary: async () => ({ status: 'settled' }),
+      settleSourceReadinessBoundary: async () => {
+        throw new Error('readiness failed');
+      },
+      waitForDrain: async () => {
+        drainCount += 1;
+      },
+    }),
+    /readiness failed/,
+  );
+  assert.equal(drainCount, 1);
 });

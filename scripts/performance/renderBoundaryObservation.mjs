@@ -17,6 +17,7 @@ const VALID_STAGES = new Set([
 const VALID_PROGRESS_FIELDS = new Set([
   'warmupBoundaryObservation',
   'postMeasurementSourceTriggerBoundaryObservation',
+  'postMeasurementSourceReadinessBoundaryObservation',
   'measurementBoundaryObservation',
 ]);
 
