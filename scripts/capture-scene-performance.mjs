@@ -142,6 +142,7 @@ import {
   normalizeAustinSatelliteWitness,
   summarizeAustinNativePopulations,
 } from './performance/austinOperatingPopulationEvidence.mjs';
+import { waitForPostMeasurementSourceDrain } from './performance/postMeasurementSourceDrain.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -4732,6 +4733,14 @@ try {
           throw new Error(
             `Austin phased clock/foreground contract failed: ${JSON.stringify({ clock: sample.phasedClockEnd, clockEnd })}`,
           );
+        if (austinOperatingWorkload) {
+          failureProgress.phase = 'post-measurement-source-debounce-drain';
+          failureProgress.current.phase = failureProgress.phase;
+          sample.postMeasurementSourceDrain =
+            await waitForPostMeasurementSourceDrain();
+          failureProgress.current.postMeasurementSourceDrain =
+            sample.postMeasurementSourceDrain;
+        }
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;
         const measurementProgressRecord = failureProgress.current;
