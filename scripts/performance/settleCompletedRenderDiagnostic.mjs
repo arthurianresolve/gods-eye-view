@@ -14,6 +14,7 @@ export function settleCompletedRenderDiagnostic(
   beforeRenderRequestArgs = [],
   postRenderConditionFunction = null,
   postRenderConditionArgs = [],
+  postRenderConditionStabilityMs = 0,
 ) {
   const acknowledge = (stage, details) => {
     if (!progressFunctionName || !invocationId) return;
@@ -85,6 +86,10 @@ export function settleCompletedRenderDiagnostic(
               followupRenderRequestCompleted: false,
               followupRenderRequestErrorName: null,
               acceptedAfterFollowupRender: false,
+              stabilityMs: postRenderConditionStabilityMs,
+              stabilityTimerStarted: false,
+              stabilityTimerFired: false,
+              stabilityTimerCancelled: false,
             }
           : null,
         pageTimerFired: false,
@@ -98,6 +103,7 @@ export function settleCompletedRenderDiagnostic(
     let timer = null;
     let listener = null;
     let removeListener = null;
+    let followupRenderTimer = null;
     const startedAt = globalThis.performance?.now?.();
     const diagnostics = {
       phase: 'page-entry',
@@ -140,6 +146,10 @@ export function settleCompletedRenderDiagnostic(
             followupRenderRequestCompleted: false,
             followupRenderRequestErrorName: null,
             acceptedAfterFollowupRender: false,
+            stabilityMs: postRenderConditionStabilityMs,
+            stabilityTimerStarted: false,
+            stabilityTimerFired: false,
+            stabilityTimerCancelled: false,
           }
         : null,
       pageTimerFired: false,
@@ -157,6 +167,10 @@ export function settleCompletedRenderDiagnostic(
       done = true;
       clearTimeout(timer);
       diagnostics.cleanup.timerCleared = true;
+      if (followupRenderTimer !== null) {
+        clearTimeout(followupRenderTimer);
+        followupRenderTimer = null;
+      }
       try {
         if (typeof removeListener === 'function') {
           removeListener();
@@ -249,7 +263,14 @@ export function settleCompletedRenderDiagnostic(
           );
           condition.ready = ready;
           if (!ready) {
+            if (followupRenderTimer !== null) {
+              clearTimeout(followupRenderTimer);
+              followupRenderTimer = null;
+              condition.stabilityTimerCancelled = true;
+            }
             condition.followupRenderRequested = false;
+            condition.followupRenderRequestStarted = false;
+            condition.followupRenderRequestCompleted = false;
             return;
           }
           condition.readyPostRenderCount = Math.min(
@@ -266,23 +287,38 @@ export function settleCompletedRenderDiagnostic(
               return;
             }
             condition.followupRenderRequested = true;
-            condition.followupRenderRequestStarted = true;
-            try {
-              viewer.scene.requestRender();
-            } catch (error) {
-              condition.followupRenderRequestErrorName = String(
-                error?.name || 'Error',
-              ).slice(0, 80);
-              finish(error);
-              return;
-            }
-            condition.followupRenderRequestCompleted = true;
+            const requestFollowupRender = () => {
+              if (done || !condition.followupRenderRequested) return;
+              followupRenderTimer = null;
+              condition.stabilityTimerFired =
+                postRenderConditionStabilityMs > 0;
+              condition.followupRenderRequestStarted = true;
+              try {
+                viewer.scene.requestRender();
+              } catch (error) {
+                condition.followupRenderRequestErrorName = String(
+                  error?.name || 'Error',
+                ).slice(0, 80);
+                finish(error);
+                return;
+              }
+              condition.followupRenderRequestCompleted = true;
+            };
+            if (postRenderConditionStabilityMs > 0) {
+              condition.stabilityTimerStarted = true;
+              followupRenderTimer = setTimeout(
+                requestFollowupRender,
+                postRenderConditionStabilityMs,
+              );
+            } else requestFollowupRender();
             return;
-          } else {
+          } else if (condition.followupRenderRequestCompleted) {
             condition.followupRenderRequested = false;
             condition.acceptedAfterFollowupRender = true;
             condition.acceptedBoundaryObserved = true;
             condition.acceptedBoundaryElapsedMs = elapsed();
+          } else {
+            return;
           }
         }
         let finalObservationError = null;
@@ -434,6 +470,7 @@ export function evaluateCompletedRenderDiagnostic(
     beforeRenderRequestArgs = [],
     postRenderConditionFunction = null,
     postRenderConditionArgs = [],
+    postRenderConditionStabilityMs = 0,
   },
 ) {
   const hasBrowserCallbacks =
@@ -448,6 +485,7 @@ export function evaluateCompletedRenderDiagnostic(
         beforeRenderRequestArgs,
         postRenderConditionFunction,
         postRenderConditionArgs,
+        postRenderConditionStabilityMs,
       )
     : settleCompletedRenderDiagnostic;
   const args = [
@@ -457,7 +495,8 @@ export function evaluateCompletedRenderDiagnostic(
     invocationId,
     retireViewerRenderLoop,
   ];
-  if (!hasBrowserCallbacks) args.push(null, [], null, [], null, []);
+  if (!hasBrowserCallbacks)
+    args.push(null, [], null, [], null, [], postRenderConditionStabilityMs);
   return targetPage.evaluate(pageFunction, ...args);
 }
 
@@ -473,6 +512,7 @@ export function createCompletedRenderDiagnosticWithObservation(
   beforeRenderRequestArgs = [],
   postRenderConditionFunction = null,
   postRenderConditionArgs = [],
+  postRenderConditionStabilityMs = 0,
 ) {
   if (
     (observationFunction !== null &&
@@ -483,7 +523,10 @@ export function createCompletedRenderDiagnosticWithObservation(
     !Array.isArray(beforeRenderRequestArgs) ||
     (postRenderConditionFunction !== null &&
       typeof postRenderConditionFunction !== 'function') ||
-    !Array.isArray(postRenderConditionArgs)
+    !Array.isArray(postRenderConditionArgs) ||
+    !Number.isSafeInteger(postRenderConditionStabilityMs) ||
+    postRenderConditionStabilityMs < 0 ||
+    postRenderConditionStabilityMs > 2000
   )
     throw new TypeError(
       'Browser observation callbacks and argument arrays are invalid.',
@@ -522,6 +565,7 @@ export function createCompletedRenderDiagnosticWithObservation(
       ${serializedBeforeArgs},
       postRenderCondition,
       ${serializedConditionArgs},
+      ${postRenderConditionStabilityMs},
     );
   }`;
   return new Function(`return (${composed});`)();

@@ -794,6 +794,94 @@ test('serialized Austin boundary waits for installation readiness and a later re
   }
 });
 
+test('Austin boundary requires readiness to survive the viewport debounce window', async () => {
+  const stats = { loading: false, error: null };
+  const subject = viewer({ renderLoop: true });
+  let renderRequests = 0;
+  subject.scene.requestRender = () => {
+    renderRequests += 1;
+  };
+  const app = {
+    viewer: subject,
+    dataManager: {
+      layers: new Map([
+        ['military-installations', { module: { getStats: () => stats } }],
+      ]),
+      isEnabled: () => true,
+    },
+  };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  try {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { __godsEyeView: app },
+    });
+    Object.defineProperty(globalThis, '__godsEyeView', {
+      configurable: true,
+      value: app,
+    });
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const serializedFunction = new Function(`return (${fn.toString()});`)();
+        return serializedFunction(...JSON.parse(JSON.stringify(args)));
+      },
+    };
+    const resultPromise = evaluateCompletedRenderDiagnostic(targetPage, 500, {
+      retireViewerRenderLoop: true,
+      postRenderConditionFunction:
+        observeAustinInstallationsReadyForRenderBoundary,
+      postRenderConditionStabilityMs: 20,
+    });
+    await Promise.resolve();
+    assert.equal(renderRequests, 1);
+
+    subject.scene.postRender.fire();
+    subject.scene.postRender.fire();
+    assert.equal(subject.useDefaultRenderLoop, true);
+    assert.equal(renderRequests, 1);
+
+    stats.loading = true;
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(renderRequests, 2);
+    subject.scene.postRender.fire();
+    assert.equal(subject.useDefaultRenderLoop, true);
+
+    stats.loading = false;
+    subject.scene.postRender.fire();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(renderRequests, 3);
+    subject.scene.postRender.fire();
+    const result = await resultPromise;
+
+    assert.equal(result.status, 'settled');
+    assert.equal(result.diagnostics.postRenderCondition.stabilityMs, 20);
+    assert.equal(
+      result.diagnostics.postRenderCondition.stabilityTimerStarted,
+      true,
+    );
+    assert.equal(
+      result.diagnostics.postRenderCondition.stabilityTimerFired,
+      true,
+    );
+    assert.equal(
+      result.diagnostics.postRenderCondition.stabilityTimerCancelled,
+      false,
+    );
+    assert.equal(result.diagnostics.renderLoopRetirement.confirmed, true);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
 test('Austin readiness boundary fails on missing or errored installation state without retiring', async () => {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   const previousView = Object.getOwnPropertyDescriptor(

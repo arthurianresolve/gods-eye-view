@@ -12,6 +12,17 @@ requires the matched baseline/candidate timed workload matrix. Final release
 artifact/attestation verification and VM105 reconciliation must then bind the
 frozen candidate.
 
+The first full Austin baseline attempt with harness `26e68892` completed all
+five idle samples and two motion samples before correctly rejecting motion run 3. The observed 357 installation identities were a valid hashed subset of the
+699-record fixture, but the layer had re-entered `loading`. The failure exposed
+a readiness gap: two completed renders could observe `loading: false` while the
+layer's 180 ms viewport debounce timer was still pending. The boundary now
+requires readiness to remain true for 250 ms before it requests and observes
+the accepting follow-up render. A focused regression starts a load inside that
+window and proves the viewer loop cannot retire early; all 24 boundary/drain
+checks pass. The original full report remains failed evidence. Fresh exact-head
+short and full baseline/candidate captures are still required.
+
 The map-streaming producer now has an executable five-run comparison contract.
 Each native route run records a declared 30-second warmup, a 60-second timed
 route, stable Manual/75%/DENSE settings, fixture delivery hashes and transition

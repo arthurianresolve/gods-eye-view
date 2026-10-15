@@ -1981,6 +1981,7 @@ async function settleProviderRenderAtBoundary(
     beforeRenderRequestFunction = null,
     beforeRenderRequestArgs = [],
     postRenderConditionFunction = null,
+    postRenderConditionStabilityMs = 0,
   } = {},
 ) {
   return observeRenderBoundary({
@@ -1997,6 +1998,7 @@ async function settleProviderRenderAtBoundary(
         beforeRenderRequestFunction,
         beforeRenderRequestArgs,
         postRenderConditionFunction,
+        postRenderConditionStabilityMs,
       }),
     onProgress,
   });
@@ -4800,6 +4802,7 @@ try {
                 {
                   postRenderConditionFunction:
                     observeAustinInstallationsReadyForRenderBoundary,
+                  postRenderConditionStabilityMs: 250,
                 },
               );
             },
@@ -4861,6 +4864,7 @@ try {
               postRenderConditionFunction: austinOperatingWorkload
                 ? observeAustinInstallationsReadyForRenderBoundary
                 : null,
+              postRenderConditionStabilityMs: austinOperatingWorkload ? 250 : 0,
             },
           );
         } catch (error) {
