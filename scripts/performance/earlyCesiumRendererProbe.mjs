@@ -1092,13 +1092,24 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
   {
     retireViewerRenderLoop = false,
     requireShaderProgramAttribution = false,
+    hostReceiptGraceMs = 0,
   } = {},
 ) {
+  if (!Number.isFinite(hostReceiptGraceMs) || hostReceiptGraceMs < 0)
+    throw new TypeError(
+      'Renderer probe cleanup host receipt grace must be non-negative.',
+    );
   const startedAt = performance.now();
+  const pageExecutionBudgetMs =
+    Number.isFinite(timeoutMs) && timeoutMs >= 0 ? timeoutMs : 0;
+  const hostDeadlineMs = pageExecutionBudgetMs + hostReceiptGraceMs;
   const evidence = {
     schema: 'gev-early-renderer-probe-cleanup/v1',
     confirmed: false,
     timeoutMs: Number.isFinite(timeoutMs) ? Math.max(0, timeoutMs) : null,
+    pageExecutionBudgetMs,
+    hostReceiptGraceMs,
+    hostDeadlineMs,
     elapsedMs: 0,
     document: {
       ...cleanupStage('not-attempted'),
@@ -1128,10 +1139,8 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
         : null,
     },
   };
-  const boundedMs =
-    Number.isFinite(timeoutMs) && timeoutMs >= 0 ? timeoutMs : 0;
   const remaining = () =>
-    Math.max(0, boundedMs - (performance.now() - startedAt));
+    Math.max(0, hostDeadlineMs - (performance.now() - startedAt));
   const runStage = async (stage, operation, onConfirmed = () => {}) => {
     const operationStartedAt = performance.now();
     let timedOut = false;
@@ -1492,6 +1501,14 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
       }
     }
     documentOperationSettled = documentResult.settled;
+    if (
+      documentResult.settled &&
+      Number.isFinite(evidence.document.pageExecutionElapsedMs) &&
+      evidence.document.pageExecutionElapsedMs > pageExecutionBudgetMs
+    ) {
+      evidence.document.status = 'error';
+      evidence.document.errorKind = 'page-execution-budget-exceeded';
+    }
     if (!documentResult.settled) {
       evidence.scriptRegistration.status = scriptIdentifier
         ? 'not-attempted'

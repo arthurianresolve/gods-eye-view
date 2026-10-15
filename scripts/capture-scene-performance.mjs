@@ -654,13 +654,22 @@ async function cleanupEarlyRendererProbeForPage(
         page,
         scriptIdentifier,
         1_000,
-        { requireShaderProgramAttribution: shaderProgramAttributionEnabled },
+        {
+          requireShaderProgramAttribution: shaderProgramAttributionEnabled,
+          // The page-side cleanup budget stays one second. Allow a separate,
+          // bounded second for Windows CDP acknowledgement delivery; a late
+          // page execution still fails through pageExecutionBudgetMs.
+          hostReceiptGraceMs: 1_000,
+        },
       )
     : await cleanupEarlyCesiumRendererProbeWithEvidence(
         page,
         scriptIdentifier,
         1_000,
-        { requireShaderProgramAttribution: shaderProgramAttributionEnabled },
+        {
+          requireShaderProgramAttribution: shaderProgramAttributionEnabled,
+          hostReceiptGraceMs: 1_000,
+        },
       );
   if (hasRegistration && retireViewerRenderLoop)
     evidence.registrationRemovalBoundary = 'owned-document-retirement';

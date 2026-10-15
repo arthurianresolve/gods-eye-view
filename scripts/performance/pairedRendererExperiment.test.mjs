@@ -1290,6 +1290,78 @@ test('late page cleanup retains bounded page timing without converting the host 
   assert.equal(JSON.stringify(cleanup).length < 2_000, true);
 });
 
+test('host receipt grace accepts quick page cleanup delivered after its execution budget', async () => {
+  const page = {
+    isClosed: () => false,
+    evaluate: () =>
+      new Promise((resolve) => {
+        setTimeout(
+          () =>
+            resolve({
+              status: 'confirmed',
+              pageExecutionElapsedMs: 0.25,
+              statePresent: true,
+              hookRestoreAttempted: true,
+              hookRestored: true,
+              listenerCount: 0,
+              listenerRemovalAttemptedCount: 0,
+              listenerRemovalConfirmedCount: 0,
+              listenerRemovalFailedCount: 0,
+              stateDeleted: true,
+            }),
+          8,
+        );
+      }),
+    removeScriptToEvaluateOnNewDocument: async () => {},
+  };
+
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    'receipt-grace-registration',
+    5,
+    { hostReceiptGraceMs: 20 },
+  );
+
+  assert.equal(evidence.confirmed, true);
+  assert.equal(evidence.timeoutMs, 5);
+  assert.equal(evidence.pageExecutionBudgetMs, 5);
+  assert.equal(evidence.hostReceiptGraceMs, 20);
+  assert.equal(evidence.hostDeadlineMs, 25);
+  assert.equal(evidence.document.status, 'confirmed');
+  assert.equal(evidence.scriptRegistration.status, 'confirmed');
+});
+
+test('host receipt grace cannot hide page execution over budget', async () => {
+  const page = {
+    isClosed: () => false,
+    evaluate: async () => ({
+      status: 'confirmed',
+      pageExecutionElapsedMs: 6,
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: true,
+      listenerCount: 0,
+      listenerRemovalAttemptedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 0,
+      stateDeleted: true,
+    }),
+    removeScriptToEvaluateOnNewDocument: async () => {},
+  };
+
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    'slow-page-cleanup-registration',
+    5,
+    { hostReceiptGraceMs: 20 },
+  );
+
+  assert.equal(evidence.confirmed, false);
+  assert.equal(evidence.document.status, 'error');
+  assert.equal(evidence.document.errorKind, 'page-execution-budget-exceeded');
+  assert.equal(evidence.scriptRegistration.status, 'confirmed');
+});
+
 test('late retirement acknowledgement remains a timeout but retains its bounded state', async () => {
   const probe = earlyProbePage(1);
   probe.window.__godsEyeView = { viewer: { useDefaultRenderLoop: true } };
