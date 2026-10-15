@@ -5148,7 +5148,11 @@ test('analyst_query refusals carry their code and the allowed values', async () 
 });
 
 test('analyst_query keeps its answer when one record has an out-of-range time', async () => {
-  globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
+  globalThis.window = globalThis.window || {
+    clearTimeout,
+    setTimeout,
+    requestIdleCallback: null,
+  };
   const now = Date.now();
   const earthquakes = {
     getStats: () => ({ count: 2, lastUpdate: now }),
@@ -5157,8 +5161,14 @@ test('analyst_query keeps its answer when one record has an out-of-range time', 
       { id: 'r', lat: 1, lon: 1, magnitude: 4, timeMs: 8.64e15 + 1 },
     ],
   };
-  const { runner } = manifestRunner({ earthquakes }, { enabled: ['earthquakes'] });
-  const result = await runner('analyst_query', { layers: ['earthquakes'], scope: { kind: 'anywhere' } });
+  const { runner } = manifestRunner(
+    { earthquakes },
+    { enabled: ['earthquakes'] },
+  );
+  const result = await runner('analyst_query', {
+    layers: ['earthquakes'],
+    scope: { kind: 'anywhere' },
+  });
   assert.equal(result.ok, true);
   const q = result.items.find((item) => item.id === 'q');
   assert.match(q.time, /^\d{4}-\d\d-\d\dT/);
