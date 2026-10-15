@@ -39,3 +39,22 @@ export async function waitForPostMeasurementSourceDrain({
       'host wait after the timed sample and before completed-render/source-readiness validation',
   };
 }
+
+export async function settlePostMeasurementSourceChanges({
+  settleSourceTriggerBoundary,
+  waitForDrain = waitForPostMeasurementSourceDrain,
+} = {}) {
+  if (typeof settleSourceTriggerBoundary !== 'function')
+    throw new TypeError(
+      'Post-measurement source trigger boundary is required.',
+    );
+  if (typeof waitForDrain !== 'function')
+    throw new TypeError('Post-measurement source drain callback is required.');
+  const sourceTriggerBoundary = await settleSourceTriggerBoundary();
+  const drain = await waitForDrain();
+  return {
+    schema: 'gev-post-measurement-source-settle/v1',
+    sourceTriggerBoundary,
+    drain,
+  };
+}

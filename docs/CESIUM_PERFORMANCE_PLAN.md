@@ -2402,6 +2402,16 @@ and [full integration](https://github.com/arthurianresolve/gods-eye-view/actions
 both pass at this revision. No FPS, GPU-build or full S50 acceptance claim follows from the Node
 result.
 
+The ten-document diagnostic then exposed the masked source race. The failed
+population contained only valid catalog identities, but the installations layer
+was loading. The harness had drained the 180 ms viewport debounce before
+rendering the final camera pose; that render could schedule a new debounced load
+after the drain, and a later assertion observed it in flight. The corrected
+sequence completes a final-pose trigger render, drains the debounce outside the
+timed sample, and only then enters the readiness boundary that waits for loading
+to finish and observes a follow-up render. The source timeout and application
+debounce are unchanged.
+
 The [raw rendered report](performance-evidence/calibration-38083654918.json)
 passes five alternating pairs, with 1,433 total legacy-control idle frames versus
 zero candidate idle frames. All native drags, current-geometry readiness, exact

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   AUSTIN_POST_MEASUREMENT_SOURCE_DRAIN_MS,
+  settlePostMeasurementSourceChanges,
   waitForPostMeasurementSourceDrain,
 } from './postMeasurementSourceDrain.mjs';
 
@@ -59,4 +60,40 @@ test('post-measurement drain remains bounded when time does not advance', async 
     /after 4 waits \(0 ms\)/,
   );
   assert.equal(waitCalls, 4);
+});
+
+test('source settling renders the final camera pose before draining debounce work', async () => {
+  const order = [];
+  const result = await settlePostMeasurementSourceChanges({
+    settleSourceTriggerBoundary: async () => {
+      order.push('render');
+      return { status: 'settled' };
+    },
+    waitForDrain: async () => {
+      order.push('drain');
+      return { elapsedMs: 250 };
+    },
+  });
+  assert.deepEqual(order, ['render', 'drain']);
+  assert.deepEqual(result, {
+    schema: 'gev-post-measurement-source-settle/v1',
+    sourceTriggerBoundary: { status: 'settled' },
+    drain: { elapsedMs: 250 },
+  });
+});
+
+test('source settling does not drain when the trigger render fails', async () => {
+  let drained = false;
+  await assert.rejects(
+    settlePostMeasurementSourceChanges({
+      settleSourceTriggerBoundary: async () => {
+        throw new Error('trigger render failed');
+      },
+      waitForDrain: async () => {
+        drained = true;
+      },
+    }),
+    /trigger render failed/,
+  );
+  assert.equal(drained, false);
 });

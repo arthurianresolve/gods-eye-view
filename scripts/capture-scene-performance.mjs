@@ -142,7 +142,10 @@ import {
   normalizeAustinSatelliteWitness,
   summarizeAustinNativePopulations,
 } from './performance/austinOperatingPopulationEvidence.mjs';
-import { waitForPostMeasurementSourceDrain } from './performance/postMeasurementSourceDrain.mjs';
+import {
+  settlePostMeasurementSourceChanges,
+  waitForPostMeasurementSourceDrain,
+} from './performance/postMeasurementSourceDrain.mjs';
 import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
 import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
 
@@ -4765,12 +4768,33 @@ try {
             `Austin phased clock/foreground contract failed: ${JSON.stringify({ clock: sample.phasedClockEnd, clockEnd })}`,
           );
         if (austinOperatingWorkload) {
-          failureProgress.phase = 'post-measurement-source-debounce-drain';
-          failureProgress.current.phase = failureProgress.phase;
-          sample.postMeasurementSourceDrain =
-            await waitForPostMeasurementSourceDrain();
+          const sourceSettle = await settlePostMeasurementSourceChanges({
+            settleSourceTriggerBoundary: async () => {
+              failureProgress.phase =
+                'post-measurement-source-trigger-render-wait';
+              failureProgress.current.phase = failureProgress.phase;
+              return settleProviderRenderAtBoundary(
+                page,
+                'Post-measurement source trigger boundary',
+                5000,
+                createBoundaryProgressRecorder(
+                  failureProgress.current,
+                  'postMeasurementSourceTriggerBoundaryObservation',
+                ),
+                activeRenderBoundaryProgressBinding,
+              );
+            },
+            waitForDrain: async () => {
+              failureProgress.phase = 'post-measurement-source-debounce-drain';
+              failureProgress.current.phase = failureProgress.phase;
+              return waitForPostMeasurementSourceDrain();
+            },
+          });
+          sample.postMeasurementSourceSettle = sourceSettle;
+          sample.postMeasurementSourceDrain = sourceSettle.drain;
+          failureProgress.current.postMeasurementSourceSettle = sourceSettle;
           failureProgress.current.postMeasurementSourceDrain =
-            sample.postMeasurementSourceDrain;
+            sourceSettle.drain;
         }
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;
