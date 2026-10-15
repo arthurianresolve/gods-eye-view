@@ -10,6 +10,23 @@ import {
 } from './performance/soakStability.mjs';
 const DEFAULT_DURATION_MS = FULL_SOAK_MS;
 
+/** Preserve owned cleanup evidence when driver creation fails before measurement. */
+export function createSoakSetupFailureReport(error) {
+  const report = {
+    operationStatus: 'failed',
+    error: error?.message || 'Rendered soak setup failed.',
+    fullSoak: false,
+    hardwareRenderingValidated: false,
+    stability: {
+      status: 'pending',
+      pending: ['Run failed before measurement.'],
+    },
+  };
+  if (error?.browserClose) report.browserClose = error.browserClose;
+  if (error?.cleanupError) report.cleanupError = error.cleanupError;
+  return report;
+}
+
 /** No counters advance until a real operation reports completion. Short runs are smoke tests. */
 export async function runMixedUseSoak({
   durationMs = DEFAULT_DURATION_MS,
@@ -239,16 +256,7 @@ if (
     });
   } catch (error) {
     runError = error;
-    report = error.soakReport || {
-      operationStatus: 'failed',
-      error: error.message,
-      fullSoak: false,
-      hardwareRenderingValidated: false,
-      stability: {
-        status: 'pending',
-        pending: ['Run failed before measurement.'],
-      },
-    };
+    report = error.soakReport || createSoakSetupFailureReport(error);
   }
   report.candidateCommit = commit;
   report.harnessCommit = commit;

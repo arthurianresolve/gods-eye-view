@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { isRecoverableApplicationPrewarmFailure } from './qa-rendered-soak-driver.mjs';
+import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import {
   bootFixturePage,
@@ -517,6 +518,26 @@ test('rendered soak owns a longer bounded cold-application startup allowance', a
     'utf8',
   );
   assert.match(source, /applicationReadyTimeoutMs:\s*180_000/);
+});
+
+test('setup failure reports retain owned browser cleanup evidence', () => {
+  const error = new Error('Connection closed.');
+  error.browserClose = {
+    closeCompleted: true,
+    forcedProcessTermination: false,
+  };
+  const report = createSoakSetupFailureReport(error);
+  assert.equal(report.operationStatus, 'failed');
+  assert.equal(report.error, 'Connection closed.');
+  assert.equal(report.fullSoak, false);
+  assert.equal(report.stability.status, 'pending');
+  assert.deepEqual(report.browserClose, error.browserClose);
+
+  error.cleanupError = 'Application soak browser did not close normally.';
+  error.browserClose.closeCompleted = false;
+  const incomplete = createSoakSetupFailureReport(error);
+  assert.equal(incomplete.browserClose.closeCompleted, false);
+  assert.equal(incomplete.cleanupError, error.cleanupError);
 });
 
 test('stability accepts a complete plateau and leaves short/missing evidence pending', () => {
