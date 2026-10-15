@@ -4556,6 +4556,15 @@ test('full Austin CLI validator accepts the recorded producer projection and rej
     'ff605b9885dfdf20ae51983f4197949f11076d4096e363bc71b6c7c17aca88a3',
   );
   const pageAudit = report.source.buildProvenance.pageAssetAudit;
+  // This immutable replay predates the additive request-count field. Adapt
+  // only this test copy from its existing receipt-bound loaded code paths; the
+  // saved bytes and hashes above remain historical evidence.
+  assert.equal(pageAudit.scriptRequestCount, undefined);
+  pageAudit.scriptRequestCount = pageAudit.loadedAssetPaths.filter(
+    (assetPath) =>
+      /(?:^|\/)assets\/.*\.js$|(?:^|\/)cesium\/Cesium\.js$/.test(assetPath),
+  ).length;
+  assert.ok(pageAudit.scriptRequestCount > 0);
   const expected = {
     appSha: report.source.appCommit,
     harnessSha: report.source.harnessCommit,
@@ -5483,10 +5492,22 @@ test('bounded child runner stops a separately owned browser process', async (t) 
   );
   assert.equal(Number((await readFile(pidPath, 'utf8')).trim()), ownedPid);
   if (process.platform === 'win32') {
+    const taskkillCommands = syncCommands.filter(
+      (entry) => entry.command === 'taskkill',
+    );
     assert.equal(
-      syncCommands.filter((entry) => entry.command === 'taskkill').length,
+      taskkillCommands.filter((entry) => entry.status === 0).length,
       2,
-      `the CLI tree and separately-owned browser are each terminated once: ${JSON.stringify(syncCommands)}`,
+      `the CLI tree and separately-owned browser are each confirmed terminated: ${JSON.stringify(syncCommands)}`,
+    );
+    assert.ok(
+      taskkillCommands.length >= 2 && taskkillCommands.length <= 3,
+      `one bounded retry is allowed when native taskkill itself times out: ${JSON.stringify(syncCommands)}`,
+    );
+    assert.ok(
+      taskkillCommands.filter((entry) => entry.error === 'ETIMEDOUT').length <=
+        1,
+      `only one native taskkill timeout may be recovered: ${JSON.stringify(syncCommands)}`,
     );
     assert.equal(
       syncCommands.filter((entry) => entry.command === 'tasklist').length,

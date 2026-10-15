@@ -100,12 +100,17 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
   'scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs',
   'scripts/performance/fixtureInterceptionFailureEvidence.test.mjs',
+  'scripts/performance/foregroundPageActivation.test.mjs',
+  'scripts/performance/foregroundSampleContinuity.test.mjs',
   'scripts/performance/renderBoundaryObservation.test.mjs',
+  'scripts/performance/sceneMeasurementDeadline.test.mjs',
+  'scripts/performance/postMeasurementSourceDrain.test.mjs',
   'scripts/performance/settleCompletedRenderDiagnostic.test.mjs',
   'scripts/performance/terminalViewerObservation.test.mjs',
   'scripts/performance/boundedCpuProfile.test.mjs',
   'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
   'scripts/performance/providerDocumentRetirement.test.mjs',
+  'scripts/performance/windowsForegroundWindow.test.mjs',
   'scripts/captureNoUndefConfig.test.mjs',
 ]);
 

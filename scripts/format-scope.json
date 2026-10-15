@@ -1296,6 +1296,8 @@
   "scripts/performance/providerDocumentRetirement.test.mjs",
   "scripts/performance/renderBoundaryObservation.mjs",
   "scripts/performance/renderBoundaryObservation.test.mjs",
+  "scripts/performance/sceneMeasurementDeadline.mjs",
+  "scripts/performance/sceneMeasurementDeadline.test.mjs",
   "scripts/performance/settleCompletedRenderDiagnostic.mjs",
   "scripts/performance/settleCompletedRenderDiagnostic.test.mjs",
   "scripts/performance/terminalViewerObservation.mjs",

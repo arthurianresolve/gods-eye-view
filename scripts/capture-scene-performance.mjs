@@ -36,6 +36,7 @@ import {
   observeRenderBoundary,
   prepareRenderBoundaryProgressBinding,
 } from './performance/renderBoundaryObservation.mjs';
+import { runSceneMeasurementWithHostDeadline } from './performance/sceneMeasurementDeadline.mjs';
 import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
   appendAustinOperatingReadinessHistory,
@@ -1323,7 +1324,7 @@ const browser = await puppeteer.launch({
     ),
   ],
 });
-const ownedBrowserPid = browser.process()?.pid;
+const ownedBrowserPid = browser.process?.()?.pid;
 let hostWindowActivation = null;
 async function activateCapturePage(targetPage) {
   hostWindowActivation ??= await focusOwnedWindowsBrowserWindow({
@@ -4451,7 +4452,7 @@ try {
       failureProgress.phase = 'measure-scene';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
-      const samplePromise = page.evaluate(
+      const rawSamplePromise = page.evaluate(
         async ({
           durationMs,
           scenarioName,
@@ -4585,7 +4586,11 @@ try {
             clearTimeout(initialDelayTimer);
             // Slow frames must still reach the same absolute route endpoint.
             finishMotion();
-            await new Promise((resolve) => requestAnimationFrame(resolve));
+            // A parked request-render scene is allowed to stop scheduling
+            // animation frames. Requiring one here left idle captures pending
+            // until Puppeteer's unrelated protocol timeout. Motion already
+            // reaches its absolute endpoint through motionFinished; the
+            // completed-render boundary below owns terminal visual settlement.
             const renderCount = intervals.length;
             const sorted = [...intervals].sort((a, b) => a - b);
             const pick = (p) =>
@@ -4701,6 +4706,13 @@ try {
           expectedRunOrdinal: phaseRunOrdinal,
         },
       );
+      const samplePromise = runSceneMeasurementWithHostDeadline({
+        evaluate: () => rawSamplePromise,
+        measurementMs: seconds * 1000,
+        onProgress(observation) {
+          failureProgress.current.sceneMeasurementObservation = observation;
+        },
+      });
       let weatherPhaseObservations = null;
       let sample;
       try {
@@ -4714,7 +4726,10 @@ try {
         }
         sample = await samplePromise;
       } catch (error) {
-        if (weatherEffectsWorkload) {
+        if (
+          weatherEffectsWorkload &&
+          error?.sceneMeasurementObservation?.status !== 'host-deadline'
+        ) {
           await page
             .evaluate(() => window.__gevWeatherMeasurementAbort?.())
             .catch(() => {});

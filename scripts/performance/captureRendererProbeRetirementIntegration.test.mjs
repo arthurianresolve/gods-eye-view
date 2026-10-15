@@ -26,15 +26,25 @@ test('capture CLI removes the future-document registration only after document r
     `import { appendFileSync } from 'node:fs';
 const witness = process.env.GEV_CAPTURE_BROWSER_WITNESS;
 const record = (value) => appendFileSync(witness, value + '\\n');
+let foregroundObservationPending = false;
 const page = {
   isClosed: () => false,
+  bringToFront: async () => { foregroundObservationPending = true; },
   setViewport: async () => {},
   setCacheEnabled: async () => {},
   setBypassServiceWorker: async () => {},
   evaluateOnNewDocument: async () => ({ identifier: 'owned-registration' }),
   goto: async () => record('goto-domcontentloaded'),
-  waitForFunction: async () => { record('wait-for-viewer'); throw new Error('sentinel-after-domcontentloaded'); },
+  waitForFunction: async () => {
+    if (foregroundObservationPending) return;
+    record('wait-for-viewer');
+    throw new Error('sentinel-after-domcontentloaded');
+  },
   evaluate: async () => {
+    if (foregroundObservationPending) {
+      foregroundObservationPending = false;
+      return { visible: true, focused: true, visibilityState: 'visible' };
+    }
     record('document-cleanup');
     return {
       status: 'confirmed', statePresent: true, hookRestoreAttempted: true,

@@ -81,7 +81,10 @@ async function runCaptureReleaseCase(
   );
   await writeFile(
     mockChildProcessPath,
-    `export function execFileSync(_file, args) {
+    `export function execFile(_file, _args, _options, callback) {
+  callback(new Error('unexpected asynchronous child process command'));
+}
+export function execFileSync(_file, args) {
   if (args.includes('rev-parse')) return process.env.GEV_CAPTURE_HARNESS_SHA;
   if (args.includes('status')) return '';
   throw new Error('unexpected git command');
@@ -130,6 +133,7 @@ const record = (value) => appendFileSync(witness, value + '\\n');
 const listeners = new Set();
 const pendingAcks = [];
 let closed = false;
+let foregroundObservationPending = false;
 const client = {
   on(_name, listener) { listeners.add(listener); },
   off(_name, listener) { listeners.delete(listener); },
@@ -149,6 +153,7 @@ const client = {
 const page = {
   isClosed: () => closed,
   url: () => 'http://127.0.0.1:4173/',
+  bringToFront: async () => { foregroundObservationPending = true; },
   setViewport: async () => {},
   setCacheEnabled: async () => {},
   setBypassServiceWorker: async () => {},
@@ -162,8 +167,16 @@ const page = {
       void listener({ requestId: 'api-request', request: { url: 'http://127.0.0.1:4173/api/tiles', method: 'GET' } });
     }
   },
-  waitForFunction: async () => { record('startup-failure'); throw new Error('fixture-cli-sentinel'); },
+  waitForFunction: async () => {
+    if (foregroundObservationPending) return;
+    record('startup-failure');
+    throw new Error('fixture-cli-sentinel');
+  },
   evaluate: async () => {
+    if (foregroundObservationPending) {
+      foregroundObservationPending = false;
+      return { visible: true, focused: true, visibilityState: 'visible' };
+    }
     record('renderer-probe-cleanup');
     for (const settle of pendingAcks.splice(0)) queueMicrotask(settle);
     return {
