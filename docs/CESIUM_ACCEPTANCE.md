@@ -1,13 +1,13 @@
 # Cesium completion and acceptance criteria
 
-Policy: `gev-cesium-acceptance/2026-10-14`.
+Policy: `gev-cesium-acceptance/2026-10-15`.
 
 This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows
 UHD 620 machine and Linux VM105, and the experiment results already recorded.
-It does not change historical reports, grant a pass, or waive earlier stable
-release, accessibility, user-study or attestation requirements.
+It does not change historical reports or waive earlier stable release,
+accessibility, user-study or attestation requirements.
 
 ## Changes and reasons
 
@@ -32,6 +32,9 @@ jobs at containing revision `f50565a0` (see the
 [exact-commit evidence](performance-evidence/integration-f50565a0/README.md));
 historical results retain their original policy and outcome. See the
 [implementation evidence](performance-evidence/acceptance-policy-20261013/README.md).
+The 15 October amendment keeps those rules and records the new exact-head
+physical Windows retention evidence without carrying its result to untested
+workload comparisons.
 
 ## Status and counting
 
@@ -53,22 +56,17 @@ Publish two counts out of fourteen: engineering-closed slices and fully qualifie
 slices. Fully qualified requires engineering closure, applicable automatic gates
 and the relevant final Windows evidence. Also report how many slices are partial.
 Do not invent a percentage of code written or weight commits/tests as progress.
-The original fourteen partial ledger entries require a packet-by-packet audit
-under these definitions; this amendment itself closes none of them. The separate
-[13 October engineering audit](performance-evidence/closure-audit-20261013/README.md)
-has since closed S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 and S58 engineering: 11/14 closed, 3/14 partial,
-0/14 fully qualified. S50 closure includes the reviewed rendered retention
-comparison and the real-layer workspace restore integration. S57 includes the
-strict native production map/fault journeys and map ownership review.
-S56 closes the real caller cleanup gaps and explicitly retains framebuffer
-preservation; its full application capture qualification remains pending.
-S51 closure includes the corrected dense/focus producer cadence, callback/owner
-inventory and current both-base integration; primary-machine qualification is
-still pending. S53 closes the snapshot/fleet mutation audit and finite split/blend
-decisions, with final rendered qualification pending. S48 closes the bounded
-diagnostics audit; S54 closes identity/ownership and finite renderer decisions
-after current hosted correctness. Their full physical qualification remains
-pending. The fourteen-slice denominator is unchanged.
+The packet-by-packet audits have closed S47-S59 engineering: **13/14 closed,
+1/14 partial, and 0/14 fully qualified**. S60 remains the partial slice because
+the matched baseline/candidate workload matrix, final release binding and VM105
+reconciliation are not complete. S50 closure includes the reviewed rendered
+retention comparison and real-layer workspace restore integration. S56 closes
+the real caller cleanup gaps and explicitly retains framebuffer preservation.
+S57 includes strict native production map/fault journeys and map ownership.
+The physical Windows retention gate now passes on the exact current candidate;
+it qualifies the applicable S49/S60 retention requirements without filling the
+separate timed-workload rows for S47, S48, S51-S59. The fourteen-slice
+denominator is unchanged.
 
 ## Requirements that remain mandatory
 
@@ -232,3 +230,26 @@ comparison. S60 still needs the final exact-candidate comparison, release
 artifact/attestation verification and deployment reconciliation. Missing
 physical macOS and discrete-Windows evidence remains unavailable rather than
 passed, and the 20% performance objective remains unassessed.
+
+## 15 October 2026 exact-head Windows update
+
+The current merged candidate
+`786583e0ee8a36a670fe81cd244e8923bf84014b` now has its own passing physical
+Windows UHD 620 mixed-use retention run. Both `main` remotes point to
+`f0a1b22dc82c6c5cd9690d07c1cdb297818da86f`, which is already contained in the
+candidate. Exact-head push CI, pull-request CI and versioned-release checks pass.
+
+The [revision-bound evidence packet](performance-evidence/windows-gpu-20261015/README.md)
+records 3,606,892 ms, 252 complete iterations, 13 post-GC checkpoints, 2.34%
+retained-heap growth, stable owned resources, zero final pending work, and a
+graceful browser/process exit on native Intel UHD 620 / ANGLE D3D11 / WebGL 2.
+The recording bundle passes the production integrity validator. This confirms
+the applicable S49/S60 primary-machine retention and recovery status on the
+newest candidate rather than carrying forward the earlier candidate's result.
+
+S47/S60 performance acceptance still requires the declared five-run matched
+baseline/candidate workload captures. Release artifact and attestation checks
+must bind the final frozen candidate, and VM105 must be reconciled to that exact
+artifact. Physical macOS and discrete-Windows coverage remain unavailable and
+nonblocking under this amendment; the 20% objective remains unassessed until
+the paired matrix is complete.

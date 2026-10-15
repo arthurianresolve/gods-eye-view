@@ -1,5 +1,16 @@
 # Performance baseline
 
+Current physical-Windows checkpoint (15 October 2026): the merged `dev`
+candidate `786583e0ee8a36a670fe81cd244e8923bf84014b` passes the 60-minute
+mixed-use retention gate on Intel UHD 620 / ANGLE D3D11 / WebGL 2. The run
+completes 252 cycles and 13 post-GC checkpoints in 3,606,892 ms, with 2.34%
+retained-heap growth, listeners returning from 646 to 644, stable owned
+resources, zero final pending work, and graceful browser shutdown. The
+[raw report, recording, hashes and independent review](performance-evidence/windows-gpu-20261015/README.md)
+are revision-bound. This establishes current-candidate physical Windows
+retention and recovery; matched motion-p95 comparisons and the 20% objective
+remain pending.
+
 The hosted large-geometry experiment at `df63fc43` is rejected for production:
 both 256-coordinate chunking arms preserve all 30 decoded images and native
 picks but regress completion time in four of five pairs for both lines and

@@ -1,6 +1,16 @@
 # Cesium performance plan
 
-## Current execution checkpoint - 14 October 2026
+## Current execution checkpoint - 15 October 2026
+
+The merged `dev` head `786583e0ee8a36a670fe81cd244e8923bf84014b`
+passes exact-head push CI, pull-request CI, versioned-release verification and
+the physical Windows UHD 620 60-minute retention gate. The current candidate's
+native-GPU soak completes 252 mixed-use cycles with 13 passing post-GC
+checkpoints, 2.34% retained-heap growth, stable owned resources, zero final
+pending work and a graceful browser exit. S47-S60 performance acceptance still
+requires the matched baseline/candidate timed workload matrix. Final release
+artifact/attestation verification and VM105 reconciliation must then bind the
+frozen candidate.
 
 The map-streaming producer now has an executable five-run comparison contract.
 Each native route run records a declared 30-second warmup, a 60-second timed
@@ -9,8 +19,9 @@ readiness timings. The paired validator rebuilds the contract from the captured
 journeys and rejects diagnostic-only reports, missing runs, wrong settings,
 wrong route warmup or unbound fixture delivery. Focused map, paired-report,
 comparison-contract and capture-CLI checks pass; actual matched baseline and
-candidate browser exports, physical Windows rendering and the final soak remain
-separate validation requirements.
+candidate browser exports remain a separate validation requirement. Physical
+Windows rendering and the full retention soak now pass on the exact current
+candidate, as recorded in the 15 October packet below.
 
 The rendered-soak driver now supports an explicit `--recording-bundle-out`
 artifact. Soak share URLs refer to browser-local recording IDs and cannot carry
@@ -5685,3 +5696,29 @@ validator, provenance and CLI checks pass, together with formatting, package
 boundaries and the capture-harness undefined-reference check. A fresh matched
 30-second/60-second/five-run physical Windows baseline/candidate capture is
 still required before S47/S60 performance acceptance.
+
+## S60 exact-head physical Windows retention — 15 October 2026
+
+The current merged `dev` candidate
+`786583e0ee8a36a670fe81cd244e8923bf84014b` contains both fork and upstream
+`main` at `f0a1b22dc82c6c5cd9690d07c1cdb297818da86f`. Exact-head push CI, pull-request
+CI, and versioned-release verification pass. The worktree and harness were
+clean and unchanged throughout the hardware run.
+
+The [15 October Windows UHD 620 packet](performance-evidence/windows-gpu-20261015/README.md)
+records 3,606,892 ms of native Intel UHD 620 / ANGLE D3D11 / WebGL 2 execution.
+All 252 mixed-use iterations pass, including 504 workspace reloads and 252 each
+of import, replay, archive failure/recovery, and camera recovery. All 13 post-GC
+checkpoints pass the stability validator. Retained heap grows 2.34%, warmed
+listeners return from 646 to 644, worker and application-owned pending jobs end
+at zero, and browser shutdown completes without forced termination. The
+portable recording bundle passes the production integrity validator. The raw
+report and recording are checksum-bound in the packet, and an independent
+recomputation returns the same passing result.
+
+This upgrades the current exact candidate's primary Windows retention status to
+**hardware validated** for the applicable S49 and S60 requirements. Code and
+automatic validation remain separately recorded. S47 and S60 stay partial
+until the required matched baseline/candidate workload matrix is captured and
+evaluated; release artifact/attestation verification for the final frozen
+candidate and VM105 deployment reconciliation also remain outstanding.

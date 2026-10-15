@@ -1,0 +1,123 @@
+{
+  "format": "gods-eye-view-recording-bundle",
+  "version": 1,
+  "document": {
+    "bytes": 2022,
+    "endedAt": 1792045087213,
+    "id": "recording-rendered-soak",
+    "interrupted": false,
+    "kind": "aircraft-recording",
+    "lastReceivedAt": 1792045090150,
+    "region": {
+      "center": {
+        "latitude": 0,
+        "longitude": 179.7
+      },
+      "radiusKm": 25
+    },
+    "schemaVersion": 1,
+    "sourceId": "synthetic-fixture",
+    "sourcePolicy": {
+      "exportAllowed": true,
+      "policyId": "synthetic-fixture-v1",
+      "retentionAllowed": true
+    },
+    "startedAt": 1792045087150,
+    "status": "complete",
+    "stopReason": "fixture-ready"
+  },
+  "chunks": [
+    {
+      "name": "gaps",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "value": []
+    },
+    {
+      "name": "observations-000000",
+      "bytes": 1585,
+      "sha256": "ef63e779f4c6227d1ad648c30007c8186b19bb1a5b16a3a117a99dd6dabf9294",
+      "value": [
+        {
+          "altitudeM": 8000,
+          "callsign": "SYNTHETIC",
+          "entityId": "SYNTH-001",
+          "headingDeg": 90,
+          "latitude": 0,
+          "longitude": 179.70000000000005,
+          "method": "observed",
+          "observationId": "SYNTH-001@1792045087150",
+          "observedAt": 1792045087150,
+          "receivedAt": 1792045087150,
+          "sourceId": "synthetic-fixture",
+          "velocityMps": 210
+        },
+        {
+          "altitudeM": 8003,
+          "callsign": "SYNTHETIC",
+          "entityId": "SYNTH-001",
+          "headingDeg": 90,
+          "latitude": 0.001996668332936563,
+          "longitude": 179.71000000000004,
+          "method": "observed",
+          "observationId": "SYNTH-001@1792045088150",
+          "observedAt": 1792045088150,
+          "receivedAt": 1792045088150,
+          "sourceId": "synthetic-fixture",
+          "velocityMps": 210
+        },
+        {
+          "altitudeM": 8006,
+          "callsign": "SYNTHETIC",
+          "entityId": "SYNTH-001",
+          "headingDeg": 90,
+          "latitude": 0.003973386615901225,
+          "longitude": 179.72000000000003,
+          "method": "observed",
+          "observationId": "SYNTH-001@1792045089150",
+          "observedAt": 1792045089150,
+          "receivedAt": 1792045089150,
+          "sourceId": "synthetic-fixture",
+          "velocityMps": 210
+        },
+        {
+          "altitudeM": 8253,
+          "callsign": "SYNTHETIC",
+          "correction": 1,
+          "correctionOf": "SYNTH-001@1792045088150",
+          "entityId": "SYNTH-001",
+          "headingDeg": 90,
+          "latitude": 0.001996668332936563,
+          "longitude": 179.71000000000004,
+          "method": "observed",
+          "observationId": "SYNTH-001@1792045088150#1",
+          "observedAt": 1792045088150,
+          "receivedAt": 1792045089150,
+          "sourceId": "synthetic-fixture",
+          "velocityMps": 210
+        },
+        {
+          "altitudeM": 8009,
+          "callsign": "SYNTHETIC",
+          "entityId": "SYNTH-001",
+          "headingDeg": 90,
+          "latitude": 0.005910404133226791,
+          "longitude": 179.73000000000002,
+          "method": "observed",
+          "observationId": "SYNTH-001@1792045090150",
+          "observedAt": 1792045090150,
+          "receivedAt": 1792045090150,
+          "sourceId": "synthetic-fixture",
+          "velocityMps": 210
+        }
+      ]
+    }
+  ],
+  "manifest": {
+    "kind": "aircraft-recording",
+    "sourceFormat": "gods-eye-view-aircraft-recording",
+    "schemaVersion": 1,
+    "contentBytes": 2022,
+    "sha256": "da8c201530373e70edc2d49f1b5eb8fc2134a29120acd2280e4414710383c000"
+  }
+}
