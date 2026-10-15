@@ -147,6 +147,7 @@ import {
   waitForPostMeasurementSourceDrain,
 } from './performance/postMeasurementSourceDrain.mjs';
 import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
+import { focusOwnedWindowsBrowserWindow } from './performance/windowsForegroundWindow.mjs';
 import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
 
 const args = process.argv.slice(2);
@@ -1322,12 +1323,22 @@ const browser = await puppeteer.launch({
     ),
   ],
 });
+const ownedBrowserPid = browser.process()?.pid;
+async function activateCapturePage(targetPage) {
+  const hostWindowActivation = await focusOwnedWindowsBrowserWindow({
+    browserPid: ownedBrowserPid,
+    enabled: !args.includes('--headless'),
+  });
+  return {
+    ...(await activateForegroundPage(targetPage)),
+    hostWindowActivation,
+  };
+}
 if (ownedBrowserPidFile) {
-  const browserPid = browser.process()?.pid;
   try {
-    if (!Number.isInteger(browserPid) || browserPid < 1)
+    if (!Number.isInteger(ownedBrowserPid) || ownedBrowserPid < 1)
       throw new Error('Owned browser process ID is unavailable.');
-    await fs.writeFile(ownedBrowserPidFile, `${browserPid}\n`, 'utf8');
+    await fs.writeFile(ownedBrowserPidFile, `${ownedBrowserPid}\n`, 'utf8');
   } catch (error) {
     await browser.close().catch(() => {});
     throw error;
@@ -2671,8 +2682,7 @@ try {
           'Startup navigation redirected outside the verified application entry point.',
         );
     }
-    const startupForegroundActivation =
-      await activateForegroundPage(startupPage);
+    const startupForegroundActivation = await activateCapturePage(startupPage);
     failureProgress.startupForegroundActivation = {
       run,
       ...startupForegroundActivation,
@@ -2839,7 +2849,7 @@ try {
         'Capture navigation redirected outside the verified application entry point.',
       );
   }
-  failureProgress.mainForegroundActivation = await activateForegroundPage(page);
+  failureProgress.mainForegroundActivation = await activateCapturePage(page);
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
@@ -4082,7 +4092,7 @@ try {
       failureProgress.phase = 'activate-sample-foreground';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.foregroundActivation =
-        await activateForegroundPage(page);
+        await activateCapturePage(page);
       let boundaryProgressBindingRecord = null;
       if (productionFlightFixture) {
         failureProgress.phase = 'prepare-render-boundary-binding';
@@ -4723,7 +4733,7 @@ try {
         failureProgress.phase = 'reactivate-post-measurement-foreground';
         failureProgress.current.phase = failureProgress.phase;
         sample.postMeasurementForegroundActivation =
-          await activateForegroundPage(page);
+          await activateCapturePage(page);
         failureProgress.current.postMeasurementForegroundActivation =
           sample.postMeasurementForegroundActivation;
       }

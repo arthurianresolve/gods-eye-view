@@ -15,7 +15,7 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
   const source = await fs.readFile(SCRIPT, 'utf8');
   const startupNavigation = source.indexOf('await startupPage.goto(');
   const startupActivation = source.indexOf(
-    'await activateForegroundPage(startupPage)',
+    'await activateCapturePage(startupPage)',
     startupNavigation,
   );
   const startupReadiness = source.indexOf(
@@ -33,7 +33,7 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
     startupReadiness,
   );
   const mainActivation = source.indexOf(
-    'await activateForegroundPage(page)',
+    'await activateCapturePage(page)',
     mainNavigation,
   );
   const mainReadiness = source.indexOf(
