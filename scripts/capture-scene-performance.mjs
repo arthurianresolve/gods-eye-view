@@ -1324,8 +1324,9 @@ const browser = await puppeteer.launch({
   ],
 });
 const ownedBrowserPid = browser.process()?.pid;
+let hostWindowActivation = null;
 async function activateCapturePage(targetPage) {
-  const hostWindowActivation = await focusOwnedWindowsBrowserWindow({
+  hostWindowActivation ??= await focusOwnedWindowsBrowserWindow({
     browserPid: ownedBrowserPid,
     enabled: !args.includes('--headless'),
   });

@@ -13,6 +13,11 @@ const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
 
 test('startup and main documents are foregrounded before viewer readiness', async () => {
   const source = await fs.readFile(SCRIPT, 'utf8');
+  assert.equal(
+    source.match(/focusOwnedWindowsBrowserWindow\(/g)?.length,
+    1,
+    'owned Windows browser activation is cached once per capture process',
+  );
   const startupNavigation = source.indexOf('await startupPage.goto(');
   const startupActivation = source.indexOf(
     'await activateCapturePage(startupPage)',
