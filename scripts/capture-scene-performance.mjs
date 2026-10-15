@@ -2961,21 +2961,27 @@ try {
             'detection-density-slider',
           );
           if (
-            typeof services?.setDetectionModeByLabel !== 'function' ||
+            typeof app.styleManager?.setDetection !== 'function' ||
             typeof services?.getDetectionTuning !== 'function' ||
             typeof services?.getDetectionMode !== 'function' ||
             typeof services?.readDetectionDiagnostics !== 'function' ||
             !densityControl
           )
             throw new Error('Detection workload controls are unavailable');
-          services.setDetectionModeByLabel(detectionMode);
           const requestedDensity = Number.isFinite(densityPct)
             ? densityPct
             : services.getDetectionTuning()?.densityPct;
           if (!Number.isFinite(requestedDensity))
             throw new Error('Detection density is unavailable');
-          densityControl.value = String(requestedDensity);
-          densityControl.dispatchEvent(new Event('input', { bubbles: true }));
+          const detectionResult = app.styleManager.setDetection({
+            enabled: true,
+            mode: detectionMode,
+            densityPct: requestedDensity,
+          });
+          if (!detectionResult?.ok)
+            throw new Error(
+              `Detection settings were rejected: ${JSON.stringify(detectionResult)}`,
+            );
           const visualDetection = app.styleManager.getVisualState()?.detection;
           if (
             services.getDetectionMode() !== detectionMode ||
@@ -4000,6 +4006,7 @@ try {
         async ({
           qualityMode: mode,
           detectionMode: requestedDetectionMode,
+          densityPct,
         }) => {
           const app = window.__godsEyeView;
           const manager = app.dataManager;
@@ -4011,12 +4018,40 @@ try {
           if (!controller && mode !== 'manual')
             throw new Error('Requested quality profile is unavailable');
           const services = app.styleManager?.services;
-          if (typeof services?.setDetectionModeByLabel !== 'function')
+          const densityControl = document.getElementById(
+            'detection-density-slider',
+          );
+          if (
+            typeof app.styleManager?.setDetection !== 'function' ||
+            typeof services?.getDetectionTuning !== 'function' ||
+            typeof services?.getDetectionMode !== 'function' ||
+            !densityControl
+          )
             throw new Error('Detection workload controls are unavailable');
-          services.setDetectionModeByLabel(requestedDetectionMode);
-          if (services.getDetectionMode() !== requestedDetectionMode)
+          const requestedDensity = Number.isFinite(densityPct)
+            ? densityPct
+            : services.getDetectionTuning()?.densityPct;
+          if (!Number.isFinite(requestedDensity))
+            throw new Error('Detection density is unavailable');
+          const detectionResult = app.styleManager.setDetection({
+            enabled: true,
+            mode: requestedDetectionMode,
+            densityPct: requestedDensity,
+          });
+          if (!detectionResult?.ok)
             throw new Error(
-              'Detection workload mode did not match the request',
+              `Detection settings were rejected: ${JSON.stringify(detectionResult)}`,
+            );
+          const visualDetection = app.styleManager.getVisualState()?.detection;
+          if (
+            services.getDetectionMode() !== requestedDetectionMode ||
+            services.getDetectionTuning()?.densityPct !== requestedDensity ||
+            densityControl.value !== String(requestedDensity) ||
+            visualDetection?.mode !== requestedDetectionMode ||
+            visualDetection?.density !== requestedDensity
+          )
+            throw new Error(
+              `Detection settings did not become ${requestedDetectionMode}/${requestedDensity}`,
             );
           for (const id of ['local-datacenters', 'local-dams']) {
             const entry = manager.layers.get(id);
@@ -4037,7 +4072,11 @@ try {
           });
           viewer.scene.requestRender();
         },
-        { qualityMode, detectionMode },
+        {
+          qualityMode,
+          detectionMode,
+          densityPct: expectedDensityPct,
+        },
       );
       await page.waitForFunction(
         (counts) => {

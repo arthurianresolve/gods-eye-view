@@ -52,6 +52,34 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
   );
 });
 
+test('fresh dense provider documents synchronize engine and visual density', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const freshDocumentStart = source.indexOf(
+    'async function prepareFreshProviderDocument()',
+  );
+  const sampleLoopStart = source.indexOf(
+    'for (const scenario of scenarios)',
+    freshDocumentStart,
+  );
+  assert.ok(freshDocumentStart >= 0 && sampleLoopStart > freshDocumentStart);
+  const freshDocumentSource = source.slice(
+    freshDocumentStart,
+    sampleLoopStart,
+  );
+  assert.match(
+    freshDocumentSource,
+    /app\.styleManager\.setDetection\(\{[\s\S]*?mode: requestedDetectionMode,[\s\S]*?densityPct: requestedDensity/,
+  );
+  assert.match(
+    freshDocumentSource,
+    /densityPct: expectedDensityPct/,
+  );
+  assert.match(
+    freshDocumentSource,
+    /visualDetection\?\.density !== requestedDensity/,
+  );
+});
+
 function invoke(args, { loaderPath = null } = {}) {
   return spawnSync(
     process.execPath,
