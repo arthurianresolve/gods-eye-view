@@ -192,6 +192,8 @@ Windows/Claude Desktop Cowork confirmation remains outstanding (#927).
 
 Tool argument string lengths follow JSON Schema Unicode code-point counts, so supplementary characters count once rather than as two UTF-16 units.
 
+Query timestamps outside the representable Date range are reported as null, preserving the rest of the result row.
+
 `gods-eye-view/tools` defines queries that answer questions from the app's data,
 and `gods-eye-view/tools/mcp` exposes a composed catalog over the Model Context
 Protocol. `npm run mcp` serves Core's tools over stdio to a local MCP client,
@@ -512,6 +514,10 @@ GeoJSON, PNG and manually played media presentation. Storage paths, attribution
 and geographic placement remain distinct; Stop/replacement releases resources.
 Import acquires nothing. See [data packs](DIRECTOR-DATA-PACKS.md). Existing scene
 content, assets and credit remain unchanged.
+
+The asset directory source rejects with the caller's abort reason if
+cancellation arrives during any read, including the final one, or while the
+reader is being released.
 
 Director version-4 documents add named geographic anchors and optional explicit
 camera moves with easing, duration and holds. Playback and seek share one
@@ -1297,11 +1303,11 @@ entries (`DEFAULT_MAX_CACHE_ENTRIES`, overridable per instance through
 visits to one place share a key but does not bound how many distinct places a
 session visits, and the cache previously had no eviction, so a long session
 retained every coordinate it ever resolved. Eviction is least-recently-used:
-a consumer read promotes its entry, so the cell being watched is not dropped for
-having been resolved early. The bound sits far above a city-scale session, so
+a consumer read, including a warm hit in a batch lookup, promotes its entry, so
+the cell being watched is not dropped for having been resolved early. The bound sits far above a city-scale session, so
 normal use never evicts and issues no additional proxy requests. A batch's
-results are assembled from what that call resolved, so eviction during a large
-batch cannot report a just-resolved point as unresolved. Re:Earth and
+results are assembled from what that call resolved or found warm, so eviction
+during a large batch cannot report one of its points as unresolved. Re:Earth and
 geoid-fallback entry semantics, the fallback cooldown and the abort-time flush
 are unchanged.
 
@@ -1527,6 +1533,8 @@ The first-run suppression checkbox keeps its native wrapping label, so its
 accessible name remains "Don't show this again". Control behavior is unchanged.
 
 ## FIRMS source status
+
+FIRMS ingestion and adaptation require explicit finite coordinates within WGS84 ranges; genuine zero coordinates remain valid and admitted detection indices stay sequential.
 
 The FIRMS proxy records source success after appending its rows. If aggregation
 throws, that source reports failure without a contradictory success entry.
@@ -3231,6 +3239,10 @@ sequence lines below 60 km; the proxy strips the unused `image` layer from z14
 tiles (12 MB → ~80 KB) and shares one upstream fetch between concurrent
 requests for a tile.
 
+Mapillary coverage ranks unique tile addresses before applying the 16-tile
+overview budget. Overlapping dateline halves in a polar view therefore do not
+waste overview slots on the same tile; loading already skips duplicate keys.
+
 On Google 3D (`photoreal`) at street zoom (in below 1,400 m above ground, out
 above 1,800 m) the surface mode switches from `draped` to `terrain`: draped
 lines land on roofs and tree tops, so `groundCast.js` instead places lines,
@@ -4454,6 +4466,11 @@ are omitted rather than framing the wrong part of the globe.
 
 ### Recent Imagery (September 2026)
 
+Programmatic boxes passed to the exported `setBox` and `searchHls` operations
+reject missing, blank or boolean edges instead of interpreting them as zero
+coordinates. Valid finite numeric edges remain accepted; the app’s drag tool,
+pins and share links already supply complete boxes.
+
 - The layer sits in the Data Layers panel's Cameras group beside Cameras (CCTV); Mapped ALPR Cameras moved to the Infrastructure group to make room.
 - DATA ▸ **Recent Imagery** (`recent-imagery`, `src/layers/recentImagery/`) lists the last 30 UTC days of imagery for a selected box and drapes the days you pick: HLS S30 (Sentinel-2) and L30 (Landsat 8/9) at 30 m, and the VIIRS NOAA-21 daily overview at 250 m. Keyless and browser-direct: NASA CMR for which days have HLS granules in the box (`catalog.js`, both collections concurrently, paged with `CMR-Search-After` up to 2,000 records each, `truncated` against CMR `hits`), GIBS WMTS for tiles, Worldview Snapshots for thumbnails and exports. Worldview's `Data-Present` header is the only availability signal: GIBS answers an empty tile with HTTP 200, and the JPEG overview would drape black, so a day confirmed empty never drapes.
 - **Box.** SELECT BOX (`src/ui/imageryBoxTool.js`) claims the pointer like Draw, borrows the stock click actions and freezes the camera only mid-drag; USE VIEW takes the camera rectangle; `boxFromPinAt` grows a 10 km box. Boxes must be ≤ 1,000 km a side, on one side of the dateline and inside the Web-Mercator limit (`validateBox`). A refusal (`boxError`, including the tool's own via `reportBoxRefusal`) stays at the top of the panel until a box succeeds; a view over the cap is refused with its size, never shrunk. An oversized box or view (`Box is … km wide · limit 1,000 km`, `View is … wide · …`) sets the hint to `Zoom in or draw a smaller box` and enables ZOOM IN: `zoomToFit()` flies top-down (1.2 s) to the refused box's centre, or the ground under the canvas centre for a view, at the height whose view is about 400 km wide for the canvas aspect and the camera's vertical FOV (`fitViewHeightM`, clamped 5–400 km), and returns that height.
@@ -5211,6 +5228,10 @@ OSM, including their setup guidance and existing preset/share IDs. Esri still
 falls back to OSM on construction failure or two active tile failures, and
 credits follow the source actually displayed. Terrain remains lazy while the
 photoreal globe is hidden.
+
+Map-stack subscribers hear each settled activation once. A subscriber removed
+during a delivery, or every subscriber once the controller is destroyed, gets
+no further callback from it, and a destroyed controller accepts no new ones.
 
 Map credentials are passed to each source constructor rather than changing SDK-wide Google or ion defaults.
 

@@ -168,7 +168,8 @@ export class MapSourceController {
    * @returns {() => void} Unsubscribe.
    */
   subscribe(listener) {
-    if (typeof listener !== 'function') return () => {};
+    // A destroyed controller never settles again, so it takes no listeners.
+    if (typeof listener !== 'function' || this._destroyed) return () => {};
     this._subscribers.add(listener);
     return () => {
       this._subscribers.delete(listener);
@@ -179,6 +180,8 @@ export class MapSourceController {
     if (this._destroyed || !this._subscribers.size) return;
     const state = this.getState();
     for (const listener of [...this._subscribers]) {
+      if (this._destroyed) return;
+      if (!this._subscribers.has(listener)) continue;
       try {
         listener(state);
       } catch (error) {
