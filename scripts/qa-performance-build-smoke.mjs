@@ -2199,7 +2199,6 @@ export function runBoundedChild(
       for (let attempt = 0; attempt < 20; attempt += 1) {
         const present = isProcessPresent(pid, group);
         if (present === false) return true;
-        if (present === null) return false;
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       return false;
@@ -2283,6 +2282,10 @@ export function runBoundedChild(
     });
     child.once('close', async (code, signal) => {
       if (settled) return;
+      // The process has delivered its terminal event. From here the bounded
+      // cleanup verifier owns the deadline; the original runtime and forced
+      // close timers must not race a slow Windows process-table query.
+      cleanupTimers();
       rememberOwnedBrowserPid();
       if (stopReason || code !== 0 || ownedBrowserPid) {
         try {
@@ -2316,7 +2319,6 @@ export function runBoundedChild(
           // The owned process group may already have exited.
         }
       }
-      cleanupTimers();
       const output = {
         code,
         signal,

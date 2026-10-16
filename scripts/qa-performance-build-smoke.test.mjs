@@ -5617,6 +5617,60 @@ test('bounded child runner cleans the owned browser when the CLI exits with fail
     assert.throws(() => process.kill(ownedPid, 0), { code: 'ESRCH' });
 });
 
+test(
+  'bounded child runner retries an indeterminate Windows cleanup query',
+  { skip: process.platform !== 'win32' },
+  async (t) => {
+    const parent = await realpath(os.tmpdir());
+    const tempRoot = await mkdtemp(
+      path.join(parent, 'gev-build-smoke-query-retry-test-'),
+    );
+    const pidPath = path.join(tempRoot, 'browser.pid');
+    const browser = spawn(
+      process.execPath,
+      ['-e', 'setInterval(() => {}, 1000)'],
+      { stdio: 'ignore', windowsHide: true },
+    );
+    await new Promise((resolve, reject) => {
+      browser.once('spawn', resolve);
+      browser.once('error', reject);
+    });
+    await writeFile(pidPath, String(browser.pid));
+    t.after(async () => {
+      try {
+        process.kill(browser.pid, 'SIGKILL');
+      } catch {
+        // The owned process should already be gone.
+      }
+      await rm(tempRoot, { recursive: true, force: true });
+    });
+    let tasklistQueries = 0;
+    await assert.rejects(
+      runBoundedChild(process.execPath, ['-e', 'process.exit(17)'], {
+        timeoutMs: 3000,
+        maxOutputBytes: 2048,
+        ownedPidFile: pidPath,
+        spawnSyncImpl(command, commandArgs, options) {
+          if (path.basename(command).toLowerCase() === 'tasklist') {
+            tasklistQueries += 1;
+            if (tasklistQueries === 1)
+              return {
+                status: null,
+                stdout: '',
+                error: Object.assign(new Error('query timed out'), {
+                  code: 'ETIMEDOUT',
+                }),
+              };
+          }
+          return spawnSync(command, commandArgs, options);
+        },
+      }),
+      /exited 17; .*cleanup confirmed/,
+    );
+    assert.ok(tasklistQueries >= 2);
+  },
+);
+
 test('bounded child failure keeps sanitized stderr and the latest capture progress', async () => {
   await assert.rejects(
     runBoundedChild(

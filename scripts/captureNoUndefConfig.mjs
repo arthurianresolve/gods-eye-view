@@ -2,6 +2,7 @@ import globals from 'globals';
 
 export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/capture-scene-performance.mjs',
+  'scripts/capture-performance-matrix.mjs',
   'scripts/qa-performance-build-smoke.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',
   'scripts/qa-application.mjs',
@@ -55,6 +56,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/captureComparisonContract.mjs',
   'scripts/performance/pairedReport.mjs',
   'scripts/performance/pairedReport.test.mjs',
+  'scripts/performance/performanceMatrix.mjs',
+  'scripts/performance/performanceMatrix.test.mjs',
   'scripts/performance/hostedRendererBackend.mjs',
   'scripts/performance/renderBoundaryObservation.mjs',
   'scripts/performance/overlayAttribution.mjs',
