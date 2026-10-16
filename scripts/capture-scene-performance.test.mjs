@@ -16,7 +16,12 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
   assert.equal(
     source.match(/focusOwnedWindowsBrowserWindow\(/g)?.length,
     1,
-    'owned Windows browser activation is cached once per capture process',
+    'owned Windows browser activation has one shared call site',
+  );
+  assert.doesNotMatch(
+    source,
+    /hostWindowActivation\s*\?\?=/,
+    'every foreground boundary must reactivate the owned OS window',
   );
   const startupNavigation = source.indexOf('await startupPage.goto(');
   const startupActivation = source.indexOf(
@@ -49,6 +54,35 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
     mainNavigation >= 0 &&
       mainActivation > mainNavigation &&
       mainReadiness > mainActivation,
+  );
+});
+
+test('timed samples reacquire foreground after warmup and before measurement', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const warmupBoundary = source.indexOf(
+    'failureProgress.current.warmupBoundary = fixtureBoundaryStart;',
+  );
+  const measurementActivation = source.indexOf(
+    'failureProgress.current.measurementForegroundActivation =',
+    warmupBoundary,
+  );
+  const measurementObservation = source.indexOf(
+    'const fixtureMeasurementStart =',
+    measurementActivation,
+  );
+  const rawMeasurement = source.indexOf(
+    'const rawSamplePromise = page.evaluate(',
+    measurementObservation,
+  );
+  assert.ok(
+    warmupBoundary >= 0 &&
+      measurementActivation > warmupBoundary &&
+      measurementObservation > measurementActivation &&
+      rawMeasurement > measurementObservation,
+  );
+  assert.match(
+    source.slice(measurementActivation, measurementObservation),
+    /await activateCapturePage\(page\)/,
   );
 });
 

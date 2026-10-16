@@ -1347,9 +1347,8 @@ const browser = await puppeteer.launch({
   ],
 });
 const ownedBrowserPid = browser.process?.()?.pid;
-let hostWindowActivation = null;
 async function activateCapturePage(targetPage) {
-  hostWindowActivation ??= await focusOwnedWindowsBrowserWindow({
+  const hostWindowActivation = await focusOwnedWindowsBrowserWindow({
     browserPid: ownedBrowserPid,
     enabled: !args.includes('--headless'),
   });
@@ -4500,6 +4499,10 @@ try {
         failureProgress.current.prewarmWorkerAuditTimingBoundary =
           prewarmWorkerAuditTimingBoundary;
       if (trackingStart) failureProgress.current.trackingStart = trackingStart;
+      failureProgress.phase = 'activate-measurement-foreground';
+      failureProgress.current.phase = failureProgress.phase;
+      failureProgress.current.measurementForegroundActivation =
+        await activateCapturePage(page);
       const fixtureMeasurementStart =
         productionFlightFixture || austinOperatingWorkload
           ? await page.evaluate(() => ({
