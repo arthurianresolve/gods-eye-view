@@ -169,6 +169,14 @@ test('timed workload setup synchronizes engine, controls, and visual density', a
   }
 });
 
+test('controlled manual fixtures retain their requested legacy density', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const synchronizations = source.match(
+    /if \(mode === 'manual'\)\s+controller\?\.rememberManualDensity\?\.\(/g,
+  );
+  assert.equal(synchronizations?.length, 4);
+});
+
 function invoke(args, { loaderPath = null } = {}) {
   return spawnSync(
     process.execPath,

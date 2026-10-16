@@ -3003,6 +3003,8 @@ try {
             throw new Error(
               `Detection settings were rejected: ${JSON.stringify(detectionResult)}`,
             );
+          if (mode === 'manual')
+            controller?.rememberManualDensity?.(requestedDensity);
           const visualDetection = app.styleManager.getVisualState()?.detection;
           if (
             services.getDetectionMode() !== detectionMode ||
@@ -3155,6 +3157,7 @@ try {
           mode: requestedDetectionMode,
           densityPct,
         });
+        if (mode === 'manual') controller?.rememberManualDensity?.(densityPct);
         const visualDetection = app.styleManager.getVisualState()?.detection;
         if (
           !detectionResult?.ok ||
@@ -3479,6 +3482,7 @@ try {
           mode: requestedMode,
           densityPct,
         });
+        if (mode === 'manual') controller?.rememberManualDensity?.(densityPct);
         const visualDetection = app.styleManager.getVisualState()?.detection;
         if (
           !detectionResult?.ok ||
@@ -4110,6 +4114,8 @@ try {
             throw new Error(
               `Detection settings were rejected: ${JSON.stringify(detectionResult)}`,
             );
+          if (mode === 'manual')
+            controller?.rememberManualDensity?.(requestedDensity);
           const visualDetection = app.styleManager.getVisualState()?.detection;
           if (
             services.getDetectionMode() !== requestedDetectionMode ||
