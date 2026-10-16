@@ -79,6 +79,19 @@ test('matrix plan fixes all eight workload identities and balances block order',
       'austin-map-streaming-v1',
     ],
   );
+  assert.deepEqual(
+    plan.rows.map((row) => row.fixedTime),
+    [
+      '2026-10-12T18:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+      '2026-10-08T12:00:00.000Z',
+    ],
+  );
 });
 
 test('matrix plan rejects missing, duplicate, reordered, or unbalanced rows', () => {
@@ -114,6 +127,10 @@ test('matrix capture invocations use exact acceptance settings and workload mode
   );
   assert.ok(dense.args.includes('--mixed-layers'));
   assert.ok(dense.args.includes('--hardware-required'));
+  assert.equal(
+    dense.args[dense.args.indexOf('--provider-fixture-time') + 1],
+    '2026-10-08T12:00:00.000Z',
+  );
   assert.equal(dense.args[dense.args.indexOf('--runs') + 1], '5');
   assert.equal(dense.args[dense.args.indexOf('--warmup-ms') + 1], '30000');
   assert.equal(dense.args[dense.args.indexOf('--seconds') + 1], '60');
@@ -137,6 +154,16 @@ test('matrix capture invocations use exact acceptance settings and workload mode
     'diagnostic',
   );
   assert.ok(!map.args.includes('--mixed-layers'));
+
+  const operating = createMatrixCaptureInvocation(
+    plan,
+    byId['operating-view'],
+    'baseline',
+  );
+  assert.equal(
+    operating.args[operating.args.indexOf('--provider-fixture-time') + 1],
+    '2026-10-12T18:00:00.000Z',
+  );
 });
 
 test('resume accepts only exact ready hardware reports and revalidates the pair', async () => {

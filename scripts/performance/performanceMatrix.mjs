@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { PERFORMANCE_ACCEPTANCE_POLICY_ID } from './candidatePerformanceEvidence.mjs';
+import { AUSTIN_OPERATING_FIXED_TIME } from './austinOperatingWorkloadContract.mjs';
 
 export const PERFORMANCE_MATRIX_PLAN_SCHEMA = 'gev-performance-matrix-plan/v1';
 export const PERFORMANCE_MATRIX_RESULT_SCHEMA =
@@ -15,6 +16,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'operating-view',
     providerFixture: 'austin-operating-v1',
+    fixedTime: AUSTIN_OPERATING_FIXED_TIME,
     order: Object.freeze(['baseline', 'candidate']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -22,6 +24,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'dense-investigation',
     providerFixture: 'dense-investigation',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['candidate', 'baseline']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -30,6 +33,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'infrastructure-datacenters',
     providerFixture: 'infrastructure-datacenters',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['baseline', 'candidate']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -37,6 +41,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'infrastructure-dams',
     providerFixture: 'infrastructure-dams',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['candidate', 'baseline']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -44,6 +49,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'infrastructure-cables',
     providerFixture: 'infrastructure-cables',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['baseline', 'candidate']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -51,6 +57,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'infrastructure',
     providerFixture: 'infrastructure',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['candidate', 'baseline']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -58,6 +65,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'weather-effects',
     providerFixture: 'austin-weather-effects-phased-v2',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['baseline', 'candidate']),
     buildProfile: 'standard',
     workerAuditMode: 'receipt-only',
@@ -65,6 +73,7 @@ export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
     id: 'map-streaming',
     providerFixture: 'austin-map-streaming-v1',
+    fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     order: Object.freeze(['candidate', 'baseline']),
     buildProfile: 'austin-map-streaming-v1',
     workerAuditMode: 'diagnostic',
@@ -228,7 +237,7 @@ export function createMatrixCaptureInvocation(plan, row, role) {
     '--provider-fixture',
     row.providerFixture,
     '--provider-fixture-time',
-    plan.fixedTime,
+    row.fixedTime,
     '--worker-audit-mode',
     row.workerAuditMode,
     '--build-receipt',

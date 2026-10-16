@@ -9,6 +9,10 @@ loopback preview origins. It runs the eight required rows exactly once, uses
 five runs with 30 seconds of warmup and 60 seconds of measurement, keeps
 Manual/DENSE/75% settings explicit, and alternates which revision is captured
 first across the rows. Four rows are baseline-first and four candidate-first.
+Each row supplies its fixture's canonical timestamp: Austin operating uses
+2026-10-12T18:00:00.000Z, while Dense, infrastructure, weather/effects and map
+streaming use 2026-10-08T12:00:00.000Z. The plan-level timestamp remains the
+default for the latter workloads and is not forced onto Austin operating.
 
 Each producer's five-run block stays intact so startup, fixture delivery,
 source drain, cleanup and map-journey ownership remain bound to the report that
