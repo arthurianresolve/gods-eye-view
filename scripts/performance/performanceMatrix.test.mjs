@@ -208,6 +208,39 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
   }
 });
 
+test('resume accepts the bounded legacy map mode only from exact sample settings', async () => {
+  const root = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'gev-matrix-map-mode-'),
+  );
+  try {
+    const plan = validatePerformanceMatrixPlan(makePlan(root));
+    await fs.promises.mkdir(plan.outputRoot, { recursive: true });
+    const row = plan.rows.find((entry) => entry.id === 'map-streaming');
+    const report = makeReport(candidateCommit);
+    report.source.harnessCommit = plan.harnessCommit;
+    report.source.buildProvenance.harnessCommit = plan.harnessCommit;
+    report.comparisonReadiness = { status: 'ready', reasons: [] };
+    report.workload.providerFixture = row.providerFixture;
+    report.workload.detectionMode = null;
+    report.environment.hardwareEligible = true;
+    const reportPath = matrixReportPath(plan, row, 'candidate');
+    await fs.promises.writeFile(reportPath, JSON.stringify(report));
+    assert.equal(
+      readReusableMatrixReport(plan, row, 'candidate').workload.detectionMode,
+      null,
+    );
+
+    report.captures[0].conditions.before.settings.detectionMode = 'SPARSE';
+    await fs.promises.writeFile(reportPath, JSON.stringify(report));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /SPARSE.*DENSE/,
+    );
+  } finally {
+    await fs.promises.rm(root, { recursive: true, force: true });
+  }
+});
+
 test('report output stays inside the declared root and local URLs reject credentials', () => {
   const root = path.join(os.tmpdir(), 'gev-matrix-paths');
   const raw = makePlan(root);

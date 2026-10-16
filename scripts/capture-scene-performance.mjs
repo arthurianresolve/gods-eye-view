@@ -6002,7 +6002,8 @@ try {
       fixture ||
       infrastructureWorkload ||
       weatherEffectsWorkload ||
-      austinOperatingWorkload
+      austinOperatingWorkload ||
+      mapStreamingWorkloadSelected
         ? detectionMode
         : null,
     populationStableAcrossSamples,

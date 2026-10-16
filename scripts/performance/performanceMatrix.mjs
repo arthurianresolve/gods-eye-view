@@ -291,7 +291,25 @@ export function readReusableMatrixReport(plan, row, role) {
   assert.equal(report.workload?.durationPerSampleMs, 60_000);
   assert.equal(report.workload?.runsPerScenario, 5);
   assert.equal(report.workload?.qualityMode, 'manual');
-  assert.equal(report.workload?.detectionMode, 'DENSE');
+  if (report.workload?.detectionMode === null && row.id === 'map-streaming') {
+    // The first completed map reports predate the workload-field fix. Their
+    // capture envelope still records both boundary snapshots for every sample,
+    // so accept the legacy null only when all effective settings prove the
+    // requested mode and density. Other workloads and any non-null value stay
+    // exact-match requirements.
+    assert.ok(
+      Array.isArray(report.captures) && report.captures.length > 0,
+      'Legacy map report must retain capture settings',
+    );
+    for (const capture of report.captures)
+      for (const phase of ['before', 'after']) {
+        const settings =
+          capture.settings?.[phase] ?? capture.conditions?.[phase]?.settings;
+        assert.equal(settings?.qualityMode, 'manual');
+        assert.equal(settings?.detectionMode, 'DENSE');
+        assert.equal(settings?.densityPct, 75);
+      }
+  } else assert.equal(report.workload?.detectionMode, 'DENSE');
   assert.equal(report.workload?.expectedDensityPct, 75);
   assert.equal(report.environment?.hardwareEligible, true);
   return report;
