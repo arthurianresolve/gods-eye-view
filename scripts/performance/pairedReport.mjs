@@ -185,10 +185,7 @@ function validateContract(report, label) {
       assert.equal(deliveryAsset?.id, asset.id);
       assert.equal(deliveryAsset?.sha256, asset.sha256);
       assert.equal(deliveryAsset?.byteLength, asset.byteLength);
-      assert.ok(
-        Number.isInteger(deliveryAsset?.responseCount) &&
-          deliveryAsset.responseCount > 0,
-      );
+      requireText(deliveryAsset?.contentType, `${label}: asset content type`);
     }
   } else if (infrastructure) {
     assert.equal(
@@ -554,7 +551,15 @@ function validateFixtureDelivery(report, contract, label) {
     assert.equal(delivery.fixtureSha256, contract.fixture.sha256);
     assert.equal(delivery.fixedTime, contract.fixture.fixedTime);
     assert.deepEqual(delivery.phaseSchedule, contract.fixture.phaseSchedule);
-    assert.deepEqual(delivery.assets, contract.fixtureDelivery.assets);
+    assert.deepEqual(
+      delivery.assets.map(({ id, sha256, byteLength, contentType }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+      })),
+      contract.fixtureDelivery.assets,
+    );
     assert.deepEqual(
       delivery.populationsBefore,
       contract.fixtureDelivery.populationsBefore,
@@ -571,10 +576,6 @@ function validateFixtureDelivery(report, contract, label) {
     assert.equal(
       delivery.fulfilledResponseCount,
       delivery.assets.reduce((sum, asset) => sum + asset.responseCount, 0),
-    );
-    assert.equal(
-      delivery.fulfilledResponseCount,
-      contract.fixtureDelivery.fulfilledResponseCount,
     );
     for (const sample of report.captures) {
       assert.equal(sample.fixtureDelivery?.schema, delivery.schema);

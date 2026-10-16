@@ -674,6 +674,16 @@ test('weather comparison contract binds phase source, settings, populations and 
   assert.equal(contract.workloadId, 'weather-effects');
   assert.deepEqual(contract.objectiveScenarios, []);
   assert.equal(contract.fixture.phaseSchedule.measurementMs, 60_000);
+  assert.equal(
+    Object.hasOwn(contract.fixtureDelivery, 'fulfilledResponseCount'),
+    false,
+  );
+  assert.equal(
+    contract.fixtureDelivery.assets.some((asset) =>
+      Object.hasOwn(asset, 'responseCount'),
+    ),
+    false,
+  );
   assert.deepEqual(
     contract.populations,
     observed.fixtureDelivery.populationsBefore,

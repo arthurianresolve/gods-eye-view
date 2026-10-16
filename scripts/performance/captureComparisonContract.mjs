@@ -939,10 +939,16 @@ export function createObservedWeatherEffectsComparisonContract({
       fixtureSha256: fixtureDelivery.fixtureSha256,
       fixedTime: fixtureDelivery.fixedTime,
       phaseSchedule: structuredClone(fixtureDelivery.phaseSchedule),
-      assets: structuredClone(fixtureDelivery.assets),
+      assets: fixtureDelivery.assets.map(
+        ({ id, sha256, byteLength, contentType }) => ({
+          id,
+          sha256,
+          byteLength,
+          contentType,
+        }),
+      ),
       populationsBefore: structuredClone(fixtureDelivery.populationsBefore),
       populationsAfter: structuredClone(fixtureDelivery.populationsAfter),
-      fulfilledResponseCount: fixtureDelivery.fulfilledResponseCount,
       routeErrors: [],
     },
     routes: routeByScenario,

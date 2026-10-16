@@ -238,6 +238,37 @@ test('paired weather reports require five 30/60 runs with phase-bound sources an
   assert.equal(accepted.status, 'comparable');
   assert.equal(accepted.workloadObjective.status, 'not-assessed');
 
+  const differentRequestCounts = makeWeatherReport(candidateCommit);
+  for (const asset of differentRequestCounts.fixtureDelivery.assets)
+    asset.responseCount += 1;
+  differentRequestCounts.fixtureDelivery.fulfilledResponseCount =
+    differentRequestCounts.fixtureDelivery.assets.reduce(
+      (sum, asset) => sum + asset.responseCount,
+      0,
+    );
+  for (const sample of differentRequestCounts.captures) {
+    sample.fixtureDelivery.assets = structuredClone(
+      differentRequestCounts.fixtureDelivery.assets,
+    );
+    sample.fixtureDelivery.fulfilledResponseCount =
+      differentRequestCounts.fixtureDelivery.fulfilledResponseCount;
+  }
+  const acceptedDifferentRequestCounts = validatePairedPerformanceReports({
+    baseline,
+    candidate: differentRequestCounts,
+    expectedAppCommits: {
+      baseline: baselineCommit,
+      candidate: candidateCommit,
+    },
+  });
+  assert.equal(acceptedDifferentRequestCounts.status, 'comparable');
+  assert.notEqual(
+    acceptedDifferentRequestCounts.fixtureDeliveryDiagnostics.baseline
+      .fulfilledResponseCount,
+    acceptedDifferentRequestCounts.fixtureDeliveryDiagnostics.candidate
+      .fulfilledResponseCount,
+  );
+
   const rejectMutation = (mutate, pattern) => {
     const left = makeWeatherReport(baselineCommit);
     const right = makeWeatherReport(candidateCommit);
