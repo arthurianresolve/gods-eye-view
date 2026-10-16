@@ -3723,12 +3723,51 @@ try {
     );
   }
   if (!fixture) {
-    const modeSet = await page.evaluate((mode) => {
-      const controller = window.__godsEyeView?.styleManager?._adaptiveQuality;
-      return controller?.setMode(mode) || false;
-    }, qualityMode);
-    if (!modeSet)
-      throw new Error('Presentation quality controller is unavailable');
+    await page.evaluate(
+      ({ mode, requestedDetectionMode, densityPct }) => {
+        const styleManager = window.__godsEyeView?.styleManager;
+        const controller = styleManager?._adaptiveQuality;
+        if (!controller?.setMode(mode))
+          throw new Error('Presentation quality controller is unavailable');
+        const services = styleManager?.services;
+        const densityControl = document.getElementById(
+          'detection-density-slider',
+        );
+        if (
+          typeof styleManager?.setDetection !== 'function' ||
+          typeof services?.getDetectionTuning !== 'function' ||
+          typeof services?.getDetectionMode !== 'function' ||
+          !densityControl
+        )
+          throw new Error('Detection workload controls are unavailable');
+        const result = styleManager.setDetection({
+          enabled: true,
+          mode: requestedDetectionMode,
+          densityPct,
+        });
+        if (!result?.ok)
+          throw new Error(
+            `Detection settings were rejected: ${JSON.stringify(result)}`,
+          );
+        if (mode === 'manual') controller?.rememberManualDensity?.(densityPct);
+        const visualDetection = styleManager.getVisualState()?.detection;
+        if (
+          services.getDetectionMode() !== requestedDetectionMode ||
+          services.getDetectionTuning()?.densityPct !== densityPct ||
+          densityControl.value !== String(densityPct) ||
+          visualDetection?.mode !== requestedDetectionMode ||
+          visualDetection?.density !== densityPct
+        )
+          throw new Error(
+            `Detection settings did not become ${requestedDetectionMode}/${densityPct}`,
+          );
+      },
+      {
+        mode: qualityMode,
+        requestedDetectionMode: detectionMode,
+        densityPct: expectedDensityPct,
+      },
+    );
   }
 
   await page.evaluate(() => {

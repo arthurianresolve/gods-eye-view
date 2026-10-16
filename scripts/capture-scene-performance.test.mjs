@@ -149,6 +149,13 @@ test('timed workload setup synchronizes engine, controls, and visual density', a
         source.indexOf('let startupProbe = null;'),
       ),
     ],
+    [
+      'shared map/baseline',
+      source.slice(
+        source.indexOf('if (!fixture) {'),
+        source.indexOf('const commonScene = await page.evaluate('),
+      ),
+    ],
   ];
   for (const [label, section] of sections) {
     assert.match(
@@ -174,7 +181,7 @@ test('controlled manual fixtures retain their requested legacy density', async (
   const synchronizations = source.match(
     /if \(mode === 'manual'\)\s+controller\?\.rememberManualDensity\?\.\(/g,
   );
-  assert.equal(synchronizations?.length, 4);
+  assert.equal(synchronizations?.length, 5);
 });
 
 function invoke(args, { loaderPath = null } = {}) {
