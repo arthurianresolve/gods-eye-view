@@ -22,6 +22,7 @@ import {
   createFixtureInterceptionErrorRecorder,
   interceptFixtureSession,
 } from './performance/fixtureInterception.mjs';
+import { closeReceiptOnlyAuditPage } from './performance/receiptOnlyPageClose.mjs';
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
@@ -3944,7 +3945,7 @@ try {
       },
       closeDocument: async () => {
         if (providerContext) await providerContext.close();
-        else await page.close();
+        else await closeReceiptOnlyAuditPage(page);
         if (workerAuditMode === 'receipt-only') {
           finalizeReceiptOnlyDocumentAudit?.();
           finalizeReceiptOnlyDocumentAudit = null;
@@ -5845,7 +5846,7 @@ try {
   }
   if (workerAuditMode === 'receipt-only' && finalizeReceiptOnlyDocumentAudit) {
     if (providerContext) await providerContext.close();
-    else await page.close();
+    else await closeReceiptOnlyAuditPage(page);
     finalizeReceiptOnlyDocumentAudit();
     finalizeReceiptOnlyDocumentAudit = null;
   }
