@@ -27,7 +27,7 @@ export const PERFORMANCE_WORKLOAD_VALIDATION_MODES = Object.freeze({
 });
 
 export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
-  'gev-cesium-acceptance/2026-10-14';
+  'gev-cesium-acceptance/2026-10-15';
 
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';

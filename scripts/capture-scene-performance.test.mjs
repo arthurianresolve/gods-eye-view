@@ -62,22 +62,66 @@ test('fresh dense provider documents synchronize engine and visual density', asy
     freshDocumentStart,
   );
   assert.ok(freshDocumentStart >= 0 && sampleLoopStart > freshDocumentStart);
-  const freshDocumentSource = source.slice(
-    freshDocumentStart,
-    sampleLoopStart,
-  );
+  const freshDocumentSource = source.slice(freshDocumentStart, sampleLoopStart);
   assert.match(
     freshDocumentSource,
     /app\.styleManager\.setDetection\(\{[\s\S]*?mode: requestedDetectionMode,[\s\S]*?densityPct: requestedDensity/,
   );
-  assert.match(
-    freshDocumentSource,
-    /densityPct: expectedDensityPct/,
-  );
+  assert.match(freshDocumentSource, /densityPct: expectedDensityPct/);
   assert.match(
     freshDocumentSource,
     /visualDetection\?\.density !== requestedDensity/,
   );
+});
+
+test('timed workload setup synchronizes engine, controls, and visual density', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const sections = [
+    [
+      'Austin',
+      source.slice(
+        source.indexOf('async function configureAustinOperatingPage('),
+        source.indexOf('async function readAustinOperatingObservation('),
+      ),
+    ],
+    [
+      'infrastructure',
+      source.slice(
+        source.indexOf(
+          "failureProgress.phase = 'configure-infrastructure-fixture'",
+        ),
+        source.indexOf(
+          "failureProgress.phase = 'configure-austin-operating-fixture'",
+        ),
+      ),
+    ],
+    [
+      'weather/effects',
+      source.slice(
+        source.indexOf(
+          "failureProgress.phase = 'configure-weather-effects-fixture'",
+        ),
+        source.indexOf('let startupProbe = null;'),
+      ),
+    ],
+  ];
+  for (const [label, section] of sections) {
+    assert.match(
+      section,
+      /styleManager\.setDetection\(\{[\s\S]*?densityPct/,
+      `${label} setup must use the public atomic detection setter`,
+    );
+    assert.match(
+      section,
+      /getDetectionTuning\(\)\?\.densityPct/,
+      `${label} setup must verify the engine density`,
+    );
+    assert.match(
+      section,
+      /visualDetection\?\.density/,
+      `${label} setup must verify the rendered visual density`,
+    );
+  }
 });
 
 function invoke(args, { loaderPath = null } = {}) {

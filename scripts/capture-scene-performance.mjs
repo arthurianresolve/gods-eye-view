@@ -302,7 +302,10 @@ const effectiveFixtureAircraftCount = productionFlightFixture
 const expectedDensityPct = Number(
   option(
     '--expected-density',
-    (effectiveFixtureAircraftCount || austinOperatingWorkloadSelected) &&
+    (effectiveFixtureAircraftCount ||
+      austinOperatingWorkloadSelected ||
+      infrastructureWorkloadSelected ||
+      weatherEffectsWorkload) &&
       qualityMode === 'manual'
       ? '75'
       : 'NaN',
@@ -1269,6 +1272,16 @@ if (
 )
   throw new Error('--expected-density must be a number from 0 to 100');
 
+if (
+  (infrastructureWorkloadSelected || weatherEffectsWorkload) &&
+  (qualityMode !== 'manual' ||
+    detectionMode !== 'DENSE' ||
+    expectedDensityPct !== 75)
+)
+  throw new Error(
+    'Infrastructure and weather/effects captures require Manual/DENSE/75.',
+  );
+
 if (austinOperatingWorkloadSelected) {
   if (providerFixtureTime !== AUSTIN_OPERATING_FIXED_TIME)
     throw new TypeError(
@@ -1907,20 +1920,29 @@ async function configureAustinOperatingPage(fixture) {
   qualityControl.dispatchEvent(new Event('change', { bubbles: true }));
   const services = app.styleManager?.services;
   if (
-    typeof services?.setDetectionModeByLabel !== 'function' ||
+    typeof app.styleManager?.setDetection !== 'function' ||
     typeof services?.getDetectionTuning !== 'function' ||
     typeof services?.getDetectionMode !== 'function'
   )
     throw new Error('Austin detection workload controls are unavailable.');
-  densityControl.value = String(fixture.visualState.densityPct);
-  densityControl.dispatchEvent(new Event('input', { bubbles: true }));
-  services.setDetectionModeByLabel(fixture.visualState.detectionMode);
+  const detectionResult = app.styleManager.setDetection({
+    enabled: true,
+    mode: fixture.visualState.detectionMode,
+    densityPct: fixture.visualState.densityPct,
+  });
+  if (!detectionResult?.ok)
+    throw new Error(
+      `Austin detection settings were rejected: ${JSON.stringify(detectionResult)}`,
+    );
+  const visualDetection = app.styleManager.getVisualState()?.detection;
   if (
     controller.getMode() !== fixture.visualState.qualityMode ||
     densityControl.value !== String(fixture.visualState.densityPct) ||
     services.getDetectionTuning()?.densityPct !==
       fixture.visualState.densityPct ||
-    services.getDetectionMode() !== fixture.visualState.detectionMode
+    services.getDetectionMode() !== fixture.visualState.detectionMode ||
+    visualDetection?.mode !== fixture.visualState.detectionMode ||
+    visualDetection?.density !== fixture.visualState.densityPct
   )
     throw new Error(
       'Austin detection/quality settings did not match the fixture contract.',
@@ -3095,6 +3117,7 @@ try {
         clock,
         qualityMode: mode,
         detectionMode: requestedDetectionMode,
+        densityPct,
         camera,
       }) => {
         const app = window.__godsEyeView;
@@ -3118,11 +3141,33 @@ try {
         if (!controller?.setMode?.(mode))
           throw new Error('Presentation quality controller is unavailable.');
         const services = app.styleManager?.services;
-        if (typeof services?.setDetectionModeByLabel !== 'function')
+        const densityControl = document.getElementById(
+          'detection-density-slider',
+        );
+        if (
+          typeof app.styleManager?.setDetection !== 'function' ||
+          typeof services?.getDetectionTuning !== 'function' ||
+          typeof services?.getDetectionMode !== 'function' ||
+          !densityControl
+        )
           throw new Error('Detection workload controls are unavailable.');
-        services.setDetectionModeByLabel(requestedDetectionMode);
-        if (services.getDetectionMode() !== requestedDetectionMode)
-          throw new Error('Detection workload mode did not match the request.');
+        const detectionResult = app.styleManager.setDetection({
+          enabled: true,
+          mode: requestedDetectionMode,
+          densityPct,
+        });
+        const visualDetection = app.styleManager.getVisualState()?.detection;
+        if (
+          !detectionResult?.ok ||
+          services.getDetectionMode() !== requestedDetectionMode ||
+          services.getDetectionTuning()?.densityPct !== densityPct ||
+          densityControl.value !== String(densityPct) ||
+          visualDetection?.mode !== requestedDetectionMode ||
+          visualDetection?.density !== densityPct
+        )
+          throw new Error(
+            `Detection settings did not become ${requestedDetectionMode}/${densityPct}.`,
+          );
         const cesiumClock = viewer.clock;
         if (
           !cesiumClock?.currentTime ||
@@ -3163,6 +3208,7 @@ try {
         clock: infrastructureWorkload.clock,
         qualityMode,
         detectionMode,
+        densityPct: expectedDensityPct,
         camera: infrastructureWorkload.camera,
       },
     );
@@ -3418,11 +3464,34 @@ try {
         if (!controller?.setMode?.(mode))
           throw new Error('Presentation quality controller is unavailable.');
         const services = app.styleManager?.services;
-        if (typeof services?.setDetectionModeByLabel !== 'function')
+        const densityControl = document.getElementById(
+          'detection-density-slider',
+        );
+        if (
+          typeof app.styleManager?.setDetection !== 'function' ||
+          typeof services?.getDetectionTuning !== 'function' ||
+          typeof services?.getDetectionMode !== 'function' ||
+          !densityControl
+        )
           throw new Error('Detection workload controls are unavailable.');
-        services.setDetectionModeByLabel(requestedMode);
-        if (services.getDetectionMode() !== requestedMode)
-          throw new Error('Detection workload mode did not match the request.');
+        const densityPct = fixture.visualState.densityPct;
+        const detectionResult = app.styleManager.setDetection({
+          enabled: true,
+          mode: requestedMode,
+          densityPct,
+        });
+        const visualDetection = app.styleManager.getVisualState()?.detection;
+        if (
+          !detectionResult?.ok ||
+          services.getDetectionMode() !== requestedMode ||
+          services.getDetectionTuning()?.densityPct !== densityPct ||
+          densityControl.value !== String(densityPct) ||
+          visualDetection?.mode !== requestedMode ||
+          visualDetection?.density !== densityPct
+        )
+          throw new Error(
+            `Detection settings did not become ${requestedMode}/${densityPct}.`,
+          );
         const clock = viewer.clock;
         if (!clock?.currentTime)
           throw new Error('Cesium Julian clock is unavailable.');

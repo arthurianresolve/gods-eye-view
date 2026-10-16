@@ -245,7 +245,7 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
   assert.equal(
     parsed.performanceEvidence.comparison.acceptancePolicyId,
-    'gev-cesium-acceptance/2026-10-14',
+    'gev-cesium-acceptance/2026-10-15',
   );
   assert.deepEqual(
     formatPerformanceObjectiveNotes([

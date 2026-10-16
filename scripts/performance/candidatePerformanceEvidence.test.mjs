@@ -710,7 +710,7 @@ test('infrastructure evaluator coverage rejects a tampered producer asset identi
 test('lifecycle stress is a retention mode and cannot fill timed workload coverage', async () => {
   assert.equal(
     PERFORMANCE_ACCEPTANCE_POLICY_ID,
-    'gev-cesium-acceptance/2026-10-14',
+    'gev-cesium-acceptance/2026-10-15',
   );
   assert.equal(
     PERFORMANCE_WORKLOAD_VALIDATION_MODES['lifecycle-stress'],
