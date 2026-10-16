@@ -143,8 +143,13 @@ fixture correction does not silently change that baseline. Its effects must be
 represented in the candidate and its declared comparable settings.
 
 For timed performance workloads retain five matched runs per revision, 30 seconds
-of warmup and 60 seconds of measurement, counterbalancing execution order. Cold
-activation is separate. Lifecycle stress also retains its operation/ownership
+of warmup and 60 seconds of measurement. Counterbalance the complete five-run
+capture-block order across the eight registered workload rows: four rows run the
+baseline first and four run the candidate first, alternating the first revision
+in the frozen schedule. A block remains intact because each producer binds its
+startup, fixture-delivery, source-drain and cleanup evidence to the full five-run
+report; reports must not be reconstructed from independent one-run processes.
+Cold activation is separate. Lifecycle stress also retains its operation/ownership
 checks and the full 60-minute soak; a short timed route does not replace it.
 Use identical fixture identity, route, fixed data/time, browser version, actual
 renderer, viewport/drawing buffer and Manual visual settings. Profile and force

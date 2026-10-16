@@ -1,5 +1,32 @@
 # Cesium performance plan
 
+## Matrix execution update - 16 October 2026
+
+The final S60 matrix now has one executable, fail-closed schedule. The
+`performance:matrix` command accepts a versioned local plan containing the
+frozen baseline, candidate, shared harness, build receipts, build roots and
+loopback preview origins. It runs the eight required rows exactly once, uses
+five runs with 30 seconds of warmup and 60 seconds of measurement, keeps
+Manual/DENSE/75% settings explicit, and alternates which revision is captured
+first across the rows. Four rows are baseline-first and four candidate-first.
+
+Each producer's five-run block stays intact so startup, fixture delivery,
+source drain, cleanup and map-journey ownership remain bound to the report that
+the paired validator already verifies. Interrupted work preserves completed raw
+reports. `--resume` reuses a report only after checking its exact application
+and harness revisions, workload identity, timings, visual settings, hardware
+eligibility and readiness; the completed pair is then recomputed by the shared
+paired validator. Existing outputs are never overwritten without explicit
+resume. Map streaming uses its dedicated build profile and diagnostic worker
+audit; all other rows use receipt-only worker auditing. A dry-run records the
+entire schedule without launching Chrome.
+
+This closes the missing S60 matrix-orchestration code. Automatic validation and
+the physical Windows executions remain separate states. The accepted Austin
+and Dense packets remain historical evidence at their recorded revisions; the
+remaining matrix and final frozen-candidate evidence must be produced through
+the new schedule before release acceptance.
+
 ## Current execution checkpoint - 15 October 2026
 
 The merged `dev` head `786583e0ee8a36a670fe81cd244e8923bf84014b`
