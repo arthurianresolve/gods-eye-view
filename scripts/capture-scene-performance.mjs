@@ -4653,7 +4653,7 @@ try {
           let initialDelayTimer = null;
           let startedAt = null;
           let resolveMeasurement = null;
-          let motionFinished = Promise.resolve();
+          let motionFrameRequest = null;
           let finishMotion = () => {};
           try {
             if (stagedClock) stagedClock.startMeasurement(expectedRunOrdinal);
@@ -4688,26 +4688,19 @@ try {
               };
               finishMotion = () => applyDistance((durationMs * 16) / 50);
               motionStartedAt = performance.now();
-              motionFinished = new Promise((resolve) => {
-                const move = () => {
-                  if (!active) {
-                    resolve();
-                    return;
-                  }
-                  const elapsed = Math.min(
-                    durationMs,
-                    Math.max(0, performance.now() - motionStartedAt),
-                  );
-                  const distance = (elapsed * 16) / 50;
-                  applyDistance(distance);
-                  if (elapsed >= durationMs) {
-                    resolve();
-                    return;
-                  }
-                  requestAnimationFrame(move);
-                };
-                move();
-              });
+              const move = () => {
+                motionFrameRequest = null;
+                if (!active) return;
+                const elapsed = Math.min(
+                  durationMs,
+                  Math.max(0, performance.now() - motionStartedAt),
+                );
+                const distance = (elapsed * 16) / 50;
+                applyDistance(distance);
+                if (elapsed >= durationMs) return;
+                motionFrameRequest = requestAnimationFrame(move);
+              };
+              move();
             }
             if (delay > 0) {
               const runInjectedDelay = () => {
@@ -4727,10 +4720,15 @@ try {
             const clockEnd =
               stagedClock?.finishMeasurement?.(expectedRunOrdinal) ?? null;
             active = false;
-            await motionFinished;
+            if (motionFrameRequest != null) {
+              cancelAnimationFrame(motionFrameRequest);
+              motionFrameRequest = null;
+            }
             clearInterval(delayTimer);
             clearTimeout(initialDelayTimer);
-            // Slow frames must still reach the same absolute route endpoint.
+            // Completion follows the fixed measurement timer, not delivery of
+            // another animation frame. Slow hardware must still reach the same
+            // absolute route endpoint without extending the measured window.
             finishMotion();
             // A parked request-render scene is allowed to stop scheduling
             // animation frames. Requiring one here left idle captures pending
@@ -4834,6 +4832,8 @@ try {
             clearTimeout(measurementTimer);
             clearInterval(delayTimer);
             clearTimeout(initialDelayTimer);
+            if (motionFrameRequest != null)
+              cancelAnimationFrame(motionFrameRequest);
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
             window.removeEventListener('blur', onBlur);

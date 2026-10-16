@@ -86,6 +86,17 @@ test('timed samples reacquire foreground after warmup and before measurement', a
   );
 });
 
+test('scripted motion completion does not wait for another animation frame', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const measurementWait = source.indexOf('await measurementWait;');
+  const endpoint = source.indexOf('finishMotion();', measurementWait);
+  const returnSample = source.indexOf('return {', endpoint);
+  assert.ok(measurementWait >= 0 && endpoint > measurementWait);
+  const completion = source.slice(measurementWait, returnSample);
+  assert.match(completion, /cancelAnimationFrame\(motionFrameRequest\)/);
+  assert.doesNotMatch(completion, /await motionFinished/);
+});
+
 test('fresh dense provider documents synchronize engine and visual density', async () => {
   const source = await fs.readFile(SCRIPT, 'utf8');
   const freshDocumentStart = source.indexOf(
