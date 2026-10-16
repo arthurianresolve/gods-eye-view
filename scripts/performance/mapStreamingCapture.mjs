@@ -2394,9 +2394,15 @@ export async function runNativeMapStreamingJourneyInPage({
     let readyFrames = 0;
     let last = null;
     try {
-      while (performance.now() < deadline) {
+      while (true) {
+        const remainingMs = deadline - performance.now();
+        // A render is delivered on a later animation frame. Do not start a
+        // listener whose timeout is already shorter than one ordinary frame;
+        // that obscures the useful readiness state with a postRender timeout
+        // at the exact deadline boundary.
+        if (remainingMs < 20) break;
         const postRenderAt = await waitForPostRender(
-          Math.max(1, deadline - performance.now()),
+          remainingMs,
           journeyAbort.signal,
         );
         last = captureState(postRenderAt);

@@ -306,10 +306,10 @@ test('declared Esri missing and corrupt metadata responses are isolated fault ob
     );
     for (const mutate of [
       (copy) => {
-        copy.limits.maxRequests = 513;
+        copy.limits.maxRequests = MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT + 1;
       },
       (copy) => {
-        copy.requestedCount = 513;
+        copy.requestedCount = MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT + 1;
       },
       (copy) => {
         copy.errors.push({ code: 'unexpected', count: 1 });
@@ -664,15 +664,16 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
     pinned.manifest.assets.find((row) => row.kind === kind),
   );
   const requiredPaths = new Set(requiredRows.map((row) => row.path));
-  const acknowledgedRows = [
-    ...requiredRows,
-    ...pinned.manifest.assets
-      .filter((row) => !requiredPaths.has(row.path))
-      .slice(
-        0,
-        MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT - requiredRows.length - 1,
-      ),
-  ];
+  const repeatableRows = pinned.manifest.assets.filter(
+    (row) => !requiredPaths.has(row.path),
+  );
+  const acknowledgedRows = [...requiredRows];
+  while (acknowledgedRows.length < MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT - 1)
+    acknowledgedRows.push(
+      repeatableRows[
+        (acknowledgedRows.length - requiredRows.length) % repeatableRows.length
+      ],
+    );
   for (const row of acknowledgedRows) {
     const result = await issueRequest(delivery, nativeUrl(row));
     assert.equal(result.acknowledged, true);
