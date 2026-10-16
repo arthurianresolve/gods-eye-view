@@ -51,7 +51,29 @@ test('activates and verifies the measured page before warmup', async () => {
     visibilityState: 'visible',
     timeoutMs: 3200,
     pollingMs: 25,
+    waitOutcome: 'condition-resolved',
   });
+});
+
+test('accepts a final focused observation when the wait boundary races its timeout', async () => {
+  const page = fakePage({
+    waitError: new Error('timeout'),
+    states: [{ visible: true, focused: true, visibilityState: 'visible' }],
+  });
+
+  const result = await activateForegroundPage(page);
+
+  assert.equal(result.visible, true);
+  assert.equal(result.focused, true);
+  assert.equal(
+    result.waitOutcome,
+    'final-observation-confirmed-after-wait-error',
+  );
+  assert.deepEqual(page.calls, [
+    ['bringToFront'],
+    ['waitForFunction', { timeout: 5000, polling: 50 }],
+    ['evaluate'],
+  ]);
 });
 
 test('records terminal foreground state when activation times out', async () => {

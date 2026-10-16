@@ -20,23 +20,28 @@ export async function activateForegroundPage(
     throw new TypeError('Foreground activation polling must be positive.');
 
   await page.bringToFront();
+  let state = null;
+  let waitOutcome = 'condition-resolved';
   try {
     await page.waitForFunction(() => !document.hidden && document.hasFocus(), {
       timeout: timeoutMs,
       polling: pollingMs,
     });
   } catch (error) {
-    const state = await page.evaluate(observeForegroundState).catch(() => null);
-    const activationError = new Error(
-      `Performance page did not become visible and focused: ${JSON.stringify(state)}`,
-      { cause: error },
-    );
-    activationError.name = 'ForegroundActivationError';
-    activationError.state = state;
-    throw activationError;
+    state = await page.evaluate(observeForegroundState).catch(() => null);
+    if (!state?.visible || !state?.focused) {
+      const activationError = new Error(
+        `Performance page did not become visible and focused: ${JSON.stringify(state)}`,
+        { cause: error },
+      );
+      activationError.name = 'ForegroundActivationError';
+      activationError.state = state;
+      throw activationError;
+    }
+    waitOutcome = 'final-observation-confirmed-after-wait-error';
   }
 
-  const state = await page.evaluate(observeForegroundState);
+  state ||= await page.evaluate(observeForegroundState);
   if (!state.visible || !state.focused) {
     const error = new Error(
       `Performance page lost foreground immediately after activation: ${JSON.stringify(state)}`,
@@ -50,6 +55,7 @@ export async function activateForegroundPage(
     ...state,
     timeoutMs,
     pollingMs,
+    waitOutcome,
   };
 }
 
