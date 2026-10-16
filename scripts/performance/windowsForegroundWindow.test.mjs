@@ -85,3 +85,34 @@ test('Windows activation rejects invalid PID, malformed and unconfirmed evidence
     /did not confirm/,
   );
 });
+
+test('Windows activation retains structured locked-desktop evidence', async () => {
+  const evidence = {
+    schema: WINDOWS_FOREGROUND_SCHEMA,
+    status: 'foreground-not-confirmed',
+    browserPid: 77,
+    windowHandleAvailable: true,
+    windowHandleSource: 'owned-top-level-enumeration',
+    foregroundConfirmed: false,
+    foregroundPid: 88,
+    foregroundProcessName: 'LockApp',
+    desktopState: 'locked',
+  };
+  await assert.rejects(
+    focusOwnedWindowsBrowserWindow({
+      browserPid: 77,
+      platform: 'win32',
+      runner: async () => {
+        const error = new Error('exit 2');
+        error.stdout = JSON.stringify(evidence);
+        throw error;
+      },
+    }),
+    (error) => {
+      assert.equal(error.name, 'HostWindowActivationError');
+      assert.match(error.message, /desktop is locked/);
+      assert.deepEqual(error.evidence, evidence);
+      return true;
+    },
+  );
+});
