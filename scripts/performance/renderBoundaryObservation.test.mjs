@@ -510,6 +510,7 @@ test('preinstalled document binding covers warmup and measurement without bounda
   ]);
   const cleanup = await binding.dispose();
   assert.equal(cleanup.removed, true);
+  assert.equal(binding.cleanupTimeoutMs, 2000);
   assert.equal(exposed.size, 0);
   assert.equal(order.at(-1), 'binding-removed');
 });
@@ -645,11 +646,28 @@ test('persistent binding cleanup is bounded and reports an unremoved owner', asy
   const binding = await prepareRenderBoundaryProgressBinding({
     page,
     ownerId: 'provider-sample:document-d',
+    cleanupTimeoutMs: 20,
   });
   const cleanup = await binding.dispose();
   assert.equal(cleanup.removed, false);
   assert.equal(cleanup.error.name, 'TimeoutError');
-  assert.ok(cleanup.elapsedMs >= 200 && cleanup.elapsedMs < 1000);
+  assert.ok(cleanup.elapsedMs >= 10 && cleanup.elapsedMs < 500);
+});
+
+test('default binding cleanup tolerates hosted-scale protocol delay', async () => {
+  const page = {
+    async exposeFunction() {},
+    removeExposedFunction: () =>
+      new Promise((resolve) => setTimeout(resolve, 350)),
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:delayed-cleanup',
+  });
+  const cleanup = await binding.dispose();
+  assert.equal(cleanup.removed, true);
+  assert.equal(cleanup.error, null);
+  assert.ok(cleanup.elapsedMs >= 300 && cleanup.elapsedMs < 1500);
 });
 
 test('concurrent binding disposal waits for the same pending removal outcome', async () => {
@@ -718,6 +736,7 @@ test('concurrent disposal shares removal rejection and timeout results', async (
         },
       },
       ownerId: 'provider-sample:concurrent-timeout',
+      cleanupTimeoutMs: 20,
     });
     const first = binding.dispose();
     const second = binding.dispose();

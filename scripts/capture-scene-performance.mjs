@@ -4308,6 +4308,8 @@ try {
             boundaryProgressBindingRecord;
           boundaryProgressBindingRecord.setupElapsedMs =
             activeRenderBoundaryProgressBinding.setupElapsedMs;
+          boundaryProgressBindingRecord.cleanupTimeoutMs =
+            activeRenderBoundaryProgressBinding.cleanupTimeoutMs;
           boundaryProgressBindingRecord.status = 'ready';
         } catch (error) {
           boundaryProgressBindingRecord.setupElapsedMs = Math.max(

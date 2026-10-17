@@ -3,6 +3,10 @@ import { randomUUID } from 'node:crypto';
 const MAX_PROGRESS_EVENTS = 8;
 const CLEANUP_TIMEOUT_MS = 250;
 const BINDING_SETUP_TIMEOUT_MS = 5000;
+// Removing an exposed function crosses the browser protocol and can queue
+// behind a slow software-rendered frame. Keep this bounded below the boundary
+// deadline, but do not confuse a single 250 ms transport delay with retention.
+const BINDING_CLEANUP_TIMEOUT_MS = 2000;
 const VALID_STAGES = new Set([
   'page-entry',
   'listener-registered',
@@ -97,6 +101,7 @@ export async function prepareRenderBoundaryProgressBinding({
   page,
   ownerId,
   timeoutMs = BINDING_SETUP_TIMEOUT_MS,
+  cleanupTimeoutMs = BINDING_CLEANUP_TIMEOUT_MS,
   now = () => globalThis.performance?.now?.() ?? Date.now(),
   setTimer = setTimeout,
   clearTimer = clearTimeout,
@@ -109,7 +114,10 @@ export async function prepareRenderBoundaryProgressBinding({
     !ownerId ||
     ownerId.length > 160 ||
     !Number.isFinite(timeoutMs) ||
-    timeoutMs <= 0
+    timeoutMs <= 0 ||
+    !Number.isFinite(cleanupTimeoutMs) ||
+    cleanupTimeoutMs <= 0 ||
+    cleanupTimeoutMs > BINDING_SETUP_TIMEOUT_MS
   )
     throw new TypeError('Render boundary binding owner is invalid.');
 
@@ -177,7 +185,7 @@ export async function prepareRenderBoundaryProgressBinding({
     } else {
       const cleanup = await timeoutResult(
         remove(),
-        CLEANUP_TIMEOUT_MS,
+        cleanupTimeoutMs,
         'Failed setup cleanup timed out.',
         setTimer,
         clearTimer,
@@ -198,6 +206,7 @@ export async function prepareRenderBoundaryProgressBinding({
     functionName: name,
     ownerId,
     setupElapsedMs: Math.max(0, now() - setupStartedAt),
+    cleanupTimeoutMs,
     register(invocationId, receiver) {
       if (
         disposed ||
@@ -224,7 +233,7 @@ export async function prepareRenderBoundaryProgressBinding({
           const cleanupStartedAt = now();
           const outcome = await timeoutResult(
             remove(),
-            CLEANUP_TIMEOUT_MS,
+            cleanupTimeoutMs,
             'Render boundary progress binding cleanup timed out.',
             setTimer,
             clearTimer,
