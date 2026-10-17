@@ -34,6 +34,7 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
+import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
 
 const DEFAULT_CYCLES = 5;
 const FEATURE_COUNT = 512;
@@ -1018,15 +1019,12 @@ export async function readWorkerPreflight(
     }
     phase = 'worker-probe';
     try {
-      value = await evaluateWithDeadline(page, 'worker-preflight', async () => {
-        const { runCesiumWorkerProbe } =
-          await import('/scripts/fixtures/cesium-worker-probe.js');
-        const probe = await runCesiumWorkerProbe();
-        return {
-          probe,
-          diagnostics: window.__gevSoakWorkers?.snapshot() || null,
-        };
-      });
+      value = await evaluateWithDeadline(
+        page,
+        'worker-preflight',
+        runCesiumWorkerProbeInPage,
+        { includeDiagnostics: true },
+      );
     } catch (error) {
       probeError = error;
       throw error;

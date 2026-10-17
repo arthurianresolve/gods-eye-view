@@ -18,6 +18,9 @@ import {
   runWorkspaceFixturePhase,
 } from './qa-application-fixtures.mjs';
 import { closeTargetBeforeFixtureInterceptionRelease } from './performance/fixtureInterception.mjs';
+import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
+import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
+import { createRecordingBundle } from '../src/recording/bundle.js';
 
 export function isRecoverableApplicationPrewarmFailure(error) {
   const state = error?.fixtureStartupDiagnostics?.state;
@@ -51,8 +54,17 @@ async function prewarmRenderedApplication(browser, base) {
         fixture.page,
         fixture.interception,
       );
-      if (!cleanup.confirmed)
-        throw cleanup.error || new Error('Application prewarm cleanup failed.');
+      if (!cleanup.confirmed) {
+        const error =
+          cleanup.error || new Error('Application prewarm cleanup failed.');
+        error.message +=
+          '; prewarm cleanup: ' +
+          JSON.stringify({
+            targetClosed: cleanup.targetClosed,
+            release: cleanup.release,
+          });
+        throw error;
+      }
     }
   }
   return { ...outcome, durationMs: Date.now() - startedAt };
@@ -67,6 +79,9 @@ export async function createRenderedSoakDriver(
   const closeBrowser = createOwnedSoakCloser(browser);
   let startupPrewarm = null;
   let cameraFailure = true;
+  let cameraHealthCalls = 0;
+  let cameraFrameCalls = 0;
+  const cameraHealthHistory = [];
   let archiveFailure = true;
   let archiveCalls = 0;
   const png = Buffer.from(
@@ -133,6 +148,14 @@ export async function createRenderedSoakDriver(
                 rangeM: 145,
               })),
             });
+          if (url.pathname === '/api/cctv/health') {
+            cameraHealthCalls++;
+            cameraHealthHistory.push({
+              at: Date.now(),
+              cameraFailure,
+            });
+            if (cameraHealthHistory.length > 16) cameraHealthHistory.shift();
+          }
           if (url.pathname === '/api/cctv/health')
             return json({
               cameras: [0, 1].map((n) => ({
@@ -147,10 +170,15 @@ export async function createRenderedSoakDriver(
                 attemptedAt: Date.now(),
                 lastSuccessAt: cameraFailure && n === 0 ? null : Date.now(),
                 updatedAt: Date.now(),
-                refreshIntervalMs: 10000,
+                // Match a realistic public still-camera provider cadence. The
+                // production freshness policy still expires this after three
+                // declared intervals; the fixture result remains valid while
+                // a slow hardware-rendered cycle opens and verifies evidence.
+                refreshIntervalMs: 60_000,
               })),
             });
           if (url.pathname.startsWith('/api/cctv/frame/')) {
+            cameraFrameCalls++;
             if (cameraFailure && url.pathname.endsWith('fixture-camera-0'))
               return json({ error: 'fixture-outage' }, 503);
             return { status: 200, contentType: 'image/png', body: png };
@@ -205,39 +233,35 @@ export async function createRenderedSoakDriver(
       );
     const networkPreflight = await verifyNetwork();
     console.log('SOAK worker network interception preflight passed');
-    const workerPreflight = await page.evaluate(async () => {
-      const { runCesiumWorkerProbe } =
-        await import('/scripts/fixtures/cesium-worker-probe.js');
-      try {
-        return await runCesiumWorkerProbe();
-      } catch (error) {
-        error.message +=
-          '; worker diagnostics: ' +
-          JSON.stringify(window.__gevSoakWorkers?.snapshot());
-        throw error;
-      }
-    });
+    let workerPreflight;
+    try {
+      workerPreflight = await page.evaluate(runCesiumWorkerProbeInPage);
+    } catch (error) {
+      const diagnostics = await page
+        .evaluate(() => window.__gevSoakWorkers?.snapshot?.() || null)
+        .catch(() => null);
+      error.message += '; worker diagnostics: ' + JSON.stringify(diagnostics);
+      throw error;
+    }
     workerPreflight.network = networkPreflight;
     console.log('SOAK worker completion preflight passed');
     // Seed only synthetic observations through the real application recorder.
-    await page.evaluate(async () => {
+    const recordingStartAt = await page.evaluate(() => Date.now());
+    const recordingFrames = createSyntheticAircraftFrames({
+      startAt: recordingStartAt,
+      sampleCount: 4,
+      intervalMs: 1000,
+    });
+    await page.evaluate(async (frames) => {
       const app = window.__godsEyeView;
-      const { createSyntheticAircraftFrames } =
-        await import('/src/recording/index.js');
-      const startAt = Date.now();
       await app.aircraftRecording.start({
         id: 'recording-rendered-soak',
         sourceId: 'synthetic-fixture',
         region: { center: { latitude: 0, longitude: 179.7 }, radiusKm: 25 },
       });
-      for (const frame of createSyntheticAircraftFrames({
-        startAt,
-        sampleCount: 4,
-        intervalMs: 1000,
-      }))
-        await app.aircraftRecording.ingest(frame);
+      for (const frame of frames) await app.aircraftRecording.ingest(frame);
       await app.aircraftRecording.stop('fixture-ready');
-    });
+    }, recordingFrames);
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
     console.log('SOAK application ready');
@@ -355,6 +379,114 @@ export async function createRenderedSoakDriver(
         throw error;
       }
     }
+    async function waitForCameraState(phase, predicate, timeout = 30_000) {
+      const startedAt = Date.now();
+      let terminal = false;
+      let evaluationError = null;
+      while (Date.now() - startedAt < timeout) {
+        try {
+          terminal = Boolean(await page.evaluate(predicate));
+          evaluationError = null;
+        } catch (error) {
+          evaluationError = error;
+        }
+        if (terminal) {
+          console.log('SOAK camera ' + phase + ' confirmed');
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      try {
+        terminal = Boolean(await page.evaluate(predicate));
+        evaluationError = null;
+      } catch (error) {
+        evaluationError = error;
+      }
+      if (terminal) {
+        console.log('SOAK camera ' + phase + ' confirmed at deadline');
+        return;
+      }
+      {
+        const error =
+          evaluationError ||
+          new Error(`Camera ${phase} exceeded ${timeout}ms.`);
+        const state = await page
+          .evaluate(() => {
+            const layer =
+              window.__godsEyeView?.dataManager?.layers?.get('cctv')?.module;
+            const ui = layer?.getUIState?.();
+            const compact = (row) =>
+              row
+                ? {
+                    id: row.id,
+                    healthReason: row.healthReason,
+                    sourceStatus: row.sourceStatus,
+                    decodeStatus: row.decodeStatus,
+                    decodeReason: row.decodeReason,
+                    attemptedAt: row.attemptedAt,
+                    lastSuccessAt: row.lastSuccessAt,
+                    decodeAttemptedAt: row.decodeAttemptedAt,
+                    decodeLastSuccessAt: row.decodeLastSuccessAt,
+                  }
+                : null;
+            return {
+              enabled:
+                window.__godsEyeView?.dataManager?.isEnabled?.('cctv') ||
+                false,
+              activeCamera: compact(ui?.activeCamera),
+              cameras: (ui?.cameras || []).map(compact).slice(0, 8),
+              visible: !document.hidden,
+              focused: document.hasFocus(),
+              browserNow: Date.now(),
+              renderedFrames: window.__soakRenderedFrames,
+              inspector: (() => {
+                const panel = document.querySelector('#evidence-panel');
+                return panel
+                  ? {
+                      hidden: panel.hidden,
+                      pinned: panel.dataset.pinned,
+                      text: panel.textContent?.slice(-800),
+                    }
+                  : null;
+              })(),
+            };
+          })
+          .catch(() => null);
+        error.message +=
+          '; camera fixture: ' +
+          JSON.stringify({
+            phase,
+            cycle: cycleNumber - 1,
+            cameraFailure,
+            cameraHealthCalls,
+            cameraFrameCalls,
+            cameraHealthHistory,
+            state,
+          });
+        throw error;
+      }
+    }
+    async function refreshCameraHealthAtBoundary(phase, timeout = 15_000) {
+      const before = cameraHealthCalls;
+      const startedAt = Date.now();
+      while (Date.now() - startedAt < timeout) {
+        // refreshLayer() is the application's public, serialized update
+        // boundary. CCTV deliberately rate-limits health reads, so retry the
+        // update until this boundary owns a new provider response instead of
+        // assuming that a visibility toggle refreshes network state.
+        await page.evaluate(() =>
+          window.__godsEyeView.dataManager.refreshLayer('cctv'),
+        );
+        if (cameraHealthCalls > before) {
+          console.log('SOAK camera ' + phase + ' provider refresh confirmed');
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
+      throw new Error(
+        `Camera ${phase} provider refresh exceeded ${timeout}ms; calls remained ${cameraHealthCalls} after ${before}.`,
+      );
+    }
     async function cycle() {
       const iteration = cycleNumber++;
       assert.deepEqual(errors, []);
@@ -383,13 +515,16 @@ export async function createRenderedSoakDriver(
         const app = window.__godsEyeView;
         for (const enabled of [false, true])
           await app.dataManager.setEnabled('local-datacenters', enabled);
-        const { getContextStore, selectEntityContext } =
-          await import('/src/data/contextStore.js');
-        const record = [...getContextStore().entities.values()].find(
-          (row) => row.layerId === 'local-datacenters',
-        );
+        const record = app.dataManager.layers
+          .get('local-datacenters')
+          ?.module?.getAnalystRecords?.()
+          ?.find((row) => row.evidence);
         if (!record?.evidence) throw new Error('Infrastructure was not loaded');
-        selectEntityContext(record.entity);
+        window.dispatchEvent(
+          new CustomEvent('gev:entity-selected', {
+            detail: { label: record.name, evidence: record.evidence },
+          }),
+        );
         document.querySelector('.evidence-panel-technical').open = true;
       });
       // A unique public reference prevents a cache hit from hiding failure/recovery.
@@ -447,6 +582,10 @@ export async function createRenderedSoakDriver(
         ),
       );
       assert.equal(archiveCalls - before, 2);
+      // Pin A intentionally locks the inspector to the archived evidence.
+      // Close it before the camera journey so the subsequent user selection
+      // can open a fresh, unpinned camera evidence view.
+      await clickControl(page, '#evidence-panel-close');
       console.log('SOAK replay');
       await page.select(
         '.investigation-timeline-aircraft-select',
@@ -499,11 +638,23 @@ export async function createRenderedSoakDriver(
           .get('cctv')
           .module.setParams({ autoHop: false, showProjection: true });
       });
-      await page.waitForFunction(
-        async () => {
+      // Exercise the real visibility lifecycle, then cross the serialized
+      // refresh boundary so the assertion observes a provider response made
+      // after the fixture changed state.
+      await page.evaluate(async () => {
+        const manager = window.__godsEyeView.dataManager;
+        await manager.setEnabled('cctv', false);
+        await manager.setEnabled('cctv', true);
+        manager.layers
+          .get('cctv')
+          .module.setParams({ autoHop: false, showProjection: true });
+      });
+      await refreshCameraHealthAtBoundary('outage');
+      await waitForCameraState(
+        'outage-health',
+        () => {
           const layer =
             window.__godsEyeView.dataManager.layers.get('cctv').module;
-          await layer.update();
           return (
             layer
               .getUIState()
@@ -511,18 +662,50 @@ export async function createRenderedSoakDriver(
               ?.healthReason === 'upstream-http-error'
           );
         },
-        { polling: 300, timeout: 20000 },
       );
-      await page.evaluate(() => {
+      const cameraSelection = await page.evaluate(() => {
+        // Workspace pinning and replay can legitimately leave the inspector
+        // locked. Clear it at the ownership boundary immediately before the
+        // camera selection that must populate the inspector.
+        document.querySelector('#evidence-panel-close')?.click();
         const layer =
           window.__godsEyeView.dataManager.layers.get('cctv').module;
+        let selected = null;
+        const onSelected = (event) => {
+          if (
+            event.detail?.layerId === 'cctv' &&
+            event.detail?.id === 'fixture-camera-0'
+          )
+            selected = {
+              id: event.detail.id,
+              healthReason: event.detail.cameraState?.healthReason,
+              sourceStatus: event.detail.cameraState?.sourceStatus,
+            };
+        };
+        window.addEventListener('gev:entity-selected', onSelected);
         if (!layer.selectCamera('fixture-camera-0'))
           throw new Error('Manual failed camera selection lost');
+        window.removeEventListener('gev:entity-selected', onSelected);
+        const panel = document.querySelector('#evidence-panel');
+        return {
+          selected,
+          inspector: {
+            hidden: panel?.hidden,
+            pinned: panel?.dataset.pinned,
+            text: panel?.textContent || '',
+          },
+        };
       });
-      await page.waitForFunction(() =>
-        document
-          .querySelector('#evidence-panel')
-          .textContent.includes('upstream-http-error'),
+      assert.deepEqual(cameraSelection.selected, {
+        id: 'fixture-camera-0',
+        healthReason: 'upstream-http-error',
+        sourceStatus: 'unavailable',
+      });
+      assert.equal(cameraSelection.inspector.hidden, false);
+      assert.equal(cameraSelection.inspector.pinned, 'false');
+      assert.match(
+        cameraSelection.inspector.text,
+        /upstream-http-error/,
       );
       assert.equal(
         await page.evaluate(() =>
@@ -534,11 +717,20 @@ export async function createRenderedSoakDriver(
       );
       console.log('SOAK camera recovery');
       cameraFailure = false;
-      await page.waitForFunction(
-        async () => {
+      await page.evaluate(async () => {
+        const manager = window.__godsEyeView.dataManager;
+        await manager.setEnabled('cctv', false);
+        await manager.setEnabled('cctv', true);
+        manager.layers
+          .get('cctv')
+          .module.setParams({ autoHop: false, showProjection: true });
+      });
+      await refreshCameraHealthAtBoundary('recovery');
+      await waitForCameraState(
+        'recovery-health',
+        () => {
           const layer =
             window.__godsEyeView.dataManager.layers.get('cctv').module;
-          await layer.update();
           return (
             layer
               .getUIState()
@@ -546,19 +738,18 @@ export async function createRenderedSoakDriver(
               ?.healthReason === 'delivered'
           );
         },
-        { polling: 300, timeout: 20000 },
       );
       await page.evaluate(() =>
         window.__godsEyeView.dataManager.layers
           .get('cctv')
           .module.selectCamera('fixture-camera-0'),
       );
-      await page.waitForFunction(
+      await waitForCameraState(
+        'recovery-decode',
         () =>
           window.__godsEyeView.dataManager.layers
             .get('cctv')
             .module.getUIState().activeCamera?.decodeStatus === 'ok',
-        { timeout: 20000 },
       );
       assert.equal(
         await page.evaluate(() =>
@@ -616,7 +807,7 @@ export async function createRenderedSoakDriver(
       await openWorkspace(page, id);
       assert.deepEqual(errors, []);
       return {
-        sourceToggles: 4,
+        sourceToggles: 8,
         replaySeeks: 1,
         imports: 1,
         workspaceReloads: 2,
@@ -646,15 +837,20 @@ export async function createRenderedSoakDriver(
        * the operator's normal Chrome profile unless this bundle is transferred.
        */
       async exportRecordingBundle(id = 'recording-rendered-soak') {
-        return page.evaluate(async (recordingId) => {
+        const recording = await page.evaluate(async (recordingId) => {
           const app = window.__godsEyeView;
-          const recording =
+          const exported =
             await app?.aircraftRecording?.exportRecording?.(recordingId);
-          if (!recording) return null;
-          const { createRecordingBundle } =
-            await import('/src/recording/bundle.js');
-          return createRecordingBundle(recording);
+          if (!exported) return null;
+          return {
+            ...exported,
+            chunks:
+              exported.chunks instanceof Map
+                ? Object.fromEntries(exported.chunks)
+                : exported.chunks,
+          };
         }, id);
+        return recording ? createRecordingBundle(recording) : null;
       },
       async retainedMetrics() {
         await session.send('HeapProfiler.collectGarbage');

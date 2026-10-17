@@ -4,10 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import test from 'node:test';
-import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
+import {
+  resolveExpectedApplicationCommit,
+  runMixedUseSoak,
+} from './qa-mixed-use-soak.mjs';
 import { isRecoverableApplicationPrewarmFailure } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
+import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
 import {
   bootFixturePage,
   collectWorkspaceImportDiagnostics,
@@ -518,6 +522,62 @@ test('rendered soak owns a longer bounded cold-application startup allowance', a
     'utf8',
   );
   assert.match(source, /applicationReadyTimeoutMs:\s*180_000/);
+  assert.doesNotMatch(source, /await import\(['"]\/(?:src|scripts)\//);
+});
+
+test('sealed-preview worker probe uses the loaded Cesium global and retains diagnostics', async () => {
+  let destroyed = false;
+  class TaskProcessor {
+    constructor() {
+      this._activeTasks = 0;
+    }
+    scheduleTask(parameters) {
+      this._activeTasks++;
+      const invalid = parameters.subTasks.some(
+        (task) => task.moduleName && task.modulePath,
+      );
+      return Promise.resolve()
+        .then(() => {
+          if (invalid)
+            throw new Error('Must only set moduleName or modulePath');
+          return { ok: true };
+        })
+        .finally(() => this._activeTasks--);
+    }
+    destroy() {
+      destroyed = true;
+    }
+  }
+  const result = await vm.runInNewContext(
+    `(${runCesiumWorkerProbeInPage.toString()})(input)`,
+    {
+      input: { includeDiagnostics: true },
+      Cesium: {
+        Cartesian3: class {
+          constructor(x, y, z) {
+            Object.assign(this, { x, y, z });
+          }
+        },
+        BoxGeometry: class {
+          constructor(options) {
+            this.options = options;
+          }
+        },
+        TaskProcessor,
+      },
+      __gevSoakWorkers: { snapshot: () => ({ pending: 0 }) },
+      performance: { now: () => 10 },
+      setTimeout,
+      clearTimeout,
+    },
+  );
+  assert.equal(result.probe.status, 'passed');
+  assert.deepEqual(
+    Array.from(result.probe.tasks, (task) => task.outcome),
+    ['resolved', 'resolved', 'rejected-as-expected', 'resolved'],
+  );
+  assert.equal(result.diagnostics.pending, 0);
+  assert.equal(destroyed, true);
 });
 
 test('setup failure reports retain owned browser cleanup evidence', () => {
@@ -856,5 +916,19 @@ test('soak fails when an operation is missing or fails', async () => {
       },
     }),
     /source failed/,
+  );
+});
+
+test('a committed harness may validate a separately frozen application commit', () => {
+  const harness = 'a'.repeat(40);
+  const application = 'b'.repeat(40);
+  assert.equal(
+    resolveExpectedApplicationCommit(application, harness),
+    application,
+  );
+  assert.equal(resolveExpectedApplicationCommit(null, harness), harness);
+  assert.throws(
+    () => resolveExpectedApplicationCommit('dev', harness),
+    /full SHA/,
   );
 });

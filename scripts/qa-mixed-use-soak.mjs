@@ -10,6 +10,13 @@ import {
 } from './performance/soakStability.mjs';
 const DEFAULT_DURATION_MS = FULL_SOAK_MS;
 
+export function resolveExpectedApplicationCommit(value, harnessCommit) {
+  const commit = String(value || harnessCommit || '').trim();
+  if (!/^[a-f0-9]{40}$/.test(commit))
+    throw new TypeError('Expected application commit must be a full SHA.');
+  return commit;
+}
+
 /** Preserve owned cleanup evidence when driver creation fails before measurement. */
 export function createSoakSetupFailureReport(error) {
   const report = {
@@ -224,6 +231,10 @@ if (
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
     encoding: 'utf8',
   }).trim();
+  const expectedApplicationCommit = resolveExpectedApplicationCommit(
+    value('--expected-commit', commit),
+    commit,
+  );
   const dirty = () =>
     Boolean(
       execFileSync('git', ['status', '--porcelain'], {
@@ -234,7 +245,7 @@ if (
   let report, runError;
   try {
     report = await runMixedUseSoak({
-      expectedCommit: commit,
+      expectedCommit: expectedApplicationCommit,
       prewarmApplication: hasFlag('--prewarm-application'),
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
@@ -258,7 +269,7 @@ if (
     runError = error;
     report = error.soakReport || createSoakSetupFailureReport(error);
   }
-  report.candidateCommit = commit;
+  report.candidateCommit = expectedApplicationCommit;
   report.harnessCommit = commit;
   report.sourceDirtyAtStart = sourceDirtyAtStart;
   report.harnessDirtyAtStart = sourceDirtyAtStart;
