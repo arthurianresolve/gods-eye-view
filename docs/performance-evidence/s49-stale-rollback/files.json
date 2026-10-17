@@ -1,0 +1,50 @@
+[
+  {
+    "file": "after-fix.json",
+    "bytes": 1108,
+    "sha256": "f17484d1e318fb98898f1941d69448ce488a92df22dd65c65010be6720002d13"
+  },
+  {
+    "file": "after-focused.log.gz",
+    "bytes": 8624,
+    "sha256": "10b86a272c4362054761a14497f1cd7ec4c09694e380e8d1ac2a23b176f10800",
+    "rawBytes": 24703,
+    "rawSha256": "9708662f1fe61782ea1d7665cacc035c0e74563601e9cd7e2c09fd1214ba287d"
+  },
+  {
+    "file": "before-fix.json",
+    "bytes": 1231,
+    "sha256": "fcbf7aefd89ef475225e3712934208136f9cc7a3783bc5944e6607330113c9a0"
+  },
+  {
+    "file": "existing-focused.log.gz",
+    "bytes": 6819,
+    "sha256": "84e1b76989bc1a48899a5e00a94b8a0497a91b62cf32048882a9b7e131fcfe6b",
+    "rawBytes": 19267,
+    "rawSha256": "1b713536b1e58fdd90b0ed4158f04856a25bfc375bb79ba7021c58b83c81f24b"
+  },
+  {
+    "file": "reproduction-source.mjs",
+    "bytes": 1332,
+    "sha256": "ad386e1cdb80f937d659b8471d840ce9c5da87b14f5f532e818d4c147b4a41c8"
+  },
+  {
+    "file": "ui-control-review.json",
+    "bytes": 837,
+    "sha256": "c225c5e3503ca5130bfc04175f1abfdd62413d1b77623cfb7cdb9bcd326fe9d7"
+  },
+  {
+    "file": "ui-fixed.log.gz",
+    "bytes": 170,
+    "sha256": "21d8af0b7a0d52c77f2d78d241221a18ad9ea24f8fee6a59ed29fb65002c79f7",
+    "rawBytes": 210,
+    "rawSha256": "b75b6dbc47f4a0fde513c07a904325a727f5f0ee4a7d73c36dabdb05fb0eabf1"
+  },
+  {
+    "file": "ui-missing-post-await-guard.log.gz",
+    "bytes": 546,
+    "sha256": "f91e93a571a04fb61ab92d6066cd82e1f254fc0c47982787fbe29d41d2c7fec8",
+    "rawBytes": 989,
+    "rawSha256": "be06d54871e32c715d8273389b7ffcd6f800adf2c0d6a97c3f935b8c76866911"
+  }
+]

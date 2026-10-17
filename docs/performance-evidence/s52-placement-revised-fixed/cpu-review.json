@@ -1,0 +1,255 @@
+{
+  "schema": "gev-placement-cpu-independent-review/v1",
+  "reviewedAt": "2026-10-11T01:10:27.113Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273",
+  "candidateCommit": "698752adcd27b59040affc0d0a1a9bd643025833",
+  "baselineCommit": "72694089e7fa0fa414042cde48765e1418a70d7e",
+  "rawReportSha256": "69e8b615b29d4d38c8b8ddbee2514f82fd12741cd42425a4c09da95fcca56c90",
+  "verified": {
+    "terminalRunAndExactCommits": true,
+    "sourceFixtureLockAndHarnessGitHashes": true,
+    "unchangedPreviouslyReviewedAdapter": true,
+    "allFortyPairsRecomputed": true,
+    "allBeforeAfterConditionsAndRepeatTrajectoriesMatch": true,
+    "instrumentationDisabledLatencyOnly": true
+  },
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "linux",
+    "osRelease": "6.17.0-1022-azure",
+    "cpuModel": "AMD EPYC 7763 64-Core Processor"
+  },
+  "conditions": {
+    "warmupFrames": 3000,
+    "pairs": 5,
+    "sampleFrames": 600,
+    "samplesPerProcess": 10,
+    "measuredFramesPerProcess": 6000,
+    "virtualFrameMs": 16,
+    "latencyUsesForcedGc": false,
+    "cadence": "0: fixed after first tick; 1: every tick; 60: every 960 ms of virtual time"
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entries": 250,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 7.515579273996953,
+      "minDeltaPercent": 3.0439980445043036,
+      "maxDeltaPercent": 11.057411210417989,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.23745813999998897,
+          "candidate": 0.2566483583333267,
+          "deltaPercent": 8.081516318345061
+        },
+        "placement": {
+          "baseline": 0.04771896833333661,
+          "candidate": 0.04889679500000966,
+          "deltaPercent": 2.4682567704428227
+        },
+        "paint": {
+          "baseline": 0.049854136666654086,
+          "candidate": 0.05092858833334427,
+          "deltaPercent": 2.155190599075918
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 5.58022434107619,
+      "minDeltaPercent": 3.007339949707566,
+      "maxDeltaPercent": 7.7333017238270685,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.3397736433333209,
+          "candidate": 0.3673262600000059,
+          "deltaPercent": 8.109109463695408
+        },
+        "placement": {
+          "baseline": 0.08013569666667611,
+          "candidate": 0.07911617833334277,
+          "deltaPercent": -1.2722399326906997
+        },
+        "paint": {
+          "baseline": 0.12992866999998873,
+          "candidate": 0.13243037666665713,
+          "deltaPercent": 1.9254462211216516
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 0.771139741216631,
+      "minDeltaPercent": 0.07081947465668037,
+      "maxDeltaPercent": 2.806967016773121,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.935347479999973,
+          "candidate": 0.9971791916666431,
+          "deltaPercent": 6.610560565862844
+        },
+        "placement": {
+          "baseline": 0.360478771666676,
+          "candidate": 0.3436922083333593,
+          "deltaPercent": -4.656741160014488
+        },
+        "paint": {
+          "baseline": 0.7535951933334036,
+          "candidate": 0.7492541533334043,
+          "deltaPercent": -0.576044013868704
+        }
+      }
+    },
+    {
+      "profile": "phase6-detection",
+      "entries": 5000,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -0.35610672829801127,
+      "minDeltaPercent": -1.709790680147194,
+      "maxDeltaPercent": 2.670390131838629,
+      "allPairsImprove": false,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.0015633350000583354,
+          "candidate": 0.0017071816666854526,
+          "deltaPercent": 9.201269505368304
+        },
+        "placement": {
+          "baseline": 0.0011610983333351517,
+          "candidate": 0.0011628350000258555,
+          "deltaPercent": 0.14957102605730466
+        },
+        "paint": {
+          "baseline": 2.0728885233333343,
+          "candidate": 2.0774520233332807,
+          "deltaPercent": 0.22015173264637866
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -26.41043800148649,
+      "minDeltaPercent": -26.930858034928818,
+      "maxDeltaPercent": -25.05170455911835,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.3017829483333268,
+          "candidate": 0.17135981499999617,
+          "deltaPercent": -43.21752903986975
+        },
+        "placement": {
+          "baseline": 0.07211759499999972,
+          "candidate": 0.07119297333332725,
+          "deltaPercent": -1.2821027471485613
+        },
+        "paint": {
+          "baseline": 0.13173286000001402,
+          "candidate": 0.12956313499998942,
+          "deltaPercent": -1.6470643695311593
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -20.242166015247342,
+      "minDeltaPercent": -22.875789428789485,
+      "maxDeltaPercent": -16.95414412286714,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.7901812983333366,
+          "candidate": 0.5012510466666905,
+          "deltaPercent": -36.56505820576399
+        },
+        "placement": {
+          "baseline": 0.23949604500002047,
+          "candidate": 0.23593729333334978,
+          "deltaPercent": -1.485933375922921
+        },
+        "paint": {
+          "baseline": 0.4391562966666576,
+          "candidate": 0.43782692666666967,
+          "deltaPercent": -0.30270999415886735
+        }
+      }
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -25.35273189099123,
+      "minDeltaPercent": -26.015532748196858,
+      "maxDeltaPercent": -23.493740717728905,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.30281897166666416,
+          "candidate": 0.17541213833333358,
+          "deltaPercent": -42.07359685296632
+        },
+        "placement": {
+          "baseline": 0.07525399833332813,
+          "candidate": 0.07810918833333592,
+          "deltaPercent": 3.7940708311086535
+        },
+        "paint": {
+          "baseline": 0.13023984333334965,
+          "candidate": 0.12909217333334103,
+          "deltaPercent": -0.881197313076576
+        }
+      }
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -15.527529789943884,
+      "minDeltaPercent": -15.836258489263288,
+      "maxDeltaPercent": -15.053851412262464,
+      "allPairsImprove": true,
+      "instrumentedPhaseMedianMsPerFrame": {
+        "projection": {
+          "baseline": 0.8038126133333117,
+          "candidate": 0.5134496899999855,
+          "deltaPercent": -36.12321062358389
+        },
+        "placement": {
+          "baseline": 0.3357959133332891,
+          "candidate": 0.3339637516666365,
+          "deltaPercent": -0.5456176188880946
+        },
+        "paint": {
+          "baseline": 0.7484305883333097,
+          "candidate": 0.7480493183333844,
+          "deltaPercent": -0.050942599870795746
+        }
+      }
+    }
+  ],
+  "disposition": "Rejected for promotion to dev: all 15 ordinary moving pairs regress; generic median +7.52%, infrastructure +5.58%, radio +0.77%, with one generic pair +11.06%. Static/periodic benefit and passing correctness/CI do not resolve the moving-path cost. Further isolated attribution is required.",
+  "limitations": [
+    "Synchronous Node algorithm with mock Canvas2D; not GPU, browser painting, full-scene motion p95, or final S52 acceptance.",
+    "Phase timings are separate instrumented samples and are used only for attribution."
+  ]
+}

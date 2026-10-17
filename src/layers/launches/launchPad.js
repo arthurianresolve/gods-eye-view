@@ -103,14 +103,7 @@ export function createLaunchPad({
           hideLaunchPadZone();
           return;
         }
-        const nowMs = Date.now();
-        if (nowMs - layerState._lastMissionRingRotationMs >= 1000) {
-          layerState._missionRingDate.setTime(nowMs);
-          parts.orbitRendering.updateMissionOrbitPrimitiveFrames(
-            layerState._missionRingDate,
-          );
-          layerState._lastMissionRingRotationMs = nowMs;
-        }
+        parts.orbitRendering.refreshMissionOrbitFramesIfDue();
         const launch = layerState._launches.find(
           (item) => item.id === layerState._selectedLaunchId,
         );

@@ -2069,12 +2069,12 @@ test('production eviction sites actually tag their clears', () => {
     evictedClear < lodRebuild,
     'the eviction clear must precede the LOD rebuild or it emits nothing at all',
   );
-  // …and the deliberate FIRMS paths (layer disable, destroy, deselect) stay untagged.
+  // …and the deliberate FIRMS paths (layer disable, destroy, deselect, and
+  // clearing provider history) stay untagged.
   assert.equal(
-    (firmsSource.match(/clearSelectedEntityContextForLayer\(id\);/g) || [])
-      .length,
-    3,
-    'only the refresh-vanish site is an eviction; disable/destroy/deselect stay deliberate',
+    (firmsSource.match(/clearSelectedEntityContextForLayer\(id\);/g) || []).length,
+    4,
+    'only the refresh-vanish site is an eviction; explicit clears stay deliberate',
   );
   assert.match(
     militaryAwarenessSource,

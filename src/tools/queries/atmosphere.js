@@ -2,6 +2,7 @@
 
 import { suggestView } from '../views.js';
 import { windFrom } from '../../layers/wind/inspection.js';
+import { createWindEvidence } from '../../layers/wind/evidence.js';
 import { sampleWind, windSpeed } from '../../layers/wind/model.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
@@ -204,6 +205,15 @@ export const getWind = defineTool({
     const speed = windSpeed(vector.u, vector.v);
     const from = windFrom(vector.u, vector.v);
     const kph = speed * 3.6;
+    const forecastEvidence = createWindEvidence(
+      snapshot,
+      { latitude: point.lat, longitude: point.lon, speed },
+      {
+        model,
+        receivedAt: Date.now(),
+        feedState: snapshot.stale ? 'stale' : 'nominal',
+      },
+    );
     return {
       summary:
         `Wind at ${point.label}: ${kph.toFixed(0)} km/h` +
@@ -224,6 +234,7 @@ export const getWind = defineTool({
         level: snapshot.level ?? '10 m above ground',
         model,
         cycle: snapshot.cycle ?? null,
+        evidence: forecastEvidence,
       },
     };
   },

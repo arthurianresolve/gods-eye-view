@@ -3,6 +3,11 @@ import { stampInitialShareGesture } from '../navigationPolicy.js';
 import { canPresentDeferredStatusNotice } from '../loadingFeedback.js';
 import { t, msg } from '../i18n/index.js';
 import { UiLifetime } from './uiLifetime.js';
+import {
+  createDefaultLayerState,
+  decodeLayerStateParams,
+} from '../data/layerState.js';
+import { viewToParams } from '../view/index.js';
 
 // One ready-made sentence per restore policy (SHARE_TRACKING_RESTORE_POLICIES
 // label) and outcome: a label dropped into a template cannot take the case or
@@ -114,6 +119,12 @@ export class ShareRestoration {
               applyCamera,
               navigationToken: generation,
             });
+            if (share.temporal === 'recording-unavailable')
+              this.showStatus(
+                'Shared recording is unavailable. Import its recording bundle from the Investigation Timeline.',
+              );
+            else if (share.temporal === 'invalid')
+              this.showStatus('Shared investigation time is invalid.');
             const layers = await (this._layerStateRestorePromise ||
               Promise.resolve([]));
             const tracking =
@@ -179,6 +190,7 @@ export class ShareRestoration {
   }
   connect(dataManager) {
     this._dataManager = dataManager;
+    this.shareLinkManager?.setDataManager?.(dataManager);
     this._layerStateCoordinator?.destroy();
     this._layerStateCoordinator = null;
     this._layerStateRestorePromise = null;
@@ -223,6 +235,27 @@ export class ShareRestoration {
         { clearSelection: true },
       ) === true
     );
+  }
+  async restoreWorkspaceView(view, options = {}) {
+    const owns = () =>
+      !options.signal?.aborted && options.isCurrent?.() !== false;
+    if (!owns()) return { layers: [], tracking: { status: 'superseded' } };
+    const params = viewToParams(view);
+    const layers = decodeLayerStateParams(params) || createDefaultLayerState();
+    const restored = await this._layerStateCoordinator?.restoreWorkspaceState?.(
+      layers,
+      options,
+    );
+    if (!owns())
+      return { layers: restored || [], tracking: { status: 'superseded' } };
+    const tracking =
+      await this._layerStateCoordinator?.restoreShareTrackingSelection?.(
+        options,
+      );
+    return {
+      layers: restored || [],
+      tracking: tracking || { status: 'unsupported' },
+    };
   }
   get initialRestorePromise() {
     return (

@@ -1,0 +1,144 @@
+{
+  "schema": "gev-s59-csv-summary-comparison/v1",
+  "status": "diagnostic-only",
+  "runtime": "Node v24.16.0 on Windows",
+  "baselineCommit": "e20a84b863bb5a91d809bbdd78de4e59ced1897b",
+  "baselineSourceSha256": "b641993b975f53d4c396736d1079aa144e67754a4222fec713dde3bf972f492d",
+  "candidateSourceSha256": "45c9fe3097a768ee81b8dbc3d965be5baf8324ef71bb6e287e705a4ab14dc34f",
+  "measuredCandidateSourceSha256": "7851caeeb51940bbe2dbfdb67c959bb4c907bad88af065035733fcf7009b2163",
+  "postMeasurementSourceEquivalence": "The follow-up restores the exported createImportPreview(options) signature and has previewCSV call the same private buildImportPreview(options, summary) function directly. It changes only the internal forwarding path; no timing rerun was made. Focused output parity covers empty/all-invalid input, missing times, duplicate IDs, bounds and accepted time range.",
+  "fixture": {
+    "acceptedRows": 49999,
+    "rejectedRows": 1,
+    "byteLength": 1953150,
+    "sha256": "3f7119e1cd507e8338413f59a9a500fca3a58542ee71d07339dd598cc8272fe4",
+    "mapping": {
+      "id": "id",
+      "latitude": "lat",
+      "longitude": "lon",
+      "time": "observed"
+    }
+  },
+  "warmupRunsPerArm": 1,
+  "measuredPairs": 5,
+  "measurement": "total previewCSV wall time, including the unchanged synchronous decode/CSV scan and batched normalization yields",
+  "samples": [
+    {
+      "pair": 0,
+      "arm": "before",
+      "totalMs": 300.2008,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 0,
+      "arm": "after",
+      "totalMs": 291.1966,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 1,
+      "arm": "after",
+      "totalMs": 276.6144,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 1,
+      "arm": "before",
+      "totalMs": 324.1366,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 2,
+      "arm": "before",
+      "totalMs": 288.5988,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 2,
+      "arm": "after",
+      "totalMs": 275.8981,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 3,
+      "arm": "after",
+      "totalMs": 264.4515,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 3,
+      "arm": "before",
+      "totalMs": 282.1059,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 4,
+      "arm": "before",
+      "totalMs": 275.2615,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    },
+    {
+      "pair": 4,
+      "arm": "after",
+      "totalMs": 277.3971,
+      "accepted": 49999,
+      "rejected": 1,
+      "bounds": [-180, -90, 180, 90],
+      "timeRange": [1767225600000, 1770225480000],
+      "outputSha256": "10a82351939f177a7f97202988ffb44ff94c1913c2787cca0d815e14c44b75a9"
+    }
+  ],
+  "sameOutput": true,
+  "medianTotalMs": {
+    "before": 288.5988,
+    "after": 276.6144,
+    "relativeChangePct": -4.15
+  },
+  "cancellation": {
+    "before": "AbortError during batched normalization",
+    "after": "AbortError during batched normalization",
+    "boundary": "Cancellation is observed after synchronous decode/scan; it cannot interrupt parseCsv."
+  },
+  "limitations": [
+    "Synthetic Node preview measurement only; no browser/UI interaction claim.",
+    "The full-file CSV scan remains synchronous and uninterruptible.",
+    "Full GeoJSON JSON.parse remains synchronous and uninterruptible.",
+    "The comparison does not qualify total import-to-render completion or large catalog/workspace interaction."
+  ]
+}

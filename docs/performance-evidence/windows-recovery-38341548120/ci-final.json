@@ -1,0 +1,57 @@
+{
+  "status": "completed",
+  "conclusion": "failure",
+  "headSha": "9dfff5b47691ebb9b2a8c5895e7c0c0972d43a47",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120",
+  "jobs": [
+    {
+      "id": 115113435835,
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113435835"
+    },
+    {
+      "id": 115113436043,
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436043"
+    },
+    {
+      "id": 115113436078,
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436078"
+    },
+    {
+      "id": 115113436084,
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436084"
+    },
+    {
+      "id": 115113436102,
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436102"
+    },
+    {
+      "id": 115113436140,
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436140"
+    },
+    {
+      "id": 115113436164,
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436164"
+    }
+  ]
+}

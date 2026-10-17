@@ -1,0 +1,76 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38190043475",
+  "commit": "b3f4386e290524b221ac8ea4270c2ba8cc475205",
+  "rawSha256": "fc763d1249f9bda3611ea44339ed04236e860b4ba7c4c2673ed5dbc6b9415a9b",
+  "status": "failed",
+  "failure": {
+    "message": "Expected values to be strictly equal: + actual - expected + undefined - 'infrastructure-datacenters' ",
+    "phase": "candidate"
+  },
+  "captureSummary": {
+    "reportSchema": "gev-performance-capture/v1",
+    "status": null,
+    "failure": null,
+    "source": {
+      "appCommit": "b3f4386e290524b221ac8ea4270c2ba8cc475205",
+      "harnessCommit": "b3f4386e290524b221ac8ea4270c2ba8cc475205",
+      "provenanceStatus": "verified-local-build-and-served-assets-before-and-after"
+    },
+    "fixtureDelivery": {
+      "status": "observed",
+      "fixtureSha256": "44ee5e37da85bba7fb2b720a1c0e77303f28ad1ae138084a319ac7332f664454"
+    },
+    "completedSampleCount": 4,
+    "completedSamplesRetained": 4,
+    "evidenceTruncated": null
+  },
+  "retainedProjectionTruncated": true,
+  "observed": {
+    "lifecycle": {
+      "scope": "one measured app document per capture process; each asset response is matched to its verified build-receipt URL and SHA-256, with populations observed before and after every sample",
+      "clock": "Date.now remains at the declared whole-millisecond epoch; Cesium currentTime is set from Cesium.JulianDate.fromDate with shouldAnimate=false and multiplier=0",
+      "camera": {
+        "id": "world-infrastructure-overview-v1",
+        "longitudeDeg": 0,
+        "latitudeDeg": 0,
+        "altitudeM": 15000000,
+        "headingDeg": 0,
+        "pitchDeg": -90
+      },
+      "routeScope": "idle and elapsed-time scripted camera motion, reset from the same captured home pose before every run",
+      "freshBrowserContextPerSample": false
+    },
+    "providerFixtureFieldPresent": false,
+    "fixtureWorkloadId": "infrastructure-datacenters",
+    "diagnosticDocumentRoles": [
+      "startup-1",
+      "main-setup"
+    ],
+    "workerDocumentRoles": [
+      "startup-1",
+      "provider-sample-0"
+    ],
+    "workerObservationCount": 2,
+    "sampleCount": 4,
+    "comparisonReadiness": {
+      "status": "not-ready",
+      "workerAuditTimingBoundary": "during-capture-diagnostic-instrumentation",
+      "reasons": [
+        "warmup-is-not-30-seconds",
+        "measurement-is-not-60-seconds",
+        "capture-does-not-have-five-runs-per-scenario",
+        "hardware-performance-acceptance-was-not-requested-or-verified",
+        "application-diagnostics-document-coverage-is-incomplete",
+        "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+        "latency-comparison-remains-disabled-pending-uninstrumented-capture"
+      ],
+      "reason": "warmup-is-not-30-seconds; measurement-is-not-60-seconds; capture-does-not-have-five-runs-per-scenario; hardware-performance-acceptance-was-not-requested-or-verified; application-diagnostics-document-coverage-is-incomplete; receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented; latency-comparison-remains-disabled-pending-uninstrumented-capture"
+    }
+  },
+  "limitations": [
+    "The retained capture is a redacted depth-bounded projection, not a complete raw report; nested fields are omitted and truncation is explicit.",
+    "Four one-second software samples do not establish hardware or performance acceptance.",
+    "The outer infrastructure validator and its synthetic tests assumed dense per-sample document ownership; producer and validator still disagree.",
+    "Earlier clock and audit failures remain historical failures."
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "id": 115460582560,
+  "run_id": 38444888569,
+  "workflow_name": "CI",
+  "head_branch": "qa/s47-austin-receipt-only",
+  "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOUTUTds8AAAAa4fysoA",
+  "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582560",
+  "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582560",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-13T18:12:42Z",
+  "started_at": "2026-10-13T18:12:45Z",
+  "completed_at": "2026-10-13T18:14:28Z",
+  "name": "Install and update recovery (ubuntu-latest)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-13T18:12:46Z",
+      "completed_at": "2026-10-13T18:12:47Z"
+    },
+    {
+      "name": "Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-13T18:12:47Z",
+      "completed_at": "2026-10-13T18:12:56Z"
+    },
+    {
+      "name": "Use supported Node.js",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-13T18:12:56Z",
+      "completed_at": "2026-10-13T18:13:03Z"
+    },
+    {
+      "name": "Validate optional profile recovery Chrome version selection",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-13T18:13:03Z",
+      "completed_at": "2026-10-13T18:13:03Z"
+    },
+    {
+      "name": "Clean install",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-13T18:13:03Z",
+      "completed_at": "2026-10-13T18:13:06Z"
+    },
+    {
+      "name": "Verify canonical map fixture assets and native parser compatibility",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-13T18:13:06Z",
+      "completed_at": "2026-10-13T18:13:13Z"
+    },
+    {
+      "name": "Exercise real Git update paths with disposable repositories",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-13T18:13:13Z",
+      "completed_at": "2026-10-13T18:13:15Z"
+    },
+    {
+      "name": "Reject incomplete artifacts and reopen portable workspaces",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-13T18:13:15Z",
+      "completed_at": "2026-10-13T18:13:15Z"
+    },
+    {
+      "name": "Test Windows recovery and shutdown ownership before browser setup",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-10-13T18:13:15Z",
+      "completed_at": "2026-10-13T18:13:15Z"
+    },
+    {
+      "name": "Install fixture browser",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-13T18:13:15Z",
+      "completed_at": "2026-10-13T18:13:19Z"
+    },
+    {
+      "name": "Install selected Chrome for Testing version",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 11,
+      "started_at": "2026-10-13T18:13:19Z",
+      "completed_at": "2026-10-13T18:13:19Z"
+    },
+    {
+      "name": "Upgrade and recover a real installation and browser profile",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-10-13T18:13:19Z",
+      "completed_at": "2026-10-13T18:14:25Z"
+    },
+    {
+      "name": "Preserve recovery evidence",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 13,
+      "started_at": "2026-10-13T18:14:25Z",
+      "completed_at": "2026-10-13T18:14:25Z"
+    },
+    {
+      "name": "Recovery evidence in job logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-10-13T18:14:25Z",
+      "completed_at": "2026-10-13T18:14:25Z"
+    },
+    {
+      "name": "Post Use supported Node.js",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-10-13T18:14:25Z",
+      "completed_at": "2026-10-13T18:14:25Z"
+    },
+    {
+      "name": "Post Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-10-13T18:14:25Z",
+      "completed_at": "2026-10-13T18:14:26Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-10-13T18:14:26Z",
+      "completed_at": "2026-10-13T18:14:26Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582560",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000024322,
+  "runner_name": "GitHub Actions 1000024322",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

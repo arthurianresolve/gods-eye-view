@@ -1,0 +1,265 @@
+{
+  "rawSha256": "18dd4578db1b3c541e9df22451cb192a628d810256fe7c6a13eaf6dce8402c96",
+  "decodedImages": [
+    {
+      "image": "entities-default-style-0.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-1.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-2.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-3.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-4.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-0.png",
+      "pixelSha256": "8a8e3dbb74da24320453fb2953ee4efd5715dda4c462396823532d7c5471bcd8",
+      "fileSha256": "00ba410aa6f9de754246b8506ea103d60fbfe27328d2d942dbcb804c47468e00",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-1.png",
+      "pixelSha256": "8a8e3dbb74da24320453fb2953ee4efd5715dda4c462396823532d7c5471bcd8",
+      "fileSha256": "00ba410aa6f9de754246b8506ea103d60fbfe27328d2d942dbcb804c47468e00",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-2.png",
+      "pixelSha256": "8a8e3dbb74da24320453fb2953ee4efd5715dda4c462396823532d7c5471bcd8",
+      "fileSha256": "00ba410aa6f9de754246b8506ea103d60fbfe27328d2d942dbcb804c47468e00",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-3.png",
+      "pixelSha256": "8a8e3dbb74da24320453fb2953ee4efd5715dda4c462396823532d7c5471bcd8",
+      "fileSha256": "00ba410aa6f9de754246b8506ea103d60fbfe27328d2d942dbcb804c47468e00",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-4.png",
+      "pixelSha256": "8a8e3dbb74da24320453fb2953ee4efd5715dda4c462396823532d7c5471bcd8",
+      "fileSha256": "00ba410aa6f9de754246b8506ea103d60fbfe27328d2d942dbcb804c47468e00",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-0.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-1.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-2.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-3.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-4.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-0.png",
+      "pixelSha256": "6cc11b7d113c8e886ec3d07bee05a1d62d354f8337db391ca6cdbf905f6d0c8b",
+      "fileSha256": "0109004ae85db6f1e739ce97453d73766fefa6ef528d57d1799b87c74c635e53",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-1.png",
+      "pixelSha256": "6cc11b7d113c8e886ec3d07bee05a1d62d354f8337db391ca6cdbf905f6d0c8b",
+      "fileSha256": "0109004ae85db6f1e739ce97453d73766fefa6ef528d57d1799b87c74c635e53",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-2.png",
+      "pixelSha256": "6cc11b7d113c8e886ec3d07bee05a1d62d354f8337db391ca6cdbf905f6d0c8b",
+      "fileSha256": "0109004ae85db6f1e739ce97453d73766fefa6ef528d57d1799b87c74c635e53",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-3.png",
+      "pixelSha256": "6cc11b7d113c8e886ec3d07bee05a1d62d354f8337db391ca6cdbf905f6d0c8b",
+      "fileSha256": "0109004ae85db6f1e739ce97453d73766fefa6ef528d57d1799b87c74c635e53",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-4.png",
+      "pixelSha256": "6cc11b7d113c8e886ec3d07bee05a1d62d354f8337db391ca6cdbf905f6d0c8b",
+      "fileSha256": "0109004ae85db6f1e739ce97453d73766fefa6ef528d57d1799b87c74c635e53",
+      "width": 960,
+      "height": 640
+    }
+  ],
+  "pairs": [
+    {
+      "caseId": "default-style",
+      "sample": 0,
+      "differingPixels": 0,
+      "cameraEqual": true,
+      "geometryEqual": true,
+      "overlayEqual": true,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 1,
+      "differingPixels": 0,
+      "cameraEqual": true,
+      "geometryEqual": true,
+      "overlayEqual": true,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 2,
+      "differingPixels": 0,
+      "cameraEqual": true,
+      "geometryEqual": true,
+      "overlayEqual": true,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 3,
+      "differingPixels": 0,
+      "cameraEqual": true,
+      "geometryEqual": true,
+      "overlayEqual": true,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 4,
+      "differingPixels": 0,
+      "cameraEqual": true,
+      "geometryEqual": true,
+      "overlayEqual": true,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 0,
+      "differingPixels": 50,
+      "cameraEqual": true,
+      "geometryEqual": false,
+      "overlayEqual": false,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 1,
+      "differingPixels": 50,
+      "cameraEqual": true,
+      "geometryEqual": false,
+      "overlayEqual": false,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 2,
+      "differingPixels": 50,
+      "cameraEqual": true,
+      "geometryEqual": false,
+      "overlayEqual": false,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 3,
+      "differingPixels": 50,
+      "cameraEqual": true,
+      "geometryEqual": false,
+      "overlayEqual": false,
+      "styleEqual": true,
+      "sourceEqual": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 4,
+      "differingPixels": 50,
+      "cameraEqual": true,
+      "geometryEqual": false,
+      "overlayEqual": false,
+      "styleEqual": true,
+      "sourceEqual": true
+    }
+  ],
+  "allPixelHashesVerified": true,
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38188781699",
+  "commit": "eea44e5768bd75e9f6f5b1d35251cafeb4551a30",
+  "harnessCommit": "eea44e5768bd75e9f6f5b1d35251cafeb4551a30",
+  "status": "failed",
+  "failedPhase": "cross-mode-comparison",
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "physicalDesktopCoverage": false,
+  "limitations": [
+    "This run passed readiness but does not resolve the earlier intermittent map-stack readiness failures.",
+    "Camera-change geometry, overlay and pixels differ; S54 cable visual acceptance remains failed.",
+    "Hosted Apple paravirtual renderer, not physical Windows evidence.",
+    "No timing benefit or soak acceptance."
+  ]
+}

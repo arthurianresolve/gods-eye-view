@@ -1,0 +1,74 @@
+{
+  "baselineCommit": "e50350431e4f8769c882e5e75fc2e0b534b0dc27",
+  "node": "v24.16.0",
+  "cesiumVersion": "1.138.0",
+  "results": [
+    {
+      "mode": "baseline",
+      "entityIds": [
+        "north",
+        "north_2",
+        "south"
+      ],
+      "styledSources": [
+        [
+          "north",
+          "North"
+        ],
+        [
+          "north_2",
+          "South"
+        ]
+      ],
+      "sourceRecords": [
+        "North",
+        "South"
+      ],
+      "surfaces": 2
+    },
+    {
+      "mode": "candidate",
+      "entityIds": [
+        "north",
+        "north_2",
+        "south"
+      ],
+      "styledSources": [
+        [
+          "north",
+          "North"
+        ],
+        [
+          "north_2",
+          "North"
+        ],
+        [
+          "south",
+          "South"
+        ]
+      ],
+      "sourceRecords": [
+        "North",
+        "South"
+      ],
+      "surfaces": 3
+    }
+  ],
+  "expected": [
+    [
+      "north",
+      "North"
+    ],
+    [
+      "north_2",
+      "North"
+    ],
+    [
+      "south",
+      "South"
+    ]
+  ],
+  "baselineExposesBug": true,
+  "candidateFixesBug": true,
+  "sameNativeIds": true
+}

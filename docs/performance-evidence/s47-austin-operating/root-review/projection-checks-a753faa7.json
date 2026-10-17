@@ -1,0 +1,19 @@
+[
+  {
+    "command": [
+      "node",
+      "scripts/check-capture-no-undef.mjs"
+    ],
+    "status": 0,
+    "output": "Capture harness no-undef: 17 files passed.\n"
+  },
+  {
+    "command": [
+      "node",
+      "scripts/format.mjs",
+      "--check"
+    ],
+    "status": 0,
+    "output": "Checked 1622 source files.\n"
+  }
+]

@@ -1,0 +1,122 @@
+{
+  "schema": "gev-s52-didpaint-target-review/v1",
+  "reviewedAt": "2026-10-11T02:35:44.692Z",
+  "graphFilesCompared": 296,
+  "sourceHashes": {
+    "baseline": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+    "candidate": "2cf2d2c0cbaa22e17e6b32736c461c8a05331129bc7809ceeea5d680bfa1c523",
+    "worker": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+    "lockfile": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+  },
+  "focusedCounts": {
+    "tests": 69,
+    "pass": 69,
+    "fail": 0,
+    "skipped": 0
+  },
+  "profiles": {
+    "local-infrastructure": {
+      "pairs": [
+        {
+          "pair": 0,
+          "deltaPct": -4.295199533335625
+        },
+        {
+          "pair": 1,
+          "deltaPct": -13.838655370913443
+        },
+        {
+          "pair": 2,
+          "deltaPct": -13.838655370913443
+        },
+        {
+          "pair": 3,
+          "deltaPct": -13.838655370913443
+        },
+        {
+          "pair": 4,
+          "deltaPct": -3.8089608342427583
+        }
+      ],
+      "medianDeltaPct": -13.838655370913443
+    },
+    "submarine-cables": {
+      "pairs": [
+        {
+          "pair": 0,
+          "deltaPct": -15.59442955947411
+        },
+        {
+          "pair": 1,
+          "deltaPct": -15.59442955947411
+        },
+        {
+          "pair": 2,
+          "deltaPct": -15.59442955947411
+        },
+        {
+          "pair": 3,
+          "deltaPct": -15.59442955947411
+        },
+        {
+          "pair": 4,
+          "deltaPct": -15.59442955947411
+        }
+      ],
+      "medianDeltaPct": -15.59442955947411
+    }
+  },
+  "correction": "Raw report focused.summary is empty because its display extraction expected spec format. Its raw TAP independently proves 69/69/0 with zero skips. Original report bytes preserved.",
+  "limits": [
+    "Comparison is between two unpublished prototypes, not current production.",
+    "Node GC-bracketed allocation diagnostic, not CPU latency, native pixel, GPU or full-scene acceptance.",
+    "Full allocation budgets and current-production transplant remain separate gates."
+  ],
+  "artifactSha256": {
+    ".gitattributes": "09518f741b318afc3a3cee29798b548a273535adf2cc19aa53e98a221f0f8bbb",
+    "report.json": "67b8108d1cb6d86c903906276b129737765b81f41d8beaa4a8d1df62c1316146",
+    "candidate-focused.tap.txt": "dda963e91e4d532550e9646090a46df19e4c98611843962f5bb59123f6108c0d",
+    "runner.mjs.txt": "9c7f69124f7a7d3ca5aa2ed37b7d79c5127d769c58852419d3cff33d134e28ec",
+    "full-test.mjs.txt": "3a2b5bb179fcf553466212acd0ed88b81e4b256733fb01c5de4e316a509363d0",
+    "local-infrastructure-0-baseline.stdout.txt": "93bd4b472dbc25d57299cd9bdf609b3e23b59d9b46c4d5ddf477e9735426c399",
+    "local-infrastructure-0-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-0-baseline.stdout.txt": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+    "submarine-cables-0-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-0-candidate.stdout.txt": "6198c32fc0797e638c2a390d1f1b5ddf335a66bdd8d3b627b777eca18c723aae",
+    "local-infrastructure-0-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-0-candidate.stdout.txt": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+    "submarine-cables-0-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-1-candidate.stdout.txt": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+    "local-infrastructure-1-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-1-candidate.stdout.txt": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+    "submarine-cables-1-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-1-baseline.stdout.txt": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+    "local-infrastructure-1-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-1-baseline.stdout.txt": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+    "submarine-cables-1-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-2-baseline.stdout.txt": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+    "local-infrastructure-2-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-2-baseline.stdout.txt": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+    "submarine-cables-2-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-2-candidate.stdout.txt": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+    "local-infrastructure-2-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-2-candidate.stdout.txt": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+    "submarine-cables-2-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-3-candidate.stdout.txt": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+    "local-infrastructure-3-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-3-candidate.stdout.txt": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+    "submarine-cables-3-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-3-baseline.stdout.txt": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+    "local-infrastructure-3-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-3-baseline.stdout.txt": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+    "submarine-cables-3-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-4-baseline.stdout.txt": "ccf64fd5121fc8ba9fd4cd1b06e6b04fed9af8e02374045f615b8eab2368d486",
+    "local-infrastructure-4-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-4-baseline.stdout.txt": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+    "submarine-cables-4-baseline.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-infrastructure-4-candidate.stdout.txt": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+    "local-infrastructure-4-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "submarine-cables-4-candidate.stdout.txt": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+    "submarine-cables-4-candidate.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

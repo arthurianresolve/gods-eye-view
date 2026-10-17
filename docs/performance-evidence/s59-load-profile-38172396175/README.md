@@ -1,0 +1,7 @@
+# S59 complete CPU/GC diagnostic
+
+[Run 38172396175](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38172396175) passes at clean, unchanged application/harness `d91e0873989d99ede54c3a0455934787e7c0e489`. Original report SHA-256: `e0f1451f8d03ce35fc62b4a93fc6f0658bfd0ed7bf083af782a6f58cd4950aea`. The report retains independently revalidated input digests, CPU samples, normalized trace records and known geometry hash.
+
+The 50,000-position LineString loads in 20.8 ms under profiling, including 14.6 ms in coordinate conversion. Seventeen sampled stacks place the largest named application-related weights in Cesium Cartesian conversion; most of the broader 106.2 ms profiler window is program/idle/control time. Same-thread GC overlap with the load is 3.994 ms and other-thread overlap is 2.937 ms; overlap does not establish causation and must not be added together as execution time. All eight flow records are retained; delivery explicitly completes without data loss. Periodic buffer telemetry remains unavailable.
+
+Fresh capture, native pick, full position count, source hashes and geometry hash pass. Page count returns to zero, browser exit is natural in 413.6 ms, and Vite exits. This is an instrumented diagnostic, not an unprofiled performance comparison or retained-memory pass. A separate heap profile on the same commit is the next attribution step; no rejected chunking prototype is promoted.

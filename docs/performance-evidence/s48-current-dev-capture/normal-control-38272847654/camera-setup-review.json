@@ -1,0 +1,18 @@
+{
+  "schema": "gev-pinned-camera-setup-control/v1",
+  "sourceCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+  "cesiumVersion": "1.138.0",
+  "scope": "Actual Cesium Camera and View comparator in Node; no browser or GPU",
+  "repeated": {
+    "positionDeltaM": 0,
+    "directionDelta": 0,
+    "upDelta": 4.577566798522237e-16,
+    "cameraChanged": false,
+    "moveStartEvents": 0
+  },
+  "realMovement": {
+    "cameraChanged": true,
+    "moveStartEvents": 1
+  },
+  "interpretation": "The repeated saved-pose write at this fixture pose does not itself cause a camera-change event. This control does not assess initial layer enable order, other poses, rendering costs or browser scheduling."
+}

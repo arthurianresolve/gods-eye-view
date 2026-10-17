@@ -1,0 +1,24 @@
+{
+  "implementation": "Vite startup/build dependency graph validation; no engine/GPU limits overridden",
+  "baseline": "908a7ffe2afe1078740ff239c8fc36659b3eb3ca",
+  "validation": {
+    "focused": {
+      "passed": 21,
+      "command": "node --test src/tooling/cesiumDependencies.test.mjs src/tooling/viteBuild.test.mjs src/tooling/allowedHosts.test.mjs src/ui/localSdrMarkup.test.mjs"
+    },
+    "format": {
+      "passed": true,
+      "files": 1523
+    },
+    "boundaries": {
+      "imports": true,
+      "packages": true
+    },
+    "productionBuild": {
+      "passed": true,
+      "node": "v24.16.0"
+    },
+    "fullIntegration": "pending"
+  },
+  "scope": "Build correctness prevention only. Windows frame-delivery and full hardware acceptance remain unresolved."
+}

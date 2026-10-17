@@ -1,0 +1,44 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S58",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "sourceHashes": {
+    "src/layers/wind/rendering.js": "26496581a7aea2386aa7a347c3e5859fd465f0357258976f9180077f8991c45a",
+    "src/layers/wind/gpuRendering.js": "3759c6bfe55ec770feb3ac8522ed9ca856f700282020f2fa1c3ff75f53d860b6",
+    "src/layers/weather/rendering.js": "ccbf770e599ce7f130a824fd4c0b03a26a7583696b684d4e1bafebc7d117619d",
+    "src/layers/weather/shellRendering.js": "d198125af0cb7c51d87ec7e9977626519e85bcb90714d9c18878c84950967f95",
+    "src/ui/visualEffects.js": "f593d95d3318b9b346395e7bdb44d11f07d522b3049c2aebcade95ea2b269309"
+  },
+  "runtimeByteIdenticalTo": "f90e24f",
+  "historicalArtifactsReverified": {
+    "wind-restores-b7e54c0-first.json": "ad361cbfe461fb7ee2f0314af4928d674e11ae1a787c7fd88c8b09349239e6bf",
+    "wind-restores-b7e54c0-repeat.json": "0b206e13267849f17b8bebe3865ce11a32aa11763a396e5071d923b8592f9797",
+    "wind-restores-b7e54c0-third.json": "58a2dfd203c246f820d9c45c71188ac4e185d62f0eec0fd8aac3a771fa6549a5",
+    "hosted-wind-d905f30.json": "c10011beb4ea76aebcf4a9fb0f86d03de84484666a1329aed9e0a3ddee3467e8"
+  },
+  "currentEvidence": [
+    "../s58-postprocess-stage-census/root-8d9d79bd/README.md",
+    "../representative-pr-e53df518/README.md",
+    "../windows-owned-process-d8506d3b/README.md"
+  ],
+  "ownershipAudit": {
+    "wind": "Equivalent decoded vector/scalar fields reuse paths and scalar images; tick updates GPU phase/visibility, not geometry. Invisible contributions stop RAF; visibility/camera changes re-arm. Clear/destroy release RAF, subscriptions, primitives, materials, imagery and shell.",
+    "weather": "Generation/abort guards retire failed, cancelled and superseded frames. Display and retirement are bounded. Regional replacement canvas owns and closes the displaced bitmap, including processing failure; raw/late Cesium images retain their original owner. Shell primitives/materials and byte-bounded frame/detail cache have explicit release.",
+    "effects": "Initialization is idempotent; intensity disables invisible stages. Selected stage census finds zero or one settled style, two only during intentional crossfade. Destroy removes seven owned stages, animation callback and render hold and restores borrowed bloom state."
+  },
+  "experimentDecisions": {
+    "windScalarReuse": "retain accepted equal-restore raster reuse; three five-pair CPU packets and hosted exact pixels retained; initial changed-temperature regression did not reproduce in the two follow-ups",
+    "fullScreenPassRemoval": "No redundant settled style stage is observed by the real selector/owner census. Preserve intentional crossfade and separately selected bloom/sharpen; no runtime pass-removal change or GPU-time benefit claimed."
+  },
+  "limitations": [
+    "Stage census does not invoke WebGL collection update and cannot report internal GPU pass count, GPU time or shader compilation.",
+    "Mocked raster CPU timings and hosted Metal pixels do not qualify the full physical Windows scene.",
+    "Weather observation times, wind animation cadence, colors, opacity and effect parameters remain unchanged; final rendered source/map-host/reduced-motion/transition matrix is pending.",
+    "No framebuffer-preservation default change."
+  ]
+}

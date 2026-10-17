@@ -37,6 +37,7 @@ test('military records preserve feet for aviation, metres for rendering and sour
   assert.equal(first.meta.altitudeFt, 1000 / 0.3048);
   assert.equal(first.meta.renderAltitudeM, 1040);
   assert.equal(first.fixEpochMs, 1700000000000);
+  assert.equal(first.meta.positionObservedAtMs, 1700000000000);
   const next = records.receive(
     observation({ callsign: '', typeCode: '', positionTimeMs: null }),
     context(),
@@ -44,6 +45,7 @@ test('military records preserve feet for aviation, metres for rendering and sour
   assert.equal(next.meta.callsign, 'MIL1');
   assert.equal(next.meta.type, 'C17');
   assert.equal(next.fixEpochMs, 1700000001000);
+  assert.equal(next.meta.positionObservedAtMs, null);
   assert.equal(Object.hasOwn(next.meta, 'cullPosition'), false);
 });
 

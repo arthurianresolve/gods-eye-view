@@ -1,0 +1,5 @@
+*.txt -text -whitespace
+*.json -text whitespace=cr-at-eol
+# Preserve diagnostic source evidence byte-for-byte, including its original EOF.
+diagnostic-candidate.js -text -whitespace
+diagnostic-runner.mjs -text -whitespace

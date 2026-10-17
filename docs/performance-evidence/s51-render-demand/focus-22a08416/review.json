@@ -1,0 +1,44 @@
+{
+  "sourceCommit": "22a084168692dc5e79d4d84fb6e7b0c06c98b067",
+  "reviewedAgentSource": "6210f62d7aeda4bf985e5bf3f3c31e52cc2a0818",
+  "rootFocusedTests": {
+    "tests": 74,
+    "passed": 74,
+    "failed": 0,
+    "skipped": 0
+  },
+  "negativeControls": {
+    "count": 3,
+    "expectedFailures": 3,
+    "unexpectedPasses": 0
+  },
+  "packageBoundaries": "passed",
+  "format": {
+    "status": "passed",
+    "files": 1654
+  },
+  "hardwareQualification": "pending",
+  "fullIntegration": "pending; preceding Windows suite remains failed",
+  "sourceFiles": [
+    {
+      "file": "src/layers/satellites/lifecycle.js",
+      "sha256": "39a99315f8ecbc0cc466cd92cb6b933b35d6e9226a4794765e6f1f7a4b8f508f"
+    },
+    {
+      "file": "src/layers/satellites/rendering.js",
+      "sha256": "76ae53ab8eee09d6ba0222d2feb779282c65e9ef4de976bee23a36dc21674619"
+    },
+    {
+      "file": "src/layers/satellites/policy.js",
+      "sha256": "0d2cafeee341ead1c4054bdfee087fe140c35fb377597b8e7b0e3e50ab6cc39d"
+    },
+    {
+      "file": "src/layers/satellites/state.js",
+      "sha256": "f3269db3d252e15ec1e9c6f61e2d57300cd90cbf05eeb9984cfd9c332456c81a"
+    },
+    {
+      "file": "src/layers/satellites/denseRenderDemand.test.mjs",
+      "sha256": "b5fdb377a07d170a4b8b0263bfe2dcf1cffd0fd3ca37aae82736b73b5d9837cf"
+    }
+  ]
+}

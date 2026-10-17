@@ -1,0 +1,44 @@
+{
+  "schema": "gev-overlay-range-census/v1",
+  "capturedAt": "2026-10-10T22:19:12.216Z",
+  "commit": "438245c409ca0097dc644ae09957197612bb5bea",
+  "harnessSha256": "fd6d87a02582f5b72a95f3d3ebf2f610627bd441058f4b9362b4ae79cff8ce84",
+  "sourceSha256": "b73bdc48f2f294c1f0f11c3d6a6eb9390f94f03c51b46044344ce5be31b5ed42",
+  "fixtureSourceSha256": {
+    "worker": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+    "overlay": "8279f2f000fb8aec4cc2071c6c0ef8a111a32b2a585be59a7f72f54dc3104dba"
+  },
+  "instrumentedWorkerSha256": "41abdc72ad33ca4eba943d29dcbfcb314d3814b6a79bf0427181f5fc1e130ce1",
+  "instrumentedOverlaySha256": "910e7fa33c6d5ebf664d1cb956f8efc463ae4796f50da1868005ba906ed4e55f",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "osRelease": "10.0.19045",
+  "cpuModel": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+  "worktreeCleanAtStart": false,
+  "scope": "Counts from existing Node overlay allocation fixtures using mock Canvas2D; not a timing, browser, GPU, or rendered-equivalence result.",
+  "interpretation": "Finite-range early rejection can skip projection and visibility checks only for finite-range entries with distance alpha zero after positive clipW. Added distance work is counted only for finite-range entries currently rejected by safe-top or viewport/horizon/occluder tests. No optimization is applied.",
+  "workloads": [],
+  "instrumentationPositiveControl": {
+    "scope": "synthetic instrumentation validation only; not an application workload or performance evidence",
+    "frames": 6000,
+    "configuredBaselineEntries": 1,
+    "syntheticEntries": 4,
+    "addedDistanceChecksPerFrame": 2,
+    "census": {
+      "snapshotCalls": 30000,
+      "positiveClipW": 30000,
+      "positiveClipWVisibilityRejected": 18000,
+      "currentVisibilityRejectedSafeTop": 6000,
+      "currentVisibilityRejectedViewportHorizon": 12000,
+      "finiteRangeVisibilityRejectedSafeTop": 6000,
+      "finiteRangeVisibilityRejectedViewportHorizon": 6000,
+      "finiteRangeEntries": 18000,
+      "finiteRangeRejected": 18000,
+      "rangeRejectedSafeTop": 6000,
+      "rangeRejectedVisibility": 6000,
+      "rangeRejectedVisible": 6000,
+      "unboundedEntries": 12000
+    }
+  },
+  "status": "complete"
+}

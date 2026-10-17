@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: root paint cache clears pixels after a shared painter unregisters itself
+ok 1 - root paint cache clears pixels after a shared painter unregisters itself
+  ---
+  duration_ms: 19.8531
+  type: 'test'
+  ...
+# Subtest: root paint cache observes a self-releasing late callback mutation on the next frame
+ok 2 - root paint cache observes a self-releasing late callback mutation on the next frame
+  ---
+  duration_ms: 2.2677
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3873.5217

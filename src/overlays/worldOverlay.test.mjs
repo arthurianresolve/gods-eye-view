@@ -11,7 +11,7 @@ import {
   setKeyholeFadeTuning,
 } from '../celestialRing.js';
 import { createCctvThumbnailOverlayEntry, createFrameSlot } from '../data/cctvCards.js';
-import { combinedOverlayAlpha } from './worldOverlayDraw.js';
+import { combinedOverlayAlpha, measureOverlayEntry } from './worldOverlayDraw.js';
 import {
   AMBIENT_CARD_COLLISION_CAPACITY,
   WORLD_OVERLAY_OCCLUDER_SELECTORS,
@@ -894,6 +894,479 @@ test('chrome observers scope: body is childList discovery; occluder attributes a
       'descendant churn (REC-dot blink, chip internals) must not reach the observer');
   }
   env.cleanup();
+});
+
+test('stable projection inputs reuse actual visibility work while callbacks stay live', () => {
+  const env = installMockEnvironment({ width: 400, height: 300, dpr: 1 });
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  const paintedAlphas = [];
+  Object.defineProperty(env.ctx, 'globalAlpha', {
+    configurable: true,
+    get() {
+      return paintedAlphas.at(-1) ?? 1;
+    },
+    set(value) {
+      paintedAlphas.push(value);
+    },
+  });
+  try {
+    initWorldOverlay(env.viewer);
+    const mutablePosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    let positionReads = 0;
+    let alphaReads = 0;
+    let scaleReads = 0;
+    let alpha = 1;
+    let scale = 1;
+    const entry = selectedEntry('projection-cache', {
+      interactive: true,
+      horizonCull: true,
+      position: () => {
+        positionReads++;
+        return mutablePosition;
+      },
+      sourceAlpha: () => {
+        alphaReads++;
+        return alpha;
+      },
+      presentationScale: () => {
+        scaleReads++;
+        return scale;
+      },
+    });
+    setOverlayEntries('projection-cache-source', [entry]);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      1,
+      'first frame evaluates real horizon visibility',
+    );
+    const firstRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(firstRect);
+    const firstWidth = firstRect.w;
+
+    env.advanceTime(200);
+    alpha = 0.4;
+    scale = 0.5;
+    paintedAlphas.length = 0;
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      1,
+      'unchanged pure projection inputs skip visibility work',
+    );
+    assert.equal(
+      positionReads,
+      2,
+      'dynamic position callback still runs every frame',
+    );
+    assert.equal(
+      alphaReads,
+      2,
+      'dynamic alpha callback still runs every frame',
+    );
+    assert.equal(
+      scaleReads,
+      2,
+      'dynamic presentation callback still runs every frame',
+    );
+    assert.ok(Math.abs(paintedAlphas.at(-1) - 0.4) < 1e-12);
+    const scaledRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(
+      scaledRect && scaledRect.w < firstWidth,
+      'presentation scale is refreshed on a cache hit',
+    );
+    const scaledAnchorX = scaledRect.anchorX;
+
+    mutablePosition.x = 0.2;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'a mutation of the returned position object invalidates',
+    );
+    const movedRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(movedRect && movedRect.anchorX > scaledAnchorX);
+
+    env.viewer.camera.frustum.projectionMatrix[0] = 2;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 3, 'camera projection changes invalidate');
+
+    env.viewer.camera.positionWC.x = 1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 4, 'camera position changes invalidate');
+
+    env.viewer.camera.positionCartographic.height++;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 5, 'camera altitude changes invalidate');
+
+    env.viewer.scene.mode = Cesium.SceneMode.SCENE2D;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 6, 'scene mode changes invalidate');
+
+    env.viewer.canvas.clientWidth = 800;
+    env.viewer.canvas.clientHeight = 600;
+    env.window.devicePixelRatio = 1.5;
+    env.window.dispatch('resize');
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 7, 'viewport and DPR changes invalidate');
+
+    env.window.devicePixelRatio = 2;
+    env.window.dispatch('resize');
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 8, 'DPR-only changes invalidate');
+
+    env.viewer.camera.viewMatrix[12] += 0.1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 9, 'view-matrix-only changes invalidate');
+
+    setOverlayEntries(
+      'projection-cache-source',
+      [{ ...entry, title: 'changed style', selected: false, protected: false }],
+      { alpha: 0.75 },
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      10,
+      'source and entry/style replacement invalidates',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('cached negative projection decisions retry after their owning input changes', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  let visible = false;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return visible ? originalIsPointVisible.apply(this, args) : false;
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const atCenter = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    const visibilityEntry = selectedEntry('visibility', {
+      interactive: true,
+      horizonCull: true,
+      position: atCenter,
+    });
+    setOverlayEntries('projection-negative-visibility', [visibilityEntry]);
+    env.postRender.raise();
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1, 'a stable hidden result is reused');
+    assert.equal(
+      getOverlayPaintRect('projection-negative-visibility', 'visibility'),
+      null,
+    );
+
+    visible = true;
+    setOverlayEntries('projection-negative-visibility', [visibilityEntry]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 2, 'entry revision retries visibility');
+    assert.ok(
+      getOverlayPaintRect('projection-negative-visibility', 'visibility'),
+    );
+    clearOverlaySource('projection-negative-visibility');
+
+    const safeTopEntry = selectedEntry('safe-top', {
+      interactive: true,
+      horizonCull: true,
+      safeTopRatio: 0.9,
+      position: atCenter,
+    });
+    setOverlayEntries('projection-negative-safe-top', [safeTopEntry]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const afterSafeTopReject = visibilityChecks;
+    assert.equal(
+      getOverlayPaintRect('projection-negative-safe-top', 'safe-top'),
+      null,
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterSafeTopReject,
+      'a stable safe-top rejection avoids the visibility test',
+    );
+    setOverlayEntries('projection-negative-safe-top', [
+      { ...safeTopEntry, safeTopRatio: 0 },
+    ]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterSafeTopReject + 1,
+      'a safe-top policy revision reruns projection and visibility',
+    );
+    assert.ok(
+      getOverlayPaintRect('projection-negative-safe-top', 'safe-top'),
+    );
+    clearOverlaySource('projection-negative-safe-top');
+
+    const behindCameraEntry = selectedEntry('behind-camera', {
+      interactive: true,
+      horizonCull: true,
+      position: atCenter,
+    });
+    env.viewer.camera.viewMatrix[15] = -1;
+    setOverlayEntries('projection-negative-behind-camera', [
+      behindCameraEntry,
+    ]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const afterBehindCameraReject = visibilityChecks;
+    assert.equal(
+      getOverlayPaintRect(
+        'projection-negative-behind-camera',
+        'behind-camera',
+      ),
+      null,
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterBehindCameraReject,
+      'a stable behind-camera result is reused',
+    );
+    env.viewer.camera.viewMatrix[15] = 1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterBehindCameraReject + 1,
+      'view-matrix change re-evaluates a behind-camera entry',
+    );
+    assert.ok(
+      getOverlayPaintRect(
+        'projection-negative-behind-camera',
+        'behind-camera',
+      ),
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('invalid dynamic position samples do not poison a later valid sample', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const validPosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    let sample = 'valid';
+    setOverlayEntries('projection-invalid-position', [
+      selectedEntry('position', {
+        interactive: true,
+        horizonCull: true,
+        position: () => {
+          if (sample === 'throw') throw new Error('temporary position failure');
+          return sample === null ? null : validPosition;
+        },
+      }),
+    ]);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1, 'the initial valid sample is projected');
+    assert.ok(getOverlayPaintRect('projection-invalid-position', 'position'));
+
+    sample = null;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      null,
+      'an unavailable sample immediately withdraws the stale hit rect',
+    );
+
+    sample = 'throw';
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      null,
+      'a failed sample does not republish the stale hit rect',
+    );
+    sample = 'valid';
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1);
+    assert.ok(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      'the same valid position safely reuses its cached pure projection',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('projection cache isolates duplicate identities and clears across remove/re-add and visibility changes', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const surfacePosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    const makeEntry = () =>
+      selectedEntry('same-id', {
+        horizonCull: true,
+        position: () => surfacePosition,
+      });
+    setOverlayEntries('projection-source-a', [makeEntry()]);
+    setOverlayEntries('projection-source-b', [makeEntry()]);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'same entry IDs in different sources are separate records',
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'both records reuse stable projection inputs',
+    );
+
+    assert.equal(removeOverlayEntry('projection-source-a', 'same-id'), true);
+    setOverlayEntries('projection-source-a', [makeEntry()]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      3,
+      'remove and re-add starts with a fresh cache record',
+    );
+
+    setOverlaySourceVisible('projection-source-b', false);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const hiddenCount = visibilityChecks;
+    setOverlaySourceVisible('projection-source-b', true);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      hiddenCount + 1,
+      'source visibility restoration invalidates its record',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('an out-of-view position can become visible without changing entry identity', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const mutablePosition = new Cesium.Cartesian3(
+      2,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    setOverlayEntries('projection-visibility-transition', [
+      selectedEntry('moving', {
+        interactive: true,
+        horizonCull: true,
+        position: () => mutablePosition,
+      }),
+    ]);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1);
+    assert.equal(
+      getOverlayPaintRect('projection-visibility-transition', 'moving'),
+      null,
+      'off-viewport entry is not published',
+    );
+
+    mutablePosition.x = 0;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'the changed exact position is re-evaluated',
+    );
+    assert.ok(
+      getOverlayPaintRect('projection-visibility-transition', 'moving'),
+      'same entry identity becomes visible after moving in view',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
 });
 
 test('projection records never retain keys for entries that are no longer live', () => {
@@ -2296,4 +2769,566 @@ test('promoting an ambient entry to selected paints it once with no fading dupli
     setOverlayEntries('military-installations', [entry]); paint(); env.advanceTime(200);
     assert.equal(paint(), 1, 'deselect restores the ambient card without re-entry cooldown');
   } finally { env.cleanup(); }
+});
+
+test('destroyed host font events cannot wake its replacement viewer', async (t) => {
+  const oldEnv = installMockEnvironment();
+  let replacementEnv;
+  t.after(() => { replacementEnv?.cleanup(); oldEnv.cleanup(); });
+  let oldResolve;
+  let oldLoadingDone = null;
+  oldEnv.document.fonts = {
+    ready: new Promise((resolve) => { oldResolve = resolve; }),
+    addEventListener(name, listener) { if (name === 'loadingdone') oldLoadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(oldEnv.viewer);
+  const oldRequests = oldEnv.viewer.scene.requestRenderCount;
+  destroyWorldOverlay();
+
+  replacementEnv = installMockEnvironment();
+  let replacementLoadingDone = null;
+  replacementEnv.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') replacementLoadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(replacementEnv.viewer);
+  const replacementRequests = replacementEnv.viewer.scene.requestRenderCount;
+
+  oldLoadingDone?.();
+  oldResolve();
+  await Promise.resolve();
+  assert.equal(oldEnv.viewer.scene.requestRenderCount, oldRequests);
+  assert.equal(replacementEnv.viewer.scene.requestRenderCount, replacementRequests);
+  assert.equal(typeof replacementLoadingDone, 'function', 'replacement owns a font listener');
+  replacementLoadingDone();
+  assert.equal(replacementEnv.viewer.scene.requestRenderCount, replacementRequests + 1);
+
+});
+
+test('font loading wakes a parked static overlay to recompute layout and hit bounds', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  let fontLoaded = false;
+  env.ctx.measureText = (text) => ({ width: String(text).length * (fontLoaded ? 10 : 6) });
+  let loadingDone = null;
+  env.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') loadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('font-wake', [selectedEntry('static', { interactive: true, title: 'FONT' })]);
+  env.postRender.raise();
+  const initialRect = getOverlayPaintRect('font-wake', 'static');
+  const initialWidth = initialRect?.w;
+  const initialSolve = getWorldOverlayDiagnostics().solveRevision;
+  const initialRequests = env.viewer.scene.requestRenderCount;
+  assert.ok(initialRect);
+
+  fontLoaded = true;
+  loadingDone();
+  assert.equal(env.viewer.scene.requestRenderCount, initialRequests + 1);
+  env.postRender.raise();
+
+  const updatedRect = getOverlayPaintRect('font-wake', 'static');
+  assert.ok(getWorldOverlayDiagnostics().solveRevision > initialSolve);
+  assert.ok(updatedRect.w > initialWidth);
+  const updatedEdgeHit = hitTestWorldOverlay(
+    updatedRect.x + updatedRect.w - 1,
+    updatedRect.y + 1,
+    { sourceId: 'font-wake' },
+  );
+  assert.equal(updatedEdgeHit?.entryId, 'static');
+});
+
+test('stable entry layout avoids repeated measurement while moving presentation stays live', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  let loadingDone;
+  env.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') loadingDone = listener; },
+    removeEventListener() {},
+  };
+  let scale = 1;
+  let presentationCalls = 0;
+  const movingPosition = position();
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('layout', [selectedEntry('moving', {
+    title: 'MOVING', interactive: true, position: () => movingPosition,
+    presentationScale: () => { presentationCalls++; return scale; },
+  })], { moving: true });
+  env.postRender.raise();
+  const firstRect = { ...getOverlayPaintRect('layout', 'moving') };
+  const entry = hitTestWorldOverlay(firstRect.x + 1, firstRect.y + 1).entry;
+  const layout = entry._overlayLayout;
+  let width = layout.w;
+  let measurementWrites = 0;
+  // Observe real measurement output writes without a runtime instrumentation counter.
+  Object.defineProperty(layout, 'w', {
+    configurable: true,
+    get: () => width,
+    set(value) { width = value; measurementWrites++; },
+  });
+  for (let i = 0; i < 10; i++) {
+    env.advanceTime(16);
+    movingPosition.x += 0.001;
+    env.postRender.raise();
+  }
+  assert.equal(measurementWrites, 0, 'unchanged text geometry is not reconstructed');
+  assert.equal(presentationCalls, 11, 'presentation remains live every frame');
+  scale = 1.5;
+  env.postRender.raise();
+  const scaledRect = { ...getOverlayPaintRect('layout', 'moving') };
+  assert.equal(scaledRect.w, firstRect.w * 1.5);
+  assert.equal(measurementWrites, 0, 'scale updates placement without remeasuring text');
+  const scaledHit = hitTestWorldOverlay(scaledRect.x + scaledRect.w - 1, scaledRect.y + 1);
+  assert.equal(scaledHit?.entryId, 'moving');
+  env.ctx.measureText = text => ({ width: String(text).length * 10 });
+  loadingDone();
+  env.postRender.raise();
+  assert.ok(measurementWrites > 0, 'font changes invalidate the measured layout');
+  assert.ok(getOverlayPaintRect('layout', 'moving').w > scaledRect.w);
+  const fontWrites = measurementWrites;
+  env.postRender.raise();
+  assert.equal(measurementWrites, fontWrites, 'new font geometry is then reused');
+});
+
+test('replacement and visibility preserve complete layout geometry for every card variant', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  for (const variant of ['label', 'track', 'tracked', 'thumbnail', 'card', 'selected']) {
+    for (const revision of [0, 1]) {
+      const raw = selectedEntry('same', {
+        selected: variant === 'selected', variant, interactive: true,
+        title: revision ? 'A substantially longer title' : 'SHORT',
+        details: revision ? ['long detail content', 'another line'] : [],
+        cardStyle: revision ? 'tactical' : undefined,
+        thumbnailWidth: revision ? 124 : 96, thumbnailHeight: revision ? 90 : 54,
+        thumbnailPadX: revision ? 7 : 0, thumbnailPadTop: 3,
+        thumbnailPadBottom: 2, thumbnailTitleGap: 5, thumbnailTitleHeight: 13,
+      });
+      if (revision === 0) setOverlayEntries('replacement', [raw]);
+      else upsertOverlayEntry('replacement', raw);
+      env.advanceTime(1000);
+      env.postRender.raise();
+      const rect = getOverlayPaintRect('replacement', 'same');
+      assert.ok(rect, `${variant} revision ${revision} paints`);
+      const hit = hitTestWorldOverlay(rect.x + 1, rect.y + 1, { sourceId: 'replacement' });
+      assert.ok(hit, `${variant} hit is available`);
+      const expected = measureOverlayEntry(env.ctx, normalizeOverlayEntry('control', raw));
+      assert.equal(rect.w, expected.w, `${variant} full width`);
+      assert.equal(rect.h, expected.h, `${variant} full height`);
+      assert.equal(hit.entry.title, raw.title);
+      const previousLayout = hit.entry._overlayLayout;
+      setOverlaySourceVisible('replacement', false);
+      env.postRender.raise();
+      assert.equal(getOverlayPaintRect('replacement', 'same'), null);
+      setOverlaySourceVisible('replacement', true);
+      env.postRender.raise();
+      const restored = getOverlayPaintRect('replacement', 'same');
+      assert.equal(restored.w, expected.w);
+      assert.equal(restored.h, expected.h);
+      assert.equal(hitTestWorldOverlay(restored.x + 1, restored.y + 1, { sourceId: 'replacement' }).entry._overlayLayout, previousLayout);
+    }
+  }
+});
+
+test('S52 placement behavior restores choices after occlusion, visibility, and anchor-radius changes', (t) => {
+  const env = installMockEnvironment({
+    width: 400,
+    height: 300,
+    dpr: 1,
+    occluderRect: { left: 2, top: 2, width: 12, height: 12 },
+  });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+
+  let anchor = positionAtScreen(205, 128);
+  const entry = selectedEntry('placement-behavior', {
+    position: () => anchor,
+    title: 'PLACEMENT BEHAVIOR',
+    interactive: true,
+    anchorRadiusPx: 0,
+    minAnchorGapPx: 0,
+    anchorGapPaddingPx: 0,
+    gapPx: 12,
+    leaderOffsetPx: 0,
+    placement: 'auto',
+  });
+  setOverlayEntries('s52-placement-behavior', [entry]);
+
+  const capture = () => {
+    env.postRender.raise();
+    const liveRect = getOverlayPaintRect(
+      's52-placement-behavior',
+      'placement-behavior',
+    );
+    const rect = liveRect && {
+      x: liveRect.x,
+      y: liveRect.y,
+      w: liveRect.w,
+      h: liveRect.h,
+      anchorX: liveRect.anchorX,
+      anchorY: liveRect.anchorY,
+    };
+    const hit =
+      liveRect &&
+      hitTestWorldOverlay(
+        liveRect.x + liveRect.w / 2,
+        liveRect.y + liveRect.h / 2,
+        {
+          sourceId: 's52-placement-behavior',
+        },
+      );
+    return { rect, hit };
+  };
+
+  const initial = capture();
+  assert.ok(initial.rect && initial.hit?.entryId === 'placement-behavior');
+  const liveEntry = initial.hit.entry;
+  liveEntry.anchorRadiusPx = 18;
+  liveEntry.minAnchorGapPx = 3;
+  liveEntry.anchorGapPaddingPx = 5;
+  const radiusGeometry = capture();
+  assert.ok(
+    radiusGeometry.rect && radiusGeometry.hit?.entryId === 'placement-behavior',
+  );
+  assert.notDeepEqual(
+    { x: radiusGeometry.rect.x, y: radiusGeometry.rect.y },
+    { x: initial.rect.x, y: initial.rect.y },
+    'anchor radius and its derived gap/leader offset change the actual chosen geometry',
+  );
+
+  const title = env.document.getElementById('title-bar');
+  const beforeOcclusion = radiusGeometry.rect;
+  title._rect = {
+    left: beforeOcclusion.x - 8,
+    top: beforeOcclusion.y - 8,
+    width: beforeOcclusion.w + 16,
+    height: beforeOcclusion.h + 16,
+  };
+  for (const observer of env.mutationObservers) {
+    observer.callback([{ type: 'attributes', target: title }]);
+  }
+  env.advanceTime(120);
+  const obstructed = capture();
+  assert.ok(
+    obstructed.rect && obstructed.hit?.entryId === 'placement-behavior',
+  );
+  assert.notDeepEqual(
+    { x: obstructed.rect.x, y: obstructed.rect.y },
+    { x: beforeOcclusion.x, y: beforeOcclusion.y },
+    'current UI occlusion can reject the prior placement and choose another valid one',
+  );
+
+  title._rect = { left: 2, top: 2, width: 12, height: 12 };
+  for (const observer of env.mutationObservers) {
+    observer.callback([{ type: 'attributes', target: title }]);
+  }
+  env.advanceTime(120);
+  const restoredAfterOcclusion = capture();
+  assert.deepEqual(
+    { x: restoredAfterOcclusion.rect.x, y: restoredAfterOcclusion.rect.y },
+    { x: beforeOcclusion.x, y: beforeOcclusion.y },
+    'the full candidate set is available again when the occluder moves away',
+  );
+  assert.equal(restoredAfterOcclusion.hit?.entryId, 'placement-behavior');
+
+  anchor = positionAtScreen(650, 270);
+  const offscreen = capture();
+  assert.equal(offscreen.rect, null);
+  assert.equal(
+    hitTestWorldOverlay(beforeOcclusion.x + 1, beforeOcclusion.y + 1, {
+      sourceId: 's52-placement-behavior',
+    }),
+    null,
+    'an offscreen entry publishes no stale hit target',
+  );
+
+  anchor = positionAtScreen(205, 128);
+  const visibleAgain = capture();
+  assert.deepEqual(
+    { x: visibleAgain.rect.x, y: visibleAgain.rect.y },
+    { x: beforeOcclusion.x, y: beforeOcclusion.y },
+    'the same dynamic entry restores the same geometry and hit after returning onscreen',
+  );
+  assert.equal(visibleAgain.hit?.entryId, 'placement-behavior');
+});
+
+test('S52 placement behavior restores ambient eligibility after a protected footprint moves', (t) => {
+  const env = installMockEnvironment({ width: 800, height: 600, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+
+  let protectedPosition = positionAtScreen(260, 180, 800, 600);
+  const ambientPosition = positionAtScreen(260, 180, 800, 600);
+  setOverlayEntries(
+    'ambient-placement',
+    [
+      selectedEntry('ambient', {
+        position: ambientPosition,
+        title: 'AMBIENT',
+        interactive: true,
+        selected: false,
+        protected: false,
+        collisionGroup: 'ambient-card',
+        verticalOnly: true,
+        placement: 'auto',
+      }),
+    ],
+    { cohortLimit: 1, collisionCapacity: 1, moving: true, solveIntervalMs: 16 },
+  );
+
+  const capture = () => {
+    env.postRender.raise();
+    env.advanceTime(200);
+    env.postRender.raise();
+    const liveRect = getOverlayPaintRect('ambient-placement', 'ambient');
+    const rect = liveRect && {
+      x: liveRect.x,
+      y: liveRect.y,
+      w: liveRect.w,
+      h: liveRect.h,
+    };
+    const hit =
+      liveRect &&
+      hitTestWorldOverlay(
+        liveRect.x + liveRect.w / 2,
+        liveRect.y + liveRect.h / 2,
+        {
+          sourceId: 'ambient-placement',
+        },
+      );
+    return { rect, hit };
+  };
+  const intersects = (a, b) =>
+    a &&
+    b &&
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y;
+
+  const unprotectedChoice = capture();
+  assert.ok(
+    unprotectedChoice.rect && unprotectedChoice.hit?.entryId === 'ambient',
+  );
+
+  const protectedEntry = selectedEntry('tracked', {
+    position: () => protectedPosition,
+    title: 'TRACKED',
+    variant: 'tracked',
+    tracked: true,
+    selected: true,
+    protected: true,
+    paintLane: 'tracked',
+    collisionGroup: 'ambient-card',
+    verticalOnly: true,
+  });
+  setOverlayEntries('tracked-placement', [protectedEntry], {
+    cohortLimit: 1,
+    collisionCapacity: 0,
+  });
+  const protectedFrameChoice = capture();
+  const protectedRectLive = getOverlayPaintRect('tracked-placement', 'tracked');
+  const protectedRect = protectedRectLive && {
+    x: protectedRectLive.x,
+    y: protectedRectLive.y,
+    w: protectedRectLive.w,
+    h: protectedRectLive.h,
+  };
+  assert.ok(protectedRect, 'the protected owner publishes its footprint');
+  assert.equal(
+    intersects(unprotectedChoice.rect, protectedRect),
+    true,
+    'the protected footprint vetoes the previous ambient option',
+  );
+  assert.ok(
+    protectedFrameChoice.rect &&
+      protectedFrameChoice.hit?.entryId === 'ambient',
+    'the unchanged ambient entry remains eligible through its other placement options',
+  );
+  assert.equal(
+    intersects(protectedFrameChoice.rect, protectedRect),
+    false,
+    'the ambient choice does not cover the protected card',
+  );
+
+  // Move the protected rectangle over the only surviving ambient alternative.
+  // This forces the unchanged entry to restore its previously filtered choice.
+  const shift = protectedFrameChoice.rect.y - protectedRect.y;
+  protectedPosition = positionAtScreen(260, 180 + shift, 800, 600);
+  const movedProtectedFrameChoice = capture();
+  const movedProtectedRectLive = getOverlayPaintRect(
+    'tracked-placement',
+    'tracked',
+  );
+  const movedProtectedRect = movedProtectedRectLive && {
+    x: movedProtectedRectLive.x,
+    y: movedProtectedRectLive.y,
+    w: movedProtectedRectLive.w,
+    h: movedProtectedRectLive.h,
+  };
+  assert.ok(
+    movedProtectedRect,
+    'the moved protected owner still publishes its footprint',
+  );
+  assert.equal(
+    intersects(protectedFrameChoice.rect, movedProtectedRect),
+    true,
+    'the moved owner now vetoes the formerly surviving alternative',
+  );
+  assert.ok(
+    movedProtectedFrameChoice.rect &&
+      movedProtectedFrameChoice.hit?.entryId === 'ambient',
+    'the same ambient entry remains painted and pickable after protected options are restored',
+  );
+  assert.notDeepEqual(
+    movedProtectedFrameChoice.rect,
+    protectedFrameChoice.rect,
+    'the filtered choice is restored without replacing or moving the ambient entry',
+  );
+  assert.equal(
+    intersects(movedProtectedFrameChoice.rect, movedProtectedRect),
+    false,
+    'the restored ambient placement remains clear of the moved protected footprint',
+  );
+});
+
+test('S52 placement signature rebuilds moved configuration before returning to an older pose', (t) => {
+  const env = installMockEnvironment({ width: 640, height: 420, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+
+  let anchor = positionAtScreen(245, 205, 640, 420);
+  setOverlayEntries('placement-signature-cycle', [selectedEntry('same', {
+    position: () => anchor,
+    placement: 'above',
+    gapPx: 12,
+    interactive: true,
+  })]);
+  const capture = () => {
+    env.postRender.raise();
+    const live = getOverlayPaintRect('placement-signature-cycle', 'same');
+    if (!live) return null;
+    const rect = { x: live.x, y: live.y, w: live.w, h: live.h };
+    const hit = hitTestWorldOverlay(
+      rect.x + rect.w / 2,
+      rect.y + rect.h / 2,
+      { sourceId: 'placement-signature-cycle' },
+    );
+    return { rect, hit };
+  };
+
+  const original = capture();
+  assert.ok(original?.hit?.entry);
+  const normalized = original.hit.entry;
+  anchor = positionAtScreen(375, 245, 640, 420);
+  normalized.placement = 'right';
+  normalized.gapPx = 31;
+  const movedConfiguration = capture();
+  assert.ok(movedConfiguration?.hit?.entry);
+  assert.notDeepEqual(movedConfiguration.rect, original.rect);
+
+  // Keep the new anchor while restoring the old configuration. The previous
+  // geometry was built with a different gap/direction at this same anchor.
+  normalized.placement = 'above';
+  normalized.gapPx = 12;
+  const changedAtSameAnchor = capture();
+  assert.deepEqual(changedAtSameAnchor?.rect, {
+    ...original.rect, x: original.rect.x + 130, y: original.rect.y + 40,
+  }, 'old configuration at the new anchor must not reuse moved geometry');
+  assert.equal(changedAtSameAnchor?.hit?.entryId, 'same');
+  assert.deepEqual(capture()?.rect, changedAtSameAnchor.rect,
+    'the newly restored configuration remains stable at the new anchor');
+
+  anchor = positionAtScreen(245, 205, 640, 420);
+  normalized.placement = 'above';
+  normalized.gapPx = 12;
+  const restored = capture();
+  assert.deepEqual(restored?.rect, original.rect);
+  assert.equal(restored?.hit?.entryId, 'same');
+  assert.deepEqual(capture()?.rect, original.rect, 'a stable repeat uses the restored full signature');
+});
+
+test('entries below the paint threshold stay noninteractive across stable frames and recovery', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  let alpha = 0.0005;
+  setOverlayEntries('low-alpha', [selectedEntry('faded-action', {
+    position: positionAtScreen(252, 174, 500, 360),
+    sourceAlpha: () => alpha,
+    edgeFade: 'none',
+    interactive: true,
+    accessibilityLabel: 'Faded action',
+    activate() { return true; },
+  })]);
+
+  for (const expectedVisible of [false, true, false]) {
+    alpha = expectedVisible ? 0.8 : 0.0005;
+    for (let frame = 0; frame < 3; frame++) {
+      env.advanceTime(16);
+      env.postRender.raise();
+      const diagnostics = getWorldOverlayDiagnostics();
+      assert.equal(diagnostics.candidateCount, 1, 'source population is retained');
+      assert.equal(diagnostics.paintedCount, Number(expectedVisible), 'publish only painted entries');
+      assert.equal(diagnostics.hitRectCount, Number(expectedVisible), 'invisible entries have no hit target');
+      const rect = getOverlayPaintRect('low-alpha', 'faded-action');
+      assert.equal(Boolean(rect), expectedVisible, 'paint rectangles follow opacity across stable frames');
+      const actions = env.document.getElementById('world-overlay-action-list');
+      assert.equal(actions.children.length, Number(expectedVisible), 'accessible actions follow visible output');
+      if (rect) {
+        const hit = hitTestWorldOverlay(rect.x + rect.w / 2, rect.y + rect.h / 2, { sourceId: 'low-alpha' });
+        assert.equal(hit?.entryId, 'faded-action', 'recovery preserves action identity');
+      }
+    }
+  }
+});
+
+test('retiring a shared painter clears its pixels on the next frame', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-shared', [selectedEntry('retained-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'LABEL', edgeFade: 'none',
+  })]);
+  const painter = registerWorldOverlayPaintLane('selected', (frame) => {
+    frame.ctx.fillRect(1, 2, 3, 4);
+    painter.unregister();
+  }, { id: 'self-releasing-marker', active: true, target: 'shared' });
+  env.postRender.raise();
+  const isMarker = ([name, ...args]) => name === 'fillRect' && JSON.stringify(args) === '[1,2,3,4]';
+  assert.ok(env.ctx.calls.some(isMarker), 'first frame draws the custom marker');
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name]) => name === 'clearRect'), 'next frame removes retired painter pixels');
+  assert.ok(env.ctx.calls.some(([name]) => name === 'fillText'), 'retained label is repainted after clear');
+  assert.equal(env.ctx.calls.some(isMarker), false, 'retired painter does not run again');
+});
+
+test('a self-releasing late callback mutation is painted on the next frame', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-late', [selectedEntry('mutable-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'ALPHA', edgeFade: 'none',
+  })]);
+  const painter = registerWorldOverlayPaintLane('tracked', () => {
+    const rect = getOverlayPaintRect('self-releasing-late', 'mutable-label');
+    assert.ok(rect?.entry, 'later callback sees the already painted label');
+    rect.entry.title = 'OMEGA';
+    painter.unregister();
+  }, { id: 'self-releasing-late-callback', active: true, target: 'detection' });
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'ALPHA'));
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'OMEGA'), 'next frame paints the post-label mutation');
 });

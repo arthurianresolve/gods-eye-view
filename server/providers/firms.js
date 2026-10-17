@@ -1,7 +1,11 @@
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 
-import { filterTrailing24h, parseFirmsCsv } from '../../src/data/firmsCsv.js';
+import {
+  acquisitionMsUtc,
+  filterTrailing24h,
+  parseFirmsCsv,
+} from '../../src/data/firmsCsv.js';
 import { readResponseTextCapped } from './common/http.js';
 
 /**
@@ -27,8 +31,15 @@ import { readResponseTextCapped } from './common/http.js';
  *
  * @returns {import('vite').Plugin}
  */
-export function firmsProxy() {
+export function firmsProxy({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  workingDirectory = process.cwd(),
+} = {}) {
   const TTL_MS = 30 * 60_000;
+  const HISTORY_TTL_MS = 30 * 60_000;
+  const HISTORY_CACHE_LIMIT = 4;
+  const DAY_MS = 24 * 60 * 60_000;
+  const HISTORY_MAX_AGE_MS = 120 * DAY_MS;
   const STATUS_TTL_MS = 5 * 60_000;
   const SOURCES = [
     'VIIRS_NOAA20_NRT',
@@ -36,13 +47,9 @@ export function firmsProxy() {
     'VIIRS_SNPP_NRT',
     'MODIS_NRT',
   ];
-  /**
-   * Per-source body cap. A VIIRS world/2 pull is ~130k rows x ~100 B, about
-   * 13 MB per satellite in heavy fire season (MODIS runs smaller), so this is a
-   * bound, not a budget.
-   */
+  /** Bound each upstream response without constraining normal heavy-fire pulls. */
   const FIRMS_MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
-  const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
+  const CACHE_DIR = path.join(workingDirectory, '.gev-cache');
   const CACHE_PATH = path.join(CACHE_DIR, 'firms.json');
 
   /** @type {?{at: number, sources: Array<object>, fires: Array<object>}} */
@@ -54,6 +61,8 @@ export function firmsProxy() {
   let statusCache = null;
   /** @type {?Promise<?{used: number, limit: number}>} */
   let statusInflight = null;
+  const historyCache = new Map();
+  const historyInflight = new Map();
 
   const mapKey = () => String(process.env.FIRMS_MAP_KEY || '').trim();
 
@@ -88,10 +97,11 @@ export function firmsProxy() {
    * (FIRMS reports errors as HTML/plain text, never CSV). Never log the URL —
    * it embeds the MAP_KEY.
    */
-  async function fetchSource(key, source) {
-    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/${source}/world/2`;
+  async function fetchSource(key, source, { date = null, days = 2 } = {}) {
+    const datePath = date ? `/${date}` : '';
+    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/${source}/world/${days}${datePath}`;
     const signal = AbortSignal.timeout(60_000);
-    const res = await fetch(url, { signal });
+    const res = await fetchImpl(url, { signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const records = parseFirmsCsv(
       await readResponseTextCapped(res, FIRMS_MAX_RESPONSE_BYTES, signal),
@@ -128,6 +138,105 @@ export function firmsProxy() {
     }
     if (!sources.some((s) => s.ok)) throw new Error('all FIRMS sources failed');
     return { at: now, sources, fires };
+  }
+
+  /** Fetch a two-day dated source window once per UTC day for history seeks. */
+  async function refreshHistoricalDay(key, targetDayMs) {
+    const date = new Date(targetDayMs - DAY_MS).toISOString().slice(0, 10);
+    const sources = [];
+    const fires = [];
+    for (const source of SOURCES) {
+      try {
+        const records = await fetchSource(key, source, { date, days: 2 });
+        for (const record of records) fires.push(record);
+        sources.push({ source, count: records.length, ok: true });
+      } catch (err) {
+        console.warn(
+          `[firms-proxy] historical ${source} fetch failed:`,
+          err?.message || err,
+        );
+        sources.push({ source, count: 0, ok: false });
+      }
+    }
+    if (!sources.some((entry) => entry.ok))
+      throw new Error('all historical FIRMS sources failed');
+    return { at: Date.now(), targetDayMs, sources, fires };
+  }
+
+  function readHistoricalDay(targetDayMs) {
+    const cached = historyCache.get(targetDayMs);
+    if (cached && Date.now() - cached.at < HISTORY_TTL_MS) {
+      historyCache.delete(targetDayMs);
+      historyCache.set(targetDayMs, cached);
+      return Promise.resolve({ entry: cached, stale: false });
+    }
+    if (!historyInflight.has(targetDayMs)) {
+      const pending = refreshHistoricalDay(mapKey(), targetDayMs)
+        .then((entry) => {
+          historyCache.delete(targetDayMs);
+          historyCache.set(targetDayMs, entry);
+          while (historyCache.size > HISTORY_CACHE_LIMIT)
+            historyCache.delete(historyCache.keys().next().value);
+          return { entry, stale: false };
+        })
+        .catch((error) => {
+          const previous = historyCache.get(targetDayMs);
+          if (previous) return { entry: previous, stale: true };
+          throw error;
+        })
+        .finally(() => historyInflight.delete(targetDayMs));
+      historyInflight.set(targetDayMs, pending);
+    }
+    return historyInflight.get(targetDayMs);
+  }
+
+  function buildHistoricalPayload(entry, targetMs, stale) {
+    const fromMs = targetMs - DAY_MS;
+    const sourceFor = (record) => {
+      const satellite = String(record.satellite || '').toUpperCase();
+      if (satellite.includes('N20') || satellite.includes('NOAA-20'))
+        return 'VIIRS_NOAA20_NRT';
+      if (satellite.includes('N21') || satellite.includes('NOAA-21'))
+        return 'VIIRS_NOAA21_NRT';
+      if (satellite.includes('SNPP') || satellite === 'NPP')
+        return 'VIIRS_SNPP_NRT';
+      if (
+        String(record.instrument || '')
+          .toUpperCase()
+          .includes('MODIS') ||
+        satellite.includes('TERRA') ||
+        satellite.includes('AQUA')
+      )
+        return 'MODIS_NRT';
+      return null;
+    };
+    const fires = entry.fires.filter((record) => {
+      const observedAt = acquisitionMsUtc(record.acqDate, record.acqTime);
+      return (
+        Number.isFinite(observedAt) &&
+        observedAt >= fromMs &&
+        observedAt <= targetMs
+      );
+    });
+    const counts = new Map();
+    for (const fire of fires) {
+      const matched = sourceFor(fire);
+      if (matched) counts.set(matched, (counts.get(matched) || 0) + 1);
+    }
+    return {
+      fetchedAt: entry.at,
+      stale,
+      historical: true,
+      targetTime: new Date(targetMs).toISOString(),
+      window: { from: fromMs, to: targetMs },
+      ttlMs: HISTORY_TTL_MS,
+      sources: entry.sources.map((source) => ({
+        ...source,
+        count: counts.get(source.source) || 0,
+      })),
+      count: fires.length,
+      fires,
+    };
   }
 
   /**
@@ -194,7 +303,8 @@ export function firmsProxy() {
         res.end(JSON.stringify(obj));
       };
       try {
-        const subPath = String(req.url || '').split('?')[0];
+        const requestUrl = new URL(String(req.url || '/'), 'http://localhost');
+        const subPath = requestUrl.pathname;
         const key = mapKey();
         await readDiskOnce();
 
@@ -224,6 +334,28 @@ export function firmsProxy() {
 
         if (!key) {
           sendJson(503, { error: 'no_key' });
+          return;
+        }
+
+        if (subPath === '/history') {
+          const targetText = requestUrl.searchParams.get('target');
+          const targetMs = targetText ? Date.parse(targetText) : NaN;
+          if (
+            !Number.isFinite(targetMs) ||
+            targetMs < Date.now() - HISTORY_MAX_AGE_MS ||
+            targetMs > Date.now()
+          ) {
+            sendJson(400, { error: 'invalid_history_target' });
+            return;
+          }
+          const targetDayMs = Math.floor(targetMs / DAY_MS) * DAY_MS;
+          const { entry: history, stale } =
+            await readHistoricalDay(targetDayMs);
+          sendJson(200, buildHistoricalPayload(history, targetMs, stale));
+          return;
+        }
+        if (subPath !== '/') {
+          sendJson(404, { error: 'unknown_firms_route' });
           return;
         }
 

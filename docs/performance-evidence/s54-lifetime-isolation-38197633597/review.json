@@ -1,0 +1,471 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38197633597",
+  "rawSha256": "8e7204e345493954af70a02884fade86e16439672338428e6e285ecf44b1d377",
+  "rawBytes": 1406975,
+  "commit": "dc1f416c6bf9fd61333de7caefb477c36fe2311e",
+  "harnessCommit": "dc1f416c6bf9fd61333de7caefb477c36fe2311e",
+  "status": "failed",
+  "failedPhase": "entities-reenable-scene-stability",
+  "failures": [
+    {
+      "mode": "entities",
+      "activationOrder": 0,
+      "stage": "reenable-scene-stability",
+      "cycle": 0,
+      "message": "Error: Timed out waiting for a completed cable scene frame.\n    at http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:407:11"
+    }
+  ],
+  "images": [
+    {
+      "image": "entities-default-style-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "entities-default-style-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "entities-default-style-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "entities-default-style-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "entities-default-style-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "entities-camera-change-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "entities-camera-change-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "entities-camera-change-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "entities-camera-change-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "entities-camera-change-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "collections-default-style-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "collections-default-style-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "collections-default-style-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "collections-default-style-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "collections-default-style-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "image": "collections-camera-change-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "collections-camera-change-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "collections-camera-change-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "collections-camera-change-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    },
+    {
+      "image": "collections-camera-change-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "a14b2d216c62233bff87c3a4b4c3912fd7221accd58355efdf589cbccce21c1d",
+      "pixelSha256": "bbff22351e6a463e47af4440cb6394b45f0b285801171af1597355b62fe372db"
+    }
+  ],
+  "pairs": [
+    {
+      "caseId": "default-style",
+      "sample": 0,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 1,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 2,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 3,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 4,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 0,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 1,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 2,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 3,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 4,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    }
+  ],
+  "reportedCoordinateWitness": {
+    "schema": "gev-cable-reference-geometry-attribution/v1",
+    "baseline": {
+      "mode": "entities",
+      "sourceGeometrySha256": "68435ff8290dd3933b325601bbe0b339f7bcff556291d04503dc5210a9cdb8dc",
+      "referenceGeometrySha256": "dcd43116148f3bb3b55c86af4f56f22d92128ac94dc5c981d681338a47b6629c",
+      "witnessedGeometrySha256": "6fa402a0244198034ef570f7a43781bd8004a6e207ff43604899921c1d693d0a",
+      "cameraSha256": "07c912861e48cd875082ae20d58a4d4b58e2b46b07a6beccb649e9701a345447",
+      "postLoopWitnessAfterSample": 4,
+      "matchesLastSampleGeometry": true,
+      "referenceIdentitySha256": "3ae5ad156e94815b2417ac9f1a74e46f90593355d228bf03784a02a2d1977125",
+      "sourceCounts": {
+        "cableRows": 1913,
+        "landingRows": 1917,
+        "referenceRows": 2629
+      }
+    },
+    "candidate": {
+      "mode": "collections",
+      "sourceGeometrySha256": "68435ff8290dd3933b325601bbe0b339f7bcff556291d04503dc5210a9cdb8dc",
+      "referenceGeometrySha256": "dcd43116148f3bb3b55c86af4f56f22d92128ac94dc5c981d681338a47b6629c",
+      "witnessedGeometrySha256": "6fa402a0244198034ef570f7a43781bd8004a6e207ff43604899921c1d693d0a",
+      "cameraSha256": "07c912861e48cd875082ae20d58a4d4b58e2b46b07a6beccb649e9701a345447",
+      "postLoopWitnessAfterSample": 4,
+      "matchesLastSampleGeometry": true,
+      "referenceIdentitySha256": "3ae5ad156e94815b2417ac9f1a74e46f90593355d228bf03784a02a2d1977125",
+      "sourceCounts": {
+        "cableRows": 1913,
+        "landingRows": 1917,
+        "referenceRows": 2629
+      }
+    },
+    "comparison": {
+      "beforeCount": 2629,
+      "afterCount": 2629,
+      "beforeVisible": 35,
+      "beforeHidden": 2594,
+      "afterVisible": 35,
+      "afterHidden": 2594,
+      "addedIdentityCount": 0,
+      "removedIdentityCount": 0,
+      "sourceIdentityChangedCount": 0,
+      "visibilityChangedCount": 0,
+      "pointChangedCount": 0,
+      "stemChangedCount": 0,
+      "visibleChangedCount": 0,
+      "hiddenChangedCount": 0,
+      "examples": {
+        "visible": [],
+        "hidden": []
+      }
+    }
+  },
+  "coordinateWitnessLimitation": "Full rows are discarded by the fixture after comparison; the matching coordinate counts/hashes are reported observations, not independently recomputed coordinates.",
+  "lifetimeOutcomes": [
+    {
+      "mode": "entities",
+      "status": "failed",
+      "samples": 10,
+      "lifecycleStage": "reenable-scene-stability",
+      "lifecycleCycle": 0,
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      },
+      "teardown": null
+    },
+    {
+      "mode": "collections",
+      "status": "passed",
+      "samples": 10,
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      },
+      "teardown": {
+        "disabled": true,
+        "reEnabled": true,
+        "dataSourcesRemoved": 3,
+        "collectionsRemoved": 6,
+        "overlayHidden": true,
+        "destroyed": true,
+        "listenersAfterDestroy": 0,
+        "remainingDataSources": 0,
+        "remainingCollections": 0
+      }
+    }
+  ],
+  "readiness": [
+    {
+      "elapsedMs": 268.70000000001164,
+      "frameNumber": 1009,
+      "pending": [
+        {
+          "path": "primitives/0/2/0",
+          "type": "EntityCluster"
+        },
+        {
+          "path": "primitives/0/3/1",
+          "type": "Primitive"
+        },
+        {
+          "path": "primitives/0/3/2",
+          "type": "Primitive"
+        },
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ]
+    },
+    {
+      "elapsedMs": 283.29999999998836,
+      "frameNumber": 1010,
+      "pending": [
+        {
+          "path": "primitives/0/3/1",
+          "type": "Primitive"
+        },
+        {
+          "path": "primitives/0/3/2",
+          "type": "Primitive"
+        },
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ]
+    },
+    {
+      "elapsedMs": 419,
+      "frameNumber": 1011,
+      "pending": [
+        {
+          "path": "primitives/0/3/1",
+          "type": "Primitive"
+        },
+        {
+          "path": "primitives/0/3/2",
+          "type": "Primitive"
+        },
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ]
+    },
+    {
+      "elapsedMs": 452.70000000001164,
+      "frameNumber": 1012,
+      "pending": [
+        {
+          "path": "primitives/0/3/1",
+          "type": "Primitive"
+        },
+        {
+          "path": "primitives/0/3/2",
+          "type": "Primitive"
+        },
+        {
+          "path": "groundPrimitives/0/1/z-group-0/0",
+          "type": "GroundPolylinePrimitive"
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "externalRequests": 0,
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 203850.925125,
+      "closeSettledHostMs": 205598.484625,
+      "closeElapsedMs": 1747.559500000003,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1665.7867499999993
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "acceptance": "Failed lifecycle gate. Matching images in this run do not explain the earlier mismatch or establish repeatability, performance benefit, retention plateau, or physical Windows coverage."
+}

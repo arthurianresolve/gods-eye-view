@@ -1,0 +1,43 @@
+{
+  "schema": "gev-austin-cleanup-consumer-replay/v1",
+  "recordedAt": "2026-10-12T21:43:09.892Z",
+  "rawReport": {
+    "path": "docs/performance-evidence/s47-austin-operating/root-review/hosted-smoke-38311295634-cli-failed.json",
+    "sha256": "4e0bf33969efc04fe25af6de854cfed518bc59b5b2f74d61b01a39645257ebec",
+    "byteLength": 36047
+  },
+  "priorCommit": "61c72ea2411163c3d5906467b2bcfd32e275a987",
+  "priorSourceSha256": "41b05f1f79df143d2255485ce37fabdb7ebb39ddd8a4cd00fb5b44c987672ff3",
+  "correctedSourceSha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545",
+  "cases": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "previous": {
+        "status": "incomplete",
+        "confirmed": false,
+        "matchingReleaseCount": 1
+      },
+      "corrected": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "previous": {
+        "status": "incomplete",
+        "confirmed": false,
+        "matchingReleaseCount": 1
+      },
+      "corrected": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "scope": "Recompute only cleanup evidence from the preserved failed capture. The readiness timeout remains a failed capture and is not converted to a pass."
+}

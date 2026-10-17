@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Point collection upload diagnostic</title>
+  <body>
+    <h1>Point collection upload diagnostic</h1>
+    <p>
+      Five alternating pairs with identical synthetic points and update steps.
+      This measures instrumented collection submissions, not application FPS,
+      GPU execution time, or acceptance of a runtime optimization.
+    </p>
+    <button id="run">Run collection diagnostic</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer" style="width: 640px; height: 360px"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./point-collections-ui.js"></script>
+  </body>
+</html>

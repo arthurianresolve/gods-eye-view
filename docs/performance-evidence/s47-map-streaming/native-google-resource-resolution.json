@@ -1,0 +1,221 @@
+{
+  "checkedAt": "2026-10-13T03:15:39.823Z",
+  "cesiumVersion": "1.138.0",
+  "fixtureManifestSha256": "2bdeb8dbcaa4570b735d0bda4594173df14d43d1d0d8f5486de34d125862183d",
+  "scope": "Native Cesium Resource URL derivation only; no network request or browser render",
+  "rootPath": "/v1/3dtiles/root.json",
+  "profile": "austin-map-streaming-v1",
+  "count": 21,
+  "rows": [
+    {
+      "uri": "../tiles/level-0/0-0.glb",
+      "resolvedPath": "/v1/tiles/level-0/0-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-0/0-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-1/0-0.glb",
+      "resolvedPath": "/v1/tiles/level-1/0-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-1/0-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/0-0.glb",
+      "resolvedPath": "/v1/tiles/level-2/0-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/0-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/1-0.glb",
+      "resolvedPath": "/v1/tiles/level-2/1-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/1-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/0-1.glb",
+      "resolvedPath": "/v1/tiles/level-2/0-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/0-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/1-1.glb",
+      "resolvedPath": "/v1/tiles/level-2/1-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/1-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-1/1-0.glb",
+      "resolvedPath": "/v1/tiles/level-1/1-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-1/1-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/2-0.glb",
+      "resolvedPath": "/v1/tiles/level-2/2-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/2-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/3-0.glb",
+      "resolvedPath": "/v1/tiles/level-2/3-0.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/3-0.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/2-1.glb",
+      "resolvedPath": "/v1/tiles/level-2/2-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/2-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/3-1.glb",
+      "resolvedPath": "/v1/tiles/level-2/3-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/3-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-1/0-1.glb",
+      "resolvedPath": "/v1/tiles/level-1/0-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-1/0-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/0-2.glb",
+      "resolvedPath": "/v1/tiles/level-2/0-2.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/0-2.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/1-2.glb",
+      "resolvedPath": "/v1/tiles/level-2/1-2.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/1-2.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/0-3.glb",
+      "resolvedPath": "/v1/tiles/level-2/0-3.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/0-3.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/1-3.glb",
+      "resolvedPath": "/v1/tiles/level-2/1-3.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/1-3.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-1/1-1.glb",
+      "resolvedPath": "/v1/tiles/level-1/1-1.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-1/1-1.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/2-2.glb",
+      "resolvedPath": "/v1/tiles/level-2/2-2.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/2-2.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/3-2.glb",
+      "resolvedPath": "/v1/tiles/level-2/3-2.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/3-2.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/2-3.glb",
+      "resolvedPath": "/v1/tiles/level-2/2-3.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/2-3.glb",
+      "exists": true
+    },
+    {
+      "uri": "../tiles/level-2/3-3.glb",
+      "resolvedPath": "/v1/tiles/level-2/3-3.glb",
+      "queryKeys": [
+        "key"
+      ],
+      "matchesFixedPublicKey": true,
+      "logicalPath": "tiles/level-2/3-3.glb",
+      "exists": true
+    }
+  ]
+}

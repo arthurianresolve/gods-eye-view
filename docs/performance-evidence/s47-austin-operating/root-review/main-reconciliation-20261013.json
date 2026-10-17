@@ -1,0 +1,38 @@
+{
+  "schema": "gev-main-reconciliation-check/v1",
+  "checkedAt": "2026-10-13T00:40:00.614Z",
+  "refs": {
+    "dev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+    "fork/dev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+    "main": "95fa816232456a6831172befa2f1b34b9ee73794",
+    "fork/main": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "origin/main": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+    "HEAD": "f73ec9be6d061cb674afc4c8a845e0af3b68baa0"
+  },
+  "devVsForkMain": {
+    "ahead": 608,
+    "behind": 0
+  },
+  "devVsUpstreamMain": {
+    "ahead": 608,
+    "behind": 0
+  },
+  "qaVsForkMain": {
+    "ahead": 671,
+    "behind": 0
+  },
+  "localVsRemoteDev": {
+    "ahead": 0,
+    "behind": 0
+  },
+  "forkVsUpstreamMain": {
+    "ahead": 0,
+    "behind": 0
+  },
+  "localMainVsRemoteMain": {
+    "ahead": 0,
+    "behind": 51
+  },
+  "finding": "Remote main has no commits missing from dev or the current QA branch. No merge, rebase or discard is needed.",
+  "localMainAction": "The separate local main worktree is clean but behind remote main; left unchanged by this read-only reconciliation check."
+}

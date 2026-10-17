@@ -1,0 +1,282 @@
+{
+  "schema": "gev-military-tracked-time-comparison/v1",
+  "scope": "Node production-factory output and sampling-count comparison; no CPU latency, browser, GPU or live aircraft measurement",
+  "timestamp": "2026-10-10T15:02:24.719Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "workingTreeHead": "afe83bc3584e0ef276fe10c7446c568a98ec4d22",
+  "baseline": "df9c3abd45f88b5e4062264fa0f4704209bc6d46",
+  "candidate": "afe83bc3584e0ef276fe10c7446c568a98ec4d22",
+  "comparisonScriptSha256": "0d40fd6ef2d05fa06bcba5440f1e69be583f3b77764c0e01d759ec1510aa31ed",
+  "fixtureScriptSha256": "2502be841957ed78688d0015f2136cb07e4531c6ed552aec2471de9dc964b2b0",
+  "lockfileSha256": "e4664b0d0dc7746c35a118244f6f671ccbbd3472ec64bd0d72879a6ce7f17de3",
+  "dependencyHashes": {
+    "src/data/motionModel.js": "f6e6ed5ca1155f9202235c4cd69bc4ef0c7bff38cb12d7bf8efea92e75cb0f49",
+    "src/data/aircraftClass.js": "65fd0bd592d798cd646bb1d6c32454237f20a26edb85eac3cb88a8a4dc641309",
+    "src/data/modelVisualAnchor.js": "4391165e7923cc32d400060b1bfd45a6c6302040863c80ac36819cabd33f4137",
+    "src/layers/military/policy.js": "4b25a1a73b582c4f1897f15d611ae1ea0f8556a35d66b6d5a72c98c9c9da7b2c",
+    "src/evidence/evidence.js": "fd2098ebbd22fef89f2545ad0e8c3ad59a2d5df8c90dc950b968336a858feab6",
+    "src/data/cockpitAirLod.js": "61a4e7f14534905d0c9898f80381f2ab42f18dc0dd3f00bb369a1192af153630",
+    "src/data/aircraftIcons.js": "dc11724c90b94dd0f312c6a6251546edcff9fa2584b1388ec6f6a721749335ae",
+    "src/data/trackedModelRegime.js": "0450c27879b00e7b8e382fb3fa7d83072c50dcfc875f5fa916a30e41d1800d66",
+    "src/data/iconOrientation.js": "827ace4ca6ebb4f8c15e501c09826cac7cb25701c0d16464e68881dd8341bb69",
+    "src/data/trackingClickGesture.js": "27640cbe2492a0046279334998c9cad3bd10bfc49fe1eee7f033bc045ec612ca"
+  },
+  "status": "passed",
+  "reports": [
+    {
+      "commit": "df9c3abd45f88b5e4062264fa0f4704209bc6d46",
+      "runtimeSha256": {
+        "src/layers/military/motion.js": "1bf4c38172429571758236d04c28c08e0a173bf5e8b579b6cb0c1be3936dd840",
+        "src/layers/military/tracking.js": "20e579582a69b9dfb1740f4f69bed8bea093b13cf657465c55b1a8026cf03398"
+      },
+      "diagnostics": {
+        "schema": "gev-military-tracked-frame-time-reproduction/v1",
+        "classification": "diagnostic-only-synthetic-clock",
+        "sourceScope": "production military createMotion and createTracking trail CallbackProperty",
+        "timingLimit": "Controlled timestamp ordering only; no browser, renderer, or aircraft-motion claim.",
+        "cases": {
+          "positionFirst": {
+            "sampledTimesSeconds": [
+              14.5,
+              15.5
+            ],
+            "authoritativeTimeSamples": 2,
+            "trailReturnedSegment": true,
+            "positionEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "courseDeg": 90,
+            "speedMps": 100,
+            "trailEndpointDeltaM": 0,
+            "focusPublications": 1
+          },
+          "trailFirst": {
+            "sampledTimesSeconds": [
+              14.5,
+              15.5
+            ],
+            "authoritativeTimeSamples": 2,
+            "trailReturnedSegment": false,
+            "positionEcefM": [
+              -742641.5204304609,
+              -5464291.083395972,
+              3197015.3025452676
+            ],
+            "courseDeg": 89.97227584215108,
+            "speedMps": 88.22606443840277,
+            "focusPublications": 1
+          },
+          "laterFrameObserver": {
+            "authoritativeTimeSamples": 2,
+            "observerFrameNumber": 2,
+            "trailSuppressedForCachedWarmupPose": false,
+            "focusWritesFromObserver": 0,
+            "cachedPoseRemainsSame": true
+          },
+          "modelOwnedEndpoint": {
+            "authoritativeTimeSamples": 2,
+            "trailReturnedSegment": true,
+            "modelOwnedEndpointDeltaM": 0
+          },
+          "invalidFrame": {
+            "paired": {
+              "authoritativeTimeSamples": 2,
+              "trailReturnedSegment": true,
+              "positionExists": true,
+              "invalidFrameDidNotEnterPoseCache": true,
+              "poseTimeAssociatedWithoutFrameNumber": false
+            },
+            "observer": {
+              "authoritativeTimeSamples": 2,
+              "trailSuppressedForCachedPoseTime": false,
+              "framePoseWasNotCached": true
+            },
+            "standalone": {
+              "authoritativeTimeSamples": 2,
+              "decisions": [
+                true,
+                false
+              ],
+              "noInvalidFrameTimeCache": true
+            },
+            "negative": {
+              "authoritativeTimeSamples": 1,
+              "invalidFrameDidNotCachePosition": true
+            }
+          },
+          "resetAndUntrackedFreshness": {
+            "authoritativeTimeSamples": 3,
+            "untrackedUsedIndependentTime": true,
+            "trackedTimeWasNotMutated": true,
+            "resetResampledTrackedTime": false,
+            "resetClearedTimeIdentity": false,
+            "targetChangedForNextPose": true
+          },
+          "interpolationAndExtrapolation": {
+            "authoritativeTimeSamples": 2,
+            "interpolationMatchesFixBracket": true,
+            "nextFrameAdvanced": true,
+            "extrapolatedBeyondNewestFix": true,
+            "focusPublications": 2
+          }
+        }
+      },
+      "repetitions": [
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 372
+        }
+      ]
+    },
+    {
+      "commit": "afe83bc3584e0ef276fe10c7446c568a98ec4d22",
+      "runtimeSha256": {
+        "src/layers/military/motion.js": "6e3506423043f1cd0f17f8ae174377cacd17899357caba9e61d671869c4dd9dd",
+        "src/layers/military/tracking.js": "ca608e7bcc5bda755bdde31dc66c8c05aec6a002a0c0fe9eb5e5c5683c7eea93"
+      },
+      "diagnostics": {
+        "schema": "gev-military-tracked-frame-time-reproduction/v1",
+        "classification": "diagnostic-only-synthetic-clock",
+        "sourceScope": "production military createMotion and createTracking trail CallbackProperty",
+        "timingLimit": "Controlled timestamp ordering only; no browser, renderer, or aircraft-motion claim.",
+        "cases": {
+          "positionFirst": {
+            "sampledTimesSeconds": [
+              14.5
+            ],
+            "authoritativeTimeSamples": 1,
+            "trailReturnedSegment": false,
+            "positionEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "courseDeg": 90,
+            "speedMps": 100,
+            "trailEndpointDeltaM": null,
+            "focusPublications": 1
+          },
+          "trailFirst": {
+            "sampledTimesSeconds": [
+              14.5
+            ],
+            "authoritativeTimeSamples": 1,
+            "trailReturnedSegment": false,
+            "positionEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "courseDeg": 90,
+            "speedMps": 100,
+            "focusPublications": 1
+          },
+          "laterFrameObserver": {
+            "authoritativeTimeSamples": 1,
+            "observerFrameNumber": 2,
+            "trailSuppressedForCachedWarmupPose": true,
+            "focusWritesFromObserver": 0,
+            "cachedPoseRemainsSame": true
+          },
+          "modelOwnedEndpoint": {
+            "authoritativeTimeSamples": 1,
+            "trailReturnedSegment": true,
+            "modelOwnedEndpointDeltaM": 0
+          },
+          "invalidFrame": {
+            "paired": {
+              "authoritativeTimeSamples": 1,
+              "trailReturnedSegment": true,
+              "positionExists": true,
+              "invalidFrameDidNotEnterPoseCache": true,
+              "poseTimeAssociatedWithoutFrameNumber": true
+            },
+            "observer": {
+              "authoritativeTimeSamples": 1,
+              "trailSuppressedForCachedPoseTime": true,
+              "framePoseWasNotCached": true
+            },
+            "standalone": {
+              "authoritativeTimeSamples": 2,
+              "decisions": [
+                true,
+                false
+              ],
+              "noInvalidFrameTimeCache": true
+            },
+            "negative": {
+              "authoritativeTimeSamples": 2,
+              "invalidFrameDidNotCachePosition": true
+            }
+          },
+          "resetAndUntrackedFreshness": {
+            "authoritativeTimeSamples": 3,
+            "untrackedUsedIndependentTime": true,
+            "trackedTimeWasNotMutated": true,
+            "resetResampledTrackedTime": true,
+            "resetClearedTimeIdentity": true,
+            "targetChangedForNextPose": true
+          },
+          "interpolationAndExtrapolation": {
+            "authoritativeTimeSamples": 2,
+            "interpolationMatchesFixBracket": true,
+            "nextFrameAdvanced": true,
+            "extrapolatedBeyondNewestFix": true,
+            "focusPublications": 2
+          }
+        }
+      },
+      "repetitions": [
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "f92688ea4f4de4e5fb7d9657e0b126c5899a16eeb06aba7e5d2e152d789d4e57",
+          "clockCalls": 248
+        }
+      ]
+    }
+  ]
+}

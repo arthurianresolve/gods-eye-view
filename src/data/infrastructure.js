@@ -9,6 +9,8 @@ import { INFRASTRUCTURE_DATA_URLS } from '../sources/infrastructureData.js';
 export function createInfrastructureLayers(services) {
   const datacentersUrl = INFRASTRUCTURE_DATA_URLS['local-datacenters'];
   const damsUrl = INFRASTRUCTURE_DATA_URLS['local-dams'];
+  const datacenterSurfaceRenderer =
+    services.datacenterSurfaceRenderer ?? 'entities';
   const datacenters = createLocalGeoJsonLayer(
     {
       id: 'local-datacenters',
@@ -16,11 +18,13 @@ export function createInfrastructureLayers(services) {
       name: 'Datacenters',
       color: '#00ffff', // Cyan
       icon: '▣',
-      source: 'Local',
+      source: 'OpenStreetMap contributors · ODbL-1.0',
+      license: 'ODbL-1.0',
       osmDerived: true,
       labels: true,
       labelMax: 700,
       labelGridPx: 138,
+      surfaceRenderer: datacenterSurfaceRenderer,
     },
     services,
   );
@@ -32,7 +36,8 @@ export function createInfrastructureLayers(services) {
       name: 'Dams',
       color: '#0088ff', // Blue
       icon: '▰',
-      source: 'USACE',
+      source: 'Open Infrastructure Map / OpenStreetMap · ODbL-1.0',
+      license: 'ODbL-1.0',
       osmDerived: true,
       labels: true,
       labelMax: 900,

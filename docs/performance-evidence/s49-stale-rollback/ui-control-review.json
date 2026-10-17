@@ -1,0 +1,21 @@
+{
+  "testedCommit": "7c9f65dd7b571ac818f307ecf1e03f29d595bc3a",
+  "sourceSha256": "89f5220e967552af955631eff6d767f632823a0c9584c50cc43ee67848439f58",
+  "testSha256": "d76c32ff1586e4331b3e4df40e842cbad87729fbf72102eec0719b7e510816a4",
+  "negativeControl": "Remove only post-await rollback owns() guard; retain token forwarding, coordinator checks and test terminal wait.",
+  "results": [
+    {
+      "kind": "fixed",
+      "exitCode": 0,
+      "sha256": "b75b6dbc47f4a0fde513c07a904325a727f5f0ee4a7d73c36dabdb05fb0eabf1",
+      "bytes": 210
+    },
+    {
+      "kind": "missing-post-await-guard",
+      "exitCode": 1,
+      "sha256": "be06d54871e32c715d8273389b7ffcd6f800adf2c0d6a97c3f935b8c76866911",
+      "bytes": 989
+    }
+  ],
+  "scope": "Node production UI module with existing DOM/share-link contract doubles; not a browser test"
+}

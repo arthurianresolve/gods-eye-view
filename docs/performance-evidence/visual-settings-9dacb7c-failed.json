@@ -1,0 +1,66 @@
+{
+  "commit": "9dacb7cd5b2076a7e8303c8a8bc65df6213a9f71",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/37973615671",
+  "report": {
+    "schema": "gev-visual-settings-journey/v1",
+    "status": "failed",
+    "checks": [
+      {
+        "id": "initial-share-link",
+        "status": "passed",
+        "actual": {
+          "mode": "manual",
+          "slider": 25,
+          "label": "25%",
+          "status": "MANUAL \u00b7 25%",
+          "effective": 25
+        }
+      },
+      {
+        "id": "manual-slider",
+        "status": "passed",
+        "actual": {
+          "mode": "manual",
+          "slider": 75,
+          "label": "75%",
+          "status": "MANUAL \u00b7 75%",
+          "effective": 75
+        }
+      },
+      {
+        "id": "quality-profile",
+        "status": "passed",
+        "actual": {
+          "mode": "quality",
+          "slider": 75,
+          "label": "75%",
+          "status": "QUALITY \u00b7 75%",
+          "effective": 75
+        }
+      },
+      {
+        "id": "performance-profile",
+        "status": "passed",
+        "actual": {
+          "mode": "performance",
+          "slider": 25,
+          "label": "25%",
+          "status": "PERFORMANCE \u00b7 25%",
+          "effective": 25
+        }
+      },
+      {
+        "id": "manual-profile-restores-choice",
+        "status": "passed",
+        "actual": {
+          "mode": "manual",
+          "slider": 25,
+          "label": "25%",
+          "status": "MANUAL \u00b7 25%",
+          "effective": 25
+        }
+      }
+    ],
+    "error": "workspace-restore\n\n50 !== 75\n"
+  }
+}

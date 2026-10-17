@@ -3,17 +3,142 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      validation_mode:
+        description: Full validation, hosted diagnostics, or performance build smoke
+        type: choice
+        options:
+          [
+            standard,
+            hosted-native-probe,
+            hosted-macos-soak,
+            hosted-collection-probe,
+            performance-build-smoke,
+            import-workspace-lifecycle,
+            cctv-lifecycle,
+            terrain-picking-lifecycle,
+            mission-render-demand,
+            tracking-regression,
+            mixed-use-smoke,
+            windows-profile-recovery,
+            windows-browser-shutdown,
+          ]
+        default: standard
+      full_soak:
+        description: Run the 60-minute rendered application acceptance soak
+        type: boolean
+        default: false
+      renderer_diagnostic:
+        description: Workload for the isolated hosted Mac diagnostic
+        type: choice
+        options:
+          [
+            collections,
+            wind,
+            infrastructure,
+            infrastructure-datacenters,
+            vessels,
+            calibration,
+            viewshed-retention,
+            traffic,
+            import-point-benefit,
+          ]
+        default: collections
+      hosted_gpu_probe:
+        description: Probe native WebGL on free standard hosted runners
+        type: boolean
+        default: false
+      candidate_sha:
+        description: Full immutable application SHA for the performance build smoke
+        type: string
+        required: false
+        default: ''
+      capture_worker_audit_mode:
+        description: Keep worker auditing diagnostic, or restore it before capture warmup
+        type: choice
+        options: [diagnostic, prewarm, receipt-only]
+        default: diagnostic
+      capture_provider_fixture:
+        description: Candidate capture workload inside the build smoke (weather uses a 2-sample 60-second phase-producer diagnostic; comparison runs remain separate)
+        type: choice
+        options:
+          [
+            dense-investigation,
+            infrastructure-datacenters,
+            infrastructure-dams,
+            infrastructure-cables,
+            infrastructure,
+            austin-weather-effects-phased-v2,
+            austin-operating-v1,
+            austin-map-streaming-v1,
+          ]
+        default: dense-investigation
+      capture_renderer_backend:
+        description: Browser backend for the hosted smoke; native macOS is diagnostic only
+        type: choice
+        options: [swiftshader, macos-native-diagnostic]
+        default: swiftshader
+      capture_scene_frame_diagnostics:
+        description: Add bounded dense attribution or Austin setup-readiness history (ineligible for comparison)
+        type: boolean
+        default: false
+      capture_first_motion_cpu_profile:
+        description: Sample first two idle and first scripted-motion windows (diagnostic only)
+        type: boolean
+        default: false
+      capture_depth_pick_attribution:
+        description: Record bounded caller-tagged depth-pick attribution in the dense capture (diagnostic only)
+        type: boolean
+        default: false
+      capture_shader_program_attribution:
+        description: Record bounded WebGL program lifecycle attribution in the dense capture (diagnostic only)
+        type: boolean
+        default: false
+      capture_delay_negative_control:
+        description: Run paired infrastructure captures that require the injected-delay frame-budget gate to reject (diagnostic only)
+        type: boolean
+        default: false
+      upload_artifacts:
+        description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
+        type: boolean
+        default: false
+      shutdown_runner:
+        description: Free standard hosted OS for isolated shutdown or profile-recovery diagnostics
+        type: choice
+        options: [windows-latest, macos-latest, ubuntu-latest]
+        default: windows-latest
+      shutdown_renderer:
+        description: Match recovery renderer defaults, or explicitly isolate SwiftShader WebGL
+        type: choice
+        options: [recovery-default, swiftshader-webgl-only]
+        default: recovery-default
+      shutdown_diagnostics:
+        description: Collect bounded target and owned-process snapshots on Windows recovery runs and optionally on manually selected other OS runs
+        type: boolean
+        default: false
+      shutdown_browser_version:
+        description: Exact four-part Chrome for Testing version for manual Windows profile-recovery diagnostics only; blank keeps the pinned default
+        type: string
+        required: false
+        default: ''
+      application_render_demand:
+        description: Run the opt-in full-application empty-layer render-demand diagnostic in mixed-use-smoke
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # A new push must not cancel a manually started soak of a frozen commit.
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.validation_mode || github.event_name }}
   cancel-in-progress: true
 
 jobs:
   verify:
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -49,9 +174,14 @@ jobs:
       - name: Check package boundaries
         run: npm run check:boundaries
 
+      - name: Check capture harness undefined identifiers
+        run: npm run check:capture-no-undef
+
       - name: Check published layer-token allocations
         if: github.event_name == 'pull_request'
-        run: npm run layer-token:check -- --base-ref origin/main
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref || github.event.repository.default_branch }}
+        run: npm run layer-token:check -- --base-ref "origin/$BASE_REF"
 
       - name: Run unit tests
         run: npm test
@@ -60,6 +190,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -104,6 +235,51 @@ jobs:
       - name: Street Level gate with Mapillary fixtures
         run: npm run qa:street-level:fixtures -- --strict --url http://localhost:4173
 
+      - name: Start the application lifecycle fixture server
+        if: success() || failure()
+        run: |
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > lifecycle.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 2
+          done
+          cat lifecycle.log
+          exit 1
+
+      - name: First-use application lifecycle gate
+        if: success() || failure()
+        run: npm run qa:application -- --url http://localhost:4174
+
+      - name: Evidence references and browser-profile transfer
+        if: success() || failure()
+        run: npm run qa:references -- --url http://localhost:4174
+
+      - name: Keyboard, accessible names and reflow
+        if: success() || failure()
+        run: npm run qa:accessibility -- --url http://localhost:4174
+
+      - name: Effective visual settings across share and workspace restores
+        if: success() || failure()
+        run: node scripts/qa-visual-settings.mjs --url http://localhost:4174
+
+      - name: Durable workspace library and cross-page conflict journey
+        if: success() || failure()
+        run: npm run qa:workspaces -- --url http://localhost:4174
+
+      - name: Rendered application mixed-use smoke
+        if: success() || failure()
+        run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json
+
+      - name: Scene import and sharing gate
+        if: success() || failure()
+        env:
+          QA_BASE_URL: http://localhost:4173
+        run: npm run qa:director-sharing
+
+      - name: Aircraft evidence panel gate
+        if: success() || failure()
+        run: npm run qa:evidence-panel -- --url http://localhost:4173
+
       - name: Portable panel gate
         if: success() || failure()
         run: npm run qa:panel-resize -- --url http://localhost:4173
@@ -113,15 +289,18 @@ jobs:
         run: cat preview.log
 
       - name: Upload gate evidence
-        if: failure()
+        if: failure() && inputs.upload_artifacts == true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: browser-gate-evidence
-          path: qa-artifacts/
+          path: |
+            qa-artifacts/
+            qa-shots/director-sharing/
           if-no-files-found: ignore
           retention-days: 14
 
   windows-onboarding:
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -150,7 +329,630 @@ jobs:
         run: npm run check:boundaries
 
       - name: Run focused onboarding tests
-        run: node --test src/setupDoctor.test.mjs src/pinokioEnvironment.test.mjs src/pinokioPreflight.test.mjs src/pinokioLauncherContract.test.mjs src/keySetupHardening.test.mjs src/mapStartup.test.mjs src/hudSummaryResponse.test.mjs src/codexOauthRealtime.test.mjs
+        run: node --test src/setupDoctor.test.mjs src/pinokioEnvironment.test.mjs src/pinokioPreflight.test.mjs src/pinokioLauncherContract.test.mjs src/keySetupHardening.test.mjs src/codexOauthRealtime.test.mjs src/mapStartup.test.mjs src/hudSummaryResponse.test.mjs
 
       - name: Build production bundle
         run: npm run build
+
+  install-recovery:
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
+    name: Install and update recovery (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep the legacy mode name; its default remains Windows. The selected
+        # OS also permits whole-application follow-up to the shutdown controls.
+        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && format('["{0}"]', inputs.shutdown_runner || 'windows-latest') || '["windows-latest","macos-latest","ubuntu-latest"]') }}
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      # Exercise recovery with a deterministic software renderer on GPU-less bots.
+      # This job does not contribute hardware/performance acceptance evidence.
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      # Windows and macOS recovery use the measured WebGL-only SwiftShader path.
+      # Linux retains its existing full-driver software renderer.
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (matrix.os == 'windows-latest' || matrix.os == 'macos-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_renderer == 'swiftshader-webgl-only')) && '1' || '0' }}
+      GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: ${{ (matrix.os == 'windows-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_diagnostics)) && '1' || '0' }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - name: Validate optional profile recovery Chrome version selection
+        env:
+          GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: ${{ inputs.shutdown_browser_version }}
+          GEV_QA_VALIDATION_MODE: ${{ inputs.validation_mode }}
+          GEV_QA_SELECTED_RUNNER: ${{ inputs.shutdown_runner || 'windows-latest' }}
+        run: node scripts/validate-profile-recovery-browser-selection.mjs
+
+      - name: Clean install
+        run: node scripts/pinokio-install.mjs
+
+      - name: Verify canonical map fixture assets and native parser compatibility
+        run: node --test scripts/performance/mapStreamingFixture.test.mjs
+
+      - name: Exercise real Git update paths with disposable repositories
+        run: node --test src/pinokioUpdatePreview.test.mjs
+
+      - name: Reject incomplete artifacts and reopen portable workspaces
+        run: npm run qa:install-recovery
+
+      - name: Test Windows recovery and shutdown ownership before browser setup
+        if: matrix.os == 'windows-latest'
+        run: node --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
+
+      - name: Install fixture browser
+        if: ${{ !inputs.shutdown_browser_version }}
+        run: npx puppeteer browsers install chrome
+
+      - name: Install selected Chrome for Testing version
+        if: ${{ inputs.shutdown_browser_version }}
+        env:
+          GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: ${{ inputs.shutdown_browser_version }}
+          GEV_QA_VALIDATION_MODE: ${{ inputs.validation_mode }}
+          GEV_QA_SELECTED_RUNNER: ${{ inputs.shutdown_runner || 'windows-latest' }}
+        run: node scripts/install-profile-recovery-browser.mjs
+
+      - name: Upgrade and recover a real installation and browser profile
+        run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
+
+      - name: Preserve recovery evidence
+        if: always() && inputs.upload_artifacts == true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: profile-recovery-${{ matrix.os }}
+          path: qa-artifacts/profile-recovery*
+          retention-days: 30
+      - name: Recovery evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
+
+  windows-browser-shutdown:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'windows-browser-shutdown'
+    name: Browser shutdown controls (${{ inputs.shutdown_runner || 'windows-latest' }})
+    runs-on: ${{ inputs.shutdown_runner || 'windows-latest' }}
+    timeout-minutes: 12
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == 'macos-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install pinned fixture browser
+        run: npx puppeteer browsers install chrome
+      - name: Compare blank, WebGL and Cesium shutdown controls
+        run: node scripts/qa-browser-shutdown.mjs --out qa-artifacts/browser-shutdown.json
+      - name: Preserve shutdown diagnostic
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-shutdown-${{ inputs.shutdown_runner || 'windows-latest' }}-${{ github.run_id }}
+          path: qa-artifacts/browser-shutdown.json
+          retention-days: 14
+      - name: Shutdown evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/browser-shutdown.json
+
+  performance-build-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'performance-build-smoke'
+    name: Baseline-compatible performance build smoke
+    runs-on: ${{ inputs.capture_renderer_backend == 'macos-native-diagnostic' && 'macos-latest' || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - name: Check out harness and reachable commits
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - name: Initialize bounded smoke artifact and clock
+        run: |
+          mkdir -p "$RUNNER_TEMP"
+          cat > "$RUNNER_TEMP/performance-build-smoke.json" <<'JSON'
+          {"schema":"gev-performance-build-smoke/v1","scope":"hosted-browser integration smoke only; no hardware performance result or paired acceptance","status":"not-run","failure":{"phase":"runner-setup","message":"Smoke script did not complete."}}
+          JSON
+          echo "GEV_PERF_SMOKE_STARTED_AT_MS=$(node -p 'Date.now()')" >> "$GITHUB_ENV"
+
+      - name: Install harness dependencies and headless Chrome
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+
+      - name: Build and inspect both immutable application revisions
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
+          CAPTURE_PROVIDER_FIXTURE: ${{ inputs.capture_provider_fixture || 'dense-investigation' }}
+          CAPTURE_RENDERER_BACKEND: ${{ inputs.capture_renderer_backend || 'swiftshader' }}
+          CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
+          CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
+          CAPTURE_DEPTH_PICK_ATTRIBUTION: ${{ inputs.capture_depth_pick_attribution && 'enabled' || 'disabled' }}
+          CAPTURE_SHADER_PROGRAM_ATTRIBUTION: ${{ inputs.capture_shader_program_attribution && 'enabled' || 'disabled' }}
+          CAPTURE_DELAY_NEGATIVE_CONTROL: ${{ inputs.capture_delay_negative_control && 'enabled' || 'disabled' }}
+        run: >-
+          node scripts/qa-performance-build-smoke.mjs
+          --candidate-sha "$CANDIDATE_SHA"
+          --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
+          --provider-fixture "$CAPTURE_PROVIDER_FIXTURE"
+          --capture-renderer-backend "$CAPTURE_RENDERER_BACKEND"
+          --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
+          --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
+          --capture-depth-pick-attribution "$CAPTURE_DEPTH_PICK_ATTRIBUTION"
+          --capture-shader-program-attribution "$CAPTURE_SHADER_PROGRAM_ATTRIBUTION"
+          --capture-delay-negative-control "$CAPTURE_DELAY_NEGATIVE_CONTROL"
+          --out "$RUNNER_TEMP/performance-build-smoke.json"
+
+      - name: Print bounded smoke evidence
+        if: always()
+        run: |
+          evidence="$RUNNER_TEMP/performance-build-smoke.json"
+          if [ -f "$evidence" ]; then
+            jq -c '{schema, status, baselineSha, candidateSha, captureDelayNegativeControl, failure: (if .failure then {phase: .failure.phase, message: (.failure.message | tostring | .[0:400])} else null end), variants: [(.variants // [])[] | {label, status, revision, failure: (.failure | if . then tostring | .[0:400] else null end), captureCliReportArtifact, shaderProgramAttributionArtifact, captureCliDiagnostic: (if .captureCliDiagnostic.captureDelayNegativeControl then .captureCliDiagnostic.captureDelayNegativeControl else null end), captureCliFailure: (if .failureDetails.captureCliFailure then {summary: .failureDetails.captureCliFailure.summary, rawReportTruncated: .failureDetails.captureCliFailure.rawReportTruncated, rawReportUnavailable: .failureDetails.captureCliFailure.rawReportUnavailable, captureCliReportArtifact: .failureDetails.captureCliFailure.captureCliReportArtifact, shaderProgramAttributionArtifact: .failureDetails.captureCliFailure.shaderProgramAttributionArtifact, captureDelayNegativeControl: .failureDetails.captureCliFailure.captureDelayNegativeControl} else null end)}]}' "$evidence"
+          else
+            echo 'Performance build smoke report was not created.'
+          fi
+
+      - name: Preserve smoke evidence, including failed runs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: performance-build-smoke-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/performance-build-smoke.json
+            ${{ runner.temp }}/performance-build-smoke.json.cpu-profile/
+            ${{ runner.temp }}/performance-build-smoke.json.capture-cli-report-*.json
+            ${{ runner.temp }}/performance-build-smoke.json.capture-cli-report-*.shader-program-attribution.json*
+          if-no-files-found: warn
+          retention-days: 3
+
+  import-workspace-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'import-workspace-lifecycle'
+    name: Isolated import and workspace lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/import-workspace-lifecycle.json <<'JSON'
+          {"schema":"gev-import-workspace-lifecycle/v1","status":"not-run","scope":"short hosted software-rendered ownership diagnostic, not a hardware or heap-soak acceptance result","cases":[],"error":"Lifecycle runner did not complete."}
+          JSON
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Run bounded isolated ownership cases
+        run: |
+          mkdir -p qa-artifacts
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/lifecycle-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat qa-artifacts/lifecycle-server.log; exit 1; fi
+          node scripts/qa-import-workspace-lifecycle.mjs --url http://localhost:4174 --cycles 5 --drain-ms 10000 --out qa-artifacts/import-workspace-lifecycle.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/import-workspace-lifecycle.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: import-workspace-lifecycle-${{ github.run_id }}
+          path: qa-artifacts/import-workspace-lifecycle.json
+          if-no-files-found: warn
+          retention-days: 3
+
+  cctv-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'cctv-lifecycle'
+    name: Isolated CCTV lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/cctv-lifecycle.json <<'JSON'
+          {"schema":"gev-cctv-lifecycle/v2","status":"not-run","scope":"short hosted software-rendered ownership diagnostic, not a hardware or heap-soak acceptance result","cases":[],"error":"Lifecycle runner did not complete."}
+          JSON
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Run bounded CCTV ownership cycles
+        run: |
+          mkdir -p qa-artifacts
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/cctv-lifecycle-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat qa-artifacts/cctv-lifecycle-server.log; exit 1; fi
+          node scripts/qa-cctv-lifecycle.mjs --url http://localhost:4174 --cycles 5 --drain-ms 10000 --out qa-artifacts/cctv-lifecycle.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/cctv-lifecycle.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cctv-lifecycle-${{ github.run_id }}
+          path: qa-artifacts/cctv-lifecycle.json
+          if-no-files-found: warn
+          retention-days: 3
+
+  terrain-picking-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'terrain-picking-lifecycle'
+    name: Isolated terrain and picking lifecycle
+    runs-on: macos-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/terrain-picking-lifecycle.json <<'JSON'
+          {"status":"not-run","scope":"isolated hosted ownership diagnostic, not physical desktop or heap-soak acceptance","error":"Terrain/picking runner did not complete."}
+          JSON
+      - name: Install locked dependencies and fixture browser
+        run: npm ci
+      - name: Run bounded terrain and picking ownership cycles
+        run: node scripts/qa-terrain-picking-lifecycle.mjs --out qa-artifacts/terrain-picking-lifecycle.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs --artifact-only qa-artifacts/terrain-picking-lifecycle.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: terrain-picking-lifecycle-${{ github.run_id }}
+          path: qa-artifacts/terrain-picking-lifecycle.json
+          if-no-files-found: warn
+          retention-days: 3
+
+  tracking-regression:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'tracking-regression'
+    name: Aircraft tracking regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Run existing tracking regressions with bundled imagery
+        shell: bash
+        run: |
+          mkdir -p qa-artifacts
+          git rev-parse HEAD | tee qa-artifacts/tracking-source.txt
+          git status --porcelain --untracked-files=no | tee qa-artifacts/tracking-source-status.txt
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/tracking-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat qa-artifacts/tracking-server.log; exit 1; fi
+          node scripts/track-regression.mjs --url http://localhost:4174 --offline-imagery 2>&1 | tee qa-artifacts/tracking-regression.log
+      - name: Preserve regression evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tracking-regression-${{ github.run_id }}
+          path: qa-artifacts/tracking-*
+          if-no-files-found: warn
+          retention-days: 3
+
+  mission-render-demand:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mission-render-demand'
+    name: Isolated mission render-demand correctness
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/mission-render-demand.json <<'JSON'
+          {"schema":"gev-mission-render-demand/v1","status":"not-run","scope":"isolated hosted correctness and rendered-work comparison, not physical desktop or full-application performance acceptance","error":"Mission render-demand runner did not complete."}
+          JSON
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run bounded mission render-demand comparison
+        run: node scripts/qa-mission-render-demand.mjs --out qa-artifacts/mission-render-demand.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/mission-render-demand.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mission-render-demand-${{ github.run_id }}
+          path: qa-artifacts/mission-render-demand*
+          if-no-files-found: warn
+          retention-days: 3
+
+  mixed-use-smoke:
+    name: Isolated rendered mixed-use smoke
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mixed-use-smoke'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      QA_FAIL_ON_RETRY: 1
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Start fixture application
+        run: |
+          mkdir -p qa-artifacts
+          git rev-parse HEAD > qa-artifacts/mixed-use-source.txt
+          git status --porcelain > qa-artifacts/mixed-use-source-status.txt
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/mixed-use-server.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat qa-artifacts/mixed-use-server.log
+          exit 1
+      - name: Run the existing bounded mixed-use smoke
+        run: |
+          set -o pipefail
+          npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json 2>&1 | tee qa-artifacts/mixed-use-smoke.log
+      - name: Run durable workspace library and cross-page conflict journey
+        run: npm run qa:workspaces -- --url http://localhost:4174
+      - name: Run opt-in full-application empty-layer render-demand diagnostic
+        if: inputs.application_render_demand
+        run: |
+          set -o pipefail
+          npm run qa:application -- --url http://localhost:4174 --render-demand 2>&1 | tee qa-artifacts/mixed-use-render-demand.log
+      - name: Preserve the report including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mixed-use-smoke-${{ github.run_id }}
+          path: qa-artifacts/mixed-use-*
+          retention-days: 3
+
+  rendered-soak:
+    name: 60-minute rendered application soak
+    if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install dependencies and fixture browser
+        run: npm ci
+      - name: Start application
+        run: |
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > application.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 2
+          done
+          cat application.log
+          exit 1
+      - name: Run full rendered soak
+        run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --out qa-artifacts/rendered-soak.json
+      - name: Preserve soak evidence
+        if: always() && inputs.upload_artifacts == true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rendered-soak
+          path: |
+            qa-artifacts/
+            application.log
+          retention-days: 30
+      - name: Soak evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/rendered-soak.json
+
+  hosted-gpu-probe:
+    name: Native WebGL probe (${{ matrix.os }})
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+      - run: npm ci
+      - name: Probe default renderer without forcing software or bypassing GPU blocks
+        run: node scripts/qa-hosted-capture.mjs
+
+  hosted-macos-soak:
+    name: Free hosted Mac accelerated retention diagnostic
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-macos-soak'
+    runs-on: macos-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+      - run: npm ci
+      - name: Verify acceleration and run bounded project soak
+        run: node scripts/qa-hosted-capture.mjs --soak
+      - name: Preserve original hosted soak envelope including cleanup
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hosted-soak-${{ github.run_id }}
+          path: qa-artifacts/hosted-native-renderer.json
+          if-no-files-found: warn
+          retention-days: 3
+
+  hosted-collection-probe:
+    name: Free hosted Mac rendering diagnostic
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
+    runs-on: macos-latest
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'import-point-benefit' && 45 || inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+      - run: npm ci
+      - name: Prepare the exact traffic baseline
+        if: inputs.renderer_diagnostic == 'traffic'
+        run: |
+          git fetch --no-tags origin 4dfea32b4e63c0d28d22cd031e61e290e81f6f2a
+          git worktree add --detach "$RUNNER_TEMP/gev-traffic-baseline" 4dfea32b4e63c0d28d22cd031e61e290e81f6f2a
+          npm ci --prefix "$RUNNER_TEMP/gev-traffic-baseline"
+      - name: Run selected project diagnostic with verified acceleration
+        env:
+          DIAGNOSTIC: ${{ inputs.renderer_diagnostic || 'collections' }}
+          BASELINE_SHA: 4dfea32b4e63c0d28d22cd031e61e290e81f6f2a
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          if [ "$DIAGNOSTIC" = "traffic" ]; then
+            node scripts/performance/trafficRenderDemandComparison.mjs "$RUNNER_TEMP/gev-traffic-baseline" "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/qa-artifacts/traffic-render-demand"
+          elif [ "$DIAGNOSTIC" = "import-point-benefit" ]; then
+            node scripts/performance/importPointRepresentationBenefit.mjs
+          else
+            node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
+          fi
+      - name: Preserve renderer comparison evidence
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'viewshed-retention')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}
+          path: qa-artifacts/hosted-native-renderer.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Preserve import point benefit evidence after success or failure
+        if: always() && inputs.renderer_diagnostic == 'import-point-benefit'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: import-point-benefit-${{ github.run_id }}
+          path: qa-artifacts/import-point-benefit
+          if-no-files-found: error
+          retention-days: 3
+      - name: Preserve traffic evidence after success or failure
+        if: always() && inputs.renderer_diagnostic == 'traffic'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: traffic-comparison-${{ github.run_id }}
+          path: qa-artifacts/traffic-render-demand
+          if-no-files-found: error
+          retention-days: 3
+      - name: Remove the owned traffic baseline checkout
+        if: always() && inputs.renderer_diagnostic == 'traffic'
+        run: git worktree remove --force "$RUNNER_TEMP/gev-traffic-baseline"

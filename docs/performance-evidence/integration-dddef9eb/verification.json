@@ -1,0 +1,34 @@
+{
+  "candidateCommit": "dddef9eb66357394f596fad028fb671b9263abf3",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38432856926",
+  "overall": "failed",
+  "selectedJobs": 7,
+  "passedJobs": 6,
+  "failedJobs": ["Install and update recovery (windows-latest)"],
+  "reports": [
+    {
+      "file": "macos/profile-recovery.json",
+      "bytes": 18651,
+      "sha256": "a7f5644d6c6480619070f46cb123982fc9ec1360a26edbcadc0d7c2d26870ba8",
+      "checkCount": 5,
+      "browserVersion": "Chrome/152.0.7977.75",
+      "expectedBrowserVersion": null,
+      "browserVersionMatch": null,
+      "allSettingsAndWorkspacesMatch": true,
+      "allBrowserClosesNormal": true,
+      "hardwareRenderingValidated": false
+    },
+    {
+      "file": "linux/profile-recovery.json",
+      "bytes": 18132,
+      "sha256": "7ccc3a8b60b81c2d37ae00d6302d094a0409927e87bd429d2db5bb59e1bf226b",
+      "checkCount": 5,
+      "browserVersion": "Chrome/152.0.7977.75",
+      "expectedBrowserVersion": null,
+      "browserVersionMatch": null,
+      "allSettingsAndWorkspacesMatch": true,
+      "allBrowserClosesNormal": true,
+      "hardwareRenderingValidated": false
+    }
+  ]
+}

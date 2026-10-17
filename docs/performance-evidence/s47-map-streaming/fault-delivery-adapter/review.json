@@ -1,0 +1,38 @@
+{
+  "schema": "gev-map-fault-adapter-review/v1",
+  "reviewedCommit": "c05d973a6dd987cdca2f8089698548104739b770",
+  "sourceCommits": [
+    "0f1f02b0613208c23020e93b350b6c246c690f50",
+    "501b7273494b158f15f5b01818d72e36ede6672f",
+    "bae8fe4867cb764cf11d6fe9a24ecff09f5af887"
+  ],
+  "scope": "Fixture adapter and artifact validation; no rendered fault journey",
+  "initialRun": {
+    "tests": 178,
+    "pass": 177,
+    "fail": 1,
+    "reason": "Smoke test request producer omitted required requestId"
+  },
+  "afterCorrection": {
+    "tests": 63,
+    "pass": 63,
+    "fail": 0,
+    "skipped": 0,
+    "scope": "Changed delivery and smoke suites; other eight previously passing suites unchanged"
+  },
+  "captureLintFiles": 25,
+  "packageBoundaries": "passed",
+  "formatting": "passed",
+  "renderedFaultControls": "pending",
+  "performanceAcceptanceEligible": false,
+  "artifacts": {
+    "initial-expanded-tests.log": {
+      "bytes": 18517,
+      "sha256": "1a92a4dd79563c038cba13f7bd5a81088be012580b3ddadd568534061999765a"
+    },
+    "corrected-focused-tests.log": {
+      "bytes": 6183,
+      "sha256": "d27477014f41b189d1cc35952838f1c74878546cb873576735950cef417b7c48"
+    }
+  }
+}

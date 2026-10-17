@@ -1,0 +1,35 @@
+{
+  "schema": "gev-ci-failure-review/v1",
+  "candidateCommit": "fe0f66c38c9f394d8282f157d63d81846ab9c4d9",
+  "classification": "Capture CLI Puppeteer test doubles omit the newly imported named CDPSessionEvent export; actual package export is present.",
+  "jobs": [
+    {
+      "jobId": "115036767698",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38317266608/job/115036767698",
+      "conclusion": "failure",
+      "sourceLog": {
+        "bytes": 1058618,
+        "sha256": "061ea278b87c193a1ff48e47ab011543da8d1608fa177cfc1f1c49e7d810eec7"
+      },
+      "excerpt": {
+        "file": "node-ci-115036767698-failure-excerpt.txt",
+        "bytes": 5899,
+        "sha256": "db7f99a8a16fe5b3b5c88014de0f013d0f91abc92a3eb7c60919749cf653950e"
+      }
+    },
+    {
+      "jobId": "115036767729",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38317266608/job/115036767729",
+      "conclusion": "failure",
+      "sourceLog": {
+        "bytes": 1060825,
+        "sha256": "f947333bdb5ffe276f8d00a96e6eb37e705204a3e3e1f86e0f8b849581aa6b3d"
+      },
+      "excerpt": {
+        "file": "node-ci-115036767729-failure-excerpt.txt",
+        "bytes": 3939,
+        "sha256": "734363f07206e38d86b1fe867352e661c8ff2945e6bcbdf27e6b2b27e57cdcd9"
+      }
+    }
+  ]
+}

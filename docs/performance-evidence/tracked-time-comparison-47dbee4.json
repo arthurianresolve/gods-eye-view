@@ -1,0 +1,383 @@
+{
+  "schema": "gev-tracked-time-comparison/v1",
+  "scope": "Node production-factory output and sampling-count comparison; no CPU latency, browser, GPU or live aircraft measurement",
+  "timestamp": "2026-10-10T14:40:30.800Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "workingTreeHead": "47dbee47027e636e7d51e14c3a07f6e1134d7caf",
+  "baseline": "2bd3d12e37c6113510e1b8b4b4f4cf00496ff808",
+  "candidate": "47dbee47027e636e7d51e14c3a07f6e1134d7caf",
+  "comparisonScriptSha256": "ff2d969c6bbc0a8fb316d0225b9cb72183e2ced0ac2a283ae60e1648d49eed91",
+  "fixtureScriptSha256": "1de2ce20670af80935c419c3d18f26a3af46877f7fe10fecb8630910c8a0a603",
+  "lockfileSha256": "e4664b0d0dc7746c35a118244f6f671ccbbd3472ec64bd0d72879a6ce7f17de3",
+  "dependencyHashes": {
+    "src/data/motionModel.js": "f6e6ed5ca1155f9202235c4cd69bc4ef0c7bff38cb12d7bf8efea92e75cb0f49",
+    "src/data/aircraftClass.js": "65fd0bd592d798cd646bb1d6c32454237f20a26edb85eac3cb88a8a4dc641309",
+    "src/data/modelVisualAnchor.js": "4391165e7923cc32d400060b1bfd45a6c6302040863c80ac36819cabd33f4137",
+    "src/layers/flights/policy.js": "da0949ceb6dedc3ee78511ac714ffc0b36ca8a81dd7d772a3fbff9dc830ea49a",
+    "src/evidence/evidence.js": "fd2098ebbd22fef89f2545ad0e8c3ad59a2d5df8c90dc950b968336a858feab6",
+    "src/data/cockpitAirLod.js": "61a4e7f14534905d0c9898f80381f2ab42f18dc0dd3f00bb369a1192af153630",
+    "src/data/trackedModelRegime.js": "0450c27879b00e7b8e382fb3fa7d83072c50dcfc875f5fa916a30e41d1800d66",
+    "src/data/iconOrientation.js": "827ace4ca6ebb4f8c15e501c09826cac7cb25701c0d16464e68881dd8341bb69",
+    "src/data/aircraftIcons.js": "dc11724c90b94dd0f312c6a6251546edcff9fa2584b1388ec6f6a721749335ae",
+    "src/data/routePlausible.js": "d1e876ab6d8e4e4405eee26dc0d56c94362bd45344cdf73c25857fb723ae35c5",
+    "src/data/trackingClickGesture.js": "27640cbe2492a0046279334998c9cad3bd10bfc49fe1eee7f033bc045ec612ca"
+  },
+  "status": "passed",
+  "reports": [
+    {
+      "commit": "2bd3d12e37c6113510e1b8b4b4f4cf00496ff808",
+      "runtimeSha256": {
+        "src/layers/flights/motion.js": "93290069e82fc1c3a4c51f149b8fdbcdb20ea88b20912fc7a2aa025412184af0",
+        "src/layers/flights/tracking.js": "db5a1785ef9b1bde1fcd8a5aa91521add6ebed00b0ca00f8d796f90a4e7fefa9"
+      },
+      "diagnostics": {
+        "schema": "gev-tracked-frame-time-reproduction/v1",
+        "classification": "diagnostic-only-synthetic-clock",
+        "sourceScope": "production createMotion helpers; no browser or renderer",
+        "baselineFinding": "Independent trail-warmup and tracked-pose samples can disagree within one rendered frame.",
+        "timingLimit": "Synthetic controlled timestamps demonstrate ownership/order behavior; distance deltas are not real observed aircraft motion.",
+        "controlledClock": {
+          "epoch": "2026-10-08T12:00:00.000Z",
+          "nativeDateNow": "held constant by harness",
+          "julianNowSamples": "explicit per-case deterministic sequence",
+          "rendererTiming": "not measured"
+        },
+        "cases": {
+          "positionFirst": {
+            "callbackOrder": [
+              "tracked-position",
+              "trail-head"
+            ],
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              29.5,
+              30.5
+            ],
+            "expectedPoseTimeFromFirstSampleSeconds": -0.5,
+            "trailCallbackReturnedSegment": true,
+            "trackedPoseEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "trackedCourseDeg": 90,
+            "trackedSpeedMps": 100,
+            "trailEndpointDeltaFromPositionM": 0,
+            "syntheticPoseDeltaAcrossOneSecondInputM": 94.11302142139044
+          },
+          "trailFirst": {
+            "callbackOrder": [
+              "trail-head",
+              "tracked-position"
+            ],
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              29.5,
+              30.5
+            ],
+            "trailCallbackSuppressed": true,
+            "expectedPoseTimeFromFirstSampleSeconds": -0.5,
+            "positionWasComputed": true,
+            "trackedPoseEcefM": [
+              -742641.5204304609,
+              -5464291.083395972,
+              3197015.3025452676
+            ],
+            "trackedCourseDeg": 89.97227584215108,
+            "trackedSpeedMps": 88.22606443840277,
+            "trackedFrame": 1
+          },
+          "invalidFrameTrailFirstPairing": {
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              40.5,
+              50.5
+            ],
+            "callbackReturnedSegment": true,
+            "sameCallRenderTimePassedToPose": false,
+            "frameTimeWasNotCached": true,
+            "reconciliationCompleted": true
+          },
+          "invalidFrameWarmupFreshness": {
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              29.5,
+              30.5
+            ],
+            "decisions": [
+              true,
+              false
+            ],
+            "secondCheckUsesFreshSample": true
+          },
+          "invalidFrameCachedPose": {
+            "authoritativeTimeSamples": 2,
+            "cachedPoseTimeReusedByTrail": false,
+            "frameTimeWasNotCached": true,
+            "trailPoseMatchesRenderedPose": true
+          },
+          "laterPostRenderCache": {
+            "firstFrame": 1,
+            "observerFrame": 2,
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              80,
+              81
+            ],
+            "observerReusesRenderedPose": true,
+            "trailReusesRenderedPose": true,
+            "visualReusesRenderedPose": true,
+            "laterTrailCallbackUsesRenderedPose": true,
+            "cacheOnlyObserversAddedTimeSamples": 1,
+            "cacheOnlyObserversAddedFocusWrites": 0
+          },
+          "interpolationAndExtrapolation": {
+            "authoritativeTimeSamples": 2,
+            "interpolationPathObserved": true,
+            "coastingExtrapolationPathObserved": true
+          },
+          "targetReset": {
+            "targetChanged": true,
+            "targetPoseDistanceM": 52061.18986806578,
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              80,
+              81
+            ]
+          },
+          "untrackedScratchOwnership": {
+            "authoritativeTimeSamples": 3,
+            "dateNowSamples": 1,
+            "untrackedCallOverwroteSharedRenderScratch": true,
+            "trackedTimeRemainedOwned": true,
+            "trackedTimeAtSecOfDay": 10,
+            "scratchAfterUntrackedAtSecOfDay": 88,
+            "trailWarmupDecision": false
+          },
+          "missingFrameNumber": {
+            "frameNumberFallback": -1,
+            "authoritativeTimeSamples": 1,
+            "freshRawPoseDistanceM": 0
+          },
+          "negativeFrameNumber": {
+            "frameNumber": -1,
+            "authoritativeTimeSamples": 1,
+            "freshRawPoseDistanceM": 0
+          },
+          "insufficientTrailBody": {
+            "authoritativeTimeSamples": 0,
+            "callbackSuppressedWithoutSampling": true
+          },
+          "untrackedQuery": {
+            "authoritativeTimeSamples": 2,
+            "freshPositionDistanceM": 88.22606443832183,
+            "directQueryRemainsUncached": true
+          }
+        }
+      },
+      "repetitions": [
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 372
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 372
+        }
+      ]
+    },
+    {
+      "commit": "47dbee47027e636e7d51e14c3a07f6e1134d7caf",
+      "runtimeSha256": {
+        "src/layers/flights/motion.js": "e79521114c9ade47d0907fe1cd48445ede5a24bd5fe046b10e566af6440cc914",
+        "src/layers/flights/tracking.js": "5dec2d08529db2e516105c77b156c4404e93711c68056dde37db02e55d34ef39"
+      },
+      "diagnostics": {
+        "schema": "gev-tracked-frame-time-reproduction/v1",
+        "classification": "diagnostic-only-synthetic-clock",
+        "sourceScope": "production createMotion helpers; no browser or renderer",
+        "baselineFinding": "Independent trail-warmup and tracked-pose samples can disagree within one rendered frame.",
+        "timingLimit": "Synthetic controlled timestamps demonstrate ownership/order behavior; distance deltas are not real observed aircraft motion.",
+        "controlledClock": {
+          "epoch": "2026-10-08T12:00:00.000Z",
+          "nativeDateNow": "held constant by harness",
+          "julianNowSamples": "explicit per-case deterministic sequence",
+          "rendererTiming": "not measured"
+        },
+        "cases": {
+          "positionFirst": {
+            "callbackOrder": [
+              "tracked-position",
+              "trail-head"
+            ],
+            "authoritativeTimeSamples": 1,
+            "sampledTimesSeconds": [
+              29.5
+            ],
+            "expectedPoseTimeFromFirstSampleSeconds": -0.5,
+            "trailCallbackReturnedSegment": false,
+            "trackedPoseEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "trackedCourseDeg": 90,
+            "trackedSpeedMps": 100,
+            "trailEndpointDeltaFromPositionM": null,
+            "syntheticPoseDeltaAcrossOneSecondInputM": 94.11302142139044
+          },
+          "trailFirst": {
+            "callbackOrder": [
+              "trail-head",
+              "tracked-position"
+            ],
+            "authoritativeTimeSamples": 1,
+            "sampledTimesSeconds": [
+              29.5
+            ],
+            "trailCallbackSuppressed": true,
+            "expectedPoseTimeFromFirstSampleSeconds": -0.5,
+            "positionWasComputed": true,
+            "trackedPoseEcefM": [
+              -742734.7817210666,
+              -5464278.450404417,
+              3197015.3025452676
+            ],
+            "trackedCourseDeg": 90,
+            "trackedSpeedMps": 100,
+            "trackedFrame": 1
+          },
+          "invalidFrameTrailFirstPairing": {
+            "authoritativeTimeSamples": 1,
+            "sampledTimesSeconds": [
+              40.5
+            ],
+            "callbackReturnedSegment": true,
+            "sameCallRenderTimePassedToPose": true,
+            "frameTimeWasNotCached": true,
+            "reconciliationCompleted": true
+          },
+          "invalidFrameWarmupFreshness": {
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              29.5,
+              30.5
+            ],
+            "decisions": [
+              true,
+              false
+            ],
+            "secondCheckUsesFreshSample": true
+          },
+          "invalidFrameCachedPose": {
+            "authoritativeTimeSamples": 1,
+            "cachedPoseTimeReusedByTrail": true,
+            "frameTimeWasNotCached": true,
+            "trailPoseMatchesRenderedPose": true
+          },
+          "laterPostRenderCache": {
+            "firstFrame": 1,
+            "observerFrame": 2,
+            "authoritativeTimeSamples": 1,
+            "sampledTimesSeconds": [
+              80
+            ],
+            "observerReusesRenderedPose": true,
+            "trailReusesRenderedPose": true,
+            "visualReusesRenderedPose": true,
+            "laterTrailCallbackUsesRenderedPose": true,
+            "cacheOnlyObserversAddedTimeSamples": 0,
+            "cacheOnlyObserversAddedFocusWrites": 0
+          },
+          "interpolationAndExtrapolation": {
+            "authoritativeTimeSamples": 2,
+            "interpolationPathObserved": true,
+            "coastingExtrapolationPathObserved": true
+          },
+          "targetReset": {
+            "targetChanged": true,
+            "targetPoseDistanceM": 52061.18986806578,
+            "authoritativeTimeSamples": 2,
+            "sampledTimesSeconds": [
+              80,
+              81
+            ]
+          },
+          "untrackedScratchOwnership": {
+            "authoritativeTimeSamples": 2,
+            "dateNowSamples": 1,
+            "untrackedCallOverwroteSharedRenderScratch": true,
+            "trackedTimeRemainedOwned": true,
+            "trackedTimeAtSecOfDay": 87,
+            "scratchAfterUntrackedAtSecOfDay": 88,
+            "trailWarmupDecision": false
+          },
+          "missingFrameNumber": {
+            "frameNumberFallback": -1,
+            "authoritativeTimeSamples": 2,
+            "freshRawPoseDistanceM": 88.2260644383519
+          },
+          "negativeFrameNumber": {
+            "frameNumber": -1,
+            "authoritativeTimeSamples": 2,
+            "freshRawPoseDistanceM": 88.2260644383519
+          },
+          "insufficientTrailBody": {
+            "authoritativeTimeSamples": 0,
+            "callbackSuppressedWithoutSampling": true
+          },
+          "untrackedQuery": {
+            "authoritativeTimeSamples": 2,
+            "freshPositionDistanceM": 88.22606443832183,
+            "directQueryRemainsUncached": true
+          }
+        }
+      },
+      "repetitions": [
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 248
+        },
+        {
+          "frames": 124,
+          "outputSha256": "42f72b56317532ec9df0cbf3a3fb5c37ddcac302af6d43cbd623bac1651bc07a",
+          "clockCalls": 248
+        }
+      ]
+    }
+  ]
+}

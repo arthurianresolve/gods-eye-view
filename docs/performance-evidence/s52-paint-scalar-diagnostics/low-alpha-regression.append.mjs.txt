@@ -1,0 +1,22 @@
+
+test('root cached-paint low-alpha output remains absent on consecutive stable frames', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('root-low-alpha', [selectedEntry('nearly-transparent', {
+    position: positionAtScreen(252, 174, 500, 360),
+    sourceAlpha: 0.0005,
+    edgeFade: 'none',
+    interactive: true,
+    accessibilityLabel: 'Invisible action',
+    activate() { return true; },
+  })]);
+  for (let frame = 0; frame < 3; frame++) {
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().candidateCount, 1, 'retain source population');
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 0, 'alpha below paint threshold on frame ' + frame);
+    assert.equal(getOverlayPaintRect('root-low-alpha', 'nearly-transparent'), null, 'no invisible hit region');
+    assert.equal(env.document.getElementById('world-overlay-action-list').children.length, 0, 'no invisible accessible action');
+  }
+});

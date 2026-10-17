@@ -1,0 +1,51 @@
+{
+  "schema": "gev-austin-native-source-baseline-audit/v1",
+  "checkedAt": "2026-10-12T19:43:23.929Z",
+  "baseline": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateAncestor": "10d1ddb4681b31cba5a01925596805ebfe9b4c83",
+  "scope": "Static source identity of native endpoint adapters and ALPR viewport policy only; no built application or browser compatibility acceptance.",
+  "rows": [
+    {
+      "path": "src/layers/alpr/presentation.js",
+      "baselineBlob": "7436773b42678a52ec861826c15917ff4311649c",
+      "candidateAncestorBlob": "7436773b42678a52ec861826c15917ff4311649c",
+      "identical": true
+    },
+    {
+      "path": "src/layers/alpr/source.js",
+      "baselineBlob": "4431668c5728e48ac9f9710cc6e1fe696bb07fe0",
+      "candidateAncestorBlob": "4431668c5728e48ac9f9710cc6e1fe696bb07fe0",
+      "identical": true
+    },
+    {
+      "path": "src/layers/installations/source.js",
+      "baselineBlob": "fed73e87a1d1f653827c266f3e2c430b56a64067",
+      "candidateAncestorBlob": "fed73e87a1d1f653827c266f3e2c430b56a64067",
+      "identical": true
+    },
+    {
+      "path": "src/layers/satellites/source.js",
+      "baselineBlob": "e900d34b04567553d8d59385adaf2ce59519751a",
+      "candidateAncestorBlob": "e900d34b04567553d8d59385adaf2ce59519751a",
+      "identical": true
+    },
+    {
+      "path": "src/layers/cctv/source.js",
+      "baselineBlob": "0dddce1b42708e1df7a8f9f76af5ed29a933698f",
+      "candidateAncestorBlob": "0dddce1b42708e1df7a8f9f76af5ed29a933698f",
+      "identical": true
+    },
+    {
+      "path": "src/layers/radio/source.js",
+      "baselineBlob": "818e410f5a5ce849b10b96760712bf708bf7dc72",
+      "candidateAncestorBlob": "818e410f5a5ce849b10b96760712bf708bf7dc72",
+      "identical": true
+    },
+    {
+      "path": "src/layers/wind/source.js",
+      "baselineBlob": "0383654085fc4b0fdd2c47621fe5dae2c58c64d1",
+      "candidateAncestorBlob": "0383654085fc4b0fdd2c47621fe5dae2c58c64d1",
+      "identical": true
+    }
+  ]
+}

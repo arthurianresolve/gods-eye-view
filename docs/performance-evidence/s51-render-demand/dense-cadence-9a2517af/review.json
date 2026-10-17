@@ -1,0 +1,41 @@
+{
+  "sourceCommit": "9a2517afc42199790b43122851130621db136c25",
+  "environment": {
+    "os": "Windows",
+    "node": "v24.16.0",
+    "renderer": "not exercised"
+  },
+  "focused": {
+    "tests": 49,
+    "passed": 49,
+    "failed": 0
+  },
+  "negativeControl": {
+    "tests": 3,
+    "passed": 1,
+    "failed": 2,
+    "expectedFailure": true,
+    "change": "isolated imported copy restores prior satellite lifecycle scheduling only"
+  },
+  "fullNode24": {
+    "tests": 7815,
+    "passed": 7802,
+    "failed": 3,
+    "skipped": 10,
+    "allocationProbes": "not run because ordinary suite failed"
+  },
+  "failures": [
+    "map fault setup consumes narrow test budget before hung journey",
+    "owned child cleanup confirmed but elapsed8314ms exceeds5000ms assertion",
+    "concurrent malformed panel-key repair returns two distinct keys"
+  ],
+  "keyRepairDiagnostic": {
+    "isolatedPassed": 1,
+    "contentionPassed": 12,
+    "concurrency": 4,
+    "fallbackCodesObserved": [],
+    "rootCause": "unresolved"
+  },
+  "hardwareQualification": "pending",
+  "s51Engineering": "partial"
+}

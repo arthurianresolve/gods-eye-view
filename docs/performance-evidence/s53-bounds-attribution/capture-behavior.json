@@ -1,0 +1,23 @@
+{
+  "fixture": "../gev-s53-command-attribution/scripts/fixtures/point-collections-ui.js",
+  "sha256": "329c872a90f400c2e826532d0047c77a3a7e439dc4705df630978f888633ac32",
+  "scope": "Actual fixture pixels() function with controlled frame events, capture result and delayed hashing; no GPU claim",
+  "outcomes": [
+    {
+      "name": "capture-frame metadata survives a later frame while hashing",
+      "status": "passed"
+    },
+    {
+      "name": "diagnostics failure releases an already copied canvas",
+      "status": "passed"
+    },
+    {
+      "name": "null capture rejects and releases listeners and timers",
+      "status": "passed"
+    },
+    {
+      "name": "no render aborts pending capture after diagnostics timeout",
+      "status": "passed"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "artifactId": 11839006576,
+  "zipBytes": 765,
+  "zipSha256": "98c8d0190e25ce679df7399a12e40e433bdcf29ea43474afc55a75b2f22e080b",
+  "digestMatches": true,
+  "exactEntries": [
+    "gods-eye-view/gods-eye-view/downloaded-release/attestation-verification.txt",
+    "gods-eye-view/gods-eye-view/downloaded-release/artifact-rest-metadata.json"
+  ],
+  "localNameMapping": "remove exact gods-eye-view/gods-eye-view/downloaded-release/ prefix"
+}

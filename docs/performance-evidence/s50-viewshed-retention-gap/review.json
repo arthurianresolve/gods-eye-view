@@ -1,0 +1,13 @@
+{
+  "schema": "gev-s50-visibility-gap-review/v1",
+  "applicationCommit": "4b60f45391561246b891ffd8783c7acc142a227b",
+  "upstreamMain": "9beadbda6333b83f79aa03047e2d851830f01f6b",
+  "scope": "CPU construction and destruction ownership only; no GPU or measured speedup",
+  "sourceSha256": {
+    "src/layers/cctv/geometry.js": "f62f330fb5c67fdabe06efbd6c70fc080cf8ee3df679ee91c593ed5692409a64",
+    "src/layers/cctv/rendering.js": "b96b86dc63cc1ac42ec560b5e771fdd903169573e99152470b6439b9e0fc5e8a",
+    "src/data/cctvViewshed.js": "d93c135ae2e73d5e4bc368ab5ebab6c49ea5e43b1fdd744c7149f29062b496b3"
+  },
+  "resultSha256": "b062e1f35a9c8bab5a40877d12e0f8c6ca89c94a9def876bbc2a327539d9fc29",
+  "hideRecordFunctionIdenticalToMain": true
+}

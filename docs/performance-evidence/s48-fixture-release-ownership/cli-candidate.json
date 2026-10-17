@@ -1,0 +1,416 @@
+{
+  "schema": "gev-fixture-release-cli-root-review/v1",
+  "scope": "actual capture CLI and interception; browser, build provenance and git identity stubbed; no browser/network",
+  "results": [
+    {
+      "closeFailure": false,
+      "exitCode": 1,
+      "stdout": "[performance] startup 1/1\n",
+      "stderr": "Wrote bounded failed-capture evidence.\nCapture failed during startup-navigation: sentinel-viewer-wait\nRefreshed bounded failed-capture evidence after cleanup.\nCapture failed during startup-navigation: sentinel-viewer-wait\n",
+      "events": [
+        "Fetch.enable",
+        "goto",
+        "viewer-wait",
+        "probe-cleanup",
+        "registration-remove",
+        "interception-listener-remove",
+        "target-close",
+        "browser-close"
+      ],
+      "report": {
+        "schema": "gev-performance-capture-failure/v1",
+        "captureSchema": "gev-performance-capture/v1",
+        "status": "failed",
+        "capturedAt": "2026-10-12T14:44:43.346Z",
+        "comparisonEligible": false,
+        "comparisonReadiness": {
+          "status": "not-ready",
+          "reason": "Failed or incomplete captures are never comparison evidence."
+        },
+        "source": {
+          "harnessCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "harnessDirtyWorktree": false,
+          "appCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "appWorktreeState": "clean",
+          "provenanceStatus": "test-stub",
+          "reason": null,
+          "buildProvenance": {
+            "schema": null,
+            "status": "test-stub",
+            "scope": null,
+            "receiptSha256": null,
+            "appCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "harnessCommit": null,
+            "before": null,
+            "after": null
+          }
+        },
+        "fixture": {
+          "id": "opensky-dense-investigation-v1",
+          "count": 2500,
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "sha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "byteLength": 348905
+        },
+        "workload": {
+          "rendererProbeCleanup": [
+            {
+              "schema": "gev-early-renderer-probe-cleanup/v1",
+              "confirmed": true,
+              "timeoutMs": 1000,
+              "elapsedMs": 2.6776999999997315,
+              "document": {
+                "status": "confirmed",
+                "elapsedMs": 1.0871000000001914,
+                "pageExecutionElapsedMs": 0,
+                "errorKind": null,
+                "errorDetail": null,
+                "lateCompletion": null,
+                "lateHostReceiptElapsedMs": null,
+                "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                "lateOutcome": null,
+                "lateErrorKind": null,
+                "lateErrorDetail": null,
+                "statePresent": true,
+                "hookRestoreAttempted": true,
+                "hookRestored": true,
+                "listenerCount": 2,
+                "listenerRemovalAttemptedCount": 2,
+                "listenerRemovalConfirmedCount": 2,
+                "listenerRemovalFailedCount": 0,
+                "stateDeleted": true,
+                "renderLoopRetirement": {
+                  "requested": true,
+                  "status": "confirmed",
+                  "before": true,
+                  "after": false,
+                  "confirmed": true,
+                  "pageExecutionElapsedMs": 0
+                }
+              },
+              "scriptRegistration": {
+                "status": "confirmed",
+                "elapsedMs": 0.8103000000000975,
+                "pageExecutionElapsedMs": null,
+                "errorKind": null,
+                "errorDetail": null,
+                "lateCompletion": null,
+                "lateHostReceiptElapsedMs": null,
+                "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                "lateOutcome": null,
+                "lateErrorKind": null,
+                "lateErrorDetail": null,
+                "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+              },
+              "registrationRemovalBoundary": "owned-document-retirement",
+              "phase": "capture-final-document-retirement",
+              "documentRole": "retired-document",
+              "documentId": null
+            }
+          ],
+          "rendererProbeCleanupOmittedCount": 0,
+          "rendererLoopRetirements": [],
+          "rendererLoopRetirementsOmittedCount": 0,
+          "fixtureInterceptionReleases": [
+            {
+              "schema": "gev-flight-fixture-session-release/v1",
+              "sessionOrdinal": 1,
+              "documentRole": "startup-1",
+              "documentId": "startup-document-1",
+              "interception": {
+                "schema": "gev-fixture-interception-release/v1",
+                "interception": {
+                  "schema": "gev-fixture-interception-drain/v1",
+                  "confirmed": true,
+                  "listenerRemovalConfirmed": true,
+                  "listenerRemovalVerification": "event-listener-snapshot",
+                  "listenerRemovalErrorKind": null,
+                  "pendingAtStop": 0,
+                  "pendingPreparationAtStop": 0,
+                  "pendingAbortSubscriptionsAtStop": 0,
+                  "pendingCommandsAtStop": 0,
+                  "pendingCommandsAfterDrain": 0,
+                  "pendingPreparationsAfterDrain": 0,
+                  "pendingAbortSubscriptionsAfterDrain": 0,
+                  "rejectedDrainOperations": 0,
+                  "drainCommandFailures": 0,
+                  "cancelledPreparationCount": 0,
+                  "unexpectedLateRequestCount": 0
+                },
+                "fetchDisable": "target-closed",
+                "detach": "target-closed",
+                "confirmed": true
+              },
+              "stop": {
+                "schema": "gev-fixture-interception-drain/v1",
+                "confirmed": true,
+                "listenerRemovalConfirmed": true,
+                "listenerRemovalVerification": "event-listener-snapshot",
+                "listenerRemovalErrorKind": null,
+                "pendingAtStop": 0,
+                "pendingPreparationAtStop": 0,
+                "pendingAbortSubscriptionsAtStop": 0,
+                "pendingCommandsAtStop": 0,
+                "pendingCommandsAfterDrain": 0,
+                "pendingPreparationsAfterDrain": 0,
+                "pendingAbortSubscriptionsAfterDrain": 0,
+                "rejectedDrainOperations": 0,
+                "drainCommandFailures": 0,
+                "cancelledPreparationCount": 0,
+                "unexpectedLateRequestCount": 0
+              },
+              "fetchDisable": "target-closed",
+              "detach": "target-closed",
+              "confirmed": true,
+              "targetClosed": true
+            }
+          ],
+          "warmupMs": 0,
+          "durationPerSampleMs": 1000,
+          "runsPerScenario": 1,
+          "startupRuns": 1,
+          "qualityMode": "manual",
+          "expectedDensityPct": 75,
+          "detectionMode": "DENSE",
+          "mixedLayers": true,
+          "sceneFrameDiagnostics": {
+            "enabled": true,
+            "scope": "first scripted-motion run; installed before warmup and stopped after its measurement boundary",
+            "eligibleForComparison": false
+          },
+          "scenarios": []
+        },
+        "failure": {
+          "phase": "startup-navigation",
+          "scenario": null,
+          "run": 1,
+          "message": "sentinel-viewer-wait",
+          "operator": null
+        },
+        "fixtureDelivery": null,
+        "progress": {
+          "startupSampleCount": 0,
+          "startupSamples": [],
+          "completedSampleCount": 0,
+          "completedSamples": [],
+          "current": null,
+          "completedSamplesRetained": 0,
+          "startupSamplesRetained": 0
+        },
+        "evidenceTruncated": false
+      },
+      "passed": true
+    },
+    {
+      "closeFailure": true,
+      "exitCode": 1,
+      "stdout": "[performance] startup 1/1\n",
+      "stderr": "Wrote bounded failed-capture evidence.\nCapture failed during startup-navigation: sentinel-viewer-wait\nRefreshed bounded failed-capture evidence after cleanup.\nCapture failed during startup-navigation: sentinel-viewer-wait\n",
+      "events": [
+        "Fetch.enable",
+        "goto",
+        "viewer-wait",
+        "probe-cleanup",
+        "registration-remove",
+        "interception-listener-remove",
+        "target-close",
+        "browser-close"
+      ],
+      "report": {
+        "schema": "gev-performance-capture-failure/v1",
+        "captureSchema": "gev-performance-capture/v1",
+        "status": "failed",
+        "capturedAt": "2026-10-12T14:44:46.155Z",
+        "comparisonEligible": false,
+        "comparisonReadiness": {
+          "status": "not-ready",
+          "reason": "Failed or incomplete captures are never comparison evidence."
+        },
+        "source": {
+          "harnessCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "harnessDirtyWorktree": false,
+          "appCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "appWorktreeState": "clean",
+          "provenanceStatus": "test-stub",
+          "reason": null,
+          "buildProvenance": {
+            "schema": null,
+            "status": "test-stub",
+            "scope": null,
+            "receiptSha256": null,
+            "appCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "harnessCommit": null,
+            "before": null,
+            "after": null
+          }
+        },
+        "fixture": {
+          "id": "opensky-dense-investigation-v1",
+          "count": 2500,
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "sha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "byteLength": 348905
+        },
+        "workload": {
+          "rendererProbeCleanup": [
+            {
+              "schema": "gev-early-renderer-probe-cleanup/v1",
+              "confirmed": true,
+              "timeoutMs": 1000,
+              "elapsedMs": 1.8315999999999804,
+              "document": {
+                "status": "confirmed",
+                "elapsedMs": 0.8458999999998014,
+                "pageExecutionElapsedMs": 0,
+                "errorKind": null,
+                "errorDetail": null,
+                "lateCompletion": null,
+                "lateHostReceiptElapsedMs": null,
+                "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                "lateOutcome": null,
+                "lateErrorKind": null,
+                "lateErrorDetail": null,
+                "statePresent": true,
+                "hookRestoreAttempted": true,
+                "hookRestored": true,
+                "listenerCount": 2,
+                "listenerRemovalAttemptedCount": 2,
+                "listenerRemovalConfirmedCount": 2,
+                "listenerRemovalFailedCount": 0,
+                "stateDeleted": true,
+                "renderLoopRetirement": {
+                  "requested": true,
+                  "status": "confirmed",
+                  "before": true,
+                  "after": false,
+                  "confirmed": true,
+                  "pageExecutionElapsedMs": 0
+                }
+              },
+              "scriptRegistration": {
+                "status": "confirmed",
+                "elapsedMs": 0.4553000000000793,
+                "pageExecutionElapsedMs": null,
+                "errorKind": null,
+                "errorDetail": null,
+                "lateCompletion": null,
+                "lateHostReceiptElapsedMs": null,
+                "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                "lateOutcome": null,
+                "lateErrorKind": null,
+                "lateErrorDetail": null,
+                "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+              },
+              "registrationRemovalBoundary": "owned-document-retirement",
+              "phase": "capture-final-document-retirement",
+              "documentRole": "retired-document",
+              "documentId": null
+            }
+          ],
+          "rendererProbeCleanupOmittedCount": 0,
+          "rendererLoopRetirements": [],
+          "rendererLoopRetirementsOmittedCount": 0,
+          "fixtureInterceptionReleases": [
+            {
+              "schema": "gev-flight-fixture-session-release/v1",
+              "sessionOrdinal": 1,
+              "documentRole": "startup-1",
+              "documentId": "startup-document-1",
+              "interception": {
+                "schema": "gev-fixture-interception-release/v1",
+                "interception": {
+                  "schema": "gev-fixture-interception-drain/v1",
+                  "confirmed": true,
+                  "listenerRemovalConfirmed": true,
+                  "listenerRemovalVerification": "event-listener-snapshot",
+                  "listenerRemovalErrorKind": null,
+                  "pendingAtStop": 0,
+                  "pendingPreparationAtStop": 0,
+                  "pendingAbortSubscriptionsAtStop": 0,
+                  "pendingCommandsAtStop": 0,
+                  "pendingCommandsAfterDrain": 0,
+                  "pendingPreparationsAfterDrain": 0,
+                  "pendingAbortSubscriptionsAfterDrain": 0,
+                  "rejectedDrainOperations": 0,
+                  "drainCommandFailures": 0,
+                  "cancelledPreparationCount": 0,
+                  "unexpectedLateRequestCount": 0
+                },
+                "fetchDisable": "target-closed",
+                "detach": "target-closed",
+                "confirmed": true
+              },
+              "stop": {
+                "schema": "gev-fixture-interception-drain/v1",
+                "confirmed": true,
+                "listenerRemovalConfirmed": true,
+                "listenerRemovalVerification": "event-listener-snapshot",
+                "listenerRemovalErrorKind": null,
+                "pendingAtStop": 0,
+                "pendingPreparationAtStop": 0,
+                "pendingAbortSubscriptionsAtStop": 0,
+                "pendingCommandsAtStop": 0,
+                "pendingCommandsAfterDrain": 0,
+                "pendingPreparationsAfterDrain": 0,
+                "pendingAbortSubscriptionsAfterDrain": 0,
+                "rejectedDrainOperations": 0,
+                "drainCommandFailures": 0,
+                "cancelledPreparationCount": 0,
+                "unexpectedLateRequestCount": 0
+              },
+              "fetchDisable": "target-closed",
+              "detach": "target-closed",
+              "confirmed": false,
+              "targetClosed": true,
+              "errorKind": "cleanup-error"
+            }
+          ],
+          "warmupMs": 0,
+          "durationPerSampleMs": 1000,
+          "runsPerScenario": 1,
+          "startupRuns": 1,
+          "qualityMode": "manual",
+          "expectedDensityPct": 75,
+          "detectionMode": "DENSE",
+          "mixedLayers": true,
+          "sceneFrameDiagnostics": {
+            "enabled": true,
+            "scope": "first scripted-motion run; installed before warmup and stopped after its measurement boundary",
+            "eligibleForComparison": false
+          },
+          "scenarios": []
+        },
+        "failure": {
+          "phase": "startup-navigation",
+          "scenario": null,
+          "run": 1,
+          "message": "sentinel-viewer-wait",
+          "operator": null
+        },
+        "fixtureDelivery": null,
+        "fixtureInterceptionErrors": [
+          {
+            "message": "sentinel-close-ack-failure",
+            "phase": "command-send",
+            "documentRole": "startup-1",
+            "documentId": "startup-document-1",
+            "sessionOrdinal": 1,
+            "lifecycleStage": "releasing"
+          }
+        ],
+        "progress": {
+          "startupSampleCount": 0,
+          "startupSamples": [],
+          "completedSampleCount": 0,
+          "completedSamples": [],
+          "current": null,
+          "completedSamplesRetained": 0,
+          "startupSamplesRetained": 0
+        },
+        "evidenceTruncated": false
+      },
+      "passed": true
+    }
+  ],
+  "passed": true
+}

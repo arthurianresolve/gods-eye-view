@@ -9,6 +9,33 @@ import {
   CALIBRATION_RANGE_FLOOR_M,
 } from './policy.js';
 
+export function raceWithFallbackTimeout(
+  promise,
+  timeoutMs,
+  fallback = null,
+  timerApi = globalThis,
+  signal,
+) {
+  let timer;
+  let abortHandler;
+  const timeout = new Promise((resolve) => {
+    timer = timerApi.setTimeout(() => resolve(fallback), timeoutMs);
+  });
+  const aborted = signal
+    ? new Promise((_, reject) => {
+        abortHandler = () => reject(signal.reason || new Error('Aborted'));
+        if (signal.aborted) abortHandler();
+        else signal.addEventListener('abort', abortHandler, { once: true });
+      })
+    : null;
+  const contenders = [Promise.resolve(promise), timeout];
+  if (aborted) contenders.push(aborted);
+  return Promise.race(contenders).finally(() => {
+    if (timer !== undefined) timerApi.clearTimeout(timer);
+    if (abortHandler) signal.removeEventListener('abort', abortHandler);
+  });
+}
+
 export function createLifecycle({
   state: layerState,
   services,
@@ -21,6 +48,7 @@ export function createLifecycle({
     services.picking;
   const { onFocusTargetAppear } = services.focus;
   const { releaseContinuousRender } = services.render;
+  const requestRender = services.render?.governorRequestRender || (() => {});
 
   /** Resets all module-scoped runtime state to initial values. */
 
@@ -32,6 +60,7 @@ export function createLifecycle({
     layerState._records = [];
     layerState._recordById = new Map();
     layerState._healthById = new Map();
+    layerState._clientHealthById = new Map();
     layerState._count = 0;
     layerState._lastUpdate = null;
     layerState._lastHealthSyncAt = 0;
@@ -44,6 +73,52 @@ export function createLifecycle({
     // Task 5: the applied-regime tracker is record-set-scoped — a fresh init
     // recomputes it against the then-current scene.
     layerState._lastAppliedRegime = null;
+    layerState._googleGroundSource = null;
+    layerState._hasGoogleGroundSource = false;
+  }
+
+  function releaseViewerOwners(viewer) {
+    layerState._removeFocusAppearListener?.();
+    layerState._removeFocusAppearListener = null;
+    unregisterPickOwner('cctv');
+    releaseContinuousRender('cctv-adjust');
+    layerState._calibrationMode = false;
+    if (viewer) services.credits?.hideOsmCredit?.(viewer, 'cctv');
+    parts.projection.stopProjectionLoop();
+    parts.geometryQueue.stopGeometryLoadQueue();
+    parts.cards.teardownAmbientCards();
+    parts.geometry.destroyCoverageEntities();
+    if (layerState._clickHandler) {
+      layerState._clickHandler.destroy();
+      layerState._clickHandler = null;
+    }
+    if (!viewer) return;
+    if (layerState._horizonCullListener && viewer.camera?.moveEnd) {
+      viewer.camera.moveEnd.removeEventListener(
+        layerState._horizonCullListener,
+      );
+      layerState._horizonCullListener = null;
+    }
+    if (layerState._moveStartListener && viewer.camera?.moveStart) {
+      viewer.camera.moveStart.removeEventListener(
+        layerState._moveStartListener,
+      );
+      layerState._moveStartListener = null;
+    }
+    if (layerState._gizmo) {
+      layerState._gizmo.destroy();
+      layerState._gizmo = null;
+    }
+    if (layerState._billboards) {
+      viewer.scene.primitives.remove(layerState._billboards);
+      services.sprites.unregisterSpriteCollection?.(
+        'cctv',
+        layerState._billboards,
+      );
+      layerState._billboards = null;
+    }
+    if (viewer && !viewer.isDestroyed?.())
+      requestRender('cctv-owners-released');
   }
   const methods = {
     /**
@@ -54,6 +129,7 @@ export function createLifecycle({
      */
     async init(viewer) {
       layerState._sourceAbort?.abort();
+      releaseViewerOwners(layerState._viewer);
       const sourceAbort = new AbortController();
       layerState._sourceAbort = sourceAbort;
       if (typeof document !== 'undefined')
@@ -75,6 +151,7 @@ export function createLifecycle({
       registerSpriteCollection('cctv', layerState._billboards);
 
       const sources = await parts.catalog.loadCameraSources();
+      sourceAbort.signal.throwIfAborted();
       const catalogFromSources = parts.catalog.buildCatalogFromSources(sources);
       const catalog = catalogFromSources.length
         ? catalogFromSources
@@ -117,13 +194,17 @@ export function createLifecycle({
       // records are normally built WITH their prior (correct first paint in
       // every regime); a cold/slow upstream loses the race and the batch
       // applies post-hoc via applyLateGroundPriors instead of hanging init.
-      const priorsPromise = parts.ground.resolveGroundPriors(catalog);
-      const priors = await Promise.race([
+      const priorsPromise = parts.ground.resolveGroundPriors(
+        catalog,
+        sourceAbort.signal,
+      );
+      const priors = await raceWithFallbackTimeout(
         priorsPromise,
-        new Promise((resolve) =>
-          setTimeout(() => resolve(null), GROUND_PRIOR_INIT_WAIT_MS),
-        ),
-      ]);
+        GROUND_PRIOR_INIT_WAIT_MS,
+        null,
+        globalThis,
+        sourceAbort.signal,
+      );
       sourceAbort.signal.throwIfAborted();
 
       for (let i = 0; i < catalog.length; i++) {
@@ -189,18 +270,24 @@ export function createLifecycle({
           groundSamples: {},
           frustumGeometry: null,
           frustumPositions: null,
+          frustumGeometrySurfaceRegime: null,
+          frustumGeometrySurfaceOwnerId: null,
           // §9.1 activation obstruction probe result: effective-range clamp so
           // the far-cap plane never clips into the tiles. Null = unclamped.
           // Reset + re-probed on every activation; cleared when the user takes
           // the range slider (slider overrides the clamp).
           probeClampRangeM: null,
+          probeClampSource: null,
           // Viewshed (design §3a/§3b): per-camera color identity + the volume
-          // primitive handle (exists only in viewshed mode for the visible set).
+          // cached volume handle for the current coverage cohort.
           viewshedColors: viewshedColors(
             cameraHue(hueIndexById.get(camera.id) ?? 0),
           ),
           viewshedPrimitive: null,
-          viewshedActiveTint: false,
+          viewshedPrimitiveInstanceId: null,
+          viewshedActiveTint: null,
+          viewshedDesiredTint: null,
+          viewshedTintReadyUnsubscribe: null,
         };
         layerState._records.push(record);
         layerState._recordById.set(camera.id, record);
@@ -231,9 +318,14 @@ export function createLifecycle({
       // regimes itself, so 'switching'/'error' emissions and same-regime stack
       // swaps (bing→osm) no-op.
       layerState._lastAppliedRegime = parts.ground.currentSurfaceRegime();
+      if (typeof services.mesh?.reconcileMeshFloorSource === 'function') {
+        const observed = services.mesh.reconcileMeshFloorSource(viewer.scene);
+        layerState._googleGroundSource = observed.source;
+        layerState._hasGoogleGroundSource = true;
+      }
       if (!layerState._mapStackListener && typeof window !== 'undefined') {
-        layerState._mapStackListener = () =>
-          parts.ground.handleMapStackChanged();
+        layerState._mapStackListener = (event) =>
+          parts.ground.handleMapStackChanged(event);
         window.addEventListener(
           'gev:map-stack-changed',
           layerState._mapStackListener,
@@ -270,6 +362,10 @@ export function createLifecycle({
       layerState._clickHandler = new Cesium.ScreenSpaceEventHandler(
         layerState._viewer.scene.canvas,
       );
+      // Keep the activation seam stable for callers and tests while ensuring
+      // user initiated world/card clicks publish the shared evidence event.
+      const setActiveCamera = (cameraId) =>
+        parts.selection.setActiveCamera(cameraId, { publish: true });
       parts.selection.bindCctvWorldClickGesture(
         layerState._clickHandler,
         (click) => {
@@ -277,10 +373,7 @@ export function createLifecycle({
           const picked = layerState._viewer.scene.pick(click.position);
           const cameraId = parts.selection.extractPickedCameraId(picked);
           if (cameraId) {
-            activateCctvCameraFromWorldClick(
-              cameraId,
-              parts.selection.setActiveCamera,
-            );
+            activateCctvCameraFromWorldClick(cameraId, setActiveCamera);
             return;
           }
           // Any identified scene object owns this click even if its layer does not
@@ -300,10 +393,7 @@ export function createLifecycle({
             { sourceId: CCTV_OVERLAY_SOURCE_ID },
           )?.entryId;
           if (cardId && layerState._recordById.has(cardId)) {
-            activateCctvCameraFromWorldClick(
-              cardId,
-              parts.selection.setActiveCamera,
-            );
+            activateCctvCameraFromWorldClick(cardId, setActiveCamera);
             return;
           }
           if (
@@ -312,7 +402,7 @@ export function createLifecycle({
               calibrationMode: layerState._calibrationMode,
             })
           ) {
-            parts.selection.deactivateActiveCamera();
+            parts.selection.deactivateActiveCamera({ publish: true });
           }
         },
         {
@@ -325,6 +415,7 @@ export function createLifecycle({
       );
 
       await parts.health.syncHealthState(true);
+      sourceAbort.signal.throwIfAborted();
       parts.rendering.refreshCoverageStyles();
       parts.presentation.notifyListeners();
       restoreSpriteOrder(layerState._viewer);
@@ -370,7 +461,16 @@ export function createLifecycle({
         parts.projection.ensureProjectionRuntime(activeRecord);
         parts.frames.refreshProjectionImage(activeRecord, true);
       }
-      parts.geometryQueue.startGeometryLoadQueue();
+      // Re-enabling a layer must not resubmit Cesium geometry jobs for records
+      // that already have a materialized frustum.  The previous unconditional
+      // restart rebuilt every coverage primitive on every toggle; a quick
+      // outage/recovery cycle could therefore leave a growing tail of worker
+      // message listeners while those jobs drained.  Records without geometry
+      // still enter the initial staggered pass, and the existing one-shot
+      // unresolved-ground refresh remains owned by ingestion.update().
+      if (layerState._records.some((record) => !record.frustumGeometry))
+        parts.geometryQueue.startGeometryLoadQueue();
+      else parts.geometryQueue.stopGeometryLoadQueue();
       parts.rendering.refreshCoverageStyles();
       parts.projection.startProjectionLoop();
       // The projection loop self-stops when idle; a focus target appearing
@@ -406,6 +506,7 @@ export function createLifecycle({
       // source entries, pacer timer, in-flight handlers, and caches.
       parts.cards.teardownAmbientCards();
       parts.rendering.hideCctvVisuals();
+      requestRender('cctv-disabled');
       parts.presentation.notifyListeners();
     },
 
@@ -415,14 +516,14 @@ export function createLifecycle({
      * @param {Cesium.Viewer} [viewer] - Viewer instance (falls back to stored ref).
      */
     destroy(viewer) {
-      services.credits?.hideOsmCredit?.(layerState._viewer, 'cctv');
+      const teardownViewer = layerState._viewer || viewer;
+      services.credits?.hideOsmCredit?.(teardownViewer, 'cctv');
       layerState._sourceAbort?.abort();
       if (typeof document !== 'undefined')
         document.removeEventListener(
           'visibilitychange',
           parts.cards.handleVisibilityChange,
         );
-      unregisterPickOwner('cctv');
       if (layerState._mapStackListener && typeof window !== 'undefined') {
         window.removeEventListener(
           'gev:map-stack-changed',
@@ -430,40 +531,8 @@ export function createLifecycle({
         );
         layerState._mapStackListener = null;
       }
-      const teardownViewer = viewer || layerState._viewer;
-      if (layerState._horizonCullListener && teardownViewer?.camera?.moveEnd) {
-        teardownViewer.camera.moveEnd.removeEventListener(
-          layerState._horizonCullListener,
-        );
-        layerState._horizonCullListener = null;
-      }
-      if (layerState._moveStartListener && teardownViewer?.camera?.moveStart) {
-        teardownViewer.camera.moveStart.removeEventListener(
-          layerState._moveStartListener,
-        );
-        layerState._moveStartListener = null;
-      }
-      if (layerState._gizmo) {
-        layerState._gizmo.destroy();
-        layerState._gizmo = null;
-      }
       layerState._calibrationMode = false;
-      releaseContinuousRender('cctv-adjust');
-      if (layerState._clickHandler) {
-        layerState._clickHandler.destroy();
-        layerState._clickHandler = null;
-      }
-      if (teardownViewer?.scene?.screenSpaceCameraController) {
-        teardownViewer.scene.screenSpaceCameraController.enableInputs = true;
-      }
-      parts.projection.stopProjectionLoop();
-      parts.geometryQueue.stopGeometryLoadQueue();
-      parts.cards.teardownAmbientCards();
-      parts.geometry.destroyCoverageEntities();
-      if (layerState._billboards && teardownViewer) {
-        teardownViewer.scene.primitives.remove(layerState._billboards);
-        layerState._billboards = null;
-      }
+      releaseViewerOwners(teardownViewer);
       clearRuntimeState();
       layerState._viewer = null;
       layerState._enabled = false;

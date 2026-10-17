@@ -1,0 +1,28 @@
+{
+  "schema": "gev-user-exported-gpu-summary/v1",
+  "scope": "browser configuration only; no application performance or soak acceptance",
+  "sourceFile": "about-gpu-2026-10-11T23-04-43-507Z.txt",
+  "sourceSha256": "2fd0bffe4c82a53d5ca02369e58ae93d5f1b59cde7e80c9f83167e8ee7fe74bf",
+  "exportedAt": "2026-10-11T23:03:55.475Z",
+  "browserVersion": "Chrome/154.0.8037.98",
+  "operatingSystem": "Windows NT 10.0.19045.7725 (kernel32 10.0.19041.7725)",
+  "activeGpu": "VENDOR= 0x8086, DEVICE=0x3ea0 [Intel(R) UHD Graphics 620], SUBSYS=0x229217aa, REV=2, DRIVER_VENDOR=Intel, DRIVER_VERSION=30.0.101.1338 *ACTIVE*",
+  "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11-30.0.101.1338)",
+  "implementation": "(gl=egl-angle,angle=d3d11)",
+  "sandboxed": "true",
+  "webgl": "Hardware accelerated",
+  "compositing": "Hardware accelerated",
+  "softwareRendering": "No",
+  "gpuProcessCrashCount": 0,
+  "logMessages": [
+    "[18024:18028:1012/005854.237:ERROR:ui\\gl\\egl_util.cc:92] : EGL Driver message (Error) eglCreateContext: Requested version is not supported",
+    "GpuProcessHost: The info collection GPU process exited normally. Everything is okay.",
+    "[18024:18028:1012/010339.567:ERROR:ui\\gl\\egl_util.cc:92] : EGL Driver message (Error) eglCreateContext: Requested version is not supported",
+    "[18024:18028:1012/010355.337:ERROR:ui\\gl\\egl_util.cc:92] : EGL Driver message (Error) eglCreateContext: Requested version is not supported"
+  ],
+  "limitations": [
+    "Export supplied by user; raw local source remains in Downloads.",
+    "Applied driver workarounds and unsupported-version probe messages do not identify the application frame-timeout cause.",
+    "Graphics configuration is distinct from completed application frames and capture correctness."
+  ]
+}

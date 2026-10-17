@@ -167,6 +167,31 @@ async function readDisk(address) {
   }
 }
 
+// Coalesce the whole read/trim/publication operation, not only its write. A
+// delayed reader can otherwise return old bytes after the first rewrite has
+// finished and start another rewrite (or overwrite a newer memory entry).
+const _diskReads = new Map();
+function readPreparedDisk(address) {
+  const file = diskPath(address);
+  if (_diskReads.has(file)) return _diskReads.get(file);
+  const task = readDisk(address)
+    .then((disk) => {
+      if (!disk) return null;
+      const current = memoryGet(address.key);
+      if (current) return current;
+      const bytes = trim(address, disk.bytes);
+      if (bytes !== disk.bytes && !diskWritePending(address))
+        writeDisk(address, bytes, disk.at);
+      memoryPut(address.key, bytes, disk.at);
+      return bytes;
+    })
+    .finally(() => {
+      if (_diskReads.get(file) === task) _diskReads.delete(file);
+    });
+  _diskReads.set(file, task);
+  return task;
+}
+
 /** Unsettled background writes and sweeps; requests never wait on them. */
 const _background = new Set();
 
@@ -422,15 +447,8 @@ export async function fetchTile(request, { signal } = {}) {
   const address = normalizeTileAddress(request);
   const memory = memoryGet(address.key);
   if (memory) return { bytes: memory, source: 'memory', address };
-  const disk = await readDisk(address);
-  if (disk) {
-    // Older cache files may be untrimmed: rewrite once, keeping the fetch time.
-    const bytes = trim(address, disk.bytes);
-    if (bytes !== disk.bytes && !diskWritePending(address))
-      writeDisk(address, bytes, disk.at);
-    memoryPut(address.key, bytes, disk.at);
-    return { bytes, source: 'disk', address };
-  }
+  const disk = await readPreparedDisk(address);
+  if (disk) return { bytes: disk, source: 'disk', address };
   // A caller gone while the disk was read must not start a fetch nobody joins.
   signal?.throwIfAborted();
   let flight = _inFlight.get(address.key);

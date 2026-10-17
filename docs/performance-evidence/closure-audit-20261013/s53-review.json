@@ -1,0 +1,52 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S53",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "510334331a5c2c6b40694beb5808ad7b2395d262",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "fixtureSha256": "dad71af75e22b686aacbf87425dd463e5fb8afa5d98bbcc5a714455371798eac",
+  "sourceHashes": {
+    "scripts/performance/aircraftFleetTickAudit.mjs": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01",
+    "scripts/performance/aircraftFleetTickAudit.test.mjs": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5",
+    "src/layers/flights/rendering.js": "0f1c2abc8b9f2e4e6976566219eb4b030c8180bb261294183e7bbf881ff42ac7",
+    "src/layers/military/rendering.js": "34cc6115b96589c16cc9196a43b89761a801940dba659720ff1c48354274d2d6",
+    "src/layers/flights/records.js": "fd75e46e7fe70deaf7dbf75325d3c5535b6b68ef5516ad84fccc36e5a3c66fc4",
+    "src/layers/military/records.js": "97ed6650377030908a44b5b8b1051564932c2231bae25ebd070d271d3b649117",
+    "src/layers/flights/policy.js": "da0949ceb6dedc3ee78511ac714ffc0b36ca8a81dd7d772a3fbff9dc830ea49a",
+    "src/layers/military/policy.js": "4b25a1a73b582c4f1897f15d611ae1ea0f8556a35d66b6d5a72c98c9c9da7b2c",
+    "src/data/aircraftRecession.js": "ae548896e26ba2d70a06ae28ac651bbbe38c32b22de0ba027b3578198b0a9fd3",
+    "src/data/iconOrientation.js": "827ace4ca6ebb4f8c15e501c09826cac7cb25701c0d16464e68881dd8341bb69"
+  },
+  "focusedChecks": 15,
+  "noUndefFiles": 34,
+  "historicalSplitArtifactsVerified": [
+    "command-report.json",
+    "command-run.json",
+    "command-review.json",
+    "command-job.log.gz",
+    "bounds-report.json",
+    "bounds-run.json",
+    "bounds-review.json",
+    "bounds-job.log.gz",
+    "verify-capture-behavior.mjs",
+    "capture-behavior.json",
+    "verify-bounds-report.mjs"
+  ],
+  "satelliteMutationReportSha256": "62805e4cad664a180d34c3700376f2ecc362b10035784716020521cbaaff3017",
+  "dispositions": {
+    "satelliteScratchAndWrites": "retain measured returned-Cartesian and setter reduction; no GPU upload claim",
+    "frequencySplit": "reject natural-bounds split: exact pixel gate fails; no private bound override in runtime",
+    "opaqueSpecialization": "retain mixed blending: dense alpha, outlines and dynamic focus invalidate opaque-only assumption",
+    "aircraft": "retain existing snapshot identities, absence policy, scratch argument and position/presentation write gates; no new runtime optimization proposed"
+  },
+  "limitations": [
+    "Producer audit has seven synthetic records and six billboards per layer, not a fleet-scale timing or general heap-allocation profile.",
+    "Model and focus collaborators are deterministic; rendered handoff/focus/fade qualification is pending.",
+    "Show setter attempts remain; no measured cost justifies changing these ownership transitions.",
+    "Full GPU uploads, uploaded bytes, GPU time and general allocation totals remain unavailable.",
+    "Physical Windows selected/horizon/focus/fade equivalence and final shared candidate gates remain pending."
+  ]
+}

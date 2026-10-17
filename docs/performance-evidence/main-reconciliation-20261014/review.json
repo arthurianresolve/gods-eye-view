@@ -1,0 +1,35 @@
+{
+  "schema": "gev-main-reconciliation/v1",
+  "merge": "b6d30c37c31d56dc67a438cae0f208e2f4bd861c",
+  "parents": [
+    "8645d6d73a70d2458712d2230ac2f8e29dcd1565",
+    "132b9e96dc1491e5db8bf949b1560f4561c925c3"
+  ],
+  "refs": {
+    "fork/main": "9beadbda6333b83f79aa03047e2d851830f01f6b",
+    "fork/dev": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+    "origin/main": "132b9e96dc1491e5db8bf949b1560f4561c925c3"
+  },
+  "upstreamCommitsAdded": 4,
+  "changedPaths": [
+    "CHANGELOG.md",
+    "docs/CURRENT-STATE.md",
+    "scripts/format-scope.json",
+    "scripts/qa-gbfs-names.mjs",
+    "src/sources/gbfsStations.js",
+    "src/sources/gbfsStations.test.mjs",
+    "src/tools/queries/mobility.test.mjs"
+  ],
+  "overlapConflicts": [
+    "CHANGELOG.md",
+    "scripts/format-scope.json"
+  ],
+  "resolution": "Preserved both additive changelog blocks and union of formatting entries. Runtime/test patch matches upstream.",
+  "focusedTests": 23,
+  "unitDiscoveryTests": 2,
+  "formattedFiles": 1656,
+  "fullCurrentIntegration": "pending",
+  "remoteDevChanged": false,
+  "vmChanged": false,
+  "historyRewritten": false
+}

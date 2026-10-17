@@ -3,6 +3,7 @@ import cesium from 'vite-plugin-cesium';
 import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
+import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -54,6 +55,7 @@ export function createBrowserViteConfig({
   googleApiKey,
   cesiumToken,
   mapillaryToken,
+  appCommit,
   host = 'localhost',
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
@@ -63,6 +65,7 @@ export function createBrowserViteConfig({
     plugins: [
       // First, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
+      cesiumDependencyIdentityPlugin(),
       cesium(),
       applicationHtmlPlugin(),
       ...plugins,
@@ -112,6 +115,9 @@ export function createBrowserViteConfig({
       'import.meta.env.MAPILLARY_CLIENT_TOKEN': JSON.stringify(
         mapillaryToken ?? '',
       ),
+      // A commit is diagnostic metadata only; never use it for authorization.
+      // The harness can require this value to match the revision under test.
+      __GEV_APP_COMMIT__: JSON.stringify(appCommit || null),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

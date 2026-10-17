@@ -1,0 +1,34 @@
+{
+  "baselineCommit": "e50350431e4f8769c882e5e75fc2e0b534b0dc27",
+  "recordedAt": "2026-10-11T09:38:09.829Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "command": "node --test src/layers/submarineCables/geometry.test.mjs src/layers/submarineCables/ingestion.test.mjs src/layers/submarineCables/interaction.test.mjs src/data/telegeographySubmarineCables.test.mjs",
+  "tests": {
+    "passed": 39,
+    "failed": 0,
+    "skipped": 0
+  },
+  "format": {
+    "files": 1521,
+    "passed": true,
+    "lastAddedTestFormattedSeparately": true
+  },
+  "boundaries": {
+    "modules": 1003,
+    "portableEntries": 78,
+    "passed": true
+  },
+  "sourceHashes": {
+    "src/layers/submarineCables/geometry.js": "43d6dfe6fc3dd2a7d7f553fb92a0c60b59956ae6a133665ef3d67a9c53abfa34",
+    "src/layers/submarineCables/ingestion.js": "c9fa46bba8e9d6429cf4e54e02d70d59df64e5b5a3d9af0f0c59964d7309794b",
+    "src/layers/submarineCables/geometry.test.mjs": "72af198877346f55024bc00e23d306a5f898bd6735ba679c597407907df2e0d4",
+    "src/layers/submarineCables/ingestion.test.mjs": "5652a4ac15ea0622a9c852930f55ca7a60e8850a685b9ab0d44ed283c065b5f4",
+    "src/layers/submarineCables/interaction.test.mjs": "f5bf92e4b8fafaf1b5ff896cff5a7b159beea3efc3d045fc7870d4b6e8a742e3",
+    "src/data/telegeographySubmarineCables.test.mjs": "00ea3ce610d90228c16de9740ce9ad5fd9e5a8433b4096e67d5ad66d5aaa6605",
+    "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+  },
+  "logSha256": "f61de2614db862494c7fa84986ce4a3fab114e8b57f61bd6227733e97c4d35dd",
+  "negativeControlSha256": "6c8b448bfbad45a40d88a0ba2989ab0c785bc3c05f4ac6ebc087f62c2ccf9f60",
+  "scope": "Real Cesium 1.138 GeoJSON loading and production cable ingestion/style/identity in Node. No GPU, image equivalence, activation/memory benefit or completed S54 claimed. Whole integration pending."
+}

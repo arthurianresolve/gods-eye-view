@@ -19,7 +19,70 @@ import {
 import { sanitizeCctvRangeHeader } from './cctv/range.js';
 import { createHlsPuller } from './cctv/stream.js';
 import { googleServerApiKey } from './places/google-key.js';
+import { createPlaceholderMatcher } from './cctv/placeholders.js';
 export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
+
+export function cctvHealthReasonCode(patch = {}) {
+  if (patch.reasonCode) return String(patch.reasonCode);
+  if (patch.sourceKind === 'synthetic') return 'synthetic-placeholder';
+  if (patch.sourceKind === 'streetview') return 'fallback-streetview';
+  if (patch.status === 'ok') return 'delivery-ok';
+  if (/timeout/i.test(patch.message || '')) return 'upstream-timeout';
+  if (/decode/i.test(patch.message || '')) return 'decode-failure';
+  if (/HTTP|upstream/i.test(patch.message || '')) return 'upstream-failure';
+  return patch.status || 'unknown';
+}
+export const CCTV_HEALTH_STALE_MS = 5 * 60_000;
+
+export function cctvHealthWithStaleness(entry, now = Date.now()) {
+  const expiryMs =
+    Number.isFinite(entry?.refreshIntervalMs) && entry.refreshIntervalMs > 0
+      ? entry.refreshIntervalMs * 3
+      : CCTV_HEALTH_STALE_MS;
+  if (
+    !entry ||
+    (Number.isFinite(entry.updatedAt) &&
+      now >= entry.updatedAt &&
+      now - entry.updatedAt < expiryMs)
+  )
+    return entry;
+  return {
+    ...entry,
+    status: 'stale',
+    reasonCode: 'stale-health',
+    message: 'Health result is older than the allowed refresh window',
+  };
+}
+
+/** A new attempt replaces the conclusion while retaining the last successful delivery. */
+export function updateCctvHealth(
+  cameraId,
+  prev = {},
+  patch = {},
+  now = Date.now(),
+) {
+  if (patch.cancelled) return prev;
+  return {
+    ...prev,
+    id: cameraId,
+    status: patch.status || 'unknown',
+    sourceKind: patch.sourceKind || 'unknown',
+    label: patch.label ?? prev.label ?? '',
+    message: patch.message ?? '',
+    reasonCode: cctvHealthReasonCode(patch),
+    upstreamReasonCode:
+      patch.upstreamReasonCode ||
+      (patch.status === 'ok' ? 'delivery-ok' : 'unknown'),
+    transportStatus:
+      patch.transportStatus || (patch.status === 'ok' ? 'ok' : 'unknown'),
+    attemptedAt: patch.attemptedAt ?? now,
+    lastSuccessAt: patch.status === 'ok' ? now : (prev.lastSuccessAt ?? null),
+    sourceObservedAt: patch.sourceObservedAt ?? null,
+    refreshIntervalMs:
+      patch.refreshIntervalMs ?? prev.refreshIntervalMs ?? null,
+    updatedAt: now,
+  };
+}
 /**
  * Vite plugin: CCTV camera proxy with source registry, frame/media serving,
  * fallback chain (upstream -> Street View -> synthetic SVG), and health tracking.
@@ -33,7 +96,11 @@ export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
  *
  * @returns {import('vite').Plugin}
  */
-export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
+export function cctvProxy({
+  sourceRoot = process.cwd(),
+  placeholderFingerprints,
+} = {}) {
+  const isKnownPlaceholder = createPlaceholderMatcher(placeholderFingerprints);
   const getCctvSources = createCctvCatalog({ sourceRoot });
   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
   const health = new Map();
@@ -51,19 +118,15 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
       const oldest = health.keys().next().value;
       health.delete(oldest);
     }
-    const prev = health.get(cameraId) || {};
-    health.set(cameraId, {
-      id: cameraId,
-      status: patch.status || prev.status || 'unknown',
-      sourceKind: patch.sourceKind || prev.sourceKind || 'unknown',
-      label: patch.label || prev.label || '',
-      message: patch.message || prev.message || '',
-      updatedAt: Date.now(),
-    });
+    health.set(
+      cameraId,
+      updateCctvHealth(cameraId, health.get(cameraId), patch),
+    );
   };
 
   /** Snapshot all camera health entries as an array. */
-  const listHealth = () => Array.from(health.values());
+  const listHealth = () =>
+    Array.from(health.values()).map((entry) => cctvHealthWithStaleness(entry));
 
   /** Build a JSON payload describing stream info (feedType, URLs) for a camera. */
   const buildStreamPayload = (source, cameraId) => {
@@ -504,16 +567,38 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
             ? source?.url
             : '');
 
+        const downstream = watchDownstreamClose(res);
+        const attemptedAt = Date.now();
+        let upstreamHealth = {
+          transportStatus: 'unknown',
+          upstreamReasonCode: 'upstream-failure',
+        };
+        const snapshotOptions = {
+          signal: downstream.signal,
+          onHealth: (value) => {
+            upstreamHealth = value;
+          },
+        };
         const upstreamImage =
           source?.sourceKind === 'txdot-its'
-            ? await fetchTxdotSnapshot(upstreamCandidate)
-            : await fetchCctvImageFromUpstream(upstreamCandidate);
-        if (upstreamImage?.ok) {
+            ? await fetchTxdotSnapshot(upstreamCandidate, snapshotOptions)
+            : await fetchCctvImageFromUpstream(
+                upstreamCandidate,
+                snapshotOptions,
+              );
+        if (downstream.closed) return;
+        const knownPlaceholder =
+          upstreamImage?.ok &&
+          isKnownPlaceholder(source?.provider, upstreamImage.body);
+        if (upstreamImage?.ok && !knownPlaceholder) {
           setHealth(cameraId, {
             status: 'ok',
             sourceKind: 'snapshot',
             label: source?.provider || 'Configured source',
             message: 'Upstream snapshot active',
+            attemptedAt,
+            upstreamReasonCode: 'delivery-ok',
+            transportStatus: 'ok',
           });
           res.writeHead(200, {
             'Content-Type': upstreamImage.contentType,
@@ -531,12 +616,18 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
           fov,
           pitch,
         });
+        if (downstream.closed) return;
         if (sv?.ok) {
           setHealth(cameraId, {
             status: 'degraded',
             sourceKind: 'streetview',
             label: 'Google Street View',
             message: 'Fallback Street View frame',
+            attemptedAt,
+            upstreamReasonCode: knownPlaceholder
+              ? 'known-placeholder'
+              : upstreamHealth.upstreamReasonCode,
+            transportStatus: upstreamHealth.transportStatus,
           });
           res.writeHead(200, {
             'Content-Type': sv.contentType,
@@ -559,6 +650,11 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
         setHealth(cameraId, {
           status: 'degraded',
           sourceKind: 'synthetic',
+          attemptedAt,
+          upstreamReasonCode: knownPlaceholder
+            ? 'known-placeholder'
+            : upstreamHealth.upstreamReasonCode,
+          transportStatus: upstreamHealth.transportStatus,
           label: source?.provider || 'Synthetic fallback',
           message: source?.url
             ? 'Upstream unavailable'

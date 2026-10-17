@@ -1,0 +1,68 @@
+[
+  {
+    "run": "38459820173",
+    "jobId": 115511772096,
+    "candidateCommit": "febfea1815e5c4637412fba66a2be1d86ea6b029",
+    "platform": "darwin",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "run": "38459820173",
+    "jobId": 115511772429,
+    "candidateCommit": "febfea1815e5c4637412fba66a2be1d86ea6b029",
+    "platform": "linux",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "run": "38459820173",
+    "jobId": 115511772557,
+    "candidateCommit": "febfea1815e5c4637412fba66a2be1d86ea6b029",
+    "platform": "win32",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "run": "38459824649",
+    "jobId": 115511789550,
+    "candidateCommit": "3d77b7d16dee3b3da5adeb67963c7ec8714dfe1e",
+    "platform": "darwin",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "run": "38459824649",
+    "jobId": 115511789831,
+    "candidateCommit": "3d77b7d16dee3b3da5adeb67963c7ec8714dfe1e",
+    "platform": "linux",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "run": "38459824649",
+    "jobId": 115511789926,
+    "candidateCommit": "3d77b7d16dee3b3da5adeb67963c7ec8714dfe1e",
+    "platform": "win32",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "checkCount": 5,
+    "identicalReportCopiesInLog": 2,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  }
+]

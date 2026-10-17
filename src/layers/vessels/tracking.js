@@ -15,6 +15,10 @@ export function createTracking({
   options,
 }) {
   const { state } = vesselState;
+
+  function requestVesselRender(reason) {
+    services.render?.governorRequestRender?.(reason);
+  }
   const { geoidHeight } = services.geoid;
   const { createTrail } = services.trails;
 
@@ -58,6 +62,7 @@ export function createTracking({
 
   function refloorVesselRecords() {
     if (!state.records.all.length) return;
+    let moved = false;
     for (const record of state.records.all) {
       const visual = components.rendering.getVisual(record);
       if (!Number.isFinite(record.lat) || !Number.isFinite(record.lon))
@@ -72,7 +77,9 @@ export function createTracking({
         heightM,
       );
       if (visual.billboard) visual.billboard.position = visual.position;
+      moved = true;
     }
+    if (moved) requestVesselRender('ais-vessels-geoid-refloor');
   }
 
   /**
@@ -96,6 +103,7 @@ export function createTracking({
       });
     }
     if (state.trail) state.trail.setPositions(state.trailPositions);
+    if (state.trail) requestVesselRender('ais-vessel-trail-start');
     backfillVesselTrail(
       record.mmsi,
       state.trailBackfillToken,
@@ -157,6 +165,7 @@ export function createTracking({
       );
     }
     if (state.trail) state.trail.setPositions(state.trailPositions);
+    if (state.trail) requestVesselRender('ais-vessel-trail-backfill');
   }
 
   /**
@@ -176,6 +185,7 @@ export function createTracking({
     if (state.trailPositions.length > TRAIL_MAX_POINTS)
       state.trailPositions.shift();
     state.trail.setPositions(state.trailPositions);
+    requestVesselRender('ais-vessel-trail-update');
   }
 
   /**
@@ -189,6 +199,7 @@ export function createTracking({
     state.trailMmsi = null;
     state.trailPositions = [];
     if (state.trail) state.trail.clear();
+    if (state.trail) requestVesselRender('ais-vessel-trail-clear');
   }
 
   /**

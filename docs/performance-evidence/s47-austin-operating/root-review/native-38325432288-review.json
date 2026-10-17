@@ -1,0 +1,183 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-13T00:12:30.316Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38325432288",
+  "testedCommit": "6b675ff90ade278438ae6111ea2354463bfc01df",
+  "status": "failed",
+  "comparisonEligible": false,
+  "completedSampleCount": 3,
+  "retainedCompleteSampleCount": 0,
+  "evidenceTruncated": true,
+  "failure": {
+    "phase": "measurement-boundary-render-wait",
+    "scenario": "scripted-motion",
+    "run": 2,
+    "message": "Austin scripted-motion run 2 measurement end installations population is not a valid observed subset of the delivered synthetic catalog.",
+    "operator": null
+  },
+  "verifiedRenderer": {
+    "schema": "gev-hosted-renderer-diagnostic/v1",
+    "requestedBackend": "macos-native-diagnostic",
+    "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "observedWebglVendor": "Google Inc. (Apple)",
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "status": "verified",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "physicalDesktopCoverage": false,
+    "hostedEnvironment": "github-actions-macos",
+    "comparisonEligible": false,
+    "performanceAcceptanceEligible": false
+  },
+  "cleanupRecomputed": [
+    {
+      "documentRole": "startup-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-4",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "measurementBoundary": {
+    "status": "settled",
+    "hostElapsedMs": 68.98408399999607,
+    "pageSettleElapsedMs": 63.79999999998836
+  },
+  "observedBeforeSettings": {
+    "qualityMode": "manual",
+    "densityPct": 75,
+    "detectionMode": "DENSE",
+    "resolutionScale": 1,
+    "antialias": true,
+    "msaaSamples": 4,
+    "fxaa": false,
+    "bloom": false,
+    "sharpen": true,
+    "style": "normal",
+    "map": "osm",
+    "visualState": {
+      "style": "normal",
+      "bloom": {
+        "enabled": false,
+        "intensity": 0,
+        "version": 2
+      },
+      "sharpen": {
+        "enabled": true,
+        "intensity": 49
+      },
+      "hud": {
+        "visible": true,
+        "variant": "tactical"
+      },
+      "detection": {
+        "mode": "DENSE",
+        "density": 75,
+        "allocation": "ELASTIC",
+        "fadePct": 7,
+        "outsideOpacityPct": 1
+      },
+      "scope": {
+        "enabled": true,
+        "featherPct": 11
+      },
+      "mapStack": "osm",
+      "styleParams": {
+        "retro": {
+          "pixelation": 5,
+          "distortion": 0,
+          "instability": 0.4
+        },
+        "surveillance": {
+          "gain": 0.55,
+          "bloom": 0.3,
+          "scanlineStr": 1,
+          "pixelation": 2.5
+        },
+        "thermal": {
+          "sensitivity": 0.75,
+          "bloom": 0.65,
+          "mode": 0,
+          "pixelation": 1.5,
+          "palette": 0
+        },
+        "anime": {
+          "saturation": 1,
+          "edgeThick": 0.5
+        },
+        "noir": {
+          "contrastAmt": 1.2,
+          "grainAmt": 0.5,
+          "vignetteAmt": 0.5
+        },
+        "snow": {
+          "density": 0.6,
+          "wind": 0.5
+        }
+      }
+    }
+  },
+  "limitations": [
+    "The failing after-observation was not attached before its assertion threw, so the exact installations predicate cannot be reconstructed.",
+    "Three earlier completed samples are counted but their complete data was removed by the bounded serializer.",
+    "No final-integrity, post-capture asset verification, performance or physical-desktop acceptance."
+  ],
+  "artifacts": [
+    {
+      "file": "hosted-native-38325432288-smoke-failed.json",
+      "bytes": 322410,
+      "sha256": "1312697cb6d723bbdf5f5cac24df5aa52acffd9c0a02bedb77bbff358904c455"
+    },
+    {
+      "file": "hosted-native-38325432288-cli-failed.json",
+      "bytes": 225680,
+      "sha256": "e78b48fe7213d8ae796444bbd91d5f75fabd5a9d53b4811222d47d0b79d6378e"
+    }
+  ]
+}

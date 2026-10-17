@@ -1,0 +1,29 @@
+{
+  "schema": "gev-austin-cleanup-validator-control/v1",
+  "checkedAt": "2026-10-13T01:22:35.544Z",
+  "testedImplementation": "746188712a73ea35476de2f20bf1aae75979fd9c",
+  "historicalCandidate": "5368d54aac2fe01c8fd472615af9bc8bd4c4612d",
+  "historicalRunStatus": "failed-unchanged",
+  "rawSha256": "b9762d40eb00428077677758269e06d37ebb2b7d2a61214698715eec012bcbc6",
+  "compactFixture": "every retained leaf matches raw source",
+  "fullCleanupReplay": "passed",
+  "retirementCount": 5,
+  "probeCleanupCount": 6,
+  "interceptionReleaseCount": 6,
+  "rejectedMutations": [
+    "missing retirement",
+    "duplicate retirement",
+    "wrong identity",
+    "unconfirmed retirement",
+    "wrong sample ordinal",
+    "capture mismatch",
+    "failed cleanup",
+    "undrained requests",
+    "missing cleanup",
+    "missing startup release",
+    "missing setup release",
+    "duplicate release",
+    "missing capture retirement"
+  ],
+  "scope": "Complete cleanup validator replay only; no new browser run, served-artifact provenance replay, or performance acceptance."
+}

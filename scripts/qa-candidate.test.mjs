@@ -1,0 +1,292 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  evaluateCandidateReadiness,
+  formatPerformanceObjectiveNotes,
+  requiresPerformanceEvidence,
+  readValidationManifest,
+} from './qa-candidate.mjs';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+test('empty artifacts, wrong per-check commits and conflicting outcomes cannot pass', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-regressions-'));
+  const file = path.join(dir, 'manifest.json');
+  const commit = 'a'.repeat(40);
+  const item = {
+    id: 'hardware-matrix',
+    outcome: 'passed',
+    environment: 'fixture',
+    timestamp: '2026-01-01T00:00:00Z',
+    artifacts: ['https://example.test/report'],
+  };
+  for (const patch of [
+    { artifacts: [] },
+    { candidateCommit: 'b'.repeat(40) },
+    { status: 'failed' },
+    { environment: {} },
+  ]) {
+    await writeFile(
+      file,
+      JSON.stringify({
+        schemaVersion: 1,
+        candidateCommit: commit,
+        checks: [{ ...item, ...patch }],
+      }),
+    );
+    assert.throws(() =>
+      readValidationManifest(file, { candidateCommit: commit }),
+    );
+  }
+  await writeFile(
+    file,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit: commit,
+      checks: [{ ...item, outcome: 'failed', artifacts: [] }],
+    }),
+  );
+  assert.equal(
+    readValidationManifest(file, { candidateCommit: commit }).checks[0].status,
+    'failed',
+  );
+});
+
+test('candidate readiness distinguishes failed required gates from pending environment evidence', () => {
+  assert.deepEqual(
+    evaluateCandidateReadiness([{ required: true, status: 'passed' }]),
+    {
+      passed: true,
+      releaseReady: true,
+      failureCount: 0,
+      pendingCount: 0,
+    },
+  );
+  assert.deepEqual(
+    evaluateCandidateReadiness([
+      { required: true, status: 'passed' },
+      { required: true, status: 'pending' },
+    ]),
+    { passed: true, releaseReady: false, failureCount: 0, pendingCount: 1 },
+  );
+  assert.deepEqual(
+    evaluateCandidateReadiness([{ required: true, status: 'failed' }]),
+    {
+      passed: false,
+      releaseReady: false,
+      failureCount: 1,
+      pendingCount: 1,
+    },
+  );
+});
+
+test('a passed performance comparison cannot satisfy missing or failed retention', () => {
+  for (const retentionStatus of ['pending', 'failed']) {
+    const readiness = evaluateCandidateReadiness([
+      { id: 'performance-comparison', required: true, status: 'passed' },
+      {
+        id: 'performance-retention',
+        required: true,
+        status: retentionStatus,
+      },
+    ]);
+    assert.equal(readiness.releaseReady, false);
+    assert.equal(readiness.pendingCount, 1);
+    assert.equal(readiness.passed, retentionStatus !== 'failed');
+    assert.equal(readiness.failureCount, retentionStatus === 'failed' ? 1 : 0);
+  }
+});
+
+test('validation manifests require the exact candidate commit and bounded evidence', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-'));
+  const artifact = path.join(dir, 'evidence.json');
+  await writeFile(artifact, '{}');
+  const manifestPath = path.join(dir, 'manifest.json');
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit: 'a'.repeat(40),
+      checks: [
+        {
+          id: 'accessibility-review',
+          outcome: 'passed',
+          environment: 'NVDA / Windows',
+          timestamp: '2026-10-08T12:00:00Z',
+          artifacts: [artifact],
+        },
+      ],
+    }),
+  );
+  const manifest = readValidationManifest(manifestPath, {
+    candidateCommit: 'a'.repeat(40),
+  });
+  assert.equal(manifest.checks[0].status, 'passed');
+  assert.throws(
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'different' }),
+    /does not match/,
+  );
+});
+
+test('validation manifests reject duplicate, unknown, and missing artifact evidence', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-invalid-'));
+  const manifestPath = path.join(dir, 'manifest.json');
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit: 'a'.repeat(40),
+      checks: [
+        {
+          id: 'hardware-matrix',
+          status: 'passed',
+          environment: 'Windows',
+          timestamp: '2026-10-08T12:00:00Z',
+          artifacts: ['missing.json'],
+        },
+        {
+          id: 'accessibility-review',
+          status: 'passed',
+          environment: 'macOS',
+          timestamp: '2026-10-08T12:00:00Z',
+        },
+      ],
+    }),
+  );
+  assert.throws(
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
+    /does not exist/,
+  );
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit: 'a'.repeat(40),
+      checks: [
+        {
+          id: 'hardware-matrix',
+          status: 'passed',
+          environment: 'Windows',
+          timestamp: '2026-10-08T12:00:00Z',
+        },
+        {
+          id: 'hardware-matrix',
+          status: 'passed',
+          environment: 'macOS',
+          timestamp: '2026-10-08T12:00:00Z',
+        },
+      ],
+    }),
+  );
+  assert.throws(
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
+    /Duplicate/,
+  );
+});
+
+test('publication verification stays separate from pre-release readiness', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-phase-'));
+  const manifestPath = path.join(dir, 'manifest.json');
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      phase: 'pre-release',
+      candidateCommit: 'a'.repeat(40),
+      checks: [
+        {
+          id: 'release-tag-match',
+          outcome: 'passed',
+          environment: 'GitHub Actions',
+          timestamp: '2026-10-08T12:00:00Z',
+        },
+      ],
+    }),
+  );
+  assert.throws(
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
+    /post-publication/,
+  );
+});
+
+test('v2 manifests automatically require computed performance gates; v1 remains compatible', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-v2-'));
+  const manifestPath = path.join(dir, 'manifest.json');
+  const candidate = 'a'.repeat(40);
+  const v1 = {
+    schemaVersion: 1,
+    candidateCommit: candidate,
+    checks: [],
+  };
+  await writeFile(manifestPath, JSON.stringify(v1));
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), false);
+  assert.equal(
+    requiresPerformanceEvidence({ GEV_REQUIRE_PERFORMANCE_EVIDENCE: '1' }),
+    true,
+  );
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      schemaVersion: 2,
+      performanceEvidence: { comparisons: [], retention: [] },
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  const parsed = readValidationManifest(manifestPath, {
+    candidateCommit: candidate,
+  });
+  assert.equal(parsed.schemaVersion, 2);
+  assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
+  assert.equal(
+    parsed.performanceEvidence.comparison.acceptancePolicyId,
+    'gev-cesium-acceptance/2026-10-15',
+  );
+  assert.deepEqual(
+    formatPerformanceObjectiveNotes([
+      {
+        id: 'dense-motion',
+        status: 'missed',
+        actualImprovementPct: 14.75,
+        targetImprovementPct: 20,
+      },
+      {
+        id: 'selected-aircraft-tracking',
+        status: 'unassessed',
+        actualImprovementPct: null,
+        targetImprovementPct: 20,
+      },
+    ]),
+    [
+      'dense-motion: missed (actual 14.8%; target 20%).',
+      'selected-aircraft-tracking: unassessed (actual unavailable; target 20%).',
+    ],
+  );
+  assert.equal(parsed.performanceEvidence.retentionOutcome.status, 'pending');
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 2,
+      candidateCommit: candidate,
+      checks: [
+        {
+          id: 'performance-retention',
+          status: 'passed',
+          environment: 'self-certified',
+          timestamp: '2026-10-08T12:00:00Z',
+          artifacts: ['report.json'],
+        },
+      ],
+      performanceEvidence: { comparisons: [], retention: [] },
+    }),
+  );
+  assert.throws(
+    () => readValidationManifest(manifestPath, { candidateCommit: candidate }),
+    /derived from raw evidence/,
+  );
+});

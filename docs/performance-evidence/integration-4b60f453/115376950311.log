@@ -1,0 +1,628 @@
+﻿2026-10-13T15:17:04.6540479Z Current runner version: '2.337.0'
+2026-10-13T15:17:04.6568283Z ##[group]Runner Image Provisioner
+2026-10-13T15:17:04.6569141Z Hosted Compute Agent
+2026-10-13T15:17:04.6569811Z Version: 20260901.588
+2026-10-13T15:17:04.6570427Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-13T15:17:04.6571172Z Build Date: 2026-09-01T19:56:44Z
+2026-10-13T15:17:04.6571845Z Worker ID: {a086163c-ec83-46ae-96ca-3e45acf35531}
+2026-10-13T15:17:04.6572596Z Azure Region: westus3
+2026-10-13T15:17:04.6573150Z ##[endgroup]
+2026-10-13T15:17:04.6574619Z ##[group]Operating System
+2026-10-13T15:17:04.6575308Z Microsoft Windows Server 2025
+2026-10-13T15:17:04.6575970Z 10.0.26100
+2026-10-13T15:17:04.6576486Z Datacenter
+2026-10-13T15:17:04.6576986Z ##[endgroup]
+2026-10-13T15:17:04.6577590Z ##[group]Runner Image
+2026-10-13T15:17:04.6578166Z Image: windows-2025-vs2026
+2026-10-13T15:17:04.6578738Z Version: 20260925.250.1
+2026-10-13T15:17:04.6580228Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+2026-10-13T15:17:04.6581911Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+2026-10-13T15:17:04.6582870Z ##[endgroup]
+2026-10-13T15:17:04.6583955Z ##[group]GITHUB_TOKEN Permissions
+2026-10-13T15:17:04.6586493Z Contents: read
+2026-10-13T15:17:04.6587212Z Metadata: read
+2026-10-13T15:17:04.6587752Z ##[endgroup]
+2026-10-13T15:17:04.6589985Z Secret source: Actions
+2026-10-13T15:17:04.6590883Z Cache mode: write
+2026-10-13T15:17:04.6591727Z Prepare workflow directory
+2026-10-13T15:17:04.7210381Z Prepare all required actions
+2026-10-13T15:17:04.7288824Z Getting action download info
+2026-10-13T15:17:05.0719401Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-13T15:17:05.2031662Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-13T15:17:05.3740375Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-13T15:17:05.7229288Z Complete job name: Install and update recovery (windows-latest)
+2026-10-13T15:17:05.8699719Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+2026-10-13T15:17:05.8701088Z with:
+2026-10-13T15:17:05.8701570Z   persist-credentials: false
+2026-10-13T15:17:05.8702126Z   fetch-depth: 0
+2026-10-13T15:17:05.8702644Z   repository: arthurianresolve/gods-eye-view
+2026-10-13T15:17:05.8707374Z   token: ***
+2026-10-13T15:17:05.8707850Z   ssh-strict: true
+2026-10-13T15:17:05.8708323Z   ssh-user: git
+2026-10-13T15:17:05.8708755Z   clean: true
+2026-10-13T15:17:05.8709223Z   sparse-checkout-cone-mode: true
+2026-10-13T15:17:05.8709810Z   fetch-tags: false
+2026-10-13T15:17:05.8710289Z   show-progress: true
+2026-10-13T15:17:05.8710762Z   lfs: false
+2026-10-13T15:17:05.8711185Z   submodules: false
+2026-10-13T15:17:05.8711686Z   set-safe-directory: true
+2026-10-13T15:17:05.8712224Z   allow-unsafe-pr-checkout: false
+2026-10-13T15:17:05.8713458Z env:
+2026-10-13T15:17:05.8713944Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:17:05.8714565Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:17:05.8715138Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:17:05.8715788Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:17:05.8716473Z ##[endgroup]
+2026-10-13T15:17:06.0247258Z Syncing repository: arthurianresolve/gods-eye-view
+2026-10-13T15:17:06.0249259Z ##[group]Getting Git version info
+2026-10-13T15:17:06.0250043Z Working directory is 'D:\a\gods-eye-view\gods-eye-view'
+2026-10-13T15:17:06.1184346Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-13T15:17:06.4296184Z git version 2.55.0.windows.5
+2026-10-13T15:17:06.4348667Z ##[endgroup]
+2026-10-13T15:17:06.4370924Z Temporarily overriding HOME='D:\a\_temp\2371bcb1-0e37-4307-9d40-d4438eec9b01' before making global git config changes
+2026-10-13T15:17:06.4375644Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T15:17:06.4382656Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\gods-eye-view\gods-eye-view
+2026-10-13T15:17:06.5005775Z Deleting the contents of 'D:\a\gods-eye-view\gods-eye-view'
+2026-10-13T15:17:06.5013048Z ##[group]Initializing the repository
+2026-10-13T15:17:06.5023451Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\gods-eye-view\gods-eye-view
+2026-10-13T15:17:06.5844565Z Initialized empty Git repository in D:/a/gods-eye-view/gods-eye-view/.git/
+2026-10-13T15:17:06.5896214Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/arthurianresolve/gods-eye-view
+2026-10-13T15:17:06.6494120Z ##[endgroup]
+2026-10-13T15:17:06.6496009Z ##[group]Disabling automatic garbage collection
+2026-10-13T15:17:06.6502934Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-13T15:17:06.6830540Z ##[endgroup]
+2026-10-13T15:17:06.6832394Z ##[group]Setting up auth
+2026-10-13T15:17:06.6844593Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T15:17:06.7202074Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T15:17:08.0909615Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T15:17:08.1263708Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T15:17:08.6547314Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T15:17:08.6872364Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T15:17:09.2360622Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-13T15:17:09.2705809Z ##[endgroup]
+2026-10-13T15:17:09.2706816Z ##[group]Fetching the repository
+2026-10-13T15:17:09.2721250Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-13T15:17:16.5802662Z From https://github.com/arthurianresolve/gods-eye-view
+2026-10-13T15:17:16.5803512Z  * [new branch]        dev                     -> origin/dev
+2026-10-13T15:17:16.5804255Z  * [new branch]        fix/cable-source-identity -> origin/fix/cable-source-identity
+2026-10-13T15:17:16.5805320Z  * [new branch]        fix/cesium-dependency-identity -> origin/fix/cesium-dependency-identity
+2026-10-13T15:17:16.5806041Z  * [new branch]        fix/next-stage-validation -> origin/fix/next-stage-validation
+2026-10-13T15:17:16.5806512Z  * [new branch]        main                    -> origin/main
+2026-10-13T15:17:16.5807079Z  * [new branch]        qa/accessibility-focus-diagnostics -> origin/qa/accessibility-focus-diagnostics
+2026-10-13T15:17:16.5807742Z  * [new branch]        qa/cctv-calibration-demand -> origin/qa/cctv-calibration-demand
+2026-10-13T15:17:16.5808448Z  * [new branch]        qa/cctv-lifecycle       -> origin/qa/cctv-lifecycle
+2026-10-13T15:17:16.5809588Z  * [new branch]        qa/cesium-collision-fix -> origin/qa/cesium-collision-fix
+2026-10-13T15:17:16.5810803Z  * [new branch]        qa/command-palette-focus -> origin/qa/command-palette-focus
+2026-10-13T15:17:16.5811702Z  * [new branch]        qa/free-renderer-a49b221 -> origin/qa/free-renderer-a49b221
+2026-10-13T15:17:16.5812567Z  * [new branch]        qa/hosted-soak-envelope -> origin/qa/hosted-soak-envelope
+2026-10-13T15:17:16.5814734Z  * [new branch]        qa/hud-summary-coalescing -> origin/qa/hud-summary-coalescing
+2026-10-13T15:17:16.5815569Z  * [new branch]        qa/import-entity-ownership -> origin/qa/import-entity-ownership
+2026-10-13T15:17:16.5816468Z  * [new branch]        qa/import-point-current-dev -> origin/qa/import-point-current-dev
+2026-10-13T15:17:16.5817382Z  * [new branch]        qa/import-workspace-lifecycle -> origin/qa/import-workspace-lifecycle
+2026-10-13T15:17:16.5818399Z  * [new branch]        qa/infrastructure-collections -> origin/qa/infrastructure-collections
+2026-10-13T15:17:16.5819373Z  * [new branch]        qa/main-integration-591f299 -> origin/qa/main-integration-591f299
+2026-10-13T15:17:16.5820377Z  * [new branch]        qa/main-tle-reconciliation-8b8ccc9 -> origin/qa/main-tle-reconciliation-8b8ccc9
+2026-10-13T15:17:16.5821417Z  * [new branch]        qa/main-weather-integration -> origin/qa/main-weather-integration
+2026-10-13T15:17:16.5822629Z  * [new branch]        qa/map-streaming-metal-control-7fbbf1fa -> origin/qa/map-streaming-metal-control-7fbbf1fa
+2026-10-13T15:17:16.5823846Z  * [new branch]        qa/mission-render-demand -> origin/qa/mission-render-demand
+2026-10-13T15:17:16.5824693Z  * [new branch]        qa/mixed-use-smoke      -> origin/qa/mixed-use-smoke
+2026-10-13T15:17:16.5825240Z  * [new branch]        qa/performance-build-smoke -> origin/qa/performance-build-smoke
+2026-10-13T15:17:16.5825830Z  * [new branch]        qa/s47-atomic-warmup-boundary -> origin/qa/s47-atomic-warmup-boundary
+2026-10-13T15:17:16.5826430Z  * [new branch]        qa/s47-austin-operating-workload -> origin/qa/s47-austin-operating-workload
+2026-10-13T15:17:16.5827009Z  * [new branch]        qa/s47-austin-receipt-only -> origin/qa/s47-austin-receipt-only
+2026-10-13T15:17:16.5827650Z  * [new branch]        qa/s47-common-renderer-evidence -> origin/qa/s47-common-renderer-evidence
+2026-10-13T15:17:16.5828283Z  * [new branch]        qa/s47-early-document-cpu-profile -> origin/qa/s47-early-document-cpu-profile
+2026-10-13T15:17:16.5828904Z  * [new branch]        qa/s47-first-motion-cpu-profile -> origin/qa/s47-first-motion-cpu-profile
+2026-10-13T15:17:16.5898512Z  * [new branch]        qa/s47-fixture-clock-contract -> origin/qa/s47-fixture-clock-contract
+2026-10-13T15:17:16.5899776Z  * [new branch]        qa/s47-infrastructure-workloads -> origin/qa/s47-infrastructure-workloads
+2026-10-13T15:17:16.5900544Z  * [new branch]        qa/s47-interception-failure-evidence -> origin/qa/s47-interception-failure-evidence
+2026-10-13T15:17:16.5901682Z  * [new branch]        qa/s47-observation-retirement -> origin/qa/s47-observation-retirement
+2026-10-13T15:17:16.5902284Z  * [new branch]        qa/s47-observer-read-cost -> origin/qa/s47-observer-read-cost
+2026-10-13T15:17:16.5902864Z  * [new branch]        qa/s47-prewarm-stage-diagnostic -> origin/qa/s47-prewarm-stage-diagnostic
+2026-10-13T15:17:16.5903481Z  * [new branch]        qa/s47-renderer-cleanup-evidence -> origin/qa/s47-renderer-cleanup-evidence
+2026-10-13T15:17:16.5904116Z  * [new branch]        qa/s47-renderer-cleanup-lifetime -> origin/qa/s47-renderer-cleanup-lifetime
+2026-10-13T15:17:16.5904737Z  * [new branch]        qa/s47-renderer-cleanup-timing -> origin/qa/s47-renderer-cleanup-timing
+2026-10-13T15:17:16.5905675Z  * [new branch]        qa/s47-retire-setup-render-loop -> origin/qa/s47-retire-setup-render-loop
+2026-10-13T15:17:16.5906672Z  * [new branch]        qa/s47-retirement-order -> origin/qa/s47-retirement-order
+2026-10-13T15:17:16.5907522Z  * [new branch]        qa/s47-weather-capture  -> origin/qa/s47-weather-capture
+2026-10-13T15:17:16.5908416Z  * [new branch]        qa/s48-current-dev-capture -> origin/qa/s48-current-dev-capture
+2026-10-13T15:17:16.5909349Z  * [new branch]        qa/s48-depth-pick-attribution -> origin/qa/s48-depth-pick-attribution
+2026-10-13T15:17:16.5910313Z  * [new branch]        qa/s48-fixture-release-ownership -> origin/qa/s48-fixture-release-ownership
+2026-10-13T15:17:16.5911769Z  * [new branch]        qa/s48-registration-retirement -> origin/qa/s48-registration-retirement
+2026-10-13T15:17:16.5912867Z  * [new branch]        qa/s48-shader-program-attribution -> origin/qa/s48-shader-program-attribution
+2026-10-13T15:17:16.5913938Z  * [new branch]        qa/s48-smoke-cli-startup -> origin/qa/s48-smoke-cli-startup
+2026-10-13T15:17:16.5914908Z  * [new branch]        qa/s49-camera-verbs-ownership -> origin/qa/s49-camera-verbs-ownership
+2026-10-13T15:17:16.5916042Z  * [new branch]        qa/s49-view-target-prewarm-ownership -> origin/qa/s49-view-target-prewarm-ownership
+2026-10-13T15:17:16.5917112Z  * [new branch]        qa/s50-frustum-input-reuse -> origin/qa/s50-frustum-input-reuse
+2026-10-13T15:17:16.5917910Z  * [new branch]        qa/s50-revision-completion -> origin/qa/s50-revision-completion
+2026-10-13T15:17:16.5918681Z  * [new branch]        qa/s50-terrain-epoch    -> origin/qa/s50-terrain-epoch
+2026-10-13T15:17:16.5919420Z  * [new branch]        qa/s51-fleet-demand     -> origin/qa/s51-fleet-demand
+2026-10-13T15:17:16.5920209Z  * [new branch]        qa/s51-traffic-demand   -> origin/qa/s51-traffic-demand
+2026-10-13T15:17:16.5921389Z  * [new branch]        qa/s51-traffic-integration -> origin/qa/s51-traffic-integration
+2026-10-13T15:17:16.5922337Z  * [new branch]        qa/s52-direct-filter-checks -> origin/qa/s52-direct-filter-checks
+2026-10-13T15:17:16.5923195Z  * [new branch]        qa/s52-font-wake        -> origin/qa/s52-font-wake
+2026-10-13T15:17:16.5923651Z  * [new branch]        qa/s52-layout-reuse     -> origin/qa/s52-layout-reuse
+2026-10-13T15:17:16.5924125Z  * [new branch]        qa/s52-node-comparison  -> origin/qa/s52-node-comparison
+2026-10-13T15:17:16.5924928Z  * [new branch]        qa/s52-overlay-visual   -> origin/qa/s52-overlay-visual
+2026-10-13T15:17:16.5925857Z  * [new branch]        qa/s52-paint-callback-controls -> origin/qa/s52-paint-callback-controls
+2026-10-13T15:17:16.5926806Z  * [new branch]        qa/s52-placement-reuse  -> origin/qa/s52-placement-reuse
+2026-10-13T15:17:16.5927620Z  * [new branch]        qa/s52-placement-revised -> origin/qa/s52-placement-revised
+2026-10-13T15:17:16.5928118Z  * [new branch]        qa/s52-projection-reuse -> origin/qa/s52-projection-reuse
+2026-10-13T15:17:16.5928847Z  * [new branch]        qa/s53-command-attribution -> origin/qa/s53-command-attribution
+2026-10-13T15:17:16.5929352Z  * [new branch]        qa/s54-cable-benefit    -> origin/qa/s54-cable-benefit
+2026-10-13T15:17:16.5929813Z  * [new branch]        qa/s54-cable-references -> origin/qa/s54-cable-references
+2026-10-13T15:17:16.5930346Z  * [new branch]        qa/s54-current-dev-integration -> origin/qa/s54-current-dev-integration
+2026-10-13T15:17:16.5930908Z  * [new branch]        qa/s54-current-update-gate -> origin/qa/s54-current-update-gate
+2026-10-13T15:17:16.5931476Z  * [new branch]        qa/s54-current-update-readiness -> origin/qa/s54-current-update-readiness
+2026-10-13T15:17:16.5932060Z  * [new branch]        qa/s54-datacenter-current-dev -> origin/qa/s54-datacenter-current-dev
+2026-10-13T15:17:16.5932674Z  * [new branch]        qa/s54-infrastructure-collections -> origin/qa/s54-infrastructure-collections
+2026-10-13T15:17:16.5933305Z  * [new branch]        qa/s54-infrastructure-integration -> origin/qa/s54-infrastructure-integration
+2026-10-13T15:17:16.5933883Z  * [new branch]        qa/s54-primitive-readiness -> origin/qa/s54-primitive-readiness
+2026-10-13T15:17:16.5934386Z  * [new branch]        qa/s54-stem-comparator  -> origin/qa/s54-stem-comparator
+2026-10-13T15:17:16.5934880Z  * [new branch]        qa/s54-stem-pick-diagnostic -> origin/qa/s54-stem-pick-diagnostic
+2026-10-13T15:17:16.5935369Z  * [new branch]        qa/s57-artifact-log     -> origin/qa/s57-artifact-log
+2026-10-13T15:17:16.5935846Z  * [new branch]        qa/s57-flat-readiness-owner -> origin/qa/s57-flat-readiness-owner
+2026-10-13T15:17:16.5936340Z  * [new branch]        qa/s57-observer-epoch   -> origin/qa/s57-observer-epoch
+2026-10-13T15:17:16.5936800Z  * [new branch]        qa/s57-stream-comparison -> origin/qa/s57-stream-comparison
+2026-10-13T15:17:16.5937519Z  * [new branch]        qa/s57-tiles-cancellation-recovery -> origin/qa/s57-tiles-cancellation-recovery
+2026-10-13T15:17:16.5938086Z  * [new branch]        qa/s57-tiles-streaming  -> origin/qa/s57-tiles-streaming
+2026-10-13T15:17:16.5938605Z  * [new branch]        qa/s58-weather-image-ownership -> origin/qa/s58-weather-image-ownership
+2026-10-13T15:17:16.5939271Z  * [new branch]        qa/s59-batch-attribution -> origin/qa/s59-batch-attribution
+2026-10-13T15:17:16.5939933Z  * [new branch]        qa/s59-chunk-inner-loop -> origin/qa/s59-chunk-inner-loop
+2026-10-13T15:17:16.5940456Z  * [new branch]        qa/s59-geometry-load-profile -> origin/qa/s59-geometry-load-profile
+2026-10-13T15:17:16.5941009Z  * [new branch]        qa/s59-geometry-wake-browser -> origin/qa/s59-geometry-wake-browser
+2026-10-13T15:17:16.5941934Z  * [new branch]        qa/s59-import-cartesian-kernel -> origin/qa/s59-import-cartesian-kernel
+2026-10-13T15:17:16.5942562Z  * [new branch]        qa/s59-import-point-collection -> origin/qa/s59-import-point-collection
+2026-10-13T15:17:16.5943135Z  * [new branch]        qa/terrain-picking-lifecycle -> origin/qa/terrain-picking-lifecycle
+2026-10-13T15:17:16.5943666Z  * [new branch]        qa/tracking-regression  -> origin/qa/tracking-regression
+2026-10-13T15:17:16.5944145Z  * [new branch]        qa/vessel-render-demand -> origin/qa/vessel-render-demand
+2026-10-13T15:17:16.5944635Z  * [new branch]        qa/webgl-preserve-control -> origin/qa/webgl-preserve-control
+2026-10-13T15:17:16.5945520Z  * [new branch]        qa/wind-image-reuse     -> origin/qa/wind-image-reuse
+2026-10-13T15:17:16.5946365Z  * [new branch]        qa/windows-browser-shutdown -> origin/qa/windows-browser-shutdown
+2026-10-13T15:17:16.5947315Z  * [new branch]        qa/windows-close-diagnostics -> origin/qa/windows-close-diagnostics
+2026-10-13T15:17:16.5948306Z  * [new branch]        qa/windows-close-observation -> origin/qa/windows-close-observation
+2026-10-13T15:17:16.5948914Z  * [new branch]        qa/windows-frame-controls -> origin/qa/windows-frame-controls
+2026-10-13T15:17:16.5949622Z  * [new branch]        qa/windows-profile-recovery -> origin/qa/windows-profile-recovery
+2026-10-13T15:17:16.5950845Z  * [new branch]        qa/windows-recovery-diagnostic -> origin/qa/windows-recovery-diagnostic
+2026-10-13T15:17:16.5951916Z  * [new branch]        qa/windows-renderer-experiment -> origin/qa/windows-renderer-experiment
+2026-10-13T15:17:16.5953526Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/qa/s47-austin-receipt-only
+2026-10-13T15:17:16.6296343Z   origin/qa/s47-austin-receipt-only
+2026-10-13T15:17:16.6353463Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/qa/s47-austin-receipt-only
+2026-10-13T15:17:16.6635170Z 4b60f45391561246b891ffd8783c7acc142a227b
+2026-10-13T15:17:16.6673720Z ##[endgroup]
+2026-10-13T15:17:16.6674179Z ##[group]Determining the checkout info
+2026-10-13T15:17:16.6676762Z ##[endgroup]
+2026-10-13T15:17:16.6686479Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-13T15:17:16.7128135Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-13T15:17:16.7443380Z ##[group]Checking out the ref
+2026-10-13T15:17:16.7453825Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B qa/s47-austin-receipt-only refs/remotes/origin/qa/s47-austin-receipt-only
+2026-10-13T15:17:17.8097940Z Updating files:  27% (1459/5248)
+2026-10-13T15:17:17.8449098Z Updating files:  28% (1470/5248)
+2026-10-13T15:17:17.8685436Z Updating files:  29% (1522/5248)
+2026-10-13T15:17:17.8910279Z Updating files:  30% (1575/5248)
+2026-10-13T15:17:17.9141888Z Updating files:  31% (1627/5248)
+2026-10-13T15:17:17.9369273Z Updating files:  32% (1680/5248)
+2026-10-13T15:17:17.9604900Z Updating files:  33% (1732/5248)
+2026-10-13T15:17:18.0359725Z Updating files:  34% (1785/5248)
+2026-10-13T15:17:18.0487646Z Updating files:  35% (1837/5248)
+2026-10-13T15:17:18.0627318Z Updating files:  36% (1890/5248)
+2026-10-13T15:17:18.0785199Z Updating files:  37% (1942/5248)
+2026-10-13T15:17:18.1143242Z Updating files:  38% (1995/5248)
+2026-10-13T15:17:18.1380865Z Updating files:  39% (2047/5248)
+2026-10-13T15:17:18.1626575Z Updating files:  40% (2100/5248)
+2026-10-13T15:17:18.1887838Z Updating files:  41% (2152/5248)
+2026-10-13T15:17:18.2107224Z Updating files:  42% (2205/5248)
+2026-10-13T15:17:18.2341577Z Updating files:  43% (2257/5248)
+2026-10-13T15:17:18.2566585Z Updating files:  44% (2310/5248)
+2026-10-13T15:17:18.2797300Z Updating files:  45% (2362/5248)
+2026-10-13T15:17:18.3022854Z Updating files:  46% (2415/5248)
+2026-10-13T15:17:18.3254575Z Updating files:  47% (2467/5248)
+2026-10-13T15:17:18.3912359Z Updating files:  48% (2520/5248)
+2026-10-13T15:17:18.4124517Z Updating files:  49% (2572/5248)
+2026-10-13T15:17:18.4289905Z Updating files:  50% (2624/5248)
+2026-10-13T15:17:18.4462510Z Updating files:  51% (2677/5248)
+2026-10-13T15:17:18.4795374Z Updating files:  52% (2729/5248)
+2026-10-13T15:17:18.5151615Z Updating files:  53% (2782/5248)
+2026-10-13T15:17:18.5322803Z Updating files:  54% (2834/5248)
+2026-10-13T15:17:18.5466921Z Updating files:  55% (2887/5248)
+2026-10-13T15:17:18.5621626Z Updating files:  56% (2939/5248)
+2026-10-13T15:17:18.5986752Z Updating files:  57% (2992/5248)
+2026-10-13T15:17:18.6215130Z Updating files:  58% (3044/5248)
+2026-10-13T15:17:18.6410352Z Updating files:  59% (3097/5248)
+2026-10-13T15:17:18.6608508Z Updating files:  60% (3149/5248)
+2026-10-13T15:17:18.6790995Z Updating files:  61% (3202/5248)
+2026-10-13T15:17:18.6950285Z Updating files:  62% (3254/5248)
+2026-10-13T15:17:18.7110439Z Updating files:  63% (3307/5248)
+2026-10-13T15:17:18.7321149Z Updating files:  64% (3359/5248)
+2026-10-13T15:17:18.7501122Z Updating files:  65% (3412/5248)
+2026-10-13T15:17:18.7655568Z Updating files:  66% (3464/5248)
+2026-10-13T15:17:18.7800777Z Updating files:  67% (3517/5248)
+2026-10-13T15:17:18.7952336Z Updating files:  68% (3569/5248)
+2026-10-13T15:17:18.8050221Z Updating files:  69% (3622/5248)
+2026-10-13T15:17:18.8078319Z Updating files:  69% (3664/5248)
+2026-10-13T15:17:18.8237885Z Updating files:  70% (3674/5248)
+2026-10-13T15:17:18.8395981Z Updating files:  71% (3727/5248)
+2026-10-13T15:17:18.8550980Z Updating files:  72% (3779/5248)
+2026-10-13T15:17:18.8749153Z Updating files:  73% (3832/5248)
+2026-10-13T15:17:18.8948525Z Updating files:  74% (3884/5248)
+2026-10-13T15:17:18.9928292Z Updating files:  75% (3936/5248)
+2026-10-13T15:17:19.0066425Z Updating files:  76% (3989/5248)
+2026-10-13T15:17:19.0204767Z Updating files:  77% (4041/5248)
+2026-10-13T15:17:19.0346705Z Updating files:  78% (4094/5248)
+2026-10-13T15:17:19.0495978Z Updating files:  79% (4146/5248)
+2026-10-13T15:17:19.0632095Z Updating files:  80% (4199/5248)
+2026-10-13T15:17:19.0781634Z Updating files:  81% (4251/5248)
+2026-10-13T15:17:19.0930303Z Updating files:  82% (4304/5248)
+2026-10-13T15:17:19.1070273Z Updating files:  83% (4356/5248)
+2026-10-13T15:17:19.1440650Z Updating files:  84% (4409/5248)
+2026-10-13T15:17:19.1591435Z Updating files:  85% (4461/5248)
+2026-10-13T15:17:19.1753147Z Updating files:  86% (4514/5248)
+2026-10-13T15:17:19.1893130Z Updating files:  87% (4566/5248)
+2026-10-13T15:17:19.2039507Z Updating files:  88% (4619/5248)
+2026-10-13T15:17:19.2190721Z Updating files:  89% (4671/5248)
+2026-10-13T15:17:19.2339533Z Updating files:  90% (4724/5248)
+2026-10-13T15:17:19.2474103Z Updating files:  91% (4776/5248)
+2026-10-13T15:17:19.2606012Z Updating files:  92% (4829/5248)
+2026-10-13T15:17:19.2750617Z Updating files:  93% (4881/5248)
+2026-10-13T15:17:19.2881269Z Updating files:  94% (4934/5248)
+2026-10-13T15:17:19.3019250Z Updating files:  95% (4986/5248)
+2026-10-13T15:17:19.3157418Z Updating files:  96% (5039/5248)
+2026-10-13T15:17:19.3314408Z Updating files:  97% (5091/5248)
+2026-10-13T15:17:19.3474338Z Updating files:  98% (5144/5248)
+2026-10-13T15:17:19.3614227Z Updating files:  99% (5196/5248)
+2026-10-13T15:17:19.3614721Z Updating files: 100% (5248/5248)
+2026-10-13T15:17:19.3615158Z Updating files: 100% (5248/5248), done.
+2026-10-13T15:17:19.3817255Z Switched to a new branch 'qa/s47-austin-receipt-only'
+2026-10-13T15:17:19.3875971Z branch 'qa/s47-austin-receipt-only' set up to track 'origin/qa/s47-austin-receipt-only'.
+2026-10-13T15:17:19.4117601Z ##[endgroup]
+2026-10-13T15:17:19.4539286Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-13T15:17:19.4810661Z 4b60f45391561246b891ffd8783c7acc142a227b
+2026-10-13T15:17:19.4855997Z ##[group]Removing auth
+2026-10-13T15:17:19.4865067Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T15:17:19.5165998Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T15:17:20.0758963Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T15:17:20.1042309Z http.https://github.com/.extraheader
+2026-10-13T15:17:20.1088064Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-13T15:17:20.1409697Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T15:17:20.6807442Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T15:17:20.7110410Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T15:17:21.2778574Z ##[endgroup]
+2026-10-13T15:17:21.3218017Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+2026-10-13T15:17:21.3218481Z with:
+2026-10-13T15:17:21.3218680Z   node-version: 24.14.0
+2026-10-13T15:17:21.3218895Z   cache: npm
+2026-10-13T15:17:21.3219090Z   always-auth: false
+2026-10-13T15:17:21.3219307Z   check-latest: false
+2026-10-13T15:17:21.3221849Z   token: ***
+2026-10-13T15:17:21.3222052Z env:
+2026-10-13T15:17:21.3222236Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:17:21.3222914Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:17:21.3223161Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:17:21.3223441Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:17:21.3223721Z ##[endgroup]
+2026-10-13T15:17:21.4974139Z Attempting to download 24.14.0...
+2026-10-13T15:17:21.5179205Z (node:10144) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-13T15:17:21.5180658Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T15:17:22.5068955Z Acquiring 24.14.0 - x64 from https://github.com/actions/node-versions/releases/download/24.14.0-22380502845/node-24.14.0-win32-x64.7z
+2026-10-13T15:17:23.0421986Z Extracting ...
+2026-10-13T15:17:25.2831893Z Adding to the cache ...
+2026-10-13T15:17:28.3863749Z ##[group]Environment details
+2026-10-13T15:17:29.5895566Z node: v24.14.0
+2026-10-13T15:17:29.5895906Z npm: 11.9.0
+2026-10-13T15:17:29.5896096Z yarn: 1.22.22
+2026-10-13T15:17:29.5896595Z ##[endgroup]
+2026-10-13T15:17:29.6657420Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\24.14.0\x64\npm.cmd config get cache"
+2026-10-13T15:17:29.9511272Z C:\npm\cache
+2026-10-13T15:17:30.3493352Z Cache hit for: node-cache-Windows-x64-npm-d97d4f933e744ae3f558a8696bbd3ffce9b80f181937649447aa37d43a5becf6
+2026-10-13T15:17:30.3616915Z (node:10144) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-13T15:17:31.5630748Z Received 83886080 of 96344739 (87.1%), 80.0 MBs/sec
+2026-10-13T15:17:32.5572530Z Received 96344739 of 96344739 (100.0%), 46.1 MBs/sec
+2026-10-13T15:17:32.5576383Z Cache Size: ~92 MB (96344739 B)
+2026-10-13T15:17:32.5676686Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/f7d7997d-451a-4b0d-a019-47a0ca2e7abd/cache.tzst -P -C D:/a/gods-eye-view/gods-eye-view --force-local --use-compress-program "zstd -d"
+2026-10-13T15:17:36.3799005Z Cache restored successfully
+2026-10-13T15:17:36.3865783Z Cache restored from key: node-cache-Windows-x64-npm-d97d4f933e744ae3f558a8696bbd3ffce9b80f181937649447aa37d43a5becf6
+2026-10-13T15:17:36.4253085Z ##[group]Run node scripts/validate-profile-recovery-browser-selection.mjs
+2026-10-13T15:17:36.4253775Z [36;1mnode scripts/validate-profile-recovery-browser-selection.mjs[0m
+2026-10-13T15:17:36.4725911Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:17:36.4726541Z env:
+2026-10-13T15:17:36.4726819Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:17:36.4727180Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:17:36.4727532Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:17:36.4727947Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:17:36.4728400Z   GEV_QA_PROFILE_RECOVERY_CHROME_VERSION: 
+2026-10-13T15:17:36.4728805Z   GEV_QA_VALIDATION_MODE: standard
+2026-10-13T15:17:36.4729181Z   GEV_QA_SELECTED_RUNNER: windows-latest
+2026-10-13T15:17:36.4729558Z ##[endgroup]
+2026-10-13T15:17:36.9699933Z {"selection":"pinned-default","expectedVersion":null}
+2026-10-13T15:17:37.1224019Z ##[group]Run node scripts/pinokio-install.mjs
+2026-10-13T15:17:37.1224475Z [36;1mnode scripts/pinokio-install.mjs[0m
+2026-10-13T15:17:37.1302468Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:17:37.1302839Z env:
+2026-10-13T15:17:37.1303046Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:17:37.1303303Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:17:37.1303564Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:17:37.1303852Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:17:37.1304535Z ##[endgroup]
+2026-10-13T15:17:40.6079070Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2026-10-13T15:17:49.1765700Z 
+2026-10-13T15:17:49.1767987Z > gods-eye-view@0.2.1 postinstall
+2026-10-13T15:17:49.1768726Z > node scripts/apply-cesium-patches.mjs
+2026-10-13T15:17:49.1769056Z 
+2026-10-13T15:17:49.6238821Z [cesium-patch] patched 5 distributions
+2026-10-13T15:17:49.6520308Z 
+2026-10-13T15:17:49.6521719Z added 247 packages, and audited 248 packages in 12s
+2026-10-13T15:17:49.6522135Z 
+2026-10-13T15:17:49.6524831Z 40 packages are looking for funding
+2026-10-13T15:17:49.6527164Z   run `npm fund` for details
+2026-10-13T15:17:49.6574580Z 
+2026-10-13T15:17:49.6575068Z 3 vulnerabilities (1 low, 2 high)
+2026-10-13T15:17:49.6575444Z 
+2026-10-13T15:17:49.6575664Z To address all issues, run:
+2026-10-13T15:17:49.6576410Z   npm audit fix
+2026-10-13T15:17:49.6576641Z 
+2026-10-13T15:17:49.6576870Z Run `npm audit` for details.
+2026-10-13T15:18:01.0121597Z 
+2026-10-13T15:18:01.0122422Z God's Eye View setup doctor
+2026-10-13T15:18:01.0122734Z 
+2026-10-13T15:18:01.0123140Z [OK] Node 24.14.0: supported LTS and calibrated for release gates
+2026-10-13T15:18:01.0124645Z [OK] npm 11.9.0
+2026-10-13T15:18:01.0125148Z [OK] dependencies installed
+2026-10-13T15:18:01.0125455Z 
+2026-10-13T15:18:01.0126247Z Map:     Esri World Imagery (keyless satellite basemap) with keyless terrain
+2026-10-13T15:18:01.0127176Z Flights: OpenSky keyless anonymous access (rate-limited)
+2026-10-13T15:18:01.0128438Z Voice:   off until an OpenAI key is added, or a Codex ChatGPT sign-in is selected in Provider Settings (experimental)
+2026-10-13T15:18:01.0129765Z Vessels: off until an AISStream key is added
+2026-10-13T15:18:01.0130537Z Fires:   off until a FIRMS key is added
+2026-10-13T15:18:01.0131301Z Traffic: built-in traffic simulation
+2026-10-13T15:18:01.0132367Z Missions: Launch Library 2 public access
+2026-10-13T15:18:01.0132791Z 
+2026-10-13T15:18:01.0132983Z Configured providers:
+2026-10-13T15:18:01.0133516Z   [--] Google Maps
+2026-10-13T15:18:01.0134050Z   [--] Google Places / Street View server
+2026-10-13T15:18:01.0134860Z   [--] Cesium ion
+2026-10-13T15:18:01.0135698Z   [--] OpenAI voice
+2026-10-13T15:18:01.0137831Z   [--] AISStream vessels
+2026-10-13T15:18:01.0138409Z   [--] NASA FIRMS fires
+2026-10-13T15:18:01.0138928Z   [--] TomTom traffic
+2026-10-13T15:18:01.0143353Z   [--] OpenSky client ID
+2026-10-13T15:18:01.0143842Z   [--] OpenSky client secret
+2026-10-13T15:18:01.0144295Z   [--] Launch Library 2
+2026-10-13T15:18:01.0144708Z   [--] Mapillary street level
+2026-10-13T15:18:01.0145009Z 
+2026-10-13T15:18:01.0145297Z Ready. Return to Pinokio and choose Start.
+2026-10-13T15:18:01.0145654Z 
+2026-10-13T15:18:01.0147564Z (node:10196) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+2026-10-13T15:18:01.0149331Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-13T15:18:01.0150077Z [Pinokio] Installation ready.
+2026-10-13T15:18:01.1465883Z ##[group]Run node --test scripts/performance/mapStreamingFixture.test.mjs
+2026-10-13T15:18:01.1466546Z [36;1mnode --test scripts/performance/mapStreamingFixture.test.mjs[0m
+2026-10-13T15:18:01.1541790Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:18:01.1542175Z env:
+2026-10-13T15:18:01.1542395Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:18:01.1542663Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:18:01.1542938Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:18:01.1543247Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:18:01.1543567Z ##[endgroup]
+2026-10-13T15:18:03.5838229Z ✔ map streaming fixture generation is stable, bounded, and route-indexed (597.8707ms)
+2026-10-13T15:18:03.9851744Z ✔ v4 adds only actual Cesium OSM skeleton and imagery-parent dependencies (401.8373ms)
+2026-10-13T15:18:04.3058899Z ✔ canonical 3D Tiles corpus is immutable, bounded, and fail-closed (320.6351ms)
+2026-10-13T15:18:05.2481569Z ✔ pinned high-LOD PNG templates preserve every route pixel and identity (942.1175ms)
+2026-10-13T15:18:05.8222025Z ✔ map streaming fixture rejects truncated, modified, missing, and unbounded assets (573.5352ms)
+2026-10-13T15:18:17.4898442Z ✔ Cesium terrain and tileset parsers accept the generated local route corpus (11668.0774ms)
+2026-10-13T15:18:17.7144346Z ✔ ArcGIS probe proof rejects successful HTTP bytes when image decoding fails (224.8929ms)
+2026-10-13T15:18:17.9435167Z ✔ Cesium rejects truncated quantized-mesh and GLB HTTP responses (228.7287ms)
+2026-10-13T15:18:17.9867492Z ℹ tests 8
+2026-10-13T15:18:17.9868440Z ℹ suites 0
+2026-10-13T15:18:17.9868888Z ℹ pass 8
+2026-10-13T15:18:17.9869318Z ℹ fail 0
+2026-10-13T15:18:17.9869751Z ℹ cancelled 0
+2026-10-13T15:18:17.9870207Z ℹ skipped 0
+2026-10-13T15:18:17.9870547Z ℹ todo 0
+2026-10-13T15:18:17.9870968Z ℹ duration_ms 16464.8685
+2026-10-13T15:18:18.1233859Z ##[group]Run node --test src/pinokioUpdatePreview.test.mjs
+2026-10-13T15:18:18.1234388Z [36;1mnode --test src/pinokioUpdatePreview.test.mjs[0m
+2026-10-13T15:18:18.1307747Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:18:18.1308138Z env:
+2026-10-13T15:18:18.1308350Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:18:18.1308618Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:18:18.1308887Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:18:18.1309204Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:18:18.1309508Z ##[endgroup]
+2026-10-13T15:18:19.3405197Z ✔ a checkout with no upstream is reported and left to the plain pull (801.2045ms)
+2026-10-13T15:18:20.1055374Z ✔ dirty checkouts stop before fetch, merge, or reinstall (765.5596ms)
+2026-10-13T15:18:21.3989488Z ✔ a schema mismatch stops before merge and install (1293.2268ms)
+2026-10-13T15:18:21.3992900Z ✔ schema compatibility requires all reader versions to match (0.2921ms)
+2026-10-13T15:18:22.6569887Z ✔ the tracking branch and the remote it fetches from are printed (1257.549ms)
+2026-10-13T15:18:24.1882413Z ✔ the incoming commits and their diffstat are printed, and the report alone applies nothing (1530.9875ms)
+2026-10-13T15:18:25.6750105Z ✔ the revision that is applied is the revision that was disclosed (1486.7077ms)
+2026-10-13T15:18:27.0306975Z ✔ the whole update applies exactly one disclosed revision (1355.6353ms)
+2026-10-13T15:18:28.5954761Z ✔ a remote that moves during the update does not change what is applied (1564.5505ms)
+2026-10-13T15:18:29.6831676Z ✔ an up-to-date checkout says so and applies nothing (1087.758ms)
+2026-10-13T15:18:30.8613202Z ✔ an unreadable commit range is reported as unreadable, not as up to date (1178.149ms)
+2026-10-13T15:18:31.9870368Z ✔ an upstream that cannot be resolved after fetching stops the update (1125.537ms)
+2026-10-13T15:18:33.5278127Z ✔ a remote whose name contains a slash is read correctly (1540.6982ms)
+2026-10-13T15:18:35.5928574Z ✔ a diffstat that cannot be read is reported, and the commits still are (2064.2904ms)
+2026-10-13T15:18:37.0390201Z ✔ diverged history is refused rather than applied (1446.7041ms)
+2026-10-13T15:18:38.2397803Z ✔ a remote that is behind this checkout is named, not announced as incoming (1197.2565ms)
+2026-10-13T15:18:39.5030224Z ✔ a stop means nothing is installed, and the script fails (1266.002ms)
+2026-10-13T15:18:44.5655983Z ✔ an ordinary update installs once and does not fail (5062.9434ms)
+2026-10-13T15:18:46.6225588Z ✔ an up-to-date checkout still reinstalls (2055.7583ms)
+2026-10-13T15:18:46.6227239Z ✔ the entrypoint is what the direct invocation runs (0.3703ms)
+2026-10-13T15:18:46.6228629Z ✔ a password in the remote URL is not printed (0.2818ms)
+2026-10-13T15:18:46.6231240Z ✔ a bare token in the remote URL is not printed (0.1893ms)
+2026-10-13T15:18:46.6233950Z ✔ a credential in a query parameter is not printed (0.1479ms)
+2026-10-13T15:18:46.6238141Z ✔ an ordinary remote URL is printed unchanged (0.1468ms)
+2026-10-13T15:18:48.0367777Z ✔ a credential-bearing remote is redacted in the printed report (1413.5405ms)
+2026-10-13T15:18:48.9165465Z ✔ a failed git read is null, and an empty successful read is an empty string (879.7661ms)
+2026-10-13T15:18:48.9167201Z ✔ the update and reinstall stay behind the direct-invocation guard (0.2998ms)
+2026-10-13T15:18:48.9170433Z ✔ the disclosed revision is applied by merge, not by a second pull (0.1695ms)
+2026-10-13T15:18:48.9319059Z ℹ tests 28
+2026-10-13T15:18:48.9319403Z ℹ suites 0
+2026-10-13T15:18:48.9319676Z ℹ pass 28
+2026-10-13T15:18:48.9319937Z ℹ fail 0
+2026-10-13T15:18:48.9320200Z ℹ cancelled 0
+2026-10-13T15:18:48.9320498Z ℹ skipped 0
+2026-10-13T15:18:48.9320762Z ℹ todo 0
+2026-10-13T15:18:48.9321066Z ℹ duration_ms 30474.6958
+2026-10-13T15:18:49.0653615Z ##[group]Run npm run qa:install-recovery
+2026-10-13T15:18:49.0654064Z [36;1mnpm run qa:install-recovery[0m
+2026-10-13T15:18:49.0728840Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:18:49.0729225Z env:
+2026-10-13T15:18:49.0729436Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:18:49.0729709Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:18:49.0729971Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:18:49.0730277Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:18:49.0730578Z ##[endgroup]
+2026-10-13T15:18:49.9155586Z 
+2026-10-13T15:18:49.9156375Z > gods-eye-view@0.2.1 qa:install-recovery
+2026-10-13T15:18:49.9157065Z > node scripts/qa-install-recovery.mjs
+2026-10-13T15:18:49.9157374Z 
+2026-10-13T15:18:50.1327870Z {
+2026-10-13T15:18:50.1328343Z   "platform": "win32",
+2026-10-13T15:18:50.1328837Z   "scope": "portable-artifact-recovery",
+2026-10-13T15:18:50.1329272Z   "browserProfileValidated": false,
+2026-10-13T15:18:50.1329636Z   "checks": [
+2026-10-13T15:18:50.1329883Z     "verified-prior-artifact",
+2026-10-13T15:18:50.1330525Z     "interrupted-copy-rejected",
+2026-10-13T15:18:50.1331015Z     "checksum-failure-recovery",
+2026-10-13T15:18:50.1331300Z     "bundle-asset-reopen"
+2026-10-13T15:18:50.1331537Z   ]
+2026-10-13T15:18:50.1331728Z }
+2026-10-13T15:18:50.2736951Z ##[group]Run node --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
+2026-10-13T15:18:50.2738535Z [36;1mnode --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs[0m
+2026-10-13T15:18:50.2818883Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:18:50.2819282Z env:
+2026-10-13T15:18:50.2819504Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:18:50.2819783Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:18:50.2820064Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:18:50.2820383Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:18:50.2820697Z ##[endgroup]
+2026-10-13T15:18:51.0465528Z ✔ browser shutdown matrix runs each document/treatment sequentially and validates a complete result (3.7401ms)
+2026-10-13T15:18:51.0497008Z ✔ a failed graceful close remains failed but later controls run after confirmed exit (0.553ms)
+2026-10-13T15:18:51.0510428Z ✔ an unconfirmed owned process blocks every later control (0.5191ms)
+2026-10-13T15:18:51.0516062Z ✔ browser version mismatch is kept as a failed control (0.524ms)
+2026-10-13T15:18:51.0543210Z ✔ validator rejects missing control evidence, changed identity, or false forced-cleanup pass (2.2281ms)
+2026-10-13T15:18:51.0544510Z ✔ navigation-first control requires a delivered outgoing-pagehide observation (0.3094ms)
+2026-10-13T15:18:51.0545349Z ✔ fixture inline scripts retain valid regex escapes and compile as browser scripts (1.0745ms)
+2026-10-13T15:18:51.0546182Z ✔ WebGL fixture performs one ready-frame renderer query and records unmasked identity (1.237ms)
+2026-10-13T15:18:51.0547042Z ✔ Cesium fixture samples renderer once from one completed postRender and removes its listener (1.5457ms)
+2026-10-13T15:18:51.0547860Z ✔ report finalization retains interrupted matrix rows and the primary error (0.8007ms)
+2026-10-13T15:18:51.3256444Z ✔ owned fixture server closes active connections within its bounded cleanup (303.2251ms)
+2026-10-13T15:18:51.3442975Z ✔ scratch profile cleanup reports removal only after successful deletion (6.4952ms)
+2026-10-13T15:18:51.3445629Z ✔ shutdown CLI can be imported for fixture tests without launching Chrome (0.141ms)
+2026-10-13T15:18:51.3596822Z ✔ serialized pagehide handler reaches the bounded owned fixture server (25.9975ms)
+2026-10-13T15:18:52.3862544Z ✔ pagehide endpoint rejects unknown tokens, malformed events, and oversized bodies (1026.4808ms)
+2026-10-13T15:18:52.3909682Z ✔ pagehide tracker bounds registered control tokens and ignores delayed or absent delivery (2.1352ms)
+2026-10-13T15:18:52.3920157Z ✔ pagehide timing uses server receipt time and late evidence remains a failure (1.9505ms)
+2026-10-13T15:18:52.3922170Z ✔ an emitted page error invalidates an otherwise healthy shutdown control (0.1279ms)
+2026-10-13T15:18:52.3923935Z ✔ WebGL and Cesium controls require observed live context and renderer data (0.2247ms)
+2026-10-13T15:18:52.3928138Z ✔ shutdown fixture identity requires the declared WebGL-only SwiftShader launch (0.2781ms)
+2026-10-13T15:18:52.3933224Z ✔ shutdown runtime and reports support win32 with webglOnly=false (0.5096ms)
+2026-10-13T15:18:52.3937101Z ✔ shutdown runtime and reports support win32 with webglOnly=true (0.1915ms)
+2026-10-13T15:18:52.3940800Z ✔ shutdown runtime and reports support darwin with webglOnly=false (0.1816ms)
+2026-10-13T15:18:52.3942130Z ✔ shutdown runtime and reports support darwin with webglOnly=true (0.1644ms)
+2026-10-13T15:18:52.3945230Z ✔ shutdown runtime and reports support linux with webglOnly=false (0.1547ms)
+2026-10-13T15:18:52.3947536Z ✔ shutdown runtime and reports support linux with webglOnly=true (0.1495ms)
+2026-10-13T15:18:52.3952972Z ✔ shutdown runtime rejects unsupported platforms and ambiguous renderer flags (0.3117ms)
+2026-10-13T15:18:52.3954575Z ✔ shutdown errors remove URL and path details before report storage (0.2155ms)
+2026-10-13T15:18:55.8802417Z ✔ PowerShell test harness waits for a flushed readiness marker before sending script (18.3267ms)
+2026-10-13T15:18:55.8803708Z ✔ PowerShell startup and hung execution have distinct bounded failures and cleanup (3.8799ms)
+2026-10-13T15:18:55.8804501Z ✔ PowerShell late readiness after startup timeout never sends the script (2.4157ms)
+2026-10-13T15:18:55.8805226Z ✔ PowerShell spawn failure, synchronous close and output overflow are bounded (1.6456ms)
+2026-10-13T15:18:55.8805959Z ✔ PowerShell early exit, nonzero exit and unconfirmed kill remain failed (4.9017ms)
+2026-10-13T15:18:55.8807461Z ✔ each recovery launch requires exactly one initial blank page (0.8736ms)
+2026-10-13T15:18:55.8808524Z ✔ post-navigation invariant requires the sole app page to be owned (0.5195ms)
+2026-10-13T15:18:55.8809513Z ✔ target guard rejects even a transient extra page target (0.7961ms)
+2026-10-13T15:18:55.8810442Z ✔ owned page closes before browser close and leaves zero open pages (1.8076ms)
+2026-10-13T15:18:55.8811370Z ✔ wedged owned-page close is bounded and reported as incomplete (21.4083ms)
+2026-10-13T15:18:55.8812384Z ✔ a passed workspace check still fails when cleanup leaves a page open (0.4891ms)
+2026-10-13T15:18:55.8813449Z ✔ owned process snapshot keeps only a bounded rooted tree and safe fields (1.0359ms)
+2026-10-13T15:18:55.8814470Z ✔ Windows process tree capture is bounded and omits command lines (0.7508ms)
+2026-10-13T15:18:55.8816813Z ✖ PowerShell skips command-line queries when the owned root is absent (5017.9607ms)
+2026-10-13T15:18:55.8818236Z ℹ {"stage":"readiness","processStatus":"closed","cleanupConfirmed":true,"startupElapsedMs":5001.869100000001,"executionElapsedMs":null,"cleanupElapsedMs":15.51719999999932}
+2026-10-13T15:19:02.4140829Z ✔ PowerShell derives roles only from command lines for owned process IDs (6538.353ms)
+2026-10-13T15:19:02.4143012Z ℹ {"startupElapsedMs":3143.4331,"executionElapsedMs":3394.452300000001,"totalElapsedMs":6537.885400000001}
+2026-10-13T15:19:02.4145135Z ✔ process snapshot failure remains unavailable instead of affecting cleanup (0.4454ms)
+2026-10-13T15:19:02.4147201Z ✔ SystemInfo process inventory keeps only bounded roles and IDs (0.6354ms)
+2026-10-13T15:19:02.4148915Z ✔ browser process inventory uses only the existing owned CDP connection (0.3012ms)
+2026-10-13T15:19:02.4150430Z ✔ browser process inventory bounds the command and rejects when the owned connection is unavailable (0.401ms)
+2026-10-13T15:19:02.4170147Z ✔ late SystemInfo reply after the owned command timeout has no session cleanup side effects (1.8515ms)
+2026-10-13T15:19:02.4175812Z ✔ owned process-info command timeout does not issue attach or detach protocol commands (0.423ms)
+2026-10-13T15:19:02.4177834Z ✔ owned browser PID presence reports only bounded read-only status and its reuse limit (0.3912ms)
+2026-10-13T15:19:02.4356369Z ✔ close diagnostics capture target types and process tree before forced cleanup (18.2039ms)
+2026-10-13T15:19:02.4357364Z ✔ pre-close SystemInfo observation is bounded and excluded from the close deadline (0.6449ms)
+2026-10-13T15:19:03.2825000Z ✔ a timed out SystemInfo probe is marked unavailable and does not change the close gate (846.6904ms)
+2026-10-13T15:19:03.2892130Z ✔ a late SystemInfo response after its diagnostic deadline cannot replace the recorded timeout (5.577ms)
+2026-10-13T15:19:03.2894331Z ✔ CDP unsupported and permission failures remain diagnostic-only (0.8953ms)
+2026-10-13T15:19:03.2988259Z ✔ pinned Puppeteer CDP errors are classified without retaining protocol text (10.2867ms)
+2026-10-13T15:19:03.3114374Z ✔ shutdown diagnostic errors do not prevent forced cleanup or alter failed close (12.4267ms)
+2026-10-13T15:19:03.3265320Z ✔ timeout target inventory is captured when the browser has not disconnected (13.7351ms)
+2026-10-13T15:19:03.3267694Z ✔ pre-close diagnostics do not extend close timing and timing origins stay explicit (0.5373ms)
+2026-10-13T15:19:03.3270648Z ✔ owned process stop distinguishes pre-existing exit from confirmed taskkill (0.6084ms)
+2026-10-13T15:19:03.3421854Z ✔ owned process stop does not claim an exit after failed taskkill and bounds a stuck helper (14.478ms)
+2026-10-13T15:19:03.3423957Z ✔ browser close records an already-exited process and releases listeners (0.4359ms)
+2026-10-13T15:19:03.3573065Z ✔ darwin fallback signals only the owned process group and waits for observed exit (15.4811ms)
+2026-10-13T15:19:03.3743427Z ✔ linux fallback signals only the owned process group and waits for observed exit (15.674ms)
+2026-10-13T15:19:03.3745550Z ✔ close trace ignores unrelated and pre-close protocol text without retaining it (0.8186ms)
+2026-10-13T15:19:03.4067758Z ✔ close trace correlates Browser.close acknowledgement but keeps process wait separate (31.1426ms)
+2026-10-13T15:19:03.4069588Z ✔ close trace distinguishes missing and late acknowledgements and bounds messages (1.0826ms)
+2026-10-13T15:19:03.4364714Z ✔ an exited process with an unresolved close acknowledgement remains a failure (29.9107ms)
+2026-10-13T15:19:03.4587746Z ✔ a live process timeout invokes bounded owned-process cleanup and stays failed (22.5843ms)
+2026-10-13T15:19:03.4842698Z ✔ a resolved but unconfirmed process stop is not reported as termination (24.9744ms)
+2026-10-13T15:19:03.5161386Z ✔ an exit racing with the force callback is not reported as forced termination (31.5423ms)
+2026-10-13T15:19:03.5163596Z ✔ close rejection is distinguished and failed forced cleanup is reported (0.5459ms)
+2026-10-13T15:19:03.5636766Z ✔ successful close clears the deadline and does not invoke fallback (46.7753ms)
+2026-10-13T15:19:03.5638630Z ✔ cleanup failure becomes primary only after an otherwise-passed check (0.488ms)
+2026-10-13T15:19:03.5785531Z ℹ tests 74
+2026-10-13T15:19:03.5785963Z ℹ suites 0
+2026-10-13T15:19:03.5786301Z ℹ pass 73
+2026-10-13T15:19:03.5786699Z ℹ fail 1
+2026-10-13T15:19:03.5786948Z ℹ cancelled 0
+2026-10-13T15:19:03.5787196Z ℹ skipped 0
+2026-10-13T15:19:03.5787423Z ℹ todo 0
+2026-10-13T15:19:03.5787692Z ℹ duration_ms 12907.3413
+2026-10-13T15:19:03.5787867Z 
+2026-10-13T15:19:03.5788010Z ✖ failing tests:
+2026-10-13T15:19:03.5788149Z 
+2026-10-13T15:19:03.5788497Z test at scripts\performance\profileRecoveryPageOwnership.test.mjs:1055:1
+2026-10-13T15:19:03.5789280Z ✖ PowerShell skips command-line queries when the owned root is absent (5017.9607ms)
+2026-10-13T15:19:03.5789866Z   Error: PowerShell test command failed at readiness.
+2026-10-13T15:19:03.5790654Z       at makeError (file:///D:/a/gods-eye-view/gods-eye-view/scripts/performance/profileRecoveryPageOwnership.test.mjs:143:21)
+2026-10-13T15:19:03.5791826Z       at Timeout.<anonymous> (file:///D:/a/gods-eye-view/gods-eye-view/scripts/performance/profileRecoveryPageOwnership.test.mjs:271:18)
+2026-10-13T15:19:03.5792599Z       at listOnTimeout (node:internal/timers:605:17)
+2026-10-13T15:19:03.5793071Z       at process.processTimers (node:internal/timers:541:7) {
+2026-10-13T15:19:03.5793488Z     code: 'POWERSHELL_READINESS_TIMEOUT',
+2026-10-13T15:19:03.5793803Z     stage: 'readiness',
+2026-10-13T15:19:03.5794100Z     observedFailureAtMs: 5142.9768,
+2026-10-13T15:19:03.5794402Z     processStatus: 'closed',
+2026-10-13T15:19:03.5794983Z     cleanupConfirmed: true,
+2026-10-13T15:19:03.5795335Z     exitCode: null,
+2026-10-13T15:19:03.5795621Z     startupElapsedMs: 5001.869100000001,
+2026-10-13T15:19:03.5795955Z     executionElapsedMs: null,
+2026-10-13T15:19:03.5796271Z     cleanupElapsedMs: 15.51719999999932
+2026-10-13T15:19:03.5796558Z   }
+2026-10-13T15:19:03.6821227Z ##[error]Process completed with exit code 1.
+2026-10-13T15:19:03.7029065Z ##[group]Run node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
+2026-10-13T15:19:03.7029783Z [36;1mnode scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json[0m
+2026-10-13T15:19:03.7102440Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-13T15:19:03.7103001Z env:
+2026-10-13T15:19:03.7103207Z   PUPPETEER_SKIP_DOWNLOAD: 1
+2026-10-13T15:19:03.7103478Z   GEV_QA_SOFTWARE_RENDERING: 1
+2026-10-13T15:19:03.7103748Z   GEV_QA_SWIFTSHADER_WEBGL_ONLY: 1
+2026-10-13T15:19:03.7104056Z   GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: 1
+2026-10-13T15:19:03.7104818Z ##[endgroup]
+2026-10-13T15:19:04.0654068Z QA evidence missing: qa-artifacts/profile-recovery.json
+2026-10-13T15:19:04.2395685Z Post job cleanup.
+2026-10-13T15:19:04.4789422Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-13T15:19:04.5084132Z git version 2.55.0.windows.5
+2026-10-13T15:19:04.5155544Z Temporarily overriding HOME='D:\a\_temp\0a8a7f36-5ded-4ee1-b2c5-6b557ea3b5a5' before making global git config changes
+2026-10-13T15:19:04.5156792Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-13T15:19:04.5167428Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\gods-eye-view\gods-eye-view
+2026-10-13T15:19:04.5503108Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-13T15:19:04.5825869Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-13T15:19:05.1564596Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-13T15:19:05.1889144Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-13T15:19:05.7555509Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-13T15:19:05.7863850Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-13T15:19:06.3776751Z Cleaning up orphan processes
+2026-10-13T15:19:06.4129254Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,459 @@
+{
+  "schema": "gev-austin-native-source-route-audit/v1",
+  "checkedAt": "2026-10-12T19:30:35.992Z",
+  "sourceIdentities": [
+    {
+      "path": "src/layers/alpr/presentation.js",
+      "byteLength": 23409,
+      "sha256": "55d2946faba1abdca30dbf887b3ff88f95826c7e11d2ef7bb6f76f45b98085f4"
+    },
+    {
+      "path": "src/layers/alpr/records.js",
+      "byteLength": 5137,
+      "sha256": "c2c5670b065a305b5f60beaab9aeb8c8ae5e463828fc827e7716ecc390bd3dbe"
+    },
+    {
+      "path": "src/layers/alpr/source.js",
+      "byteLength": 9567,
+      "sha256": "c481aab3d5663e9571b318de03a32c71c351f88fe7008232c0e6c3632c539231"
+    },
+    {
+      "path": "src/layers/installations/viewport.js",
+      "byteLength": 4675,
+      "sha256": "dcb5d82cd6e3740380b9574640e21a943b9b9f0e00d69038532bf7ad73053ceb"
+    },
+    {
+      "path": "scripts/capture-scene-performance.mjs",
+      "byteLength": 167314,
+      "sha256": "c03c7f3bab5a7183a50fa188f98aecf6b56ac1a0d0cbf34e3181a4fbd67e38b6"
+    }
+  ],
+  "scope": "Real Cesium Camera math and native layer viewport functions; no WebGL, rendered requests, performance or hardware acceptance.",
+  "correction": "The earlier route-audit applied the installation rectangle to ALPR. ALPR normally uses center pickEllipsoid and twice camera-to-ground range. Earlier 12-tile union does not establish native ALPR coverage.",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "frustum": {
+    "fov": 1.0471975511965976,
+    "aspectRatio": 1.6
+  },
+  "route": {
+    "home": {
+      "longitude": -97.7431,
+      "latitude": 30.2672,
+      "height": 12000,
+      "heading": 20,
+      "pitch": -45,
+      "roll": 0
+    },
+    "durationMs": 60000,
+    "endpointDistanceM": 19200
+  },
+  "sampledEveryMs": 100,
+  "sampleCount": 601,
+  "alprEnvelope": {
+    "south": 30.003019900752694,
+    "west": -98.05510206421238,
+    "north": 30.675070397050174,
+    "east": -97.15733201794473
+  },
+  "installationEnvelope": {
+    "south": 30.2333509546811,
+    "west": -97.80249445084847,
+    "north": 30.53260132239697,
+    "east": -97.3116604733377
+  },
+  "samples": [
+    {
+      "elapsedMs": 0,
+      "distanceM": 0,
+      "alprBox": {
+        "south": 30.062943317212454,
+        "west": -98.05510206421238,
+        "north": 30.675070397050174,
+        "east": -97.34562581328382
+      },
+      "installationBox": {
+        "south": 30.29274385989874,
+        "west": -97.80249445084847,
+        "north": 30.53260132239697,
+        "east": -97.50075985704429
+      },
+      "queryBox": {
+        "south": 30.05,
+        "west": -98.10000000000001,
+        "north": 30.700000000000003,
+        "east": -97.30000000000001
+      },
+      "zoom": 10,
+      "tiles": [
+        {
+          "z": 10,
+          "x": 232,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 232,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 232,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 422
+        }
+      ]
+    },
+    {
+      "elapsedMs": 1000,
+      "distanceM": 320,
+      "alprBox": {
+        "south": 30.06195486722867,
+        "west": -98.0519709783568,
+        "north": 30.674082338004624,
+        "east": -97.34250144480409
+      },
+      "installationBox": {
+        "south": 30.291755178814434,
+        "west": -97.79935666423113,
+        "north": 30.531598396568064,
+        "east": -97.49761610672962
+      },
+      "queryBox": {
+        "south": 30.05,
+        "west": -98.10000000000001,
+        "north": 30.700000000000003,
+        "east": -97.30000000000001
+      },
+      "zoom": 10,
+      "tiles": [
+        {
+          "z": 10,
+          "x": 232,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 232,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 232,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 422
+        }
+      ]
+    },
+    {
+      "elapsedMs": 30000,
+      "distanceM": 9600,
+      "alprBox": {
+        "south": 30.033138334916956,
+        "west": -97.96137851514564,
+        "north": 30.645633635907124,
+        "east": -97.25169037823679
+      },
+      "installationBox": {
+        "south": 30.263065738603697,
+        "west": -97.70842377394692,
+        "north": 30.502636922005603,
+        "east": -97.40633113550923
+      },
+      "queryBox": {
+        "south": 30,
+        "west": -98,
+        "north": 30.650000000000002,
+        "east": -97.25
+      },
+      "zoom": 10,
+      "tiles": [
+        {
+          "z": 10,
+          "x": 233,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 422
+        }
+      ]
+    },
+    {
+      "elapsedMs": 60000,
+      "distanceM": 19200,
+      "alprBox": {
+        "south": 30.003019900752694,
+        "west": -97.86808686151309,
+        "north": 30.616620998282325,
+        "east": -97.15733201794473
+      },
+      "installationBox": {
+        "south": 30.2333509546811,
+        "west": -97.61448222613946,
+        "north": 30.472926675863093,
+        "east": -97.3116604733377
+      },
+      "queryBox": {
+        "south": 30,
+        "west": -97.9,
+        "north": 30.650000000000002,
+        "east": -97.15
+      },
+      "zoom": 10,
+      "tiles": [
+        {
+          "z": 10,
+          "x": 233,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 420
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 421
+        },
+        {
+          "z": 10,
+          "x": 233,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 234,
+          "y": 422
+        },
+        {
+          "z": 10,
+          "x": 235,
+          "y": 422
+        }
+      ]
+    }
+  ],
+  "tileUnion": [
+    {
+      "z": 10,
+      "x": 232,
+      "y": 420
+    },
+    {
+      "z": 10,
+      "x": 233,
+      "y": 420
+    },
+    {
+      "z": 10,
+      "x": 234,
+      "y": 420
+    },
+    {
+      "z": 10,
+      "x": 235,
+      "y": 420
+    },
+    {
+      "z": 10,
+      "x": 232,
+      "y": 421
+    },
+    {
+      "z": 10,
+      "x": 233,
+      "y": 421
+    },
+    {
+      "z": 10,
+      "x": 234,
+      "y": 421
+    },
+    {
+      "z": 10,
+      "x": 235,
+      "y": 421
+    },
+    {
+      "z": 10,
+      "x": 232,
+      "y": 422
+    },
+    {
+      "z": 10,
+      "x": 233,
+      "y": 422
+    },
+    {
+      "z": 10,
+      "x": 234,
+      "y": 422
+    },
+    {
+      "z": 10,
+      "x": 235,
+      "y": 422
+    }
+  ],
+  "missingAcquiredTiles": [
+    "10/232/420",
+    "10/233/420",
+    "10/234/420",
+    "10/235/420",
+    "10/232/421",
+    "10/233/421",
+    "10/234/421",
+    "10/235/421",
+    "10/232/422",
+    "10/233/422",
+    "10/234/422",
+    "10/235/422"
+  ],
+  "limitations": [
+    "100ms sampled mathematical route only; browser must verify actual pose, frustum, source viewport and requested tile identities.",
+    "Native layer cache reuse and moveEnd debounce affect which requests actually occur; full union is asset availability, not a required fetch list for every sample."
+  ]
+}

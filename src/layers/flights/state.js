@@ -272,6 +272,19 @@ export function createFlightState({ source, services }) {
 
   flightState._cachedDRFrame = -1;
 
+  /** Delayed time paired with the last computed tracked pose. This has its own
+   * storage because untracked dead-reckoning uses `_scratchRenderTime` for live
+   * query samples. `_trackedFrameTimeFrame === -1` is not a pose cache key; the
+   * time is retained only so cache-only observers can identify that pose. */
+
+  flightState._trackedFrameRenderTime = new Cesium.JulianDate();
+
+  flightState._scratchTrackedRenderTime = new Cesium.JulianDate();
+
+  flightState._trackedFrameTimeFrame = -1;
+
+  flightState._trackedFrameTimeIcao = null;
+
   /** Course (deg) of the position `_deadReckon` most recently returned — set on
    *  every branch of `_deadReckon`, read IMMEDIATELY by the caller (same
    *  synchronous flow; module-scratch idiom, like the Cartesian scratches). */

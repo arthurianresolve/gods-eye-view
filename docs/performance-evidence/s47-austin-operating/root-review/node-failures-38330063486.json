@@ -1,0 +1,34 @@
+{
+  "schema": "gev-ci-node-failure-review/v1",
+  "candidate": "5368d54aac2fe01c8fd472615af9bc8bd4c4612d",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330063486",
+  "jobs": [
+    {
+      "id": "115077579544",
+      "tests": 7520,
+      "passed": 7515,
+      "failed": 2,
+      "skipped": 3,
+      "evidence": [
+        "test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:265:1",
+        "Error: Capture CLI did not create its lifecycle witness: {\"status\":1,\"signal\":null,\"spawnErrorCode\":null,\"spawnError\":\"\",\"stderr\":\"file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:13\\n  projectPublicCaptureBuildProvenance,\\n  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nSyntaxError: The requested module './performance/captureBuildProvenance.mjs' does not provide an export named 'projectPublicCaptureBuildProvenance'\\n    at #asyncInstantiate (node:internal/modules/esm/module_job:319:21)\\n    at async ModuleJob.run (node:internal/modules/esm/module_job:422:5)\\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)\\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\\n\\nNode.js v24.14.0\\n\",\"stdout\":\"\"}",
+        "test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:295:1",
+        "Error: Capture CLI did not create its lifecycle witness: {\"status\":1,\"signal\":null,\"spawnErrorCode\":null,\"spawnError\":\"\",\"stderr\":\"file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:13\\n  projectPublicCaptureBuildProvenance,\\n  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nSyntaxError: The requested module './performance/captureBuildProvenance.mjs' does not provide an export named 'projectPublicCaptureBuildProvenance'\\n    at #asyncInstantiate (node:internal/modules/esm/module_job:319:21)\\n    at async ModuleJob.run (node:internal/modules/esm/module_job:422:5)\\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)\\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\\n\\nNode.js v24.14.0\\n\",\"stdout\":\"\"}"
+      ]
+    },
+    {
+      "id": "115077579734",
+      "tests": 7520,
+      "passed": 7515,
+      "failed": 2,
+      "skipped": 3,
+      "evidence": [
+        "test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:265:1",
+        "Error: Capture CLI did not create its lifecycle witness: {\"status\":1,\"signal\":null,\"spawnErrorCode\":null,\"spawnError\":\"\",\"stderr\":\"file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:13\\n  projectPublicCaptureBuildProvenance,\\n  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nSyntaxError: The requested module './performance/captureBuildProvenance.mjs' does not provide an export named 'projectPublicCaptureBuildProvenance'\\n    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)\\n    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)\\n    at async node:internal/modules/esm/loader:650:26\\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)\\n\\nNode.js v26.11.1\\n\",\"stdout\":\"\"}",
+        "test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:295:1",
+        "Error: Capture CLI did not create its lifecycle witness: {\"status\":1,\"signal\":null,\"spawnErrorCode\":null,\"spawnError\":\"\",\"stderr\":\"file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:13\\n  projectPublicCaptureBuildProvenance,\\n  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nSyntaxError: The requested module './performance/captureBuildProvenance.mjs' does not provide an export named 'projectPublicCaptureBuildProvenance'\\n    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)\\n    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)\\n    at async node:internal/modules/esm/loader:650:26\\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)\\n\\nNode.js v26.11.1\\n\",\"stdout\":\"\"}"
+      ]
+    }
+  ],
+  "finding": "Two release-interception CLI tests fail during module instantiation because their provenance test double lacks the new projectPublicCaptureBuildProvenance export. These are current QA harness regressions; no passing result is inferred."
+}

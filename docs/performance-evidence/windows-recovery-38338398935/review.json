@@ -1,0 +1,26 @@
+{
+  "scope": "Windows recovery shutdown timeout with diagnostic and force completion unavailable",
+  "runId": 38338398935,
+  "jobId": 115103620881,
+  "commit": "13796691f81be55e977a8241a633586526ce0a4e",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "reportSha256": "509dcb3072353983f137a50a50f424c227d7bab15b6c7ed3e0dbc5ff82f8cccb",
+  "reportBytes": 3328,
+  "failedCheck": {
+    "check": "prior-install-saves-browser-workspace",
+    "step": "owned-page-cleanup",
+    "error": "Graceful browser close did not complete."
+  },
+  "settingsMatch": true,
+  "workspaceBundleMatches": true,
+  "closeDeadlineMs": 5000,
+  "closeElapsedMs": 5001.758000000002,
+  "processExit": null,
+  "processSnapshot": {
+    "status": "unavailable",
+    "reason": "process-snapshot-timeout"
+  },
+  "forceProcessStatus": "timed-out",
+  "forcedTerminationConfirmed": false,
+  "unresolved": "Neither the remaining process role nor process exit is established; do not infer a GPU, application or OS root cause."
+}

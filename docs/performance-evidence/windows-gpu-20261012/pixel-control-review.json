@@ -1,0 +1,146 @@
+{
+  "commit": "a92c69217e95c3a61d74d81c9e8f4274b14c7f1d",
+  "matchedBounds": {
+    "viewport": {
+      "width": 894,
+      "height": 585
+    },
+    "canvas": {
+      "width": 640,
+      "height": 360,
+      "rect": {
+        "left": 4,
+        "top": 161.5625,
+        "right": 646,
+        "bottom": 523.5625,
+        "width": 642,
+        "height": 362
+      },
+      "viewportIntersection": {
+        "width": 642,
+        "height": 362,
+        "fraction": 1
+      }
+    }
+  },
+  "matchedWebGLAttributes": {
+    "alpha": false,
+    "antialias": true,
+    "depth": true,
+    "desynchronized": false,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "high-performance",
+    "premultipliedAlpha": true,
+    "preserveDrawingBuffer": true,
+    "stencil": true,
+    "xrCompatible": false
+  },
+  "checks": "Exact identity, duration, preparation, foreground reports, full intersection, unchanged layout, renderer, context attributes, uniform formula, raw-copy SHA-256 verified. Desktop occlusion is unavailable.",
+  "reports": [
+    {
+      "file": "pixel-a1-static.json",
+      "sha256": "d1f7b0d26c66611da056e932d0acf88e60838af1685db5181551014c1906ca7f",
+      "startedAt": "2026-10-12T01:50:05.179Z",
+      "pixelMode": "static",
+      "frames": 41,
+      "maximumFrameGapMs": 550.2000000011176,
+      "maximumTimerGapMs": 21.199999999254942,
+      "timerTicks": 250,
+      "actualDelayMs": 10006.89999999851,
+      "contextSetupMs": 16.59999999962747,
+      "pixelUniform": {
+        "name": "cyanLevel",
+        "first": {
+          "elapsedMs": 0.7999999988824129,
+          "value": 1
+        },
+        "last": {
+          "elapsedMs": 4559.299999998882,
+          "value": 1
+        }
+      }
+    },
+    {
+      "file": "pixel-b1-animated.json",
+      "sha256": "42522c0c6b5a114dd56c0d43d46a6b8ed2a46602f9511468274cbb9f7d563746",
+      "startedAt": "2026-10-12T01:50:37.652Z",
+      "pixelMode": "animated",
+      "frames": 53,
+      "maximumFrameGapMs": 533.0999999996275,
+      "maximumTimerGapMs": 21.90000000037253,
+      "timerTicks": 250,
+      "actualDelayMs": 10002.700000001118,
+      "contextSetupMs": 11,
+      "pixelUniform": {
+        "name": "cyanLevel",
+        "first": {
+          "elapsedMs": 1.5,
+          "value": 0.504712319216572
+        },
+        "last": {
+          "elapsedMs": 4945.199999999255,
+          "value": 0.3312223462702421
+        }
+      }
+    },
+    {
+      "file": "pixel-b2-animated.json",
+      "sha256": "bc22e2a681f5d0236c35125d6d3fbc21a7209c40473160c343c9ea91e39f3827",
+      "startedAt": "2026-10-12T01:51:11.692Z",
+      "pixelMode": "animated",
+      "frames": 42,
+      "maximumFrameGapMs": 550.0999999996275,
+      "maximumTimerGapMs": 21.700000001117587,
+      "timerTicks": 250,
+      "actualDelayMs": 10001.300000000745,
+      "contextSetupMs": 10.099999999627471,
+      "pixelUniform": {
+        "name": "cyanLevel",
+        "first": {
+          "elapsedMs": 1.300000000745058,
+          "value": 0.5040840250382989
+        },
+        "last": {
+          "elapsedMs": 4975.0999999996275,
+          "value": 0.4220930743412587
+        }
+      }
+    },
+    {
+      "file": "pixel-a2-static.json",
+      "sha256": "04347ac57955ae3180569659b88c95c7735f5e40b030dc60f93aba0d73cb4a71",
+      "startedAt": "2026-10-12T01:51:44.910Z",
+      "pixelMode": "static",
+      "frames": 43,
+      "maximumFrameGapMs": 549.6000000014901,
+      "maximumTimerGapMs": 21.399999998509884,
+      "timerTicks": 250,
+      "actualDelayMs": 10005.5,
+      "contextSetupMs": 9.200000001117587,
+      "pixelUniform": {
+        "name": "cyanLevel",
+        "first": {
+          "elapsedMs": 0.599999999627471,
+          "value": 1
+        },
+        "last": {
+          "elapsedMs": 4999.5,
+          "value": 1
+        }
+      }
+    },
+    {
+      "file": "pixel-plain-raf.json",
+      "sha256": "804902a6a926341a819ece824a7e462977e5ce197d264db2e0ce8ffa826bccbe",
+      "startedAt": "2026-10-12T01:52:19.857Z",
+      "pixelMode": "not-applicable",
+      "frames": 301,
+      "maximumFrameGapMs": 18.5,
+      "maximumTimerGapMs": 22,
+      "timerTicks": 250,
+      "actualDelayMs": 10005.699999999255,
+      "contextSetupMs": 0.09999999962747097,
+      "pixelUniform": null
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "gev-weather-namespace-fix-validation/v1",
+  "node": "v24.16.0",
+  "unfixedCommit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+  "negativeControl": {
+    "exitCode": 1,
+    "expectedFailure": "createWeatherEffectsFixtureDelivery must resolve through the dynamically loaded fixture module",
+    "logSha256": "5a4c56c87829d022798f14bb2280c94d1aeb24a3c7a59b9f56706283e95f59d1"
+  },
+  "fixed": {
+    "exitCode": 0,
+    "sourceSha256": "1945afbc5a161884e30a60051a463259c5efc39c1dc667a935dfd388841a4900",
+    "command": [
+      "node",
+      "--test",
+      "scripts/capture-scene-performance.test.mjs",
+      "scripts/performance/captureComparisonContract.test.mjs",
+      "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+      "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+      "scripts/qa-performance-build-smoke.test.mjs"
+    ],
+    "logSha256": "dc19b67dd697731a3ec18a89f86e8dbcb985e4d475732678bb19ff81cef79eb8",
+    "outputTail": [
+      "ℹ tests 60",
+      "ℹ suites 0",
+      "ℹ pass 60",
+      "ℹ fail 0",
+      "ℹ cancelled 0",
+      "ℹ skipped 0",
+      "ℹ todo 0",
+      "ℹ duration_ms 14186.8762"
+    ]
+  }
+}

@@ -129,6 +129,7 @@ const RING_RADIUS_MAX_M = 40;
 const ARROW_LENGTH_FACTOR = 1.6;
 const DRAG_THROTTLE_MS = 16;
 const HOVER_THROTTLE_MS = 120;
+const cameraInputLeases = new WeakMap();
 
 const COLOR_RING_HEADING = Cesium.Color.fromCssColorString('#35d8ff');
 const COLOR_RING_PITCH = Cesium.Color.fromCssColorString('#ff5fd0');
@@ -136,6 +137,98 @@ const COLOR_MOVE_EAST = Cesium.Color.fromCssColorString('#ff5252');
 const COLOR_MOVE_NORTH = Cesium.Color.fromCssColorString('#52ff7a');
 const COLOR_MOVE_UP = Cesium.Color.fromCssColorString('#5b8cff');
 const COLOR_HANDLE = Cesium.Color.fromCssColorString('#ffd97a');
+
+function restoreCameraInputLease(controller, lease) {
+  cameraInputLeases.delete(controller);
+  const descriptor = Object.getOwnPropertyDescriptor(
+    controller,
+    'enableInputs',
+  );
+  if (
+    lease.accessorInstalled &&
+    descriptor?.get === lease.getter &&
+    descriptor?.set === lease.setter
+  ) {
+    if (lease.originalDescriptor) {
+      Object.defineProperty(controller, 'enableInputs', {
+        ...lease.originalDescriptor,
+        value: lease.requestedEnableInputs,
+      });
+    } else {
+      delete controller.enableInputs;
+    }
+  } else if (!lease.accessorInstalled && controller.enableInputs === false) {
+    controller.enableInputs = lease.requestedEnableInputs;
+  }
+}
+
+function acquireCameraInputLease(controller, owner) {
+  let lease = cameraInputLeases.get(controller);
+  if (!lease) {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      controller,
+      'enableInputs',
+    );
+    lease = {
+      controller,
+      originalDescriptor,
+      requestedEnableInputs: controller.enableInputs,
+      owners: new Set(),
+      removePostUpdate: null,
+      accessorInstalled: false,
+      getter: null,
+      setter: null,
+    };
+    if (originalDescriptor?.configurable && 'value' in originalDescriptor) {
+      // Other owners may set enableInputs while this gizmo owns the drag.
+      // Record their requested value, but keep Cesium's read false until the
+      // postUpdate handoff so the controller cannot consume queued movement.
+      lease.getter = () => false;
+      lease.setter = (value) => {
+        lease.requestedEnableInputs = Boolean(value);
+      };
+      Object.defineProperty(controller, 'enableInputs', {
+        configurable: true,
+        enumerable: originalDescriptor.enumerable,
+        get: lease.getter,
+        set: lease.setter,
+      });
+      lease.accessorInstalled = true;
+    } else {
+      controller.enableInputs = false;
+    }
+    cameraInputLeases.set(controller, lease);
+  }
+
+  lease.removePostUpdate?.();
+  lease.removePostUpdate = null;
+  lease.owners.add(owner);
+  return lease;
+}
+
+function releaseCameraInputLease(
+  scene,
+  controller,
+  lease,
+  owner,
+  requestRender,
+) {
+  if (!lease || !lease.owners.delete(owner) || lease.owners.size > 0) return;
+
+  const restore = () => {
+    lease.removePostUpdate?.();
+    lease.removePostUpdate = null;
+    if (lease.owners.size === 0) restoreCameraInputLease(controller, lease);
+  };
+
+  if (typeof scene.postUpdate?.addEventListener === 'function') {
+    lease.removePostUpdate = scene.postUpdate.addEventListener(restore);
+    requestRender('cctv-gizmo-camera-input-release');
+    return;
+  }
+
+  restore();
+}
 
 const toRadians = (deg) => (deg * Math.PI) / 180;
 const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -203,6 +296,45 @@ function ringPositions(center, radius, basisA, basisB) {
   return positions;
 }
 
+function propertyValue(property) {
+  return typeof property?.getValue === 'function'
+    ? property.getValue()
+    : property;
+}
+
+function samePositions(left, right) {
+  return (
+    Array.isArray(left) &&
+    Array.isArray(right) &&
+    left.length === right.length &&
+    left.every((position, index) =>
+      Cesium.Cartesian3.equals(position, right[index]),
+    )
+  );
+}
+
+/**
+ * Cesium's ConstantProperty equality is reference-based for position arrays.
+ * Avoid replacing an equal array on every gizmo refresh: the new property
+ * wrapper otherwise raises geometryChanged and rebuilds static polyline data.
+ */
+function setPolylinePositionsIfChanged(entity, positions) {
+  const property = entity?.polyline?.positions;
+  if (samePositions(propertyValue(property), positions)) return false;
+  entity.polyline.positions = positions.map((position) =>
+    Cesium.Cartesian3.clone(position),
+  );
+  return true;
+}
+
+function setEntityPositionIfChanged(entity, position) {
+  if (Cesium.Cartesian3.equals(propertyValue(entity?.position), position)) {
+    return false;
+  }
+  entity.position = Cesium.Cartesian3.clone(position);
+  return true;
+}
+
 /**
  * Creates the calibration gizmo controller (design §3c). Renders grab-able
  * handles for the ACTIVE camera's 7 calibration DOF and turns pointer drags
@@ -228,9 +360,16 @@ export function createCalibrationGizmo({
   getActiveRecord,
   applyPatch,
   endPatch,
+  requestRender = () => {},
 }) {
   let enabled = false;
+  let destroyed = false;
   let drag = null; // { part, startCal, basePose, refs... }
+  // `enableInputs` is sampled by Cesium's camera controller once per scene
+  // update. Keep this gizmo's lock through that update after pointer release,
+  // so the controller cannot consume the drag's already-aggregated movement.
+  const cameraInputOwner = {};
+  let cameraInputLease = null;
   let hoveredId = null;
   let lastDragAt = 0;
   let lastHoverAt = 0;
@@ -300,18 +439,47 @@ export function createCalibrationGizmo({
   pointPart('handle-fov-r', COLOR_HANDLE, 10);
 
   function hideAll() {
-    for (const entity of entities.values()) entity.show = false;
+    let changed = false;
+    for (const entity of entities.values()) {
+      if (entity.show) changed = true;
+      entity.show = false;
+    }
+    return changed;
+  }
+
+  function requestSceneRender(reason) {
+    if (!destroyed) requestRender(reason);
+  }
+
+  function lockCameraInputs() {
+    const controller = scene.screenSpaceCameraController;
+    if (!controller) return;
+    cameraInputLease = acquireCameraInputLease(controller, cameraInputOwner);
+  }
+
+  function releaseCameraInputs() {
+    if (!cameraInputLease) return;
+    const lease = cameraInputLease;
+    cameraInputLease = null;
+    releaseCameraInputLease(
+      scene,
+      lease.controller,
+      lease,
+      cameraInputOwner,
+      requestSceneRender,
+    );
   }
 
   /** Recomputes every handle's geometry from the active record's CURRENT pose
    * (the PINNED record while a drag is live, so handles never jump to another
    * camera mid-interaction). */
   function refresh() {
+    if (destroyed) return;
     const record = enabled ? (drag ? drag.record : getActiveRecord()) : null;
     const positions = record?.frustumPositions;
     const camera = record?.camera;
     if (!record || !positions || !camera) {
-      hideAll();
+      if (hideAll()) requestSceneRender('cctv-gizmo-hidden');
       return;
     }
     const mount = positions.mount;
@@ -328,17 +496,13 @@ export function createCalibrationGizmo({
     );
     const arrowLen = radius * ARROW_LENGTH_FACTOR;
 
-    entities.get('ring-heading').polyline.positions = ringPositions(
-      mount,
-      radius,
-      axes.north,
-      axes.east,
+    setPolylinePositionsIfChanged(
+      entities.get('ring-heading'),
+      ringPositions(mount, radius, axes.north, axes.east),
     );
-    entities.get('ring-pitch').polyline.positions = ringPositions(
-      mount,
-      radius,
-      forwardHoriz,
-      axes.up,
+    setPolylinePositionsIfChanged(
+      entities.get('ring-pitch'),
+      ringPositions(mount, radius, forwardHoriz, axes.up),
     );
     const arrowTo = (dir) => [
       mount,
@@ -355,24 +519,34 @@ export function createCalibrationGizmo({
     const eastArrow = arrowTo(axes.east);
     const northArrow = arrowTo(axes.north);
     const upArrow = arrowTo(axes.up);
-    entities.get('move-east').polyline.positions = eastArrow;
-    entities.get('move-east').position = eastArrow[1];
-    entities.get('move-north').polyline.positions = northArrow;
-    entities.get('move-north').position = northArrow[1];
-    entities.get('move-up').polyline.positions = upArrow;
-    entities.get('move-up').position = upArrow[1];
-    entities.get('handle-range').position = positions.capCenter;
-    entities.get('handle-fov-l').position = Cesium.Cartesian3.midpoint(
-      positions.tl,
-      positions.bl,
-      new Cesium.Cartesian3(),
+    setPolylinePositionsIfChanged(entities.get('move-east'), eastArrow);
+    setEntityPositionIfChanged(entities.get('move-east'), eastArrow[1]);
+    setPolylinePositionsIfChanged(entities.get('move-north'), northArrow);
+    setEntityPositionIfChanged(entities.get('move-north'), northArrow[1]);
+    setPolylinePositionsIfChanged(entities.get('move-up'), upArrow);
+    setEntityPositionIfChanged(entities.get('move-up'), upArrow[1]);
+    setEntityPositionIfChanged(
+      entities.get('handle-range'),
+      positions.capCenter,
     );
-    entities.get('handle-fov-r').position = Cesium.Cartesian3.midpoint(
-      positions.tr,
-      positions.br,
-      new Cesium.Cartesian3(),
+    setEntityPositionIfChanged(
+      entities.get('handle-fov-l'),
+      Cesium.Cartesian3.midpoint(
+        positions.tl,
+        positions.bl,
+        new Cesium.Cartesian3(),
+      ),
+    );
+    setEntityPositionIfChanged(
+      entities.get('handle-fov-r'),
+      Cesium.Cartesian3.midpoint(
+        positions.tr,
+        positions.br,
+        new Cesium.Cartesian3(),
+      ),
     );
     for (const entity of entities.values()) entity.show = true;
+    requestSceneRender('cctv-gizmo-refresh');
   }
 
   /** Extracts a gizmo part name from a pick result, or null. */
@@ -456,6 +630,7 @@ export function createCalibrationGizmo({
         (name === 'handle-range' ? 13 : 10) + (hot ? 4 : 0);
     }
     setCursor(hoveredId ? 'grab' : '');
+    if (enabled) requestSceneRender('cctv-gizmo-hover');
   }
 
   /** Captures the fixed drag reference frame + start values for a part. */
@@ -495,6 +670,7 @@ export function createCalibrationGizmo({
       effectiveRangeM: geometry.rangeM,
       startAngle: null,
       startParam: null,
+      lastAppliedPosition: Cesium.Cartesian2.clone(windowPosition),
     };
 
     if (part === 'ring-heading') {
@@ -533,9 +709,7 @@ export function createCalibrationGizmo({
 
     drag = state;
     setCursor('grabbing');
-    if (scene.screenSpaceCameraController) {
-      scene.screenSpaceCameraController.enableInputs = false;
-    }
+    lockCameraInputs();
     return true;
   }
 
@@ -615,9 +789,7 @@ export function createCalibrationGizmo({
     if (!drag) return;
     const record = drag.record;
     drag = null;
-    if (scene.screenSpaceCameraController) {
-      scene.screenSpaceCameraController.enableInputs = true;
-    }
+    releaseCameraInputs();
     setCursor(hoveredId ? 'grab' : '');
     endPatch(record);
   }
@@ -661,7 +833,15 @@ export function createCalibrationGizmo({
         '→',
         patch ? JSON.stringify(patch) : null,
       );
-      if (patch) applyPatch(patch, drag.record);
+      if (patch) {
+        const currentDrag = drag;
+        applyPatch(patch, currentDrag.record);
+        if (drag === currentDrag)
+          Cesium.Cartesian2.clone(
+            event.endPosition,
+            currentDrag.lastAppliedPosition,
+          );
+      }
       return;
     }
     if (now - lastHoverAt < HOVER_THROTTLE_MS) return;
@@ -669,31 +849,50 @@ export function createCalibrationGizmo({
     setHovered(pickGizmoPart(event.endPosition));
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-  handler.setInputAction(() => {
+  handler.setInputAction((event) => {
     if (!enabled) return;
-    endDrag();
+    try {
+      // Movement is throttled, but release is the authoritative endpoint.
+      // Flush a skipped final position only to the still-active pinned record.
+      if (
+        drag &&
+        getActiveRecord() === drag.record &&
+        event.position &&
+        !Cesium.Cartesian2.equals(event.position, drag.lastAppliedPosition)
+      ) {
+        const patch = dragPatch(event.position);
+        if (patch) applyPatch(patch, drag.record);
+      }
+    } finally {
+      endDrag();
+    }
   }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
   return {
     setEnabled(value) {
+      if (destroyed) return;
       enabled = !!value;
       if (!enabled) {
         if (drag) endDrag();
         setHovered(null);
-        hideAll();
+        if (hideAll()) requestSceneRender('cctv-gizmo-disabled');
       } else {
         refresh();
       }
     },
     refresh,
     destroy() {
+      if (destroyed) return;
       if (drag) endDrag();
       handler.destroy();
+      const wasVisible = [...entities.values()].some((entity) => entity.show);
       for (const entity of entities.values()) {
         viewer.entities.remove(entity);
       }
       entities.clear();
       setCursor('');
+      if (wasVisible) requestRender('cctv-gizmo-destroyed');
+      destroyed = true;
     },
     isDragging: () => !!drag,
     isEnabled: () => enabled,

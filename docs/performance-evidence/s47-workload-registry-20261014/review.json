@@ -1,0 +1,37 @@
+{
+  "schema": "gev-s47-workload-registry-review/v1",
+  "status": "engineering-closed",
+  "testedCommit": "d1fc068a1de735487cb7e5d25046e3ff8b2d45d2",
+  "executor": "root-coordinator",
+  "scope": "candidate workload-family identity and complete timed-family manifest coverage",
+  "changedSourceSha256": {
+    "scripts/performance/candidatePerformanceEvidence.mjs": "a980d38875472c9153dc951130bfa29c054c86bc5732e6d1749c6e9be9531024",
+    "scripts/performance/candidatePerformanceEvidence.test.mjs": "bb5a41574dbd71213dcded726fe6af56c04c0fc35760f2e8880df8383436bfea",
+    "scripts/performance/pairedReport.test.mjs": "e8751dac7a1ce2ca76c2aa206854382cceb4b2dc2799540a18e8848669a0001f",
+    "scripts/performance/pairedReportTestFixtures.mjs": "5e2da8a1d5638cd659f582e568738f7309a4141d121d0513e0a5c75602b632ab"
+  },
+  "validation": [
+    {
+      "command": "node --test scripts/qa-candidate.test.mjs scripts/qa-performance-build-smoke.test.mjs scripts/performance/candidatePerformanceEvidence.test.mjs scripts/performance/pairedReport.test.mjs scripts/performance/captureComparisonContract.test.mjs scripts/performance/austinOperatingComparisonContract.test.mjs",
+      "passed": 154,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run format:check",
+      "checkedSourceFiles": 1678,
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:boundaries",
+      "modules": 1025,
+      "portableEntries": 80,
+      "status": "passed"
+    }
+  ],
+  "hardwareQualified": false,
+  "remainingQualification": [
+    "five matched baseline/candidate runs for every timed family on the primary Windows machine",
+    "full 60-minute retention run on the frozen final candidate"
+  ]
+}

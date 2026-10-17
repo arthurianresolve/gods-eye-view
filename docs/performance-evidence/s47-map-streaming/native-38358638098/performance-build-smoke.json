@@ -1,0 +1,172 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "0cae3037715bed96aa5f13085cb98f9a6397fbd5",
+  "harnessSha": "0cae3037715bed96aa5f13085cb98f9a6397fbd5",
+  "captureWorkerAuditMode": "diagnostic",
+  "captureRendererBackend": "swiftshader",
+  "comparisonEligible": false,
+  "performanceAcceptanceEligible": false,
+  "sceneFrameDiagnostics": false,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-map-streaming-v1",
+  "startedAt": "2026-10-13T06:46:56.248Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Native map journey failed during transition-readiness: Completed render did not arrive before its bound.",
+      "failureDetails": {
+        "phase": "native-map-streaming-journey",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "mapStreamingJourneyFailure": {
+          "schema": "gev-map-streaming-journey-failure/v1",
+          "operationId": "map-mv6bjj4p-1",
+          "failureCode": "page-operation-failed",
+          "elapsedMs": 51629,
+          "checkpoint": {
+            "phase": "transition-readiness",
+            "initialReadinessComplete": true,
+            "transitionCount": 0,
+            "targetStack": "esri-imagery",
+            "routeElapsedMs": 45276.90000000002,
+            "latestObservation": {
+              "activeStack": "esri-imagery",
+              "controllerStatus": "ready",
+              "switchOrigin": "manual",
+              "hasError": false,
+              "stackAvailable": true,
+              "globeTilesLoaded": false,
+              "terrainProviderClass": "CesiumTerrainProvider",
+              "imageryLayerCount": 1,
+              "imageryProviderClass": "ArcGisMapServerImageryProvider",
+              "photorealTilesLoaded": true,
+              "photorealReadyContentTiles": 21,
+              "photorealSelectedTiles": 3
+            }
+          },
+          "expected": {
+            "operationId": "map-mv6bjj4p-1",
+            "status": "completed"
+          },
+          "retirement": {
+            "cancelStatus": "not-attempted",
+            "drainStatus": "not-needed",
+            "drainWaitMs": 0,
+            "terminalStatus": "failed",
+            "disposeStatus": "confirmed",
+            "cancelErrorKind": null,
+            "disposeErrorKind": null
+          }
+        },
+        "terminalRenderLoopRetirement": null,
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 3.827482999986387,
+            "document": {
+              "status": "confirmed",
+              "elapsedMs": 2.41321300000709,
+              "pageExecutionElapsedMs": 0,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": true,
+              "hookRestoreAttempted": true,
+              "hookRestored": true,
+              "listenerCount": 2,
+              "listenerRemovalAttemptedCount": 2,
+              "listenerRemovalConfirmedCount": 2,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": true,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "confirmed",
+                "before": true,
+                "after": false,
+                "confirmed": true,
+                "pageExecutionElapsedMs": 0
+              }
+            },
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 0.7434860000066692,
+              "pageExecutionElapsedMs": null,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "smoke-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [],
+        "mapStreamingInterceptionRelease": {
+          "schema": "gev-map-smoke-interception-release/v1",
+          "documentRole": "smoke-variant",
+          "documentId": "baseline-eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "contextCloseStatus": "closed",
+          "targetClosed": true,
+          "release": {
+            "schema": "gev-fixture-interception-release/v1",
+            "interception": {
+              "schema": "gev-fixture-interception-drain/v1",
+              "confirmed": true,
+              "listenerRemovalConfirmed": true,
+              "listenerRemovalVerification": "remove-listener-call-acknowledged",
+              "listenerRemovalErrorKind": null,
+              "pendingAtStop": 0,
+              "pendingPreparationAtStop": 0,
+              "pendingAbortSubscriptionsAtStop": 0,
+              "pendingCommandsAtStop": 0,
+              "pendingCommandsAfterDrain": 0,
+              "pendingPreparationsAfterDrain": 0,
+              "pendingAbortSubscriptionsAfterDrain": 0,
+              "rejectedDrainOperations": 0,
+              "drainCommandFailures": 0,
+              "cancelledPreparationCount": 0,
+              "unexpectedLateRequestCount": 0
+            },
+            "fetchDisable": "target-closed",
+            "detach": "target-closed",
+            "confirmed": true
+          },
+          "confirmed": true
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The map fixture runs its native journey on both exact revisions; the candidate also runs the full capture CLI. This hosted smoke is diagnostic only, not paired timing evidence.",
+    "Map-only preparation skips the unrelated dense aircraft, infrastructure and dam populations; other provider-fixture selections retain the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Native map journey failed during transition-readiness: Completed render did not arrive before its bound.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-13T06:48:21.203Z",
+  "durationMs": 84955
+}

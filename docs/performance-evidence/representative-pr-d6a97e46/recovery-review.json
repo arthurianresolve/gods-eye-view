@@ -1,0 +1,68 @@
+[
+  {
+    "jobId": 115460582215,
+    "candidateCommit": "655c9029c98142414ce2449a0330242a54dc9f09",
+    "platform": "darwin",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "jobId": 115460582560,
+    "candidateCommit": "655c9029c98142414ce2449a0330242a54dc9f09",
+    "platform": "linux",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "jobId": 115460582580,
+    "candidateCommit": "655c9029c98142414ce2449a0330242a54dc9f09",
+    "platform": "win32",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "jobId": 115460555487,
+    "candidateCommit": "568dfa489a94cf09d559c7a87622975118bb3ae5",
+    "platform": "linux",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "jobId": 115460555655,
+    "candidateCommit": "568dfa489a94cf09d559c7a87622975118bb3ae5",
+    "platform": "win32",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  },
+  {
+    "jobId": 115460555770,
+    "candidateCommit": "568dfa489a94cf09d559c7a87622975118bb3ae5",
+    "platform": "darwin",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "checkCount": 5,
+    "allPersistenceAndCloseChecksPass": true,
+    "hardwareRenderingValidated": false
+  }
+]

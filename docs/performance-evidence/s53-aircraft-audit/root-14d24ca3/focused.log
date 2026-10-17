@@ -1,0 +1,19 @@
+✔ flight and military snapshot producers retain Billboard identity through absence policy (119.1392ms)
+✔ complete aircraft fixture descriptor binds every stage and receipt-clock assumption (1.2103ms)
+✔ audit receipt clock instrumentation restores Date.now after success and failure (88.7038ms)
+✔ civil records keep aviation units separate from render height and survive missing fields (3.4303ms)
+✔ civil rendering can use receipt time without claiming it as a source fix time (0.3759ms)
+✔ civil record owners isolate state and preserve partial, missing-poll and landed retention (0.4131ms)
+✔ ground transitions preserve last render height while a surface cell is cold (0.3787ms)
+✔ repeated fixed-time OpenSky observations do not grow flight history, while a fresh epoch does (3.0407ms)
+✔ military records preserve feet for aviation, metres for rendering and source epochs (3.0904ms)
+✔ military ground records leave model-owned placement alone and warm the same floor cell (1.7734ms)
+✔ military records keep bounded partial retention and release metadata only after removal admission (0.5339ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2902.0262

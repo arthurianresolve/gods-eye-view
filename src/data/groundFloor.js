@@ -19,6 +19,8 @@ export const {
   allocateCorridorCells,
   setMeshFloorPreferred,
   meshFloorPreferred,
+  setMeshFloorSource,
+  setMeshFloorSourcePending,
   reportMeshFloorCell,
   meshFloorSampleWithinPrior,
   reportValidatedMeshFloorCell,

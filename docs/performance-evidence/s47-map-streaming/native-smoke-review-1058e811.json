@@ -1,0 +1,26 @@
+{
+  "schema": "gev-map-native-smoke-review/v1",
+  "implementationCommit": "1058e811",
+  "reviewedAt": "2026-10-13T05:27:19.155Z",
+  "status": "correction-required-not-integrated",
+  "legitimateCancellation": {
+    "source": "actual native fixture adapter and fixtureRequestCommand with acknowledged manifest bytes",
+    "manifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
+    "requested": 73,
+    "acknowledged": 72,
+    "cancelled": 1,
+    "pending": 0,
+    "errorObservations": 0,
+    "cleanupConfirmed": true,
+    "rejected": true,
+    "failure": {
+      "name": "AssertionError",
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    }
+  },
+  "sourceReview": {
+    "baselineFinalization": "Baseline disposes its map delivery before the finally block closes its context; the published summary can precede target/interception retirement.",
+    "requiredCorrection": "Finalize after observed stop/drain/target closure for both variants, and preserve legitimately cancelled requests as count-balanced outcomes."
+  },
+  "scope": "No browser launched; disposal ordering finding is source review, cancellation false rejection is executed with the real adapter."
+}

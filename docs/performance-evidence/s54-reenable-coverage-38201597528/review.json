@@ -1,0 +1,307 @@
+{
+  "schema": "gev-s54-reenable-coverage-review/v1",
+  "status": "failed-before-reenable-observation",
+  "applicationCommit": "01521081988c04f122401be4054607bbbc26e6f5",
+  "harnessCommit": "01521081988c04f122401be4054607bbbc26e6f5",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38201597528",
+  "rawBytes": 498600,
+  "rawSha256": "eb27d37a3d8ea0cc220679cea56683300bcef01150d2d3b804d6718c29ed0f81",
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "comparisonSummary": {
+    "expectedPairs": 10,
+    "capturedPairs": 0,
+    "exactPairs": 0,
+    "unavailablePairs": 10
+  },
+  "observationCoverage": {
+    "schema": "gev-cable-reenable-attribution/v1",
+    "enabled": true,
+    "expectedObservationCount": 4,
+    "recordedObservationCount": 0,
+    "identityCoverageComplete": false,
+    "missing": [
+      {
+        "rendererMode": "entities",
+        "cycle": 0
+      },
+      {
+        "rendererMode": "entities",
+        "cycle": 1
+      },
+      {
+        "rendererMode": "collections",
+        "cycle": 0
+      },
+      {
+        "rendererMode": "collections",
+        "cycle": 1
+      }
+    ],
+    "fixtureObservation": null,
+    "observations": [],
+    "scope": "all-renderer-lifetimes-two-reenable-cycles",
+    "performanceAcceptanceEligible": false
+  },
+  "lifetimes": [
+    {
+      "mode": "entities",
+      "status": "failed",
+      "failureStage": "case-camera-change-map-stack-witness",
+      "readinessStage": "map-stack-photoreal",
+      "samples": 5,
+      "traceObservationCount": 250,
+      "traceTruncated": true,
+      "first": {
+        "phase": "first-post-render",
+        "elapsedMs": null,
+        "remainingMs": null,
+        "frameNumber": 905,
+        "stableFrames": null,
+        "primitiveReady": false,
+        "pending": [
+          {
+            "type": "GroundPolylinePrimitive",
+            "show": false,
+            "buildState": "CREATING",
+            "instances": 1913
+          }
+        ]
+      },
+      "tail": [
+        {
+          "phase": null,
+          "elapsedMs": 9451.5,
+          "remainingMs": 2548.5,
+          "frameNumber": 1150,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 9483.799999999988,
+          "remainingMs": 2516.2000000000116,
+          "frameNumber": 1151,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 9521.399999999994,
+          "remainingMs": 2478.600000000006,
+          "frameNumber": 1152,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 9527.299999999988,
+          "remainingMs": 2472.7000000000116,
+          "frameNumber": 1153,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 12243,
+          "remainingMs": 0,
+          "frameNumber": 1154,
+          "stableFrames": 0,
+          "primitiveReady": true,
+          "pending": []
+        }
+      ],
+      "lastObservedGapMs": 2715.7000000000116,
+      "teardown": null,
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      }
+    },
+    {
+      "mode": "collections",
+      "status": "failed",
+      "failureStage": "initial-map-stack-classification",
+      "readinessStage": "map-stack-same-classification-control",
+      "samples": 0,
+      "traceObservationCount": 277,
+      "traceTruncated": true,
+      "first": {
+        "phase": "first-post-render",
+        "elapsedMs": null,
+        "remainingMs": null,
+        "frameNumber": 21,
+        "stableFrames": null,
+        "primitiveReady": false,
+        "pending": [
+          {
+            "type": "GroundPolylinePrimitive",
+            "show": false,
+            "buildState": "CREATING",
+            "instances": 1913
+          }
+        ]
+      },
+      "tail": [
+        {
+          "phase": null,
+          "elapsedMs": 10229.699999999983,
+          "remainingMs": 1770.2000000000116,
+          "frameNumber": 293,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 10249.600000000006,
+          "remainingMs": 1750.2999999999884,
+          "frameNumber": 294,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 10265.699999999983,
+          "remainingMs": 1734.2000000000116,
+          "frameNumber": 295,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 10296.100000000006,
+          "remainingMs": 1703.7999999999884,
+          "frameNumber": 296,
+          "stableFrames": 0,
+          "primitiveReady": false,
+          "pending": [
+            {
+              "type": "GroundPolylinePrimitive",
+              "show": false,
+              "buildState": "COMBINING",
+              "instances": 1913
+            }
+          ]
+        },
+        {
+          "phase": null,
+          "elapsedMs": 13332.5,
+          "remainingMs": 0,
+          "frameNumber": 297,
+          "stableFrames": 0,
+          "primitiveReady": true,
+          "pending": []
+        }
+      ],
+      "lastObservedGapMs": 3036.399999999994,
+      "teardown": null,
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      }
+    }
+  ],
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "externalRequestCount": 0,
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 111342.797709,
+      "closeSettledHostMs": 113219.537209,
+      "closeElapsedMs": 1876.739499999996,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1764.2593329999945
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "limitations": [
+    "No re-enable observation was reached; all four expected identities remain missing.",
+    "Five baseline-only captures provide no matched image or geometry parity.",
+    "Readiness traces are bounded and truncated; frame/event durations are not GPU execution timings.",
+    "Late geometry readiness is distinct from prior missing completed-frame symptoms.",
+    "No physical Windows or performance acceptance."
+  ]
+}

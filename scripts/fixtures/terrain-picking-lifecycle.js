@@ -1,0 +1,1785 @@
+import * as Cesium from 'cesium';
+import { MapSourceController } from '../../src/maps/controller.js';
+import { createSubmarineCableLayer } from '../../src/layers/submarineCables/index.js';
+import { installWorkerDiagnostics } from '../performance/workerDiagnostics.mjs';
+import {
+  installTerrainCurrentUpdateReadinessObserver,
+  finalizeTerrainCurrentUpdateObservation,
+} from './terrainCurrentUpdateReadiness.mjs';
+import { createTerrainSceneReadinessSample } from './terrainSceneReadiness.mjs';
+
+installWorkerDiagnostics(window);
+window.__terrainPickingBuildIdentity = {
+  applicationCommit:
+    typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+  harnessCommit:
+    typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+};
+
+const STATUS = document.querySelector('#status');
+const RESULT = document.querySelector('#result');
+const RUN = document.querySelector('#run');
+const VIEWER_SIZE = Object.freeze({ width: 960, height: 640 });
+const DRAIN_MS = 10_000;
+const READY_MS = 30_000;
+const CYCLES = 5;
+const CAMERA = Object.freeze({ longitude: 0, latitude: 0, height: 90_000 });
+const STREAMED_TILE_STACK = 'qa-streamed-tiles';
+let lifecycleCycles = CYCLES;
+let lifecycleDrainMs = DRAIN_MS;
+
+function snapshotWorkers() {
+  const snapshot = window.__gevSoakWorkers?.snapshot?.();
+  if (
+    !snapshot ||
+    snapshot.instrumented !== true ||
+    snapshot.overflow !== false ||
+    !Array.isArray(snapshot.workers) ||
+    snapshot.workers.length > 64
+  )
+    throw new Error(
+      'Worker diagnostics are missing, overflowing, or malformed.',
+    );
+  for (const worker of snapshot.workers) {
+    const values = [
+      worker.submitted,
+      worker.completed,
+      worker.cancelled,
+      worker.pending,
+      worker.taskErrors,
+      worker.workerErrors,
+      worker.postErrors,
+    ];
+    if (
+      values.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+      worker.submitted !==
+        worker.completed + worker.cancelled + worker.pending ||
+      worker.taskErrors ||
+      worker.workerErrors ||
+      worker.postErrors
+    )
+      throw new Error(
+        'Worker counters report pending, invalid, or failed work.',
+      );
+  }
+  return {
+    instrumented: true,
+    overflow: false,
+    pending: snapshot.pending,
+    workers: snapshot.workers.map(({ kind, ...worker }) => ({
+      kind,
+      ...worker,
+    })),
+  };
+}
+
+function workerTotals(snapshot) {
+  return snapshot.workers.reduce(
+    (totals, worker) => {
+      totals.submitted += worker.submitted;
+      totals.completed += worker.completed;
+      totals.cancelled += worker.cancelled;
+      totals.pending += worker.pending;
+      return totals;
+    },
+    { submitted: 0, completed: 0, cancelled: 0, pending: 0 },
+  );
+}
+
+function workerKindTotals(snapshot) {
+  return Object.fromEntries(
+    snapshot.workers.map((worker) => [
+      worker.kind,
+      {
+        submitted: worker.submitted,
+        completed: worker.completed,
+        cancelled: worker.cancelled,
+        pending: worker.pending,
+      },
+    ]),
+  );
+}
+
+function resetFixtureCamera(viewer) {
+  viewer.camera.cancelFlight();
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(
+      CAMERA.longitude,
+      CAMERA.latitude,
+      CAMERA.height,
+    ),
+    orientation: { heading: 0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0 },
+  });
+}
+
+function cameraPose(viewer) {
+  const camera = viewer.camera;
+  const vectors = [camera.positionWC, camera.directionWC, camera.upWC];
+  if (
+    vectors.some(
+      (vector) =>
+        !vector || ![vector.x, vector.y, vector.z].every(Number.isFinite),
+    )
+  )
+    return null;
+  return vectors.map((vector) => [vector.x, vector.y, vector.z]);
+}
+
+function diagnosticSnapshot(viewer, controller, cableLayer) {
+  const workerCounters = snapshotWorkers();
+  const canvas = viewer.scene.canvas;
+  return {
+    map: {
+      activeStackId: controller.getActiveId(),
+      switchOrigin: controller.getSwitchOrigin(),
+      ...controller.getPerformanceDiagnostics(),
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'legacy terrain-only observation; streamed tile ownership and memory are reported separately under streamedTiles',
+    },
+    cables: cableLayer.getPerformanceDiagnostics(),
+    scene: {
+      dataSources: viewer.dataSources.length,
+      imageryLayers: viewer.imageryLayers.length,
+      primitives: viewer.scene.primitives.length,
+      terrainProviderKind: viewer.terrainProvider?.constructor?.name || null,
+      globeTilesLoaded: viewer.scene.globe.tilesLoaded,
+      dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
+      frameNumber: viewer.scene.frameState.frameNumber,
+      postRenderCount,
+      canvas: [canvas.width, canvas.height],
+      camera: cameraPose(viewer),
+      renderer: readRendererOnce(viewer),
+    },
+    workerCounters,
+  };
+}
+
+let postRenderCount = 0;
+let rendererCaptured = false;
+let rendererInfo = null;
+
+function readRendererOnce(viewer) {
+  if (rendererCaptured) return rendererInfo;
+  rendererCaptured = true;
+  const gl =
+    viewer.scene.context?._originalGLContext ||
+    viewer.scene.context?._gl ||
+    null;
+  if (!gl) return null;
+  try {
+    const extension = gl.getExtension('WEBGL_debug_renderer_info');
+    rendererInfo = {
+      vendor: String(gl.getParameter(gl.VENDOR) || '').slice(0, 120),
+      renderer: String(gl.getParameter(gl.RENDERER) || '').slice(0, 160),
+      unmaskedVendor: extension
+        ? String(gl.getParameter(extension.UNMASKED_VENDOR_WEBGL) || '').slice(
+            0,
+            120,
+          )
+        : null,
+      unmaskedRenderer: extension
+        ? String(
+            gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) || '',
+          ).slice(0, 160)
+        : null,
+    };
+  } catch {}
+  return rendererInfo;
+}
+
+function waitFor(predicate, timeoutMs, label, onPoll = null) {
+  const started = performance.now();
+  return new Promise((resolve, reject) => {
+    const poll = () => {
+      let result;
+      try {
+        result = predicate();
+      } catch (error) {
+        reject(error);
+        return;
+      }
+      if (result) {
+        resolve({ elapsedMs: performance.now() - started, value: result });
+        return;
+      }
+      if (performance.now() - started >= timeoutMs) {
+        reject(new Error(`${label} exceeded ${timeoutMs}ms.`));
+        return;
+      }
+      try {
+        onPoll?.();
+      } catch (error) {
+        reject(error);
+        return;
+      }
+      setTimeout(poll, 50);
+    };
+    poll();
+  });
+}
+
+function boundedErrorDetails(error, depth = 0) {
+  if (!error || depth > 2) return null;
+  const sanitizeMessage = (value) =>
+    String(value || 'Unknown failure')
+      .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+      .replace(/[\r\n\t]+/g, ' ')
+      .slice(0, 300);
+  const detail = {
+    name: String(error.name || 'Error').slice(0, 80),
+    message: sanitizeMessage(error.message || error),
+  };
+  if (error.cause) detail.cause = boundedErrorDetails(error.cause, depth + 1);
+  return detail;
+}
+
+async function waitForStableScene(
+  viewer,
+  label,
+  timeoutMs = lifecycleDrainMs,
+  onSample = null,
+  currentUpdateRequirement = null,
+  ownerController,
+) {
+  const started = performance.now();
+  const history = [];
+  let stableSince = null;
+  let previous = null;
+  while (performance.now() - started <= timeoutMs) {
+    const workers = snapshotWorkers();
+    const pose = cameraPose(viewer);
+    const currentUpdateReadiness = currentUpdateRequirement?.() ?? null;
+    const sample = createTerrainSceneReadinessSample({
+      elapsedMs: performance.now() - started,
+      frameNumber: viewer.scene.frameState.frameNumber,
+      postRenderCount,
+      tilesLoaded: viewer.scene.globe.tilesLoaded,
+      dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
+      workers,
+      camera: pose,
+      currentUpdateReadiness,
+      controller: ownerController,
+    });
+    if (history.length < 64) history.push(sample);
+    onSample?.(sample);
+    const stable =
+      sample.tilesLoaded === true &&
+      viewer.dataSourceDisplay.ready === true &&
+      sample.pending === 0 &&
+      (currentUpdateRequirement === null ||
+        currentUpdateReadiness?.ready === true) &&
+      sample.camera &&
+      sample.frameNumber >= 0 &&
+      previous &&
+      sample.workerSignature === previous.workerSignature &&
+      JSON.stringify(sample.camera) === JSON.stringify(previous.camera) &&
+      sample.postRenderCount > previous.postRenderCount;
+    if (stable) {
+      stableSince ??= sample.elapsedMs;
+      if (sample.elapsedMs - stableSince >= 1000 && history.length >= 3)
+        return {
+          status: 'ready',
+          label,
+          elapsedMs: performance.now() - started,
+          stableWindowMs: sample.elapsedMs - stableSince,
+          samples: history,
+          final: sample,
+        };
+    } else stableSince = null;
+    previous = sample;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw Object.assign(
+    new Error(`${label} did not reach stable scene ownership.`),
+    {
+      sceneHistory: history,
+    },
+  );
+}
+
+async function waitForStreamedTilesReady(
+  viewer,
+  controller,
+  streamedTiles,
+  label,
+  timeoutMs = READY_MS,
+) {
+  const started = performance.now();
+  const startFrame = viewer.scene.frameState.frameNumber;
+  const history = [];
+  let previous = null;
+  let stableSince = null;
+  while (performance.now() - started <= timeoutMs) {
+    const tile = streamedTiles.snapshot(viewer, controller);
+    const workers = snapshotWorkers();
+    const sample = {
+      elapsedMs: performance.now() - started,
+      frameNumber: Number.isSafeInteger(viewer.scene.frameState.frameNumber)
+        ? viewer.scene.frameState.frameNumber
+        : null,
+      postRenderCount,
+      activeStackId: controller.getActiveId(),
+      globeShow: viewer.scene.globe.show,
+      tileset: tile,
+      workerPending: workers.pending,
+      camera: cameraPose(viewer),
+    };
+    if (history.length < 64) history.push(sample);
+    const stable =
+      sample.activeStackId === STREAMED_TILE_STACK &&
+      sample.globeShow === false &&
+      tile.attachedToScene === true &&
+      tile.show === true &&
+      tile.tilesLoaded === true &&
+      tile.latestVisible?.contentReady === true &&
+      tile.latestVisible.frameNumber > startFrame &&
+      tile.failureCount === 0 &&
+      workers.pending === 0 &&
+      sample.camera &&
+      previous &&
+      sample.frameNumber > previous.frameNumber &&
+      sample.postRenderCount > previous.postRenderCount &&
+      JSON.stringify(sample.camera) === JSON.stringify(previous.camera);
+    if (stable) {
+      stableSince ??= sample.elapsedMs;
+      if (sample.elapsedMs - stableSince >= 1000 && history.length >= 3)
+        return {
+          status: 'ready',
+          label,
+          elapsedMs: performance.now() - started,
+          stableWindowMs: sample.elapsedMs - stableSince,
+          startFrame,
+          samples: history,
+          final: sample,
+        };
+    } else stableSince = null;
+    previous = sample;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw Object.assign(
+    new Error(`${label} did not reach streamed-tile readiness.`),
+    {
+      sceneHistory: history,
+    },
+  );
+}
+
+function cableFixture() {
+  return {
+    cables: {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          id: 'qa-cable-1',
+          properties: { id: 'qa-cable-1', name: 'Local cable fixture' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [-0.02, 0],
+              [0.02, 0],
+            ],
+          },
+        },
+      ],
+    },
+    landingPoints: {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          id: 'qa-landing-1',
+          properties: { id: 'qa-landing-1', name: 'Local landing fixture' },
+          geometry: { type: 'Point', coordinates: [0, 0] },
+        },
+      ],
+    },
+  };
+}
+
+function localImageryProvider(color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 2;
+  const context = canvas.getContext('2d');
+  context.fillStyle = color;
+  context.fillRect(0, 0, 2, 2);
+  return new Cesium.SingleTileImageryProvider({
+    url: canvas.toDataURL(),
+    tileWidth: 2,
+    tileHeight: 2,
+  });
+}
+
+function createLocalReliefProvider(requestCount) {
+  return new Cesium.CustomHeightmapTerrainProvider({
+    width: 16,
+    height: 16,
+    callback(x, y, level) {
+      requestCount.count++;
+      const heights = new Float32Array(16 * 16);
+      for (let index = 0; index < heights.length; index++)
+        heights[index] = 40 + ((x * 3 + y * 5 + level + index) % 20);
+      return heights;
+    },
+  });
+}
+
+function createMapController(
+  viewer,
+  mapEvents,
+  terrainCalls,
+  delayed,
+  streamedTiles = null,
+) {
+  const imageryA = localImageryProvider('#406080');
+  const imageryB = localImageryProvider('#806040');
+  const sources = [
+    {
+      descriptor: {
+        id: 'qa-terrain-flat',
+        label: 'Fixture flat',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryA;
+      },
+      terrain: {
+        id: 'qa-flat-provider',
+        create: async ({ signal }) => {
+          signal.throwIfAborted();
+          terrainCalls.flat++;
+          return { provider: new Cesium.EllipsoidTerrainProvider() };
+        },
+      },
+    },
+    {
+      descriptor: {
+        id: 'qa-terrain-relief',
+        label: 'Fixture relief',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryB;
+      },
+      terrain: {
+        id: 'qa-heightmap-provider',
+        create: async ({ signal }) => {
+          signal.throwIfAborted();
+          terrainCalls.relief++;
+          return { provider: createLocalReliefProvider(terrainCalls.tiles) };
+        },
+      },
+    },
+    {
+      descriptor: {
+        id: 'qa-terrain-delayed',
+        label: 'Fixture delayed',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryA;
+      },
+      terrain: {
+        id: 'qa-delayed-provider',
+        create: ({ signal }) => {
+          terrainCalls.delayedSignal = signal;
+          terrainCalls.delayed++;
+          return delayed.promise;
+        },
+      },
+    },
+  ];
+  if (streamedTiles) {
+    sources.push({
+      descriptor: {
+        id: STREAMED_TILE_STACK,
+        label: 'Fixture streamed 3D tiles',
+        kind: 'tileset',
+      },
+      async createTileset({ signal }) {
+        streamedTiles.factoryCalls++;
+        streamedTiles.factorySignal = signal;
+        if (streamedTiles.deferNextFactory) {
+          streamedTiles.deferNextFactory = false;
+          streamedTiles.factoryStarted = true;
+          await streamedTiles.factoryGate.promise;
+        }
+        signal.throwIfAborted();
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(
+          new URL('/qa/s57-streaming/tileset.json', window.location.origin)
+            .href,
+        );
+        streamedTiles.tileset = tileset;
+        streamedTiles.objectId = streamedTiles.nextObjectId++;
+        streamedTiles.attachListeners(tileset, viewer);
+        return tileset;
+      },
+    });
+  }
+  const registry = {
+    defaultId: 'qa-terrain-flat',
+    sources,
+  };
+  return new MapSourceController(viewer, {
+    registry,
+    createImageryLayer: (provider) => new Cesium.ImageryLayer(provider),
+    onChange(state) {
+      if (state.status !== 'ready' && state.status !== 'error') return;
+      const event = new Event('gev:map-stack-changed');
+      event.detail = { activeId: state.activeId };
+      mapEvents.dispatchEvent(event);
+    },
+  });
+}
+
+function createStreamedTileState() {
+  return {
+    factoryCalls: 0,
+    deferNextFactory: false,
+    factoryStarted: false,
+    factoryGate: deferred(),
+    tileset: null,
+    factorySignal: null,
+    objectId: null,
+    nextObjectId: 1,
+    tileVisibleCount: 0,
+    tileLoadCount: 0,
+    loadProgressCount: 0,
+    failureCount: 0,
+    latestVisible: null,
+    eventRows: [],
+    eventOverflowCount: 0,
+    removeListeners: [],
+    cleanupErrors: [],
+    attachListeners(tileset, viewer) {
+      const push = (row) => {
+        if (this.eventRows.length < 32) this.eventRows.push(row);
+        else this.eventOverflowCount++;
+      };
+      this.removeListeners.push(
+        tileset.tileVisible.addEventListener((tile) => {
+          const content = tile?.content;
+          const row = {
+            kind: 'visible',
+            frameNumber: Number.isSafeInteger(
+              viewer.scene.frameState?.frameNumber,
+            )
+              ? viewer.scene.frameState.frameNumber
+              : null,
+            contentType: String(content?.constructor?.name || '').slice(0, 80),
+            contentReady: content?.ready === true,
+          };
+          this.tileVisibleCount++;
+          this.latestVisible = row;
+          push(row);
+        }),
+      );
+      this.removeListeners.push(
+        tileset.tileLoad.addEventListener((tile) => {
+          this.tileLoadCount++;
+          push({
+            kind: 'load',
+            contentType: String(tile?.content?.constructor?.name || '').slice(
+              0,
+              80,
+            ),
+            contentReady: tile?.content?.ready === true,
+          });
+        }),
+      );
+      this.removeListeners.push(
+        tileset.loadProgress.addEventListener((pendingRequests, processing) => {
+          this.loadProgressCount++;
+          push({
+            kind: 'progress',
+            pendingRequests:
+              Number.isSafeInteger(pendingRequests) && pendingRequests >= 0
+                ? pendingRequests
+                : null,
+            processing:
+              Number.isSafeInteger(processing) && processing >= 0
+                ? processing
+                : null,
+          });
+        }),
+      );
+      this.removeListeners.push(
+        tileset.tileFailed.addEventListener((error) => {
+          this.failureCount++;
+          push({
+            kind: 'failed',
+            name: String(error?.name || 'TileLoadError').slice(0, 80),
+          });
+        }),
+      );
+    },
+    snapshot(viewer, controller) {
+      const tileset = this.tileset;
+      const memory = tileset?.totalMemoryUsageInBytes;
+      return {
+        factoryCalls: this.factoryCalls,
+        objectId: this.objectId,
+        activeStackId: controller.getActiveId(),
+        attachedToScene: Boolean(
+          tileset && viewer.scene.primitives.contains(tileset),
+        ),
+        show: typeof tileset?.show === 'boolean' ? tileset.show : null,
+        tilesLoaded:
+          typeof tileset?.tilesLoaded === 'boolean'
+            ? tileset.tilesLoaded
+            : null,
+        tileVisibleCount: this.tileVisibleCount,
+        tileLoadCount: this.tileLoadCount,
+        loadProgressCount: this.loadProgressCount,
+        failureCount: this.failureCount,
+        totalMemoryUsageInBytes:
+          Number.isFinite(memory) && memory >= 0 ? memory : null,
+        totalMemoryUsageStatus:
+          Number.isFinite(memory) && memory >= 0 ? 'observed' : 'unavailable',
+        totalMemoryUsageUnavailableReason:
+          Number.isFinite(memory) && memory >= 0
+            ? null
+            : 'Cesium3DTileset.totalMemoryUsageInBytes unavailable for this snapshot',
+        maximumScreenSpaceError: Number.isFinite(
+          tileset?.maximumScreenSpaceError,
+        )
+          ? tileset.maximumScreenSpaceError
+          : null,
+        dynamicScreenSpaceError:
+          typeof tileset?.dynamicScreenSpaceError === 'boolean'
+            ? tileset.dynamicScreenSpaceError
+            : null,
+        latestVisible: this.latestVisible,
+      };
+    },
+    cleanup() {
+      const errors = [];
+      const removers = this.removeListeners.splice(0);
+      for (const remove of removers) {
+        try {
+          remove();
+        } catch (error) {
+          errors.push(String(error?.name || 'Error').slice(0, 80));
+        }
+      }
+      this.cleanupErrors.push(...errors);
+      return {
+        attemptedCount: removers.length,
+        removedCount: removers.length - errors.length,
+        cleanupConfirmed:
+          errors.length === 0 &&
+          (this.tileset === null || removers.length === 4),
+        errors,
+      };
+    },
+  };
+}
+
+function boundsMatch(snapshot, baseline) {
+  const sameCamera =
+    snapshot.scene.camera?.length === baseline.scene.camera?.length &&
+    snapshot.scene.camera.every((vector, vectorIndex) =>
+      vector.every(
+        (value, axis) =>
+          Math.abs(value - baseline.scene.camera[vectorIndex][axis]) <= 1e-6,
+      ),
+    );
+  return (
+    snapshot.map.cacheEntries === baseline.map.cacheEntries &&
+    snapshot.map.pendingJobs === baseline.map.pendingJobs &&
+    snapshot.map.primitives === baseline.map.primitives &&
+    snapshot.map.imageryLayers === baseline.map.imageryLayers &&
+    snapshot.cables.dataSources === baseline.cables.dataSources &&
+    snapshot.cables.listeners === baseline.cables.listeners &&
+    snapshot.cables.pendingJobs === baseline.cables.pendingJobs &&
+    snapshot.cables.cacheEntries === baseline.cables.cacheEntries &&
+    snapshot.scene.dataSources === baseline.scene.dataSources &&
+    snapshot.scene.imageryLayers === baseline.scene.imageryLayers &&
+    snapshot.scene.primitives === baseline.scene.primitives &&
+    snapshot.scene.terrainProviderKind === 'EllipsoidTerrainProvider' &&
+    sameCamera &&
+    snapshot.workerCounters.pending === 0
+  );
+}
+
+async function runFixture() {
+  const options = window.__terrainPickingLifecycleOptions || {};
+  lifecycleCycles = Number.isSafeInteger(options.cycles)
+    ? options.cycles
+    : CYCLES;
+  lifecycleDrainMs = Number.isSafeInteger(options.drainMs)
+    ? options.drainMs
+    : DRAIN_MS;
+  const startedAt = new Date().toISOString();
+  const streamedTiles = createStreamedTileState();
+  const report = {
+    schema: 'gev-terrain-picking-lifecycle/v1',
+    status: 'running',
+    applicationCommit:
+      typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+    harnessCommit:
+      typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+    fixture: {
+      identity: 'local-geojson-custom-heightmap-v1',
+      externalProviderCalls: 0,
+      terrain:
+        'Cesium CustomHeightmapTerrainProvider 16x16 deterministic local heights; ellipsoid reset provider',
+      cableFeatures: 1,
+      landingFeatures: 1,
+      viewport: VIEWER_SIZE,
+      camera: CAMERA,
+      cycles: lifecycleCycles,
+      coldReadinessBudgetMs: READY_MS,
+      operationDrainBudgetMs: lifecycleDrainMs,
+      terrainCoverage:
+        'local custom heightmap tiles and ellipsoid reset; no network quantized-mesh tiles',
+    },
+    switchComparison: {
+      status: 'running',
+      order: 'counterbalanced-relief-flat-and-flat-relief',
+      timingBoundary:
+        'setStack promise completion and the separate stable-scene wait are observed independently; switch-to-settled wall time runs from just before setStack through the final ownership snapshot and includes those snapshot costs, so stage values are not summed as end-to-end time',
+      stableSceneGate:
+        'existing waitForStableScene predicates: globe tiles loaded, latched DataSourceDisplay.ready, zero worker pending, stable camera and worker signature with advancing postRender for at least 1000 ms; current DataSourceDisplay.update true is now additionally required for comparison switches',
+      checkpointScope:
+        'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate',
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'legacy terrain-only comparison excludes streamed tile memory; separate streamedTiles observations report it',
+    },
+    startedAt,
+    initialReadiness: null,
+    warmup: null,
+    cycles: [],
+    staleTerrainReplacement: null,
+    destroyLateTerrain: null,
+    streamedTiles: {
+      status: 'not-started',
+      fixtureId: 's57-local-http-3dtiles-v1',
+      stackId: STREAMED_TILE_STACK,
+      assetPaths: {
+        manifest: '/qa/s57-streaming/tileset.json',
+        content: '/qa/s57-streaming/tile.glb',
+      },
+      supersededFactory: null,
+      supersededContent: null,
+      warmup: null,
+      cycles: [],
+      eventRows: [],
+      eventOverflowCount: 0,
+      cleanup: null,
+    },
+    cleanup: null,
+    failedPhase: null,
+    error: null,
+  };
+  const publish = () => {
+    try {
+      window.__terrainPickingLifecycleProgress = {
+        status: report.status,
+        phase: report.phase || report.failedPhase || 'initialization',
+        failedPhase: report.failedPhase || null,
+        currentObservation: report.currentObservation || null,
+      };
+      window.__terrainPickingLifecycleResult = JSON.parse(
+        JSON.stringify(report),
+      );
+    } catch {}
+  };
+  publish();
+  let lastObservationPublishedAt = 0;
+  const observe = (stage, observation, force = false) => {
+    report.currentObservation = { stage, ...observation };
+    const now = performance.now();
+    if (force || now - lastObservationPublishedAt >= 250) {
+      lastObservationPublishedAt = now;
+      publish();
+    }
+  };
+  const sceneObserver = (label) => (sample) => observe(label, sample);
+  const waitForScene = (
+    label,
+    timeoutMs = lifecycleDrainMs,
+    currentUpdateRequirement = null,
+  ) =>
+    waitForStableScene(
+      viewer,
+      label,
+      timeoutMs,
+      sceneObserver(label),
+      currentUpdateRequirement,
+      controller,
+    );
+  const streamedMapSnapshot = () => ({
+    activeStackId: controller.getActiveId(),
+    switchOrigin: controller.getSwitchOrigin(),
+    diagnostics: controller.getPerformanceDiagnostics(),
+    tile: streamedTiles.snapshot(viewer, controller),
+    globeShow: viewer.scene.globe.show,
+    frameNumber: viewer.scene.frameState.frameNumber,
+  });
+  const switchStreamedTarget = async (targetStackId, label) => {
+    const before = streamedMapSnapshot();
+    const started = performance.now();
+    const state = await controller.setStack(targetStackId);
+    const setStackElapsedMs = performance.now() - started;
+    if (
+      state?.activeId !== targetStackId ||
+      state.status !== 'ready' ||
+      state.lastError
+    )
+      throw new Error(`${label} did not activate ${targetStackId}.`);
+    const readyStarted = performance.now();
+    const readiness =
+      targetStackId === STREAMED_TILE_STACK
+        ? await waitForStreamedTilesReady(
+            viewer,
+            controller,
+            streamedTiles,
+            label,
+            READY_MS,
+          )
+        : await waitForScene(label, READY_MS);
+    const after = streamedMapSnapshot();
+    return {
+      status: 'ready',
+      label,
+      fromStackId: before.activeStackId,
+      toStackId: targetStackId,
+      setStackElapsedMs,
+      readinessElapsedMs: performance.now() - readyStarted,
+      switchToSettledElapsedMs: performance.now() - started,
+      providerLoadDelta:
+        after.diagnostics.providerLoadsStarted -
+        before.diagnostics.providerLoadsStarted,
+      providerCacheReuseDelta:
+        after.diagnostics.providerCacheReuses -
+        before.diagnostics.providerCacheReuses,
+      pendingJobsAfterReadiness: after.diagnostics.pendingJobs,
+      readiness,
+      before,
+      after,
+    };
+  };
+  const runStackSwitch = async (targetStackId, label, measured) => {
+    const before = diagnosticSnapshot(viewer, controller, cableLayer);
+    const tileRequestsBefore = terrainCalls.tiles.count;
+    const generationResult = currentUpdateObserver?.beginGeneration();
+    if (!generationResult?.available)
+      throw new Error(
+        'Current DataSourceDisplay update observer is unavailable.',
+      );
+    const currentUpdateRequirement = () => {
+      const witness = currentUpdateObserver.read();
+      return {
+        generation: generationResult.generation,
+        ready: currentUpdateObserver.isCurrentFrameReady(
+          witness,
+          generationResult.generation,
+        ),
+        witness,
+      };
+    };
+    const startedAt = performance.now();
+    await controller.setStack(targetStackId);
+    const setStackElapsedMs = performance.now() - startedAt;
+    const afterSetStack = diagnosticSnapshot(viewer, controller, cableLayer);
+    const sceneReadiness = await waitForScene(
+      label,
+      lifecycleDrainMs,
+      currentUpdateRequirement,
+    );
+    const afterReady = diagnosticSnapshot(viewer, controller, cableLayer);
+    const switchToSettledElapsedMs = performance.now() - startedAt;
+    const beforeWorkers = workerTotals(before.workerCounters);
+    const readyWorkers = workerTotals(afterReady.workerCounters);
+    return {
+      status: sceneReadiness.status === 'ready' ? 'ready' : 'failed',
+      measured,
+      fromStackId: before.map.activeStackId,
+      toStackId: targetStackId,
+      switchOrigin: afterSetStack.map.switchOrigin,
+      setStackElapsedMs,
+      switchToSettledElapsedMs,
+      sceneReadinessElapsedMs: sceneReadiness.elapsedMs,
+      stableWindowMs: sceneReadiness.stableWindowMs,
+      currentUpdateReadiness: {
+        generation: generationResult.generation,
+        witness: sceneReadiness.final.currentUpdateReadiness?.witness || null,
+        ready: sceneReadiness.final.currentUpdateReadiness?.ready === true,
+      },
+      sceneReadiness: {
+        status: sceneReadiness.status,
+        label: sceneReadiness.label,
+        elapsedMs: sceneReadiness.elapsedMs,
+        stableWindowMs: sceneReadiness.stableWindowMs,
+        sampleCount: sceneReadiness.samples.length,
+        final: sceneReadiness.final,
+      },
+      sceneReadinessEvidence: sceneReadiness,
+      before,
+      afterSetStack,
+      afterReady,
+      providerLoadDelta:
+        afterReady.map.providerLoadsStarted - before.map.providerLoadsStarted,
+      providerCacheReuseDelta:
+        afterReady.map.providerCacheReuses - before.map.providerCacheReuses,
+      providerLoadFailureDelta:
+        afterReady.map.providerLoadFailures - before.map.providerLoadFailures,
+      cacheEntryDelta: afterReady.map.cacheEntries - before.map.cacheEntries,
+      pendingJobsAtSetStackCompletion: afterSetStack.map.pendingJobs,
+      pendingJobsAfterReadiness: afterReady.map.pendingJobs,
+      tileRequestsBefore: tileRequestsBefore,
+      tileRequestsAfter: terrainCalls.tiles.count,
+      tileRequestDelta: terrainCalls.tiles.count - tileRequestsBefore,
+      workerSubmittedDelta: readyWorkers.submitted - beforeWorkers.submitted,
+      workerCompletedDelta: readyWorkers.completed - beforeWorkers.completed,
+      workerPendingAfterReadiness: readyWorkers.pending,
+      estimatedTileBytesBefore: before.map.estimatedTileBytes,
+      estimatedTileBytesAfter: afterReady.map.estimatedTileBytes,
+    };
+  };
+  let viewer;
+  let controller;
+  let cableLayer;
+  let currentUpdateObserver;
+  let postRenderRemove;
+  let originalMapEvents = 0;
+  const mapEvents = new EventTarget();
+  const terrainCalls = { flat: 0, relief: 0, delayed: 0, tiles: { count: 0 } };
+  let delayed = deferred();
+  let currentPick = null;
+  let cameraFlights = 0;
+  let cableFetches = 0;
+  let handler;
+  const overlay = {
+    entries: [],
+    visible: false,
+    clearSource() {
+      this.entries = [];
+    },
+    setEntries(_source, entries) {
+      this.entries = entries.slice();
+    },
+    setVisible(_source, visible) {
+      this.visible = visible;
+    },
+  };
+  try {
+    viewer = new Cesium.Viewer('viewer', {
+      animation: false,
+      baseLayer: false,
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      navigationHelpButton: false,
+      sceneModePicker: false,
+      selectionIndicator: false,
+      timeline: false,
+      infoBox: false,
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      requestRenderMode: false,
+      msaaSamples: 1,
+    });
+    viewer.resize();
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(
+        CAMERA.longitude,
+        CAMERA.latitude,
+        CAMERA.height,
+      ),
+      orientation: {
+        heading: 0,
+        pitch: -Cesium.Math.PI_OVER_TWO,
+        roll: 0,
+      },
+    });
+    postRenderRemove = viewer.scene.postRender.addEventListener(() => {
+      postRenderCount++;
+    });
+    const source = {
+      label: 'S49 local synthetic cable fixture',
+      async fetch(signal) {
+        cableFetches++;
+        signal.throwIfAborted();
+        return cableFixture();
+      },
+    };
+    cableLayer = createSubmarineCableLayer({
+      source,
+      overlayHost: overlay,
+      mapStackEventTarget: mapEvents,
+      sweepClock: () => performance.now(),
+      screenSpaceEventHandlerFactory(canvas) {
+        handler = new Cesium.ScreenSpaceEventHandler(canvas);
+        return handler;
+      },
+    });
+    cableLayer.init(viewer);
+    cableLayer.enable(viewer);
+    controller = createMapController(
+      viewer,
+      mapEvents,
+      terrainCalls,
+      delayed,
+      streamedTiles,
+    );
+
+    report.phase = 'initial-local-terrain-and-entity-warmup';
+    publish();
+    observe(
+      report.phase,
+      diagnosticSnapshot(viewer, controller, cableLayer),
+      true,
+    );
+    await controller.setStack('qa-terrain-flat');
+    await waitFor(
+      () =>
+        cableLayer.getStats().loading === false &&
+        cableLayer.getStats().count === 2,
+      lifecycleDrainMs,
+      'local cable load',
+      () => {
+        const workers = snapshotWorkers();
+        observe('local-cable-load', {
+          cableStats: cableLayer.getStats(),
+          workerCounters: workers,
+          frameNumber: viewer.scene.frameState.frameNumber,
+          tilesLoaded: viewer.scene.globe.tilesLoaded,
+          dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
+          camera: cameraPose(viewer),
+        });
+      },
+    );
+    await waitForScene(report.phase, READY_MS);
+    report.initialReadiness = diagnosticSnapshot(
+      viewer,
+      controller,
+      cableLayer,
+    );
+    publish();
+    const beforePick = cameraFlights;
+    const center = new Cesium.Cartesian2(
+      viewer.canvas.clientWidth / 2,
+      viewer.canvas.clientHeight / 2,
+    );
+    const nativeFlyTo = viewer.camera.flyTo.bind(viewer.camera);
+    viewer.camera.flyTo = (...args) => {
+      cameraFlights++;
+      return nativeFlyTo(...args);
+    };
+    currentPick = viewer.scene.pick(center);
+    if (!currentPick?.id || !cableLayer.getStats().count)
+      throw new Error(
+        'Actual Cesium scene pick did not resolve a fixture entity.',
+      );
+    handler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+      position: center,
+    });
+    if (cameraFlights !== beforePick + 1)
+      throw new Error(
+        'Production click action did not fly to the actual picked cable entity.',
+      );
+    viewer.camera.cancelFlight();
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(
+        CAMERA.longitude,
+        CAMERA.latitude,
+        CAMERA.height,
+      ),
+      orientation: { heading: 0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0 },
+    });
+    report.initialPick = {
+      status: 'passed',
+      pickedEntityId: String(currentPick.id.id).slice(0, 120),
+      cameraFlights,
+      center: [center.x, center.y],
+    };
+    publish();
+
+    report.phase = 'warm-relief-provider';
+    publish();
+    const firstTerrainBefore = diagnosticSnapshot(
+      viewer,
+      controller,
+      cableLayer,
+    );
+    const firstTerrainSubmitted = workerTotals(
+      firstTerrainBefore.workerCounters,
+    );
+    const firstTerrainKindsBefore = workerKindTotals(
+      firstTerrainBefore.workerCounters,
+    );
+    const firstTerrainTileRequestsBefore = terrainCalls.tiles.count;
+    report.firstTerrainTransition = {
+      status: 'running',
+      beforeWorkerCounters: firstTerrainBefore.workerCounters,
+      beforeWorkerTotals: firstTerrainSubmitted,
+      workerKindTotalsBefore: firstTerrainKindsBefore,
+      tileRequestsBefore: firstTerrainTileRequestsBefore,
+      initialSceneAndCableWorkerActivity: {
+        scope:
+          'cumulative startup, cable, and initial flat-scene worker work before heightmap terrain is selected',
+        atInitialReadiness: report.initialReadiness.workerCounters,
+        beforeTerrainSwitch: firstTerrainBefore.workerCounters,
+      },
+    };
+    publish();
+    await controller.setStack('qa-terrain-relief');
+    await waitForScene(report.phase);
+    const firstTerrainAfter = diagnosticSnapshot(
+      viewer,
+      controller,
+      cableLayer,
+    );
+    const firstTerrainCompleted = workerTotals(
+      firstTerrainAfter.workerCounters,
+    );
+    const submittedDelta =
+      firstTerrainCompleted.submitted - firstTerrainSubmitted.submitted;
+    const completedDelta =
+      firstTerrainCompleted.completed - firstTerrainSubmitted.completed;
+    const tileRequestsAfter = terrainCalls.tiles.count;
+    const transitionPassed =
+      submittedDelta > 0 && completedDelta > 0 && tileRequestsAfter > 0;
+    Object.assign(report.firstTerrainTransition, {
+      status: transitionPassed ? 'passed' : 'failed',
+      beforeWorkerCounters: firstTerrainBefore.workerCounters,
+      afterWorkerCounters: firstTerrainAfter.workerCounters,
+      beforeWorkerTotals: firstTerrainSubmitted,
+      afterWorkerTotals: firstTerrainCompleted,
+      workerKindTotalsBefore: firstTerrainKindsBefore,
+      workerKindTotalsAfter: workerKindTotals(firstTerrainAfter.workerCounters),
+      submittedDelta,
+      completedDelta,
+      tileRequestsBefore: firstTerrainTileRequestsBefore,
+      tileRequestsAfter,
+      scope:
+        'cumulative worker activity during the first local heightmap switch; worker counters include all fixture work',
+    });
+    publish();
+    if (!transitionPassed)
+      throw new Error(
+        'The first local heightmap transition did not produce tile requests and completed worker activity.',
+      );
+    await controller.setStack('qa-terrain-flat');
+    await waitForScene('return-to-flat-baseline');
+    const baseline = diagnosticSnapshot(viewer, controller, cableLayer);
+    if (
+      baseline.map.pendingJobs ||
+      baseline.cables.pendingJobs ||
+      baseline.workerCounters.pending
+    )
+      throw new Error('Warm fixture baseline still owns pending work.');
+    report.warmup = baseline;
+    report.localTerrain = { tileRequests: terrainCalls.tiles.count };
+    const getCurrentEntityCollections = () => {
+      const entityCollections = [viewer.entities];
+      for (let index = 0; index < viewer.dataSources.length; index++) {
+        const dataSource = viewer.dataSources.get(index);
+        if (dataSource?.entities) entityCollections.push(dataSource.entities);
+      }
+      return [...new Set(entityCollections)];
+    };
+    const uniqueEntityCollections = getCurrentEntityCollections();
+    currentUpdateObserver = installTerrainCurrentUpdateReadinessObserver({
+      dataSourceDisplay: viewer.dataSourceDisplay,
+      scene: viewer.scene,
+      entityCollections: uniqueEntityCollections,
+      ownershipCollection: viewer.dataSources,
+      getCurrentEntityCollections,
+    });
+    report.switchComparison.currentUpdateObserver = {
+      available: currentUpdateObserver.available,
+      installErrorName: currentUpdateObserver.installErrorName,
+      entityCollectionCount: uniqueEntityCollections.length,
+      requirement:
+        'each switch waits for the existing DataSourceDisplay.update result true, bound to unchanged public EntityCollection contents, data-source ownership revision, exact collection identities, and that completed frame; no extra update calls',
+    };
+    if (!currentUpdateObserver.available)
+      throw new Error('Current update readiness proof could not be installed.');
+    publish();
+
+    for (let cycle = 1; cycle <= lifecycleCycles; cycle++) {
+      const flatFirst = cycle % 2 === 0;
+      const expectedStart = flatFirst ? 'qa-terrain-relief' : 'qa-terrain-flat';
+      const row = {
+        cycle,
+        status: 'running',
+        order: flatFirst ? 'flat-relief' : 'relief-flat',
+        warmStart: null,
+        switches: [],
+      };
+      report.cycles.push(row);
+      publish();
+      if (controller.getActiveId() !== expectedStart) {
+        row.warmStart = await runStackSwitch(
+          expectedStart,
+          `cycle-${cycle}-counterbalance-setup`,
+          false,
+        );
+        if (row.warmStart.status !== 'ready')
+          throw new Error(
+            `Cycle ${cycle} counterbalance setup did not settle.`,
+          );
+      }
+      const targets = flatFirst
+        ? ['qa-terrain-flat', 'qa-terrain-relief']
+        : ['qa-terrain-relief', 'qa-terrain-flat'];
+      for (const targetStackId of targets) {
+        const result = await runStackSwitch(
+          targetStackId,
+          `cycle-${cycle}-${targetStackId === 'qa-terrain-flat' ? 'flat' : 'relief'}`,
+          true,
+        );
+        row.switches.push(result);
+        if (targetStackId === 'qa-terrain-relief') {
+          row.relief = result.sceneReadinessEvidence;
+          row.reliefSnapshot = result.afterReady;
+          if (
+            row.reliefSnapshot.scene.terrainProviderKind !==
+            'CustomHeightmapTerrainProvider'
+          )
+            throw new Error(
+              `Cycle ${cycle} did not install local relief terrain.`,
+            );
+        } else {
+          row.flat = result.sceneReadinessEvidence;
+          row.flatSnapshot = result.afterReady;
+          if (!boundsMatch(row.flatSnapshot, baseline))
+            throw new Error(
+              `Cycle ${cycle} did not return to warmed ownership baseline.`,
+            );
+        }
+      }
+      row.status = 'passed';
+      publish();
+    }
+    report.switchComparison.status = 'passed';
+    report.switchComparison.currentUpdateObserver =
+      finalizeTerrainCurrentUpdateObservation(
+        currentUpdateObserver,
+        report.switchComparison.currentUpdateObserver,
+      );
+    if (!report.switchComparison.currentUpdateObserver.cleanupConfirmed)
+      throw new Error('Current update observer cleanup was not confirmed.');
+
+    report.phase = 'stale-terrain-provider-replacement';
+    publish();
+    const delayedStarted = waitFor(
+      () => terrainCalls.delayed > 0,
+      lifecycleDrainMs,
+      'delayed terrain factory',
+    ).catch((error) => {
+      throw error;
+    });
+    const staleSwitch = controller.setStack('qa-terrain-delayed');
+    await delayedStarted;
+    const replacement = controller.setStack('qa-terrain-relief');
+    await replacement;
+    await waitForScene('stale-terrain-replacement');
+    const providerBeforeLate = viewer.terrainProvider;
+    delayed.resolve({ provider: new Cesium.EllipsoidTerrainProvider() });
+    await staleSwitch;
+    if (
+      viewer.terrainProvider !== providerBeforeLate ||
+      controller.getActiveId() !== 'qa-terrain-relief'
+    )
+      throw new Error(
+        'A stale local terrain completion replaced the selected map.',
+      );
+    report.staleTerrainReplacement = {
+      status: 'passed',
+      delayedSignalAborted: terrainCalls.delayedSignal?.aborted === true,
+      selectedStack: controller.getActiveId(),
+      installedProviderKind: viewer.terrainProvider?.constructor?.name || null,
+    };
+    publish();
+
+    report.phase = 'cable-disable-reenable-stale-pick';
+    publish();
+    const staleEntity = currentPick?.id;
+    const nativeScenePick = viewer.scene.pick.bind(viewer.scene);
+    const selectionRows = [];
+    let retiredEntity = staleEntity;
+    for (let cycle = 1; cycle <= 3; cycle++) {
+      cableLayer.disable();
+      if (
+        viewer.dataSources.length !== 0 ||
+        cableLayer.getPerformanceDiagnostics().dataSources !== 0
+      )
+        throw new Error(
+          `Cable disable ${cycle} did not release Cesium data sources.`,
+        );
+      const beforeStaleClick = cameraFlights;
+      viewer.scene.pick = () => ({ id: retiredEntity });
+      handler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+        position: center,
+      });
+      if (cameraFlights !== beforeStaleClick)
+        throw new Error(
+          `Retired pick ${cycle} triggered camera selection while disabled.`,
+        );
+      viewer.scene.pick = nativeScenePick;
+      cableLayer.enable(viewer);
+      await waitFor(
+        () =>
+          !cableLayer.getStats().loading && cableLayer.getStats().count === 2,
+        lifecycleDrainMs,
+        `cable re-enable ${cycle}`,
+      );
+      await waitForScene(`cable-reenabled-${cycle}`);
+      const activeEntity = viewer.scene.pick(center)?.id;
+      if (!activeEntity || activeEntity === retiredEntity)
+        throw new Error(
+          `Re-enable ${cycle} did not produce a fresh Cesium pick target.`,
+        );
+      const beforeCurrentClick = cameraFlights;
+      handler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+        position: center,
+      });
+      if (cameraFlights !== beforeCurrentClick + 1)
+        throw new Error(
+          `Current pick ${cycle} did not select its active cable entity.`,
+        );
+      resetFixtureCamera(viewer);
+      await waitForScene(`selection-camera-reset-${cycle}`);
+      const beforeRetiredClick = cameraFlights;
+      viewer.scene.pick = () => ({ id: retiredEntity });
+      handler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+        position: center,
+      });
+      if (cameraFlights !== beforeRetiredClick)
+        throw new Error(`Retired pick ${cycle} was accepted after re-enable.`);
+      viewer.scene.pick = nativeScenePick;
+      selectionRows.push({
+        cycle,
+        retiredEntityId: String(retiredEntity?.id || '').slice(0, 120),
+        activeEntityId: String(activeEntity.id || '').slice(0, 120),
+        activePickSelected: true,
+        retiredPickRejected: true,
+      });
+      publish();
+      retiredEntity = activeEntity;
+    }
+    report.selectionLifecycle = {
+      status: 'passed',
+      sourceFetches: cableFetches,
+      completedReenablePicks: selectionRows.length,
+      stalePickAccepted: false,
+      cameraFlights,
+      cycles: selectionRows,
+    };
+    publish();
+
+    report.phase = 'streamed-tiles-lifecycle';
+    report.streamedTiles.status = 'running';
+    publish();
+    await switchStreamedTarget('qa-terrain-flat', 'streamed-tile-flat-warmup');
+    report.streamedTiles.warmup = streamedMapSnapshot();
+
+    // Hold the first factory completion behind a real superseding stack switch.
+    // The late factory returns the actual HTTP-backed Cesium tileset but its
+    // stale generation must not attach it to the scene.
+    streamedTiles.deferNextFactory = true;
+    const staleFactoryStartedAt = performance.now();
+    const staleFactorySwitch = controller.setStack(STREAMED_TILE_STACK);
+    await waitFor(
+      () => streamedTiles.factoryStarted,
+      lifecycleDrainMs,
+      'streamed tileset factory start',
+    );
+    const staleGeneration = controller.getSwitchGeneration();
+    const staleFactorySupersedingSwitch =
+      await controller.setStack('qa-terrain-flat');
+    if (staleFactorySupersedingSwitch.activeId !== 'qa-terrain-flat')
+      throw new Error(
+        'Streamed tileset factory supersession did not settle flat.',
+      );
+    await waitForScene('streamed-tile-factory-superseded-flat');
+    const supersedingGeneration = controller.getSwitchGeneration();
+    streamedTiles.factoryGate.resolve();
+    const staleFactoryResult = await staleFactorySwitch;
+    const afterLateFactory = streamedMapSnapshot();
+    if (
+      staleFactoryResult.activeId !== 'qa-terrain-flat' ||
+      afterLateFactory.activeStackId !== 'qa-terrain-flat' ||
+      afterLateFactory.tile.attachedToScene !== false
+    )
+      throw new Error(
+        'A superseded streamed tileset factory replaced the active flat stack.',
+      );
+    report.streamedTiles.supersededFactory = {
+      status: 'passed',
+      elapsedMs: performance.now() - staleFactoryStartedAt,
+      staleGeneration,
+      supersedingGeneration,
+      factoryCalls: streamedTiles.factoryCalls,
+      signalAborted: streamedTiles.factorySignal?.aborted === true,
+      factoryResolvedWhileFlatActive: true,
+      sceneAttachmentAfterLateResolution: false,
+      unattachedTilesetShowValue: afterLateFactory.tile.show,
+      activeStackAfterLateResolution: controller.getActiveId(),
+      httpCheckpointBeforeTileActivation:
+        typeof window.__s57CaptureTileRequestCheckpoint === 'function'
+          ? await window.__s57CaptureTileRequestCheckpoint()
+          : null,
+    };
+    publish();
+
+    // A real Cesium content request is paused at Fetch after Network has seen
+    // it. The harness supersedes the stack, observes browser cancellation, then
+    // reactivates the tileset to witness retry delivery and cache ownership.
+    window.__s57SupersedeStreamedContentRequest = async () => {
+      const activeAtPause = controller.getActiveId();
+      if (activeAtPause !== STREAMED_TILE_STACK)
+        throw new Error('Tile content paused outside its active stack.');
+      const switched = await switchStreamedTarget(
+        'qa-terrain-flat',
+        'streamed-tile-content-superseded-flat',
+      );
+      const tileAtDelivery = streamedTiles.snapshot(viewer, controller);
+      const passed =
+        switched.status === 'ready' &&
+        tileAtDelivery.activeStackId === 'qa-terrain-flat' &&
+        tileAtDelivery.show === false;
+      report.streamedTiles.supersededContent = {
+        status: passed ? 'passed' : 'failed',
+        observedPausedContentPath: '/qa/s57-streaming/tile.glb',
+        activeStackAtPause: activeAtPause,
+        activeStackAfterSupersession: controller.getActiveId(),
+        tileSetHiddenAtCancellation: tileAtDelivery.show === false,
+        setStackElapsedMs: switched.setStackElapsedMs,
+        flatReadinessElapsedMs: switched.readinessElapsedMs,
+        tileObjectId: tileAtDelivery.objectId,
+        browserAtPause: window.__s57StreamedTilePauseEvidence?.browser || null,
+        serverAtPause: window.__s57StreamedTilePauseEvidence?.server || null,
+      };
+      publish();
+      return {
+        status: report.streamedTiles.supersededContent.status,
+        activeStackAfterSupersession: controller.getActiveId(),
+        tileSetHiddenAtCancellation: tileAtDelivery.show === false,
+        browserAtPause: window.__s57StreamedTilePauseEvidence?.browser || null,
+        serverAtPause: window.__s57StreamedTilePauseEvidence?.server || null,
+      };
+    };
+
+    const pendingContentActivationStartedAt = performance.now();
+    const pendingContentActivation =
+      await controller.setStack(STREAMED_TILE_STACK);
+    report.streamedTiles.pendingContentActivation = {
+      status:
+        pendingContentActivation?.activeId === STREAMED_TILE_STACK
+          ? 'activated-pending-content'
+          : 'failed',
+      setStackElapsedMs: performance.now() - pendingContentActivationStartedAt,
+      activeStackId: controller.getActiveId(),
+      tile: streamedTiles.snapshot(viewer, controller),
+    };
+    if (
+      report.streamedTiles.pendingContentActivation.status !==
+      'activated-pending-content'
+    )
+      throw new Error(
+        'Streamed tile content request did not activate its source.',
+      );
+    publish();
+    await waitFor(
+      () => report.streamedTiles.supersededContent?.status === 'passed',
+      lifecycleDrainMs,
+      'streamed tile content supersession',
+    );
+    if (typeof window.__s57WaitForSupersededTileCancellation !== 'function')
+      throw new Error(
+        'Streamed tile supersession cancellation observer is unavailable.',
+      );
+    const cancellation = await window.__s57WaitForSupersededTileCancellation();
+    const cancellationOwner = controller.getActiveId();
+    const cancellationTileShow = streamedTiles.tileset?.show ?? null;
+    report.streamedTiles.supersededContent.cancellation = {
+      ...cancellation,
+      activeStackId: cancellationOwner,
+      tileSetShow: cancellationTileShow,
+    };
+    const canceledRequest = cancellation?.request;
+    if (
+      cancellation?.status !== 'cancellation-observed' ||
+      canceledRequest?.failure !== true ||
+      canceledRequest.failureClass !== 'cancellation' ||
+      !['ERR_ABORTED', 'ERR_CANCELED'].includes(canceledRequest.failureCode) ||
+      cancellationOwner !== 'qa-terrain-flat' ||
+      cancellationTileShow !== false ||
+      cancellation.server?.counts?.content?.requests !== 0
+    )
+      throw new Error(
+        'Superseded streamed tile request did not cancel while flat remained the owner.',
+      );
+    delete window.__s57SupersedeStreamedContentRequest;
+    publish();
+
+    // The canceled first request must be replaced by an actual network
+    // delivery when the cached tileset is activated again.
+    const firstTilesetActivation = await switchStreamedTarget(
+      STREAMED_TILE_STACK,
+      'streamed-tile-first-visible-activation',
+    );
+    report.streamedTiles.firstVisibleActivation = firstTilesetActivation;
+    if (typeof window.__s57WaitForStreamedTileContent !== 'function')
+      throw new Error('Streamed tile HTTP completion observer is unavailable.');
+    report.streamedTiles.supersededContent.delivery =
+      await window.__s57WaitForStreamedTileContent();
+    if (
+      controller.getActiveId() !== STREAMED_TILE_STACK ||
+      streamedTiles.tileset?.show !== true
+    )
+      throw new Error(
+        'Reactivated tile content did not remain owned by the streamed tile stack.',
+      );
+    publish();
+
+    // Re-activate the same cached object, then counterbalance five warmed
+    // flat/tiles pairs. Network observations remain separate from the
+    // controller's cache/object-reuse counters.
+    report.streamedTiles.warmCacheState = streamedMapSnapshot();
+    report.streamedTiles.postWarmReturn = await switchStreamedTarget(
+      'qa-terrain-flat',
+      'streamed-tile-post-warm-flat',
+    );
+    for (let cycle = 1; cycle <= lifecycleCycles; cycle++) {
+      const tilesFirst = cycle % 2 === 0;
+      const firstTarget = tilesFirst ? STREAMED_TILE_STACK : 'qa-terrain-flat';
+      const secondTarget = tilesFirst ? 'qa-terrain-flat' : STREAMED_TILE_STACK;
+      const warmStart =
+        controller.getActiveId() === firstTarget
+          ? null
+          : await switchStreamedTarget(
+              firstTarget,
+              `streamed-tile-cycle-${cycle}-warm-start`,
+            );
+      const row = {
+        cycle,
+        order: tilesFirst ? 'tiles-flat-tiles' : 'flat-tiles-flat',
+        warmStart,
+        switches: [],
+        status: 'running',
+      };
+      report.streamedTiles.cycles.push(row);
+      row.switches.push(
+        await switchStreamedTarget(
+          secondTarget,
+          `streamed-tile-cycle-${cycle}-first`,
+        ),
+      );
+      row.switches.push(
+        await switchStreamedTarget(
+          firstTarget,
+          `streamed-tile-cycle-${cycle}-second`,
+        ),
+      );
+      row.status = 'passed';
+      publish();
+    }
+    const finalStreamed = streamedMapSnapshot();
+    if (
+      finalStreamed.activeStackId !== 'qa-terrain-flat' ||
+      finalStreamed.tile.factoryCalls !== 1 ||
+      finalStreamed.tile.objectId !== 1 ||
+      finalStreamed.tile.failureCount !== 0
+    )
+      throw new Error(
+        'Streamed tile cache or final owner evidence is invalid.',
+      );
+    report.streamedTiles.final = finalStreamed;
+    report.streamedTiles.eventRows = streamedTiles.eventRows.slice(0, 32);
+    report.streamedTiles.eventOverflowCount = streamedTiles.eventOverflowCount;
+    report.streamedTiles.status = 'passed';
+    publish();
+
+    report.phase = 'destroy-late-terrain-provider';
+    publish();
+    // Exercise destruction while a local terrain factory is pending. The
+    // replacement controller is not attached to the viewer after this point.
+    const late = deferred();
+    const destroyController = createMapController(
+      viewer,
+      new EventTarget(),
+      terrainCalls,
+      late,
+    );
+    const destroyPending = destroyController.setStack('qa-terrain-delayed');
+    await waitFor(
+      () => terrainCalls.delayed > 1,
+      lifecycleDrainMs,
+      'destroy late terrain factory',
+    );
+    destroyController.destroy();
+    const lateProvider = new Cesium.EllipsoidTerrainProvider();
+    let disposalHookCalls = 0;
+    // EllipsoidTerrainProvider has no destroy() contract in this Cesium build.
+    // A fixture-owned hook records the controller's disposal call without
+    // claiming native terrain resource reclamation.
+    lateProvider.destroy = () => {
+      disposalHookCalls++;
+    };
+    report.destroyLateTerrain = {
+      status: 'running',
+      signalAborted: terrainCalls.delayedSignal?.aborted === true,
+      fixtureOwnedDisposalHookCalledOnce: false,
+      disposalHookCalls,
+      disposalScope:
+        'fixture-owned hook only; this Cesium EllipsoidTerrainProvider has no native destroy method',
+    };
+    publish();
+    late.resolve({ provider: lateProvider });
+    await destroyPending;
+    report.destroyLateTerrain.disposalHookCalls = disposalHookCalls;
+    report.destroyLateTerrain.fixtureOwnedDisposalHookCalledOnce =
+      disposalHookCalls === 1;
+    publish();
+    await waitFor(
+      () => disposalHookCalls === 1,
+      lifecycleDrainMs,
+      'late terrain provider disposal hook',
+    );
+    if (disposalHookCalls !== 1)
+      throw new Error(
+        'Late provider fixture-owned disposal hook did not run exactly once.',
+      );
+    report.destroyLateTerrain.status = 'passed';
+    publish();
+
+    report.phase = 'destroy-layer-and-map-controller';
+    publish();
+    cableLayer.destroy(viewer);
+    controller.destroy();
+    const final = diagnosticSnapshot(viewer, controller, cableLayer);
+    if (
+      final.cables.listeners !== 0 ||
+      final.cables.pendingJobs !== 0 ||
+      final.cables.dataSources !== 0 ||
+      final.cables.cacheEntries !== 0 ||
+      final.map.pendingJobs !== 0 ||
+      final.map.cacheEntries !== 0 ||
+      final.map.imageryLayers !== 0 ||
+      viewer.dataSources.length !== 0
+    )
+      throw new Error(
+        'Final fixture cleanup did not return owned resources to zero.',
+      );
+    report.cleanup = { status: 'passed', final };
+    report.status = 'passed';
+  } catch (error) {
+    report.status = 'failed';
+    report.failedPhase = report.phase || 'initialization';
+    report.error = String(error?.message || error)
+      .replace(/https?:\/\/[^\s]+/g, '[url]')
+      .slice(0, 500);
+    report.errorDetails = boundedErrorDetails(error);
+    report.failureEvidence = {
+      phase: report.failedPhase,
+      sceneHistory: Array.isArray(error?.sceneHistory)
+        ? error.sceneHistory.slice(-32)
+        : [],
+      currentObservation: report.currentObservation || null,
+      snapshot:
+        viewer && controller && cableLayer
+          ? (() => {
+              try {
+                return diagnosticSnapshot(viewer, controller, cableLayer);
+              } catch {
+                return null;
+              }
+            })()
+          : null,
+    };
+  } finally {
+    report.phase = report.phase || 'cleanup';
+    streamedTiles.factoryGate.resolve();
+    delete window.__s57SupersedeStreamedContentRequest;
+    delete window.__s57StreamedTilePauseEvidence;
+    const streamedTileListenerCleanup = streamedTiles.cleanup();
+    if (
+      report.streamedTiles.status === 'passed' &&
+      !streamedTileListenerCleanup.cleanupConfirmed
+    ) {
+      report.status = 'failed';
+      report.failedPhase ||= 'streamed-tile-listener-cleanup';
+      report.error ||= 'Streamed tile listener cleanup was not confirmed.';
+      report.streamedTiles.status = 'failed';
+    }
+    report.streamedTiles.cleanup = streamedTileListenerCleanup;
+    if (currentUpdateObserver) {
+      report.switchComparison.currentUpdateObserver =
+        finalizeTerrainCurrentUpdateObservation(
+          currentUpdateObserver,
+          report.switchComparison.currentUpdateObserver,
+        );
+      if (!report.switchComparison.currentUpdateObserver.cleanupConfirmed) {
+        report.status = 'failed';
+        report.failedPhase ||= 'current-update-observer-cleanup';
+        report.error ||= 'Current update observer ownership was not restored.';
+      }
+    }
+    try {
+      cableLayer?.destroy(viewer);
+    } catch {}
+    try {
+      controller?.destroy();
+    } catch {}
+    report.streamedTiles.controllerDestroyedTileset =
+      streamedTiles.tileset?.isDestroyed?.() === true;
+    try {
+      postRenderRemove?.();
+    } catch {}
+    const beforeDestroy =
+      viewer && !viewer.isDestroyed() ? viewer.dataSources.length : null;
+    try {
+      if (viewer && !viewer.isDestroyed()) viewer.destroy();
+    } catch (error) {
+      report.cleanup = {
+        ...(report.cleanup || {}),
+        viewerDestroyError: String(error?.message || error).slice(0, 250),
+      };
+    }
+    report.cleanup = {
+      ...(report.cleanup || {}),
+      status:
+        report.status === 'passed' && !report.cleanup?.viewerDestroyError
+          ? 'passed'
+          : 'failed',
+      viewerDestroyed: !viewer || viewer.isDestroyed(),
+      dataSourcesBeforeViewerDestroy: beforeDestroy,
+      pageErrors: [],
+    };
+  }
+  publish();
+  RESULT.textContent = JSON.stringify(report, null, 2);
+  STATUS.textContent = report.status;
+  return report;
+}
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
+RUN.addEventListener('click', async () => {
+  RUN.disabled = true;
+  STATUS.textContent = 'running';
+  try {
+    await runFixture();
+  } finally {
+    RUN.disabled = false;
+  }
+});
+window.runTerrainPickingLifecycleFixture = runFixture;

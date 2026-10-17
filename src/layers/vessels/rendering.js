@@ -204,6 +204,16 @@ export function createRendering({
   }
 
   function updateVisibility(force = false) {
+    try {
+      const result = updateVisibilityPass(force);
+      if (force) services.render?.governorRequestRender?.('ais-vessels-update');
+      return result;
+    } finally {
+      components.lifecycle.syncPeriodicRenderDemand();
+    }
+  }
+
+  function updateVisibilityPass(force = false) {
     if (!state.feed.enabled) return;
     const now = focusNowMs(performance.now());
     const focusTarget = getFocusTarget();
@@ -218,7 +228,10 @@ export function createRendering({
     if (!state.records.all.length) {
       // No records — flush any lingering card entries (vanished-feed case).
       if (regularPass) updateClusteredLabels([]);
-      if (focusPass) state.activeFocusCount = 0;
+      if (focusPass) {
+        state.activeFocusCount = 0;
+        state.focusTransitioning = false;
+      }
       return;
     }
 
@@ -272,6 +285,7 @@ export function createRendering({
           Cesium.Cartesian3.distance(camera.positionWC, position),
       });
       state.activeFocusCount = result.activeCount;
+      state.focusTransitioning = result.transitioning;
     }
   }
 
@@ -317,7 +331,14 @@ export function createRendering({
       });
       transitioning ||= focus.transitioning;
       if (focus.active) activeCount += 1;
-      if (focusAlphaNeedsWrite(bb.color?.alpha, focus.factor, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          bb.color?.alpha,
+          focus.factor,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Narrow always-visible amendment: the ship chevron remains present at
         // the non-zero floor while it competes with the tracked target. Preserve
         // the billboard's existing base RGB, matching the other layer patterns,
@@ -495,6 +516,7 @@ export function createRendering({
       state.billboardCollection.show = show;
     }
     vesselState._vesselOverlayHost.setVisible(VESSEL_OVERLAY_SOURCE_ID, show);
+    services.render?.governorRequestRender?.('ais-vessels-visibility');
   }
   return {
     getVisual,

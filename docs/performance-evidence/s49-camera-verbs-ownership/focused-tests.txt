@@ -1,0 +1,1090 @@
+TAP version 13
+# Subtest: importing and constructing the package is inactive without browser globals
+ok 1 - importing and constructing the package is inactive without browser globals
+  ---
+  duration_ms: 108.0091
+  type: 'test'
+  ...
+# Subtest: constructors are validated before allocating anything
+ok 2 - constructors are validated before allocating anything
+  ---
+  duration_ms: 1.3597
+  type: 'test'
+  ...
+# Subtest: startup shares one promise and teardown keeps data alive for controls
+ok 3 - startup shares one promise and teardown keeps data alive for controls
+  ---
+  duration_ms: 3.0528
+  type: 'test'
+  ...
+# Subtest: failure during Scene releases partially acquired resources
+ok 4 - failure during Scene releases partially acquired resources
+  ---
+  duration_ms: 1.0337
+  type: 'test'
+  ...
+# Subtest: failure during Controls releases partially acquired resources
+ok 5 - failure during Controls releases partially acquired resources
+  ---
+  duration_ms: 0.8594
+  type: 'test'
+  ...
+# Subtest: failure during Data releases partially acquired resources
+ok 6 - failure during Data releases partially acquired resources
+  ---
+  duration_ms: 0.8461
+  type: 'test'
+  ...
+# Subtest: failure during Tools releases partially acquired resources
+ok 7 - failure during Tools releases partially acquired resources
+  ---
+  duration_ms: 0.797
+  type: 'test'
+  ...
+# Subtest: destroy before startup prevents every constructor
+ok 8 - destroy before startup prevents every constructor
+  ---
+  duration_ms: 0.9283
+  type: 'test'
+  ...
+# Subtest: destroy aborts an in-flight constructor and cleans late acquisitions before resolving
+ok 9 - destroy aborts an in-flight constructor and cleans late acquisitions before resolving
+  ---
+  duration_ms: 1.1009
+  type: 'test'
+  ...
+# Subtest: cleanup errors are reported after all remaining resources are attempted
+ok 10 - cleanup errors are reported after all remaining resources are attempted
+  ---
+  duration_ms: 1.0859
+  type: 'test'
+  ...
+# Subtest: subscribers can destroy during startup without allowing the next constructor
+ok 11 - subscribers can destroy during startup without allowing the next constructor
+  ---
+  duration_ms: 0.6292
+  type: 'test'
+  ...
+# Subtest: destroy during ready notification rejects startup and tears everything down
+ok 12 - destroy during ready notification rejects startup and tears everything down
+  ---
+  duration_ms: 0.6218
+  type: 'test'
+  ...
+# Subtest: cleanup registration closes when a constructor settles
+ok 13 - cleanup registration closes when a constructor settles
+  ---
+  duration_ms: 0.5453
+  type: 'test'
+  ...
+# Subtest: different application instances do not share lifecycle state
+ok 14 - different application instances do not share lifecycle state
+  ---
+  duration_ms: 0.6142
+  type: 'test'
+  ...
+# Subtest: the separate viewer export imports without constructing a browser viewer
+ok 15 - the separate viewer export imports without constructing a browser viewer
+  ---
+  duration_ms: 2.1407
+  type: 'test'
+  ...
+# Subtest: trackpad pinch adds the Ctrl+wheel binding without replacing Cesium inputs
+ok 16 - trackpad pinch adds the Ctrl+wheel binding without replacing Cesium inputs
+  ---
+  duration_ms: 1.2676
+  type: 'test'
+  ...
+# Subtest: trackpad pinch relays pixel deltas once with bounded amplification
+ok 17 - trackpad pinch relays pixel deltas once with bounded amplification
+  ---
+  duration_ms: 0.4773
+  type: 'test'
+  ...
+# Subtest: trackpad pinch falls back to the original event when relay construction fails
+ok 18 - trackpad pinch falls back to the original event when relay construction fails
+  ---
+  duration_ms: 0.3161
+  type: 'test'
+  ...
+# Subtest: Cockpit takeover invalidates deferred work before camera cancellation
+ok 19 - Cockpit takeover invalidates deferred work before camera cancellation
+  ---
+  duration_ms: 2.8756
+  type: 'test'
+  ...
+# Subtest: one explicit tracking selection clears sibling IDs before publishing its durable replacement
+ok 20 - one explicit tracking selection clears sibling IDs before publishing its durable replacement
+  ---
+  duration_ms: 0.856
+  type: 'test'
+  ...
+# Subtest: navigation clears dormant tracker IDs without aborting unrelated layer restoration
+ok 21 - navigation clears dormant tracker IDs without aborting unrelated layer restoration
+  ---
+  duration_ms: 0.7565
+  type: 'test'
+  ...
+# Subtest: voice Cockpit entry reaches the camera only through stamping seams
+ok 22 - voice Cockpit entry reaches the camera only through stamping seams
+  ---
+  duration_ms: 1.6882
+  type: 'test'
+  ...
+# Subtest: voice Cockpit next/previous shares the manual Context navigation path
+ok 23 - voice Cockpit next/previous shares the manual Context navigation path
+  ---
+  duration_ms: 0.9782
+  type: 'test'
+  ...
+# Subtest: accepted navigation releases through PR15-aware ownership before flight
+ok 24 - accepted navigation releases through PR15-aware ownership before flight
+  ---
+  duration_ms: 0.5606
+  type: 'test'
+  ...
+# Subtest: validated voice camera destinations share the UI navigation authority facade
+ok 25 - validated voice camera destinations share the UI navigation authority facade
+  ---
+  duration_ms: 2.0343
+  type: 'test'
+  ...
+# Subtest: deferred search releases only after its final authority check
+ok 26 - deferred search releases only after its final authority check
+  ---
+  duration_ms: 1.0123
+  type: 'test'
+  ...
+# Subtest: a direct globe gesture retires delayed camera and selection restore only
+ok 27 - a direct globe gesture retires delayed camera and selection restore only
+  ---
+  duration_ms: 0.7017
+  type: 'test'
+  ...
+# Subtest: newer navigation, reset, Cockpit, and teardown share one generation
+ok 28 - newer navigation, reset, Cockpit, and teardown share one generation
+  ---
+  duration_ms: 1.15
+  type: 'test'
+  ...
+# Subtest: teardown synchronously closes immediate camera entry points
+ok 29 - teardown synchronously closes immediate camera entry points
+  ---
+  duration_ms: 0.4837
+  type: 'test'
+  ...
+# Subtest: teardown refuses deferred location work before geocoding begins
+ok 30 - teardown refuses deferred location work before geocoding begins
+  ---
+  duration_ms: 0.4299
+  type: 'test'
+  ...
+# Subtest: refused canned destinations commit no location or POI state
+ok 31 - refused canned destinations commit no location or POI state
+  ---
+  duration_ms: 0.2094
+  type: 'test'
+  ...
+# Subtest: world-focus listener lifecycle is symmetric and idempotent
+ok 32 - world-focus listener lifecycle is symmetric and idempotent
+  ---
+  duration_ms: 0.4529
+  type: 'test'
+  ...
+# Subtest: vessel and fire layers announce valid clicks and never fly cameras
+ok 33 - vessel and fire layers announce valid clicks and never fly cameras
+  ---
+  duration_ms: 0.7194
+  type: 'test'
+  ...
+# Subtest: shared callers reuse one viewer registration and owner teardown stops motion
+ok 34 - shared callers reuse one viewer registration and owner teardown stops motion
+  ---
+  duration_ms: 5.2906
+  type: 'test'
+  ...
+# Subtest: replacement clears old motion and stale owner callbacks cannot affect the new viewer
+ok 35 - replacement clears old motion and stale owner callbacks cannot affect the new viewer
+  ---
+  duration_ms: 0.7719
+  type: 'test'
+  ...
+# Subtest: retired callbacks stay inert when the same viewer is reinitialized
+ok 36 - retired callbacks stay inert when the same viewer is reinitialized
+  ---
+  duration_ms: 2.3165
+  type: 'test'
+  ...
+# Subtest: disposed viewers reject deferred camera starts and routes
+ok 37 - disposed viewers reject deferred camera starts and routes
+  ---
+  duration_ms: 0.5766
+  type: 'test'
+  ...
+# Subtest: application consumers share camera verbs until the scene owner stops them
+ok 38 - application consumers share camera verbs until the scene owner stops them
+  ---
+  duration_ms: 3.5375
+  type: 'test'
+  ...
+# Subtest: scene viewer cleanup destroys the viewer even when camera listener removal fails
+ok 39 - scene viewer cleanup destroys the viewer even when camera listener removal fails
+  ---
+  duration_ms: 1.3969
+  type: 'test'
+  ...
+# Subtest: install with zero holds enters idle mode and pins maximumRenderTimeChange
+ok 40 - install with zero holds enters idle mode and pins maximumRenderTimeChange
+  ---
+  duration_ms: 3.0137
+  type: 'test'
+  ...
+# Subtest: a hold flips to continuous; releasing the last hold returns to idle with a settling frame
+ok 41 - a hold flips to continuous; releasing the last hold returns to idle with a settling frame
+  ---
+  duration_ms: 0.6713
+  type: 'test'
+  ...
+# Subtest: holds are identity-keyed: double-hold cannot leak, double-release cannot corrupt
+ok 42 - holds are identity-keyed: double-hold cannot leak, double-release cannot corrupt
+  ---
+  duration_ms: 0.5591
+  type: 'test'
+  ...
+# Subtest: mode stays continuous until the LAST holder releases
+ok 43 - mode stays continuous until the LAST holder releases
+  ---
+  duration_ms: 1.7094
+  type: 'test'
+  ...
+# Subtest: governorRequestRender forwards to the scene and records reasons only in idle mode
+ok 44 - governorRequestRender forwards to the scene and records reasons only in idle mode
+  ---
+  duration_ms: 0.8747
+  type: 'test'
+  ...
+# Subtest: hold/release/request are safe no-ops before install (test environments without a viewer)
+ok 45 - hold/release/request are safe no-ops before install (test environments without a viewer)
+  ---
+  duration_ms: 0.5089
+  type: 'test'
+  ...
+# Subtest: holds registered before install apply at install time
+ok 46 - holds registered before install apply at install time
+  ---
+  duration_ms: 0.4285
+  type: 'test'
+  ...
+# Subtest: scheduled updates coalesce by owner and dispose cleanly
+ok 47 - scheduled updates coalesce by owner and dispose cleanly
+  ---
+  duration_ms: 51.2957
+  type: 'test'
+  ...
+# Subtest: independent deadlines neither wake periodic owners early nor delay urgent updates
+ok 48 - independent deadlines neither wake periodic owners early nor delay urgent updates
+  ---
+  duration_ms: 4.8487
+  type: 'test'
+  ...
+# Subtest: disposable owners preserve independent lifetimes and reject stale callbacks
+ok 49 - disposable owners preserve independent lifetimes and reject stale callbacks
+  ---
+  duration_ms: 1.2978
+  type: 'test'
+  ...
+# Subtest: cancellation during a due callback prevents another due owner from running
+ok 50 - cancellation during a due callback prevents another due owner from running
+  ---
+  duration_ms: 0.7539
+  type: 'test'
+  ...
+# Subtest: the speed profile eases in and out with no step anywhere
+ok 51 - the speed profile eases in and out with no step anywhere
+  ---
+  duration_ms: 112.2722
+  type: 'test'
+  ...
+# Subtest: easing preserves the shipped pace — mean speed is still the speed word
+ok 52 - easing preserves the shipped pace — mean speed is still the speed word
+  ---
+  duration_ms: 154.0368
+  type: 'test'
+  ...
+# Subtest: routeSpeedProfile is continuous, normalized, and zero at both ends
+ok 53 - routeSpeedProfile is continuous, normalized, and zero at both ends
+  ---
+  duration_ms: 1.0248
+  type: 'test'
+  ...
+# Subtest: turns bank into the corner, capped, and roll in and out smoothly
+ok 54 - turns bank into the corner, capped, and roll in and out smoothly
+  ---
+  duration_ms: 24.3357
+  type: 'test'
+  ...
+# Subtest: a straight route never banks
+ok 55 - a straight route never banks
+  ---
+  duration_ms: 79.2287
+  type: 'test'
+  ...
+# Subtest: a hairpin saturates the cap without exceeding it
+ok 56 - a hairpin saturates the cap without exceeding it
+  ---
+  duration_ms: 37.2843
+  type: 'test'
+  ...
+# Subtest: the banked up vector is a roll about the camera forward axis, not a skew
+ok 57 - the banked up vector is a roll about the camera forward axis, not a skew
+  ---
+  duration_ms: 44.8694
+  type: 'test'
+  ...
+# Subtest: altitude breathes around the requested mean and rises into turns
+ok 58 - altitude breathes around the requested mean and rises into turns
+  ---
+  duration_ms: 41.8984
+  type: 'test'
+  ...
+# Subtest: a rise is cleared BEFORE the camera reaches it, not as it arrives
+ok 59 - a rise is cleared BEFORE the camera reaches it, not as it arrives
+  ---
+  duration_ms: 58.7468
+  type: 'test'
+  ...
+# Subtest: a COLD corridor never descends blind — the seed holds until terrain lands
+ok 60 - a COLD corridor never descends blind — the seed holds until terrain lands
+  ---
+  duration_ms: 63.0027
+  type: 'test'
+  ...
+# Subtest: a cold route ARMS for terrain rather than racing the warm
+ok 61 - a cold route ARMS for terrain rather than racing the warm
+  ---
+  duration_ms: 28.0313
+  type: 'test'
+  ...
+# Subtest: the rendered mesh answers when the DEM never will — once, and only once
+ok 62 - the rendered mesh answers when the DEM never will — once, and only once
+  ---
+  duration_ms: 28.9284
+  type: 'test'
+  ...
+# Subtest: probeMeshFloorM reports COVERAGE, not just a height
+ok 63 - probeMeshFloorM reports COVERAGE, not just a height
+  ---
+  duration_ms: 1.4256
+  type: 'test'
+  ...
+# Subtest: a PARTIALLY warm corridor is unresolved, and probes only the cold cells
+ok 64 - a PARTIALLY warm corridor is unresolved, and probes only the cold cells
+  ---
+  duration_ms: 63.752
+  type: 'test'
+  ...
+# Subtest: floor data arriving mid-flight blends down, and never arriving holds
+ok 65 - floor data arriving mid-flight blends down, and never arriving holds
+  ---
+  duration_ms: 62.5201
+  type: 'test'
+  ...
+# Subtest: a flight warms its own corridor instead of waiting for contact traffic
+ok 66 - a flight warms its own corridor instead of waiting for contact traffic
+  ---
+  duration_ms: 4.2837
+  type: 'test'
+  ...
+# Subtest: the shaping floor is smoothed both ways, and the CLAMP reads the raw sample
+ok 67 - the shaping floor is smoothed both ways, and the CLAMP reads the raw sample
+  ---
+  duration_ms: 0.3579
+  type: 'test'
+  ...
+# Subtest: prefers-reduced-motion flattens the roll and the altitude shaping
+ok 68 - prefers-reduced-motion flattens the roll and the altitude shaping
+  ---
+  duration_ms: 29.0994
+  type: 'test'
+  ...
+# Subtest: the reduced-motion PREFERENCE reaches a real flight, not just the flag
+ok 69 - the reduced-motion PREFERENCE reaches a real flight, not just the flag
+  ---
+  duration_ms: 7.2156
+  type: 'test'
+  ...
+# Subtest: an exact U-turn reverses the heading instead of flying the return leg backwards
+ok 70 - an exact U-turn reverses the heading instead of flying the return leg backwards
+  ---
+  duration_ms: 72.7949
+  type: 'test'
+  ...
+# Subtest: signedTurnRad is deterministic at exactly 180°
+ok 71 - signedTurnRad is deterministic at exactly 180°
+  ---
+  duration_ms: 0.506
+  type: 'test'
+  ...
+# Subtest: approachValue is frame-rate independent and adopts a cold value
+ok 72 - approachValue is frame-rate independent and adopts a cold value
+  ---
+  duration_ms: 0.381
+  type: 'test'
+  ...
+# Subtest: an interrupt MID-BANK stops the dolly and puts the horizon back level
+ok 73 - an interrupt MID-BANK stops the dolly and puts the horizon back level
+  ---
+  duration_ms: 14.1344
+  type: 'test'
+  ...
+# Subtest: a completed dolly lands wings level and releases the slot
+ok 74 - a completed dolly lands wings level and releases the slot
+  ---
+  duration_ms: 14.0666
+  type: 'test'
+  ...
+# Subtest: a completed dolly lands on the last waypoint
+ok 75 - a completed dolly lands on the last waypoint
+  ---
+  duration_ms: 22.8592
+  type: 'test'
+  ...
+# Subtest: the 0.5 s duration floor is the one place the speed word is not the mean
+ok 76 - the 0.5 s duration floor is the one place the speed word is not the mean
+  ---
+  duration_ms: 0.2855
+  type: 'test'
+  ...
+# Subtest: a flight can be stopped by its owner, and only while it is still theirs
+ok 77 - a flight can be stopped by its owner, and only while it is still theirs
+  ---
+  duration_ms: 0.6132
+  type: 'test'
+  ...
+# Subtest: a new viewer lifetime drops the previous view-target getter
+ok 78 - a new viewer lifetime drops the previous view-target getter
+  ---
+  duration_ms: 0.778
+  type: 'test'
+  ...
+# Subtest: every live basemap is reachable by its own id — no enum value without a voice alias
+ok 79 - every live basemap is reachable by its own id — no enum value without a voice alias
+  ---
+  duration_ms: 3.622
+  type: 'test'
+  ...
+# Subtest: track_entity narration names aircraft callsign → registration → icao24
+ok 80 - track_entity narration names aircraft callsign → registration → icao24
+  ---
+  duration_ms: 0.4582
+  type: 'test'
+  ...
+# Subtest: track_entity runner narrates a callsign-less aircraft by its registration
+ok 81 - track_entity runner narrates a callsign-less aircraft by its registration
+  ---
+  duration_ms: 5.566
+  type: 'test'
+  ...
+# Subtest: zoom to globe adopts the shared visible reset route and returns its result
+ok 82 - zoom to globe adopts the shared visible reset route and returns its result
+  ---
+  duration_ms: 0.6125
+  type: 'test'
+  ...
+# Subtest: dependent voice navigation waits for the destination viewport to arrive
+ok 83 - dependent voice navigation waits for the destination viewport to arrive
+  ---
+  duration_ms: 2.8784
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+ok 84 - nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+  ---
+  duration_ms: 38.4275
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+ok 85 - nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+  ---
+  duration_ms: 3.9488
+  type: 'test'
+  ...
+# Subtest: fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+ok 86 - fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+  ---
+  duration_ms: 1.6279
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action rejects a missing destination without changing the map or layer
+ok 87 - nearest-aircraft voice action rejects a missing destination without changing the map or layer
+  ---
+  duration_ms: 0.4524
+  type: 'test'
+  ...
+# Subtest: successful voice tracking stamps and releases the old owner before layer takeover
+ok 88 - successful voice tracking stamps and releases the old owner before layer takeover
+  ---
+  duration_ms: 0.6778
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking clears all durable tracker IDs even without active trackers
+ok 89 - voice Stop Tracking clears all durable tracker IDs even without active trackers
+  ---
+  duration_ms: 0.7433
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking reports exact layers whose active or durable clear failed
+ok 90 - voice Stop Tracking reports exact layers whose active or durable clear failed
+  ---
+  duration_ms: 0.4501
+  type: 'test'
+  ...
+# Subtest: successful voice overhead framing stamps and releases the old owner before flight
+ok 91 - successful voice overhead framing stamps and releases the old owner before flight
+  ---
+  duration_ms: 1.4315
+  type: 'test'
+  ...
+# Subtest: tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+ok 92 - tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+  ---
+  duration_ms: 0.9449
+  type: 'test'
+  ...
+# Subtest: move_camera and fly_route validate first, then use the shared camera authority seam
+ok 93 - move_camera and fly_route validate first, then use the shared camera authority seam
+  ---
+  duration_ms: 57.0721
+  type: 'test'
+  ...
+# Subtest: a chained orbit preserves its current destination flight while still stamping authority
+ok 94 - a chained orbit preserves its current destination flight while still stamping authority
+  ---
+  duration_ms: 93.3167
+  type: 'test'
+  ...
+# Subtest: invalid named voice navigation never releases the current camera owner
+ok 95 - invalid named voice navigation never releases the current camera owner
+  ---
+  duration_ms: 1.2497
+  type: 'test'
+  ...
+# Subtest: Cockpit refuses every named voice camera route before camera or selection mutation
+ok 96 - Cockpit refuses every named voice camera route before camera or selection mutation
+  ---
+  duration_ms: 0.9047
+  type: 'test'
+  ...
+# Subtest: a newer voice action makes an older deferred navigation authority inert
+ok 97 - a newer voice action makes an older deferred navigation authority inert
+  ---
+  duration_ms: 0.3651
+  type: 'test'
+  ...
+# Subtest: Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+ok 98 - Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+  ---
+  duration_ms: 1.4432
+  type: 'test'
+  ...
+# Subtest: generic layer visibility forwards cancellation and reports semantic failure
+ok 99 - generic layer visibility forwards cancellation and reports semantic failure
+  ---
+  duration_ms: 0.7299
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves a manager resource-cancellation envelope
+ok 100 - generic voice visibility preserves a manager resource-cancellation envelope
+  ---
+  duration_ms: 0.4055
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves caller-abort phase before the stale-turn fallback
+ok 101 - generic voice visibility preserves caller-abort phase before the stale-turn fallback
+  ---
+  duration_ms: 0.4224
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+ok 102 - generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+  ---
+  duration_ms: 0.4613
+  type: 'test'
+  ...
+# Subtest: late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+ok 103 - late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+  ---
+  duration_ms: 3.4511
+  type: 'test'
+  ...
+# Subtest: generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+ok 104 - generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+  ---
+  duration_ms: 1.3113
+  type: 'test'
+  ...
+# Subtest: generic voice visibility maps Space Missions to the explicit mission layer
+ok 105 - generic voice visibility maps Space Missions to the explicit mission layer
+  ---
+  duration_ms: 0.5586
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports tracking ownership separately from no active camera
+ok 106 - voice CCTV focus reports tracking ownership separately from no active camera
+  ---
+  duration_ms: 0.2014
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports cockpit ownership
+ok 107 - voice CCTV focus reports cockpit ownership
+  ---
+  duration_ms: 0.124
+  type: 'test'
+  ...
+# Subtest: control_cockpit forwards schema-valid navigation filters
+ok 108 - control_cockpit forwards schema-valid navigation filters
+  ---
+  duration_ms: 0.5936
+  type: 'test'
+  ...
+# Subtest: control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+ok 109 - control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+  ---
+  duration_ms: 0.4839
+  type: 'test'
+  ...
+# Subtest: control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+ok 110 - control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+  ---
+  duration_ms: 0.6864
+  type: 'test'
+  ...
+# Subtest: control_cockpit does not mutate selection when Contacts entry fails
+ok 111 - control_cockpit does not mutate selection when Contacts entry fails
+  ---
+  duration_ms: 0.3444
+  type: 'test'
+  ...
+# Subtest: control_cockpit cancellation is inert when Contacts is already active
+ok 112 - control_cockpit cancellation is inert when Contacts is already active
+  ---
+  duration_ms: 0.3149
+  type: 'test'
+  ...
+# Subtest: control_cockpit rolls Contacts back when the turn becomes stale at commit
+ok 113 - control_cockpit rolls Contacts back when the turn becomes stale at commit
+  ---
+  duration_ms: 0.4332
+  type: 'test'
+  ...
+# Subtest: control_cockpit adopts the newest selection after Contacts settles
+ok 114 - control_cockpit adopts the newest selection after Contacts settles
+  ---
+  duration_ms: 0.4431
+  type: 'test'
+  ...
+# Subtest: control_cockpit restores the prior Context mode after Cockpit entry fails
+ok 115 - control_cockpit restores the prior Context mode after Cockpit entry fails
+  ---
+  duration_ms: 0.4549
+  type: 'test'
+  ...
+# Subtest: control_cockpit contains entry exceptions and still restores the prior Context mode
+ok 116 - control_cockpit contains entry exceptions and still restores the prior Context mode
+  ---
+  duration_ms: 0.728
+  type: 'test'
+  ...
+# Subtest: set_context_mode forwards cancellation authority and reports a stale turn
+ok 117 - set_context_mode forwards cancellation authority and reports a stale turn
+  ---
+  duration_ms: 0.5584
+  type: 'test'
+  ...
+# Subtest: opening Contacts expands Context before activation and returns its settled aircraft window
+ok 118 - opening Contacts expands Context before activation and returns its settled aircraft window
+  ---
+  duration_ms: 0.4239
+  type: 'test'
+  ...
+# Subtest: set_context_mode pre-dispatch cancellation includes authoritative Context state
+ok 119 - set_context_mode pre-dispatch cancellation includes authoritative Context state
+  ---
+  duration_ms: 0.3989
+  type: 'test'
+  ...
+# Subtest: control_cockpit enter skips selected non-flight context
+ok 120 - control_cockpit enter skips selected non-flight context
+  ---
+  duration_ms: 0.4538
+  type: 'test'
+  ...
+# Subtest: voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+ok 121 - voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+  ---
+  duration_ms: 1.048
+  type: 'test'
+  ...
+# Subtest: voice CCTV coverage writes the canonical durable coverage mode
+ok 122 - voice CCTV coverage writes the canonical durable coverage mode
+  ---
+  duration_ms: 1.3735
+  type: 'test'
+  ...
+# Subtest: voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+ok 123 - voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+  ---
+  duration_ms: 2.9473
+  type: 'test'
+  ...
+# Subtest: community Radio names remain untrusted data and cannot redirect model-visible routing
+ok 124 - community Radio names remain untrusted data and cannot redirect model-visible routing
+  ---
+  duration_ms: 1.9443
+  type: 'test'
+  ...
+# Subtest: Radio country validation fails closed before enable or selection side effects
+ok 125 - Radio country validation fails closed before enable or selection side effects
+  ---
+  duration_ms: 0.7262
+  type: 'test'
+  ...
+# Subtest: voice Radio status exposes authoritative four-state lifecycle without side effects
+ok 126 - voice Radio status exposes authoritative four-state lifecycle without side effects
+  ---
+  duration_ms: 1.1168
+  type: 'test'
+  ...
+# Subtest: voice Radio reports a rejected Stop without claiming stopped state
+ok 127 - voice Radio reports a rejected Stop without claiming stopped state
+  ---
+  duration_ms: 0.6483
+  type: 'test'
+  ...
+# Subtest: voice Radio rejects a fulfilled-false Pause without claiming authority
+ok 128 - voice Radio rejects a fulfilled-false Pause without claiming authority
+  ---
+  duration_ms: 0.4242
+  type: 'test'
+  ...
+# Subtest: voice Radio Stop rechecks ownership after an awaited player boundary
+ok 129 - voice Radio Stop rechecks ownership after an awaited player boundary
+  ---
+  duration_ms: 0.4017
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio geocoding causes no enable or selection side effects
+ok 130 - interrupting delayed Radio geocoding causes no enable or selection side effects
+  ---
+  duration_ms: 2.1776
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio disable forwards cancellation and retains enabled state
+ok 131 - interrupting delayed Radio disable forwards cancellation and retains enabled state
+  ---
+  duration_ms: 0.5535
+  type: 'test'
+  ...
+# Subtest: voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+ok 132 - voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+  ---
+  duration_ms: 0.7577
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciles uncertain lifecycle authority before direct selection
+ok 133 - voice Radio reconciles uncertain lifecycle authority before direct selection
+  ---
+  duration_ms: 0.6236
+  type: 'test'
+  ...
+# Subtest: voice Radio Volume waits for settled certain lifecycle authority
+ok 134 - voice Radio Volume waits for settled certain lifecycle authority
+  ---
+  duration_ms: 0.9916
+  type: 'test'
+  ...
+# Subtest: voice Radio settled OFF blocks Volume without enabling
+ok 135 - voice Radio settled OFF blocks Volume without enabling
+  ---
+  duration_ms: 0.4556
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciliation failures leave gated player state unchanged
+ok 136 - voice Radio reconciliation failures leave gated player state unchanged
+  ---
+  duration_ms: 1.4811
+  type: 'test'
+  ...
+# Subtest: voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+ok 137 - voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+  ---
+  duration_ms: 0.6276
+  type: 'test'
+  ...
+# Subtest: voice Radio Pause while disabled is a truthful playback-only no-op
+ok 138 - voice Radio Pause while disabled is a truthful playback-only no-op
+  ---
+  duration_ms: 0.315
+  type: 'test'
+  ...
+# Subtest: Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+ok 139 - Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+  ---
+  duration_ms: 0.8097
+  type: 'test'
+  ...
+# Subtest: Cockpit entry rollback also stays inert on the visual lane
+ok 140 - Cockpit entry rollback also stays inert on the visual lane
+  ---
+  duration_ms: 0.4333
+  type: 'test'
+  ...
+# Subtest: a genuine set_context_mode request DOES claim the visual lane
+ok 141 - a genuine set_context_mode request DOES claim the visual lane
+  ---
+  duration_ms: 0.3788
+  type: 'test'
+  ...
+# Subtest: disposing a runner removes the moveEnd listener and cancels a pending debounce
+ok 142 - disposing a runner removes the moveEnd listener and cancels a pending debounce
+  ---
+  duration_ms: 1.6027
+  type: 'test'
+  ...
+# Subtest: a retired debounce delivery cannot replace newer moveEnd work
+ok 143 - a retired debounce delivery cannot replace newer moveEnd work
+  ---
+  duration_ms: 1.0944
+  type: 'test'
+  ...
+# Subtest: disposing cancels a queued idle prewarm and stale delivery cannot pick
+ok 144 - disposing cancels a queued idle prewarm and stale delivery cannot pick
+  ---
+  duration_ms: 0.5578
+  type: 'test'
+  ...
+# Subtest: a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+ok 145 - a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+  ---
+  duration_ms: 0.388
+  type: 'test'
+  ...
+# Subtest: shared runners keep one viewer lease until the final disposer releases it
+ok 146 - shared runners keep one viewer lease until the final disposer releases it
+  ---
+  duration_ms: 0.3408
+  type: 'test'
+  ...
+# Subtest: prewarm leases are independent per viewer and can be reinitialized safely
+ok 147 - prewarm leases are independent per viewer and can be reinitialized safely
+  ---
+  duration_ms: 0.7906
+  type: 'test'
+  ...
+# Subtest: the no-requestIdleCallback fallback still runs after the 120 ms debounce
+ok 148 - the no-requestIdleCallback fallback still runs after the 120 ms debounce
+  ---
+  duration_ms: 0.3165
+  type: 'test'
+  ...
+# Subtest: a degenerate depth pick does not escape the view-target prewarm
+ok 149 - a degenerate depth pick does not escape the view-target prewarm
+  ---
+  duration_ms: 0.7179
+  type: 'test'
+  ...
+# Subtest: an unexpected prewarm failure is logged once at debug level, never thrown
+ok 150 - an unexpected prewarm failure is logged once at debug level, never thrown
+  ---
+  duration_ms: 0.5388
+  type: 'test'
+  ...
+# Subtest: a lost cross-mode switch reports every mode field in the shared vocabulary
+ok 151 - a lost cross-mode switch reports every mode field in the shared vocabulary
+  ---
+  duration_ms: 0.5088
+  type: 'test'
+  ...
+# Subtest: an absent secondary mode stays absent instead of claiming to be off
+ok 152 - an absent secondary mode stays absent instead of claiming to be off
+  ---
+  duration_ms: 0.353
+  type: 'test'
+  ...
+# Subtest: a nested Cockpit rollback result is translated too
+ok 153 - a nested Cockpit rollback result is translated too
+  ---
+  duration_ms: 0.6205
+  type: 'test'
+  ...
+# Subtest: front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+ok 154 - front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+  ---
+  duration_ms: 246.3032
+  type: 'test'
+  ...
+# Subtest: front5: the spoken count and the panel window are ONE number by construction
+ok 155 - front5: the spoken count and the panel window are ONE number by construction
+  ---
+  duration_ms: 1.6899
+  type: 'test'
+  ...
+# Subtest: front5: Contacts active with NO subject falls back to the view, not an empty panel
+ok 156 - front5: Contacts active with NO subject falls back to the view, not an empty panel
+  ---
+  duration_ms: 0.9466
+  type: 'test'
+  ...
+# Subtest: front5: an explicit region still uses the region engine while Contacts is active
+ok 157 - front5: an explicit region still uses the region engine while Contacts is active
+  ---
+  duration_ms: 251.9477
+  type: 'test'
+  ...
+# Subtest: front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+ok 158 - front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+  ---
+  duration_ms: 1.2271
+  type: 'test'
+  ...
+# Subtest: front5: 0.99 km due EAST is the subject, though a degree box rejects it
+ok 159 - front5: 0.99 km due EAST is the subject, though a degree box rejects it
+  ---
+  duration_ms: 1.006
+  type: 'test'
+  ...
+# Subtest: voice Radio: a key that geocodes to nothing still places the station, keylessly
+ok 160 - voice Radio: a key that geocodes to nothing still places the station, keylessly
+  ---
+  duration_ms: 2.6569
+  type: 'test'
+  ...
+# Subtest: voice Radio: the keyless path applies no country filter the keyed path would not
+ok 161 - voice Radio: the keyless path applies no country filter the keyed path would not
+  ---
+  duration_ms: 0.8894
+  type: 'test'
+  ...
+# Subtest: ALPR common names toggle only the registered camera layer through the normal voice action
+ok 162 - ALPR common names toggle only the registered camera layer through the normal voice action
+  ---
+  duration_ms: 0.8208
+  type: 'test'
+  ...
+# Subtest: Local ADS-B common names toggle only the receiver layer through the normal voice action
+ok 163 - Local ADS-B common names toggle only the receiver layer through the normal voice action
+  ---
+  duration_ms: 0.9292
+  type: 'test'
+  ...
+# Subtest: ISS voice lookup uses the registered satellite instance
+ok 164 - ISS voice lookup uses the registered satellite instance
+  ---
+  duration_ms: 0.443
+  type: 'test'
+  ...
+# Subtest: analyst_query and get_current_view_state carry stale feed provenance
+ok 165 - analyst_query and get_current_view_state carry stale feed provenance
+  ---
+  duration_ms: 1.1034
+  type: 'test'
+  ...
+# Subtest: analyst age uses the selected investigation time
+ok 166 - analyst age uses the selected investigation time
+  ---
+  duration_ms: 0.6039
+  type: 'test'
+  ...
+# Subtest: general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+ok 167 - general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+  ---
+  duration_ms: 0.6586
+  type: 'test'
+  ...
+# Subtest: analyst_query counts the whole loaded set, not a 2,000-record slice
+ok 168 - analyst_query counts the whole loaded set, not a 2,000-record slice
+  ---
+  duration_ms: 5.415
+  type: 'test'
+  ...
+# Subtest: analyst aircraft results carry pinned source evidence from the query snapshot
+ok 169 - analyst aircraft results carry pinned source evidence from the query snapshot
+  ---
+  duration_ms: 1.139
+  type: 'test'
+  ...
+# Subtest: analyst_query refusals carry their code and the allowed values
+ok 170 - analyst_query refusals carry their code and the allowed values
+  ---
+  duration_ms: 0.8258
+  type: 'test'
+  ...
+# Subtest: spoken layer names from the manifest reach the newer layers
+ok 171 - spoken layer names from the manifest reach the newer layers
+  ---
+  duration_ms: 0.5029
+  type: 'test'
+  ...
+# Subtest: the Contacts window ranks, filters and formats like any analyst answer
+ok 172 - the Contacts window ranks, filters and formats like any analyst answer
+  ---
+  duration_ms: 2.0682
+  type: 'test'
+  ...
+# Subtest: a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+ok 173 - a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+  ---
+  duration_ms: 4.2952
+  type: 'test'
+  ...
+# Subtest: overlapping analyst siblings from one response complete independently
+ok 174 - overlapping analyst siblings from one response complete independently
+  ---
+  duration_ms: 31.5204
+  type: 'test'
+  ...
+# Subtest: a capped Contacts snapshot is a lower bound from one immutable cohort
+ok 175 - a capped Contacts snapshot is a lower bound from one immutable cohort
+  ---
+  duration_ms: 31.7522
+  type: 'test'
+  ...
+# Subtest: Contacts follow-ups filter the cohort that was actually displayed
+ok 176 - Contacts follow-ups filter the cohort that was actually displayed
+  ---
+  duration_ms: 2.815
+  type: 'test'
+  ...
+# Subtest: point-and-ask: the runner resolves pointer and referent targets
+ok 177 - point-and-ask: the runner resolves pointer and referent targets
+  ---
+  duration_ms: 1.2458
+  type: 'test'
+  ...
+# Subtest: point-and-ask: only accepted, current results become the referent list
+ok 178 - point-and-ask: only accepted, current results become the referent list
+  ---
+  duration_ms: 0.8371
+  type: 'test'
+  ...
+# Subtest: numbered analyst records navigate using the current layer accessor
+ok 179 - numbered analyst records navigate using the current layer accessor
+  ---
+  duration_ms: 1.4958
+  type: 'test'
+  ...
+# Subtest: analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+ok 180 - analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+  ---
+  duration_ms: 1.2244
+  type: 'test'
+  ...
+1..180
+# tests 180
+# suites 0
+# pass 180
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5283.07

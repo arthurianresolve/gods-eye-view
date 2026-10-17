@@ -1,0 +1,226 @@
+{
+  "schema": "gev-paired-performance-evidence/v1",
+  "createdAt": "2026-10-15T19:21:10.705Z",
+  "baseline": {
+    "path": "baseline-dense-investigation.json",
+    "sha256": "9fc04cf278513532cf9d1a632e39c14c983dcc8866bd9e00f02d54903848d2bc",
+    "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+    "harnessCommit": "c10aabe66af80acdc1088486ec05d0d14a3091ac",
+    "receiptSha256": "a98378d59b5ef465bd40142aa485e52f5a210ab265601686765d0b168f8576f6"
+  },
+  "candidate": {
+    "path": "candidate-dense-investigation.json",
+    "sha256": "9a9b9e61a15ef711b3bb96849b608dd9977367a7a8e7592f701d027577b8d92d",
+    "appCommit": "6e196d8fcf82751ea7658aabceb9a99948a572a4",
+    "harnessCommit": "c10aabe66af80acdc1088486ec05d0d14a3091ac",
+    "receiptSha256": "bd6c149f97d44006ab9964141c488b7efd54d1aef064762e5949c5fb5a4f87b2"
+  },
+  "validation": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "assessed",
+      "achieved": false,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": false
+      }
+    },
+    "denseTrackingObjective": {
+      "status": "assessed",
+      "achieved": false,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": false
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 220.70000000298023,
+        "candidateMedianP95Ms": 200.89999999850988,
+        "changePct": -8.971454464976429,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 217.5,
+        "candidateMedianP95Ms": 213.10000000149012,
+        "changePct": -2.0229885050620156,
+        "regressionOver10Pct": false
+      },
+      "selected-aircraft-tracking": {
+        "status": "measured",
+        "baselineMedianP95Ms": 1107.1000000014901,
+        "candidateMedianP95Ms": 1143.2000000029802,
+        "changePct": 3.2607713848289697,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "fulfilledResponseCount": 60,
+        "perSample": [
+          {
+            "scenario": "idle",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          }
+        ]
+      },
+      "candidate": {
+        "fulfilledResponseCount": 60,
+        "perSample": [
+          {
+            "scenario": "idle",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          }
+        ]
+      }
+    },
+    "regressionsOver10Pct": []
+  }
+}

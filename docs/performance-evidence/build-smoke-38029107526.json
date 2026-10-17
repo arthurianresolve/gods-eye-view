@@ -1,0 +1,34 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "7b925c096f1051a6da6c657df4cbbf7b5b29d517",
+  "harnessSha": "ac9cbc09e08438242c4feaf5b50e5d73acb885ba",
+  "startedAt": "2026-10-10T05:55:02.326Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Fixture network worker failed",
+      "failureDetails": {
+        "phase": "worker-aware-provider-interception",
+        "pageErrors": [],
+        "interceptionErrors": []
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "No provider fixture is claimed as observed, so this smoke is not paired-comparison evidence.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Fixture network worker failed",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-10T05:55:37.938Z",
+  "durationMs": 35612
+}

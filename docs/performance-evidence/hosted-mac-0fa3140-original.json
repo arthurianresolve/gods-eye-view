@@ -1,0 +1,2890 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+  "platform": "darwin",
+  "timestamp": "2026-10-09T16:36:26.908Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+    "harnessCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+    "capturedAt": "2026-10-09T16:36:38.214Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [255, 0, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [0, 0, 255, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [0, 255, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [255, 0, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [0, 0, 255, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [255, 0, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [0, 0, 255, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [0, 255, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [255, 0, 0, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [0, 0, 255, 255],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+        "harnessCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+        "harnessCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Hosted accelerated soak did not pass stability acceptance",
+  "soak": {
+    "scope": "rendered-application-fixtures",
+    "renderer": {
+      "vendor": "Google Inc. (Apple)",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "graphics": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    },
+    "renderingEvidence": {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    "environment": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "osRelease": "25.6.0",
+      "cpu": "Apple M1 (Virtual)",
+      "logicalCpus": 3,
+      "memoryBytes": 7516192768,
+      "hosted": true,
+      "runnerImage": "macos26",
+      "runnerImageVersion": "20260907.0351.1"
+    },
+    "applicationCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+    "workerPreflight": {
+      "status": "passed",
+      "durationMs": 411.3999999999942,
+      "tasks": [
+        {
+          "id": "geometry-cold",
+          "outcome": "resolved"
+        },
+        {
+          "id": "geometry-reuse",
+          "outcome": "resolved"
+        },
+        {
+          "id": "geometry-error",
+          "outcome": "rejected-as-expected"
+        },
+        {
+          "id": "geometry-recovery",
+          "outcome": "resolved"
+        }
+      ],
+      "network": {
+        "status": "passed",
+        "interceptedWorkerRequests": 3
+      }
+    },
+    "warmupIterations": 2,
+    "firstRetainedMetrics": {
+      "Timestamp": 162.568713,
+      "Documents": 10,
+      "Frames": 8,
+      "JSEventListeners": 629,
+      "Nodes": 5722,
+      "LayoutCount": 1003,
+      "RecalcStyleCount": 1525,
+      "LayoutDuration": 0.467605,
+      "RecalcStyleDuration": 1.390241,
+      "ScriptDuration": 9.687087,
+      "TaskDuration": 18.113487,
+      "JSHeapUsedSize": 74928012,
+      "JSHeapTotalSize": 77643776,
+      "documents": 10,
+      "nodes": 5723,
+      "jsEventListeners": 629,
+      "application": {
+        "resources": {
+          "dataSources": 3,
+          "primitives": 4,
+          "groundPrimitives": 1,
+          "imageryLayers": 1,
+          "dataLayers": 30,
+          "renderHolds": 0,
+          "scheduledUpdates": 0,
+          "ownerResources": {
+            "maps": {
+              "listeners": 2,
+              "pendingJobs": 0,
+              "primitives": 0,
+              "cacheEntries": 3,
+              "imageryLayers": 1,
+              "estimatedTileBytes": 0,
+              "providerLoadsStarted": 3,
+              "providerCacheReuses": 4,
+              "providerLoadFailures": 0
+            },
+            "satellites": {
+              "listeners": 0,
+              "pendingJobs": 0,
+              "primitives": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            },
+            "cctv": {
+              "listeners": 5,
+              "timers": 0,
+              "pendingJobs": 0,
+              "primitives": 1,
+              "dataSources": 12,
+              "cacheEntries": 4
+            },
+            "local-datacenters": {
+              "listeners": 1,
+              "timers": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 1
+            },
+            "local-dams": {
+              "listeners": 0,
+              "timers": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            },
+            "telegeography-submarine-cables": {
+              "listeners": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            }
+          }
+        },
+        "scene": {
+          "renderedFrameCount": 688
+        },
+        "timings": {
+          "gpuExecutionMs": null,
+          "frameIntervalScope": "completed-frame-wall-time",
+          "applicationCpu": null,
+          "overlayProjectionMs": 0.10000000000582077,
+          "overlayPlacementMs": 0,
+          "overlayPaintMs": 0
+        },
+        "workers": {
+          "instrumented": true,
+          "overflow": false,
+          "pending": 0,
+          "workers": [
+            {
+              "kind": "createVerticesFromHeightmap.js",
+              "submitted": 238,
+              "completed": 238,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "transferTypedArrayTest.js",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": true,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "incrementallyBuildTerrainPicker.js",
+              "submitted": 66,
+              "completed": 66,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 58,
+              "completed": 58,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 27,
+              "completed": 27,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "combineGeometry.js",
+              "submitted": 53,
+              "completed": 53,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            }
+          ]
+        }
+      },
+      "renderedFrames": 672
+    },
+    "checkpoints": [
+      {
+        "elapsedMs": 0,
+        "metrics": {
+          "Timestamp": 162.568713,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5722,
+          "LayoutCount": 1003,
+          "RecalcStyleCount": 1525,
+          "LayoutDuration": 0.467605,
+          "RecalcStyleDuration": 1.390241,
+          "ScriptDuration": 9.687087,
+          "TaskDuration": 18.113487,
+          "JSHeapUsedSize": 74928012,
+          "JSHeapTotalSize": 77643776,
+          "documents": 10,
+          "nodes": 5723,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 4,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 688
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.10000000000582077,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 238,
+                  "completed": 238,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 66,
+                  "completed": 66,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 58,
+                  "completed": 58,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 27,
+                  "completed": 27,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 53,
+                  "completed": 53,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 672
+        }
+      },
+      {
+        "elapsedMs": 300951,
+        "metrics": {
+          "Timestamp": 463.517555,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 10852,
+          "RecalcStyleCount": 18108,
+          "LayoutDuration": 6.583411,
+          "RecalcStyleDuration": 19.401508,
+          "ScriptDuration": 90.565648,
+          "TaskDuration": 165.799709,
+          "JSHeapUsedSize": 78078976,
+          "JSHeapTotalSize": 80789504,
+          "documents": 10,
+          "nodes": 5731,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 46,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 9268
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.20000000001164153
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 472,
+                  "completed": 472,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 255,
+                  "completed": 255,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 464,
+                  "completed": 464,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 9251
+        }
+      },
+      {
+        "elapsedMs": 602065,
+        "metrics": {
+          "Timestamp": 764.628883,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 20958,
+          "RecalcStyleCount": 35861,
+          "LayoutDuration": 12.137229,
+          "RecalcStyleDuration": 35.498025,
+          "ScriptDuration": 162.298846,
+          "TaskDuration": 294.224126,
+          "JSHeapUsedSize": 79131408,
+          "JSHeapTotalSize": 82362368,
+          "documents": 10,
+          "nodes": 5731,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 88,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 18722
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.10000000009313226,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.09999999986030161
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 870,
+                  "completed": 870,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 475,
+                  "completed": 475,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 859,
+                  "completed": 859,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 18706
+        }
+      },
+      {
+        "elapsedMs": 902882,
+        "metrics": {
+          "Timestamp": 1065.444809,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 31138,
+          "RecalcStyleCount": 54508,
+          "LayoutDuration": 17.37715,
+          "RecalcStyleDuration": 51.12394,
+          "ScriptDuration": 233.457685,
+          "TaskDuration": 420.770647,
+          "JSHeapUsedSize": 79726044,
+          "JSHeapTotalSize": 83148800,
+          "documents": 10,
+          "nodes": 5730,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 130,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 29087
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.09999999986030161
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1276,
+                  "completed": 1276,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 699,
+                  "completed": 699,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 1262,
+                  "completed": 1262,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 29070
+        }
+      },
+      {
+        "elapsedMs": 1216449,
+        "metrics": {
+          "Timestamp": 1379.023826,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5726,
+          "LayoutCount": 42330,
+          "RecalcStyleCount": 76285,
+          "LayoutDuration": 21.861494,
+          "RecalcStyleDuration": 64.823914,
+          "ScriptDuration": 296.202414,
+          "TaskDuration": 530.996471,
+          "JSHeapUsedSize": 79907392,
+          "JSHeapTotalSize": 83935232,
+          "documents": 10,
+          "nodes": 5726,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 174,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 41871
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.6000000000931323,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.09999999986030161
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1700,
+                  "completed": 1700,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 933,
+                  "completed": 933,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 1683,
+                  "completed": 1683,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 41855
+        }
+      },
+      {
+        "elapsedMs": 1517140,
+        "metrics": {
+          "Timestamp": 1679.70418,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5729,
+          "LayoutCount": 52994,
+          "RecalcStyleCount": 97233,
+          "LayoutDuration": 25.930641,
+          "RecalcStyleDuration": 77.260608,
+          "ScriptDuration": 354.843616,
+          "TaskDuration": 633.670567,
+          "JSHeapUsedSize": 80414152,
+          "JSHeapTotalSize": 83410944,
+          "documents": 10,
+          "nodes": 5732,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 216,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 54288
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.10000000009313226
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2098,
+                  "completed": 2098,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1153,
+                  "completed": 1153,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 2081,
+                  "completed": 2081,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 54271
+        }
+      },
+      {
+        "elapsedMs": 1817773,
+        "metrics": {
+          "Timestamp": 1980.346376,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5806,
+          "LayoutCount": 63183,
+          "RecalcStyleCount": 116150,
+          "LayoutDuration": 30.502992,
+          "RecalcStyleDuration": 90.785772,
+          "ScriptDuration": 416.90721,
+          "TaskDuration": 745.720073,
+          "JSHeapUsedSize": 80603044,
+          "JSHeapTotalSize": 84197376,
+          "documents": 10,
+          "nodes": 5806,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 258,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 64933
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.39999999990686774,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.20000000018626451
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2500,
+                  "completed": 2500,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1375,
+                  "completed": 1375,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 2474,
+                  "completed": 2474,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 64919
+        }
+      },
+      {
+        "elapsedMs": 2131811,
+        "metrics": {
+          "Timestamp": 2294.384913,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 73693,
+          "RecalcStyleCount": 135129,
+          "LayoutDuration": 35.725808,
+          "RecalcStyleDuration": 105.922838,
+          "ScriptDuration": 487.382007,
+          "TaskDuration": 871.253632,
+          "JSHeapUsedSize": 80889364,
+          "JSHeapTotalSize": 84197376,
+          "documents": 10,
+          "nodes": 5728,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 302,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 75381
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.10000000009313226
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2924,
+                  "completed": 2924,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1609,
+                  "completed": 1609,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 2898,
+                  "completed": 2898,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 75366
+        }
+      },
+      {
+        "elapsedMs": 2432734,
+        "metrics": {
+          "Timestamp": 2595.294642,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 84119,
+          "RecalcStyleCount": 154640,
+          "LayoutDuration": 40.825358,
+          "RecalcStyleDuration": 121.368078,
+          "ScriptDuration": 554.535674,
+          "TaskDuration": 991.98573,
+          "JSHeapUsedSize": 81057676,
+          "JSHeapTotalSize": 84721664,
+          "documents": 10,
+          "nodes": 5731,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 344,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 86457
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0.10000000009313226,
+              "overlayPaintMs": 0.09999999962747097
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 3326,
+                  "completed": 3326,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 1831,
+                  "completed": 1831,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 3300,
+                  "completed": 3300,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 86443
+        }
+      },
+      {
+        "elapsedMs": 2733092,
+        "metrics": {
+          "Timestamp": 2895.660401,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5806,
+          "LayoutCount": 94604,
+          "RecalcStyleCount": 174755,
+          "LayoutDuration": 45.374805,
+          "RecalcStyleDuration": 135.274599,
+          "ScriptDuration": 618.127735,
+          "TaskDuration": 1104.605191,
+          "JSHeapUsedSize": 81637704,
+          "JSHeapTotalSize": 84983808,
+          "documents": 10,
+          "nodes": 5808,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 386,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 98116
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 3732,
+                  "completed": 3732,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2055,
+                  "completed": 2055,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 3706,
+                  "completed": 3706,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 98105
+        }
+      },
+      {
+        "elapsedMs": 3033482,
+        "metrics": {
+          "Timestamp": 3196.042808,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5728,
+          "LayoutCount": 105435,
+          "RecalcStyleCount": 195986,
+          "LayoutDuration": 49.54633,
+          "RecalcStyleDuration": 148.19431,
+          "ScriptDuration": 677.675615,
+          "TaskDuration": 1209.416321,
+          "JSHeapUsedSize": 81501828,
+          "JSHeapTotalSize": 85770240,
+          "documents": 10,
+          "nodes": 5731,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 428,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 110675
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.10000000009313226,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.10000000009313226
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4134,
+                  "completed": 4134,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2277,
+                  "completed": 2277,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 4108,
+                  "completed": 4108,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 110658
+        }
+      },
+      {
+        "elapsedMs": 3347146,
+        "metrics": {
+          "Timestamp": 3509.719851,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5730,
+          "LayoutCount": 116622,
+          "RecalcStyleCount": 217636,
+          "LayoutDuration": 54.227564,
+          "RecalcStyleDuration": 162.560623,
+          "ScriptDuration": 744.044659,
+          "TaskDuration": 1326.513166,
+          "JSHeapUsedSize": 81569648,
+          "JSHeapTotalSize": 85245952,
+          "documents": 10,
+          "nodes": 5730,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 472,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 123264
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0.09999999962747097,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.20000000018626451
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4558,
+                  "completed": 4558,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2511,
+                  "completed": 2511,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 4526,
+                  "completed": 4526,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 123248
+        }
+      },
+      {
+        "elapsedMs": 3603543,
+        "metrics": {
+          "Timestamp": 3766.113626,
+          "Documents": 10,
+          "Frames": 8,
+          "JSEventListeners": 629,
+          "Nodes": 5725,
+          "LayoutCount": 125724,
+          "RecalcStyleCount": 235081,
+          "LayoutDuration": 58.386552,
+          "RecalcStyleDuration": 175.057152,
+          "ScriptDuration": 800.1234,
+          "TaskDuration": 1426.017103,
+          "JSHeapUsedSize": 81687124,
+          "JSHeapTotalSize": 84983808,
+          "documents": 10,
+          "nodes": 5727,
+          "jsEventListeners": 629,
+          "application": {
+            "resources": {
+              "dataSources": 3,
+              "primitives": 4,
+              "groundPrimitives": 1,
+              "imageryLayers": 1,
+              "dataLayers": 30,
+              "renderHolds": 0,
+              "scheduledUpdates": 0,
+              "ownerResources": {
+                "maps": {
+                  "listeners": 2,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "cacheEntries": 3,
+                  "imageryLayers": 1,
+                  "estimatedTileBytes": 0,
+                  "providerLoadsStarted": 3,
+                  "providerCacheReuses": 508,
+                  "providerLoadFailures": 0
+                },
+                "satellites": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "primitives": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "cctv": {
+                  "listeners": 5,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "primitives": 1,
+                  "dataSources": 12,
+                  "cacheEntries": 4
+                },
+                "local-datacenters": {
+                  "listeners": 1,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 1
+                },
+                "local-dams": {
+                  "listeners": 0,
+                  "timers": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                },
+                "telegeography-submarine-cables": {
+                  "listeners": 0,
+                  "pendingJobs": 0,
+                  "dataSources": 0,
+                  "cacheEntries": 0
+                }
+              }
+            },
+            "scene": {
+              "renderedFrameCount": 133364
+            },
+            "timings": {
+              "gpuExecutionMs": null,
+              "frameIntervalScope": "completed-frame-wall-time",
+              "applicationCpu": null,
+              "overlayProjectionMs": 0,
+              "overlayPlacementMs": 0,
+              "overlayPaintMs": 0.20000000018626451
+            },
+            "workers": {
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 1603,
+                  "completed": 1603,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": true,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 660,
+                  "completed": 660,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4898,
+                  "completed": 4898,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 2699,
+                  "completed": 2699,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                },
+                {
+                  "kind": "combineGeometry.js",
+                  "submitted": 4866,
+                  "completed": 4866,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "terminated": false,
+                  "pending": 0,
+                  "oldestPendingMs": 0
+                }
+              ]
+            }
+          },
+          "renderedFrames": 133340
+        }
+      }
+    ],
+    "hardwareRenderingValidated": true,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "operationStatus": "passed",
+    "iterations": 252,
+    "sourceToggles": 1008,
+    "replaySeeks": 252,
+    "imports": 252,
+    "workspaceReloads": 504,
+    "archiveFailures": 252,
+    "cameraRecoveries": 252,
+    "durationMs": 3603543,
+    "fullSoak": true,
+    "peakHeapBytes": 109245888,
+    "firstMetrics": {
+      "Timestamp": 176.868932,
+      "Documents": 10,
+      "Frames": 8,
+      "JSEventListeners": 797,
+      "Nodes": 11021,
+      "LayoutCount": 1484,
+      "RecalcStyleCount": 2393,
+      "LayoutDuration": 0.745729,
+      "RecalcStyleDuration": 2.195066,
+      "ScriptDuration": 13.318942,
+      "TaskDuration": 24.718155,
+      "JSHeapUsedSize": 79210152,
+      "JSHeapTotalSize": 88915968
+    },
+    "lastMetrics": {
+      "Timestamp": 3765.659875,
+      "Documents": 10,
+      "Frames": 8,
+      "JSEventListeners": 1034,
+      "Nodes": 12611,
+      "LayoutCount": 125697,
+      "RecalcStyleCount": 235052,
+      "LayoutDuration": 58.377879,
+      "RecalcStyleDuration": 175.025661,
+      "ScriptDuration": 800.054133,
+      "TaskDuration": 1425.686609,
+      "JSHeapUsedSize": 93300284,
+      "JSHeapTotalSize": 147636224
+    },
+    "lastRetainedMetrics": {
+      "Timestamp": 3766.113626,
+      "Documents": 10,
+      "Frames": 8,
+      "JSEventListeners": 629,
+      "Nodes": 5725,
+      "LayoutCount": 125724,
+      "RecalcStyleCount": 235081,
+      "LayoutDuration": 58.386552,
+      "RecalcStyleDuration": 175.057152,
+      "ScriptDuration": 800.1234,
+      "TaskDuration": 1426.017103,
+      "JSHeapUsedSize": 81687124,
+      "JSHeapTotalSize": 84983808,
+      "documents": 10,
+      "nodes": 5727,
+      "jsEventListeners": 629,
+      "application": {
+        "resources": {
+          "dataSources": 3,
+          "primitives": 4,
+          "groundPrimitives": 1,
+          "imageryLayers": 1,
+          "dataLayers": 30,
+          "renderHolds": 0,
+          "scheduledUpdates": 0,
+          "ownerResources": {
+            "maps": {
+              "listeners": 2,
+              "pendingJobs": 0,
+              "primitives": 0,
+              "cacheEntries": 3,
+              "imageryLayers": 1,
+              "estimatedTileBytes": 0,
+              "providerLoadsStarted": 3,
+              "providerCacheReuses": 508,
+              "providerLoadFailures": 0
+            },
+            "satellites": {
+              "listeners": 0,
+              "pendingJobs": 0,
+              "primitives": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            },
+            "cctv": {
+              "listeners": 5,
+              "timers": 0,
+              "pendingJobs": 0,
+              "primitives": 1,
+              "dataSources": 12,
+              "cacheEntries": 4
+            },
+            "local-datacenters": {
+              "listeners": 1,
+              "timers": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 1
+            },
+            "local-dams": {
+              "listeners": 0,
+              "timers": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            },
+            "telegeography-submarine-cables": {
+              "listeners": 0,
+              "pendingJobs": 0,
+              "dataSources": 0,
+              "cacheEntries": 0
+            }
+          }
+        },
+        "scene": {
+          "renderedFrameCount": 133364
+        },
+        "timings": {
+          "gpuExecutionMs": null,
+          "frameIntervalScope": "completed-frame-wall-time",
+          "applicationCpu": null,
+          "overlayProjectionMs": 0,
+          "overlayPlacementMs": 0,
+          "overlayPaintMs": 0.20000000018626451
+        },
+        "workers": {
+          "instrumented": true,
+          "overflow": false,
+          "pending": 0,
+          "workers": [
+            {
+              "kind": "createVerticesFromHeightmap.js",
+              "submitted": 1603,
+              "completed": 1603,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "transferTypedArrayTest.js",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": true,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "incrementallyBuildTerrainPicker.js",
+              "submitted": 660,
+              "completed": 660,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 4898,
+              "completed": 4898,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 2699,
+              "completed": 2699,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            },
+            {
+              "kind": "combineGeometry.js",
+              "submitted": 4866,
+              "completed": 4866,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "terminated": false,
+              "pending": 0,
+              "oldestPendingMs": 0
+            }
+          ]
+        }
+      },
+      "renderedFrames": 133340
+    },
+    "stability": {
+      "status": "failed",
+      "failures": [
+        "Resource maps.providerCacheReuses grew from 4 to 46 at 300951 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 88 at 602065 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 130 at 902882 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 174 at 1216449 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 216 at 1517140 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 258 at 1817773 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 302 at 2131811 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 344 at 2432734 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 386 at 2733092 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 428 at 3033482 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 472 at 3347146 ms.",
+        "Resource maps.providerCacheReuses grew from 4 to 508 at 3603543 ms."
+      ],
+      "pending": [],
+      "heapGrowthRatio": 0.01583019864463658
+    },
+    "candidateCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39"
+  }
+}

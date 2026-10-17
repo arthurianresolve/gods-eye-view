@@ -1,0 +1,258 @@
+{
+  "schema": "gev-application-render-demand-diagnostic/v1",
+  "status": "failed",
+  "failedStage": "start-snapshot",
+  "scope": "full application with enabled-empty civil and military source layers; diagnostic only",
+  "fixture": {
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "flightsId": "opensky-dense-investigation-v1",
+    "flightsSha256": "1abd6482cc12eb7bfa25b08c73d3a07f4a88e5e84b3882bfaea6341ab3bd2e5f",
+    "flightsBytes": 31,
+    "militaryId": "readsb-empty-render-demand-v1",
+    "militarySha256": "51bbff9bf5050e52eacfefd729da0d098f7eb7641377a8a7932a905f32529da9",
+    "militaryBytes": 26,
+    "profileId": "empty-sources-austin-manual-osm-v2",
+    "profileSha256": "a87932925bee823ac0773f12119ee706e166e3885fac18dfc7400a9a86772554"
+  },
+  "failure": {
+    "name": "AssertionError",
+    "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'ELASTIC'\n- 'elastic'\n"
+  },
+  "observations": [
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "sourceCommit": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+        "sourceDirtyAtStart": false,
+        "sourceIdentityValid": true
+      }
+    },
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "networkProbePassed": true,
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "application-start",
+      "state": {
+        "applicationStartResolved": true,
+        "environment": {
+          "appCommit": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+          "browser": {
+            "family": "chromium",
+            "version": "152.0.0.0",
+            "rendererClass": "swiftshader",
+            "viewport": {
+              "width": 1440,
+              "height": 1000,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 1000
+            }
+          }
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "fixture-delivery",
+      "state": {
+        "routeAttempts": {
+          "flights": 1,
+          "military": 1
+        },
+        "acknowledged": {
+          "flights": 1,
+          "military": 1
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "scene-settle",
+      "state": {
+        "settled": true,
+        "demandMeaning": "no queued globe tile work; tilesLoaded state and queue counts stable across consecutive samples",
+        "elapsedMs": 14296.700000000012,
+        "tileQueueStableSamples": 4,
+        "sample": {
+          "mapStatus": "ready",
+          "activeMapId": "osm",
+          "camera": {
+            "longitude": -97.74309999999998,
+            "latitude": 30.267199999999992,
+            "height": 799.999999999007,
+            "heading": 15,
+            "pitch": -30,
+            "roll": 0
+          },
+          "enabledLayerIds": [
+            "flights",
+            "military"
+          ],
+          "globeTilesLoaded": true,
+          "tileQueues": {
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "tileQueueCount": 0,
+          "stableTileDemandCount": 4
+        }
+      }
+    },
+    {
+      "stage": "start-snapshot",
+      "state": {
+        "applicationStatus": "ready",
+        "source": {
+          "appCommit": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+          "expectedCommit": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+          "matchesHarnessHead": true
+        },
+        "browser": {
+          "family": "chromium",
+          "version": "152.0.0.0",
+          "rendererClass": "swiftshader",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "viewport": {
+            "width": 1440,
+            "height": 1000,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1440,
+            "height": 1000
+          }
+        },
+        "fixtureEpochMs": 1791460829557,
+        "visibilityState": "visible",
+        "focused": true,
+        "frameNumber": 46,
+        "camera": {
+          "latitude": 30.267199999999992,
+          "longitude": -97.74309999999998,
+          "altitudeMeters": 799.999999999007,
+          "headingDegrees": 15,
+          "pitchDegrees": -30,
+          "rollDegrees": 0
+        },
+        "map": {
+          "status": "ready",
+          "activeId": "osm"
+        },
+        "enabledLayerIds": [
+          "flights",
+          "military"
+        ],
+        "stats": {
+          "flights": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "status": 200,
+            "stale": false
+          },
+          "military": {
+            "enabled": true,
+            "lifecycleState": "enabled",
+            "lifecycleUncertain": false,
+            "count": 0,
+            "status": 200,
+            "stale": false
+          }
+        },
+        "mapDemand": {
+          "globeTilesLoaded": true,
+          "tileQueueCount": 0,
+          "tileQueues": {
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "tileQueueStableSamples": 4,
+          "observedProviderRequests": 185,
+          "interceptedProviderRequests": 185,
+          "pendingProviderRequests": 0,
+          "requestTrackingOverflow": false
+        },
+        "settings": {
+          "msaaSamples": 4,
+          "preserveDrawingBuffer": true,
+          "antialias": true,
+          "fxaaEnabled": false,
+          "resolutionScale": 1,
+          "canvasWidth": 1440,
+          "canvasHeight": 1000,
+          "style": "normal",
+          "bloomEnabled": false,
+          "bloomIntensity": 50,
+          "bloomVersion": 2,
+          "sharpenEnabled": false,
+          "sharpenIntensity": 49,
+          "detectionMode": "OFF",
+          "densityPct": 75,
+          "visualDensityPct": 75,
+          "allocation": "ELASTIC",
+          "qualityMode": "manual"
+        },
+        "governor": {
+          "installed": true,
+          "mode": "continuous",
+          "holds": [
+            "flights",
+            "military"
+          ],
+          "holdsTruncated": false,
+          "scheduledUpdates": [],
+          "scheduledUpdatesTruncated": false
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    }
+  ],
+  "terminal": null,
+  "source": {
+    "commit": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+    "dirtyAtStart": false,
+    "identityValid": true
+  },
+  "sourceFinish": null,
+  "delivery": {
+    "routeAttempts": {
+      "flights": 1,
+      "military": 2
+    },
+    "acknowledged": {
+      "flights": 1,
+      "military": 2
+    },
+    "invalidFixtureRouteCount": null
+  },
+  "traffic": {
+    "expectedBootstrapApiCount": 1,
+    "expectedRenderDemandApiCount": 3,
+    "expectedBlockedStaticFontCount": 2,
+    "expectedBlockedMapProviderCount": 185,
+    "observedMapProviderRequestCount": 185,
+    "pendingMapProviderRequestCount": 0,
+    "mapProviderRequestTrackingOverflow": false,
+    "mapProviderRequestsBeforeForeground": null,
+    "mapProviderRequestsAfterForeground": null,
+    "mapProviderTrafficStable": null,
+    "unexpectedApiCount": 0,
+    "unexpectedExternalCount": 0,
+    "sameOriginNonApiCount": null,
+    "otherApiPaths": [],
+    "otherApiPathOverflow": false
+  }
+}

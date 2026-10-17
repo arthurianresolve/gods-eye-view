@@ -1,0 +1,786 @@
+{
+  "rawSha256": "c55ff090241738a0178bfa148c63c98cefa06a398625ae812127b8d4c040fdfe",
+  "rawBytes": 2672067,
+  "appCommit": "9752656caa51829b46224ec36156c92ac62ae436",
+  "harnessCommit": "9752656caa51829b46224ec36156c92ac62ae436",
+  "status": "failed",
+  "failedPhase": "entities-lifetime",
+  "error": "Error: Timed out waiting for a completed cable scene frame.\n    at http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:407:11",
+  "completedLifetimes": [
+    {
+      "mode": "entities",
+      "status": "failed",
+      "capturedSamples": 10,
+      "readinessFailureStage": "scene-stability",
+      "teardown": null
+    }
+  ],
+  "baselineReferenceRowCount": 2629,
+  "baseline": {
+    "mode": "entities",
+    "sourceGeometrySha256": "68435ff8290dd3933b325601bbe0b339f7bcff556291d04503dc5210a9cdb8dc",
+    "referenceGeometrySha256": "dcd43116148f3bb3b55c86af4f56f22d92128ac94dc5c981d681338a47b6629c",
+    "witnessedGeometrySha256": "6fa402a0244198034ef570f7a43781bd8004a6e207ff43604899921c1d693d0a",
+    "cameraSha256": "07c912861e48cd875082ae20d58a4d4b58e2b46b07a6beccb649e9701a345447",
+    "postLoopWitnessAfterSample": 4,
+    "matchesLastSampleGeometry": true,
+    "referenceIdentitySha256": "3ae5ad156e94815b2417ac9f1a74e46f90593355d228bf03784a02a2d1977125",
+    "sourceCounts": {
+      "cableRows": 1913,
+      "landingRows": 1917,
+      "referenceRows": 2629
+    }
+  },
+  "candidate": null,
+  "comparison": null,
+  "readinessFailure": {
+    "stage": "scene-stability",
+    "readiness": {
+      "stage": "scene-stability",
+      "observationCount": 4,
+      "truncated": false,
+      "observations": [
+        {
+          "elapsedMs": 321.5,
+          "remainingMs": 11678.5,
+          "frameNumber": 951,
+          "dataSourceDisplayReady": true,
+          "globeTilesLoaded": true,
+          "primitiveReadiness": {
+            "available": true,
+            "value": {
+              "ready": false,
+              "observedOwners": 20,
+              "truncated": false,
+              "pending": [
+                {
+                  "path": "primitives/0/2/0",
+                  "type": "EntityCluster"
+                },
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive"
+                }
+              ],
+              "owners": [
+                {
+                  "path": "primitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2/0",
+                  "type": "EntityCluster",
+                  "ready": false,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "groundPrimitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/0",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive",
+                  "ready": false,
+                  "show": false,
+                  "buildState": {
+                    "schema": "gev-cesium-ground-polyline-build-state/v1",
+                    "status": "observed",
+                    "cesiumVersion": "1.138.0",
+                    "primitivePresent": true,
+                    "primitiveReady": false,
+                    "primitiveShow": false,
+                    "asynchronous": true,
+                    "innerAsynchronous": true,
+                    "state": {
+                      "value": 1,
+                      "name": "CREATING"
+                    },
+                    "instanceCount": 1913,
+                    "createGeometryResultsCount": null,
+                    "geometriesCount": 0,
+                    "vertexArraysCount": 0,
+                    "error": null,
+                    "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+                  }
+                },
+                {
+                  "path": "groundPrimitives/0/2",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/3",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                }
+              ],
+              "unsupportedOwners": []
+            }
+          },
+          "stableFrames": 0,
+          "signatureStable": false
+        },
+        {
+          "elapsedMs": 374.69999999995343,
+          "remainingMs": 11625.300000000047,
+          "frameNumber": 952,
+          "dataSourceDisplayReady": true,
+          "globeTilesLoaded": true,
+          "primitiveReadiness": {
+            "available": true,
+            "value": {
+              "ready": false,
+              "observedOwners": 20,
+              "truncated": false,
+              "pending": [
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive"
+                }
+              ],
+              "owners": [
+                {
+                  "path": "primitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "groundPrimitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/0",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive",
+                  "ready": false,
+                  "show": false,
+                  "buildState": {
+                    "schema": "gev-cesium-ground-polyline-build-state/v1",
+                    "status": "observed",
+                    "cesiumVersion": "1.138.0",
+                    "primitivePresent": true,
+                    "primitiveReady": false,
+                    "primitiveShow": false,
+                    "asynchronous": true,
+                    "innerAsynchronous": true,
+                    "state": {
+                      "value": 1,
+                      "name": "CREATING"
+                    },
+                    "instanceCount": 1913,
+                    "createGeometryResultsCount": null,
+                    "geometriesCount": 0,
+                    "vertexArraysCount": 0,
+                    "error": null,
+                    "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+                  }
+                },
+                {
+                  "path": "groundPrimitives/0/2",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/3",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                }
+              ],
+              "unsupportedOwners": []
+            }
+          },
+          "stableFrames": 0,
+          "signatureStable": false
+        },
+        {
+          "elapsedMs": 394.29999999998836,
+          "remainingMs": 11605.700000000012,
+          "frameNumber": 953,
+          "dataSourceDisplayReady": true,
+          "globeTilesLoaded": true,
+          "primitiveReadiness": {
+            "available": true,
+            "value": {
+              "ready": false,
+              "observedOwners": 20,
+              "truncated": false,
+              "pending": [
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive"
+                }
+              ],
+              "owners": [
+                {
+                  "path": "primitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "groundPrimitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/0",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive",
+                  "ready": false,
+                  "show": false,
+                  "buildState": {
+                    "schema": "gev-cesium-ground-polyline-build-state/v1",
+                    "status": "observed",
+                    "cesiumVersion": "1.138.0",
+                    "primitivePresent": true,
+                    "primitiveReady": false,
+                    "primitiveShow": false,
+                    "asynchronous": true,
+                    "innerAsynchronous": true,
+                    "state": {
+                      "value": 1,
+                      "name": "CREATING"
+                    },
+                    "instanceCount": 1913,
+                    "createGeometryResultsCount": null,
+                    "geometriesCount": 0,
+                    "vertexArraysCount": 0,
+                    "error": null,
+                    "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+                  }
+                },
+                {
+                  "path": "groundPrimitives/0/2",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/3",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                }
+              ],
+              "unsupportedOwners": []
+            }
+          },
+          "stableFrames": 0,
+          "signatureStable": false
+        },
+        {
+          "elapsedMs": 422,
+          "remainingMs": 11578,
+          "frameNumber": 954,
+          "dataSourceDisplayReady": true,
+          "globeTilesLoaded": true,
+          "primitiveReadiness": {
+            "available": true,
+            "value": {
+              "ready": false,
+              "observedOwners": 20,
+              "truncated": false,
+              "pending": [
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive"
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive"
+                }
+              ],
+              "owners": [
+                {
+                  "path": "primitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/0/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/1/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/2/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/0",
+                  "type": "EntityCluster",
+                  "ready": true,
+                  "show": true
+                },
+                {
+                  "path": "primitives/0/3/1",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "primitives/0/3/2",
+                  "type": "Primitive",
+                  "ready": false,
+                  "show": false
+                },
+                {
+                  "path": "groundPrimitives",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/0",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0",
+                  "type": "PrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/1/z-group-0/0",
+                  "type": "GroundPolylinePrimitive",
+                  "ready": false,
+                  "show": false,
+                  "buildState": {
+                    "schema": "gev-cesium-ground-polyline-build-state/v1",
+                    "status": "observed",
+                    "cesiumVersion": "1.138.0",
+                    "primitivePresent": true,
+                    "primitiveReady": false,
+                    "primitiveShow": false,
+                    "asynchronous": true,
+                    "innerAsynchronous": true,
+                    "state": {
+                      "value": 1,
+                      "name": "CREATING"
+                    },
+                    "instanceCount": 1913,
+                    "createGeometryResultsCount": null,
+                    "geometriesCount": 0,
+                    "vertexArraysCount": 0,
+                    "error": null,
+                    "ownerPath": "groundPrimitives/0/1/z-group-0/0"
+                  }
+                },
+                {
+                  "path": "groundPrimitives/0/2",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                },
+                {
+                  "path": "groundPrimitives/0/3",
+                  "type": "OrderedGroundPrimitiveCollection",
+                  "ready": null,
+                  "show": true
+                }
+              ],
+              "unsupportedOwners": []
+            }
+          },
+          "stableFrames": 0,
+          "signatureStable": false
+        }
+      ]
+    },
+    "scene": {
+      "dataSourceDisplayReady": {
+        "available": true,
+        "value": true
+      },
+      "globeTilesLoaded": {
+        "available": true,
+        "value": true
+      },
+      "frameNumber": {
+        "available": true,
+        "value": 954
+      }
+    },
+    "layer": {
+      "performance": {
+        "available": true,
+        "value": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "dataSources": 3,
+          "cacheEntries": 2,
+          "referenceRenderer": "entities",
+          "referenceCollections": 0,
+          "referencePointPrimitives": 0,
+          "referenceStemPrimitives": 0
+        }
+      },
+      "stats": {
+        "available": true,
+        "value": {
+          "count": 2629,
+          "lastUpdate": 1791771877006,
+          "loading": false,
+          "loadingLabel": "",
+          "error": null,
+          "referenceLabelCount": 35
+        }
+      }
+    }
+  }
+}

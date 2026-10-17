@@ -14,6 +14,7 @@ import {
   CYCLONE_OVERLAY_SOURCE_ID,
   cycloneStormIdFromEntryId,
 } from './labels.js';
+import { createCycloneEvidence } from './evidence.js';
 import {
   formatUtcDayMonth,
   t,
@@ -71,6 +72,7 @@ export function createCyclonesLayer({
   let viewer = null,
     rendering = null,
     snapshot = null,
+    snapshotReceivedAt = null,
     request = null,
     listener = null,
     selectedId = null,
@@ -78,6 +80,8 @@ export function createCyclonesLayer({
     navigationGeneration = 0,
     clickHandler = null,
     removeClickCapture = null;
+  let investigationHistorical = false,
+    waitingForLatest = false;
   let enabled = false,
     loading = false,
     error = null,
@@ -208,9 +212,55 @@ export function createCyclonesLayer({
           : null;
       notify();
     },
+    attachInvestigationTime(clock, capabilities = null) {
+      if (!clock?.subscribe)
+        throw new TypeError('An investigation clock is required');
+      const removeCapability = capabilities?.register
+        ? capabilities.register({
+            id: 'weather-cyclones',
+            mode: 'live',
+            label: msg('NOAA NHC / CPHC active advisories'),
+            readLive: () => ({
+              sampleTimeMs: Number.isFinite(snapshot?.fetchedAt)
+                ? snapshot.fetchedAt
+                : null,
+              feedStatus: error
+                ? 'unavailable'
+                : snapshot?.stale
+                  ? 'stale'
+                  : 'nominal',
+              recordCount: snapshot?.storms?.length || 0,
+            }),
+          })
+        : () => {};
+      const remove = clock.subscribe((state) => {
+        const nextHistorical = state.mode !== 'live';
+        if (nextHistorical === investigationHistorical) return;
+        investigationHistorical = nextHistorical;
+        request?.abort();
+        request = null;
+        loading = false;
+        if (nextHistorical) {
+          waitingForLatest = false;
+          rendering?.setVisible?.(false);
+        } else {
+          waitingForLatest = true;
+          rendering?.setVisible?.(false);
+          if (enabled) void layer.update(viewer);
+        }
+        notify();
+      });
+      return () => {
+        removeCapability();
+        remove();
+        request?.abort();
+        request = null;
+      };
+    },
     enable() {
       if (!destroyed && !enabled) {
         enabled = true;
+        rendering?.setVisible?.(!investigationHistorical && !waitingForLatest);
         registerPickOwner(
           'weather-cyclones',
           (id) => enabled && rendering?.ownsPickId?.(id) === true,
@@ -227,13 +277,14 @@ export function createCyclonesLayer({
       loading = false;
       error = null;
       snapshot = null;
+      snapshotReceivedAt = null;
       selectedId = null;
       selectionIntent = 'auto';
       ++navigationGeneration;
       rendering?.clear();
     },
     async update(_viewer, { signal } = {}) {
-      if (!enabled || destroyed) return false;
+      if (!enabled || destroyed || investigationHistorical) return false;
       request?.abort();
       const controller = new AbortController();
       if (signal?.aborted) controller.abort(signal.reason);
@@ -250,6 +301,8 @@ export function createCyclonesLayer({
         if (next.unavailable) {
           // An expired advisory must not remain presented as current hazard context.
           rendering.clear();
+          waitingForLatest = false;
+          rendering?.setVisible?.(false);
           snapshot = next;
           selectedId = null;
           ++navigationGeneration;
@@ -267,7 +320,10 @@ export function createCyclonesLayer({
         )
           return false;
         snapshot = next;
+        snapshotReceivedAt = Date.now();
         error = null;
+        waitingForLatest = false;
+        rendering?.setVisible?.(true);
         if (!snapshot.storms.some((storm) => storm.id === selectedId))
           select(
             selectionIntent === 'cleared'
@@ -279,9 +335,13 @@ export function createCyclonesLayer({
       } catch (cause) {
         if (controller.signal.aborted || request !== controller) return false;
         error = cause?.message || ADVISORIES_UNAVAILABLE;
+        waitingForLatest = false;
+
         // Failed acquisition has no bounded last-good age guarantee at this layer.
         rendering?.clear();
+        rendering?.setVisible?.(false);
         snapshot = null;
+        snapshotReceivedAt = null;
         selectedId = null;
         ++navigationGeneration;
         return true;
@@ -470,7 +530,8 @@ export function createCyclonesLayer({
      * @returns {Array<Object>} {id, name, classification, basin, lat, lon, windKt, pressureHpa}.
      */
     getAnalystRecords(maxCount = Infinity) {
-      if (!enabled || destroyed) return [];
+      if (!enabled || destroyed || investigationHistorical || waitingForLatest)
+        return [];
       const num = (v) => (Number.isFinite(v) ? v : null);
       const result = [];
       for (const storm of snapshot?.storms || []) {
@@ -487,6 +548,11 @@ export function createCyclonesLayer({
           lon,
           windKt: num(storm.windKt),
           pressureHpa: num(storm.pressureHpa),
+          evidence: createCycloneEvidence(storm, {
+            receivedAt: snapshotReceivedAt,
+            snapshotAt: snapshot?.fetchedAt,
+            feedState: snapshot?.stale ? 'stale' : 'nominal',
+          }),
         });
       }
       return result;
@@ -494,13 +560,23 @@ export function createCyclonesLayer({
     getStats() {
       const storm = selected();
       return {
-        count: snapshot?.storms.length || 0,
+        count:
+          investigationHistorical || waitingForLatest
+            ? 0
+            : snapshot?.storms.length || 0,
+        liveCount: snapshot?.storms.length || 0,
         lastUpdate: storm
           ? Date.parse(storm.issuedAt)
           : snapshot?.fetchedAt || null,
         loading,
         error,
         stale: Boolean(snapshot?.stale),
+        temporalAlignment: investigationHistorical ? 'unsupported' : 'live',
+        loadingLabel: investigationHistorical
+          ? t('History unavailable · live advisories hidden')
+          : waitingForLatest
+            ? t('LIVE · refreshing after investigation')
+            : '',
         source: 'NOAA NHC / CPHC',
         advisoryAt: storm?.issuedAt || null,
         empty: Boolean(

@@ -11,8 +11,19 @@ function deferred() {
   return { promise, resolve };
 }
 
-function setup(t, requestRoads, getStatus = async () => ({ hasKey: false })) {
-  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+function setup(
+  t,
+  requestRoads,
+  getStatus = async () => ({ hasKey: false }),
+  { mockTimers = true } = {},
+) {
+  if (mockTimers) t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const renderDemand = {
+    held: false,
+    holds: 0,
+    releases: 0,
+    requests: [],
+  };
   const camera = {
     positionCartographic: Cesium.Cartographic.fromDegrees(
       -97.744,
@@ -52,7 +63,19 @@ function setup(t, requestRoads, getStatus = async () => ({ hasKey: false })) {
   const layer = createTrafficLayer({
     services: {
       credits: {},
-      render: { holdContinuousRender() {}, releaseContinuousRender() {} },
+      render: {
+        holdContinuousRender() {
+          renderDemand.held = true;
+          renderDemand.holds++;
+        },
+        releaseContinuousRender() {
+          renderDemand.held = false;
+          renderDemand.releases++;
+        },
+        governorRequestRender(reason) {
+          renderDemand.requests.push(reason);
+        },
+      },
     },
     source: {
       requestRoads,
@@ -77,7 +100,7 @@ function setup(t, requestRoads, getStatus = async () => ({ hasKey: false })) {
     t.mock.timers.tick(ms);
     for (let i = 0; i < 30; i++) await Promise.resolve();
   };
-  return { layer, viewer, move, tick };
+  return { layer, viewer, move, tick, renderDemand };
 }
 function roads(bounds) {
   return {
@@ -96,6 +119,81 @@ function roads(bounds) {
     }),
   };
 }
+
+test('an enabled empty high-altitude traffic layer does not hold continuous rendering', async (t) => {
+  const h = setup(t, async () => {
+    throw new Error('high-altitude traffic must not fetch roads');
+  });
+  h.viewer.camera.positionCartographic = Cesium.Cartographic.fromDegrees(
+    -97.744,
+    30.267,
+    1_000_000,
+  );
+
+  h.layer.enable(h.viewer);
+  await h.tick(10_000);
+
+  assert.equal(h.layer.getStats().count, 0);
+  assert.equal(h.renderDemand.held, false);
+  assert.equal(h.renderDemand.holds, 0);
+  assert.equal(h.renderDemand.releases, 0);
+  assert.ok(
+    h.renderDemand.requests.includes('traffic-enabled'),
+    'enabling still requests a discrete frame for the visible collection state',
+  );
+});
+
+test('traffic acquires before the first populated frame and releases after high-altitude clear', async (t) => {
+  const h = setup(t, async (bounds) => roads(bounds));
+  h.layer.enable(h.viewer);
+  assert.equal(h.renderDemand.held, false, 'empty startup is request-driven');
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0);
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(h.renderDemand.holds >= 1);
+  assert.ok(h.renderDemand.requests.includes('traffic-animation-boundary'));
+
+  h.move(-97.744, 30.267, 1_000_000);
+  await h.tick(0);
+  assert.equal(h.layer.getStats().count, 0);
+  assert.equal(h.renderDemand.held, false);
+  assert.ok(h.renderDemand.requests.includes('traffic-cleared'));
+
+  h.move(-97.744, 30.267, 3200);
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0, 'new viewport data repopulates dots');
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(
+    h.renderDemand.requests.includes('traffic-animation-boundary'),
+    'rearrival requests the first rendered frame before animation proceeds',
+  );
+  h.layer.disable(h.viewer);
+  assert.equal(h.renderDemand.held, false);
+});
+
+test('retiring dot populations keep traffic demand until the fade work drains', async (t) => {
+  const h = setup(t, async (bounds) => roads(bounds));
+  h.layer.enable(h.viewer);
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0);
+  assert.equal(h.renderDemand.held, true);
+
+  h.layer.setParams({ densityScale: 0.2 });
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(
+    h.layer.getLoadingDiagnostics().populationPending ||
+      h.layer.getStats().count > 0,
+    'retiring/remaining point contributions continue to own animation frames',
+  );
+  h.layer.disable(h.viewer);
+  assert.equal(h.renderDemand.held, false);
+  await h.tick(1000);
+  assert.equal(
+    h.renderDemand.held,
+    false,
+    'disabled callbacks cannot reacquire demand',
+  );
+});
 
 test('traffic recovers a failed destination request after another city has loaded', async (t) => {
   let londonCalls = 0;
@@ -338,6 +436,100 @@ test('traffic surface observers belong to enable and leave no listener after dis
   layer.destroy(viewer);
   assert.equal(viewer.scene.postRender.numberOfListeners, 0);
   assert.equal(viewer.scene.preRender.numberOfListeners, 0);
+});
+
+test('traffic style listeners are owned by each layer and removed on destroy', (t) => {
+  class CountingEventTarget extends EventTarget {
+    listeners = new Map();
+
+    addEventListener(type, listener, options) {
+      super.addEventListener(type, listener, options);
+      if (!this.listeners.has(type)) this.listeners.set(type, new Set());
+      this.listeners.get(type).add(listener);
+    }
+
+    removeEventListener(type, listener, options) {
+      super.removeEventListener(type, listener, options);
+      this.listeners.get(type)?.delete(listener);
+    }
+
+    listenerCount(type) {
+      return this.listeners.get(type)?.size || 0;
+    }
+
+    changeStyle(style) {
+      const event = new Event('gev:style-change');
+      Object.defineProperty(event, 'detail', { value: { style } });
+      this.dispatchEvent(event);
+    }
+  }
+
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document',
+  );
+  const eventTarget = new CountingEventTarget();
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: eventTarget,
+  });
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement: { dataset: { gevStyle: 'normal' } } },
+  });
+  t.after(() => {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousDocument)
+      Object.defineProperty(globalThis, 'document', previousDocument);
+    else delete globalThis.document;
+  });
+
+  const baseline = eventTarget.listenerCount('gev:style-change');
+  const first = setup(t, async (bounds) => roads(bounds));
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+
+  first.layer.disable(first.viewer);
+  eventTarget.changeStyle('nvg');
+  assert.equal(
+    first.layer.getStats().stylePreset,
+    'nvg',
+    'style changes remain active while the traffic layer is disabled',
+  );
+  eventTarget.changeStyle('normal');
+  first.layer.destroy(first.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
+  eventTarget.changeStyle('nvg');
+  assert.equal(
+    first.layer.getStats().stylePreset,
+    'normal',
+    'destroyed layers no longer receive style changes',
+  );
+
+  for (let cycle = 0; cycle < 3; cycle++) {
+    first.layer.init(first.viewer);
+    assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+    first.layer.destroy(first.viewer);
+    first.layer.destroy(first.viewer);
+    assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
+  }
+
+  const second = setup(t, async (bounds) => roads(bounds), undefined, {
+    mockTimers: false,
+  });
+  const third = setup(t, async (bounds) => roads(bounds), undefined, {
+    mockTimers: false,
+  });
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 2);
+  second.layer.destroy(second.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+  eventTarget.changeStyle('retro');
+  assert.equal(second.layer.getStats().stylePreset, 'normal');
+  assert.equal(third.layer.getStats().stylePreset, 'retro');
+  third.layer.destroy(third.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
 });
 
 test('coverage changes at the same center reload and disabling invalidates coverage without dropping source caches', async (t) => {

@@ -1,0 +1,2 @@
+# Preserve captured logs byte-for-byte, including output whitespace.
+*.log -text whitespace=cr-at-eol,-blank-at-eol

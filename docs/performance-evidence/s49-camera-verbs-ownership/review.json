@@ -1,0 +1,53 @@
+{
+  "schema": "gev-camera-ownership-review/v1",
+  "sourceCommit": "4d077c7f558444b0cce6a1d889eb986315597b5b",
+  "qaCommit": "58205d2b33367d6d8c556f515190b2d437ce1723",
+  "upstreamCommit": "591f299d11f38a612629a274463196d57ae3862e",
+  "baselineCommit": "6cc3cd0f5c69555640a64bd958819056d27fa43c",
+  "sourceHashes": {
+    "src/cameraVerbs.js": "0d5fc65abfabfaa2b9bc72b30e3a7399ab6a5c0ede55e5a4eb9ba25ddf440704",
+    "src/app/scene.js": "d6ebdfb29a05f0be691021fc0c9022cb18988358ef8d254d049c086b0eca11e0",
+    "src/app/sceneViewerLifecycle.js": "f7a93632175193eee8c668d8b6b26065e9442a9ce9bd9cbaa23416f7c56d30fd",
+    "src/cameraVerbsOwnership.test.mjs": "5cf48e12173e974418b2ab3176f04377fd62c704dc165033582e52e6f4c58f27"
+  },
+  "codeImplemented": true,
+  "focusedTests": {
+    "passed": 180,
+    "failed": 0
+  },
+  "negativeReplacementControl": "failed as expected",
+  "candidateReplacementControl": "passed",
+  "formatting": "passed",
+  "packageBoundaries": "passed",
+  "integrationCi": {
+    "runId": 38259509629,
+    "testedCommit": "68aff52b3d39eeee1f1e18378a5ba973e662ee31",
+    "status": "passed",
+    "jobsPassed": 7
+  },
+  "hardwareValidated": false,
+  "limitations": "Real Cesium events and camera/canvas stubs verify ownership only. No browser frame-delivery, full tracking latency, post-GC retention plateau or S49/S55 completion claim.",
+  "tracking": {
+    "runId": 38259574499,
+    "testedCommit": "68aff52b3d39eeee1f1e18378a5ba973e662ee31",
+    "status": "passed",
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0,
+    "naturalBrowserExit": true,
+    "artifacts": {
+      "tracking-regression.log": {
+        "sha256": "73a7003bdf18f09bf4aafb2b44666e7a8cc6d6bbb2539c72a0474f91e5e9b6aa",
+        "bytes": 25393
+      },
+      "tracking-source.txt": {
+        "sha256": "e1185edff4208877a6ecb30c71ca71a7a494e21cf8cb032ff70ed82484b14492",
+        "bytes": 41
+      },
+      "tracking-source-status.txt": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    }
+  }
+}

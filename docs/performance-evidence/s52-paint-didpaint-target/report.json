@@ -1,0 +1,775 @@
+{
+  "schema": "s52-didpaint-keyhole-target-controls/v1",
+  "scope": "Five alternating paired Node GC-bracketed allocation comparisons on unchanged baseline233d versus staged didPaint/keyhole-signature runtime. Focused candidate tests include low-alpha stable/recovery, same-geometry tuning, edgeFade, and detection-callback mutation. No pixel/GPU/browser performance claim.",
+  "baselineRuntimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+  "candidateRuntimeSha256": "2cf2d2c0cbaa22e17e6b32736c461c8a05331129bc7809ceeea5d680bfa1c523",
+  "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+  "prototypeAppendSha256": "064c436ee4a9e8c4452d64daf561db3b21b4d9f7ad9e8a36d9f5b127ecff86b2",
+  "unregisterAppendSha256": "45fbaf9d63b6e0cb2ccd0a8636351b85eda06cd205e385f966feb28912dcd92b",
+  "lowAlphaRegressionAppendSha256": "63fc0d8eba6838353835358225c2f23d60e7f26d7d54f6628bdfbff716626953",
+  "focusedTestSha256": "dda963e91e4d532550e9646090a46df19e4c98611843962f5bb59123f6108c0d",
+  "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "conditions": {
+    "warmupFrames": 3000,
+    "chunkFrames": 48,
+    "measuredChunks": 10,
+    "order": [
+      {
+        "pair": 0,
+        "side": "baseline",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 0,
+        "side": "baseline",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 0,
+        "side": "candidate",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 0,
+        "side": "candidate",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 1,
+        "side": "candidate",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 1,
+        "side": "candidate",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 1,
+        "side": "baseline",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 1,
+        "side": "baseline",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 2,
+        "side": "baseline",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 2,
+        "side": "baseline",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 2,
+        "side": "candidate",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 2,
+        "side": "candidate",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 3,
+        "side": "candidate",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 3,
+        "side": "candidate",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 3,
+        "side": "baseline",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 3,
+        "side": "baseline",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 4,
+        "side": "baseline",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 4,
+        "side": "baseline",
+        "profile": "submarine-cables"
+      },
+      {
+        "pair": 4,
+        "side": "candidate",
+        "profile": "local-infrastructure"
+      },
+      {
+        "pair": 4,
+        "side": "candidate",
+        "profile": "submarine-cables"
+      }
+    ]
+  },
+  "focused": {
+    "exitCode": 0,
+    "summary": []
+  },
+  "profiles": {
+    "local-infrastructure": {
+      "entries": 320,
+      "pairs": [
+        {
+          "pair": 0,
+          "baselineMedian": 38857.333333333336,
+          "candidateMedian": 37188.333333333336,
+          "deltaPct": -4.295199533335625,
+          "baselineMax": 39573,
+          "candidateMax": 37729.333333333336
+        },
+        {
+          "pair": 1,
+          "baselineMedian": 49104,
+          "candidateMedian": 42308.666666666664,
+          "deltaPct": -13.838655370913443,
+          "baselineMax": 49812.666666666664,
+          "candidateMax": 42845
+        },
+        {
+          "pair": 2,
+          "baselineMedian": 49104,
+          "candidateMedian": 42308.666666666664,
+          "deltaPct": -13.838655370913443,
+          "baselineMax": 49812.666666666664,
+          "candidateMax": 42845
+        },
+        {
+          "pair": 3,
+          "baselineMedian": 49104,
+          "candidateMedian": 42308.666666666664,
+          "deltaPct": -13.838655370913443,
+          "baselineMax": 49812.666666666664,
+          "candidateMax": 42845
+        },
+        {
+          "pair": 4,
+          "baselineMedian": 43984,
+          "candidateMedian": 42308.666666666664,
+          "deltaPct": -3.8089608342427583,
+          "baselineMax": 44693,
+          "candidateMax": 42845
+        }
+      ],
+      "medianDeltaPct": -13.838655370913443,
+      "minDeltaPct": -13.838655370913443,
+      "maxDeltaPct": -3.8089608342427583
+    },
+    "submarine-cables": {
+      "entries": 160,
+      "pairs": [
+        {
+          "pair": 0,
+          "baselineMedian": 21398.666666666668,
+          "candidateMedian": 18061.666666666668,
+          "deltaPct": -15.59442955947411,
+          "baselineMax": 21695.833333333332,
+          "candidateMax": 18250.833333333332
+        },
+        {
+          "pair": 1,
+          "baselineMedian": 21398.666666666668,
+          "candidateMedian": 18061.666666666668,
+          "deltaPct": -15.59442955947411,
+          "baselineMax": 21695.833333333332,
+          "candidateMax": 18250.833333333332
+        },
+        {
+          "pair": 2,
+          "baselineMedian": 21398.666666666668,
+          "candidateMedian": 18061.666666666668,
+          "deltaPct": -15.59442955947411,
+          "baselineMax": 21695.833333333332,
+          "candidateMax": 18250.833333333332
+        },
+        {
+          "pair": 3,
+          "baselineMedian": 21398.666666666668,
+          "candidateMedian": 18061.666666666668,
+          "deltaPct": -15.59442955947411,
+          "baselineMax": 21695.833333333332,
+          "candidateMax": 18250.833333333332
+        },
+        {
+          "pair": 4,
+          "baselineMedian": 21398.666666666668,
+          "candidateMedian": 18061.666666666668,
+          "deltaPct": -15.59442955947411,
+          "baselineMax": 21695.833333333332,
+          "candidateMax": 18250.833333333332
+        }
+      ],
+      "medianDeltaPct": -15.59442955947411,
+      "minDeltaPct": -15.59442955947411,
+      "maxDeltaPct": -15.59442955947411
+    }
+  },
+  "rows": [
+    {
+      "pair": 0,
+      "side": "baseline",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 38857.333333333336,
+      "maxBytesPerFrame": 39573,
+      "chunkBytesPerFrame": [
+        39124.833333333336,
+        38693.833333333336,
+        39231,
+        39131.666666666664,
+        38857.333333333336,
+        38100.666666666664,
+        37360.166666666664,
+        38004.833333333336,
+        38854.833333333336,
+        39573
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "93bd4b472dbc25d57299cd9bdf609b3e23b59d9b46c4d5ddf477e9735426c399",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 0,
+      "side": "baseline",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 21398.666666666668,
+      "maxBytesPerFrame": 21695.833333333332,
+      "chunkBytesPerFrame": [
+        20995.666666666668,
+        21060.5,
+        21164,
+        21298.333333333332,
+        21604.666666666668,
+        21435.666666666668,
+        21576.333333333332,
+        21695.833333333332,
+        21398.666666666668,
+        21145.166666666668
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 0,
+      "side": "candidate",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 37188.333333333336,
+      "maxBytesPerFrame": 37729.333333333336,
+      "chunkBytesPerFrame": [
+        37285.5,
+        36995.666666666664,
+        37557.333333333336,
+        37357,
+        37132.5,
+        36735.166666666664,
+        36160.5,
+        36565.333333333336,
+        37188.333333333336,
+        37729.333333333336
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "6198c32fc0797e638c2a390d1f1b5ddf335a66bdd8d3b627b777eca18c723aae",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 0,
+      "side": "candidate",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 18061.666666666668,
+      "maxBytesPerFrame": 18250.833333333332,
+      "chunkBytesPerFrame": [
+        17763.833333333332,
+        17787.666666666668,
+        17852,
+        17913.333333333332,
+        18155.333333333332,
+        18061.666666666668,
+        18145.166666666668,
+        18250.833333333332,
+        18101,
+        17889.833333333332
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 1,
+      "side": "candidate",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 42308.666666666664,
+      "maxBytesPerFrame": 42845,
+      "chunkBytesPerFrame": [
+        42431.666666666664,
+        42116,
+        42468.666666666664,
+        42477,
+        42252.833333333336,
+        41855.5,
+        41280.833333333336,
+        41685.666666666664,
+        42308.666666666664,
+        42845
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 1,
+      "side": "candidate",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 18061.666666666668,
+      "maxBytesPerFrame": 18250.833333333332,
+      "chunkBytesPerFrame": [
+        17763.833333333332,
+        17787.666666666668,
+        17852,
+        17913.333333333332,
+        18155.333333333332,
+        18061.666666666668,
+        18145.166666666668,
+        18250.833333333332,
+        18101,
+        17889.833333333332
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 1,
+      "side": "baseline",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 49104,
+      "maxBytesPerFrame": 49812.666666666664,
+      "chunkBytesPerFrame": [
+        49390.333333333336,
+        48934,
+        49470.666666666664,
+        49371,
+        49097,
+        48340.666666666664,
+        47600.166666666664,
+        48244.833333333336,
+        49104,
+        49812.666666666664
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 1,
+      "side": "baseline",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 21398.666666666668,
+      "maxBytesPerFrame": 21695.833333333332,
+      "chunkBytesPerFrame": [
+        20995.666666666668,
+        21060.5,
+        21164,
+        21298.333333333332,
+        21604.666666666668,
+        21435.666666666668,
+        21576.333333333332,
+        21695.833333333332,
+        21398.666666666668,
+        21145.166666666668
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 2,
+      "side": "baseline",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 49104,
+      "maxBytesPerFrame": 49812.666666666664,
+      "chunkBytesPerFrame": [
+        49390.333333333336,
+        48934,
+        49470.666666666664,
+        49371,
+        49097,
+        48340.666666666664,
+        47600.166666666664,
+        48244.833333333336,
+        49104,
+        49812.666666666664
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 2,
+      "side": "baseline",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 21398.666666666668,
+      "maxBytesPerFrame": 21695.833333333332,
+      "chunkBytesPerFrame": [
+        20995.666666666668,
+        21060.5,
+        21164,
+        21298.333333333332,
+        21604.666666666668,
+        21435.666666666668,
+        21576.333333333332,
+        21695.833333333332,
+        21398.666666666668,
+        21145.166666666668
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 2,
+      "side": "candidate",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 42308.666666666664,
+      "maxBytesPerFrame": 42845,
+      "chunkBytesPerFrame": [
+        42431.666666666664,
+        42116,
+        42468.666666666664,
+        42477,
+        42252.833333333336,
+        41855.5,
+        41280.833333333336,
+        41685.666666666664,
+        42308.666666666664,
+        42845
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 2,
+      "side": "candidate",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 18061.666666666668,
+      "maxBytesPerFrame": 18250.833333333332,
+      "chunkBytesPerFrame": [
+        17763.833333333332,
+        17787.666666666668,
+        17852,
+        17913.333333333332,
+        18155.333333333332,
+        18061.666666666668,
+        18145.166666666668,
+        18250.833333333332,
+        18101,
+        17889.833333333332
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 3,
+      "side": "candidate",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 42308.666666666664,
+      "maxBytesPerFrame": 42845,
+      "chunkBytesPerFrame": [
+        42431.666666666664,
+        42116,
+        42468.666666666664,
+        42477,
+        42252.833333333336,
+        41855.5,
+        41280.833333333336,
+        41685.666666666664,
+        42308.666666666664,
+        42845
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 3,
+      "side": "candidate",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 18061.666666666668,
+      "maxBytesPerFrame": 18250.833333333332,
+      "chunkBytesPerFrame": [
+        17763.833333333332,
+        17787.666666666668,
+        17852,
+        17913.333333333332,
+        18155.333333333332,
+        18061.666666666668,
+        18145.166666666668,
+        18250.833333333332,
+        18101,
+        17889.833333333332
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 3,
+      "side": "baseline",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 49104,
+      "maxBytesPerFrame": 49812.666666666664,
+      "chunkBytesPerFrame": [
+        49390.333333333336,
+        48934,
+        49470.666666666664,
+        49371,
+        49097,
+        48340.666666666664,
+        47600.166666666664,
+        48244.833333333336,
+        49104,
+        49812.666666666664
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "edd61d9ef08b15b225033217ea065fbfd75ba9662aa3104239118338d2531871",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 3,
+      "side": "baseline",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 21398.666666666668,
+      "maxBytesPerFrame": 21695.833333333332,
+      "chunkBytesPerFrame": [
+        20995.666666666668,
+        21060.5,
+        21164,
+        21298.333333333332,
+        21604.666666666668,
+        21435.666666666668,
+        21576.333333333332,
+        21695.833333333332,
+        21398.666666666668,
+        21145.166666666668
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 4,
+      "side": "baseline",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 43984,
+      "maxBytesPerFrame": 44693,
+      "chunkBytesPerFrame": [
+        44244.666666666664,
+        43813.666666666664,
+        44351.5,
+        44251.5,
+        43977.166666666664,
+        43220.333333333336,
+        42480.166666666664,
+        43124.5,
+        43984,
+        44693
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "ccf64fd5121fc8ba9fd4cd1b06e6b04fed9af8e02374045f615b8eab2368d486",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 4,
+      "side": "baseline",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 21398.666666666668,
+      "maxBytesPerFrame": 21695.833333333332,
+      "chunkBytesPerFrame": [
+        20995.666666666668,
+        21060.5,
+        21164,
+        21298.333333333332,
+        21604.666666666668,
+        21435.666666666668,
+        21576.333333333332,
+        21695.833333333332,
+        21398.666666666668,
+        21145.166666666668
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "936e1898adccf6a53f40f2e2527471b394924de60481dc072f617de76513325c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 4,
+      "side": "candidate",
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "medianBytesPerFrame": 42308.666666666664,
+      "maxBytesPerFrame": 42845,
+      "chunkBytesPerFrame": [
+        42431.666666666664,
+        42116,
+        42468.666666666664,
+        42477,
+        42252.833333333336,
+        41855.5,
+        41280.833333333336,
+        41685.666666666664,
+        42308.666666666664,
+        42845
+      ],
+      "candidateCount": 320,
+      "paintedCount": 192,
+      "paintedBySource": {
+        "local-dams": 96,
+        "local-datacenters": 96
+      },
+      "stdoutSha256": "d5c4f04896a18529f643652b3e81fc98b470c370f30a51d2e06f7d6dbdafc8b9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pair": 4,
+      "side": "candidate",
+      "profile": "submarine-cables",
+      "entries": 160,
+      "medianBytesPerFrame": 18061.666666666668,
+      "maxBytesPerFrame": 18250.833333333332,
+      "chunkBytesPerFrame": [
+        17763.833333333332,
+        17787.666666666668,
+        17852,
+        17913.333333333332,
+        18155.333333333332,
+        18061.666666666668,
+        18145.166666666668,
+        18250.833333333332,
+        18101,
+        17889.833333333332
+      ],
+      "candidateCount": 160,
+      "paintedCount": 96,
+      "paintedBySource": {
+        "telegeography-submarine-cables": 96
+      },
+      "stdoutSha256": "e1d3213076c272bfa416c27cd76ad03e4cac319b8ad44e88148eb8c5436739f9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

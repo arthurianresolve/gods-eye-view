@@ -1,0 +1,119 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-12T23:25:40.512Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38321326898",
+  "testedCommit": "66d8c8c169f53a358f2e8ac9a3a65b25fe171fab",
+  "status": "failed",
+  "comparisonEligible": false,
+  "completedSampleCount": 0,
+  "failure": {
+    "phase": "measurement-boundary-render-wait",
+    "scenario": "idle",
+    "run": 1,
+    "message": "measurementBoundarySettle is not defined",
+    "operator": null
+  },
+  "verifiedRenderer": {
+    "schema": "gev-hosted-renderer-diagnostic/v1",
+    "requestedBackend": "macos-native-diagnostic",
+    "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "observedWebglVendor": "Google Inc. (Apple)",
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "status": "verified",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "physicalDesktopCoverage": false,
+    "hostedEnvironment": "github-actions-macos",
+    "comparisonEligible": false,
+    "performanceAcceptanceEligible": false
+  },
+  "warmup": {
+    "status": "settled",
+    "hostElapsedMs": 67.91862499999843,
+    "pageSettleElapsedMs": 27.29999999998836,
+    "postRenderObserved": true,
+    "pageCleanup": {
+      "timerCleared": true,
+      "listenerRemoved": true
+    },
+    "hostCleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": true,
+      "progressInvocationReleased": true,
+      "progressBindingCleanupElapsedMs": null
+    },
+    "renderLoopRetirement": null
+  },
+  "measurementBoundary": {
+    "status": "settled",
+    "hostElapsedMs": 43.52387499999895,
+    "pageSettleElapsedMs": 29.800000000017462,
+    "postRenderObserved": true,
+    "pageCleanup": {
+      "timerCleared": true,
+      "listenerRemoved": true
+    },
+    "hostCleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": true,
+      "progressInvocationReleased": true,
+      "progressBindingCleanupElapsedMs": null
+    },
+    "renderLoopRetirement": {
+      "requested": true,
+      "status": "retired-at-final-post-render",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0.10000000000582077
+    }
+  },
+  "cleanupRecomputed": [
+    {
+      "documentRole": "startup-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "fileName": "hosted-native-38321326898-smoke-failed.json",
+      "byteLength": 300044,
+      "sha256": "45e203f7a70cf4fc90affd63164e373e30883f69d9d3b020659862425579eb31"
+    },
+    {
+      "fileName": "hosted-native-38321326898-cli-failed.json",
+      "byteLength": 207316,
+      "sha256": "5f959cf026cb793f07162048643b76b0bad5d52f4abe14c63f802ef934c6b1f0"
+    }
+  ],
+  "limitations": [
+    "Boundaries settle, but a harness ReferenceError prevents completed sample assembly.",
+    "Boundary wait durations are not motion latency or GPU execution time.",
+    "Hosted paravirtual Metal remains nonphysical diagnostic evidence."
+  ]
+}

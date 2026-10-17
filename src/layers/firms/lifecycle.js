@@ -46,8 +46,15 @@ export function createLifecycle({
       registerPickOwner(id, (pickedId) =>
         layerState._pickIndexById.has(pickedId),
       );
-      if (!layerState._fires.length && !layerState._loading)
-        await components.ingestion.loadHeatmap();
+      if (
+        !layerState._loading &&
+        (layerState._investigationTargetMs !== null ||
+          layerState._needsLiveRefresh ||
+          !layerState._fires.length)
+      )
+        await components.ingestion.loadHeatmap(
+          layerState._investigationTargetMs,
+        );
       if (
         layerState._enabled &&
         !layerState._destroyed &&
@@ -97,6 +104,8 @@ export function createLifecycle({
       layerState._count = 0;
       layerState._cellCount = 0;
       layerState._lastUpdate = null;
+      layerState._receivedAt = null;
+      layerState._missingSources = [];
       layerState._keyRequired = false;
       layerState._stale = false;
       layerState._error = null;
@@ -104,6 +113,11 @@ export function createLifecycle({
       overlayHost.clearSource(FIRMS_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(FIRMS_OVERLAY_SOURCE_ID, false);
       layerState._currentLodIndex = -1;
+      layerState._investigationTargetMs = null;
+      layerState._historyLoadedTargetMs = null;
+      layerState._historyStatus = null;
+      layerState._historyEffectiveTime = null;
+      layerState._needsLiveRefresh = false;
       layerState._lastViewRect = null;
       layerState._selectedFire = null;
       layerState._labelCandidates = [];

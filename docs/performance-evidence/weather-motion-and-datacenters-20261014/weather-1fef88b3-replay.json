@@ -1,0 +1,19 @@
+{
+  "source": "1fef88b35f25c610063676582ac0e6c0cdffeaed",
+  "validatorRevision": "ea1692e8",
+  "rawSha256": "5bde8f93303d4e7de7bb5622241bf36ecb9b3e48dda58ec791fa5650e958ed9c",
+  "status": "passed",
+  "comparisonEligible": false,
+  "fixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+  "captureCount": 2,
+  "preflight": [
+    "2026-10-08T12:00:00.000Z",
+    "2026-10-08T11:50:00.000Z",
+    "2026-10-08T11:55:00.000Z",
+    "2026-10-08T12:00:00.000Z",
+    "2026-10-08T12:00:00.000Z"
+  ],
+  "negativeControlsRejected": 3,
+  "receiptScope": "Replay uses the receipt digest recorded by the original served-build capture; receipt bytes were not independently downloaded.",
+  "originalWorkflowOutcome": "failure remains unchanged"
+}

@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   ALLOCATION_TEST_FILES,
+  PERFORMANCE_HARNESS_TEST_FILES,
   UNIT_TEST_ROOTS,
   allocationTestArgs,
   assertNode24AllocationRuntime,
@@ -19,7 +20,15 @@ const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 function testFilesOnDisk(root) {
   // Build outputs and dependencies are not places a contributor writes a test,
   // and walking them would be slow enough to matter. Everything else counts.
-  const skip = new Set(['node_modules', 'dist', 'build', 'public']);
+  const skip = new Set([
+    'node_modules',
+    'dist',
+    'build',
+    'public',
+    // Generated evidence can contain copied source trees and rejected test
+    // variants; none of those files are active repository suites.
+    'qa-artifacts',
+  ]);
   const found = [];
   const visit = (directory) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -79,6 +88,11 @@ test('the runner discovers every test file in the repository', () => {
     `test files the runner never executes: ${undiscovered.join(', ')}`,
   );
   assert.deepEqual(discovered, onDisk);
+  assert.deepEqual(
+    [...PERFORMANCE_HARNESS_TEST_FILES].sort(),
+    onDisk.filter((file) => file.startsWith('scripts/')),
+    'the historical performance-harness ledger should cover every script test',
+  );
   for (const file of discovered) {
     assert.ok(
       UNIT_TEST_ROOTS.some((root) => file.startsWith(`${root}/`)),

@@ -33,18 +33,28 @@ function assertResumeGate(name, makePass) {
     };
 
     assert.equal(tick(0, target).ran, true);
+    tick(params.attackMs - 40, target);
+    assert.ok(readAlpha() > params.dimFloor);
+    assert.ok(readAlpha() - params.dimFloor < params.writeEpsilon);
     const settled = tick(params.attackMs + 1, target);
     assert.equal(settled.activeCount, 1);
     assert.equal(readAlpha(), params.dimFloor);
+    assert.equal(settled.writes, 1, 'attack endpoint bypasses only the final deadband');
 
     const releaseStart = tick(params.attackMs + 1, null);
     assert.equal(releaseStart.ran, true, 'active count keeps the no-target release pass alive');
     assert.equal(releaseStart.activeCount, 1);
 
+    const almostRestored = tick(params.attackMs + 1 + 490, null);
+    assert.ok(readAlpha() < 1);
+    assert.ok(1 - readAlpha() < params.writeEpsilon);
+    assert.equal(almostRestored.activeCount, 1, 'release stays owned until the endpoint');
+
     const restored = tick(params.attackMs + params.releaseMs + 2, null);
     assert.equal(restored.ran, true);
     assert.equal(restored.activeCount, 0);
     assert.equal(readAlpha(), 1);
+    assert.equal(restored.writes, 1, 'the original full opacity is restored exactly');
 
     assert.equal(tick(params.attackMs + params.releaseMs + 82, null).ran, false);
   });

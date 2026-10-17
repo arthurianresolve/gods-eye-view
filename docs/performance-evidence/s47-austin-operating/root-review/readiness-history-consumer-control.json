@@ -1,0 +1,13 @@
+{
+  "schema": "gev-readiness-history-consumer-control/v1",
+  "capturedAt": "2026-10-13T00:55:27.630Z",
+  "oldConsumerCommit": "5dac1293f4aab3ea03dd2dab9c8ba5a89eb8a1c1",
+  "integrationCommit": "2a1cff054645acf03fb619ac2c8c3b50b74b97e7",
+  "method": "Actual producer-backed test with read-only loader replacement of the prior smoke validator; current aggregation/helper remains unchanged between runs.",
+  "oldExit": 1,
+  "candidateExit": 0,
+  "limitations": [
+    "Offline Node sampler/aggregation/consumer control only; no historical field repair or rendered capture pass.",
+    "Initial invocation used a Windows path rather than a file URL for the loader and failed before the test; corrected invocation is the reported control."
+  ]
+}

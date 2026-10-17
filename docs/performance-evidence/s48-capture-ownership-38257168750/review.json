@@ -1,0 +1,107 @@
+{
+  "schema": "gev-capture-artifact-review/v1",
+  "sourceCommit": "5441b0386e318d4cd1e57800cfd0f163f6a15461",
+  "runStatus": "failed",
+  "rawArtifact": {
+    "schema": "gev-smoke-capture-cli-report-artifact/v1",
+    "status": "preserved",
+    "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+    "byteLength": 6890,
+    "sha256": "9fd3076ce19b27045e669f8e94803ff983696542da35708233636881da235da1",
+    "limitBytes": 8388608,
+    "childStatus": "failed",
+    "bytesIndependentlyVerified": true,
+    "inlineReportIdentical": true
+  },
+  "failure": {
+    "phase": "startup-navigation",
+    "scenario": null,
+    "run": 1,
+    "message": "Early Cesium renderer future-document registration removal was not confirmed.",
+    "operator": null
+  },
+  "cleanup": [
+    {
+      "schema": "gev-early-renderer-registration-removal/v1",
+      "confirmed": false,
+      "timeoutMs": 1000,
+      "elapsedMs": 1000.4914290000006,
+      "currentDocumentUntouched": true,
+      "scriptRegistration": {
+        "status": "timeout",
+        "elapsedMs": 1000.4914290000006,
+        "pageExecutionElapsedMs": null,
+        "errorKind": "operation-timeout",
+        "errorDetail": null,
+        "lateCompletion": "confirmed",
+        "lateHostReceiptElapsedMs": null,
+        "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+        "lateOutcome": null,
+        "lateErrorKind": null,
+        "lateErrorDetail": null,
+        "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+      },
+      "phase": "startup-navigation",
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1"
+    },
+    {
+      "schema": "gev-early-renderer-probe-cleanup/v1",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "elapsedMs": 249.8838539999997,
+      "document": {
+        "status": "confirmed",
+        "elapsedMs": 249.60291899999993,
+        "pageExecutionElapsedMs": 0,
+        "errorKind": null,
+        "errorDetail": null,
+        "lateCompletion": null,
+        "lateHostReceiptElapsedMs": null,
+        "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+        "lateOutcome": null,
+        "lateErrorKind": null,
+        "lateErrorDetail": null,
+        "statePresent": true,
+        "hookRestoreAttempted": true,
+        "hookRestored": true,
+        "listenerCount": 2,
+        "listenerRemovalAttemptedCount": 2,
+        "listenerRemovalConfirmedCount": 2,
+        "listenerRemovalFailedCount": 0,
+        "stateDeleted": true,
+        "renderLoopRetirement": {
+          "requested": true,
+          "status": "not-applicable-no-viewer",
+          "before": null,
+          "after": null,
+          "confirmed": true,
+          "pageExecutionElapsedMs": 0
+        }
+      },
+      "scriptRegistration": {
+        "status": "already-confirmed",
+        "elapsedMs": 0.0332220000000234,
+        "pageExecutionElapsedMs": null,
+        "errorKind": null,
+        "errorDetail": null,
+        "lateCompletion": null,
+        "lateHostReceiptElapsedMs": null,
+        "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+        "lateOutcome": null,
+        "lateErrorKind": null,
+        "lateErrorDetail": null,
+        "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+      },
+      "phase": "capture-final-document-close",
+      "documentRole": "retired-document",
+      "documentId": null
+    }
+  ],
+  "completedSamples": 0,
+  "localTests": {
+    "passed": 175,
+    "failed": 0
+  },
+  "limitations": "Real failure artifact is preserved; reached observer cleanup is confirmed and parent reports child cleanup. No measured samples or successful full producer/consumer acceptance."
+}

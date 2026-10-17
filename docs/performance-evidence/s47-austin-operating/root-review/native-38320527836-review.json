@@ -1,0 +1,165 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-12T23:14:10.808Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38320527836",
+  "testedCommit": "652913fd894f8977973e7aa8409cfcf566c71f1b",
+  "status": "failed",
+  "comparisonEligible": false,
+  "completedSampleCount": 0,
+  "failure": {
+    "phase": "warmup",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Render boundary observer arguments are invalid.",
+    "operator": null
+  },
+  "verifiedRenderer": {
+    "schema": "gev-hosted-renderer-diagnostic/v1",
+    "requestedBackend": "macos-native-diagnostic",
+    "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "observedWebglVendor": "Google Inc. (Apple)",
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "status": "verified",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "physicalDesktopCoverage": false,
+    "hostedEnvironment": "github-actions-macos",
+    "comparisonEligible": false,
+    "performanceAcceptanceEligible": false
+  },
+  "firstProviderSetup": {
+    "documentRole": "provider-sample-1",
+    "qualityMode": "manual",
+    "densityControl": {
+      "id": "detection-density-slider",
+      "value": "75",
+      "densityPct": 75
+    },
+    "detectionMode": "DENSE",
+    "populations": [
+      {
+        "id": "alpr-cameras",
+        "count": 776
+      },
+      {
+        "id": "satellites",
+        "count": 828
+      },
+      {
+        "id": "cctv",
+        "count": 250
+      },
+      {
+        "id": "radio",
+        "count": 750
+      },
+      {
+        "id": "military-installations",
+        "count": 357
+      },
+      {
+        "id": "wind",
+        "count": 65160
+      }
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    },
+    "visible": true,
+    "focused": true,
+    "warmupClock": {
+      "schema": "gev-phased-monotonic-wall-clock/v1",
+      "phase": "warmup",
+      "epochMs": 1791828000000,
+      "elapsedMs": 0,
+      "warmupMs": 1000,
+      "measurementMs": 1000,
+      "warmupNativeElapsedMs": 0,
+      "measurementNativeElapsedMs": null,
+      "startCount": 1,
+      "measurementStartCount": 0,
+      "runOrdinal": 1
+    }
+  },
+  "cleanupRecomputed": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1",
+      "cleanup": {
+        "status": "confirmed",
+        "confirmed": true,
+        "matchingReleaseCount": 1
+      }
+    }
+  ],
+  "readinessSamplerCleanup": [
+    {
+      "documentRole": "main-setup",
+      "status": "stalled",
+      "stopReason": "stalled",
+      "session": {
+        "creationStatus": "created",
+        "detachStatus": "confirmed",
+        "disconnectListenerRemoval": "confirmed",
+        "lateAttachCleanupStatus": "not-applicable"
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "status": "stalled",
+      "stopReason": "stalled",
+      "session": {
+        "creationStatus": "created",
+        "detachStatus": "confirmed",
+        "disconnectListenerRemoval": "confirmed",
+        "lateAttachCleanupStatus": "not-applicable"
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "fileName": "hosted-native-38320527836-smoke-failed.json",
+      "byteLength": 220255,
+      "sha256": "b91be12f89615e1b5548eb8ea2593acf3d43134c64e6715239aefd73d28d2a76"
+    },
+    {
+      "fileName": "hosted-native-38320527836-cli-failed.json",
+      "byteLength": 145345,
+      "sha256": "a1c8156a3c755e21dd5b47a2bc7cc83ecde6f0e72218e9b2d44b62ac5d7e6af5"
+    }
+  ],
+  "limitations": [
+    "Warmup argument validation fails before a measured sample completes.",
+    "Readiness sampler command deadlines can fail independently of the source-readiness predicate.",
+    "Hosted paravirtual Metal is not physical desktop acceptance or a same-host comparison with Linux SwiftShader."
+  ]
+}

@@ -1,0 +1,3103 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+  "harnessSha": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+  "captureWorkerAuditMode": "diagnostic",
+  "sceneFrameDiagnostics": false,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-operating-v1",
+  "startedAt": "2026-10-12T21:14:49.844Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "passed",
+      "receiptSha256": "6adb7b41bd98e1a43cd4a1298f08efdaf2188006e7a063efdab404999d9b16b4",
+      "assetCount": 434,
+      "totalAssetBytes": 43912979,
+      "servedBefore": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "6adb7b41bd98e1a43cd4a1298f08efdaf2188006e7a063efdab404999d9b16b4",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "servedAfter": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "6adb7b41bd98e1a43cd4a1298f08efdaf2188006e7a063efdab404999d9b16b4",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "loadedCodePathAudit": {
+        "status": "receipt-backed-paths-observed",
+        "paths": [
+          "assets/egm96-universal.esm-D6y_VLZc.js",
+          "assets/index-DFXg4IQ_.js",
+          "cesium/Cesium.js"
+        ],
+        "externalCodeRequestsObserved": 0,
+        "validatedWorkerBlobCount": 18,
+        "cesiumWorkerBlobs": {
+          "schema": "gev-cesium-worker-blob-audit/v1",
+          "status": "receipt-derived-worker-blobs-validated",
+          "auditMode": "diagnostic",
+          "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+          "createdScriptBlobCount": 14,
+          "validatedWorkerCount": 6,
+          "validatedCreatedWrapperCount": 7,
+          "unobservedCreatedWrapperCount": 1,
+          "validatedEmbeddedSourceCount": 7,
+          "validatedModuleIds": [
+            "combineGeometry",
+            "createGeometry",
+            "createVerticesFromHeightmap",
+            "incrementallyBuildTerrainPicker",
+            "transferTypedArrayTest"
+          ],
+          "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+          "scriptBlobSha256": [
+            "83b9e45a340c20d8f9b220fe4194cbdc7241491c717da73207e02a7f0cc5db42",
+            "9c324d136d08334a9787b7d0357bf7f810ba5a695f40d87e2bbe846e4d1b6120",
+            "b134ca0df02de8b1d33d0f7cfd98248270b7d4423cb3c6ca9b44967db297ea00",
+            "b34afed214c5bbd5bc68be4ff56ef3ea1f7c4b48f397eeaad1829c716ef49208",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "dd1fba486998c2ca9f758bd9dd72742e9adab76f797ed5b1d2cc49fad2e21db4",
+            "f6792368c869ec4fa12a3ae970acd637db8b0de242c40d8dfc4960ec2b68b046",
+            "fb742ec0d61d34a03c6766da195e6748b89f91981f599261c2e3d1496c241132"
+          ],
+          "validatedWrapperSha256": [
+            "83b9e45a340c20d8f9b220fe4194cbdc7241491c717da73207e02a7f0cc5db42",
+            "9c324d136d08334a9787b7d0357bf7f810ba5a695f40d87e2bbe846e4d1b6120",
+            "b134ca0df02de8b1d33d0f7cfd98248270b7d4423cb3c6ca9b44967db297ea00",
+            "b34afed214c5bbd5bc68be4ff56ef3ea1f7c4b48f397eeaad1829c716ef49208",
+            "dd1fba486998c2ca9f758bd9dd72742e9adab76f797ed5b1d2cc49fad2e21db4",
+            "f6792368c869ec4fa12a3ae970acd637db8b0de242c40d8dfc4960ec2b68b046",
+            "fb742ec0d61d34a03c6766da195e6748b89f91981f599261c2e3d1496c241132"
+          ],
+          "readBytes": 6428769,
+          "retentionByteCapBytes": 33554432
+        },
+        "requestCount": 70,
+        "coverage": "receipt-backed request-path audit with smoke-only Cesium worker blob instrumentation; browser response bytes are not independently attested and the smoke is not performance evidence"
+      },
+      "providerInterception": {
+        "status": "worker-aware-external-blocking-probe-passed",
+        "preflight": {
+          "status": "passed",
+          "scope": "harness-generated same-origin inert document; excluded from app code audit",
+          "workerNetworkProbe": {
+            "status": "passed",
+            "interceptedWorkerRequests": 3
+          },
+          "discardedAudit": {
+            "requestCount": 0,
+            "codeRequestCount": 0
+          },
+          "targetDisposal": {
+            "closed": true,
+            "remainingCount": 0,
+            "waitMs": 125.07372100000066
+          }
+        },
+        "sameOriginOnlyStaticServer": true
+      },
+      "denseProviderFixture": {
+        "scope": "real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence",
+        "expectedLayerCounts": {
+          "flights": 2500,
+          "local-datacenters": 4362,
+          "local-dams": 716
+        },
+        "observedLayerPopulation": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        },
+        "flightFixture": {
+          "schema": "gev-fixture-delivery-observation/v1",
+          "status": "observed",
+          "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+          "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+          "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "fulfilledResponseCount": 1,
+          "observedFlightsCount": 2500
+        },
+        "captureClock": {
+          "schema": "gev-provider-fixture-capture-clock/v1",
+          "scope": "hosted integration smoke only; one short route check, not a performance measurement",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "start": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800000,
+            "elapsedMs": 0
+          },
+          "end": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800266,
+            "elapsedMs": 266.5
+          },
+          "ageAtEndMs": 266,
+          "freshnessWindowMs": 120000,
+          "sourceFreshness": "current"
+        },
+        "comparisonEligible": false,
+        "comparisonIneligibilityReason": "This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract."
+      },
+      "terminalRenderLoopRetirement": {
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0.10000000009313226
+      },
+      "rendererProbeCleanup": [
+        {
+          "schema": "gev-early-renderer-probe-cleanup/v1",
+          "confirmed": true,
+          "timeoutMs": 1000,
+          "elapsedMs": 6.693279999999504,
+          "document": {
+            "status": "confirmed",
+            "elapsedMs": 3.884815000001254,
+            "pageExecutionElapsedMs": 0.09999999997671694,
+            "errorKind": null,
+            "errorDetail": null,
+            "lateCompletion": null,
+            "lateHostReceiptElapsedMs": null,
+            "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+            "lateOutcome": null,
+            "lateErrorKind": null,
+            "lateErrorDetail": null,
+            "statePresent": true,
+            "hookRestoreAttempted": true,
+            "hookRestored": true,
+            "listenerCount": 2,
+            "listenerRemovalAttemptedCount": 2,
+            "listenerRemovalConfirmedCount": 2,
+            "listenerRemovalFailedCount": 0,
+            "stateDeleted": true,
+            "renderLoopRetirement": {
+              "requested": true,
+              "status": "already-disabled",
+              "before": false,
+              "after": false,
+              "confirmed": true,
+              "pageExecutionElapsedMs": 0
+            }
+          },
+          "scriptRegistration": {
+            "status": "confirmed",
+            "elapsedMs": 2.393206000000646,
+            "pageExecutionElapsedMs": null,
+            "errorKind": null,
+            "errorDetail": null,
+            "lateCompletion": null,
+            "lateHostReceiptElapsedMs": null,
+            "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+            "lateOutcome": null,
+            "lateErrorKind": null,
+            "lateErrorDetail": null,
+            "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+          },
+          "phase": "smoke-document-retirement",
+          "registrationRemovalBoundary": "owned-document-retirement"
+        }
+      ],
+      "rendererProbeCleanupOmittedCount": 0,
+      "serviceWorker": {
+        "controlled": false
+      },
+      "browser": {
+        "softwareRenderingRequested": true,
+        "flags": [
+          "--use-gl=angle",
+          "--use-angle=swiftshader",
+          "--enable-unsafe-swiftshader"
+        ],
+        "observedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "observedVendor": "Google Inc. (Google)"
+      },
+      "route": {
+        "id": "integration-smoke-idle",
+        "start": {
+          "position": {
+            "x": -744448.0724731189,
+            "y": -5475035.426630855,
+            "z": 3203010.9088884895
+          },
+          "direction": {
+            "x": 0.18805793535598003,
+            "y": 0.9805709717623482,
+            "z": -0.05581023460522361
+          },
+          "up": {
+            "x": 0.11114947701579654,
+            "y": 0.035211171161732994,
+            "z": 0.9931797255202777
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 259,
+        "motionDistanceM": 0
+      },
+      "observerBefore": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -744448.0724731189,
+            "y": -5475035.426630855,
+            "z": 3203010.9088884895
+          },
+          "direction": {
+            "x": 0.18805793535598003,
+            "y": 0.9805709717623482,
+            "z": -0.05581023460522361
+          },
+          "up": {
+            "x": 0.11114947701579654,
+            "y": 0.035211171161732994,
+            "z": 0.9931797255202777
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "observerAfter": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -744448.0724731189,
+            "y": -5475035.426630855,
+            "z": 3203010.9088884895
+          },
+          "direction": {
+            "x": 0.18805793535598003,
+            "y": 0.9805709717623482,
+            "z": -0.05581023460522361
+          },
+          "up": {
+            "x": 0.11114947701579643,
+            "y": 0.035211171161732994,
+            "z": 0.9931797255202777
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "durationMs": 39594
+    },
+    {
+      "revision": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+      "label": "candidate",
+      "status": "failed",
+      "captureCliReportArtifact": {
+        "schema": "gev-smoke-capture-cli-report-artifact/v1",
+        "status": "preserved",
+        "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+        "byteLength": 73123,
+        "sha256": "ba73ff01598a3acd9efe16191c40417bdda0208a45c476400cabf0881ed4c747",
+        "limitBytes": 8388608,
+        "childStatus": "failed"
+      },
+      "failure": "Child process exited 1; Wrote bounded failed-capture evidence. Capture failed during configure-austin-operating-sample-document: Waiting failed: 60000ms exceeded Refreshed bounded failed-capture evidence after cleanup. Capture failed during configure-austin-operating-sample-document: Waiting failed: 60000ms exceeded; cleanup confirmed (1).",
+      "failureDetails": {
+        "phase": "candidate-capture-cli-integration",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "workerBlobDiagnostics": {
+          "schema": "gev-cesium-worker-blob-diagnostics/v1",
+          "urlValuesOmitted": true,
+          "retentionByteCapBytes": 33554432,
+          "blobRequestCount": 20,
+          "observedBlobCount": 14,
+          "entryCount": 14,
+          "omittedEntryCount": 0,
+          "entries": [
+            {
+              "index": 0,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 148,
+              "bodySha256": "67748dbb5c5215904cc36a2611df0c65ea380f052a7f0f41d63b7a2756443a5c",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 1,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 143,
+              "bodySha256": "6bfaaeaed57d9e608eb07c1928570578cabef0709e59f8f25242a4d9afb29e68",
+              "requestCount": 2,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 2,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "9749f4889726fd944f334ccc87cfca1b2c0f0acf2685bf5f45e0d6d7cc00425f",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 3,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "05cf7905796fc4919509668d4236570d64e03ca3f126e32edb27cde897b6258c",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 4,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "e57b5372e3a6c58ac2857812d9779b6f1f0061e935a32da75ca36e84753cec94",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 5,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 152,
+              "bodySha256": "8adef1690fc55ebd63bf5315d8b8a07e256159cce991a22c55ac099bd51c44ca",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 6,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 136,
+              "bodySha256": "b843ddea1e0655ba9a29e8a149a3c813b0255b5aa0746bc729c83411c3c6590e",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 7,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 8,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 9,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 10,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 11,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 12,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 13,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            }
+          ]
+        },
+        "captureCliFailure": {
+          "schema": "gev-smoke-capture-cli-failure/v1",
+          "summary": {
+            "reportSchema": "gev-performance-capture-failure/v1",
+            "status": "failed",
+            "failure": {
+              "message": "Waiting failed: 60000ms exceeded",
+              "phase": "configure-austin-operating-sample-document",
+              "scenario": "idle",
+              "run": 1,
+              "operator": null,
+              "actual": null,
+              "expected": null
+            },
+            "source": {
+              "appCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+              "harnessCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+              "provenanceStatus": "pre-capture-served-assets-verified"
+            },
+            "fixtureDelivery": {
+              "status": "observed",
+              "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94"
+            },
+            "fixtureInterceptionErrors": [],
+            "completedSampleCount": 0,
+            "completedSamplesRetained": 0,
+            "evidenceTruncated": true
+          },
+          "rawReport": {
+            "schema": "gev-performance-capture-failure/v1",
+            "captureSchema": "gev-performance-capture/v1",
+            "status": "failed",
+            "capturedAt": "2026-10-12T21:18:25.200Z",
+            "comparisonEligible": false,
+            "comparisonReadiness": {
+              "status": "not-ready",
+              "reason": "Failed or incomplete captures are never comparison evidence."
+            },
+            "source": {
+              "harnessCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+              "harnessDirtyWorktree": false,
+              "appCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+              "appWorktreeState": "clean",
+              "provenanceStatus": "pre-capture-served-assets-verified",
+              "reason": null,
+              "buildProvenance": {
+                "schema": "gev-capture-build-provenance/v1",
+                "status": "pre-capture-served-assets-verified",
+                "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+                "receiptSha256": "88239c21139c4e87748054a69d57bacae64c01ddad8ee70c5ba45f9df8cd62ae",
+                "appCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+                "harnessCommit": "eeb6dfdd7fad7eaf8b556ad542e250536c88f0af",
+                "before": {
+                  "schema": "gev-served-assets-verification/v1",
+                  "status": "served-assets-match",
+                  "receiptSha256": "88239c21139c4e87748054a69d57bacae64c01ddad8ee70c5ba45f9df8cd62ae",
+                  "assetCount": 436,
+                  "totalAssetBytes": 43983899
+                },
+                "after": null
+              }
+            },
+            "fixture": null,
+            "workload": {
+              "rendererProbeCleanup": [
+                {
+                  "schema": "gev-early-renderer-probe-cleanup/v1",
+                  "confirmed": true,
+                  "timeoutMs": 1000,
+                  "elapsedMs": 4.4828099999995175,
+                  "document": {
+                    "status": "confirmed",
+                    "elapsedMs": 1.9353009999995265,
+                    "pageExecutionElapsedMs": 0.19999999995343387,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "statePresent": true,
+                    "hookRestoreAttempted": true,
+                    "hookRestored": true,
+                    "listenerCount": 2,
+                    "listenerRemovalAttemptedCount": 2,
+                    "listenerRemovalConfirmedCount": 2,
+                    "listenerRemovalFailedCount": 0,
+                    "stateDeleted": true,
+                    "renderLoopRetirement": {
+                      "requested": true,
+                      "status": "already-disabled",
+                      "before": false,
+                      "after": false,
+                      "confirmed": true,
+                      "pageExecutionElapsedMs": 0
+                    }
+                  },
+                  "scriptRegistration": {
+                    "status": "confirmed",
+                    "elapsedMs": 2.236507999999958,
+                    "pageExecutionElapsedMs": null,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+                  },
+                  "registrationRemovalBoundary": "owned-document-retirement",
+                  "phase": "startup-document-retirement",
+                  "documentRole": "startup-1",
+                  "documentId": "startup-document-1"
+                },
+                {
+                  "schema": "gev-early-renderer-probe-cleanup/v1",
+                  "confirmed": true,
+                  "timeoutMs": 1000,
+                  "elapsedMs": 7.54572900000494,
+                  "document": {
+                    "status": "confirmed",
+                    "elapsedMs": 1.9047449999925448,
+                    "pageExecutionElapsedMs": 0.09999999997671694,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "statePresent": true,
+                    "hookRestoreAttempted": true,
+                    "hookRestored": true,
+                    "listenerCount": 2,
+                    "listenerRemovalAttemptedCount": 2,
+                    "listenerRemovalConfirmedCount": 2,
+                    "listenerRemovalFailedCount": 0,
+                    "stateDeleted": true,
+                    "renderLoopRetirement": {
+                      "requested": true,
+                      "status": "confirmed",
+                      "before": true,
+                      "after": false,
+                      "confirmed": true,
+                      "pageExecutionElapsedMs": 0.09999999997671694
+                    }
+                  },
+                  "scriptRegistration": {
+                    "status": "confirmed",
+                    "elapsedMs": 5.592149999996764,
+                    "pageExecutionElapsedMs": null,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+                  },
+                  "registrationRemovalBoundary": "owned-document-retirement",
+                  "phase": "provider-document-retirement",
+                  "documentRole": "main-setup",
+                  "documentId": "main-measured-document"
+                },
+                {
+                  "schema": "gev-early-renderer-probe-cleanup/v1",
+                  "confirmed": true,
+                  "timeoutMs": 1000,
+                  "elapsedMs": 1.4377169999934267,
+                  "document": {
+                    "status": "confirmed",
+                    "elapsedMs": 1.0679370000143535,
+                    "pageExecutionElapsedMs": 0,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "statePresent": true,
+                    "hookRestoreAttempted": true,
+                    "hookRestored": true,
+                    "listenerCount": 2,
+                    "listenerRemovalAttemptedCount": 2,
+                    "listenerRemovalConfirmedCount": 2,
+                    "listenerRemovalFailedCount": 0,
+                    "stateDeleted": true,
+                    "renderLoopRetirement": {
+                      "requested": true,
+                      "status": "confirmed",
+                      "before": true,
+                      "after": false,
+                      "confirmed": true,
+                      "pageExecutionElapsedMs": 0
+                    }
+                  },
+                  "scriptRegistration": {
+                    "status": "confirmed",
+                    "elapsedMs": 0.32481200000620447,
+                    "pageExecutionElapsedMs": null,
+                    "errorKind": null,
+                    "errorDetail": null,
+                    "lateCompletion": null,
+                    "lateHostReceiptElapsedMs": null,
+                    "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+                    "lateOutcome": null,
+                    "lateErrorKind": null,
+                    "lateErrorDetail": null,
+                    "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+                  },
+                  "registrationRemovalBoundary": "owned-document-retirement",
+                  "phase": "capture-final-document-retirement",
+                  "documentRole": "provider-sample-1",
+                  "documentId": "provider-document-1"
+                }
+              ],
+              "rendererProbeCleanupOmittedCount": 0,
+              "rendererLoopRetirements": [
+                {
+                  "phase": "startup-final-details",
+                  "documentRole": "startup-1",
+                  "documentId": "startup-document-1",
+                  "requested": true,
+                  "status": "retired-with-final-observation",
+                  "before": true,
+                  "after": false,
+                  "confirmed": true,
+                  "elapsedMs": 0
+                }
+              ],
+              "rendererLoopRetirementsOmittedCount": 0,
+              "fixtureInterceptionReleases": [
+                {
+                  "schema": "gev-flight-fixture-session-release/v1",
+                  "sessionOrdinal": 1,
+                  "documentRole": "startup-1",
+                  "documentId": "startup-document-1",
+                  "interception": {
+                    "schema": "gev-fixture-interception-release/v1",
+                    "interception": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true
+                  },
+                  "stop": {
+                    "schema": "gev-fixture-interception-drain/v1",
+                    "confirmed": true,
+                    "listenerRemovalConfirmed": true,
+                    "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                    "listenerRemovalErrorKind": null,
+                    "pendingAtStop": 0,
+                    "pendingPreparationAtStop": 0,
+                    "pendingAbortSubscriptionsAtStop": 0,
+                    "pendingCommandsAtStop": 0,
+                    "pendingCommandsAfterDrain": 0,
+                    "pendingPreparationsAfterDrain": 0,
+                    "pendingAbortSubscriptionsAfterDrain": 0,
+                    "rejectedDrainOperations": 0,
+                    "drainCommandFailures": 0,
+                    "cancelledPreparationCount": 0,
+                    "unexpectedLateRequestCount": 0
+                  },
+                  "fetchDisable": "target-closed",
+                  "detach": "target-closed",
+                  "confirmed": true,
+                  "targetClosed": true
+                },
+                {
+                  "schema": "gev-flight-fixture-session-release/v1",
+                  "sessionOrdinal": 2,
+                  "documentRole": "main-setup",
+                  "documentId": "main-measured-document",
+                  "interception": {
+                    "schema": "gev-fixture-interception-release/v1",
+                    "interception": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true
+                  },
+                  "stop": {
+                    "schema": "gev-fixture-interception-drain/v1",
+                    "confirmed": true,
+                    "listenerRemovalConfirmed": true,
+                    "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                    "listenerRemovalErrorKind": null,
+                    "pendingAtStop": 0,
+                    "pendingPreparationAtStop": 0,
+                    "pendingAbortSubscriptionsAtStop": 0,
+                    "pendingCommandsAtStop": 0,
+                    "pendingCommandsAfterDrain": 0,
+                    "pendingPreparationsAfterDrain": 0,
+                    "pendingAbortSubscriptionsAfterDrain": 0,
+                    "rejectedDrainOperations": 0,
+                    "drainCommandFailures": 0,
+                    "cancelledPreparationCount": 0,
+                    "unexpectedLateRequestCount": 0
+                  },
+                  "fetchDisable": "target-closed",
+                  "detach": "target-closed",
+                  "confirmed": true,
+                  "targetClosed": true
+                },
+                {
+                  "schema": "gev-flight-fixture-session-release/v1",
+                  "sessionOrdinal": 3,
+                  "documentRole": "provider-sample-1",
+                  "documentId": "provider-document-1",
+                  "interception": {
+                    "schema": "gev-fixture-interception-release/v1",
+                    "interception": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true
+                  },
+                  "stop": {
+                    "schema": "gev-fixture-interception-drain/v1",
+                    "confirmed": true,
+                    "listenerRemovalConfirmed": true,
+                    "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                    "listenerRemovalErrorKind": null,
+                    "pendingAtStop": 0,
+                    "pendingPreparationAtStop": 0,
+                    "pendingAbortSubscriptionsAtStop": 0,
+                    "pendingCommandsAtStop": 0,
+                    "pendingCommandsAfterDrain": 0,
+                    "pendingPreparationsAfterDrain": 0,
+                    "pendingAbortSubscriptionsAfterDrain": 0,
+                    "rejectedDrainOperations": 0,
+                    "drainCommandFailures": 0,
+                    "cancelledPreparationCount": 0,
+                    "unexpectedLateRequestCount": 0
+                  },
+                  "fetchDisable": "target-closed",
+                  "detach": "target-closed",
+                  "confirmed": true,
+                  "targetClosed": true
+                }
+              ],
+              "warmupMs": 1000,
+              "durationPerSampleMs": 1000,
+              "runsPerScenario": 2,
+              "startupRuns": 1,
+              "qualityMode": "manual",
+              "expectedDensityPct": 75,
+              "detectionMode": "DENSE",
+              "mixedLayers": false,
+              "austinOperatingFixtureDocuments": [
+                {
+                  "schema": "gev-austin-operating-document-evidence/v1",
+                  "documentRole": "startup-1",
+                  "documentId": "startup-document-1",
+                  "sessionOrdinal": 1,
+                  "disposed": true,
+                  "disposeReason": "startup-page-closed-after-session-release",
+                  "delivery": {
+                    "schema": "gev-austin-operating-delivery/v1",
+                    "status": "observed",
+                    "fixtureId": "austin-operating-composed-v1",
+                    "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+                    "fixedTime": "2026-10-12T18:00:00.000Z",
+                    "windSourceTime": "2026-10-08T12:00:00.000Z",
+                    "windSourceAgeMs": 367200000,
+                    "deliveredAssets": [
+                      {
+                        "id": "tle-stations",
+                        "responseCount": 0,
+                        "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c"
+                      },
+                      {
+                        "id": "tle-visual",
+                        "responseCount": 0,
+                        "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9"
+                      },
+                      {
+                        "id": "tle-gps-ops",
+                        "responseCount": 0,
+                        "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909"
+                      },
+                      {
+                        "id": "tle-glo-ops",
+                        "responseCount": 0,
+                        "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f"
+                      },
+                      {
+                        "id": "tle-galileo",
+                        "responseCount": 0,
+                        "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255"
+                      },
+                      {
+                        "id": "tle-geo",
+                        "responseCount": 0,
+                        "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+                      },
+                      {
+                        "id": "cctv-catalog-response",
+                        "responseCount": 0,
+                        "sha256": "badf64e806a2437229d7fa1e5c1b856cd5a42e5a5411e21fe2ce83fbb7fb9915"
+                      },
+                      {
+                        "id": "cctv-health",
+                        "responseCount": 0,
+                        "sha256": "ef1c8ede78a371b617c6b5a8e1f55da7499ab2ee0d630ef634095b388d93b401"
+                      },
+                      {
+                        "id": "alpr-tilejson",
+                        "responseCount": 0,
+                        "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6"
+                      },
+                      {
+                        "id": "radio-directory",
+                        "responseCount": 0,
+                        "sha256": "aec394a29e84c8f4efa267c8884948e01d9d22cf9c37f5544dc917fc16458516"
+                      },
+                      {
+                        "id": "wind-manifest",
+                        "responseCount": 0,
+                        "sha256": "965c0b09f9693ca07b6713b8aa7f6888cfff4f5b84135ca20eaef1cf7adacc60"
+                      },
+                      {
+                        "id": "wind-grid",
+                        "responseCount": 0,
+                        "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3"
+                      }
+                    ],
+                    "requiredAssetIds": [],
+                    "missingRequiredAssets": [],
+                    "alprTileCoverage": {
+                      "inventory": [
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 420,
+                          "id": "alpr-10-232-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 421,
+                          "id": "alpr-10-232-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 422,
+                          "id": "alpr-10-232-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 420,
+                          "id": "alpr-10-233-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 421,
+                          "id": "alpr-10-233-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 422,
+                          "id": "alpr-10-233-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 420,
+                          "id": "alpr-10-234-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 421,
+                          "id": "alpr-10-234-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 422,
+                          "id": "alpr-10-234-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 420,
+                          "id": "alpr-10-235-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 421,
+                          "id": "alpr-10-235-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 422,
+                          "id": "alpr-10-235-422"
+                        }
+                      ],
+                      "requiredForDocument": [],
+                      "requested": [],
+                      "missingRequired": [],
+                      "fullRouteCoverageComplete": false
+                    },
+                    "installations": {
+                      "sourceCatalog": {
+                        "sha256": "cbe09777617df34a6b93d574d9a27ffd416d325fc1443c9b079e23fbc42836fb",
+                        "byteLength": 109512,
+                        "sourceCount": 699,
+                        "synthetic": true
+                      },
+                      "responseVariants": [],
+                      "responseVariantOverflowCount": 0
+                    },
+                    "syntheticFrames": {
+                      "generated": true,
+                      "format": "SVG",
+                      "requestCount": 0,
+                      "sourceImagesCaptured": false
+                    },
+                    "populations": {
+                      "satellites": 828,
+                      "cctv": 250,
+                      "alpr-cameras": 952,
+                      "military-installations": 699,
+                      "radio": 750,
+                      "wind": 65160
+                    },
+                    "benchmarkEligibility": "pending complete matched five-run capture and shared acceptance validation",
+                    "disposed": false
+                  },
+                  "interceptionRelease": {
+                    "schema": "gev-flight-fixture-session-release/v1",
+                    "sessionOrdinal": 1,
+                    "documentRole": "startup-1",
+                    "documentId": "startup-document-1",
+                    "interception": {
+                      "schema": "gev-fixture-interception-release/v1",
+                      "interception": {
+                        "schema": "gev-fixture-interception-drain/v1",
+                        "confirmed": true,
+                        "listenerRemovalConfirmed": true,
+                        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                        "listenerRemovalErrorKind": null,
+                        "pendingAtStop": 0,
+                        "pendingPreparationAtStop": 0,
+                        "pendingAbortSubscriptionsAtStop": 0,
+                        "pendingCommandsAtStop": 0,
+                        "pendingCommandsAfterDrain": 0,
+                        "pendingPreparationsAfterDrain": 0,
+                        "pendingAbortSubscriptionsAfterDrain": 0,
+                        "rejectedDrainOperations": 0,
+                        "drainCommandFailures": 0,
+                        "cancelledPreparationCount": 0,
+                        "unexpectedLateRequestCount": 0
+                      },
+                      "fetchDisable": "target-closed",
+                      "detach": "target-closed",
+                      "confirmed": true
+                    },
+                    "stop": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true,
+                    "targetClosed": true
+                  },
+                  "cleanup": {
+                    "status": "incomplete",
+                    "confirmed": false,
+                    "matchingReleaseCount": 1
+                  },
+                  "error": null
+                },
+                {
+                  "schema": "gev-austin-operating-document-evidence/v1",
+                  "documentRole": "main-setup",
+                  "documentId": "main-measured-document",
+                  "sessionOrdinal": 2,
+                  "disposed": true,
+                  "disposeReason": "provider-document-retired-after-interception-release",
+                  "delivery": {
+                    "schema": "gev-austin-operating-delivery/v1",
+                    "status": "observed",
+                    "fixtureId": "austin-operating-composed-v1",
+                    "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+                    "fixedTime": "2026-10-12T18:00:00.000Z",
+                    "windSourceTime": "2026-10-08T12:00:00.000Z",
+                    "windSourceAgeMs": 367200000,
+                    "deliveredAssets": [
+                      {
+                        "id": "tle-stations",
+                        "responseCount": 1,
+                        "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c"
+                      },
+                      {
+                        "id": "tle-visual",
+                        "responseCount": 1,
+                        "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9"
+                      },
+                      {
+                        "id": "tle-gps-ops",
+                        "responseCount": 1,
+                        "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909"
+                      },
+                      {
+                        "id": "tle-glo-ops",
+                        "responseCount": 1,
+                        "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f"
+                      },
+                      {
+                        "id": "tle-galileo",
+                        "responseCount": 1,
+                        "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255"
+                      },
+                      {
+                        "id": "tle-geo",
+                        "responseCount": 1,
+                        "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+                      },
+                      {
+                        "id": "cctv-catalog-response",
+                        "responseCount": 1,
+                        "sha256": "badf64e806a2437229d7fa1e5c1b856cd5a42e5a5411e21fe2ce83fbb7fb9915"
+                      },
+                      {
+                        "id": "cctv-health",
+                        "responseCount": 1,
+                        "sha256": "ef1c8ede78a371b617c6b5a8e1f55da7499ab2ee0d630ef634095b388d93b401"
+                      },
+                      {
+                        "id": "alpr-tilejson",
+                        "responseCount": 1,
+                        "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6"
+                      },
+                      {
+                        "id": "radio-directory",
+                        "responseCount": 1,
+                        "sha256": "aec394a29e84c8f4efa267c8884948e01d9d22cf9c37f5544dc917fc16458516"
+                      },
+                      {
+                        "id": "wind-manifest",
+                        "responseCount": 1,
+                        "sha256": "965c0b09f9693ca07b6713b8aa7f6888cfff4f5b84135ca20eaef1cf7adacc60"
+                      },
+                      {
+                        "id": "wind-grid",
+                        "responseCount": 1,
+                        "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3"
+                      }
+                    ],
+                    "requiredAssetIds": [],
+                    "missingRequiredAssets": [],
+                    "alprTileCoverage": {
+                      "inventory": [
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 420,
+                          "id": "alpr-10-232-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 421,
+                          "id": "alpr-10-232-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 422,
+                          "id": "alpr-10-232-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 420,
+                          "id": "alpr-10-233-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 421,
+                          "id": "alpr-10-233-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 422,
+                          "id": "alpr-10-233-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 420,
+                          "id": "alpr-10-234-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 421,
+                          "id": "alpr-10-234-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 422,
+                          "id": "alpr-10-234-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 420,
+                          "id": "alpr-10-235-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 421,
+                          "id": "alpr-10-235-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 422,
+                          "id": "alpr-10-235-422"
+                        }
+                      ],
+                      "requiredForDocument": [],
+                      "requested": [
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 420,
+                          "id": "alpr-10-232-420",
+                          "responseCount": 1,
+                          "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 421,
+                          "id": "alpr-10-232-421",
+                          "responseCount": 1,
+                          "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 422,
+                          "id": "alpr-10-232-422",
+                          "responseCount": 1,
+                          "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 420,
+                          "id": "alpr-10-233-420",
+                          "responseCount": 1,
+                          "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 421,
+                          "id": "alpr-10-233-421",
+                          "responseCount": 1,
+                          "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 422,
+                          "id": "alpr-10-233-422",
+                          "responseCount": 1,
+                          "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 420,
+                          "id": "alpr-10-234-420",
+                          "responseCount": 1,
+                          "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 421,
+                          "id": "alpr-10-234-421",
+                          "responseCount": 1,
+                          "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 422,
+                          "id": "alpr-10-234-422",
+                          "responseCount": 1,
+                          "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 420,
+                          "id": "alpr-10-235-420",
+                          "responseCount": 1,
+                          "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 421,
+                          "id": "alpr-10-235-421",
+                          "responseCount": 1,
+                          "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 422,
+                          "id": "alpr-10-235-422",
+                          "responseCount": 1,
+                          "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105"
+                        }
+                      ],
+                      "missingRequired": [],
+                      "fullRouteCoverageComplete": false
+                    },
+                    "installations": {
+                      "sourceCatalog": {
+                        "sha256": "cbe09777617df34a6b93d574d9a27ffd416d325fc1443c9b079e23fbc42836fb",
+                        "byteLength": 109512,
+                        "sourceCount": 699,
+                        "synthetic": true
+                      },
+                      "responseVariants": [
+                        {
+                          "key": "{\"bounds\":{\"south\":30.29274,\"west\":-97.80249,\"north\":30.5326,\"east\":-97.50076},\"exact\":false}",
+                          "exact": false,
+                          "sha256": "41ce0040d7f0ebe0a9295708eddcc5d99ea7986a85d1f9e2ce96c59e29aea501",
+                          "byteLength": 66567,
+                          "elementCount": 425,
+                          "responseCount": 2
+                        }
+                      ],
+                      "responseVariantOverflowCount": 0
+                    },
+                    "syntheticFrames": {
+                      "generated": true,
+                      "format": "SVG",
+                      "requestCount": 2,
+                      "sourceImagesCaptured": false
+                    },
+                    "populations": {
+                      "satellites": 828,
+                      "cctv": 250,
+                      "alpr-cameras": 952,
+                      "military-installations": 699,
+                      "radio": 750,
+                      "wind": 65160
+                    },
+                    "benchmarkEligibility": "pending complete matched five-run capture and shared acceptance validation",
+                    "disposed": false
+                  },
+                  "interceptionRelease": {
+                    "schema": "gev-flight-fixture-session-release/v1",
+                    "sessionOrdinal": 2,
+                    "documentRole": "main-setup",
+                    "documentId": "main-measured-document",
+                    "interception": {
+                      "schema": "gev-fixture-interception-release/v1",
+                      "interception": {
+                        "schema": "gev-fixture-interception-drain/v1",
+                        "confirmed": true,
+                        "listenerRemovalConfirmed": true,
+                        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                        "listenerRemovalErrorKind": null,
+                        "pendingAtStop": 0,
+                        "pendingPreparationAtStop": 0,
+                        "pendingAbortSubscriptionsAtStop": 0,
+                        "pendingCommandsAtStop": 0,
+                        "pendingCommandsAfterDrain": 0,
+                        "pendingPreparationsAfterDrain": 0,
+                        "pendingAbortSubscriptionsAfterDrain": 0,
+                        "rejectedDrainOperations": 0,
+                        "drainCommandFailures": 0,
+                        "cancelledPreparationCount": 0,
+                        "unexpectedLateRequestCount": 0
+                      },
+                      "fetchDisable": "target-closed",
+                      "detach": "target-closed",
+                      "confirmed": true
+                    },
+                    "stop": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true,
+                    "targetClosed": true
+                  },
+                  "cleanup": {
+                    "status": "incomplete",
+                    "confirmed": false,
+                    "matchingReleaseCount": 1
+                  },
+                  "error": null
+                },
+                {
+                  "schema": "gev-austin-operating-document-evidence/v1",
+                  "documentRole": "provider-sample-1",
+                  "documentId": "provider-document-1",
+                  "sessionOrdinal": 3,
+                  "disposed": true,
+                  "disposeReason": "capture-finally-after-session-release",
+                  "delivery": {
+                    "schema": "gev-austin-operating-delivery/v1",
+                    "status": "observed",
+                    "fixtureId": "austin-operating-composed-v1",
+                    "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+                    "fixedTime": "2026-10-12T18:00:00.000Z",
+                    "windSourceTime": "2026-10-08T12:00:00.000Z",
+                    "windSourceAgeMs": 367200000,
+                    "deliveredAssets": [
+                      {
+                        "id": "tle-stations",
+                        "responseCount": 1,
+                        "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c"
+                      },
+                      {
+                        "id": "tle-visual",
+                        "responseCount": 1,
+                        "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9"
+                      },
+                      {
+                        "id": "tle-gps-ops",
+                        "responseCount": 1,
+                        "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909"
+                      },
+                      {
+                        "id": "tle-glo-ops",
+                        "responseCount": 1,
+                        "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f"
+                      },
+                      {
+                        "id": "tle-galileo",
+                        "responseCount": 1,
+                        "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255"
+                      },
+                      {
+                        "id": "tle-geo",
+                        "responseCount": 1,
+                        "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+                      },
+                      {
+                        "id": "cctv-catalog-response",
+                        "responseCount": 1,
+                        "sha256": "badf64e806a2437229d7fa1e5c1b856cd5a42e5a5411e21fe2ce83fbb7fb9915"
+                      },
+                      {
+                        "id": "cctv-health",
+                        "responseCount": 1,
+                        "sha256": "ef1c8ede78a371b617c6b5a8e1f55da7499ab2ee0d630ef634095b388d93b401"
+                      },
+                      {
+                        "id": "alpr-tilejson",
+                        "responseCount": 1,
+                        "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6"
+                      },
+                      {
+                        "id": "radio-directory",
+                        "responseCount": 1,
+                        "sha256": "aec394a29e84c8f4efa267c8884948e01d9d22cf9c37f5544dc917fc16458516"
+                      },
+                      {
+                        "id": "wind-manifest",
+                        "responseCount": 1,
+                        "sha256": "965c0b09f9693ca07b6713b8aa7f6888cfff4f5b84135ca20eaef1cf7adacc60"
+                      },
+                      {
+                        "id": "wind-grid",
+                        "responseCount": 1,
+                        "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3"
+                      }
+                    ],
+                    "requiredAssetIds": [],
+                    "missingRequiredAssets": [],
+                    "alprTileCoverage": {
+                      "inventory": [
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 420,
+                          "id": "alpr-10-232-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 421,
+                          "id": "alpr-10-232-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 422,
+                          "id": "alpr-10-232-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 420,
+                          "id": "alpr-10-233-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 421,
+                          "id": "alpr-10-233-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 422,
+                          "id": "alpr-10-233-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 420,
+                          "id": "alpr-10-234-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 421,
+                          "id": "alpr-10-234-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 422,
+                          "id": "alpr-10-234-422"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 420,
+                          "id": "alpr-10-235-420"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 421,
+                          "id": "alpr-10-235-421"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 422,
+                          "id": "alpr-10-235-422"
+                        }
+                      ],
+                      "requiredForDocument": [],
+                      "requested": [
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 420,
+                          "id": "alpr-10-232-420",
+                          "responseCount": 1,
+                          "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 421,
+                          "id": "alpr-10-232-421",
+                          "responseCount": 1,
+                          "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3"
+                        },
+                        {
+                          "z": 10,
+                          "x": 232,
+                          "y": 422,
+                          "id": "alpr-10-232-422",
+                          "responseCount": 1,
+                          "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 420,
+                          "id": "alpr-10-233-420",
+                          "responseCount": 1,
+                          "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 421,
+                          "id": "alpr-10-233-421",
+                          "responseCount": 1,
+                          "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88"
+                        },
+                        {
+                          "z": 10,
+                          "x": 233,
+                          "y": 422,
+                          "id": "alpr-10-233-422",
+                          "responseCount": 1,
+                          "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 420,
+                          "id": "alpr-10-234-420",
+                          "responseCount": 1,
+                          "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 421,
+                          "id": "alpr-10-234-421",
+                          "responseCount": 1,
+                          "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33"
+                        },
+                        {
+                          "z": 10,
+                          "x": 234,
+                          "y": 422,
+                          "id": "alpr-10-234-422",
+                          "responseCount": 1,
+                          "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 420,
+                          "id": "alpr-10-235-420",
+                          "responseCount": 1,
+                          "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 421,
+                          "id": "alpr-10-235-421",
+                          "responseCount": 1,
+                          "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b"
+                        },
+                        {
+                          "z": 10,
+                          "x": 235,
+                          "y": 422,
+                          "id": "alpr-10-235-422",
+                          "responseCount": 1,
+                          "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105"
+                        }
+                      ],
+                      "missingRequired": [],
+                      "fullRouteCoverageComplete": false
+                    },
+                    "installations": {
+                      "sourceCatalog": {
+                        "sha256": "cbe09777617df34a6b93d574d9a27ffd416d325fc1443c9b079e23fbc42836fb",
+                        "byteLength": 109512,
+                        "sourceCount": 699,
+                        "synthetic": true
+                      },
+                      "responseVariants": [
+                        {
+                          "key": "{\"bounds\":{\"south\":30.29274,\"west\":-97.80249,\"north\":30.5326,\"east\":-97.50076},\"exact\":false}",
+                          "exact": false,
+                          "sha256": "41ce0040d7f0ebe0a9295708eddcc5d99ea7986a85d1f9e2ce96c59e29aea501",
+                          "byteLength": 66567,
+                          "elementCount": 425,
+                          "responseCount": 2
+                        }
+                      ],
+                      "responseVariantOverflowCount": 0
+                    },
+                    "syntheticFrames": {
+                      "generated": true,
+                      "format": "SVG",
+                      "requestCount": 2,
+                      "sourceImagesCaptured": false
+                    },
+                    "populations": {
+                      "satellites": 828,
+                      "cctv": 250,
+                      "alpr-cameras": 952,
+                      "military-installations": 699,
+                      "radio": 750,
+                      "wind": 65160
+                    },
+                    "benchmarkEligibility": "pending complete matched five-run capture and shared acceptance validation",
+                    "disposed": false
+                  },
+                  "interceptionRelease": {
+                    "schema": "gev-flight-fixture-session-release/v1",
+                    "sessionOrdinal": 3,
+                    "documentRole": "provider-sample-1",
+                    "documentId": "provider-document-1",
+                    "interception": {
+                      "schema": "gev-fixture-interception-release/v1",
+                      "interception": {
+                        "schema": "gev-fixture-interception-drain/v1",
+                        "confirmed": true,
+                        "listenerRemovalConfirmed": true,
+                        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                        "listenerRemovalErrorKind": null,
+                        "pendingAtStop": 0,
+                        "pendingPreparationAtStop": 0,
+                        "pendingAbortSubscriptionsAtStop": 0,
+                        "pendingCommandsAtStop": 0,
+                        "pendingCommandsAfterDrain": 0,
+                        "pendingPreparationsAfterDrain": 0,
+                        "pendingAbortSubscriptionsAfterDrain": 0,
+                        "rejectedDrainOperations": 0,
+                        "drainCommandFailures": 0,
+                        "cancelledPreparationCount": 0,
+                        "unexpectedLateRequestCount": 0
+                      },
+                      "fetchDisable": "target-closed",
+                      "detach": "target-closed",
+                      "confirmed": true
+                    },
+                    "stop": {
+                      "schema": "gev-fixture-interception-drain/v1",
+                      "confirmed": true,
+                      "listenerRemovalConfirmed": true,
+                      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+                      "listenerRemovalErrorKind": null,
+                      "pendingAtStop": 0,
+                      "pendingPreparationAtStop": 0,
+                      "pendingAbortSubscriptionsAtStop": 0,
+                      "pendingCommandsAtStop": 0,
+                      "pendingCommandsAfterDrain": 0,
+                      "pendingPreparationsAfterDrain": 0,
+                      "pendingAbortSubscriptionsAfterDrain": 0,
+                      "rejectedDrainOperations": 0,
+                      "drainCommandFailures": 0,
+                      "cancelledPreparationCount": 0,
+                      "unexpectedLateRequestCount": 0
+                    },
+                    "fetchDisable": "target-closed",
+                    "detach": "target-closed",
+                    "confirmed": true,
+                    "targetClosed": true
+                  },
+                  "cleanup": {
+                    "status": "incomplete",
+                    "confirmed": false,
+                    "matchingReleaseCount": 1
+                  },
+                  "error": null
+                }
+              ],
+              "scenarios": [
+                "idle",
+                "scripted-motion"
+              ]
+            },
+            "failure": {
+              "phase": "configure-austin-operating-sample-document",
+              "scenario": "idle",
+              "run": 1,
+              "message": "Waiting failed: 60000ms exceeded",
+              "operator": null
+            },
+            "fixtureDelivery": {
+              "schema": "gev-austin-operating-delivery/v1",
+              "status": "observed",
+              "fixtureId": "austin-operating-composed-v1",
+              "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+              "fixedTime": "2026-10-12T18:00:00.000Z",
+              "windSourceTime": "2026-10-08T12:00:00.000Z",
+              "windSourceAgeMs": 367200000,
+              "deliveredAssets": [
+                {
+                  "id": "tle-stations",
+                  "responseCount": 1,
+                  "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c"
+                },
+                {
+                  "id": "tle-visual",
+                  "responseCount": 1,
+                  "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9"
+                },
+                {
+                  "id": "tle-gps-ops",
+                  "responseCount": 1,
+                  "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909"
+                },
+                {
+                  "id": "tle-glo-ops",
+                  "responseCount": 1,
+                  "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f"
+                },
+                {
+                  "id": "tle-galileo",
+                  "responseCount": 1,
+                  "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255"
+                },
+                {
+                  "id": "tle-geo",
+                  "responseCount": 1,
+                  "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+                },
+                {
+                  "id": "cctv-catalog-response",
+                  "responseCount": 1,
+                  "sha256": "badf64e806a2437229d7fa1e5c1b856cd5a42e5a5411e21fe2ce83fbb7fb9915"
+                },
+                {
+                  "id": "cctv-health",
+                  "responseCount": 1,
+                  "sha256": "ef1c8ede78a371b617c6b5a8e1f55da7499ab2ee0d630ef634095b388d93b401"
+                },
+                {
+                  "id": "alpr-tilejson",
+                  "responseCount": 1,
+                  "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6"
+                },
+                {
+                  "id": "radio-directory",
+                  "responseCount": 1,
+                  "sha256": "aec394a29e84c8f4efa267c8884948e01d9d22cf9c37f5544dc917fc16458516"
+                },
+                {
+                  "id": "wind-manifest",
+                  "responseCount": 1,
+                  "sha256": "965c0b09f9693ca07b6713b8aa7f6888cfff4f5b84135ca20eaef1cf7adacc60"
+                },
+                {
+                  "id": "wind-grid",
+                  "responseCount": 1,
+                  "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3"
+                }
+              ],
+              "requiredAssetIds": [
+                "tle-stations",
+                "tle-visual",
+                "tle-gps-ops",
+                "tle-glo-ops",
+                "tle-galileo",
+                "tle-geo",
+                "cctv-catalog-response",
+                "cctv-health",
+                "alpr-tilejson",
+                "radio-directory",
+                "wind-manifest",
+                "wind-grid",
+                "installations"
+              ],
+              "missingRequiredAssets": [],
+              "alprTileCoverage": {
+                "inventory": [
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 420,
+                    "id": "alpr-10-232-420"
+                  },
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 421,
+                    "id": "alpr-10-232-421"
+                  },
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 422,
+                    "id": "alpr-10-232-422"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 420,
+                    "id": "alpr-10-233-420"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 421,
+                    "id": "alpr-10-233-421"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 422,
+                    "id": "alpr-10-233-422"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 420,
+                    "id": "alpr-10-234-420"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 421,
+                    "id": "alpr-10-234-421"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 422,
+                    "id": "alpr-10-234-422"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 420,
+                    "id": "alpr-10-235-420"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 421,
+                    "id": "alpr-10-235-421"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 422,
+                    "id": "alpr-10-235-422"
+                  }
+                ],
+                "requiredForDocument": [
+                  "10/232/420",
+                  "10/232/421",
+                  "10/232/422",
+                  "10/233/420",
+                  "10/233/421",
+                  "10/233/422",
+                  "10/234/420",
+                  "10/234/421",
+                  "10/234/422",
+                  "10/235/420",
+                  "10/235/421",
+                  "10/235/422"
+                ],
+                "requested": [
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 420,
+                    "id": "alpr-10-232-420",
+                    "responseCount": 1,
+                    "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777"
+                  },
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 421,
+                    "id": "alpr-10-232-421",
+                    "responseCount": 1,
+                    "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3"
+                  },
+                  {
+                    "z": 10,
+                    "x": 232,
+                    "y": 422,
+                    "id": "alpr-10-232-422",
+                    "responseCount": 1,
+                    "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 420,
+                    "id": "alpr-10-233-420",
+                    "responseCount": 1,
+                    "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 421,
+                    "id": "alpr-10-233-421",
+                    "responseCount": 1,
+                    "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88"
+                  },
+                  {
+                    "z": 10,
+                    "x": 233,
+                    "y": 422,
+                    "id": "alpr-10-233-422",
+                    "responseCount": 1,
+                    "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 420,
+                    "id": "alpr-10-234-420",
+                    "responseCount": 1,
+                    "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 421,
+                    "id": "alpr-10-234-421",
+                    "responseCount": 1,
+                    "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33"
+                  },
+                  {
+                    "z": 10,
+                    "x": 234,
+                    "y": 422,
+                    "id": "alpr-10-234-422",
+                    "responseCount": 1,
+                    "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 420,
+                    "id": "alpr-10-235-420",
+                    "responseCount": 1,
+                    "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 421,
+                    "id": "alpr-10-235-421",
+                    "responseCount": 1,
+                    "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b"
+                  },
+                  {
+                    "z": 10,
+                    "x": 235,
+                    "y": 422,
+                    "id": "alpr-10-235-422",
+                    "responseCount": 1,
+                    "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105"
+                  }
+                ],
+                "missingRequired": [],
+                "fullRouteCoverageComplete": true
+              },
+              "installations": {
+                "sourceCatalog": {
+                  "sha256": "cbe09777617df34a6b93d574d9a27ffd416d325fc1443c9b079e23fbc42836fb",
+                  "byteLength": 109512,
+                  "sourceCount": 699,
+                  "synthetic": true
+                },
+                "responseVariants": [
+                  {
+                    "key": "{\"bounds\":{\"south\":30.29274,\"west\":-97.80249,\"north\":30.5326,\"east\":-97.50076},\"exact\":false}",
+                    "bounds": {
+                      "south": 30.29274,
+                      "west": -97.80249,
+                      "north": 30.5326,
+                      "east": -97.50076
+                    },
+                    "exact": false,
+                    "sha256": "41ce0040d7f0ebe0a9295708eddcc5d99ea7986a85d1f9e2ce96c59e29aea501",
+                    "byteLength": 66567,
+                    "responseBounds": {
+                      "south": 30.25,
+                      "west": -97.85,
+                      "north": 30.55,
+                      "east": -97.5
+                    },
+                    "elementCount": 425,
+                    "elementIds": [
+                      "Synthetic benchmark installation 028",
+                      "Synthetic benchmark installation 029",
+                      "Synthetic benchmark installation 030",
+                      "Synthetic benchmark installation 031",
+                      "Synthetic benchmark installation 032",
+                      "Synthetic benchmark installation 033",
+                      "Synthetic benchmark installation 034",
+                      "Synthetic benchmark installation 035",
+                      "Synthetic benchmark installation 036",
+                      "Synthetic benchmark installation 037",
+                      "Synthetic benchmark installation 038",
+                      "Synthetic benchmark installation 039",
+                      "Synthetic benchmark installation 040",
+                      "Synthetic benchmark installation 041",
+                      "Synthetic benchmark installation 042",
+                      "Synthetic benchmark installation 043",
+                      "Synthetic benchmark installation 044",
+                      "Synthetic benchmark installation 055",
+                      "Synthetic benchmark installation 056",
+                      "Synthetic benchmark installation 057",
+                      "Synthetic benchmark installation 058",
+                      "Synthetic benchmark installation 059",
+                      "Synthetic benchmark installation 060",
+                      "Synthetic benchmark installation 061",
+                      "Synthetic benchmark installation 062",
+                      "Synthetic benchmark installation 063",
+                      "Synthetic benchmark installation 064",
+                      "Synthetic benchmark installation 065",
+                      "Synthetic benchmark installation 066",
+                      "Synthetic benchmark installation 067",
+                      "Synthetic benchmark installation 068",
+                      "Synthetic benchmark installation 069",
+                      "Synthetic benchmark installation 070",
+                      "Synthetic benchmark installation 071",
+                      "Synthetic benchmark installation 082",
+                      "Synthetic benchmark installation 083",
+                      "Synthetic benchmark installation 084",
+                      "Synthetic benchmark installation 085",
+                      "Synthetic benchmark installation 086",
+                      "Synthetic benchmark installation 087",
+                      "Synthetic benchmark installation 088",
+                      "Synthetic benchmark installation 089",
+                      "Synthetic benchmark installation 090",
+                      "Synthetic benchmark installation 091",
+                      "Synthetic benchmark installation 092",
+                      "Synthetic benchmark installation 093",
+                      "Synthetic benchmark installation 094",
+                      "Synthetic benchmark installation 095",
+                      "Synthetic benchmark installation 096",
+                      "Synthetic benchmark installation 097",
+                      "Synthetic benchmark installation 098",
+                      "Synthetic benchmark installation 109",
+                      "Synthetic benchmark installation 110",
+                      "Synthetic benchmark installation 111",
+                      "Synthetic benchmark installation 112",
+                      "Synthetic benchmark installation 113",
+                      "Synthetic benchmark installation 114",
+                      "Synthetic benchmark installation 115",
+                      "Synthetic benchmark installation 116",
+                      "Synthetic benchmark installation 117",
+                      "Synthetic benchmark installation 118",
+                      "Synthetic benchmark installation 119",
+                      "Synthetic benchmark installation 120",
+                      "Synthetic benchmark installation 121",
+                      "Synthetic benchmark installation 122",
+                      "Synthetic benchmark installation 123",
+                      "Synthetic benchmark installation 124",
+                      "Synthetic benchmark installation 125",
+                      "Synthetic benchmark installation 136",
+                      "Synthetic benchmark installation 137",
+                      "Synthetic benchmark installation 138",
+                      "Synthetic benchmark installation 139",
+                      "Synthetic benchmark installation 140",
+                      "Synthetic benchmark installation 141",
+                      "Synthetic benchmark installation 142",
+                      "Synthetic benchmark installation 143",
+                      "Synthetic benchmark installation 144",
+                      "Synthetic benchmark installation 145",
+                      "Synthetic benchmark installation 146",
+                      "Synthetic benchmark installation 147",
+                      "Synthetic benchmark installation 148",
+                      "Synthetic benchmark installation 149",
+                      "Synthetic benchmark installation 150",
+                      "Synthetic benchmark installation 151",
+                      "Synthetic benchmark installation 152",
+                      "Synthetic benchmark installation 163",
+                      "Synthetic benchmark installation 164",
+                      "Synthetic benchmark installation 165",
+                      "Synthetic benchmark installation 166",
+                      "Synthetic benchmark installation 167",
+                      "Synthetic benchmark installation 168",
+                      "Synthetic benchmark installation 169",
+                      "Synthetic benchmark installation 170",
+                      "Synthetic benchmark installation 171",
+                      "Synthetic benchmark installation 172",
+                      "Synthetic benchmark installation 173",
+                      "Synthetic benchmark installation 174",
+                      "Synthetic benchmark installation 175",
+                      "Synthetic benchmark installation 176",
+                      "Synthetic benchmark installation 177",
+                      "Synthetic benchmark installation 178",
+                      "Synthetic benchmark installation 179",
+                      "Synthetic benchmark installation 190",
+                      "Synthetic benchmark installation 191",
+                      "Synthetic benchmark installation 192",
+                      "Synthetic benchmark installation 193",
+                      "Synthetic benchmark installation 194",
+                      "Synthetic benchmark installation 195",
+                      "Synthetic benchmark installation 196",
+                      "Synthetic benchmark installation 197",
+                      "Synthetic benchmark installation 198",
+                      "Synthetic benchmark installation 199",
+                      "Synthetic benchmark installation 200",
+                      "Synthetic benchmark installation 201",
+                      "Synthetic benchmark installation 202",
+                      "Synthetic benchmark installation 203",
+                      "Synthetic benchmark installation 204",
+                      "Synthetic benchmark installation 205",
+                      "Synthetic benchmark installation 206",
+                      "Synthetic benchmark installation 217",
+                      "Synthetic benchmark installation 218",
+                      "Synthetic benchmark installation 219",
+                      "Synthetic benchmark installation 220",
+                      "Synthetic benchmark installation 221",
+                      "Synthetic benchmark installation 222",
+                      "Synthetic benchmark installation 223",
+                      "Synthetic benchmark installation 224",
+                      "Synthetic benchmark installation 225",
+                      "Synthetic benchmark installation 226",
+                      "Synthetic benchmark installation 227",
+                      "Synthetic benchmark installation 228",
+                      "Synthetic benchmark installation 229",
+                      "Synthetic benchmark installation 230",
+                      "Synthetic benchmark installation 231",
+                      "Synthetic benchmark installation 232",
+                      "Synthetic benchmark installation 233",
+                      "Synthetic benchmark installation 244",
+                      "Synthetic benchmark installation 245",
+                      "Synthetic benchmark installation 246",
+                      "Synthetic benchmark installation 247",
+                      "Synthetic benchmark installation 248",
+                      "Synthetic benchmark installation 249",
+                      "Synthetic benchmark installation 250",
+                      "Synthetic benchmark installation 251",
+                      "Synthetic benchmark installation 252",
+                      "Synthetic benchmark installation 253",
+                      "Synthetic benchmark installation 254",
+                      "Synthetic benchmark installation 255",
+                      "Synthetic benchmark installation 256",
+                      "Synthetic benchmark installation 257",
+                      "Synthetic benchmark installation 258",
+                      "Synthetic benchmark installation 259",
+                      "Synthetic benchmark installation 260",
+                      "Synthetic benchmark installation 271",
+                      "Synthetic benchmark installation 272",
+                      "Synthetic benchmark installation 273",
+                      "Synthetic benchmark installation 274",
+                      "Synthetic benchmark installation 275",
+                      "Synthetic benchmark installation 276",
+                      "Synthetic benchmark installation 277",
+                      "Synthetic benchmark installation 278",
+                      "Synthetic benchmark installation 279",
+                      "Synthetic benchmark installation 280",
+                      "Synthetic benchmark installation 281",
+                      "Synthetic benchmark installation 282",
+                      "Synthetic benchmark installation 283",
+                      "Synthetic benchmark installation 284",
+                      "Synthetic benchmark installation 285",
+                      "Synthetic benchmark installation 286",
+                      "Synthetic benchmark installation 287",
+                      "Synthetic benchmark installation 298",
+                      "Synthetic benchmark installation 299",
+                      "Synthetic benchmark installation 300",
+                      "Synthetic benchmark installation 301",
+                      "Synthetic benchmark installation 302",
+                      "Synthetic benchmark installation 303",
+                      "Synthetic benchmark installation 304",
+                      "Synthetic benchmark installation 305",
+                      "Synthetic benchmark installation 306",
+                      "Synthetic benchmark installation 307",
+                      "Synthetic benchmark installation 308",
+                      "Synthetic benchmark installation 309",
+                      "Synthetic benchmark installation 310",
+                      "Synthetic benchmark installation 311",
+                      "Synthetic benchmark installation 312",
+                      "Synthetic benchmark installation 313",
+                      "Synthetic benchmark installation 314",
+                      "Synthetic benchmark installation 325",
+                      "Synthetic benchmark installation 326",
+                      "Synthetic benchmark installation 327",
+                      "Synthetic benchmark installation 328",
+                      "Synthetic benchmark installation 329",
+                      "Synthetic benchmark installation 330",
+                      "Synthetic benchmark installation 331",
+                      "Synthetic benchmark installation 332",
+                      "Synthetic benchmark installation 333",
+                      "Synthetic benchmark installation 334",
+                      "Synthetic benchmark installation 335",
+                      "Synthetic benchmark installation 336",
+                      "Synthetic benchmark installation 337",
+                      "Synthetic benchmark installation 338",
+                      "Synthetic benchmark installation 339",
+                      "Synthetic benchmark installation 340",
+                      "Synthetic benchmark installation 341",
+                      "Synthetic benchmark installation 352",
+                      "Synthetic benchmark installation 353",
+                      "Synthetic benchmark installation 354",
+                      "Synthetic benchmark installation 355",
+                      "Synthetic benchmark installation 356",
+                      "Synthetic benchmark installation 357",
+                      "Synthetic benchmark installation 358",
+                      "Synthetic benchmark installation 359",
+                      "Synthetic benchmark installation 360",
+                      "Synthetic benchmark installation 361",
+                      "Synthetic benchmark installation 362",
+                      "Synthetic benchmark installation 363",
+                      "Synthetic benchmark installation 364",
+                      "Synthetic benchmark installation 365",
+                      "Synthetic benchmark installation 366",
+                      "Synthetic benchmark installation 367",
+                      "Synthetic benchmark installation 368",
+                      "Synthetic benchmark installation 379",
+                      "Synthetic benchmark installation 380",
+                      "Synthetic benchmark installation 381",
+                      "Synthetic benchmark installation 382",
+                      "Synthetic benchmark installation 383",
+                      "Synthetic benchmark installation 384",
+                      "Synthetic benchmark installation 385",
+                      "Synthetic benchmark installation 386",
+                      "Synthetic benchmark installation 387",
+                      "Synthetic benchmark installation 388",
+                      "Synthetic benchmark installation 389",
+                      "Synthetic benchmark installation 390",
+                      "Synthetic benchmark installation 391",
+                      "Synthetic benchmark installation 392",
+                      "Synthetic benchmark installation 393",
+                      "Synthetic benchmark installation 394",
+                      "Synthetic benchmark installation 395",
+                      "Synthetic benchmark installation 406",
+                      "Synthetic benchmark installation 407",
+                      "Synthetic benchmark installation 408",
+                      "Synthetic benchmark installation 409",
+                      "Synthetic benchmark installation 410",
+                      "Synthetic benchmark installation 411",
+                      "Synthetic benchmark installation 412",
+                      "Synthetic benchmark installation 413",
+                      "Synthetic benchmark installation 414",
+                      "Synthetic benchmark installation 415",
+                      "Synthetic benchmark installation 416",
+                      "Synthetic benchmark installation 417",
+                      "Synthetic benchmark installation 418",
+                      "Synthetic benchmark installation 419",
+                      "Synthetic benchmark installation 420",
+                      "Synthetic benchmark installation 421",
+                      "Synthetic benchmark installation 422",
+                      "Synthetic benchmark installation 433"
+                    ],
+                    "responseCount": 2
+                  }
+                ],
+                "responseVariantOverflowCount": 0
+              },
+              "syntheticFrames": {
+                "generated": true,
+                "format": "SVG",
+                "requestCount": 2,
+                "sourceImagesCaptured": false
+              },
+              "populations": {
+                "satellites": 828,
+                "cctv": 250,
+                "alpr-cameras": 952,
+                "military-installations": 699,
+                "radio": 750,
+                "wind": 65160
+              },
+              "benchmarkEligibility": "pending complete matched five-run capture and shared acceptance validation",
+              "disposed": false
+            },
+            "progress": {
+              "startupSampleCount": 1,
+              "startupSamples": [
+                {
+                  "run": 1,
+                  "cacheDisabled": true,
+                  "appReadyMs": 3948,
+                  "initialSettleMs": 4839,
+                  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                  "platform": "Linux x86_64",
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "dpr": 1
+                  },
+                  "drawingBuffer": {
+                    "width": 1440,
+                    "height": 900
+                  },
+                  "focused": true,
+                  "visible": true,
+                  "navigationMs": 1924.1999999999534,
+                  "memory": {
+                    "usedJsHeapBytes": 43366459,
+                    "reason": null
+                  },
+                  "renderLoopRetirement": {
+                    "requested": true,
+                    "status": "retired-with-final-observation",
+                    "before": true,
+                    "after": false,
+                    "confirmed": true,
+                    "elapsedMs": 0
+                  },
+                  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                  "vendor": "Google Inc. (Google)",
+                  "rendererEvidence": {
+                    "source": "early-cesium-context-creation",
+                    "contextAttributes": {
+                      "alpha": false,
+                      "antialias": true,
+                      "depth": true,
+                      "failIfMajorPerformanceCaveat": false,
+                      "powerPreference": "high-performance",
+                      "premultipliedAlpha": true,
+                      "preserveDrawingBuffer": true,
+                      "stencil": true,
+                      "desynchronized": false
+                    },
+                    "queryDurationMs": 1.1000000000931323,
+                    "parameterQueryCount": 2
+                  }
+                }
+              ],
+              "completedSampleCount": 0,
+              "completedSamples": [],
+              "current": {
+                "phase": "configure-austin-operating-sample-document",
+                "scenario": "idle",
+                "run": 1,
+                "workerAuditRestoration": {
+                  "nativeCreateObjectURLRestored": true,
+                  "registryEmpty": true,
+                  "createdScriptBlobCountAtRestore": 14,
+                  "overflowCountAtRestore": 0,
+                  "auditedCreatedScriptBlobCount": 14,
+                  "auditedOverflowCount": 0,
+                  "validatedCreatedScriptBlobCount": 14,
+                  "observedWorkerTargetCount": 7,
+                  "observedBlobRequestCount": 7,
+                  "lateWorkerTargetCount": 0,
+                  "lateBlobRequestCount": 0,
+                  "delayedValidatedWorkerTargetCount": 0,
+                  "delayedValidatedBlobRequestCount": 0,
+                  "unvalidatedLateWorkerTargetCount": 0,
+                  "unvalidatedLateBlobRequestCount": 0,
+                  "workerUrlOverflowAtCompletion": 0,
+                  "blobUrlOverflowAtCompletion": 0
+                },
+                "performanceDiagnosticsDocuments": [
+                  {
+                    "documentRole": "startup-1",
+                    "documentId": "startup-document-1",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "main-setup",
+                    "documentId": "main-measured-document",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "provider-sample-1",
+                    "documentId": "provider-document-1",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  }
+                ]
+              },
+              "completedSamplesRetained": 0,
+              "startupSamplesRetained": 1
+            },
+            "evidenceTruncated": true
+          },
+          "rawReportTruncated": false,
+          "captureCliReportArtifact": {
+            "schema": "gev-smoke-capture-cli-report-artifact/v1",
+            "status": "preserved",
+            "fileName": "performance-build-smoke.json.capture-cli-report-candidate.json",
+            "byteLength": 73123,
+            "sha256": "ba73ff01598a3acd9efe16191c40417bdda0208a45c476400cabf0881ed4c747",
+            "limitBytes": 8388608,
+            "childStatus": "failed"
+          }
+        },
+        "terminalRenderLoopRetirement": {
+          "requested": true,
+          "status": "retired-with-final-observation",
+          "before": true,
+          "after": false,
+          "confirmed": true,
+          "elapsedMs": 0
+        },
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 9.00451100000646,
+            "document": {
+              "status": "confirmed",
+              "elapsedMs": 8.264108999996097,
+              "pageExecutionElapsedMs": 0.19999999995343387,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": true,
+              "hookRestoreAttempted": true,
+              "hookRestored": true,
+              "listenerCount": 2,
+              "listenerRemovalAttemptedCount": 2,
+              "listenerRemovalConfirmedCount": 2,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": true,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "already-disabled",
+                "before": false,
+                "after": false,
+                "confirmed": true,
+                "pageExecutionElapsedMs": 0
+              }
+            },
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 0.619407999998657,
+              "pageExecutionElapsedMs": null,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "candidate-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [
+          {
+            "checkpoint": "initial",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          },
+          {
+            "checkpoint": "final-before-code-validation",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            },
+            "renderLoopRetirement": {
+              "requested": true,
+              "status": "retired-with-final-observation",
+              "before": true,
+              "after": false,
+              "confirmed": true,
+              "elapsedMs": 0
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Child process exited 1; Wrote bounded failed-capture evidence. Capture failed during configure-austin-operating-sample-document: Waiting failed: 60000ms exceeded Refreshed bounded failed-capture evidence after cleanup. Capture failed during configure-austin-operating-sample-document: Waiting failed: 60000ms exceeded; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "finishedAt": "2026-10-12T21:18:29.470Z",
+  "durationMs": 219626
+}

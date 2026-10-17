@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "cesiumVersion": "1.138.0",
+  "engineVersion": "22.3.0",
+  "license": "Apache-2.0",
+  "provenance": "CesiumJS 1.138.0 and @cesium/engine 22.3.0; exact local fix for stale camera inertia after disabled input updates. All surrounding upstream bytes remain unchanged.",
+  "files": [
+    {
+      "relativePath": "@cesium/engine/Source/Scene/ScreenSpaceCameraController.js",
+      "sourceSha256": "e889992cbe8c7e09d4b25db8b616c7a32511d11f7bce0ef2169442d181461f39",
+      "patchedSha256": "d71453cc57e8faf96a82514b15a93420c58a9b8f4975ceda06cb67f02c881ead",
+      "oldText": "    if (controller.enableInputs && enabled) {\n      if (movement) {\n        action(controller, startPosition, movement);\n        activateInertia(controller, inertiaStateName);\n      } else if (inertiaConstant < 1.0) {\n        maintainInertia(\n          aggregator,\n          type,\n          modifier,\n          inertiaConstant,\n          action,\n          controller,\n          inertiaStateName,\n        );\n      }\n    }",
+      "newText": "    if (controller.enableInputs && enabled) {\n      if (movement) {\n        action(controller, startPosition, movement);\n        activateInertia(controller, inertiaStateName);\n      } else if (inertiaConstant < 1.0) {\n        maintainInertia(\n          aggregator,\n          type,\n          modifier,\n          inertiaConstant,\n          action,\n          controller,\n          inertiaStateName,\n        );\n      }\n    } else if (defined(inertiaStateName)) {\n      let movementState = controller[inertiaStateName];\n      if (!defined(movementState)) {\n        movementState = controller[inertiaStateName] = {\n          startPosition: new Cartesian2(),\n          endPosition: new Cartesian2(),\n          motion: new Cartesian2(),\n          inertiaEnabled: false,\n        };\n      } else {\n        movementState.inertiaEnabled = false;\n      }\n    }"
+    },
+    {
+      "relativePath": "cesium/Build/Cesium/Cesium.js",
+      "sourceSha256": "fb0f46e6da69e00a8f2b66b09821984971a4f22b8acd7b8b30d96cd5bb3a8463",
+      "patchedSha256": "90966c1f22604d00f24013288f7176c6e564587fd7e16205e169e9700eaa982a",
+      "oldText": "e.enableInputs&&t&&(p?(i(e,g,p),ySt(e,r)):o<1&&bSt(s,u,h,o,i,e,r))",
+      "newText": "e.enableInputs&&t?(p?(i(e,g,p),ySt(e,r)):o<1&&bSt(s,u,h,o,i,e,r)):l(r)&&(l(e[r])||(e[r]={startPosition:new M,endPosition:new M,motion:new M,inertiaEnabled:!1}),e[r].inertiaEnabled=!1)"
+    },
+    {
+      "relativePath": "cesium/Build/CesiumUnminified/Cesium.js",
+      "sourceSha256": "effe18779d4cf36a885c08a3b69fa8574728d3771ff2e4d7f566e3ea9ced6b86",
+      "patchedSha256": "1e4cc6f4b76d4c48df12ce7160a07d0ef009244b073f0a4048384f1d413158d2",
+      "oldText": "      if (controller.enableInputs && enabled) {\n        if (movement) {\n          action(controller, startPosition, movement);\n          activateInertia(controller, inertiaStateName);\n        } else if (inertiaConstant < 1) {\n          maintainInertia(\n            aggregator,\n            type,\n            modifier,\n            inertiaConstant,\n            action,\n            controller,\n            inertiaStateName\n          );\n        }\n      }",
+      "newText": "      if (controller.enableInputs && enabled) {\n        if (movement) {\n          action(controller, startPosition, movement);\n          activateInertia(controller, inertiaStateName);\n        } else if (inertiaConstant < 1) {\n          maintainInertia(\n            aggregator,\n            type,\n            modifier,\n            inertiaConstant,\n            action,\n            controller,\n            inertiaStateName\n          );\n        }\n      } else if (defined_default(inertiaStateName)) {\n        let movementState = controller[inertiaStateName];\n        if (!defined_default(movementState)) {\n          movementState = controller[inertiaStateName] = {\n            startPosition: new Cartesian2_default(),\n            endPosition: new Cartesian2_default(),\n            motion: new Cartesian2_default(),\n            inertiaEnabled: false,\n          };\n        } else {\n          movementState.inertiaEnabled = false;\n        }\n      }"
+    },
+    {
+      "relativePath": "cesium/Build/Cesium/index.cjs",
+      "sourceSha256": "66465b800f3cc4fc1d6730a532c47d114258fb60c69c65ec7a00bb9f28ef2000",
+      "patchedSha256": "9ac3d1f3541165c8379fa6e7d4c110946fc9b5bfad58c73bb6299e2fe0f250ae",
+      "oldText": "e.enableInputs&&t&&(m?(i(e,g,m),BSt(e,r)):o<1&&SSt(a,f,h,o,i,e,r))",
+      "newText": "e.enableInputs&&t?(m?(i(e,g,m),BSt(e,r)):o<1&&SSt(a,f,h,o,i,e,r)):l(r)&&(l(e[r])||(e[r]={startPosition:new k,endPosition:new k,motion:new k,inertiaEnabled:!1}),e[r].inertiaEnabled=!1)"
+    },
+    {
+      "relativePath": "cesium/Build/CesiumUnminified/index.cjs",
+      "sourceSha256": "7762c835741bd126a3c082d520fead225cb39d3cf5d2f6de9b9f078d72a14b6e",
+      "patchedSha256": "7c233e615767d9183e053c16a72d0bd1bea98ed888f88a86fe55711a54fd3367",
+      "oldText": "    if (controller.enableInputs && enabled) {\n      if (movement) {\n        action(controller, startPosition, movement);\n        activateInertia(controller, inertiaStateName);\n      } else if (inertiaConstant < 1) {\n        maintainInertia(\n          aggregator,\n          type,\n          modifier,\n          inertiaConstant,\n          action,\n          controller,\n          inertiaStateName\n        );\n      }\n    }",
+      "newText": "    if (controller.enableInputs && enabled) {\n      if (movement) {\n        action(controller, startPosition, movement);\n        activateInertia(controller, inertiaStateName);\n      } else if (inertiaConstant < 1) {\n        maintainInertia(\n          aggregator,\n          type,\n          modifier,\n          inertiaConstant,\n          action,\n          controller,\n          inertiaStateName\n        );\n      }\n    } else if (defined_default(inertiaStateName)) {\n      let movementState = controller[inertiaStateName];\n      if (!defined_default(movementState)) {\n        movementState = controller[inertiaStateName] = {\n          startPosition: new Cartesian2_default(),\n          endPosition: new Cartesian2_default(),\n          motion: new Cartesian2_default(),\n          inertiaEnabled: false,\n        };\n      } else {\n        movementState.inertiaEnabled = false;\n      }\n    }"
+    }
+  ]
+}

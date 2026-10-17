@@ -116,6 +116,7 @@ export function createStyle({ state: layerState, services, parts, source }) {
         layerState._lastRenderAltitude,
       ),
     );
+    services.render?.governorRequestRender?.('traffic-style');
   }
 
   /**

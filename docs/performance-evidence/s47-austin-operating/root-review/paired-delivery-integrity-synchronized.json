@@ -1,0 +1,52 @@
+{
+  "schema": "gev-root-austin-paired-integrity-audit/v1",
+  "recordedAt": "2026-10-12T20:52:16.603Z",
+  "scope": "Node report-validator audit using real fixture delivery and synthetic browser/build observations; no browser, hardware, or performance acceptance",
+  "checkoutHead": "cd44d1df2bdcbb0e9ed401c4f813ea2a5709b998",
+  "sourceState": "working-tree integration under development; exact file hashes recorded",
+  "sourceSha256": {
+    "scripts/performance/austinOperatingComparisonContract.test.mjs": "ad57c6358621f1537c8f638e5f36567bd5d325aabb003496499ef983a7dfb614",
+    "scripts/performance/captureComparisonContract.mjs": "918e614e7a810edff82ef4a150ad1d9c529d967649a8744a33c84d0016a8235c",
+    "scripts/performance/pairedReport.mjs": "13ef2577eb3662d97740a11c697125628d748ed85940806459e26db755d8e84d",
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "eea5d1d1805318e4e1e9978c9b504012f9b25082855022500abceed88b8f5e15",
+    "scripts/performance/pairedReportTestFixtures.mjs": "909ea829a4290f96f0eb4ade681e6c20863f69c9f9b5ae8afca8826af1ef186b"
+  },
+  "sourceStable": true,
+  "mutationScope": "top-level delivery and every matching captured delivery copy; copied identities remain mutually consistent",
+  "positiveControl": {
+    "status": "comparable",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    }
+  },
+  "controls": [
+    {
+      "id": "corrupt-delivered-asset-hash",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "capture 1 delivered response hash differs for tle-stations",
+      "reasonSha256": "d40912fbfa17f3828416f969539c7be27151f8a9d3a421ceb81287f17714d335"
+    },
+    {
+      "id": "remove-acknowledged-alpr-tiles",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "capture 1 did not observe every required native route tile",
+      "reasonSha256": "6689ea447051b8f171a51b1ea86a846e949886519b82eab66e68f959fb50de89"
+    },
+    {
+      "id": "remove-acknowledged-installation-identities",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "capture 1 installation identity is not acknowledged by its delivered response variants",
+      "reasonSha256": "2a3c5cf4d414bd516ef36f4405be6869606c1c36aa25ae4d12b2425801aae28c"
+    }
+  ],
+  "status": "passed"
+}

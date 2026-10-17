@@ -1,0 +1,57 @@
+{
+  "schema": "gev-local-validation-summary/v1",
+  "environment": {
+    "os": "Windows",
+    "node": "24.16.0"
+  },
+  "results": [
+    {
+      "sourceCommit": "9487a57cf5ad3eb1076532da77bda8c48953e7de",
+      "localLog": "qa-artifacts/resume-full-suite-9487a57c.log",
+      "localRawSha256": "b2a62512ceeaf20c247a15d409d4c92be6ec7018c16c2fa3674b4048be69383b",
+      "status": "passed",
+      "phases": [
+        {
+          "tests": 7958,
+          "passed": 7948,
+          "failed": 0,
+          "skipped": 10,
+          "durationMs": 426342.548
+        },
+        {
+          "tests": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 4045.4407
+        },
+        {
+          "tests": 13,
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 131284.1629
+        }
+      ]
+    },
+    {
+      "sourceCommit": "3ee739376a26b8773350c41931d2e7fef835ecf6",
+      "localLog": "qa-artifacts/resume-second-batch-focused.log",
+      "localRawSha256": "cc79d1196b4f8baf6cb9c1c6c65d98eadcd5b851a39ddb9a7043a506773afbcb",
+      "status": "passed",
+      "phases": [
+        {
+          "tests": 58,
+          "passed": 58,
+          "failed": 0,
+          "skipped": 0,
+          "durationMs": 11932.5779
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Full source suite at 9487a57c does not automatically validate subsequent source changes.",
+    "No browser rendering or hardware acceptance follows from these Node suites."
+  ]
+}

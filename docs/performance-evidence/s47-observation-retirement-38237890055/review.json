@@ -1,0 +1,346 @@
+{
+  "schema": "gev-preserved-failed-artifact-review/v1",
+  "runId": "38237890055",
+  "candidateCommit": "fda1cb883cf07d322559c15c63bf059c93e6b391",
+  "conclusion": "failure",
+  "performanceAcceptanceEligible": false,
+  "files": [
+    {
+      "file": "report.json",
+      "byteLength": 192038,
+      "sha256": "de012dbc33b50ee7b7df4c6e98b8465e465d59c0ff3279d15465174e5b0a0b9f"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile.json",
+      "byteLength": 296235,
+      "sha256": "06aac1ebae1d2dfa36f5f29faf80867f03ba8b5f305f90046a595df0ef7d3c5f"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile-ref.json",
+      "byteLength": 804,
+      "sha256": "16607692341f558f05d113b0e259a8e2fa58c97e8ddccdf20d39aee4c4df2cd1"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile.json",
+      "byteLength": 284302,
+      "sha256": "4a2f068b445aea7591600b3ac266b7c6436721cb4657f167bd892a0fb0ef5f76"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile-ref.json",
+      "byteLength": 804,
+      "sha256": "4de3da94e51825081d93f1677635b1f30e810532f87bef3713595ab6a9b1f9e5"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile.json",
+      "byteLength": 419386,
+      "sha256": "17272044228449960f0813f651ecea39d81209c7706329374ff449dbec1f672b"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile-ref.json",
+      "byteLength": 848,
+      "sha256": "1e3cfbc44c650c0b410e53a265256adf695ff20e7804b129131f346659b45eb0"
+    }
+  ],
+  "profileChecks": [
+    {
+      "file": "provider-idle-1-cpu-profile.json",
+      "status": "complete",
+      "sha256": "06aac1ebae1d2dfa36f5f29faf80867f03ba8b5f305f90046a595df0ef7d3c5f",
+      "byteLength": 296235,
+      "profileWindowMs": 18419.918,
+      "profilerErrors": []
+    },
+    {
+      "file": "provider-idle-2-cpu-profile.json",
+      "status": "complete",
+      "sha256": "4a2f068b445aea7591600b3ac266b7c6436721cb4657f167bd892a0fb0ef5f76",
+      "byteLength": 284302,
+      "profileWindowMs": 16127.154,
+      "profilerErrors": []
+    },
+    {
+      "file": "provider-scripted-motion-1-cpu-profile.json",
+      "status": "complete",
+      "sha256": "17272044228449960f0813f651ecea39d81209c7706329374ff449dbec1f672b",
+      "byteLength": 419386,
+      "profileWindowMs": 19473.321,
+      "profilerErrors": []
+    }
+  ],
+  "completedSamples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "retired-at-final-post-render",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0.10000000000582077
+      }
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "retired-at-final-post-render",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0.1999999999825377
+      }
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "retired-at-final-post-render",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      }
+    }
+  ],
+  "terminalRetirements": [
+    {
+      "phase": "startup-final-details",
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "requested": true,
+      "status": "retired-with-final-observation",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0
+    },
+    {
+      "phase": "main-setup-final-population",
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "population": {
+        "flights": {
+          "enabled": true,
+          "count": 2500
+        },
+        "local-datacenters": {
+          "enabled": true,
+          "count": 4362
+        },
+        "local-dams": {
+          "enabled": true,
+          "count": 716
+        }
+      },
+      "requested": true,
+      "status": "retired-with-final-observation",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "scenario": "idle",
+      "run": 1,
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1",
+      "requested": true,
+      "status": "retired-at-final-post-render",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0.10000000000582077
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "scenario": "idle",
+      "run": 2,
+      "documentRole": "provider-sample-2",
+      "documentId": "provider-document-2",
+      "requested": true,
+      "status": "retired-at-final-post-render",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0.1999999999825377
+    },
+    {
+      "phase": "provider-sample-measurement-post-render",
+      "scenario": "scripted-motion",
+      "run": 1,
+      "documentRole": "provider-sample-3",
+      "documentId": "provider-document-3",
+      "requested": true,
+      "status": "retired-at-final-post-render",
+      "before": true,
+      "after": false,
+      "confirmed": true,
+      "elapsedMs": 0
+    }
+  ],
+  "reachedDocumentCleanups": [
+    {
+      "owner": "startup-1",
+      "confirmed": true,
+      "hostStageElapsedMs": 22.40072499999951,
+      "pageExecutionElapsedMs": 0.10000000000582077
+    },
+    {
+      "owner": "main-setup",
+      "confirmed": true,
+      "hostStageElapsedMs": 5.533895000000484,
+      "pageExecutionElapsedMs": 0.10000000000582077
+    },
+    {
+      "owner": "provider-sample-1",
+      "confirmed": true,
+      "hostStageElapsedMs": 1.907069999993837,
+      "pageExecutionElapsedMs": 0.20000000001164153
+    },
+    {
+      "owner": "provider-sample-2",
+      "confirmed": true,
+      "hostStageElapsedMs": 1.8624049999925774,
+      "pageExecutionElapsedMs": 0.20000000001164153
+    },
+    {
+      "owner": "provider-sample-3",
+      "confirmed": true,
+      "hostStageElapsedMs": 8.742318999997224,
+      "pageExecutionElapsedMs": 0.10000000000582077
+    }
+  ],
+  "failure": {
+    "phase": "warmup",
+    "scenario": "scripted-motion",
+    "run": 2,
+    "message": "Warmup boundary: host observation deadline elapsed.",
+    "operator": null
+  },
+  "failedBoundary": {
+    "schema": "gev-render-boundary-observation/v1",
+    "invocationId": "41c088ce-91f2-4b1c-8976-942bbdba51dd",
+    "label": "Warmup boundary",
+    "status": "host-observation-deadline",
+    "hostTimeoutMs": 6000,
+    "hostElapsedMs": 6113.8568049999885,
+    "hostDispatchElapsedMs": 0.29102100001182407,
+    "hostProgressBindingSetupElapsedMs": null,
+    "progressBindingOwnerId": "provider-sample-4:provider-document-4",
+    "progressBindingSetupElapsedMs": 4.022098000001279,
+    "pageEntryObserved": true,
+    "pageEntryHostReceiptElapsedMs": 2990.138902999999,
+    "progressEvents": [
+      {
+        "stage": "page-entry",
+        "hostReceiptElapsedMs": 2990.138902999999,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0
+        }
+      },
+      {
+        "stage": "listener-registered",
+        "hostReceiptElapsedMs": 2991.4562009999936,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0,
+          "listenerRegistered": true
+        }
+      },
+      {
+        "stage": "render-request-started",
+        "hostReceiptElapsedMs": 2992.526343999998,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.1000000000349246,
+          "renderRequestAvailable": true,
+          "renderRequestStarted": true
+        }
+      },
+      {
+        "stage": "render-request-completed",
+        "hostReceiptElapsedMs": 2992.701212999993,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.1000000000349246,
+          "renderRequestCompleted": true
+        }
+      }
+    ],
+    "ignoredProgressEvents": {
+      "wrongInvocation": 0,
+      "malformed": 0,
+      "overflow": 0
+    },
+    "hostEvaluationOverheadResidualMs": 2992.556805,
+    "page": {
+      "status": "settled",
+      "settleElapsedMs": 3121.2999999999884,
+      "error": null,
+      "diagnostics": {
+        "phase": "settled",
+        "pageEntryElapsedMs": 0,
+        "pageElapsedMs": 3121.2999999999884,
+        "listenerRegistered": true,
+        "listenerRegistrationElapsedMs": 0,
+        "renderRequestAvailable": true,
+        "renderRequestStarted": true,
+        "renderRequestStartElapsedMs": 0.1000000000349246,
+        "renderRequestCompleted": true,
+        "renderRequestCompleteElapsedMs": 0.1000000000349246,
+        "postRenderObserved": true,
+        "postRenderElapsedMs": 3121.100000000035,
+        "renderLoopRetirement": null,
+        "finalObservation": null,
+        "finalObservationErrorName": null,
+        "pageTimerFired": false,
+        "pageTimerElapsedMs": null,
+        "cleanup": {
+          "timerCleared": true,
+          "listenerRemoved": true
+        }
+      }
+    },
+    "pageError": null,
+    "hostError": {
+      "name": "TimeoutError",
+      "message": "Warmup boundary: host observation deadline elapsed."
+    },
+    "pendingPageResultAtDeadline": true,
+    "latePageResultObserved": true,
+    "cleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": null,
+      "progressInvocationReleased": true,
+      "progressBindingCleanupElapsedMs": 0.042022000008728355,
+      "progressInvocationReleaseElapsedMs": 0.042022000008728355
+    }
+  },
+  "bindingCleanup": {
+    "ownerId": "provider-sample-4:provider-document-4",
+    "status": "disposed",
+    "setupTimeoutMs": 5000,
+    "setupElapsedMs": 4.022098000001279,
+    "cleanup": {
+      "removed": true,
+      "elapsedMs": 121.05809800000861,
+      "error": null
+    },
+    "disposeReason": "capture-failed",
+    "ignoredCallbacks": {
+      "malformedInvocation": 0,
+      "unownedInvocation": 0
+    }
+  },
+  "limitations": [
+    "Instrumented SwiftShader; no physical GPU acceptance.",
+    "Three samples complete; tracking is not reached.",
+    "Profiles cover idle1, idle2 and motion1, not the failed motion2 document.",
+    "The bounded raw failure projection is marked evidenceTruncated; no missing observation is inferred."
+  ]
+}

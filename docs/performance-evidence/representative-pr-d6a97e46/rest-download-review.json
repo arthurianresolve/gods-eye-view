@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-10-13T18:20:44.157856+00:00",
+  "artifactId": 11837328637,
+  "runId": 38444888716,
+  "sourceCommit": "655c9029c98142414ce2449a0330242a54dc9f09",
+  "method": "authenticated gh REST by ID; later diagnostic, not same-job download proof",
+  "zipBytes": 19863092,
+  "zipSha256": "f38d402b7bba9118302a5ce144b99d418f44c5d3ce40860e5407df3fa57de7a2",
+  "zipDigestMatchesMetadata": true,
+  "archiveBytes": 19869028,
+  "archiveSha256": "a8c756b8809f5b7c0cdbdd7440287b364b9e3108ccbf08174094e6b83709c2ae",
+  "innerChecksumMatches": true,
+  "manifestCommitMatches": true,
+  "attestationExitCode": 0,
+  "attestationLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stablePublished": false,
+  "attestationJsonBytes": 14292,
+  "attestationJsonSha256": "eaef8c9bef9a4462231420f60cdf391f5b79559cd79fc3f722c8110fa5708009"
+}

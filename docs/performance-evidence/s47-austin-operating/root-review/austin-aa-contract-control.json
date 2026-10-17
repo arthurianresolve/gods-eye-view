@@ -1,0 +1,46 @@
+{
+  "schema": "gev-austin-aa-contract-control/v1",
+  "oldContractCommit": "21be98a45dae188be84d958987a88e050d88bae7",
+  "oldContractSha256": "d2954c0b1b06c7be8108db083927115df21198fd5561ab280954ed9f3c25a92e",
+  "testCommit": "a734071297f3cd6cc1cbee1d2c43b64412152149",
+  "testFile": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+  "testFileSha256": "70b06cc0845fa6b7e7a49c6be62b29a4020d4eb178bc23312ebb58124eef14ed",
+  "sourceSubstitution": "Read-only Node module-loader override of the old comparison contract; all relative imports resolve against its original URL. Tracked files unchanged.",
+  "case": "Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence",
+  "oldExitCode": 1,
+  "oldFailure": "false !== true at old captureComparisonContract.mjs:964 (FXAA expectation)",
+  "renderSettings": {
+    "resolutionScale": 1,
+    "msaaSamples": 4,
+    "antialias": true,
+    "fxaa": false
+  },
+  "correctedValidation": {
+    "focusedTests": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "limitation": "Fixture-backed contract control using the baseline-observed rendering defaults; not a new browser capture or independent identification of the truncated hosted failure sample.",
+  "earlierLocalSuite": {
+    "testedCommit": "ac14dfbdbe9aad4cb21adc30ba35dbe38e568599",
+    "total": 101,
+    "passed": 100,
+    "failed": 1,
+    "durationMs": 90826.7826,
+    "failingTest": "capture CLI recognizes an infrastructure workload before browser startup",
+    "observedTestDurationMs": 15027.7186,
+    "childTimeoutMs": 15000,
+    "observedStderr": "",
+    "failure": "Expected provenance error text was absent.",
+    "cause": "Unresolved; a subsequent pass does not establish the cause of the earlier startup delay."
+  },
+  "isolatedCliRecheck": {
+    "testedCommit": "ac14dfbdbe9aad4cb21adc30ba35dbe38e568599",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "durationMs": 22305.6372,
+    "firstTestDurationMs": 3250.801,
+    "childTimeoutMs": 15000
+  }
+}

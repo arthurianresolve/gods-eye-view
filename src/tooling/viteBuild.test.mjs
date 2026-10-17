@@ -15,7 +15,9 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   // The Host check runs before every other plugin's middleware.
   assert.equal(config.plugins[0].name, 'host-check');
   assert.equal(config.plugins[0].enforce, 'pre');
-  assert.equal(config.plugins[3], plugin);
+  assert.equal(config.plugins[1].name, 'gev-cesium-dependency-identity');
+  assert.equal(typeof config.plugins[1].configResolved, 'function');
+  assert.equal(config.plugins[4], plugin);
   assert.equal(config.server.host, 'localhost');
   assert.equal(config.server.port, 4173);
   assert.deepEqual(config.server.allowedHosts, ['localhost', '127.0.0.1']);
@@ -39,7 +41,12 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
     'import.meta.env.CESIUM_ION_TOKEN': '"ion-fixture"',
     'import.meta.env.MAPILLARY_CLIENT_TOKEN': '""',
+    __GEV_APP_COMMIT__: 'null',
   });
+  assert.equal(
+    createBrowserViteConfig({ appCommit: 'abc123' }).define.__GEV_APP_COMMIT__,
+    '"abc123"',
+  );
   assert.equal(
     createBrowserViteConfig({ mapillaryToken: 'MLY|1|abc' }).define[
       'import.meta.env.MAPILLARY_CLIENT_TOKEN'
@@ -75,7 +82,7 @@ test('build helper does not discover environment values or construct local provi
       undefined,
     );
     assert.deepEqual(
-      config.plugins.slice(3).map((plugin) => plugin.name),
+      config.plugins.slice(4).map((plugin) => plugin.name),
       ['embed-framing', 'panel-build'],
     );
   } finally {
@@ -88,8 +95,13 @@ test('root config retains existing named exports and standalone provider order',
   for (const [name, value] of Object.entries(providers))
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
+  assert.match(
+    config.define.__GEV_APP_COMMIT__,
+    /^"[a-f0-9]{40}"$|^null$/,
+    'standalone dev config must expose a real checkout commit when available',
+  );
   assert.deepEqual(
-    config.plugins.slice(3, -4).map((plugin) => plugin.name),
+    config.plugins.slice(4, -4).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
   assert.equal(config.plugins.at(-5).name, 'gev-key-setup');

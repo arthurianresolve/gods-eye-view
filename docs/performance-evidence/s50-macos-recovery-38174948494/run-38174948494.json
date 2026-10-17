@@ -1,0 +1,85 @@
+{
+  "conclusion": "failure",
+  "createdAt": "2026-10-11T21:05:59Z",
+  "headSha": "0c7d678b8d9b9d8c3f65059bc46b888b7436e194",
+  "jobs": [
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261092,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261092",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:07:55Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261209,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261209",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:15:47Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261270,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261270",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:09:41Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 114575261290,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261290",
+      "startedAt": "2026-10-11T21:06:10Z",
+      "completedAt": "2026-10-11T21:09:54Z",
+      "failedSteps": [
+        {
+          "name": "Upgrade and recover a real installation and browser profile",
+          "number": 8
+        }
+      ]
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261325,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261325",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:08:26Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261328,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261328",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:08:42Z",
+      "failedSteps": []
+    },
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114575261364,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494/job/114575261364",
+      "startedAt": "2026-10-11T21:06:03Z",
+      "completedAt": "2026-10-11T21:17:24Z",
+      "failedSteps": []
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-10-11T21:17:25Z",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174948494"
+}

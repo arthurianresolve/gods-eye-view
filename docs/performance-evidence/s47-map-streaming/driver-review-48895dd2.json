@@ -1,0 +1,57 @@
+{
+  "reviewedOn": "2026-10-13",
+  "reviewedCommit": "48895dd239aa147e9a6ca23c2f62208d0328cf56",
+  "status": "rejected-pending-correction",
+  "scope": "Independent source, pinned Cesium API and report mutation review; no browser or GPU run",
+  "cesiumVersion": "1.138.0",
+  "apiFinding": {
+    "obsoleteProperty": "Cesium3DTileset.maximumMemoryUsage",
+    "existsOnPinnedPrototype": false,
+    "supportedProperties": [
+      "cacheBytes",
+      "maximumCacheOverflowBytes",
+      "maximumScreenSpaceError"
+    ],
+    "productionCacheBytes": 1610612736,
+    "productionMaximumCacheOverflowBytes": 1073741824,
+    "consequence": "The real capture reports null for the obsolete property and fails its own validator; the test double incorrectly supplies that property."
+  },
+  "mutationControls": [
+    {
+      "mutation": "Set the document release confirmed and targetClosed fields to false",
+      "expected": "reject",
+      "actual": "accepted"
+    },
+    {
+      "mutation": "Set the document release pendingCommandsAfterDrain to 99",
+      "expected": "reject",
+      "actual": "accepted"
+    },
+    {
+      "mutation": "Set the first alternate-map transition resolutionScale to 0.1",
+      "expected": "reject",
+      "actual": "accepted"
+    },
+    {
+      "mutation": "Set the reported route start longitude to 0",
+      "expected": "reject",
+      "actual": "accepted"
+    },
+    {
+      "mutation": "Increase aggregate requestedCount and fulfilledAckCount by 100 without changing document deliveries",
+      "expected": "reject",
+      "actual": "accepted"
+    }
+  ],
+  "method": "Execute the existing positive test in memory with additional structured-clone mutations, leaving its files unchanged. All four existing tests still pass while all five invalid reports are accepted.",
+  "requiredCorrection": [
+    "Observe and validate the actual pinned Cesium cache properties, without changing cache budgets",
+    "Recompute and compare aggregate delivery from checked document release records",
+    "Compare transition visual settings while allowing only the intended map stack change",
+    "Bind observed camera route poses to the declared elapsed-time route",
+    "Retain mutation controls as regression tests"
+  ],
+  "browserDecodeObserved": false,
+  "renderedReadinessObserved": false,
+  "performanceAcceptanceEligible": false
+}

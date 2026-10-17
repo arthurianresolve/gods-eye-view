@@ -1,6 +1,11 @@
 import * as Cesium from 'cesium';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../../evidence/evidence.js';
 import { formatNumber, t } from '../../i18n/index.js';
 import { unitLabel } from '../../ui/unitLabels.js';
+
 import { nextCockpitNearContacts } from '../../data/cockpitAirLod.js';
 import { trackedModelZoomActive } from '../../data/trackedModelRegime.js';
 import {
@@ -50,6 +55,10 @@ export function createTracking({
   const { resolvePickId, isOwnedByOtherLayer } = services.picking;
   const flightsLayer = layer;
 
+  function _syncRenderDemand() {
+    parts.lifecycle?.syncRenderDemand?.();
+  }
+
   function _emitAwarenessEvent(type, detail) {
     if (
       typeof window === 'undefined' ||
@@ -66,6 +75,8 @@ export function createTracking({
     if (!bb?.position || !info) return false;
     if (flightState._trackedEntity)
       flightState._trackedEntity.gevSelectionOrigin = origin;
+    const described = parts.queries._describeFlight(icao24);
+    const evidence = _flightEvidence(icao24, info, described?.stale === true);
     _emitAwarenessEvent('gev:awareness-subject-selected', {
       layerId: 'flights',
       id: icao24,
@@ -75,10 +86,56 @@ export function createTracking({
       // had supplied a registration. Identity below stays `icao24`.
       label: parts.queries._contactLabel(icao24, info),
       position: Cesium.Cartesian3.clone(bb.position),
+      evidence,
       origin,
     });
     selectTrackedSubjectContext(_contextSubjectMetadata(icao24));
     return true;
+  }
+
+  function _flightEvidence(icao24, info, stale = false) {
+    return createEvidenceEnvelope({
+      entityRef: { layerKey: 'flights', id: icao24 },
+      sourceId: info?.sourceId || flightState.feed._lastSource,
+      sourceUrl: knownEvidenceSourceUrl(
+        info?.sourceId || flightState.feed._lastSource,
+      ),
+      sourceRecordId: info?.sourceReference,
+      observedAt: info?.positionObservedAtMs,
+      receivedAt: info?.receivedAtMs,
+      snapshotAt: info?.sourceSnapshotObservedAtMs,
+      method: 'observed',
+      displayMethod: stale ? 'predicted' : 'interpolated',
+      feedState: stale
+        ? 'stale'
+        : /adsb\.lol/i.test(info?.sourceId || '')
+          ? 'fallback'
+          : info?.sourceComplete === false
+            ? 'partial'
+            : info?.sourceFreshness === 'current'
+              ? 'nominal'
+              : 'unknown',
+      coverage: {
+        area:
+          typeof info?.sourceCoverage === 'string' ? info.sourceCoverage : null,
+        completeness:
+          info?.sourceComplete === true &&
+          !/regional/i.test(info?.sourceCoverage || '')
+            ? 'complete'
+            : info?.sourceFreshness === 'partial' ||
+                /regional/i.test(info?.sourceCoverage || '')
+              ? 'partial'
+              : 'unknown',
+      },
+      limitations: [
+        info?.positionObservedAtMs == null
+          ? 'The source did not provide a per-aircraft position time.'
+          : null,
+        stale
+          ? 'Displayed position is dead-reckoned from earlier fixes.'
+          : null,
+      ].filter(Boolean),
+    });
   }
 
   /**
@@ -102,6 +159,11 @@ export function createTracking({
       layerId: 'flights',
       layerName: 'Live Flights',
       source: flightState.feed._lastSource,
+      evidence: _flightEvidence(
+        icao24,
+        flightState.records.data.get(icao24),
+        described.stale === true,
+      ),
       label: parts.queries._contactLabel(
         icao24,
         flightState.records.data.get(icao24),
@@ -417,13 +479,20 @@ export function createTracking({
             // icon predates all real history, so there is no valid body point behind it.
             if (
               !flightState._trackedIcao ||
-              flightState._trailPositions.length < 2 ||
-              parts.motion._isTrackWarmingUp()
+              flightState._trailPositions.length < 2
             )
               return [];
+            const renderTime = parts.motion._trackedDisplayRenderTime(
+              flightState._trackedIcao,
+              { preferCachedPose: true },
+            );
+            if (parts.motion._isTrackWarmingUp(renderTime)) return [];
             const head =
               parts.motion._trackedTrailCached() ||
-              parts.motion._trackedDisplayPosition(flightState._trackedIcao);
+              parts.motion._trackedDisplayPosition(
+                flightState._trackedIcao,
+                renderTime,
+              );
             if (!head) return [];
             // body[n−2] (last displayed body point) → delayed head: runs FORWARD, never a
             // backward/reversing segment.
@@ -684,6 +753,7 @@ export function createTracking({
     // cannot read the previous aircraft's cached/smoothed position.
     parts.motion._resetTrackedDisplay();
     _clearTrail();
+    _syncRenderDemand();
   }
 
   /**
@@ -1068,6 +1138,7 @@ export function createTracking({
     console.log(
       `[Data:Flights] Tracking ${parts.queries._contactLabel(icao24, info)} (${icao24})`,
     );
+    _syncRenderDemand();
   }
 
   /**
@@ -1106,6 +1177,7 @@ export function createTracking({
         flightState.records.missingPolls.delete(icao24);
       }
       flightState.feed._count = flightState._billboards.size;
+      _syncRenderDemand();
     } else if (flightState._billboardCollection.show) {
       // Fire-and-forget refresh; only while the layer is actually enabled.
       void flightsLayer.update(flightState._viewer);

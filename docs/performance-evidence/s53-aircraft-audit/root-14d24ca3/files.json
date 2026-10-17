@@ -1,0 +1,18 @@
+{
+  "audit.json": {
+    "bytes": 29676,
+    "sha256": "878abc9f4e95388170ded3b4fff307ee7b0e1ee3db3a5f35e57e6cd7e7efc21c"
+  },
+  "focused.log": {
+    "bytes": 1232,
+    "sha256": "40ffb2d4047bf82737ba969f9aaeee511bbbdbda3b6762d955fb515c0d91c343"
+  },
+  "format.log": {
+    "bytes": 27,
+    "sha256": "9fd68e0e4197166fd801a3bd8e4534104b30f2bb7723834b95a00b5c70879604"
+  },
+  "review.json": {
+    "bytes": 780,
+    "sha256": "10575f7994bf09c515632d0f62d7aebacc171eb2ad21c95cb2b5d5d9ff25e29a"
+  }
+}

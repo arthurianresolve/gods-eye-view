@@ -199,9 +199,13 @@ export function createState({ services }) {
 
   layerState._presetDots = 'on';
 
-  /** @type {boolean} gev:style-change listener bound (bind once per page). */
+  /** @type {EventTarget|null} Target owning this layer's style subscription. */
 
-  layerState._styleListenerBound = false;
+  layerState._styleEventTarget = null;
+
+  /** @type {Function|null} Exact callback owned by this layer. */
+
+  layerState._styleEventListener = null;
 
   /**
    * Effective per-bucket dot colors: preset override when one applies, else

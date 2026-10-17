@@ -357,6 +357,8 @@ export async function fetchTxdotSnapshot(
   url,
   {
     fetchImpl = fetch,
+    signal: downstreamSignal,
+    onHealth = () => {},
     timeoutMs = CCTV_FRAME_FETCH_TIMEOUT_MS,
     maxBytes = CCTV_FRAME_MAX_BODY_BYTES,
   } = {},
@@ -386,8 +388,14 @@ export async function fetchTxdotSnapshot(
         Accept: 'application/json',
         'User-Agent': 'gods-eye-view-cctv-proxy/1.0',
       },
-      signal: controller.signal,
+      signal: downstreamSignal
+        ? AbortSignal.any([controller.signal, downstreamSignal])
+        : controller.signal,
       redirect: 'manual',
+    });
+    onHealth({
+      transportStatus: upstream.ok ? 'ok' : 'failed',
+      upstreamReasonCode: upstream.ok ? 'delivery-ok' : 'upstream-failure',
     });
     if (!upstream.ok) return null;
     const envelope = await readCappedResponseBytes(upstream, maxEnvelopeBytes);
@@ -417,7 +425,14 @@ export async function fetchTxdotSnapshot(
     if (body.length < 4 || body.length > maxBytes) return null;
     if (body[0] !== 0xff || body[1] !== 0xd8 || body[2] !== 0xff) return null;
     return { ok: true, body, contentType: 'image/jpeg' };
-  } catch {
+  } catch (error) {
+    if (!downstreamSignal?.aborted)
+      onHealth({
+        transportStatus: 'failed',
+        upstreamReasonCode: controller.signal.aborted
+          ? 'upstream-timeout'
+          : 'upstream-failure',
+      });
     return null;
   } finally {
     clearTimeout(timeoutId);
@@ -522,6 +537,8 @@ export async function fetchCctvImageFromUpstream(
   url,
   {
     fetchImpl = fetch,
+    signal: downstreamSignal,
+    onHealth = () => {},
     timeoutMs = CCTV_FRAME_FETCH_TIMEOUT_MS,
     maxBytes = CCTV_FRAME_MAX_BODY_BYTES,
   } = {},
@@ -538,20 +555,38 @@ export async function fetchCctvImageFromUpstream(
       url,
       {
         headers: { 'User-Agent': cctvUpstreamUserAgent(url) },
-        signal: controller.signal,
+        signal: downstreamSignal
+          ? AbortSignal.any([controller.signal, downstreamSignal])
+          : controller.signal,
       },
       fetchImpl,
     );
     if (!upstream) return null;
+    onHealth({
+      transportStatus: upstream.ok ? 'ok' : 'failed',
+      upstreamReasonCode: upstream.ok ? 'delivery-ok' : 'upstream-failure',
+    });
     const contentType = upstream.headers.get('content-type') || '';
     if (!upstream.ok || !contentType.startsWith('image/')) {
+      if (upstream.ok)
+        onHealth({
+          transportStatus: 'ok',
+          upstreamReasonCode: 'invalid-media',
+        });
       controller.abort();
       return null;
     }
     const body = await readCappedResponseBytes(upstream, maxBytes);
     if (!body) return null;
     return { ok: true, body, contentType };
-  } catch {
+  } catch (error) {
+    if (!downstreamSignal?.aborted)
+      onHealth({
+        transportStatus: 'failed',
+        upstreamReasonCode: controller.signal.aborted
+          ? 'upstream-timeout'
+          : 'upstream-failure',
+      });
     return null;
   } finally {
     clearTimeout(timeoutId);

@@ -12,10 +12,12 @@ export function createMeshFloorSampler({
     cachedMeshFloor,
     reportValidatedMeshFloorCell,
     setMeshFloorPreferred,
+    setMeshFloorSourcePending,
     meshFloorPreferred,
     cachedGroundFloor,
   } = groundFloor;
   signal?.throwIfAborted();
+  let stackSwitchPending = false;
   // src/data/meshFloorSampler.js — rendered-surface (mesh) floor sampling
   // (field-test round 4, 2026-07-06).
   //
@@ -65,19 +67,45 @@ export function createMeshFloorSampler({
    * @param {Cesium.Scene} scene
    * @returns {boolean}
    */
-  function _visibleTilesetLoaded(scene) {
+  function _visibleTileset(scene) {
     try {
       const prims = scene.primitives;
       for (let i = 0; i < prims.length; i++) {
         const p = prims.get(i);
-        if (p instanceof Cesium.Cesium3DTileset && p.show) {
-          return !!p.tilesLoaded;
-        }
+        if (
+          p instanceof Cesium.Cesium3DTileset &&
+          p.show !== false &&
+          !p.isDestroyed?.()
+        )
+          return p;
       }
     } catch {
       /* mid-teardown */
     }
-    return false;
+    return null;
+  }
+
+  /**
+   * Rebind mesh-floor cache ownership to the currently visible tileset.
+   * @param {Cesium.Scene|undefined} scene
+   * @returns {{changed:boolean, source:object|null}}
+   */
+  function reconcileMeshFloorSource(scene) {
+    if (stackSwitchPending) {
+      return { changed: false, source: null, pending: true };
+    }
+    const source = _visibleTileset(scene);
+    return {
+      changed: groundFloor.setMeshFloorSource(source),
+      source,
+    };
+  }
+
+  function _visibleTilesetLoaded(scene) {
+    if (stackSwitchPending) return false;
+    const source = _visibleTileset(scene);
+    groundFloor.setMeshFloorSource(source);
+    return !!source?.tilesLoaded;
   }
 
   /**
@@ -178,8 +206,21 @@ export function createMeshFloorSampler({
   // re-export for callers that want one import site
 
   const onStack = (event) => {
-    const id = event?.detail?.activeId;
+    const detail = event?.detail;
+    // A switching event describes the old settled owner while scene flags may
+    // already be between states. Suppress reads temporarily without rebinding
+    // to a transient null; the settled event covers silent switches too.
+    if (detail?.status === 'switching') {
+      stackSwitchPending = true;
+      setMeshFloorSourcePending?.(true);
+      return;
+    }
+    stackSwitchPending = false;
+    const id = detail?.activeId;
     if (id) setMeshFloorPreferred(id === 'photoreal');
+    if (detail?.surfaceOwnerKnown === true)
+      groundFloor.setMeshFloorSource(detail.surfaceOwner);
+    setMeshFloorSourcePending?.(false);
   };
   eventTarget?.addEventListener('gev:map-stack-changed', onStack);
   signal?.addEventListener(
@@ -189,6 +230,7 @@ export function createMeshFloorSampler({
   );
   return {
     sampleMeshFloorCells,
+    reconcileMeshFloorSource,
     cachedGroundFloor,
     visibleTilesetLoaded: _visibleTilesetLoaded,
   };

@@ -1,0 +1,26 @@
+[
+  {
+    "file": "focused.log.gz",
+    "bytes": 2871,
+    "sha256": "845c91fa4991ba7afffccb749b1ad96628c549d59fb671961c9ff31dcd8e40ea",
+    "rawBytes": 7542,
+    "rawSha256": "d7cdabfc56502c5b0d661fd635498b6240d570dbd193790f06b12d75a085ff49"
+  },
+  {
+    "file": "negative-control.diff",
+    "bytes": 426,
+    "sha256": "00ea4f1bc93df0fc065827f1c0feb9808e606ab21e80ff3c00bdb6aba489e9f4"
+  },
+  {
+    "file": "negative.log.gz",
+    "bytes": 581,
+    "sha256": "dc2215963317a07fb6b662072af0bf2cbf969c83ed7a8abfd174333e8d40fdf5",
+    "rawBytes": 1073,
+    "rawSha256": "85987759f3cd2f924025d9d4a8eeabf8d9b2e7c0bc2bdd0b6ba3b640540bd88f"
+  },
+  {
+    "file": "source-review.json",
+    "bytes": 901,
+    "sha256": "acae036d17cd423893b47c63405a5f3b951af3670bdbad917d0d5a1fdfc00c75"
+  }
+]

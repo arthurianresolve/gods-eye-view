@@ -1,0 +1,48 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S57",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "287997544420decea68e50e8581d85209c4089f3",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "tests": {
+    "command": "node --test src/maps/controller.test.mjs src/maps/googleTokens.test.mjs src/maps/imageryHost.test.mjs src/maps/sourceFactories.test.mjs src/maps/terrainRetry.test.mjs",
+    "passed": 50,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "b63f457edde07570c29f1fad21a93f77cda0b50c0c569b5579aedc5989040408"
+  },
+  "nativeProductionJourney": {
+    "runId": 38439382587,
+    "commit": "e0710bd5cf3ba7c5d0d5383189b82fd8475ec087",
+    "reportSha256": "df2bfe6b9daa34b552d7e786b4f136a8f288c0cd3634f15a1766532b5d8dbb2f"
+  },
+  "historicalStreamedTileComponent": {
+    "runId": 38236552746,
+    "commit": "e1a6f5e4bc58aeb30b69ed611deebf221f7695c9",
+    "reportSha256": "6b6291c5feaf5c86eda6ef3832a304d31effba03c3914938660e2fa583e3ad0d"
+  },
+  "sourceHashes": {
+    "src/maps/availability.js": "355391bf4b66ae8d5732d2eafb95ee37b1a077e0aed36b09e93aedbe4067fd81",
+    "src/maps/catalog.js": "23af20bcb64a73c4d303a0f957a96cd4a517564b89595fdc22a3d85c7a0086be",
+    "src/maps/controller.js": "cda038a80e47b0d65cd8a1cf8efe2356cf0fda46a4e8370644d1c0f8fa844737",
+    "src/maps/credits.js": "7408f8eea01a9ae65527b4739588720360b046fd9051eedc605c3c89da862914",
+    "src/maps/defaultSources.js": "66ebac478bcbaa888d2d580b30fb1d7a1026c3e5d1f912e98da15462cbd80cda",
+    "src/maps/google3d.js": "7a92523193e4dc13c019bf4fa2e303957d7121af5c657364e9143c1b2226beb4",
+    "src/maps/googleTokens.js": "ab6fc88938160b4effc69326e3bee879b3236ddb80edce2ad146870f26de8a8b",
+    "src/maps/imagery.js": "67847d7affef78236cd8ba26df78888ab998fe21c5a06ba67c0d206fddbeacde",
+    "src/maps/imageryComparison.js": "19f904f52069626c26d4a35276fc01dea5dc19de556befd82309d9e6f4a6ad7f",
+    "src/maps/imageryHost.js": "f4b0fe1b6f5404c9df02c5ab058544c2db3766dc72384492546c9bef48ef3b48",
+    "src/maps/registry.js": "0a7f4b1312d4be0005e763607f22c6dc34885fb66db68012afb64795b7db7559",
+    "src/maps/terrain.js": "ae101a44f1767253be6e3f855a792573879ce447146ad480fea627373b073705",
+    "src/maps/terrainRetry.js": "903581eb493ca02e6782fb173abda09828be9ed67be266a70b9bbf5dbe3c46d7"
+  },
+  "limitations": [
+    "Native results use hosted Apple Paravirtual Metal, not physical Windows.",
+    "Historical streamed-tile component remains bound to its original revision and tiny fixture.",
+    "Final same-hardware route timing, visual qualification and full retention soak remain pending.",
+    "No cache limit or visual detail setting was changed and no speedup is claimed."
+  ]
+}

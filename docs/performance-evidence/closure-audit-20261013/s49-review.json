@@ -1,0 +1,44 @@
+{
+  "schema": "gev-engineering-closure-review/v1",
+  "slice": "S49",
+  "policy": "gev-cesium-acceptance/2026-10-13",
+  "reviewedCommit": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "engineering": "closed",
+  "automaticValidation": "passed-scoped",
+  "primaryWindowsQualification": "pending",
+  "performanceObjective": "unassessed",
+  "sourceHashes": {
+    "src/imports/cooperative.js": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+    "src/imports/runtimeLayer.js": "7f86d61317d6d02fb840fcdd91748dabf526d17b631ffa7fa2d8e5a51c1dbae5",
+    "src/workspaces/restore.js": "139e24246b30fecfe8e696a24863266e756c29c13332dfb1deb8eab02ca0dc35",
+    "src/layers/cctv/source.js": "95a4ca3e342e7ab824fed7a8d65cef1bb0f9d50b2b65f516baf7857f036313df",
+    "src/data/scenePick.js": "44277e0d9f3625a23f7b8ac891aeb17492ed8a8417f7fe9b2f5389be21be3d2f",
+    "scripts/performance/fixtureInterception.mjs": "b7a095598c501154e2cca8e2d8d442a2a5f3983c6cff7401bb94bb6615f1c946",
+    "scripts/performance/workerDiagnostics.mjs": "e06dcbd2a951ea35b36e56a8d5e6140abf2ce98f25cbaa9d82c1a4fde12cae81"
+  },
+  "currentRuns": [
+    38507366933,
+    38507370727,
+    38507373874
+  ],
+  "unchangedReportValidatorsPassed": 3,
+  "additionalEvidence": [
+    "../s49-stale-rollback/README.md",
+    "../s50-viewshed-retention/native-38439815077/README.md",
+    "../s47-map-streaming/native-fault-38439382587/README.md",
+    "../representative-pr-e53df518/README.md",
+    "../windows-owned-process-d8506d3b/README.md"
+  ],
+  "dispositions": {
+    "importAndWorkspace": "Cooperative cancellation, source generation and rollback ownership prevent retired results from publishing; original rollback regression and missing-guard negative control retained.",
+    "cctv": "Source and geometry generations, reuse and latest-result ownership cover disabled/replaced layers and rapid edits.",
+    "terrainAndPicking": "Superseded and failed provider loads retire, explicit retry retains legitimate caches, retired picked entities are rejected. Native missing/corrupt/superseded map controls remain passing.",
+    "workers": "Receipt/source asset interception and completed/pending/error diagnostics checked before engine attribution. No independently reproduced engine defect; no engine patch or shared-worker termination justified."
+  },
+  "limitations": [
+    "Raw browser listener/heap values do not prove long-run retention.",
+    "Hosted software and paravirtual rendering do not qualify physical Windows.",
+    "Final affected Windows journeys and full sixty-minute retention acceptance remain pending.",
+    "Historical unresolved causes are disclosed; failures are not reclassified."
+  ]
+}

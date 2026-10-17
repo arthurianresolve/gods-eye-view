@@ -1,0 +1,20 @@
+{
+  "id": 11837355842,
+  "node_id": "MDg6QXJ0aWZhY3QxMTgzNzM1NTg0Mg==",
+  "name": "gev-candidate-9f71970d042bce935986a97366ca49677f423530",
+  "size_in_bytes": 19863026,
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11837355842",
+  "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11837355842/zip",
+  "expired": false,
+  "digest": "sha256:c21d0fee0852d83d23e2f68ea429f1afd8947de8fe77540fa13d5b36ab3ce319",
+  "created_at": "2026-10-13T17:58:37Z",
+  "updated_at": "2026-10-13T17:58:37Z",
+  "expires_at": "2026-11-12T17:58:35Z",
+  "workflow_run": {
+    "id": 38442178374,
+    "repository_id": 1362432886,
+    "head_repository_id": 1362432886,
+    "head_branch": "qa/s47-austin-receipt-only",
+    "head_sha": "44c6532d58c4c5c1bef9339d31c6d7de74422a72"
+  }
+}

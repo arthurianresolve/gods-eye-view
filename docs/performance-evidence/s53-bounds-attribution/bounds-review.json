@@ -1,0 +1,60 @@
+{
+  "status": "verified-causal-control-original-comparison-failed",
+  "commit": "c5889ef0046f8ca05e2f2cd0321e2038a58d7f74",
+  "reportSha256": "6ce6bddea3a940922e9c57b4623b6ebe7769db60a9aa123e5f789f3bea7fbf15",
+  "decodedImages": 4,
+  "naturalChangedPixels": 24,
+  "maximumChannelDifference": 36,
+  "interventionChangedPixelsVersusMixed": 0,
+  "restoredChangedPixelsVersusNatural": 0,
+  "pointCount": 10840,
+  "positionSha256": "c10c49372c88bb0df2ae845babc0e031fe387ede723dc1c052e81154a8b51ae2",
+  "boundsInterventionOnlyAfterMeasurements": true,
+  "actualOitActiveInAllFourCaptures": true,
+  "frameBoundMetadata": true,
+  "identicalProjectedNeighborhoods": true,
+  "planes": {
+    "mixed": [
+      {
+        "near": 42919.37666947001,
+        "far": 126464.14966261906
+      }
+    ],
+    "partitioned": [
+      {
+        "near": 44410.05622069358,
+        "far": 124958.56331588328
+      }
+    ],
+    "intervened": [
+      {
+        "near": 42919.37666947001,
+        "far": 126464.14966261906
+      }
+    ],
+    "restored": [
+      {
+        "near": 44410.05622069358,
+        "far": 124958.56331588328
+      }
+    ]
+  },
+  "environment": {
+    "appCommit": "c5889ef0046f8ca05e2f2cd0321e2038a58d7f74",
+    "harnessCommit": "c5889ef0046f8ca05e2f2cd0321e2038a58d7f74",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 800,
+      "height": 600,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "conclusion": "For this fixed Cesium 1.138 fixture, replacing split draw-command bounds with the original mixed bounds removes the image difference and restoring natural split bounds restores it. OIT remains active, positions/settings remain unchanged, and fitted frustum planes follow the intervention. This identifies the bounds/frustum dependency without identifying the exact GPU arithmetic instruction. No production private-command override or collection partition is accepted."
+}

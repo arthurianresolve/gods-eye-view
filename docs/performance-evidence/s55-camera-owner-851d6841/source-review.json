@@ -1,0 +1,26 @@
+{
+  "head": "851d68418546617b8a28ece2c5a85a2d9271c688",
+  "tests": [
+    "src/data/trackedCamera.test.mjs",
+    "src/data/trackedReadout.test.mjs",
+    "src/data/trackedModelRegime.test.mjs",
+    "src/data/trackingClickGesture.test.mjs",
+    "src/cameraHandoff.test.mjs",
+    "src/cockpitTracking.test.mjs",
+    "scripts/performance/trackedFrameTimeRepro.test.mjs",
+    "scripts/performance/militaryTrackedFrameTimeRepro.test.mjs"
+  ],
+  "historicalSourcesMatch": [
+    {
+      "report": "tracked-time-comparison-47dbee4.json",
+      "candidate": "47dbee47027e636e7d51e14c3a07f6e1134d7caf",
+      "verifiedSourceFiles": 13
+    },
+    {
+      "report": "military-tracked-time-comparison-afe83bc.json",
+      "candidate": "afe83bc3584e0ef276fe10c7446c568a98ec4d22",
+      "verifiedSourceFiles": 12
+    }
+  ],
+  "currentCameraSha256": "86eebfd4c72bcac8425fc165bb565271dab3f054317271db237147bd14dc224d"
+}

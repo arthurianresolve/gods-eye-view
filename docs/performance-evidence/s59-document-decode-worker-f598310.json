@@ -1,0 +1,1024 @@
+{
+  "schema": "gev-s59-document-decode-comparison/v1",
+  "status": "passed",
+  "capturedAt": "2026-10-10T21:17:36.206Z",
+  "candidateCommit": "f59831067a27b223781956af5430afda300be569",
+  "sourceClean": true,
+  "sourceFiles": {
+    "src/imports/geojsonCsv.js": {
+      "workingTreeSha256": "aa6eafbf49d4365fce8dd3dd829330721811a6c158e83de38d90611217c67b38",
+      "headSha256": "aa6eafbf49d4365fce8dd3dd829330721811a6c158e83de38d90611217c67b38"
+    },
+    "src/imports/kmlGpx.js": {
+      "workingTreeSha256": "c7c72cab1b585cc65a373e16de7d3304dc73e16a518e2d558337669d5ad9a57f",
+      "headSha256": "c7c72cab1b585cc65a373e16de7d3304dc73e16a518e2d558337669d5ad9a57f"
+    },
+    "src/imports/cooperative.js": {
+      "workingTreeSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+      "headSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b"
+    },
+    "src/director/packs/geojson.js": {
+      "workingTreeSha256": "039573e4613294666564814875d19fc57316988b677623cff409892ea5c3806d",
+      "headSha256": "039573e4613294666564814875d19fc57316988b677623cff409892ea5c3806d"
+    }
+  },
+  "harnessSha256": "27d15013ea0cc22479ddd496f21bbc375971d3a7780e6a34a52048f2a8e4b36f",
+  "workerScriptSha256": "32315035eed03bb17003d412fa8f2516b253653924c896035d0000cf6513c56b",
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "release": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "memoryBytes": 16907538432
+  },
+  "workerStartupMs": 59.86299999999994,
+  "warmup": [
+    {
+      "workload": "geojson-line-50k-vertices",
+      "mainCompletionMs": 93.41159999999991,
+      "workerCompletionMs": 122.5154,
+      "workerExecutionMs": 80.99090000000001,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "mainCompletionMs": 59.39229999999998,
+      "workerCompletionMs": 95.57999999999993,
+      "workerExecutionMs": 61.66890000000012,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "mainCompletionMs": 516.3139999999999,
+      "workerCompletionMs": 766.9177,
+      "workerExecutionMs": 552.1457,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "mainCompletionMs": 87.90520000000106,
+      "workerCompletionMs": 106.89929999999913,
+      "workerExecutionMs": 63.47609999999986,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    }
+  ],
+  "scope": "Node main-thread public preview APIs versus the same APIs in a persistent worker_threads diagnostic prototype. Includes transfer/clone costs in worker total completion. Maximum 1ms-interval event-loop timer gap is a responsiveness observation, not an application CPU-task duration. Not a browser Web Worker, application, rendering, GPU, or production-default comparison.",
+  "bounds": {
+    "maxVerticesPerGeometry": 50000,
+    "maxCsvRows": 50000,
+    "maxPairs": 5,
+    "maxWorkerTasksInFlight": 1,
+    "taskTimeoutMs": 45000,
+    "comparisonTimeoutMs": 600000,
+    "timerIntervalMs": 1
+  },
+  "fixture": {
+    "vertices": 50000,
+    "csvRows": 50000,
+    "deterministic": true,
+    "workloads": [
+      {
+        "id": "geojson-line-50k-vertices",
+        "kind": "geojson",
+        "inputBytes": 1588611,
+        "inputSha256": "7b823ab7e225c6dbb5687bf5f8d174b8d626e8521e383c0c04ab809da08dbcbc",
+        "expected": {
+          "accepted": 1,
+          "rejected": 0,
+          "vertexCount": 50000,
+          "firstId": "line-50k",
+          "lastId": "line-50k"
+        }
+      },
+      {
+        "id": "geojson-polygon-hole-50k-vertices",
+        "kind": "geojson",
+        "inputBytes": 1589152,
+        "inputSha256": "5fdf95b9f180e38e6265a868aef3ff4f569b5e8334857ec9a670af6033cdb9fc",
+        "expected": {
+          "accepted": 1,
+          "rejected": 0,
+          "vertexCount": 50000,
+          "ringCount": 2,
+          "firstId": "polygon-hole-50k",
+          "lastId": "polygon-hole-50k"
+        }
+      },
+      {
+        "id": "csv-50k-rows",
+        "kind": "csv",
+        "inputBytes": 2988932,
+        "inputSha256": "629ad616e92d8b24e134fee757dbcd17cf78080067034c6693db003493c01de3",
+        "expected": {
+          "accepted": 50000,
+          "rejected": 0,
+          "firstId": "row-1",
+          "lastId": "row-50000"
+        }
+      },
+      {
+        "id": "kml-line-50k-vertices",
+        "kind": "kml",
+        "inputBytes": 1488570,
+        "inputSha256": "07b7687ec6a0200e7c5f1766c9f89072a0c1d21e2a82e4ee15a25e0e02978b18",
+        "expected": {
+          "accepted": 1,
+          "rejected": 0,
+          "vertexCount": 50000,
+          "firstId": "xml-line-50000",
+          "lastId": "xml-line-50000"
+        }
+      }
+    ]
+  },
+  "samples": [
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 59.22880000000009,
+      "maxMainThreadGapMs": 19.216700000000174,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 107.70169999999985,
+      "maxMainThreadGapMs": 18.88330000000019,
+      "workerDurationMs": 67.60349999999994,
+      "workerMaxEventLoopGapMs": 26.85669999999982,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 90.71900000000005,
+      "maxMainThreadGapMs": 16.01599999999985,
+      "workerDurationMs": 51.992100000000164,
+      "workerMaxEventLoopGapMs": 16.526099999999815,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 55.218200000000024,
+      "maxMainThreadGapMs": 16.44939999999997,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 49.868600000000015,
+      "maxMainThreadGapMs": 19.727499999999964,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 70.50410000000011,
+      "maxMainThreadGapMs": 16.22129999999993,
+      "workerDurationMs": 33.62749999999983,
+      "workerMaxEventLoopGapMs": 16.292999999999893,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 79.2025000000001,
+      "maxMainThreadGapMs": 20.58269999999993,
+      "workerDurationMs": 40.7355,
+      "workerMaxEventLoopGapMs": 20.092599999999948,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 44.28340000000003,
+      "maxMainThreadGapMs": 17.444400000000087,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 37.190399999999954,
+      "maxMainThreadGapMs": 18.443899999999985,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-line-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 78.94769999999994,
+      "maxMainThreadGapMs": 25.03780000000006,
+      "workerDurationMs": 43.0308,
+      "workerMaxEventLoopGapMs": 16.179800000000114,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "line-50k",
+      "lastId": "line-50k",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 50.95249999999987,
+      "maxMainThreadGapMs": 19.128999999999905,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 90.22550000000001,
+      "maxMainThreadGapMs": 16.097499999999854,
+      "workerDurationMs": 54.02410000000009,
+      "workerMaxEventLoopGapMs": 16.22360000000026,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 86.17219999999998,
+      "maxMainThreadGapMs": 16.01870000000008,
+      "workerDurationMs": 49.045700000000124,
+      "workerMaxEventLoopGapMs": 17.597400000000107,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 46.52649999999994,
+      "maxMainThreadGapMs": 31.63530000000037,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 39.92260000000033,
+      "maxMainThreadGapMs": 15.89220000000023,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 86.57540000000017,
+      "maxMainThreadGapMs": 16.051100000000133,
+      "workerDurationMs": 60.18780000000015,
+      "workerMaxEventLoopGapMs": 22.29220000000032,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 82.26659999999993,
+      "maxMainThreadGapMs": 16.039000000000215,
+      "workerDurationMs": 45.17979999999989,
+      "workerMaxEventLoopGapMs": 16.386399999999867,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 38.313100000000304,
+      "maxMainThreadGapMs": 36.098399999999856,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 36.86670000000004,
+      "maxMainThreadGapMs": 16.477499999999964,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 74.4031,
+      "maxMainThreadGapMs": 16.00759999999991,
+      "workerDurationMs": 37.14899999999989,
+      "workerMaxEventLoopGapMs": 18.961099999999988,
+      "kind": "geojson",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "polygon-hole-50k",
+      "lastId": "polygon-hole-50k",
+      "vertexCount": 50000,
+      "ringCount": 2,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 499.6158000000005,
+      "maxMainThreadGapMs": 131.26969999999983,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 670.3037000000004,
+      "maxMainThreadGapMs": 16.192799999999806,
+      "workerDurationMs": 452.9431000000004,
+      "workerMaxEventLoopGapMs": 110.22299999999996,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 701.0298999999995,
+      "maxMainThreadGapMs": 82.09590000000026,
+      "workerDurationMs": 511.3710999999994,
+      "workerMaxEventLoopGapMs": 114.73189999999977,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 665.1574,
+      "maxMainThreadGapMs": 123.15710000000036,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 622.2332000000006,
+      "maxMainThreadGapMs": 110.35540000000037,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 829.5435000000016,
+      "maxMainThreadGapMs": 18.438200000000506,
+      "workerDurationMs": 575.0878000000012,
+      "workerMaxEventLoopGapMs": 97.9354000000003,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 809.8292000000001,
+      "maxMainThreadGapMs": 16.169800000001487,
+      "workerDurationMs": 551.4462999999996,
+      "workerMaxEventLoopGapMs": 99.70030000000042,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 498.96460000000116,
+      "maxMainThreadGapMs": 138.70639999999912,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 535.4706999999999,
+      "maxMainThreadGapMs": 129.21930000000066,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "csv-50k-rows",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 626.3816999999999,
+      "maxMainThreadGapMs": 54.23250000000007,
+      "workerDurationMs": 439.2602999999999,
+      "workerMaxEventLoopGapMs": 117.65260000000126,
+      "kind": "csv",
+      "accepted": 50000,
+      "rejected": 0,
+      "firstId": "row-1",
+      "lastId": "row-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 59.909999999999854,
+      "maxMainThreadGapMs": 60.005700000001525,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 0,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 108.08380000000034,
+      "maxMainThreadGapMs": 16.017699999998513,
+      "workerDurationMs": 67.52280000000064,
+      "workerMaxEventLoopGapMs": 67.59709999999905,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 93.99779999999919,
+      "maxMainThreadGapMs": 16.668400000000474,
+      "workerDurationMs": 55.612199999999575,
+      "workerMaxEventLoopGapMs": 55.678399999998874,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 1,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 74.04619999999886,
+      "maxMainThreadGapMs": 74.14500000000044,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 82.3848999999991,
+      "maxMainThreadGapMs": 82.4976000000006,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 2,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 104.17129999999997,
+      "maxMainThreadGapMs": 16.045400000000882,
+      "workerDurationMs": 66.34360000000015,
+      "workerMaxEventLoopGapMs": 66.42050000000017,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 102.22890000000007,
+      "maxMainThreadGapMs": 16.52559999999903,
+      "workerDurationMs": 71.89609999999993,
+      "workerMaxEventLoopGapMs": 71.96730000000025,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 3,
+      "order": [
+        "worker",
+        "main"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 66.8187999999991,
+      "maxMainThreadGapMs": 66.92779999999948,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "main",
+      "totalCompletionMs": 64.77460000000065,
+      "maxMainThreadGapMs": 64.89149999999972,
+      "workerDurationMs": null,
+      "workerMaxEventLoopGapMs": null,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "pair": 4,
+      "order": [
+        "main",
+        "worker"
+      ],
+      "variant": "worker",
+      "totalCompletionMs": 98.20410000000084,
+      "maxMainThreadGapMs": 16.141700000000128,
+      "workerDurationMs": 58.13619999999901,
+      "workerMaxEventLoopGapMs": 58.21759999999995,
+      "kind": "kml",
+      "accepted": 1,
+      "rejected": 0,
+      "firstId": "xml-line-50000",
+      "lastId": "xml-line-50000",
+      "vertexCount": 50000,
+      "ringCount": null,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6"
+    }
+  ],
+  "summaries": [
+    {
+      "workload": "geojson-line-50k-vertices",
+      "inputBytes": 1588611,
+      "outputSha256": "25e7777a79976f8cca5ad4da72cb1ac80e39b2a84f810699a8168f7bb2fe3bb7",
+      "mainMedianCompletionMs": 49.868600000000015,
+      "workerMedianCompletionMs": 79.2025000000001,
+      "mainMedianMaxTaskGapMs": 18.443899999999985,
+      "workerMedianMaxMainTaskGapMs": 18.88330000000019,
+      "workerMedianWorkerTaskGapMs": 16.526099999999815
+    },
+    {
+      "workload": "geojson-polygon-hole-50k-vertices",
+      "inputBytes": 1589152,
+      "outputSha256": "853b696ca246f16c4d0a9302c24b795ce32730bdc0c060c47f3fd020238b9c20",
+      "mainMedianCompletionMs": 39.92260000000033,
+      "workerMedianCompletionMs": 86.17219999999998,
+      "mainMedianMaxTaskGapMs": 19.128999999999905,
+      "workerMedianMaxMainTaskGapMs": 16.039000000000215,
+      "workerMedianWorkerTaskGapMs": 17.597400000000107
+    },
+    {
+      "workload": "csv-50k-rows",
+      "inputBytes": 2988932,
+      "outputSha256": "d1099d8049a0320d6afec3eddc7f127c5df9feed3ea9dca824ddf69fae5665fc",
+      "mainMedianCompletionMs": 535.4706999999999,
+      "workerMedianCompletionMs": 701.0298999999995,
+      "mainMedianMaxTaskGapMs": 129.21930000000066,
+      "workerMedianMaxMainTaskGapMs": 18.438200000000506,
+      "workerMedianWorkerTaskGapMs": 110.22299999999996
+    },
+    {
+      "workload": "kml-line-50k-vertices",
+      "inputBytes": 1488570,
+      "outputSha256": "6d673cec092a4665bce228c17e6a6749a83ed099534b2d69018586ee67a3b2c6",
+      "mainMedianCompletionMs": 66.8187999999991,
+      "workerMedianCompletionMs": 102.22890000000007,
+      "mainMedianMaxTaskGapMs": 66.92779999999948,
+      "workerMedianMaxMainTaskGapMs": 16.141700000000128,
+      "workerMedianWorkerTaskGapMs": 66.42050000000017
+    }
+  ],
+  "workerPendingAtCleanup": 0,
+  "cleanup": {
+    "workerTerminated": true,
+    "pendingJobs": 0
+  }
+}

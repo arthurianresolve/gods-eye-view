@@ -21,6 +21,7 @@ import {
   REFRESH_MS,
   FOCUS_EVIDENCE_DEV,
 } from './policy.js';
+import { createVesselEvidence } from './evidence.js';
 
 export function createQueries({
   vesselState,
@@ -184,6 +185,14 @@ export function createQueries({
     };
     const mmsi = text(record?.mmsi);
     const name = text(record?.name);
+    const evidence =
+      Number.isFinite(record?.receivedAtMs) ||
+      Number.isFinite(record?.observedAtMs)
+        ? createVesselEvidence(record, {
+            source: layer.source,
+            feed: state.feed,
+          })
+        : null;
     return {
       id: name || mmsi,
       mmsi,
@@ -195,6 +204,7 @@ export function createQueries({
       shipType: text(record?.type),
       destination: text(record?.destination),
       navStatus: null,
+      ...(evidence ? { evidence } : {}),
     };
   }
 

@@ -1,0 +1,59 @@
+{
+  "source": "6d84a6ee27e8b542f207a8f9aff04a378d8ff3f8",
+  "sourceTree": "e18a30b20e11f8f36af5e068f367b0c6e6914d49",
+  "runs": [
+    {
+      "run": "38459820173",
+      "base": "dev",
+      "workflow": "CI",
+      "testedMergeCommit": "febfea1815e5c4637412fba66a2be1d86ea6b029",
+      "treeEqualsSource": true,
+      "statusAtReview": "completed",
+      "conclusionAtReview": "failure"
+    },
+    {
+      "run": "38459824649",
+      "base": "main",
+      "workflow": "CI",
+      "testedMergeCommit": "3d77b7d16dee3b3da5adeb67963c7ec8714dfe1e",
+      "treeEqualsSource": true,
+      "statusAtReview": "completed",
+      "conclusionAtReview": "failure"
+    },
+    {
+      "run": "38459820013",
+      "base": "dev",
+      "workflow": "release",
+      "testedMergeCommit": "febfea1815e5c4637412fba66a2be1d86ea6b029",
+      "treeEqualsSource": true,
+      "statusAtReview": "completed",
+      "conclusionAtReview": "failure"
+    },
+    {
+      "run": "38459824578",
+      "base": "main",
+      "workflow": "release",
+      "testedMergeCommit": "3d77b7d16dee3b3da5adeb67963c7ec8714dfe1e",
+      "treeEqualsSource": true,
+      "statusAtReview": "completed",
+      "conclusionAtReview": "failure"
+    }
+  ],
+  "currentScope": "Both-base CI and release source suites failed the same obsolete assertion. On both bases, three OS recovery jobs, Windows onboarding and Street Level browser gate independently passed.",
+  "cause": "obsolete detectionRenderDemand source-regex assertion requires an unconditional hold literal in enable()",
+  "failedTest": "src/data/detectionRenderDemand.test.mjs:461",
+  "sameFailureInAllSixSourceSuites": true,
+  "recoveryRecordsPassed": 30,
+  "browserGates": [
+    {
+      "base": "dev",
+      "job": 115511772338,
+      "conclusion": "success"
+    },
+    {
+      "base": "main",
+      "job": 115511790028,
+      "conclusion": "success"
+    }
+  ]
+}

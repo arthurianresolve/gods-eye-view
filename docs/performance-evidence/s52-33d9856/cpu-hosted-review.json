@@ -1,0 +1,651 @@
+{
+  "schema": "gev-overlay-projection-comparison-review/v1",
+  "reviewedAt": "2026-10-10T23:34:54.291Z",
+  "reviewedAgainstHead": "eadc099fef42a7487dd1bff691e13576601da7c4",
+  "rawReport": {
+    "path": "qa-artifacts/overlay-cpu-38094279142/report.json",
+    "sha256": "cd4a04b63c528ca6d3cc76cd6d8b333298c3cf014faace6bbcb9d65b5ef344a6",
+    "schema": "gev-overlay-projection-comparison/v1",
+    "status": "complete"
+  },
+  "independentChecks": {
+    "provenance": {
+      "baselineOverlay": true,
+      "candidateOverlay": true,
+      "baselineLock": true,
+      "candidateLock": true,
+      "harness": true,
+      "fixture": true
+    },
+    "workloadCount": 8,
+    "pairCount": 40,
+    "allFortyPairsConditionParity": true,
+    "allFortyRecomputedRatiosMatch": true,
+    "maximumObservedRegressionPercent": 4.016413655378903,
+    "noRegressionExceedsTenPercent": true,
+    "allFortyHaveFiveInstrumentationDisabledTimedSamplesPerSide": true
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entryCount": 250,
+      "cadence": 1,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.30527711333333324,
+          "candidateMedianMsPerFrame": 0.31753830499999974,
+          "deltaPercent": 4.016413655378903,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.316525378333334,
+          "candidateMedianMsPerFrame": 0.3196894950000001,
+          "deltaPercent": 0.9996407502383509,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.3227090033333328,
+          "candidateMedianMsPerFrame": 0.3262118033333339,
+          "deltaPercent": 1.0854360937624596,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.31253910166666704,
+          "candidateMedianMsPerFrame": 0.32254260166666654,
+          "deltaPercent": 3.2007195089043705,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.3109050233333331,
+          "candidateMedianMsPerFrame": 0.31836960499999956,
+          "deltaPercent": 2.4009202510258065,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": 2.4009202510258065,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": 2.2878395999740064
+    },
+    {
+      "profile": "local-infrastructure",
+      "entryCount": 320,
+      "cadence": 1,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4885969616666671,
+          "candidateMedianMsPerFrame": 0.5072292133333326,
+          "deltaPercent": 3.813419470131052,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.4937873483333336,
+          "candidateMedianMsPerFrame": 0.48996980499999987,
+          "deltaPercent": -0.7731148532296284,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4955122083333329,
+          "candidateMedianMsPerFrame": 0.5026901666666678,
+          "deltaPercent": 1.4485936395952859,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.4904986466666658,
+          "candidateMedianMsPerFrame": 0.49537456333333313,
+          "deltaPercent": 0.9940734189183065,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.48699106500000044,
+          "candidateMedianMsPerFrame": 0.49655041333333355,
+          "deltaPercent": 1.962941216043279,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": 1.4485936395952859,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": 1.2337988509844688
+    },
+    {
+      "profile": "all-live-radio",
+      "entryCount": 864,
+      "cadence": 1,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.9672671466666665,
+          "candidateMedianMsPerFrame": 2.0054413400000004,
+          "deltaPercent": 1.9404681971137538,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.965047548333332,
+          "candidateMedianMsPerFrame": 1.996071913333332,
+          "deltaPercent": 1.5788098881532653,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.9944746749999953,
+          "candidateMedianMsPerFrame": 2.0054699999999985,
+          "deltaPercent": 0.5512892762101984,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.976557596666668,
+          "candidateMedianMsPerFrame": 1.9959676666666655,
+          "deltaPercent": 0.9820138827591585,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 2.021202031666668,
+          "candidateMedianMsPerFrame": 1.9945029483333323,
+          "deltaPercent": -1.3209507468840198,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": 0.9820138827591585,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": 0.9872880355003888
+    },
+    {
+      "profile": "phase6-detection",
+      "entryCount": 5000,
+      "cadence": 1,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 2.0485189250000015,
+          "candidateMedianMsPerFrame": 2.068077620000001,
+          "deltaPercent": 0.9547724827584592,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 2.054542225000002,
+          "candidateMedianMsPerFrame": 2.1244332416666656,
+          "deltaPercent": 3.401780494760276,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 2.0499162983333328,
+          "candidateMedianMsPerFrame": 2.074445366666666,
+          "deltaPercent": 1.1965887755161608,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 2.090956595000001,
+          "candidateMedianMsPerFrame": 2.075803881666664,
+          "deltaPercent": -0.7246785212840279,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.985177708333334,
+          "candidateMedianMsPerFrame": 2.039467723333334,
+          "deltaPercent": 2.7347685183095827,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": 1.1965887755161608,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": 1.1965887755161608
+    },
+    {
+      "profile": "local-infrastructure",
+      "entryCount": 320,
+      "cadence": 0,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4691338849999996,
+          "candidateMedianMsPerFrame": 0.45684169999999996,
+          "deltaPercent": -2.6201869856404936,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.4728860316666669,
+          "candidateMedianMsPerFrame": 0.45355030666666685,
+          "deltaPercent": -4.0888763264696255,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.48090175666666635,
+          "candidateMedianMsPerFrame": 0.45366938166666687,
+          "deltaPercent": -5.6627730347168175,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.47405975666666716,
+          "candidateMedianMsPerFrame": 0.4587000866666661,
+          "deltaPercent": -3.240028242009396,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4812447499999992,
+          "candidateMedianMsPerFrame": 0.4599535249999993,
+          "deltaPercent": -4.424198913338784,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": -4.0888763264696255,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": -3.6320435186769084
+    },
+    {
+      "profile": "all-live-radio",
+      "entryCount": 864,
+      "cadence": 0,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.5200485533333328,
+          "candidateMedianMsPerFrame": 1.406974909999999,
+          "deltaPercent": -7.438817864427627,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.5822427266666668,
+          "candidateMedianMsPerFrame": 1.4432485183333332,
+          "deltaPercent": -8.784632470781183,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.5203673049999997,
+          "candidateMedianMsPerFrame": 1.4465835500000017,
+          "deltaPercent": -4.85302168478281,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.4969085216666675,
+          "candidateMedianMsPerFrame": 1.4381168183333344,
+          "deltaPercent": -3.9275414951792875,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.5077978833333328,
+          "candidateMedianMsPerFrame": 1.3930774483333335,
+          "deltaPercent": -7.608475662957126,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": -7.438817864427627,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": -5.390073548659302
+    },
+    {
+      "profile": "local-infrastructure",
+      "entryCount": 320,
+      "cadence": 60,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4894906083333338,
+          "candidateMedianMsPerFrame": 0.45351472166666706,
+          "deltaPercent": -7.349658206755183,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.4954573516666657,
+          "candidateMedianMsPerFrame": 0.4607409366666669,
+          "deltaPercent": -7.006943157310419,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.4881335833333333,
+          "candidateMedianMsPerFrame": 0.45238323999999996,
+          "deltaPercent": -7.323885213798198,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 0.49250740166666673,
+          "candidateMedianMsPerFrame": 0.45814843333333255,
+          "deltaPercent": -6.97633542502345,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 0.49416301833333365,
+          "candidateMedianMsPerFrame": 0.46399653166666666,
+          "deltaPercent": -6.104561763526872,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": -7.006943157310419,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": -6.97633542502345
+    },
+    {
+      "profile": "all-live-radio",
+      "entryCount": 864,
+      "cadence": 60,
+      "pairs": [
+        {
+          "pair": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.9385079116666688,
+          "candidateMedianMsPerFrame": 1.815411736666665,
+          "deltaPercent": -6.350047593778941,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.9302469850000004,
+          "candidateMedianMsPerFrame": 1.813677996666667,
+          "deltaPercent": -6.039071126088736,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.910440564999999,
+          "candidateMedianMsPerFrame": 1.8045103733333325,
+          "deltaPercent": -5.544804355987198,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 3,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "baselineMedianMsPerFrame": 1.9215874166666647,
+          "candidateMedianMsPerFrame": 1.8085348483333352,
+          "deltaPercent": -5.883290416703457,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        },
+        {
+          "pair": 4,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baselineMedianMsPerFrame": 1.9136794683333331,
+          "candidateMedianMsPerFrame": 1.8230750566666665,
+          "deltaPercent": -4.734565697440241,
+          "rawPairRatioMatches": true,
+          "conditionsEqual": true,
+          "fiveInstrumentationDisabledTimedSamplesEach": true
+        }
+      ],
+      "medianPairedDeltaPercent": -5.883290416703457,
+      "recomputedStoredMedianPercentMatches": true,
+      "ratioOfMediansPercent": -5.615639396056505
+    }
+  ],
+  "scope": {
+    "timedMetric": "Median synchronous overlay CPU per 600-frame child-process sample, calculated only from instrumentation-disabled samples; five timed samples per side per pair.",
+    "instrumentation": "Enabled diagnostic samples were not included in timing medians.",
+    "environment": "v24.14.0 linux 6.17.0-1022-azure INTEL(R) XEON(R) PLATINUM 8573C",
+    "warmupFrames": 3000,
+    "measuredFramesPerProcess": 6000,
+    "forcedGc": false,
+    "camera": "Fixed mock camera; fixture records equal conditions per baseline/candidate pair.",
+    "notEstablished": [
+      "browser layout/Canvas2D render timing",
+      "Cesium WebGL/GPU performance or FPS",
+      "full application frame latency",
+      "hardware-wide benefit"
+    ]
+  },
+  "recommendation": {
+    "disposition": "Retain pure projection reuse as a scoped S52.1 candidate for further integration; do not describe this CPU report as full S52 acceptance.",
+    "basis": "All 20 fixed/periodic pairs improved by 2.62 to 8.78%. Moving/detection pairs range from -1.32% to +4.02%; 3 improved. No paired regression exceeds 10%. The stable-input workloads demonstrate repeatable algorithm benefit; these measurements do not establish whole-scene performance.",
+    "fidelity": "CPU report proves equal per-pair fixture trajectories, camera/viewport and observed candidate/painted counts, not rendered pixels. The separate native Canvas2D five-pair, 24-case visual result is recorded in the S52 evidence docs; full Cesium/GPU performance remains open."
+  },
+  "rootNumericalReviewAt": "2026-10-10T23:36:59.586Z"
+}

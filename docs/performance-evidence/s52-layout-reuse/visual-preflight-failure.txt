@@ -1,0 +1,276 @@
+﻿2026-10-10T23:29:26.1981122Z Current runner version: '2.337.0'
+2026-10-10T23:29:26.2001271Z ##[group]Runner Image Provisioner
+2026-10-10T23:29:26.2001875Z Hosted Compute Agent
+2026-10-10T23:29:26.2002349Z Version: 20261002.596
+2026-10-10T23:29:26.2002745Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-10T23:29:26.2003197Z Build Date: 2026-10-02T22:28:27Z
+2026-10-10T23:29:26.2003742Z Worker ID: {aecf21f8-8845-4eac-b939-75a53cbb6a4b}
+2026-10-10T23:29:26.2004202Z Region: centralus
+2026-10-10T23:29:26.2004598Z Cloud: Azure
+2026-10-10T23:29:26.2004992Z ##[endgroup]
+2026-10-10T23:29:26.2005900Z ##[group]Operating System
+2026-10-10T23:29:26.2006737Z Ubuntu
+2026-10-10T23:29:26.2007075Z 24.04.5
+2026-10-10T23:29:26.2007431Z LTS
+2026-10-10T23:29:26.2007772Z ##[endgroup]
+2026-10-10T23:29:26.2008103Z ##[group]Runner Image
+2026-10-10T23:29:26.2008535Z Image: ubuntu-24.04
+2026-10-10T23:29:26.2008881Z Version: 20261004.327.1
+2026-10-10T23:29:26.2009712Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-10T23:29:26.2010654Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-10T23:29:26.2011282Z ##[endgroup]
+2026-10-10T23:29:26.2012027Z ##[group]GITHUB_TOKEN Permissions
+2026-10-10T23:29:26.2013555Z Contents: read
+2026-10-10T23:29:26.2013927Z Metadata: read
+2026-10-10T23:29:26.2014670Z ##[endgroup]
+2026-10-10T23:29:26.2016305Z Secret source: Actions
+2026-10-10T23:29:26.2016916Z Cache mode: write
+2026-10-10T23:29:26.2017503Z Prepare workflow directory
+2026-10-10T23:29:26.2377743Z Prepare all required actions
+2026-10-10T23:29:26.2411829Z Getting action download info
+2026-10-10T23:29:26.4537507Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-10T23:29:26.5853284Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-10T23:29:26.7524282Z Complete job name: paired-canvas
+2026-10-10T23:29:26.7989094Z ##[group]Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+2026-10-10T23:29:26.7989631Z with:
+2026-10-10T23:29:26.7989882Z   persist-credentials: false
+2026-10-10T23:29:26.7990160Z   fetch-depth: 0
+2026-10-10T23:29:26.7990430Z   repository: arthurianresolve/gods-eye-view
+2026-10-10T23:29:26.7992714Z   token: ***
+2026-10-10T23:29:26.7992948Z   ssh-strict: true
+2026-10-10T23:29:26.7993192Z   ssh-user: git
+2026-10-10T23:29:26.7993430Z   clean: true
+2026-10-10T23:29:26.7993680Z   sparse-checkout-cone-mode: true
+2026-10-10T23:29:26.7993971Z   fetch-tags: false
+2026-10-10T23:29:26.7994219Z   show-progress: true
+2026-10-10T23:29:26.7994469Z   lfs: false
+2026-10-10T23:29:26.7994696Z   submodules: false
+2026-10-10T23:29:26.7994950Z   set-safe-directory: true
+2026-10-10T23:29:26.7995230Z   allow-unsafe-pr-checkout: false
+2026-10-10T23:29:26.7995578Z env:
+2026-10-10T23:29:26.7995848Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:26.7996432Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:26.7996775Z ##[endgroup]
+2026-10-10T23:29:26.8714280Z Syncing repository: arthurianresolve/gods-eye-view
+2026-10-10T23:29:26.8716282Z ##[group]Getting Git version info
+2026-10-10T23:29:26.8716976Z Working directory is '/home/runner/work/gods-eye-view/gods-eye-view'
+2026-10-10T23:29:26.8718061Z [command]/usr/bin/git version
+2026-10-10T23:29:26.8775083Z git version 2.55.0
+2026-10-10T23:29:26.8779889Z ##[endgroup]
+2026-10-10T23:29:26.8795453Z Temporarily overriding HOME='/home/runner/work/_temp/de093f26-cc1e-4b8e-894d-d7b642abb198' before making global git config changes
+2026-10-10T23:29:26.8796948Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-10T23:29:26.8799964Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/gods-eye-view/gods-eye-view
+2026-10-10T23:29:26.8852091Z Deleting the contents of '/home/runner/work/gods-eye-view/gods-eye-view'
+2026-10-10T23:29:26.8854750Z ##[group]Initializing the repository
+2026-10-10T23:29:26.8858029Z [command]/usr/bin/git init /home/runner/work/gods-eye-view/gods-eye-view
+2026-10-10T23:29:26.8957377Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-10T23:29:26.8958489Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-10T23:29:26.8959346Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-10T23:29:26.8959918Z hint: call:
+2026-10-10T23:29:26.8960150Z hint:
+2026-10-10T23:29:26.8960466Z hint: 	git config --global init.defaultBranch <name>
+2026-10-10T23:29:26.8960812Z hint:
+2026-10-10T23:29:26.8961151Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-10T23:29:26.8961663Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-10T23:29:26.8962070Z hint:
+2026-10-10T23:29:26.8962303Z hint: 	git branch -m <name>
+2026-10-10T23:29:26.8962563Z hint:
+2026-10-10T23:29:26.8962961Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-10T23:29:26.8963795Z Initialized empty Git repository in /home/runner/work/gods-eye-view/gods-eye-view/.git/
+2026-10-10T23:29:26.8980397Z [command]/usr/bin/git remote add origin https://github.com/arthurianresolve/gods-eye-view
+2026-10-10T23:29:26.9178584Z ##[endgroup]
+2026-10-10T23:29:26.9179340Z ##[group]Disabling automatic garbage collection
+2026-10-10T23:29:26.9182161Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-10T23:29:26.9215280Z ##[endgroup]
+2026-10-10T23:29:26.9215709Z ##[group]Setting up auth
+2026-10-10T23:29:26.9221070Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-10T23:29:26.9252143Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-10T23:29:26.9556617Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-10T23:29:26.9588468Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-10T23:29:26.9773386Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-10T23:29:26.9803911Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-10T23:29:26.9991269Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-10T23:29:27.0028733Z ##[endgroup]
+2026-10-10T23:29:27.0029473Z ##[group]Fetching the repository
+2026-10-10T23:29:27.0037172Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-10T23:29:31.0806417Z From https://github.com/arthurianresolve/gods-eye-view
+2026-10-10T23:29:31.0807882Z  * [new branch]      dev                     -> origin/dev
+2026-10-10T23:29:31.0809217Z  * [new branch]      fix/next-stage-validation -> origin/fix/next-stage-validation
+2026-10-10T23:29:31.0810587Z  * [new branch]      main                    -> origin/main
+2026-10-10T23:29:31.0812037Z  * [new branch]      qa/cctv-calibration-demand -> origin/qa/cctv-calibration-demand
+2026-10-10T23:29:31.0813715Z  * [new branch]      qa/cctv-lifecycle       -> origin/qa/cctv-lifecycle
+2026-10-10T23:29:31.0815217Z  * [new branch]      qa/free-renderer-a49b221 -> origin/qa/free-renderer-a49b221
+2026-10-10T23:29:31.0817273Z  * [new branch]      qa/import-workspace-lifecycle -> origin/qa/import-workspace-lifecycle
+2026-10-10T23:29:31.0819295Z  * [new branch]      qa/infrastructure-collections -> origin/qa/infrastructure-collections
+2026-10-10T23:29:31.0821042Z  * [new branch]      qa/mission-render-demand -> origin/qa/mission-render-demand
+2026-10-10T23:29:31.0822942Z  * [new branch]      qa/mixed-use-smoke      -> origin/qa/mixed-use-smoke
+2026-10-10T23:29:31.0824525Z  * [new branch]      qa/performance-build-smoke -> origin/qa/performance-build-smoke
+2026-10-10T23:29:31.0826597Z  * [new branch]      qa/s52-font-wake        -> origin/qa/s52-font-wake
+2026-10-10T23:29:31.0827869Z  * [new branch]      qa/s52-layout-reuse     -> origin/qa/s52-layout-reuse
+2026-10-10T23:29:31.0829177Z  * [new branch]      qa/s52-node-comparison  -> origin/qa/s52-node-comparison
+2026-10-10T23:29:31.0830504Z  * [new branch]      qa/s52-overlay-visual   -> origin/qa/s52-overlay-visual
+2026-10-10T23:29:31.0831811Z  * [new branch]      qa/s52-projection-reuse -> origin/qa/s52-projection-reuse
+2026-10-10T23:29:31.0833243Z  * [new branch]      qa/terrain-picking-lifecycle -> origin/qa/terrain-picking-lifecycle
+2026-10-10T23:29:31.0834950Z  * [new branch]      qa/tracking-regression  -> origin/qa/tracking-regression
+2026-10-10T23:29:31.0836869Z  * [new branch]      qa/vessel-render-demand -> origin/qa/vessel-render-demand
+2026-10-10T23:29:31.0838353Z  * [new branch]      qa/wind-image-reuse     -> origin/qa/wind-image-reuse
+2026-10-10T23:29:31.0839917Z  * [new branch]      qa/windows-browser-shutdown -> origin/qa/windows-browser-shutdown
+2026-10-10T23:29:31.0841703Z  * [new branch]      qa/windows-profile-recovery -> origin/qa/windows-profile-recovery
+2026-10-10T23:29:31.0843557Z  * [new branch]      qa/windows-recovery-diagnostic -> origin/qa/windows-recovery-diagnostic
+2026-10-10T23:29:31.0845500Z  * [new branch]      qa/windows-renderer-experiment -> origin/qa/windows-renderer-experiment
+2026-10-10T23:29:31.0849965Z [command]/usr/bin/git branch --list --remote origin/qa/s52-layout-reuse
+2026-10-10T23:29:31.0852142Z   origin/qa/s52-layout-reuse
+2026-10-10T23:29:31.0857581Z [command]/usr/bin/git rev-parse refs/remotes/origin/qa/s52-layout-reuse
+2026-10-10T23:29:31.0882193Z f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:31.0887894Z ##[endgroup]
+2026-10-10T23:29:31.0889888Z ##[group]Determining the checkout info
+2026-10-10T23:29:31.0891780Z ##[endgroup]
+2026-10-10T23:29:31.0898171Z [command]/usr/bin/git sparse-checkout disable
+2026-10-10T23:29:31.0945160Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-10T23:29:31.0975310Z ##[group]Checking out the ref
+2026-10-10T23:29:31.0977511Z [command]/usr/bin/git checkout --progress --force -B qa/s52-layout-reuse refs/remotes/origin/qa/s52-layout-reuse
+2026-10-10T23:29:31.6003709Z Switched to a new branch 'qa/s52-layout-reuse'
+2026-10-10T23:29:31.6005616Z branch 'qa/s52-layout-reuse' set up to track 'origin/qa/s52-layout-reuse'.
+2026-10-10T23:29:31.6033436Z ##[endgroup]
+2026-10-10T23:29:31.6075805Z [command]/usr/bin/git log -1 --format=%H
+2026-10-10T23:29:31.6101197Z f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:31.6108833Z ##[group]Removing auth
+2026-10-10T23:29:31.6111352Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-10T23:29:31.6138513Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-10T23:29:31.6323895Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-10T23:29:31.6350624Z http.https://github.com/.extraheader
+2026-10-10T23:29:31.6356902Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-10T23:29:31.6386519Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-10T23:29:31.6571167Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-10T23:29:31.6600066Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-10T23:29:31.6779618Z ##[endgroup]
+2026-10-10T23:29:31.6970446Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+2026-10-10T23:29:31.6970714Z with:
+2026-10-10T23:29:31.6970865Z   node-version: 24.14.0
+2026-10-10T23:29:31.6971022Z   cache: npm
+2026-10-10T23:29:31.6971175Z   always-auth: false
+2026-10-10T23:29:31.6971334Z   check-latest: false
+2026-10-10T23:29:31.6972864Z   token: ***
+2026-10-10T23:29:31.6973005Z env:
+2026-10-10T23:29:31.6973181Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:31.6973426Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:31.6973646Z ##[endgroup]
+2026-10-10T23:29:31.7874233Z Attempting to download 24.14.0...
+2026-10-10T23:29:31.7945371Z (node:2165) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-10T23:29:31.7946691Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-10T23:29:32.5563638Z Acquiring 24.14.0 - x64 from https://github.com/actions/node-versions/releases/download/24.14.0-22380502845/node-24.14.0-linux-x64.tar.gz
+2026-10-10T23:29:33.2027534Z Extracting ...
+2026-10-10T23:29:33.2119677Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/7697016f-2fb1-4846-a201-bcf00f753dc8 -f /home/runner/work/_temp/4949ef11-2681-42c3-940e-d325f482ce83
+2026-10-10T23:29:34.1200760Z Adding to the cache ...
+2026-10-10T23:29:36.1527962Z ##[group]Environment details
+2026-10-10T23:29:36.3156777Z node: v24.14.0
+2026-10-10T23:29:36.3157071Z npm: 11.9.0
+2026-10-10T23:29:36.3157268Z yarn: 1.22.22
+2026-10-10T23:29:36.3157795Z ##[endgroup]
+2026-10-10T23:29:36.3172003Z [command]/opt/hostedtoolcache/node/24.14.0/x64/bin/npm config get cache
+2026-10-10T23:29:36.3832208Z /home/runner/.npm
+2026-10-10T23:29:36.5285755Z npm cache is not found
+2026-10-10T23:29:36.5448280Z ##[group]Run npm ci
+2026-10-10T23:29:36.5448511Z [36;1mnpm ci[0m
+2026-10-10T23:29:36.5681659Z shell: /usr/bin/bash -e {0}
+2026-10-10T23:29:36.5681888Z env:
+2026-10-10T23:29:36.5682067Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:36.5682291Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:36.5682480Z ##[endgroup]
+2026-10-10T23:29:37.2531241Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2026-10-10T23:29:44.2821159Z 
+2026-10-10T23:29:44.2821960Z > gods-eye-view@0.2.1 postinstall
+2026-10-10T23:29:44.2822453Z > node scripts/apply-cesium-patches.mjs
+2026-10-10T23:29:44.2822657Z 
+2026-10-10T23:29:44.6966278Z [cesium-patch] patched 5 distributions
+2026-10-10T23:29:44.7055546Z 
+2026-10-10T23:29:44.7056574Z added 173 packages, and audited 174 packages in 8s
+2026-10-10T23:29:44.7056882Z 
+2026-10-10T23:29:44.7057056Z 26 packages are looking for funding
+2026-10-10T23:29:44.7057425Z   run `npm fund` for details
+2026-10-10T23:29:44.7081800Z 
+2026-10-10T23:29:44.7082028Z 3 vulnerabilities (1 low, 2 high)
+2026-10-10T23:29:44.7082173Z 
+2026-10-10T23:29:44.7082286Z To address all issues, run:
+2026-10-10T23:29:44.7082500Z   npm audit fix
+2026-10-10T23:29:44.7082608Z 
+2026-10-10T23:29:44.7082721Z Run `npm audit` for details.
+2026-10-10T23:29:44.7634610Z ##[group]Run [[ "$BASELINE_SHA" =~ ^[0-9a-f]{40}$ ]]
+2026-10-10T23:29:44.7634855Z [36;1m[[ "$BASELINE_SHA" =~ ^[0-9a-f]{40}$ ]][0m
+2026-10-10T23:29:44.7635037Z [36;1m[[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]][0m
+2026-10-10T23:29:44.7635263Z [36;1mgit worktree add --detach ../overlay-baseline "$BASELINE_SHA"[0m
+2026-10-10T23:29:44.7635534Z [36;1mgit worktree add --detach ../overlay-candidate "$CANDIDATE_SHA"[0m
+2026-10-10T23:29:44.7635807Z [36;1mcmp package-lock.json ../overlay-baseline/package-lock.json[0m
+2026-10-10T23:29:44.7636286Z [36;1mcmp package-lock.json ../overlay-candidate/package-lock.json[0m
+2026-10-10T23:29:44.7636559Z [36;1mln -s "$PWD/node_modules" ../overlay-baseline/node_modules[0m
+2026-10-10T23:29:44.7636804Z [36;1mln -s "$PWD/node_modules" ../overlay-candidate/node_modules[0m
+2026-10-10T23:29:44.7695203Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-10T23:29:44.7695412Z env:
+2026-10-10T23:29:44.7695638Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:44.7695852Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:44.7696114Z ##[endgroup]
+2026-10-10T23:29:44.7869331Z Preparing worktree (detached HEAD 0d431f2)
+2026-10-10T23:29:45.3672695Z HEAD is now at 0d431f2 fix(overlays): invalidate idle host after font changes
+2026-10-10T23:29:45.3717057Z Preparing worktree (detached HEAD f25154a)
+2026-10-10T23:29:45.8702855Z HEAD is now at f25154a perf(overlays): experiment with normalized entry layout reuse
+2026-10-10T23:29:45.8968645Z ##[group]Run node scripts/performance/overlayVisualComparison.mjs ../overlay-baseline ../overlay-candidate qa-artifacts/overlay-visual
+2026-10-10T23:29:45.8969575Z [36;1mnode scripts/performance/overlayVisualComparison.mjs ../overlay-baseline ../overlay-candidate qa-artifacts/overlay-visual[0m
+2026-10-10T23:29:45.9027671Z shell: /usr/bin/bash -e {0}
+2026-10-10T23:29:45.9027828Z env:
+2026-10-10T23:29:45.9027983Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:45.9028212Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:45.9028393Z ##[endgroup]
+2026-10-10T23:29:46.4832826Z node:internal/modules/run_main:107
+2026-10-10T23:29:46.4833231Z     triggerUncaughtException(
+2026-10-10T23:29:46.4833418Z     ^
+2026-10-10T23:29:46.4833498Z 
+2026-10-10T23:29:46.4833759Z AssertionError [ERR_ASSERTION]: Fixture path already exists in baseline: overlay-visual.html
+2026-10-10T23:29:46.4833993Z 
+2026-10-10T23:29:46.4834053Z true !== false
+2026-10-10T23:29:46.4834235Z 
+2026-10-10T23:29:46.4834494Z     at file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/performance/overlayVisualComparison.mjs:130:12
+2026-10-10T23:29:46.4834897Z     at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+2026-10-10T23:29:46.4835199Z     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+2026-10-10T23:29:46.4835596Z     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+2026-10-10T23:29:46.4835847Z   generatedMessage: false,
+2026-10-10T23:29:46.4836159Z   code: 'ERR_ASSERTION',
+2026-10-10T23:29:46.4836432Z   actual: true,
+2026-10-10T23:29:46.4836686Z   expected: false,
+2026-10-10T23:29:46.4836935Z   operator: 'strictEqual',
+2026-10-10T23:29:46.4837168Z   diff: 'simple'
+2026-10-10T23:29:46.4837428Z }
+2026-10-10T23:29:46.4837498Z 
+2026-10-10T23:29:46.4837555Z Node.js v24.14.0
+2026-10-10T23:29:46.4915400Z ##[error]Process completed with exit code 1.
+2026-10-10T23:29:46.4978921Z ##[group]Run node --input-type=module <<'JS'
+2026-10-10T23:29:46.4979155Z [36;1mnode --input-type=module <<'JS'[0m
+2026-10-10T23:29:46.4979402Z [36;1mimport { existsSync, readdirSync, readFileSync } from 'node:fs';[0m
+2026-10-10T23:29:46.4979681Z [36;1mconst root = 'qa-artifacts/overlay-visual';[0m
+2026-10-10T23:29:46.4979887Z [36;1mif (!existsSync(root + '/report.json')) {[0m
+2026-10-10T23:29:46.4980366Z [36;1m  console.log(JSON.stringify({ schema: 'gev-overlay-visual-comparison/v1', status: 'not-run', error: 'No completed runner report; inspect prior step failures.' }));[0m
+2026-10-10T23:29:46.4980789Z [36;1m} else {[0m
+2026-10-10T23:29:46.4981075Z [36;1m  console.log('OVERLAY_VISUAL_REPORT ' + readFileSync(root + '/report.json', 'utf8').trim().split('\n').join(''));[0m
+2026-10-10T23:29:46.4981529Z [36;1m  for (const name of readdirSync(root).filter(name => /^[0-4]-(baseline|candidate)-\d+\.png$/.test(name)))[0m
+2026-10-10T23:29:46.4982032Z [36;1m    console.log('OVERLAY_VISUAL_IMAGE ' + JSON.stringify({ name, base64: readFileSync(root + '/' + name).toString('base64') }));[0m
+2026-10-10T23:29:46.4982358Z [36;1m}[0m
+2026-10-10T23:29:46.4982471Z [36;1mJS[0m
+2026-10-10T23:29:46.5037991Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-10T23:29:46.5038196Z env:
+2026-10-10T23:29:46.5038344Z   BASELINE_SHA: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+2026-10-10T23:29:46.5038703Z   CANDIDATE_SHA: f25154a61326e881e2223f2238d94b06cf231df8
+2026-10-10T23:29:46.5038886Z ##[endgroup]
+2026-10-10T23:29:46.5679660Z {"schema":"gev-overlay-visual-comparison/v1","status":"not-run","error":"No completed runner report; inspect prior step failures."}
+2026-10-10T23:29:46.6091334Z Post job cleanup.
+2026-10-10T23:29:46.6687013Z [command]/usr/bin/git version
+2026-10-10T23:29:46.6730919Z git version 2.55.0
+2026-10-10T23:29:46.6757840Z Temporarily overriding HOME='/home/runner/work/_temp/424834ad-d887-459d-aadf-c5ec616f3cc7' before making global git config changes
+2026-10-10T23:29:46.6758731Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-10T23:29:46.6763183Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/gods-eye-view/gods-eye-view
+2026-10-10T23:29:46.7247914Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-10T23:29:46.7280265Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-10T23:29:46.7503431Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-10T23:29:46.7540270Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-10T23:29:46.7756780Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-10T23:29:46.7792938Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-10T23:29:46.8142747Z Cleaning up orphan processes
+2026-10-10T23:29:46.8365883Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

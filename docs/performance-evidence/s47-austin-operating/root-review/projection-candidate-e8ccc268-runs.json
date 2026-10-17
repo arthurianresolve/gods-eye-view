@@ -1,0 +1,24 @@
+{
+  "schema": "gev-exact-candidate-run-receipt/v1",
+  "checkedAt": "2026-10-13T01:53:57.082Z",
+  "candidate": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "runs": [
+    {
+      "mode": "performance-build-smoke",
+      "id": "38334288585",
+      "conclusion": "",
+      "headSha": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+      "status": "in_progress",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334288585"
+    },
+    {
+      "mode": "standard",
+      "id": "38334290706",
+      "conclusion": "",
+      "headSha": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+      "status": "in_progress",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334290706"
+    }
+  ],
+  "performanceAcceptance": false
+}

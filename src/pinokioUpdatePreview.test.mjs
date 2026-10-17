@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,6 +10,7 @@ import {
   redactRemoteUrl,
   reportIncomingChanges,
   runPinokioUpdate,
+  schemaUpgradeCompatible,
   updateFromRemote,
 } from '../scripts/pinokio-update.mjs';
 
@@ -53,7 +54,22 @@ async function fixture(t) {
   git(origin, ['config', 'user.email', 'fixture@example.invalid']);
   git(origin, ['config', 'user.name', 'Fixture']);
   await writeFile(path.join(origin, 'README.md'), 'first\n');
+  for (const directory of ['src/workspaces', 'src/director', 'src/diagnostics'])
+    await mkdir(path.join(origin, directory), { recursive: true });
+  await writeFile(
+    path.join(origin, 'src/workspaces/document.js'),
+    'export const WORKSPACE_DOCUMENT_VERSION = 1;\n',
+  );
+  await writeFile(
+    path.join(origin, 'src/director/document.js'),
+    'export const SCENE_DOCUMENT_VERSION = 6;\n',
+  );
+  await writeFile(
+    path.join(origin, 'src/diagnostics/portable.js'),
+    'export const SETTINGS_BACKUP_VERSION = 1;\n',
+  );
   git(origin, ['add', 'README.md']);
+  git(origin, ['add', 'src']);
   git(origin, ['commit', '--quiet', '-m', 'first commit']);
 
   git(scratch, ['clone', '--quiet', origin, clone]);
@@ -110,6 +126,77 @@ test('a checkout with no upstream is reported and left to the plain pull', async
   assert.deepEqual(plan, { apply: null, fallback: true });
   assert.match(app.text(), /No upstream branch is configured/);
   assert.equal(fetched, null, 'nothing is fetched without an upstream');
+});
+
+test('dirty checkouts stop before fetch, merge, or reinstall', async (t) => {
+  const app = await fixture(t);
+  await app.push('second commit', 'second\n');
+  await writeFile(path.join(app.clone, 'README.md'), 'unsaved local work\n');
+  let fetched = false;
+  let applied = false;
+  const failures = [];
+  const plan = runPinokioUpdate({
+    ...app.io,
+    fetchRemote: () => {
+      fetched = true;
+    },
+    apply: () => {
+      applied = true;
+    },
+    install: () => {
+      applied = true;
+    },
+    fail: (code) => failures.push(code),
+  });
+  assert.equal(plan.stopped, true);
+  assert.equal(fetched, false);
+  assert.equal(applied, false);
+  assert.deepEqual(failures, [1]);
+  assert.match(app.text(), /Local changes are present/);
+});
+
+test('a schema mismatch stops before merge and install', async (t) => {
+  const app = await fixture(t);
+  const before = git(app.clone, ['rev-parse', 'HEAD']);
+  await writeFile(
+    path.join(app.origin, 'src/director/document.js'),
+    'export const SCENE_DOCUMENT_VERSION = 7;\n',
+  );
+  git(app.origin, ['add', 'src/director/document.js']);
+  git(app.origin, ['commit', '--quiet', '-m', 'new scene schema']);
+  const installs = [];
+  const failures = [];
+  const plan = runPinokioUpdate({
+    ...app.io,
+    install: () => installs.push('install'),
+    fail: (code) => failures.push(code),
+  });
+  assert.equal(plan.stopped, true);
+  assert.deepEqual(installs, []);
+  assert.deepEqual(failures, [1]);
+  assert.equal(git(app.clone, ['rev-parse', 'HEAD']), before);
+  assert.match(app.text(), /schema differs/);
+});
+
+test('schema compatibility requires all reader versions to match', () => {
+  assert.equal(
+    schemaUpgradeCompatible(
+      { workspace: 1, director: 6, settings: 1 },
+      { workspace: 1, director: 6, settings: 1 },
+    ),
+    true,
+  );
+  assert.equal(
+    schemaUpgradeCompatible(
+      { workspace: 1, director: 6, settings: 1 },
+      { workspace: 1, director: 7, settings: 1 },
+    ),
+    false,
+  );
+  assert.equal(
+    schemaUpgradeCompatible(null, { workspace: 1, director: 6, settings: 1 }),
+    false,
+  );
 });
 
 test('the tracking branch and the remote it fetches from are printed', async (t) => {

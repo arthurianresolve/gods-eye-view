@@ -1,0 +1,30 @@
+{
+  "schema": "gev-overlay-visual-review/v1",
+  "reviewedAt": "2026-10-11T00:16:08.903Z",
+  "reportSha256": "6838827538ff6552e50f19586261806d1e7071b6c5789ef1c029ed309d60a8cf",
+  "pairs": 5,
+  "casesPerPair": 24,
+  "imagesVerified": 240,
+  "allPngPixelsDecodedAndHashed": true,
+  "exactWithinAndAcrossPairs": true,
+  "sourceAndHarnessHashesVerified": true,
+  "scope": "Browser Canvas2D component pixels, picking and accessible actions with deterministic mock Cesium viewer; no GPU, whole-scene or performance acceptance.",
+  "sources": {
+    "baseline": {
+      "commit": "72694089e7fa0fa414042cde48765e1418a70d7e",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "b6344025f66949eafc84f56b40d45254d56394bbcd8cf4cb50c6f3a4e54b6e4f"
+    },
+    "candidate": {
+      "commit": "21523d5c5ff7f17329e139f23582a883a91a7c92",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b"
+    }
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "serversClosed": true,
+    "fixturesRemoved": true,
+    "unchangedSources": true
+  }
+}

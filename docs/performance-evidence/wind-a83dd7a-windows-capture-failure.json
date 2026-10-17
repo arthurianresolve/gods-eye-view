@@ -1,0 +1,22 @@
+{
+  "schema": "gev-wind-image-reuse/v1",
+  "applicationCommit": "a83dd7af30cb3b9a39095da0f081a1037725d2cd",
+  "harnessCommit": "a83dd7af30cb3b9a39095da0f081a1037725d2cd",
+  "capturedAt": "2026-10-10T05:46:19.462Z",
+  "fixture": "synthetic-360x181-wind-and-scalars/v1",
+  "scope": "Same-build forced construction versus retained-image equivalence at a fixed pose; isolated globe host, paused real GPU wind geometry. No FPS, latency or soak claim.",
+  "checks": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "a83dd7af30cb3b9a39095da0f081a1037725d2cd",
+    "harnessCommit": "a83dd7af30cb3b9a39095da0f081a1037725d2cd",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {"width": 887, "height": 529, "dpr": 2},
+    "drawingBuffer": {"width": 640, "height": 360},
+    "layers": []
+  },
+  "error": "Fresh capture did not complete",
+  "foregroundUninterrupted": true
+}

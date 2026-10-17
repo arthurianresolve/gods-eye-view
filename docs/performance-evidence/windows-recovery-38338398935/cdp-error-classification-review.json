@@ -1,0 +1,65 @@
+{
+  "sourceCommit": "fd1ae0540d82399eaef1418ddcf3095a17bbfb01",
+  "scope": "Pinned Puppeteer Connection with fake transport; no Chrome process or network",
+  "results": [
+    {
+      "mode": "timeout",
+      "rawError": {
+        "name": "ProtocolError",
+        "code": null,
+        "message": "SystemInfo.getProcessInfo timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
+        "originalMessage": ""
+      },
+      "observation": {
+        "status": "unavailable",
+        "reason": "process-info-query-failed"
+      },
+      "closeStatus": "completed",
+      "pendingCallbacks": 0,
+      "commands": [
+        "SystemInfo.getProcessInfo",
+        "SystemInfo.getProcessInfo"
+      ],
+      "transportClosedByProbe": false
+    },
+    {
+      "mode": "unsupported",
+      "rawError": {
+        "name": "ProtocolError",
+        "code": null,
+        "message": "Protocol error (SystemInfo.getProcessInfo): 'SystemInfo.getProcessInfo' wasn't found",
+        "originalMessage": "'SystemInfo.getProcessInfo' wasn't found"
+      },
+      "observation": {
+        "status": "unavailable",
+        "reason": "process-info-query-failed"
+      },
+      "closeStatus": "completed",
+      "pendingCallbacks": 0,
+      "commands": [
+        "SystemInfo.getProcessInfo",
+        "SystemInfo.getProcessInfo"
+      ],
+      "transportClosedByProbe": false
+    },
+    {
+      "mode": "connection-closed",
+      "rawError": {
+        "name": "TargetCloseError",
+        "code": null,
+        "message": "Protocol error (SystemInfo.getProcessInfo): Target closed",
+        "originalMessage": ""
+      },
+      "observation": {
+        "status": "unavailable",
+        "reason": "process-info-query-failed"
+      },
+      "closeStatus": "completed",
+      "pendingCallbacks": 0,
+      "commands": [
+        "SystemInfo.getProcessInfo"
+      ],
+      "transportClosedByProbe": false
+    }
+  ]
+}

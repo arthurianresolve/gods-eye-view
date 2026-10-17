@@ -1,4 +1,3 @@
-import { readLayerSource } from '../testSupport/readLayerSource.mjs';
 // src/data/detectionRenderDemand.test.mjs
 //
 // Detection must not hold the render loop open — and must not drop work on the
@@ -437,42 +436,7 @@ test('the render-governor gate covers the parked case, with teeth on the painter
     'the threshold inside the settled window stays untouched');
 });
 
-// ---------------------------------------------------------------------------
-// 5. What keeps aircraft brackets prompt without a detection hold
-// ---------------------------------------------------------------------------
-
-// Detection paints AIR brackets — including the alpha-floored ones — inside
-// _drawOverlay, from live positions, and does NOT take part in any
-// "objects may have changed" notification. With detection's own render hold
-// gone, the obvious worry is a floored bracket sitting stale on a parked scene
-// until some unrelated frame happens along.
-//
-// It cannot, and the reason is structural rather than lucky: an AIR bracket can
-// only exist while an aircraft layer is enabled, and both aircraft layers take a
-// continuous-render hold for their own per-frame fleet animation. So for exactly
-// as long as there is anything to bracket, the scene is rendering every frame
-// and the overlay repaints with it. (Measured live 2026-08-23 on a parked
-// camera: an outside-aircraft population change moved the painted bracket count
-// with no camera input, holds = ["flights"], requestRenderMode = false.)
-//
-// That is a COUPLING, so it deserves a pin. If a later perf pass strips these
-// holds the way it stripped detection's — a reasonable-looking change — bracket
-// promptness goes with them, silently. This test is where that shows up.
-test('aircraft brackets stay prompt because the aircraft layers hold the render loop', async () => {
-  for (const file of ['./flights.js', './militaryFlights.js']) {
-    const source = readLayerSource(new URL(file, import.meta.url));
-    const enable = /\n([ \t]*)enable\([\s\S]*?\n\1\},/.exec(source)?.[0];
-    assert.ok(enable, `${file}: enable() is still identifiable`);
-    assert.match(
-      enable,
-      /holdContinuousRender\('(flights|military)'\)/,
-      `${file}: enabling the layer must hold continuous render — detection no longer ` +
-      'holds one, so this is what keeps its AIR brackets repainting on a parked scene',
-    );
-    assert.match(
-      source,
-      /releaseContinuousRender\('(flights|military)'\)/,
-      `${file}: and the hold must be released, or the governor can never idle`,
-    );
-  }
-});
+// Aircraft promptness is covered by producer/lifecycle tests in
+// src/layers/fleetRenderDemand.test.mjs. That suite exercises both real layer
+// lifecycles and verifies that accepted non-empty membership owns the hold;
+// this file remains focused on detection's own render-demand contract.

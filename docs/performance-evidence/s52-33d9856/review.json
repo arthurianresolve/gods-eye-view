@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "scope": "Browser Canvas2D component pixels, picking and accessible actions with deterministic mock Cesium viewer; no GPU, whole-scene or performance acceptance.",
+  "sourceCommits": {
+    "baseline": {
+      "commit": "886b7d2927b6eb3a546c0dfaf629684973d9e501",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "8279f2f000fb8aec4cc2071c6c0ef8a111a32b2a585be59a7f72f54dc3104dba"
+    },
+    "candidate": {
+      "commit": "33d985657c8949a02cfce2f0f1ad4131d3da774c",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "328f9ca8d5cfd62507773847ebd2e00d2dba978c75a9ff9b1161d19a044fb174"
+    }
+  },
+  "harnessCommit": "55f0c964205f1cc658625f6b5828acc9deb796fc",
+  "reportSha256": "121d6c5221a7f1df1bc6d01f84846990030c568d02d5bc5c1b3168f6214fa6a0",
+  "pairs": 5,
+  "casesPerSide": 24,
+  "verifiedPngArtifacts": 240,
+  "exactPixelsAndInteraction": true,
+  "repeatableWithinEachSide": true,
+  "cleanup": {
+    "browserClosed": true,
+    "serversClosed": true,
+    "fixturesRemoved": true,
+    "unchangedSources": true
+  },
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "linux",
+    "osRelease": "6.17.0-1022-azure",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "deviceScaleFactor": 1
+    },
+    "browserVersion": "Chrome/152.0.7977.75",
+    "launchArgs": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
+    ]
+  }
+}

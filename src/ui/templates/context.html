@@ -1,5 +1,22 @@
   <!-- Global Context is deliberately independent from the left layer accordion. -->
   <aside id="right-context-rail">
+    <aside id="evidence-panel" class="panel-collapsible collapsed" data-panel-id="evidence-panel" hidden aria-label="Evidence inspector" data-i18n-aria-label>
+      <div data-panel-surface>
+        <header data-panel-header tabindex="-1">
+          <span class="panel-surface-title" data-evidence-title data-i18n>EVIDENCE</span>
+          <button class="panel-collapse-btn panel-surface-control" data-collapse-target="evidence-panel" type="button" aria-label="Collapse evidence inspector" title="Collapse evidence inspector" data-i18n-aria-label data-i18n-title>▼</button>
+          <button id="evidence-panel-close" class="panel-surface-control" type="button" aria-label="Close evidence inspector" data-i18n-aria-label data-i18n>Close</button>
+        </header>
+        <div data-panel-body data-rail-scroller>
+          <p data-evidence-status role="status" aria-live="polite"></p>
+          <dl class="evidence-panel-fields" data-evidence-fields></dl>
+          <details class="evidence-panel-technical">
+            <summary data-i18n>Technical evidence</summary>
+            <dl class="evidence-panel-fields" data-evidence-technical-fields></dl>
+          </details>
+        </div>
+      </div>
+    </aside>
     <div id="weather-panel" class="panel-collapsible" data-panel-id="weather-panel" hidden>
       <div class="panel-glow"></div>
       <div class="weather-panel-inner" data-rail-scroller>

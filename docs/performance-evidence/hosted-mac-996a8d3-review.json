@@ -1,0 +1,115 @@
+{
+  "schema": "gev-hosted-soak-independent-review/v1",
+  "reviewedAt": "2026-10-10T21:46:12.614Z",
+  "sourceCommit": "996a8d3b8b73da0d3f64392b993bdff81a1e857f",
+  "rawSha256": "dad43a0a25013dd621f9e1b4e0b9060c5ca57d1ad0162a9764646b76c125177b",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084725843",
+  "scope": "Hosted Apple paravirtual Metal; not physical desktop acceptance or current candidate acceptance",
+  "status": "passed",
+  "durationMs": 3603211,
+  "iterations": 252,
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "heapBytes": 75301404,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 302761,
+      "heapBytes": 78268064,
+      "listeners": 638,
+      "pendingWorkers": 1,
+      "oldestPendingMs": 10.79999999993015
+    },
+    {
+      "elapsedMs": 616841,
+      "heapBytes": 79415796,
+      "listeners": 639,
+      "pendingWorkers": 1,
+      "oldestPendingMs": 15.5
+    },
+    {
+      "elapsedMs": 917376,
+      "heapBytes": 80454684,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 1231659,
+      "heapBytes": 80535664,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 1533169,
+      "heapBytes": 80676332,
+      "listeners": 639,
+      "pendingWorkers": 1,
+      "oldestPendingMs": 12.300000000279397
+    },
+    {
+      "elapsedMs": 1846733,
+      "heapBytes": 81322428,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 2147603,
+      "heapBytes": 81332780,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 2460596,
+      "heapBytes": 81648920,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 2774180,
+      "heapBytes": 81730004,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    },
+    {
+      "elapsedMs": 3075062,
+      "heapBytes": 81642112,
+      "listeners": 635,
+      "pendingWorkers": 1,
+      "oldestPendingMs": 10
+    },
+    {
+      "elapsedMs": 3388984,
+      "heapBytes": 81864588,
+      "listeners": 631,
+      "pendingWorkers": 1,
+      "oldestPendingMs": 10.099999999627471
+    },
+    {
+      "elapsedMs": 3603211,
+      "heapBytes": 82050228,
+      "listeners": 629,
+      "pendingWorkers": 0,
+      "oldestPendingMs": 0
+    }
+  ],
+  "resourceGaugeCount": 40,
+  "resourceGaugesEqualAtEveryCheckpoint": true,
+  "finalWindowStartMs": 1533169,
+  "finalWindowPeakHeapGrowthRatio": 0.017029728123980625,
+  "finalWindowHeapGrowthRatio": 0.017029728123980625,
+  "recomputedStability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.01702972812398065
+  }
+}

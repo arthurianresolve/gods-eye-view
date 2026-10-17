@@ -1,0 +1,149 @@
+{
+  "rawSha256": "1d6e77e652feb24e5f8110be1f925c6c9fa6977c4f34870a6bc4107f89ead99b",
+  "rawBytes": 217211,
+  "appCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "harnessCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "independentReview": "Exact c21b3f21 validateCaptureCliReport passed against the complete retained raw report with infrastructure expectations.",
+  "fixture": {
+    "schema": "gev-infrastructure-fixture-manifest/v1",
+    "id": "bundled-infrastructure-static-v1",
+    "workloadId": "infrastructure",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "assets": [
+      {
+        "id": "datacenters.geojsonl",
+        "path": "src/data/local_data/datacenters/datacenters.geojsonl",
+        "sha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+        "byteLength": 2561978,
+        "sourceFeatureCount": 4351
+      },
+      {
+        "id": "dams.geojsonl",
+        "path": "src/data/local_data/dams/dams.geojsonl",
+        "sha256": "f2b6f3166bee6dba4f0b569553a14c84faeb0048eb522bacd4d9c78e93d30d30",
+        "byteLength": 730280,
+        "sourceFeatureCount": 704
+      },
+      {
+        "id": "cable-geo.json",
+        "path": "src/data/local_data/telegeography_submarine_cables/cable-geo.json",
+        "sha256": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+        "byteLength": 728308,
+        "sourceFeatureCount": 712
+      },
+      {
+        "id": "landing-point-geo.json",
+        "path": "src/data/local_data/telegeography_submarine_cables/landing-point-geo.json",
+        "sha256": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+        "byteLength": 359269,
+        "sourceFeatureCount": 1917
+      }
+    ],
+    "expectedLayerCounts": {
+      "local-datacenters": 4362,
+      "local-dams": 716,
+      "telegeography-submarine-cables": 2629
+    },
+    "camera": {
+      "id": "world-infrastructure-overview-v1",
+      "longitudeDeg": 0,
+      "latitudeDeg": 0,
+      "altitudeM": 15000000,
+      "headingDeg": 0,
+      "pitchDeg": -90
+    },
+    "sha256": "16ff35f20ac6405efcd860c8f5057bef12516aedc29a65b8351ad48651d4cba6",
+    "fixedTimeMs": 1791460800000,
+    "clock": {
+      "dayNumber": 2461322,
+      "secondsOfDay": 37
+    },
+    "selectedLayerIds": [
+      "local-datacenters",
+      "local-dams",
+      "telegeography-submarine-cables"
+    ]
+  },
+  "observedPopulations": [
+    {
+      "id": "local-datacenters",
+      "enabled": true,
+      "count": 4362
+    },
+    {
+      "id": "local-dams",
+      "enabled": true,
+      "count": 716
+    },
+    {
+      "id": "telegeography-submarine-cables",
+      "enabled": true,
+      "count": 2629
+    }
+  ],
+  "diagnosticDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    }
+  ],
+  "workerDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "validatedWorkerCount": 3,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    },
+    {
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "validatedWorkerCount": 8,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    }
+  ],
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderedFrameCount": 2,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    }
+  ],
+  "comparisonEligible": false,
+  "readinessReasons": [
+    "warmup-is-not-30-seconds",
+    "measurement-is-not-60-seconds",
+    "capture-does-not-have-five-runs-per-scenario",
+    "hardware-performance-acceptance-was-not-requested-or-verified",
+    "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+    "latency-comparison-remains-disabled-pending-uninstrumented-capture"
+  ]
+}

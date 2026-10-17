@@ -1,0 +1,6 @@
+{
+  "schema": "gev-import-workspace-lifecycle/v1",
+  "status": "failed",
+  "error": "workspaceImportSha256 is not defined",
+  "cases": []
+}

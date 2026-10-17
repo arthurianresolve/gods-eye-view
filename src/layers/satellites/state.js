@@ -48,7 +48,17 @@ export function createState({ services }) {
 
   state._preRenderListener = null;
 
+  // Separate one-shot owners preserve the core cadence while the focus owner
+  // samples an active fade at its existing 80ms easing interval.
+  state._periodicRenderDisposer = null;
+  state._focusRenderDisposer = null;
+
   state._lastPropagation = 0;
+
+  // Reused by the fleet and dense propagation paths. Cesium clones a point's
+  // position on assignment, so one scratch Cartesian is sufficient and avoids
+  // allocating a new position object for every collection upload.
+  state._scratchPropagationCartesian = new Cesium.Cartesian3();
 
   state._lastRingRotation = 0;
 
@@ -57,6 +67,8 @@ export function createState({ services }) {
   /** Points whose animated emphasis remains outside the 1.0 deadband. */
 
   state._activeFocusCount = 0;
+  state._focusTransitioning = false;
+  state._focusPassPending = false;
 
   state._scratchFocusScreen = new Cesium.Cartesian2();
 
@@ -139,6 +151,7 @@ export function createState({ services }) {
   state._trackedFrameNumber = -1;
 
   state._trackedFrameGeo = null;
+  state._trackedFrameTimeMs = null;
   // { longitude, latitude, altitude } or null
 
   state._trackedFrameCartesian = new Cesium.Cartesian3();

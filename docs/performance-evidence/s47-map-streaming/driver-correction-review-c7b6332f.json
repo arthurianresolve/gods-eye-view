@@ -1,0 +1,57 @@
+{
+  "reviewedOn": "2026-10-13",
+  "reviewedCommit": "c7b6332f2dced378b29682af191b8bb596702f91",
+  "integrationCommit": "0a504d27ea643138b99bcb751d514c6d9bd2206f",
+  "scope": "Native map journey driver and report validator, without production CLI/outer-validator wiring or a browser run",
+  "status": "component-validation-passed",
+  "corrections": [
+    "Observe actual pinned tileset cacheBytes and maximumCacheOverflowBytes; preserve valid zero values",
+    "Recompute aggregate delivery from checked document owner release and drain observations",
+    "Require transition and final settings to preserve the initial settings except intentional map-stack selection",
+    "Bind route start/end to captured camera observations and declared bounded movement",
+    "Use circular heading comparison so real Cesium 2-pi heading equals declared zero"
+  ],
+  "pinnedCesiumCamera": {
+    "version": "1.138.0",
+    "method": "Real Cesium.Camera and WGS84 transforms with a 1440x900 scene seam; no WebGL context",
+    "durationMs": 60000,
+    "distanceM": 7200,
+    "start": {
+      "longitude": -97.72000000000001,
+      "latitude": 30.27,
+      "heightM": 6000.000000000201,
+      "headingRadians": 6.283185307179586,
+      "pitchRadians": -1.5707963267948966
+    },
+    "end": {
+      "longitude": -97.64524491389871,
+      "latitude": 30.269978662537365,
+      "heightM": 6004.056610674536,
+      "headingRadians": 0.0006576815303178662,
+      "pitchRadians": -1.569669492428309
+    }
+  },
+  "validation": {
+    "focusedTests": {
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "command": "node --test scripts/performance/mapStreamingCapture.test.mjs scripts/performance/mapStreamingFixture.test.mjs scripts/performance/mapStreamingFixtureDelivery.test.mjs scripts/performance/buildProvenance.test.mjs"
+    },
+    "rejectedMutationControls": 5,
+    "formatting": { "passed": true, "sourceFiles": 1630 },
+    "importDirections": { "passed": true, "modules": 1010, "portableEntries": 80 },
+    "packageBoundaries": { "passed": true, "packages": 127 },
+    "existingCaptureLint": { "passed": true, "files": 17 },
+    "additionalMapModuleLint": { "passed": true, "files": 7, "errors": 0 }
+  },
+  "browserDecodeObserved": false,
+  "renderedReadinessObserved": false,
+  "performanceAcceptanceEligible": false,
+  "remaining": [
+    "Production capture CLI and outer report validator wiring",
+    "Named-profile production builds and actual native browser startup, rendered coverage and readiness",
+    "Browser lifecycle fault controls",
+    "Matched primary Windows hardware comparisons and soak"
+  ]
+}

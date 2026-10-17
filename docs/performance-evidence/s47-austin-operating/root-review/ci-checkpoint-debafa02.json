@@ -1,0 +1,77 @@
+{
+  "schema": "gev-ci-checkpoint/v1",
+  "recordedAt": "2026-10-12T23:11:05.471Z",
+  "repository": "arthurianresolve/gods-eye-view",
+  "conclusion": "success",
+  "createdAt": "2026-10-12T22:52:03Z",
+  "headSha": "debafa026810fd162a7d4d048a2a5ef75ac645f6",
+  "jobs": [
+    {
+      "id": 115042562773,
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042562773",
+      "startedAt": "2026-10-12T22:52:07Z",
+      "completedAt": "2026-10-12T22:53:53Z"
+    },
+    {
+      "id": 115042562979,
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042562979",
+      "startedAt": "2026-10-12T22:52:07Z",
+      "completedAt": "2026-10-12T22:56:32Z"
+    },
+    {
+      "id": 115042563023,
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042563023",
+      "startedAt": "2026-10-12T22:52:08Z",
+      "completedAt": "2026-10-12T22:57:34Z"
+    },
+    {
+      "id": 115042563028,
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042563028",
+      "startedAt": "2026-10-12T22:52:14Z",
+      "completedAt": "2026-10-12T22:55:52Z"
+    },
+    {
+      "id": 115042563058,
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042563058",
+      "startedAt": "2026-10-12T22:52:07Z",
+      "completedAt": "2026-10-12T23:10:01Z"
+    },
+    {
+      "id": 115042563176,
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042563176",
+      "startedAt": "2026-10-12T22:52:08Z",
+      "completedAt": "2026-10-12T22:54:18Z"
+    },
+    {
+      "id": 115042563188,
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167/job/115042563188",
+      "startedAt": "2026-10-12T22:52:08Z",
+      "completedAt": "2026-10-12T23:02:07Z"
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-10-12T23:10:01Z",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167",
+  "scope": "Standard integration checks; no completed Austin hardware/performance capture and no root-cause proof for the intermittent Windows shutdown timeout."
+}

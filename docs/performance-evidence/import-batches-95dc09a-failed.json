@@ -1,0 +1,30 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "95dc09af0809f1c7040d82d1ce9e4e1c6d391adf",
+  "harnessCommit": "95dc09af0809f1c7040d82d1ce9e4e1c6d391adf",
+  "capturedAt": "2026-10-09T17:13:20.501Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "95dc09af0809f1c7040d82d1ce9e4e1c6d391adf",
+    "harnessCommit": "95dc09af0809f1c7040d82d1ce9e4e1c6d391adf",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true
+}

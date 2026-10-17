@@ -1,0 +1,1334 @@
+{
+  "schema": "gev-overlay-cpu/v1",
+  "commit": "82a195138ee6e2b2f61f996877f096d65bdb653b",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "capturedAt": "2026-10-09T16:41:24.696Z",
+  "scope": "Node overlay algorithm attribution and instrumentation overhead; mock canvas; no browser or GPU claim",
+  "workloads": [
+    {
+      "ok": true,
+      "profile": "generic",
+      "entryCount": 250,
+      "scope": "Node synchronous overlay work; mock canvas, no GPU or browser layout, no forced GC",
+      "samples": [
+        {
+          "run": 0,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 258.7529999999997,
+          "candidates": 250,
+          "painted": 96,
+          "phases": null
+        },
+        {
+          "run": 0,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 272.76720000000023,
+          "candidates": 250,
+          "painted": 96,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 264.20990000001257,
+                "maxMs": 7.923999999999978,
+                "sampleCount": 120,
+                "p50Ms": 0.37920000000030996,
+                "p95Ms": 0.8231000000005224
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 180.72279999999228,
+                "maxMs": 7.722799999999552,
+                "sampleCount": 120,
+                "p50Ms": 0.26739999999972497,
+                "p95Ms": 0.5437999999994645
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 39.06619999998475,
+                "maxMs": 0.3293999999996231,
+                "sampleCount": 120,
+                "p50Ms": 0.06060000000070431,
+                "p95Ms": 0.1125000000001819
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 37.119200000001,
+                "maxMs": 1.0864000000001397,
+                "sampleCount": 120,
+                "p50Ms": 0.021700000000237196,
+                "p95Ms": 0.32879999999931897
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 274.1369999999997,
+          "candidates": 250,
+          "painted": 96,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 265.44620000000214,
+                "maxMs": 5.202199999999721,
+                "sampleCount": 120,
+                "p50Ms": 0.3562999999994645,
+                "p95Ms": 0.7240999999994528
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 180.17189999998845,
+                "maxMs": 4.066200000000208,
+                "sampleCount": 120,
+                "p50Ms": 0.2701999999999316,
+                "p95Ms": 0.4019000000007509
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 43.16350000001603,
+                "maxMs": 4.6908000000003085,
+                "sampleCount": 120,
+                "p50Ms": 0.021200000000135333,
+                "p95Ms": 0.3235999999997148
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 36.63230000000203,
+                "maxMs": 0.26189999999951397,
+                "sampleCount": 120,
+                "p50Ms": 0.05169999999998254,
+                "p95Ms": 0.08140000000003056
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 252.6858000000002,
+          "candidates": 250,
+          "painted": 96,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 245.2501000000002,
+          "candidates": 250,
+          "painted": 96,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 272.0630000000001,
+          "candidates": 250,
+          "painted": 96,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 262.87350000000424,
+                "maxMs": 1.676300000000083,
+                "sampleCount": 120,
+                "p50Ms": 0.3602000000000771,
+                "p95Ms": 0.6593000000002576
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 184.7299999999923,
+                "maxMs": 1.2066999999997279,
+                "sampleCount": 120,
+                "p50Ms": 0.27300000000013824,
+                "p95Ms": 0.3756999999995969
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 36.6469999999872,
+                "maxMs": 0.6868000000004031,
+                "sampleCount": 120,
+                "p50Ms": 0.021700000000237196,
+                "p95Ms": 0.3036000000001877
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 35.52810000001682,
+                "maxMs": 0.46190000000024156,
+                "sampleCount": 120,
+                "p50Ms": 0.05079999999998108,
+                "p95Ms": 0.0783000000001266
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 277.28069999999934,
+          "candidates": 250,
+          "painted": 96,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 268.16699999998855,
+                "maxMs": 2.6039999999993597,
+                "sampleCount": 120,
+                "p50Ms": 0.3462999999992462,
+                "p95Ms": 0.6898000000001048
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 187.15489999999681,
+                "maxMs": 1.0070999999998094,
+                "sampleCount": 120,
+                "p50Ms": 0.26340000000072905,
+                "p95Ms": 0.3827000000001135
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 39.644400000013775,
+                "maxMs": 2.1785999999992782,
+                "sampleCount": 120,
+                "p50Ms": 0.02040000000033615,
+                "p95Ms": 0.27880000000004657
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 35.571699999991324,
+                "maxMs": 0.16150000000016007,
+                "sampleCount": 120,
+                "p50Ms": 0.050600000000486034,
+                "p95Ms": 0.06869999999980791
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 266.4555999999993,
+          "candidates": 250,
+          "painted": 96,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 332.91109999999935,
+          "candidates": 250,
+          "painted": 96,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 295.6839,
+          "candidates": 250,
+          "painted": 96,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 281.4087999999847,
+                "maxMs": 8.16110000000026,
+                "sampleCount": 120,
+                "p50Ms": 0.35090000000036525,
+                "p95Ms": 0.7249999999994543
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 203.66219999999703,
+                "maxMs": 8.049700000000485,
+                "sampleCount": 120,
+                "p50Ms": 0.2699000000002343,
+                "p95Ms": 0.4596000000001368
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 37.403599999992366,
+                "maxMs": 0.47120000000086293,
+                "sampleCount": 120,
+                "p50Ms": 0.020899999999528518,
+                "p95Ms": 0.308100000000195
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 35.62309999999252,
+                "maxMs": 0.18990000000030705,
+                "sampleCount": 120,
+                "p50Ms": 0.050900000000183354,
+                "p95Ms": 0.07569999999941501
+              }
+            ]
+          }
+        }
+      ],
+      "disabledMedianCpuMs": 0.4312549999999995,
+      "enabledMedianCpuMs": 0.45689499999999955,
+      "instrumentationRatio": 0.05945438313758711
+    },
+    {
+      "ok": true,
+      "profile": "local-infrastructure",
+      "entryCount": 320,
+      "scope": "Node synchronous overlay work; mock canvas, no GPU or browser layout, no forced GC",
+      "samples": [
+        {
+          "run": 0,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 459.97789999999986,
+          "candidates": 320,
+          "painted": 192,
+          "phases": null
+        },
+        {
+          "run": 0,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 532.4741999999997,
+          "candidates": 320,
+          "painted": 192,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 517.6896000000088,
+                "maxMs": 3.480399999999463,
+                "sampleCount": 120,
+                "p50Ms": 0.7137000000002445,
+                "p95Ms": 1.7395999999998821
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 315.13770000000477,
+                "maxMs": 2.378799999999501,
+                "sampleCount": 120,
+                "p50Ms": 0.45349999999962165,
+                "p95Ms": 0.9715000000005602
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 114.707100000006,
+                "maxMs": 1.1322000000000116,
+                "sampleCount": 120,
+                "p50Ms": 0.15899999999965075,
+                "p95Ms": 0.3525999999992564
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 75.37069999999858,
+                "maxMs": 1.3179000000000087,
+                "sampleCount": 120,
+                "p50Ms": 0.05319999999937863,
+                "p95Ms": 0.48180000000047585
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 496.34289999999964,
+          "candidates": 320,
+          "painted": 192,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 482.88999999999123,
+                "maxMs": 2.824399999999514,
+                "sampleCount": 120,
+                "p50Ms": 0.6334999999999127,
+                "p95Ms": 1.0308999999997468
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 298.7654000000084,
+                "maxMs": 2.0806000000002314,
+                "sampleCount": 120,
+                "p50Ms": 0.4236000000000786,
+                "p95Ms": 0.48210000000017317
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 106.17620000000807,
+                "maxMs": 0.48880000000008295,
+                "sampleCount": 120,
+                "p50Ms": 0.1517999999996391,
+                "p95Ms": 0.17479999999977736
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 69.29389999999876,
+                "maxMs": 1.255699999999706,
+                "sampleCount": 120,
+                "p50Ms": 0.0466999999998734,
+                "p95Ms": 0.4404999999997017
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 438.58300000000054,
+          "candidates": 320,
+          "painted": 192,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 431.96869999999944,
+          "candidates": 320,
+          "painted": 192,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 476.52880000000005,
+          "candidates": 320,
+          "painted": 192,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 463.29919999997037,
+                "maxMs": 2.173499999998967,
+                "sampleCount": 120,
+                "p50Ms": 0.6363999999994121,
+                "p95Ms": 1.136899999999514
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 285.9118999999864,
+                "maxMs": 1.1409999999996217,
+                "sampleCount": 120,
+                "p50Ms": 0.42449999999917054,
+                "p95Ms": 0.6721999999990658
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 104.07829999998285,
+                "maxMs": 1.341100000001461,
+                "sampleCount": 120,
+                "p50Ms": 0.15209999999933643,
+                "p95Ms": 0.2510000000002037
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 65.14610000000539,
+                "maxMs": 0.7479999999995925,
+                "sampleCount": 120,
+                "p50Ms": 0.04719999999906577,
+                "p95Ms": 0.45750000000043656
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 454.8072000000011,
+          "candidates": 320,
+          "painted": 192,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 442.5103000000254,
+                "maxMs": 3.190199999999095,
+                "sampleCount": 120,
+                "p50Ms": 0.6247999999995955,
+                "p95Ms": 1.0979000000006636
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 273.49760000000606,
+                "maxMs": 1.5499999999992724,
+                "sampleCount": 120,
+                "p50Ms": 0.41530000000057044,
+                "p95Ms": 0.6436000000012427
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 97.57449999999517,
+                "maxMs": 0.5555999999996857,
+                "sampleCount": 120,
+                "p50Ms": 0.1481999999996333,
+                "p95Ms": 0.2228000000013708
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 64.82880000001933,
+                "maxMs": 2.477199999999357,
+                "sampleCount": 120,
+                "p50Ms": 0.046399999999266583,
+                "p95Ms": 0.4440000000013242
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 501.96889999999985,
+          "candidates": 320,
+          "painted": 192,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 534.8335999999999,
+          "candidates": 320,
+          "painted": 192,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 473.58160000000134,
+          "candidates": 320,
+          "painted": 192,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 454.8061999999918,
+                "maxMs": 5.217700000001059,
+                "sampleCount": 120,
+                "p50Ms": 0.651400000000649,
+                "p95Ms": 1.6392999999989115
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 285.22319999998945,
+                "maxMs": 4.614299999999275,
+                "sampleCount": 120,
+                "p50Ms": 0.4269000000003871,
+                "p95Ms": 1.0949000000000524
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 99.09920000000056,
+                "maxMs": 0.5862000000015541,
+                "sampleCount": 120,
+                "p50Ms": 0.1499999999996362,
+                "p95Ms": 0.41339999999945576
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 63.56489999999394,
+                "maxMs": 0.8845999999994092,
+                "sampleCount": 120,
+                "p50Ms": 0.04770000000098662,
+                "p95Ms": 0.4801000000006752
+              }
+            ]
+          }
+        }
+      ],
+      "disabledMedianCpuMs": 0.7666298333333331,
+      "enabledMedianCpuMs": 0.7942146666666667,
+      "instrumentationRatio": 0.03598194608914951
+    },
+    {
+      "ok": true,
+      "profile": "all-live-radio",
+      "entryCount": 864,
+      "scope": "Node synchronous overlay work; mock canvas, no GPU or browser layout, no forced GC",
+      "samples": [
+        {
+          "run": 0,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1938.9676000000018,
+          "candidates": 864,
+          "painted": 396,
+          "phases": null
+        },
+        {
+          "run": 0,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 2645.4665000000023,
+          "candidates": 864,
+          "painted": 397,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 2589.0128000000004,
+                "maxMs": 17.661299999999756,
+                "sampleCount": 120,
+                "p50Ms": 7.701199999999517,
+                "p95Ms": 14.861499999999069
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 1281.2166999999354,
+                "maxMs": 9.547899999997753,
+                "sampleCount": 120,
+                "p50Ms": 4.2260000000023865,
+                "p95Ms": 6.800500000001193
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 822.6233999999749,
+                "maxMs": 4.123700000000099,
+                "sampleCount": 120,
+                "p50Ms": 2.2573000000011234,
+                "p95Ms": 3.771600000000035
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 444.32640000002357,
+                "maxMs": 8.945999999999913,
+                "sampleCount": 120,
+                "p50Ms": 0.7993999999998778,
+                "p95Ms": 7.433199999999488
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1866.1209999999992,
+          "candidates": 864,
+          "painted": 400,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1826.2268000000222,
+                "maxMs": 40.33950000000186,
+                "sampleCount": 120,
+                "p50Ms": 2.244800000000396,
+                "p95Ms": 6.133499999999913
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 822.6796000000213,
+                "maxMs": 4.5384999999987485,
+                "sampleCount": 120,
+                "p50Ms": 1.1229999999995925,
+                "p95Ms": 2.270300000000134
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 681.3766999999643,
+                "maxMs": 35.18609999999899,
+                "sampleCount": 120,
+                "p50Ms": 0.9258999999983644,
+                "p95Ms": 1.90230000000156
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 301.25139999996463,
+                "maxMs": 6.7520000000004075,
+                "sampleCount": 120,
+                "p50Ms": 0.12310000000070431,
+                "p95Ms": 2.490300000001298
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1720.7963000000018,
+          "candidates": 864,
+          "painted": 404,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1773.3659999999982,
+          "candidates": 864,
+          "painted": 398,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1765.631699999998,
+          "candidates": 864,
+          "painted": 398,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1727.1532999999763,
+                "maxMs": 7.196899999999005,
+                "sampleCount": 120,
+                "p50Ms": 2.378899999999703,
+                "p95Ms": 4.816899999997986
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 811.204700000002,
+                "maxMs": 3.1917000000030384,
+                "sampleCount": 120,
+                "p50Ms": 1.1847999999990861,
+                "p95Ms": 2.1525000000001455
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 606.430599999956,
+                "maxMs": 2.0731999999989057,
+                "sampleCount": 120,
+                "p50Ms": 0.9419999999990978,
+                "p95Ms": 1.3630000000011933
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 287.8747000000658,
+                "maxMs": 3.808899999999994,
+                "sampleCount": 120,
+                "p50Ms": 0.13570000000254367,
+                "p95Ms": 2.4513000000006286
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1905.0043000000005,
+          "candidates": 864,
+          "painted": 403,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1862.8919000000278,
+                "maxMs": 11.872900000002119,
+                "sampleCount": 120,
+                "p50Ms": 2.5614999999997963,
+                "p95Ms": 5.175199999997858
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 881.8935000000238,
+                "maxMs": 6.7950999999993655,
+                "sampleCount": 120,
+                "p50Ms": 1.270700000000943,
+                "p95Ms": 2.1574000000000524
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 647.3140999999996,
+                "maxMs": 4.636300000001938,
+                "sampleCount": 120,
+                "p50Ms": 1.0027000000009139,
+                "p95Ms": 1.415899999999965
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 310.3874999999898,
+                "maxMs": 9.429000000000087,
+                "sampleCount": 120,
+                "p50Ms": 0.14760000000023865,
+                "p95Ms": 2.478399999999965
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 2888.2744999999995,
+          "candidates": 864,
+          "painted": 411,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1719.5147999999972,
+          "candidates": 864,
+          "painted": 406,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1878.3882000000012,
+          "candidates": 864,
+          "painted": 399,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1831.780799999935,
+                "maxMs": 10.925400000000081,
+                "sampleCount": 120,
+                "p50Ms": 2.402200000004086,
+                "p95Ms": 4.685399999994843
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 873.4775000000081,
+                "maxMs": 6.02219999999943,
+                "sampleCount": 120,
+                "p50Ms": 1.189699999995355,
+                "p95Ms": 2.1244000000006054
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 641.802300000054,
+                "maxMs": 3.1569000000017695,
+                "sampleCount": 120,
+                "p50Ms": 0.9719000000040978,
+                "p95Ms": 1.352999999995518
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 294.03220000000874,
+                "maxMs": 5.958299999998417,
+                "sampleCount": 120,
+                "p50Ms": 0.13130000000091968,
+                "p95Ms": 2.3769000000029337
+              }
+            ]
+          }
+        }
+      ],
+      "disabledMedianCpuMs": 2.955609999999997,
+      "enabledMedianCpuMs": 3.130647000000002,
+      "instrumentationRatio": 0.059221954182048675
+    },
+    {
+      "ok": true,
+      "profile": "phase6-detection",
+      "entryCount": 5000,
+      "scope": "Node synchronous overlay work; mock canvas, no GPU or browser layout, no forced GC",
+      "samples": [
+        {
+          "run": 0,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1718.610200000001,
+          "candidates": 0,
+          "painted": 0,
+          "phases": null
+        },
+        {
+          "run": 0,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1857.609800000002,
+          "candidates": 0,
+          "painted": 0,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1663.9585999999981,
+                "maxMs": 15.26640000000043,
+                "sampleCount": 120,
+                "p50Ms": 2.119200000001001,
+                "p95Ms": 6.900699999998324
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 1654.1352000000188,
+                "maxMs": 15.23359999999957,
+                "sampleCount": 120,
+                "p50Ms": 2.109199999998964,
+                "p95Ms": 6.892899999998917
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 1.8858000000163884,
+                "maxMs": 0.024400000000241562,
+                "sampleCount": 120,
+                "p50Ms": 0.0018999999992956873,
+                "p95Ms": 0.006100000002334127
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 0.9648999999990338,
+                "maxMs": 0.42000000000007276,
+                "sampleCount": 120,
+                "p50Ms": 0.0005999999993946403,
+                "p95Ms": 0.0015999999995983671
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1784.7052000000003,
+          "candidates": 0,
+          "painted": 0,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1595.0957000000235,
+                "maxMs": 11.188199999996868,
+                "sampleCount": 120,
+                "p50Ms": 1.8119000000006054,
+                "p95Ms": 5.603500000001077
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 1586.414299999975,
+                "maxMs": 11.162499999998545,
+                "sampleCount": 120,
+                "p50Ms": 1.8009999999994761,
+                "p95Ms": 5.596499999999651
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 2.486300000036863,
+                "maxMs": 0.7752000000000407,
+                "sampleCount": 120,
+                "p50Ms": 0.0017000000007101335,
+                "p95Ms": 0.005000000001018634
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 0.503500000009808,
+                "maxMs": 0.009399999999004649,
+                "sampleCount": 120,
+                "p50Ms": 0.0005000000019208528,
+                "p95Ms": 0.0014000000010128133
+              }
+            ]
+          }
+        },
+        {
+          "run": 1,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1703.8695000000007,
+          "candidates": 0,
+          "painted": 0,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 2483.0460999999996,
+          "candidates": 0,
+          "painted": 0,
+          "phases": null
+        },
+        {
+          "run": 2,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1826.9667999999983,
+          "candidates": 0,
+          "painted": 0,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1623.6775000000089,
+                "maxMs": 11.550599999998667,
+                "sampleCount": 120,
+                "p50Ms": 1.90849999999773,
+                "p95Ms": 5.947299999999814
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 1615.3512999999766,
+                "maxMs": 11.51929999999993,
+                "sampleCount": 120,
+                "p50Ms": 1.898300000000745,
+                "p95Ms": 5.926000000003114
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 1.688299999874289,
+                "maxMs": 0.01810000000114087,
+                "sampleCount": 120,
+                "p50Ms": 0.0015000000021245796,
+                "p95Ms": 0.004400000001623994
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 0.5111999999680847,
+                "maxMs": 0.007499999999708962,
+                "sampleCount": 120,
+                "p50Ms": 0.0005000000019208528,
+                "p95Ms": 0.0015000000021245796
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1726.5364999999983,
+          "candidates": 0,
+          "painted": 0,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1534.9271999999364,
+                "maxMs": 10.34570000000167,
+                "sampleCount": 120,
+                "p50Ms": 1.8467000000018743,
+                "p95Ms": 5.776499999999942
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 1526.1979000000392,
+                "maxMs": 10.32220000000234,
+                "sampleCount": 120,
+                "p50Ms": 1.8368999999984226,
+                "p95Ms": 5.7674000000006345
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 3.1697999999196327,
+                "maxMs": 2.732799999997951,
+                "sampleCount": 120,
+                "p50Ms": 0.0005000000019208528,
+                "p95Ms": 0.0011999999987892807
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 1.47800000001007,
+                "maxMs": 0.029399999999441206,
+                "sampleCount": 120,
+                "p50Ms": 0.0017000000007101335,
+                "p95Ms": 0.004700000001321314
+              }
+            ]
+          }
+        },
+        {
+          "run": 3,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1823.5177000000003,
+          "candidates": 0,
+          "painted": 0,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": false,
+          "frames": 600,
+          "cpuMs": 1903.8893000000025,
+          "candidates": 0,
+          "painted": 0,
+          "phases": null
+        },
+        {
+          "run": 4,
+          "enabled": true,
+          "frames": 600,
+          "cpuMs": 1771.4601000000039,
+          "candidates": 0,
+          "painted": 0,
+          "phases": {
+            "enabled": true,
+            "overflow": false,
+            "scope": "synchronous-application-cpu",
+            "series": [
+              {
+                "owner": "overlay",
+                "phase": "frame",
+                "count": 600,
+                "totalMs": 1575.074199999959,
+                "maxMs": 19.20470000000205,
+                "sampleCount": 120,
+                "p50Ms": 1.8712000000014086,
+                "p95Ms": 5.884200000000419
+              },
+              {
+                "owner": "overlay",
+                "phase": "paint",
+                "count": 600,
+                "totalMs": 1552.5969999998342,
+                "maxMs": 10.255499999999302,
+                "sampleCount": 120,
+                "p50Ms": 1.858699999997043,
+                "p95Ms": 5.87670000000071
+              },
+              {
+                "owner": "overlay",
+                "phase": "projection",
+                "count": 600,
+                "totalMs": 14.968099999932747,
+                "maxMs": 8.919999999998254,
+                "sampleCount": 120,
+                "p50Ms": 0.001799999998183921,
+                "p95Ms": 0.006199999996169936
+              },
+              {
+                "owner": "overlay",
+                "phase": "placement",
+                "count": 600,
+                "totalMs": 1.3823000000920729,
+                "maxMs": 0.8689000000013039,
+                "sampleCount": 120,
+                "p50Ms": 0.0005999999993946403,
+                "p95Ms": 0.002099999997881241
+              }
+            ]
+          }
+        }
+      ],
+      "disabledMedianCpuMs": 3.039196166666667,
+      "enabledMedianCpuMs": 2.9745086666666674,
+      "instrumentationRatio": -0.021284410894393813
+    }
+  ]
+}

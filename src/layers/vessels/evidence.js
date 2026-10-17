@@ -1,5 +1,51 @@
 import * as Cesium from 'cesium';
 import { FOCUS_EVIDENCE_DEV } from './policy.js';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../../evidence/evidence.js';
+import { layerFeedState } from '../../data/feedState.js';
+
+/** Snapshot honest AIS provenance for a selected/query vessel record. */
+export function createVesselEvidence(record, { source, feed = {} } = {}) {
+  if (!record?.mmsi) return null;
+  const feedState = layerFeedState({
+    source,
+    count: feed.count,
+    lastUpdate: feed.lastUpdate,
+    loading: feed.loading,
+    error: feed.error,
+    stale: feed.stale,
+    partial: feed.partial,
+    status:
+      feed.firstConnectPhase === 'unavailable'
+        ? 'unavailable'
+        : feed.transportStatus,
+  });
+  return createEvidenceEnvelope({
+    entityRef: { layerKey: 'ais-live-vessels', id: record.mmsi },
+    sourceId: source,
+    sourceUrl: knownEvidenceSourceUrl(source),
+    sourceRecordId: record.reference || record.mmsi,
+    observedAt: record.observedAtMs,
+    receivedAt: record.receivedAtMs,
+    snapshotAt: feed.lastUpdate,
+    method: record.observedAtMs == null ? 'unknown' : 'observed',
+    displayMethod: record.observedAtMs == null ? 'unknown' : 'observed',
+    feedState,
+    coverage: {
+      area: 'Received AIS positions',
+      completeness: 'partial',
+      reason: 'AIS reports are sparse and do not establish geographic absence.',
+    },
+    limitations: [
+      'AIS reports are sparse; missing positions do not prove that an area is empty.',
+      ...(record.observedAtMs == null
+        ? ['The source did not provide a vessel position time.']
+        : []),
+    ],
+  });
+}
 
 export function createEvidence({
   vesselState,

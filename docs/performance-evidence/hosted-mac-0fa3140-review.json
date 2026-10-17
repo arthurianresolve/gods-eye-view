@@ -1,0 +1,48 @@
+{
+  "schema": "gev-soak-reassessment/v1",
+  "scope": "Historical measurements evaluated by a newer validator; not a new run or current-candidate acceptance.",
+  "sourceSha256": "c701fd6441fc2008977a018369c1abe9aa38f7c22ab3d4f4cd908487cadd7eb4",
+  "candidateCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+  "validatorCommit": "a6ef707058b9916027ee4b8c95c16ec76618cddf",
+  "applicationCommit": "0fa31401b07d1156b0d50de4c7268c8735501f39",
+  "originalStability": {
+    "status": "failed",
+    "failures": [
+      "Resource maps.providerCacheReuses grew from 4 to 46 at 300951 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 88 at 602065 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 130 at 902882 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 174 at 1216449 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 216 at 1517140 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 258 at 1817773 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 302 at 2131811 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 344 at 2432734 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 386 at 2733092 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 428 at 3033482 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 472 at 3347146 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 508 at 3603543 ms."
+    ],
+    "pending": [],
+    "heapGrowthRatio": 0.01583019864463658
+  },
+  "originalOperationStatus": "passed",
+  "stability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.01583019864463658
+  },
+  "outcome": "passed",
+  "renderer": {
+    "vendor": "Google Inc. (Apple)",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "hardwareRenderingValidated": true,
+  "durationMs": 3603543,
+  "checkpointCount": 13
+}

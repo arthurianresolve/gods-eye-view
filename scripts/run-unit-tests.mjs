@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -6,6 +6,114 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/data/focusAllocations.test.mjs',
   'src/overlays/worldOverlayAllocation.test.mjs',
+]);
+export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+  'scripts/accessibilityFocusDiagnostics.test.mjs',
+  'scripts/performance/cesiumDisabledInputInertia.test.mjs',
+  'scripts/performance/cesiumTerrainCollisionTransform.test.mjs',
+  'scripts/apply-cesium-patches.test.mjs',
+  'scripts/performance/motionBudget.test.mjs',
+  'scripts/performance/captureIntegrity.test.mjs',
+  'scripts/performance/captureDiagnosticsControl.test.mjs',
+  'scripts/performance/captureFailureReport.test.mjs',
+  'scripts/performance/hostedRendererBackend.test.mjs',
+  'scripts/performance/pairedReport.test.mjs',
+  'scripts/performance/performanceMatrix.test.mjs',
+  'scripts/performance/hostedSourceProvenance.test.mjs',
+  'scripts/performance/hostedNavigationDiagnostics.test.mjs',
+  'scripts/performance/hostedSoakSession.test.mjs',
+  'scripts/performance/candidatePerformanceEvidence.test.mjs',
+  'scripts/performance/webglFrameDelivery.test.mjs',
+  'scripts/performance/webglStartDelay.test.mjs',
+  'scripts/performance/captureComparisonContract.test.mjs',
+  'scripts/performance/buildProvenance.test.mjs',
+  'scripts/performance/buildSmokeContract.test.mjs',
+  'scripts/qa-performance-build-smoke.test.mjs',
+  'scripts/print-qa-evidence.test.mjs',
+  'scripts/performance/captureBuildProvenance.test.mjs',
+  'scripts/performance/commonSceneObserver.test.mjs',
+  'scripts/performance/startupDiagnostics.test.mjs',
+  'scripts/performance/profileRecoveryPageOwnership.test.mjs',
+  'scripts/performance/profileRecoveryBrowserVersion.test.mjs',
+  'scripts/performance/productionFlightFixture.test.mjs',
+  'scripts/performance/glCompletionProbe.test.mjs',
+  'scripts/performance/pairedRendererExperiment.test.mjs',
+  'scripts/performance/shaderProgramAttributionArtifact.test.mjs',
+  'scripts/performance/importFrameDiagnostics.test.mjs',
+  'scripts/performance/importPointState.test.mjs',
+  'scripts/performance/importPointRepresentationComparison.test.mjs',
+  'scripts/performance/importPointRepresentationBenefit.test.mjs',
+  'scripts/performance/profileRecoveryFixtureContract.test.mjs',
+  'scripts/performance/importWorkspaceLifecycle.test.mjs',
+  'scripts/performance/browserShutdownControls.test.mjs',
+  'scripts/performance/cesiumWorkerBlobContract.test.mjs',
+  'scripts/performance/prewarmWorkerAuditBoundary.test.mjs',
+  'scripts/performance/receiptOnlyWorkerAudit.test.mjs',
+  'scripts/performance/receiptOnlyPageClose.test.mjs',
+  'scripts/performance/missionRenderDemand.test.mjs',
+  'scripts/performance/trafficRenderDemand.test.mjs',
+  'scripts/fixtures/traffic-surface-readiness.test.mjs',
+  'scripts/performance/vesselRenderDemand.test.mjs',
+  'scripts/performance/nativePointerFixture.test.mjs',
+  'scripts/performance/cctvCalibrationDemand.test.mjs',
+  'scripts/performance/cctvViewshedRetention.test.mjs',
+  'scripts/qa-mission-render-demand.test.mjs',
+  'scripts/performance/cctvLifecycle.test.mjs',
+  'scripts/performance/terrainPickingLifecycle.test.mjs',
+  'scripts/performance/mapStreamingFixture.test.mjs',
+  'scripts/performance/mapStreamingFixtureDelivery.test.mjs',
+  'scripts/performance/mapStreamingCapture.test.mjs',
+  'scripts/performance/streamedTileNetworkEvidence.test.mjs',
+  'scripts/fixtures/terrainCurrentUpdateReadiness.test.mjs',
+  'scripts/performance/trackedFrameTimeRepro.test.mjs',
+  'scripts/performance/trackedFloorCoverage.test.mjs',
+  'scripts/performance/s59DocumentDecodeComparison.test.mjs',
+  'scripts/performance/s59CoordinateTransfer.test.mjs',
+  'scripts/performance/s58PostProcessStageCensus.test.mjs',
+  'scripts/performance/csvDecodeComparison.test.mjs',
+  'scripts/performance/militaryTrackedFrameTimeRepro.test.mjs',
+  'scripts/performance/windFrameProbe.test.mjs',
+  'scripts/performance/infrastructureCollectionExperiment.test.mjs',
+  'scripts/performance/infrastructureRuntimeComparison.test.mjs',
+  'scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs',
+  'scripts/fixtures/infrastructureFixtureCamera.test.mjs',
+  'scripts/fixtures/infrastructureNativePickOwnership.test.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs',
+  'scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs',
+  'scripts/performance/overlayAttribution.test.mjs',
+  'scripts/performance/aircraftBillboardMutationAudit.test.mjs',
+  'scripts/performance/aircraftFleetTickAudit.test.mjs',
+  'scripts/qa-candidate.test.mjs',
+  'scripts/qa-install-recovery.test.mjs',
+  'scripts/qa-mixed-use-soak.test.mjs',
+  'scripts/review-soak-evidence.test.mjs',
+  'scripts/stage-release.test.mjs',
+  'scripts/performance/depthPickAttribution.test.mjs',
+  'scripts/performance/infrastructureWorkloadFixture.test.mjs',
+  'scripts/performance/austinOperatingDocumentEvidence.test.mjs',
+  'scripts/performance/austinOperatingReadinessHistory.test.mjs',
+  'scripts/performance/austinOperatingPopulationEvidence.test.mjs',
+  'scripts/performance/austinOperatingWorkloadFixture.test.mjs',
+  'scripts/performance/austinOperatingComparisonContract.test.mjs',
+  'scripts/performance/austinSatelliteSampledEpoch.test.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
+  'scripts/run-unit-tests.test.mjs',
+  'scripts/capture-scene-performance.test.mjs',
+  'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
+  'scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs',
+  'scripts/performance/fixtureInterceptionFailureEvidence.test.mjs',
+  'scripts/performance/foregroundPageActivation.test.mjs',
+  'scripts/performance/foregroundSampleContinuity.test.mjs',
+  'scripts/performance/renderBoundaryObservation.test.mjs',
+  'scripts/performance/sceneMeasurementDeadline.test.mjs',
+  'scripts/performance/postMeasurementSourceDrain.test.mjs',
+  'scripts/performance/settleCompletedRenderDiagnostic.test.mjs',
+  'scripts/performance/terminalViewerObservation.test.mjs',
+  'scripts/performance/boundedCpuProfile.test.mjs',
+  'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
+  'scripts/performance/providerDocumentRetirement.test.mjs',
+  'scripts/performance/windowsForegroundWindow.test.mjs',
+  'scripts/captureNoUndefConfig.test.mjs',
 ]);
 
 /** Whether this runtime matches the one the allocation budgets were calibrated on. */
@@ -16,7 +124,9 @@ export function isCalibratedAllocationRuntime(version = process.versions.node) {
 /** Require the runtime on which allocation budgets were calibrated. */
 export function assertNode24AllocationRuntime(version = process.versions.node) {
   if (!isCalibratedAllocationRuntime(version)) {
-    throw new Error(`Allocation budgets require the calibrated Node 24 runtime; received ${version}`);
+    throw new Error(
+      `Allocation budgets require the calibrated Node 24 runtime; received ${version}`,
+    );
   }
   return version;
 }
@@ -31,7 +141,7 @@ export function assertNode24AllocationRuntime(version = process.versions.node) {
  * outside dependencies, build output and dot-directories, so adding a tree
  * without adding it here fails.
  */
-export const UNIT_TEST_ROOTS = Object.freeze(['src', 'server']);
+export const UNIT_TEST_ROOTS = Object.freeze(['src', 'server', 'scripts']);
 
 /** Discover repository unit tests in stable path order. */
 export function discoverUnitTestFiles(root = process.cwd()) {
@@ -45,16 +155,23 @@ export function discoverUnitTestFiles(root = process.cwd()) {
       }
     }
   };
-  for (const testRoot of UNIT_TEST_ROOTS) visit(path.join(root, testRoot));
+  for (const testRoot of UNIT_TEST_ROOTS) {
+    const directory = path.join(root, testRoot);
+    if (existsSync(directory)) visit(directory);
+  }
   return files.sort();
 }
 
 /** Partition ordinary parallel tests from the two GC-bracketed probes. */
 export function buildUnitTestPlan(files) {
   const known = new Set(files);
-  const missingAllocationTests = ALLOCATION_TEST_FILES.filter((file) => !known.has(file));
+  const missingAllocationTests = ALLOCATION_TEST_FILES.filter(
+    (file) => !known.has(file),
+  );
   if (missingAllocationTests.length) {
-    throw new Error(`Missing allocation microbenchmarks: ${missingAllocationTests.join(', ')}`);
+    throw new Error(
+      `Missing allocation microbenchmarks: ${missingAllocationTests.join(', ')}`,
+    );
   }
   const allocationSet = new Set(ALLOCATION_TEST_FILES);
   return {
@@ -96,9 +213,9 @@ export function runUnitTests() {
       assertNode24AllocationRuntime();
     }
     console.warn(
-      `[unit] SKIPPED ${ALLOCATION_TEST_FILES.length} allocation microbenchmarks: `
-      + `budgets are calibrated for Node 24, running ${process.versions.node}. `
-      + 'Run under Node 24 (or set GEV_REQUIRE_ALLOCATION_GATE=1 to fail instead).',
+      `[unit] SKIPPED ${ALLOCATION_TEST_FILES.length} allocation microbenchmarks: ` +
+        `budgets are calibrated for Node 24, running ${process.versions.node}. ` +
+        'Run under Node 24 (or set GEV_REQUIRE_ALLOCATION_GATE=1 to fail instead).',
     );
     return 0;
   }
@@ -109,5 +226,7 @@ export function runUnitTests() {
   return 0;
 }
 
-const invokedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : '';
+const invokedPath = process.argv[1]
+  ? pathToFileURL(path.resolve(process.argv[1])).href
+  : '';
 if (import.meta.url === invokedPath) process.exitCode = runUnitTests();

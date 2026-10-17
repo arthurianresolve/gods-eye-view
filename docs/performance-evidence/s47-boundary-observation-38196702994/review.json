@@ -1,0 +1,118 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38196702994",
+  "rawSha256": "8b75f8f476d7cddbbfe6c66fc3f03f1ec35998d53957ee461d61da35ba7b3d64",
+  "rawBytes": 40349,
+  "applicationCommit": "1b1fdb2648a18e13231617248cfb46b19d493f64",
+  "harnessCommit": "1b1fdb2648a18e13231617248cfb46b19d493f64",
+  "status": "failed",
+  "baselineStatus": "passed",
+  "candidateFailure": {
+    "phase": "configure-scenario-route",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Warmup boundary: host observation deadline elapsed.",
+    "operator": null
+  },
+  "completedSampleCount": 0,
+  "fixtureDelivery": {
+    "schema": "gev-fixture-delivery-observation/v1",
+    "status": "observed",
+    "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+    "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+    "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "fulfilledResponseCount": 1,
+    "observedFlightsCount": 2500
+  },
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "warmupBoundary": {
+    "schema": "gev-phased-monotonic-wall-clock/v1",
+    "phase": "warmup-held",
+    "epochMs": 1791460801000,
+    "elapsedMs": 1000,
+    "warmupMs": 1000,
+    "measurementMs": 1000,
+    "warmupNativeElapsedMs": 1621.2999999999884,
+    "measurementNativeElapsedMs": null,
+    "startCount": 1,
+    "measurementStartCount": 0
+  },
+  "warmupBoundaryObservation": {
+    "schema": "gev-render-boundary-observation/v1",
+    "invocationId": "382eafca-620d-4c66-9946-43c23286d62f",
+    "label": "Warmup boundary",
+    "status": "host-observation-deadline",
+    "hostTimeoutMs": 6000,
+    "hostElapsedMs": 6002.9131750000015,
+    "hostDispatchElapsedMs": 0.3171730000030948,
+    "hostProgressBindingSetupElapsedMs": 4075.340560000004,
+    "pageEntryObserved": true,
+    "pageEntryHostReceiptElapsedMs": 4088.9727950000015,
+    "progressEvents": [
+      {
+        "stage": "page-entry",
+        "hostReceiptElapsedMs": 4088.9727950000015,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0
+        }
+      },
+      {
+        "stage": "listener-registered",
+        "hostReceiptElapsedMs": 4089.394644,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.10000000000582077,
+          "listenerRegistered": true
+        }
+      },
+      {
+        "stage": "render-request-started",
+        "hostReceiptElapsedMs": 4089.6675039999973,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.20000000001164153,
+          "renderRequestAvailable": true,
+          "renderRequestStarted": true
+        }
+      },
+      {
+        "stage": "render-request-completed",
+        "hostReceiptElapsedMs": 4089.9089959999983,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.20000000001164153,
+          "renderRequestCompleted": true
+        }
+      }
+    ],
+    "ignoredProgressEvents": {
+      "wrongInvocation": 0,
+      "malformed": 0,
+      "overflow": 0
+    },
+    "hostEvaluationOverheadResidualMs": null,
+    "page": null,
+    "pageError": null,
+    "hostError": {
+      "name": "TimeoutError",
+      "message": "Warmup boundary: host observation deadline elapsed."
+    },
+    "pendingPageResultAtDeadline": true,
+    "latePageResultObserved": false,
+    "cleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": false,
+      "progressBindingCleanupElapsedMs": 254.35828900000342,
+      "progressBindingError": {
+        "name": "TimeoutError",
+        "message": "Progress binding cleanup exceeded its bounded cleanup window."
+      }
+    }
+  },
+  "pageErrorCount": 0,
+  "interceptionErrorCount": 0,
+  "interpretation": "Per-boundary diagnostic binding setup consumed 4075 ms of the 6000 ms host window. Page entry and request were acknowledged, but no completed render or page timeout result arrived before the host deadline. This perturbed boundary does not identify the original render-stall cause.",
+  "nextStep": "Install and own the bounded diagnostic binding during document preparation before warmup; preserve render and host deadlines.",
+  "comparisonEligible": false
+}

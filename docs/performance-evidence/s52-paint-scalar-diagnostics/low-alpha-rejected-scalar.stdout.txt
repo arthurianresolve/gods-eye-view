@@ -1,0 +1,34 @@
+TAP version 13
+# Subtest: root cached-paint low-alpha output remains absent on consecutive stable frames
+not ok 1 - root cached-paint low-alpha output remains absent on consecutive stable frames
+  ---
+  duration_ms: 21.4048
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\qa-artifacts\\s52-paint-low-alpha-review-01\\rejected-scalar\\src\\overlays\\worldOverlay.test.mjs:3412:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    alpha below paint threshold on frame 1
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-low-alpha-review-01/rejected-scalar/src/overlays/worldOverlay.test.mjs:3428:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.start (node:internal/test_runner/test:1177:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4606.8171

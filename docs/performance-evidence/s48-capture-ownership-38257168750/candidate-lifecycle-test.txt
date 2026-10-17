@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: capture CLI closes the browser after page creation fails inside its lifecycle
+ok 1 - capture CLI closes the browser after page creation fails inside its lifecycle
+  ---
+  duration_ms: 2826.6925
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2934.2367

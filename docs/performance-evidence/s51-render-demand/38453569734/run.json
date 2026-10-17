@@ -1,0 +1,265 @@
+{
+  "conclusion": "failure",
+  "headSha": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd",
+  "jobs": [
+    {
+      "completedAt": "2026-10-13T19:21:02Z",
+      "conclusion": "failure",
+      "databaseId": 115490396442,
+      "name": "Isolated rendered mixed-use smoke",
+      "startedAt": "2026-10-13T19:16:49Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-13T19:16:51Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-13T19:16:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:16:57Z",
+          "conclusion": "success",
+          "name": "Check out immutable diagnostic source",
+          "number": 2,
+          "startedAt": "2026-10-13T19:16:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:17:02Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-13T19:16:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:17:15Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies and fixture browser",
+          "number": 4,
+          "startedAt": "2026-10-13T19:17:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:17:16Z",
+          "conclusion": "success",
+          "name": "Start fixture application",
+          "number": 5,
+          "startedAt": "2026-10-13T19:17:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:19:34Z",
+          "conclusion": "success",
+          "name": "Run the existing bounded mixed-use smoke",
+          "number": 6,
+          "startedAt": "2026-10-13T19:17:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:20:28Z",
+          "conclusion": "success",
+          "name": "Run durable workspace library and cross-page conflict journey",
+          "number": 7,
+          "startedAt": "2026-10-13T19:19:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:20:59Z",
+          "conclusion": "failure",
+          "name": "Run opt-in full-application empty-layer render-demand diagnostic",
+          "number": 8,
+          "startedAt": "2026-10-13T19:20:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:21:00Z",
+          "conclusion": "success",
+          "name": "Preserve the report including failure",
+          "number": 9,
+          "startedAt": "2026-10-13T19:20:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:21:00Z",
+          "conclusion": "skipped",
+          "name": "Post Use supported Node.js",
+          "number": 17,
+          "startedAt": "2026-10-13T19:21:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:21:00Z",
+          "conclusion": "success",
+          "name": "Post Check out immutable diagnostic source",
+          "number": 18,
+          "startedAt": "2026-10-13T19:21:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-13T19:21:01Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-10-13T19:21:00Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490396442"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490397525,
+      "name": "Native WebGL probe (${{ matrix.os }})",
+      "startedAt": "2026-10-13T19:16:47Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490397525"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490397686,
+      "name": "Windows onboarding",
+      "startedAt": "2026-10-13T19:16:47Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490397686"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490397884,
+      "name": "Isolated import and workspace lifecycle",
+      "startedAt": "2026-10-13T19:16:47Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490397884"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490398005,
+      "name": "60-minute rendered application soak",
+      "startedAt": "2026-10-13T19:16:47Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490398005"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490398486,
+      "name": "Free hosted Mac accelerated retention diagnostic",
+      "startedAt": "2026-10-13T19:16:47Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490398486"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490436014,
+      "name": "Node ${{ matrix.node }}",
+      "startedAt": "2026-10-13T19:16:52Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490436014"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490441899,
+      "name": "Street Level browser gate",
+      "startedAt": "2026-10-13T19:16:53Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490441899"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490444948,
+      "name": "Isolated mission render-demand correctness",
+      "startedAt": "2026-10-13T19:16:53Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490444948"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490450285,
+      "name": "Install and update recovery (${{ matrix.os }})",
+      "startedAt": "2026-10-13T19:16:54Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490450285"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490453702,
+      "name": "Free hosted Mac rendering diagnostic",
+      "startedAt": "2026-10-13T19:16:54Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490453702"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490453869,
+      "name": "Aircraft tracking regression",
+      "startedAt": "2026-10-13T19:16:54Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490453869"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490454965,
+      "name": "Isolated CCTV lifecycle",
+      "startedAt": "2026-10-13T19:16:54Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490454965"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490462118,
+      "name": "Baseline-compatible performance build smoke",
+      "startedAt": "2026-10-13T19:16:55Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490462118"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490469526,
+      "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+      "startedAt": "2026-10-13T19:16:56Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490469526"
+    },
+    {
+      "completedAt": "2026-10-13T19:16:46Z",
+      "conclusion": "skipped",
+      "databaseId": 115490470802,
+      "name": "Isolated terrain and picking lifecycle",
+      "startedAt": "2026-10-13T19:16:57Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734/job/115490470802"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38453569734"
+}

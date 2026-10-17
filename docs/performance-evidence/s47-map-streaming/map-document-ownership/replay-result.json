@@ -1,0 +1,24 @@
+{
+  "scope": "CPU validator replay only; original hosted run remains failed",
+  "reportSha256": "eedb5df55316c6460a3ff6837d7a125c626695fc4f9dad5c1dd8eb1e076dc0c9",
+  "reportBytes": 392710,
+  "validatorStatus": "passed",
+  "comparisonEligible": false,
+  "captureCount": 4,
+  "rejectedMutations": [
+    "missing cleanup",
+    "duplicate cleanup",
+    "wrong cleanup owner",
+    "unconfirmed main retirement",
+    "missing sample owner",
+    "wrong sample owner",
+    "wrong sample role",
+    "duplicate sample key",
+    "missing worker owner",
+    "duplicate diagnostic owner",
+    "wrong delivery owner",
+    "missing release",
+    "hardware qualification claim",
+    "comparison eligibility claim"
+  ]
+}

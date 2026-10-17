@@ -141,7 +141,7 @@ export function createSceneSharing(director) {
     if (report.bundledBytes)
       dialog.text(
         t(
-          '{bytes} bundled bytes verified. Files stay in memory for this session. Reimport the bundle after reloading the app.',
+          '{bytes} bundled bytes verified. Applied bundle files are saved in browser storage when available; a save warning appears if they cannot be persisted.',
           { bytes: report.bundledBytes },
         ),
       );

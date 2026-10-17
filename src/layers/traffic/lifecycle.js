@@ -12,8 +12,35 @@ export function createLifecycle({
   parts,
   source,
 }) {
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const {
+    holdContinuousRender,
+    releaseContinuousRender,
+    governorRequestRender = () => {},
+  } = services.render;
   const { resetFlowTileCache } = source;
+  let renderHeld = false;
+
+  function hasAnimatedVisualWork() {
+    return Boolean(
+      layerState._enabled &&
+      (layerState._dots.length > 0 ||
+        layerState._populationPending ||
+        layerState._heightPending ||
+        layerState._heatJamPrim),
+    );
+  }
+
+  function syncRenderDemand(reason = 'traffic-animation-boundary') {
+    const wanted = hasAnimatedVisualWork();
+    if (wanted === renderHeld) return false;
+    renderHeld = wanted;
+    if (wanted) holdContinuousRender('traffic');
+    else releaseContinuousRender('traffic');
+    // A newly animated population needs its first frame; the last animation
+    // frame must also publish the settled or cleared state before sleeping.
+    governorRequestRender(reason);
+    return true;
+  }
 
   const methods = {
     /**
@@ -53,16 +80,18 @@ export function createLifecycle({
       // Preset-aware dot styling: adopt the active post-FX style (persisted
       // style restore may run before layer registration, so read the dataset)
       // and follow StyleManager's gev:style-change event thereafter. Guarded
-      // for non-browser contexts; bound once per page (init survives layer
-      // destroy/re-register).
+      // for non-browser contexts. The layer owns this subscription for its
+      // lifetime, including while disabled, and releases it on destroy.
       if (typeof window !== 'undefined') {
         layerState._stylePreset =
           document?.documentElement?.dataset?.gevStyle || 'normal';
-        if (!layerState._styleListenerBound) {
-          window.addEventListener('gev:style-change', (e) =>
-            parts.style.setStylePreset(e?.detail?.style),
-          );
-          layerState._styleListenerBound = true;
+        if (!layerState._styleEventListener) {
+          const eventTarget = window;
+          const listener = (event) =>
+            parts.style.setStylePreset(event?.detail?.style);
+          eventTarget.addEventListener('gev:style-change', listener);
+          layerState._styleEventTarget = eventTarget;
+          layerState._styleEventListener = listener;
         }
       }
       parts.style.refreshBucketColors();
@@ -81,9 +110,9 @@ export function createLifecycle({
       layerState._enabled = true;
       layerState._surfaceFrameRemover = observeTrafficSurface(viewer.scene);
       if (layerState._roadMode !== 'tomtom') source.prefetch?.();
-      holdContinuousRender('traffic'); // per-frame animator (perf wave 2)
       layerState._lastAnimTime = 0;
       layerState._pointCollection.show = true;
+      governorRequestRender('traffic-enabled');
 
       layerState._preRenderRemover = viewer.scene.preRender.addEventListener(
         parts.animation.animate,
@@ -142,7 +171,7 @@ export function createLifecycle({
     disable(viewer) {
       layerState._enabled = false;
       services.credits?.hideOsmCredit?.(layerState._viewer, 'traffic');
-      releaseContinuousRender('traffic');
+      syncRenderDemand('traffic-disabled');
       clearTimeout(layerState._fetchTimeout);
       clearInterval(layerState._enableKickTimer);
       layerState._enableKickTimer = null;
@@ -181,6 +210,7 @@ export function createLifecycle({
       layerState._arrivalRemover = null;
       releaseCameraSensitivity(viewer.camera, 'traffic');
       if (layerState._pointCollection) layerState._pointCollection.show = false;
+      governorRequestRender('traffic-disabled');
     },
 
     /**
@@ -191,6 +221,14 @@ export function createLifecycle({
      */
     destroy(viewer) {
       this.disable(viewer);
+      if (layerState._styleEventListener) {
+        layerState._styleEventTarget?.removeEventListener(
+          'gev:style-change',
+          layerState._styleEventListener,
+        );
+        layerState._styleEventTarget = null;
+        layerState._styleEventListener = null;
+      }
       if (layerState._pointCollection) {
         viewer.scene.primitives.remove(layerState._pointCollection);
         layerState._pointCollection = null;
@@ -203,5 +241,5 @@ export function createLifecycle({
     },
   };
 
-  return { methods };
+  return { methods, syncRenderDemand };
 }

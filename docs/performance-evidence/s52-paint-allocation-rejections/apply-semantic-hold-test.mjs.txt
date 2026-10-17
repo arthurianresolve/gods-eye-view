@@ -1,0 +1,90 @@
+import assert from 'node:assert/strict';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const path = process.argv[2];
+if (!path) throw new Error('Usage: apply-semantic-hold-test.mjs TEST_FILE');
+const source = readFileSync(path, 'utf8');
+const start = source.indexOf(
+  "test('promoting an ambient entry to selected paints it once with no fading duplicate', () => {",
+);
+const end = source.indexOf(
+  "test('destroyed host font events cannot wake its replacement viewer', async (t) => {",
+  start,
+);
+assert.ok(start >= 0 && end > start, 'Pinned promotion test block is present');
+const before = source.slice(start, end);
+assert.equal(
+  (before.match(/env\.advanceTime\(100\); assert\.equal\(paint\(\), 1\);/g) || []).length,
+  1,
+  'The exact unchanged-hold assertion is present once',
+);
+const replacement = `test('promoting and demoting a selected entry preserves painted, hit, and accessible output', () => {
+  const env = installMockEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    const entry = {
+      id: 'site', position: position(), title: 'One site', variant: 'card',
+      collisionGroup: 'ambient-card', horizonCull: false, edgeFade: false,
+      interactive: true, accessibilityLabel: 'Open One site',
+      activate() { return true; },
+    };
+    const paint = () => {
+      env.ctx.calls.length = 0;
+      env.postRender.raise();
+      return {
+        titleCount: env.ctx.calls.filter(([op, text]) => op === 'fillText' && text === 'One site').length,
+        cleared: env.ctx.calls.some(([op]) => op === 'clearRect'),
+      };
+    };
+    const assertCurrentOutput = (label) => {
+      const rect = getOverlayPaintRect('military-installations', 'site');
+      assert.ok(rect && rect.w > 0 && rect.h > 0, label + ': current painted rect exists');
+      const hit = hitTestWorldOverlay(rect.x + rect.w / 2, rect.y + rect.h / 2, {
+        sourceId: 'military-installations',
+      });
+      assert.equal(hit?.entryId, 'site', label + ': current hit identity is retained');
+      const actions = env.document.getElementById('world-overlay-action-list');
+      assert.equal(actions?.children?.[0]?.textContent, 'Open One site',
+        label + ': accessible action remains present');
+    };
+
+    setOverlayEntries('military-installations', [entry]);
+    paint();
+    env.advanceTime(200);
+    assert.equal(paint().titleCount, 1, 'ambient baseline draws one title');
+    assertCurrentOutput('ambient baseline');
+
+    setOverlayEntries('military-installations', [{
+      ...entry, variant: 'selected', selected: true,
+    }]);
+    assert.equal(paint().titleCount, 1, 'promotion freshly paints exactly one title');
+    assertCurrentOutput('selected promotion');
+
+    env.advanceTime(100);
+    const selectedHold = paint();
+    assert.ok(
+      selectedHold.titleCount === 1 ||
+        (selectedHold.titleCount === 0 && !selectedHold.cleared),
+      'selected hold either repaints once or retains the canvas without clearing it',
+    );
+    assertCurrentOutput('selected hold');
+
+    setOverlayEntries('military-installations', [entry]);
+    paint();
+    env.advanceTime(200);
+    assert.equal(paint().titleCount, 1, 'demotion freshly paints exactly one title');
+    assertCurrentOutput('ambient demotion');
+
+    env.advanceTime(100);
+    const ambientHold = paint();
+    assert.ok(
+      ambientHold.titleCount === 1 ||
+        (ambientHold.titleCount === 0 && !ambientHold.cleared),
+      'ambient hold either repaints once or retains the canvas without clearing it',
+    );
+    assertCurrentOutput('ambient hold');
+  } finally { env.cleanup(); }
+});
+
+`;
+writeFileSync(path, source.slice(0, start) + replacement + source.slice(end));

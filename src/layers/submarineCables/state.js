@@ -49,6 +49,10 @@ export function createState({ sweepClock, overlayHost }) {
 
   state._referenceRecords = [];
 
+  /** Active source identities, independent of per-enable Cesium entities. */
+
+  state._featureRecords = [];
+
   state._surfaceRecords = [];
 
   state._clickHandler = null;

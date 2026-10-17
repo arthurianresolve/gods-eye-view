@@ -4,4 +4,8 @@ const meshFloorSampler = createMeshFloorSampler({
   groundFloor,
   eventTarget: typeof window === 'undefined' ? null : window,
 });
-export const { sampleMeshFloorCells, cachedGroundFloor } = meshFloorSampler;
+export const {
+  sampleMeshFloorCells,
+  cachedGroundFloor,
+  reconcileMeshFloorSource,
+} = meshFloorSampler;

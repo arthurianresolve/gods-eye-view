@@ -1,0 +1,40 @@
+{
+  "reviewedAt": "2026-10-13T03:21:54.379Z",
+  "sourceCommit": "8c49b078bb588e05e94f92c8aadb63c40b08ff9e",
+  "integrationCommit": "7e5ec0fe6d385ea814bfca4ac1904232f152932f",
+  "focusedChecks": {
+    "passed": 75,
+    "failed": 0,
+    "groups": [
+      "recovery page/process ownership",
+      "browser shutdown controls",
+      "capture CLI validation"
+    ]
+  },
+  "captureNoUndef": {
+    "passed": true,
+    "files": 17
+  },
+  "scope": "Bounded observation and classification changes; no Chrome shutdown root-cause claim",
+  "ownedConnectionCommand": "SystemInfo.getProcessInfo",
+  "commandTimeoutMs": 800,
+  "observationTimeoutMs": 1000,
+  "closeDeadlineMs": 5000,
+  "retainedFields": [
+    "id",
+    "role"
+  ],
+  "rawResponseRowCap": 512,
+  "retainedRowCap": 64,
+  "processPresenceScope": "owned parent PID only; signal 0; PID reuse remains possible",
+  "nativePuppeteerControls": [
+    "timeout",
+    "unsupported method",
+    "closed connection",
+    "unknown protocol failure"
+  ],
+  "newCdpSessionCreated": false,
+  "ownedConnectionDisposedByProbe": false,
+  "hostedValidation": "pending",
+  "originalFailure38338398935": "remains failed"
+}

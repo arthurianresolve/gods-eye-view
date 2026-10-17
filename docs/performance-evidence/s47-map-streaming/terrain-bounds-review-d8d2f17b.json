@@ -1,0 +1,269 @@
+{
+  "scope": "independent encoded quantized terrain vertex bounding-sphere audit",
+  "commit": "d8d2f17b896f6f66a1adbaa3e6a54819de04722e",
+  "fixtureManifestSha256": "b7fcc4f1f94dedfef140324f8e1caa00c9f2fd7e9e193e6c6759566232447001",
+  "tileCount": 20,
+  "failedTiles": 1,
+  "rows": [
+    {
+      "path": "terrain/0/0/0.terrain",
+      "level": 0,
+      "vertices": 289,
+      "outside": 255,
+      "maxExcessMeters": 21282.701392601244,
+      "sphereRadiusMeters": 6357632.314245179,
+      "horizonPoint": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "path": "terrain/1/0/1.terrain",
+      "level": 1,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 5518224.452115747,
+      "horizonPoint": [
+        -1.0242409462451108,
+        -1.0242409462451108,
+        1.0242414215788365
+      ]
+    },
+    {
+      "path": "terrain/10/467/683.terrain",
+      "level": 10,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 12920.41641809441,
+      "horizonPoint": [
+        -0.11781285791509652,
+        -0.857570934969,
+        0.5010388555149575
+      ]
+    },
+    {
+      "path": "terrain/10/467/684.terrain",
+      "level": 10,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 12910.76897389505,
+      "horizonPoint": [
+        -0.11760201918321458,
+        -0.8560467476877459,
+        0.5036877897965902
+      ]
+    },
+    {
+      "path": "terrain/10/468/683.terrain",
+      "level": 10,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 12920.41641809414,
+      "horizonPoint": [
+        -0.11517989609437987,
+        -0.8579285340454739,
+        0.5010388555149574
+      ]
+    },
+    {
+      "path": "terrain/10/468/684.terrain",
+      "level": 10,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 12910.768973894556,
+      "horizonPoint": [
+        -0.1149751513167346,
+        -0.8564035168788313,
+        0.5036877897965905
+      ]
+    },
+    {
+      "path": "terrain/2/1/2.terrain",
+      "level": 2,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 3434459.7837300287,
+      "horizonPoint": [
+        -0.3913637495525039,
+        -1.0382280824043297,
+        0.45657907325874464
+      ]
+    },
+    {
+      "path": "terrain/3/3/5.terrain",
+      "level": 3,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 1688904.6033330355,
+      "horizonPoint": [
+        -0.15800124825753248,
+        -0.8534967485269545,
+        0.5764735497270727
+      ]
+    },
+    {
+      "path": "terrain/4/7/10.terrain",
+      "level": 4,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 849147.8602690808,
+      "horizonPoint": [
+        -0.08509885972197159,
+        -0.8886714194492513,
+        0.47535049244256733
+      ]
+    },
+    {
+      "path": "terrain/5/14/21.terrain",
+      "level": 5,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 416479.20103807375,
+      "horizonPoint": [
+        -0.12571747798182464,
+        -0.8522002189716821,
+        0.5145006085200661
+      ]
+    },
+    {
+      "path": "terrain/6/29/42.terrain",
+      "level": 6,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 208289.82962020676,
+      "horizonPoint": [
+        -0.10656119766523815,
+        -0.86532762543645,
+        0.49222891367863186
+      ]
+    },
+    {
+      "path": "terrain/7/58/85.terrain",
+      "level": 7,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 103551.37806508828,
+      "horizonPoint": [
+        -0.11639348569463122,
+        -0.85731199402255,
+        0.5025437037692163
+      ]
+    },
+    {
+      "path": "terrain/8/116/170.terrain",
+      "level": 8,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 51776.32156492823,
+      "horizonPoint": [
+        -0.12210677292113974,
+        -0.8594026408396972,
+        0.4971213318185747
+      ]
+    },
+    {
+      "path": "terrain/8/116/171.terrain",
+      "level": 8,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 51622.91837698134,
+      "horizonPoint": [
+        -0.12124117746385203,
+        -0.8533078532763119,
+        0.5077181142575343
+      ]
+    },
+    {
+      "path": "terrain/8/117/170.terrain",
+      "level": 8,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 51776.32156492802,
+      "horizonPoint": [
+        -0.11153006290665204,
+        -0.8608391302348531,
+        0.49712133181857476
+      ]
+    },
+    {
+      "path": "terrain/8/117/171.terrain",
+      "level": 8,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 51622.9183769816,
+      "horizonPoint": [
+        -0.11073874549379295,
+        -0.8547342545038837,
+        0.5077181142575345
+      ]
+    },
+    {
+      "path": "terrain/9/233/341.terrain",
+      "level": 9,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 25851.824168503343,
+      "horizonPoint": [
+        -0.11924047773657817,
+        -0.8581823397631605,
+        0.4997323004733557
+      ]
+    },
+    {
+      "path": "terrain/9/233/342.terrain",
+      "level": 9,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 25813.306394930987,
+      "horizonPoint": [
+        -0.11881697800159628,
+        -0.8551340441246426,
+        0.505030334928963
+      ]
+    },
+    {
+      "path": "terrain/9/234/341.terrain",
+      "level": 9,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 25851.82416850348,
+      "horizonPoint": [
+        -0.11396705973796441,
+        -0.8588985557718114,
+        0.4997323004733556
+      ]
+    },
+    {
+      "path": "terrain/9/234/342.terrain",
+      "level": 9,
+      "vertices": 289,
+      "outside": 0,
+      "maxExcessMeters": 0,
+      "sphereRadiusMeters": 25813.30639493124,
+      "horizonPoint": [
+        -0.11356219931106291,
+        -0.855847728611832,
+        0.505030334928963
+      ]
+    }
+  ]
+}

@@ -1,4 +1,12 @@
 import {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../freshFrame.js';
+export {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../freshFrame.js';
+import {
   shouldSendViewportImage,
   hasStructuredViewIdentity,
 } from './realtimeProtocol.js';
@@ -27,23 +35,23 @@ export async function captureViewportImage() {
   // capture. The caller labels this image "Current"; a stale preserved
   // frame would feed the model old entities as current context. (perf
   // wave 2 fix)
-  const fresh = await renderFreshCesiumFrame(viewer);
-  if (!fresh) return null;
-
-  // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
-  // downscaled too (the old width-only clamp let them through — M13).
-  const { width, height } = computeDownscale(
-    source.width,
-    source.height,
-    VIEWPORT_MAX_PIXELS,
-  );
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+  const freshCanvas = await captureFreshCesiumFrame(viewer);
+  if (!freshCanvas) return null;
+  let canvas = null;
   try {
-    ctx.drawImage(source, 0, 0, width, height);
+    // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
+    // downscaled too (the old width-only clamp let them through — M13).
+    const { width, height } = computeDownscale(
+      freshCanvas.width,
+      freshCanvas.height,
+      VIEWPORT_MAX_PIXELS,
+    );
+    canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(freshCanvas, 0, 0, width, height);
     if (isNearlyBlackFrame(ctx, width, height)) {
       console.warn('[GEV Voice] Skipped black Cesium viewport capture');
       return null;
@@ -62,6 +70,9 @@ export async function captureViewportImage() {
     return dataUrl;
   } catch {
     return null;
+  } finally {
+    freshCanvas.width = freshCanvas.height = 0;
+    if (canvas) canvas.width = canvas.height = 0;
   }
 }
 
@@ -132,25 +143,29 @@ export async function capturePointerCrop(screenPx) {
   const viewer = window.__godsEyeView?.viewer;
   const source = viewer?.scene?.canvas;
   if (!source?.width || !source?.height || !screenPx) return null;
-  const fresh = await renderFreshPointerFrame(viewer);
-  if (!fresh) return null;
-  const rect = pointerCropRect({
-    x: screenPx.x,
-    y: screenPx.y,
-    cssWidth: source.clientWidth || source.width,
-    cssHeight: source.clientHeight || source.height,
-    pixelWidth: source.width,
-    pixelHeight: source.height,
-  });
-  if (!rect) return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = rect.output;
-  canvas.height = rect.output;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+  const freshCanvas = await captureFreshCesiumFrame(viewer);
+  if (!freshCanvas) return null;
+  let canvas = null;
   try {
+    const rect = pointerCropRect({
+      x: screenPx.x,
+      y: screenPx.y,
+      cssWidth: source.clientWidth || source.width,
+      cssHeight: source.clientHeight || source.height,
+      pixelWidth: freshCanvas.width,
+      pixelHeight: freshCanvas.height,
+    });
+    if (!rect) {
+      freshCanvas.width = freshCanvas.height = 0;
+      return null;
+    }
+    canvas = document.createElement('canvas');
+    canvas.width = rect.output;
+    canvas.height = rect.output;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
     ctx.drawImage(
-      source,
+      freshCanvas,
       rect.sx,
       rect.sy,
       rect.sw,
@@ -171,14 +186,17 @@ export async function capturePointerCrop(screenPx) {
     return {
       dataUrl,
       rect: {
-        x: rect.sx / source.width,
-        y: rect.sy / source.height,
-        w: rect.sw / source.width,
-        h: rect.sh / source.height,
+        x: rect.sx / freshCanvas.width,
+        y: rect.sy / freshCanvas.height,
+        w: rect.sw / freshCanvas.width,
+        h: rect.sh / freshCanvas.height,
       },
     };
   } catch {
     return null;
+  } finally {
+    freshCanvas.width = freshCanvas.height = 0;
+    if (canvas) canvas.width = canvas.height = 0;
   }
 }
 
@@ -221,44 +239,6 @@ export function estimateDataUrlBytes(dataUrl) {
   return Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
 }
 
-/**
- * Ensure the canvas holds a CURRENT frame before capture.
- * @returns {Promise<boolean>} true only when a fresh frame was presented —
- *   false while hidden (render loop suspended; a capture would be stale) or
- *   when the bounded wait timed out. Callers must not label a non-fresh
- *   canvas as current. (perf wave 2)
- */
-export async function renderFreshCesiumFrame(viewer) {
-  const scene = viewer?.scene;
-  if (!scene) return false;
-  // While the document is hidden the render loop is suspended — don't
-  // secretly restart rendering for an optional screenshot, and don't pass
-  // the stale preserved frame off as current.
-  if (typeof document !== 'undefined' && document.hidden) return false;
-  try {
-    // Under the idle render governor a bare scene.render() doesn't
-    // necessarily draw — request a frame and await its postRender (bounded),
-    // which also covers the just-became-visible race.
-    const rendered = new Promise((resolve) => {
-      const remove = scene.postRender.addEventListener(() => {
-        remove();
-        resolve(true);
-      });
-      setTimeout(() => {
-        remove();
-        resolve(false);
-      }, 400);
-    });
-    scene.requestRender?.();
-    const fresh = await rendered;
-    // A tab switch during the bounded wait invalidates freshness.
-    if (typeof document !== 'undefined' && document.hidden) return false;
-    return fresh;
-  } catch {
-    return false;
-  }
-}
-
 export function isNearlyBlackFrame(ctx, width, height) {
   const sampleWidth = Math.min(48, width);
   const sampleHeight = Math.min(32, height);
@@ -267,22 +247,28 @@ export function isNearlyBlackFrame(ctx, width, height) {
   const sampleCanvas = document.createElement('canvas');
   sampleCanvas.width = sampleWidth;
   sampleCanvas.height = sampleHeight;
-  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-  if (!sampleCtx) return false;
-  sampleCtx.drawImage(ctx.canvas, 0, 0, sampleWidth, sampleHeight);
-  const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-  let visiblePixels = 0;
-  let luminanceTotal = 0;
-  for (let index = 0; index < pixels.length; index += 4) {
-    const alpha = pixels[index + 3];
-    if (alpha < 8) continue;
-    visiblePixels++;
-    luminanceTotal +=
-      pixels[index] * 0.2126 +
-      pixels[index + 1] * 0.7152 +
-      pixels[index + 2] * 0.0722;
+  try {
+    const sampleCtx = sampleCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+    if (!sampleCtx) return false;
+    sampleCtx.drawImage(ctx.canvas, 0, 0, sampleWidth, sampleHeight);
+    const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    let visiblePixels = 0;
+    let luminanceTotal = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3];
+      if (alpha < 8) continue;
+      visiblePixels++;
+      luminanceTotal +=
+        pixels[index] * 0.2126 +
+        pixels[index + 1] * 0.7152 +
+        pixels[index + 2] * 0.0722;
+    }
+    return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
+  } finally {
+    sampleCanvas.width = sampleCanvas.height = 0;
   }
-  return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
 }
 
 // True when an error payload is the benign result of deleting a viewport

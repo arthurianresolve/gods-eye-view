@@ -12,9 +12,16 @@
 # Shell launchers must stay LF to run at all.
 *.sh text eol=lf
 
+# Renderer experiment reports are archived evidence whose byte hashes are recorded.
+docs/performance-evidence/renderer-query-*.json -text whitespace=cr-at-eol
+docs/performance-evidence/s59-42d4be6-reproduction.mjs -text whitespace=cr-at-eol
+
 # Assets Git must never rewrite.
 *.gif binary
 *.png binary
 *.glb binary
 *.wav binary
 *.pbf binary
+scripts/performance/fixtures/austin-map-streaming-v1/** -text whitespace=cr-at-eol
+scripts/performance/fixtures/austin-map-streaming-v3/imagery-png-templates.* -text whitespace=cr-at-eol
+src/data/fixtures/austin-operating-v1/tle/*.tle -text whitespace=cr-at-eol,-blank-at-eol

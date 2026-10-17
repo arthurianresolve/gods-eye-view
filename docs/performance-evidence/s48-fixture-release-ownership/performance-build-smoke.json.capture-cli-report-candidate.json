@@ -1,0 +1,1691 @@
+{
+  "schema": "gev-performance-capture-failure/v1",
+  "captureSchema": "gev-performance-capture/v1",
+  "status": "failed",
+  "capturedAt": "2026-10-12T14:49:05.119Z",
+  "comparisonEligible": false,
+  "comparisonReadiness": {
+    "status": "not-ready",
+    "reason": "Failed or incomplete captures are never comparison evidence."
+  },
+  "source": {
+    "harnessCommit": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+    "harnessDirtyWorktree": false,
+    "appCommit": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "64968aca9a571bccce0546bb0bf70beba806d69a3af59eb12cd2e35789a81d6d",
+      "appCommit": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+      "harnessCommit": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "64968aca9a571bccce0546bb0bf70beba806d69a3af59eb12cd2e35789a81d6d",
+        "assetCount": 434,
+        "totalAssetBytes": 43980091
+      },
+      "after": null
+    }
+  },
+  "fixture": {
+    "id": "opensky-dense-investigation-v1",
+    "count": 2500,
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "sha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+    "byteLength": 348905
+  },
+  "workload": {
+    "rendererProbeCleanup": [
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 18.907877999999982,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 11.194797000000108,
+          "pageExecutionElapsedMs": 0.1999999999825377,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "already-disabled",
+            "before": false,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 7.208487999998397,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "startup-document-retirement",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      },
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 3.50738299999648,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 2.4392529999968247,
+          "pageExecutionElapsedMs": 0.10000000000582077,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "already-disabled",
+            "before": false,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 0.9725299999990966,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "provider-document-retirement",
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document"
+      },
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 134.87167000000773,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 133.7259170000034,
+          "pageExecutionElapsedMs": 0.10000000000582077,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "confirmed",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 1.0326219999988098,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "capture-final-document-retirement",
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1"
+      }
+    ],
+    "rendererProbeCleanupOmittedCount": 0,
+    "rendererLoopRetirements": [
+      {
+        "phase": "startup-final-details",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0.10000000000582077
+      },
+      {
+        "phase": "main-setup-final-population",
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document",
+        "population": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        },
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      }
+    ],
+    "rendererLoopRetirementsOmittedCount": 0,
+    "fixtureInterceptionReleases": [
+      {
+        "schema": "gev-flight-fixture-session-release/v1",
+        "sessionOrdinal": 1,
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "interception": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "stop": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true,
+        "targetClosed": true
+      },
+      {
+        "schema": "gev-flight-fixture-session-release/v1",
+        "sessionOrdinal": 2,
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document",
+        "interception": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "stop": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true,
+        "targetClosed": true
+      },
+      {
+        "schema": "gev-flight-fixture-session-release/v1",
+        "sessionOrdinal": 3,
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1",
+        "interception": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "stop": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true,
+        "targetClosed": true
+      }
+    ],
+    "warmupMs": 1000,
+    "durationPerSampleMs": 1000,
+    "runsPerScenario": 2,
+    "startupRuns": 1,
+    "qualityMode": "manual",
+    "expectedDensityPct": 75,
+    "detectionMode": "DENSE",
+    "mixedLayers": true,
+    "sceneFrameDiagnostics": {
+      "enabled": true,
+      "scope": "first scripted-motion run; installed before warmup and stopped after its measurement boundary",
+      "eligibleForComparison": false
+    },
+    "providerSampleCpuProfiles": {
+      "enabled": true,
+      "targets": [
+        {
+          "scenario": "idle",
+          "run": 1
+        },
+        {
+          "scenario": "idle",
+          "run": 2
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1
+        }
+      ],
+      "scope": "first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing",
+      "performanceAcceptanceEligible": false,
+      "status": "incomplete",
+      "profiles": [
+        {
+          "schema": "gev-provider-sample-cpu-profile-window/v1",
+          "enabled": true,
+          "targetScenario": "idle",
+          "targetRun": 1,
+          "captureOrdinal": 0,
+          "documentRole": "provider-sample-1",
+          "documentId": "provider-document-1",
+          "status": "incomplete",
+          "scope": "idle run 1 from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing",
+          "performanceAcceptanceEligible": false,
+          "profilerStarted": true,
+          "stopReason": "capture-failed",
+          "profile": {
+            "schema": "gev-render-boundary-cpu-profile-ref/v1",
+            "label": "provider-idle-1-warmup-through-measurement-boundary",
+            "status": "incomplete",
+            "performanceAcceptanceEligible": false,
+            "target": {
+              "scenario": "idle",
+              "run": 1,
+              "captureOrdinal": 0,
+              "documentRole": "provider-sample-1",
+              "documentId": "provider-document-1"
+            },
+            "fileName": "provider-idle-1-cpu-profile.json",
+            "sha256": "a5de0fcad49deb512f05ea447b4c5b88b227f949bfcc194d08e8321d49bbd263",
+            "byteLength": 185574,
+            "profilerErrors": [
+              "Profiler.disable exceeded 2000 ms."
+            ],
+            "lateSessionCleanup": null,
+            "windowCapReached": false,
+            "windowCapMs": null,
+            "profileWindowMs": 8408.268,
+            "stopOverrunMs": 0
+          },
+          "startedHostElapsedMs": 55051.483639,
+          "windowStartRequestedHostElapsedMs": 55051.566383,
+          "windowEndRequestedHostElapsedMs": 62373.316388,
+          "windowCapReached": false,
+          "windowCapMs": null,
+          "profileWindowMs": 8408.268,
+          "stopOverrunMs": 0,
+          "completedHostElapsedMs": 64695.048183
+        }
+      ]
+    },
+    "depthPickAttribution": {
+      "enabled": true,
+      "schema": "gev-depth-pick-attribution/v1",
+      "performanceAcceptanceEligible": false,
+      "scope": "opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration",
+      "status": "complete",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "captureOrdinal": 0,
+          "documentRole": "provider-sample-1",
+          "documentId": "provider-document-1",
+          "schema": "gev-depth-pick-attribution-sample/v1",
+          "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+          "install": {
+            "schema": "gev-depth-pick-attribution-install/v1",
+            "installed": true,
+            "scenario": "idle",
+            "run": 1,
+            "documentRole": "provider-sample-1",
+            "documentId": "provider-document-1",
+            "captureOrdinal": 0,
+            "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+            "startedAt": 8068.700000000012,
+            "cleanup": {
+              "confirmed": true,
+              "alreadyAbsent": false,
+              "completedRenderRevision": 8,
+              "finalSnapshot": {
+                "scenario": "idle",
+                "run": 1,
+                "documentRole": "provider-sample-1",
+                "documentId": "provider-document-1",
+                "captureOrdinal": 0,
+                "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+                "active": true,
+                "elapsedMs": 20793.600000000006,
+                "completedRenderRevision": 8,
+                "omittedRows": 0
+              }
+            }
+          },
+          "warmupBoundary": null,
+          "measurementBoundary": null,
+          "cleanupConfirmed": true,
+          "finalSnapshot": {
+            "scenario": "idle",
+            "run": 1,
+            "documentRole": "provider-sample-1",
+            "documentId": "provider-document-1",
+            "captureOrdinal": 0,
+            "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+            "active": true,
+            "elapsedMs": 20793.600000000006,
+            "completedRenderRevision": 8,
+            "canvas": {
+              "left": 0,
+              "top": 0,
+              "width": 1440,
+              "height": 900,
+              "drawingBufferWidth": 1440,
+              "drawingBufferHeight": 900
+            },
+            "camera": {
+              "longitudeDeg": -97.74309999999998,
+              "latitudeDeg": 30.267200000000006,
+              "heightM": 129999.99999993874,
+              "headingRad": 6.283185307179586,
+              "pitchRad": -1.5707963267948966,
+              "rollRad": 0
+            },
+            "pickCounts": {
+              "camera-orientation-move-end": 2,
+              "voice-move-end-prewarm": 1
+            },
+            "cacheCounts": {
+              "voice-move-end-prewarm": {
+                "hits": 1,
+                "misses": 1
+              },
+              "hud-summary-context": {
+                "hits": 1,
+                "misses": 0
+              }
+            },
+            "rows": [
+              {
+                "kind": "depth-pick",
+                "caller": "camera-orientation-move-end",
+                "inputCapturedBeforePick": true,
+                "elapsedMs": 8977,
+                "pickElapsedMs": 1124.3999999999942,
+                "x": 720,
+                "y": 450,
+                "longitudeDeg": -97.74309999999998,
+                "latitudeDeg": 30.267199999999992,
+                "heightM": 600.0000000002616,
+                "headingRad": 0.26179938779914913,
+                "pitchRad": -0.5235987755982991,
+                "rollRad": 6.283185307179586,
+                "sceneMode": 3,
+                "frustumType": "other-or-unavailable",
+                "fov": 1.0471975511965976,
+                "near": 0.1,
+                "far": 10000000000,
+                "left": 0,
+                "top": 0,
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900,
+                "completedRenderRevision": 3,
+                "resultKind": "hit",
+                "errorName": null
+              },
+              {
+                "kind": "view-target-cache",
+                "caller": "voice-move-end-prewarm",
+                "cacheHit": false,
+                "cacheAgeMs": null,
+                "elapsedMs": 10482.5,
+                "completedRenderRevision": 5
+              },
+              {
+                "kind": "depth-pick",
+                "caller": "voice-move-end-prewarm",
+                "inputCapturedBeforePick": true,
+                "elapsedMs": 12684.100000000006,
+                "pickElapsedMs": 2200,
+                "x": 720,
+                "y": 450,
+                "longitudeDeg": -97.74309999999998,
+                "latitudeDeg": 30.267200000000006,
+                "heightM": 129999.99999993874,
+                "headingRad": 6.283185307179586,
+                "pitchRad": -1.5707963267948966,
+                "rollRad": 0,
+                "sceneMode": 3,
+                "frustumType": "other-or-unavailable",
+                "fov": 1.0471975511965976,
+                "near": 0.1,
+                "far": 10000000000,
+                "left": 0,
+                "top": 0,
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900,
+                "completedRenderRevision": 5,
+                "resultKind": "hit",
+                "errorName": null
+              },
+              {
+                "kind": "depth-pick",
+                "caller": "camera-orientation-move-end",
+                "inputCapturedBeforePick": true,
+                "elapsedMs": 12712.399999999994,
+                "pickElapsedMs": 0,
+                "x": 720,
+                "y": 450,
+                "longitudeDeg": -97.74309999999998,
+                "latitudeDeg": 30.267200000000006,
+                "heightM": 129999.99999993874,
+                "headingRad": 6.283185307179586,
+                "pitchRad": -1.5707963267948966,
+                "rollRad": 0,
+                "sceneMode": 3,
+                "frustumType": "other-or-unavailable",
+                "fov": 1.0471975511965976,
+                "near": 0.1,
+                "far": 10000000000,
+                "left": 0,
+                "top": 0,
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900,
+                "completedRenderRevision": 5,
+                "resultKind": "hit",
+                "errorName": null
+              },
+              {
+                "kind": "view-target-cache",
+                "caller": "hud-summary-context",
+                "cacheHit": true,
+                "cacheAgeMs": 1432.1000000000058,
+                "elapsedMs": 14116.299999999988,
+                "completedRenderRevision": 6
+              },
+              {
+                "kind": "view-target-cache",
+                "caller": "voice-move-end-prewarm",
+                "cacheHit": true,
+                "cacheAgeMs": 1949.5,
+                "elapsedMs": 14633.799999999988,
+                "completedRenderRevision": 6
+              }
+            ],
+            "omittedRows": 0
+          }
+        }
+      ]
+    },
+    "scenarios": [
+      "idle",
+      "scripted-motion",
+      "selected-aircraft-tracking"
+    ]
+  },
+  "failure": {
+    "phase": "warmup",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Warmup boundary: host observation deadline elapsed.",
+    "operator": null
+  },
+  "fixtureDelivery": {
+    "schema": "gev-fixture-delivery-observation/v1",
+    "status": "observed",
+    "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+    "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+    "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "fulfilledResponseCount": 1,
+    "observedFlightsCount": 2500
+  },
+  "progress": {
+    "startupSampleCount": 1,
+    "startupSamples": [
+      {
+        "run": 1,
+        "cacheDisabled": true,
+        "appReadyMs": 7443,
+        "initialSettleMs": 8313,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "focused": true,
+        "visible": true,
+        "navigationMs": 3055.5999999999767,
+        "memory": {
+          "usedJsHeapBytes": 37320579,
+          "reason": null
+        },
+        "renderLoopRetirement": {
+          "requested": true,
+          "status": "retired-with-final-observation",
+          "before": true,
+          "after": false,
+          "confirmed": true,
+          "elapsedMs": 0.10000000000582077
+        },
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "vendor": "Google Inc. (Google)",
+        "rendererEvidence": {
+          "source": "early-cesium-context-creation",
+          "contextAttributes": {
+            "alpha": false,
+            "antialias": true,
+            "depth": true,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": true,
+            "stencil": true,
+            "desynchronized": false
+          },
+          "queryDurationMs": 15,
+          "parameterQueryCount": 2
+        }
+      }
+    ],
+    "completedSampleCount": 0,
+    "completedSamples": [],
+    "current": {
+      "phase": "warmup",
+      "scenario": "idle",
+      "run": 1,
+      "workerAuditRestoration": {
+        "nativeCreateObjectURLRestored": true,
+        "registryEmpty": true,
+        "createdScriptBlobCountAtRestore": 12,
+        "overflowCountAtRestore": 0,
+        "auditedCreatedScriptBlobCount": 12,
+        "auditedOverflowCount": 0,
+        "validatedCreatedScriptBlobCount": 12,
+        "observedWorkerTargetCount": 6,
+        "observedBlobRequestCount": 6,
+        "lateWorkerTargetCount": 0,
+        "lateBlobRequestCount": 0,
+        "delayedValidatedWorkerTargetCount": 0,
+        "delayedValidatedBlobRequestCount": 0,
+        "unvalidatedLateWorkerTargetCount": 0,
+        "unvalidatedLateBlobRequestCount": 0,
+        "workerUrlOverflowAtCompletion": 0,
+        "blobUrlOverflowAtCompletion": 0
+      },
+      "depthPickAttribution": {
+        "scenario": "idle",
+        "run": 1,
+        "captureOrdinal": 0,
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1",
+        "schema": "gev-depth-pick-attribution-sample/v1",
+        "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+        "install": {
+          "schema": "gev-depth-pick-attribution-install/v1",
+          "installed": true,
+          "scenario": "idle",
+          "run": 1,
+          "documentRole": "provider-sample-1",
+          "documentId": "provider-document-1",
+          "captureOrdinal": 0,
+          "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+          "startedAt": 8068.700000000012,
+          "cleanup": {
+            "confirmed": true,
+            "alreadyAbsent": false,
+            "completedRenderRevision": 8,
+            "finalSnapshot": {
+              "scenario": "idle",
+              "run": 1,
+              "documentRole": "provider-sample-1",
+              "documentId": "provider-document-1",
+              "captureOrdinal": 0,
+              "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+              "active": true,
+              "elapsedMs": 20793.600000000006,
+              "completedRenderRevision": 8,
+              "canvas": {
+                "left": 0,
+                "top": 0,
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900
+              },
+              "camera": {
+                "longitudeDeg": -97.74309999999998,
+                "latitudeDeg": 30.267200000000006,
+                "heightM": 129999.99999993874,
+                "headingRad": 6.283185307179586,
+                "pitchRad": -1.5707963267948966,
+                "rollRad": 0
+              },
+              "pickCounts": {
+                "camera-orientation-move-end": 2,
+                "voice-move-end-prewarm": 1
+              },
+              "cacheCounts": {
+                "voice-move-end-prewarm": {
+                  "hits": 1,
+                  "misses": 1
+                },
+                "hud-summary-context": {
+                  "hits": 1,
+                  "misses": 0
+                }
+              },
+              "rows": [
+                {
+                  "kind": "depth-pick",
+                  "caller": "camera-orientation-move-end",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 8977,
+                  "pickElapsedMs": 1124.3999999999942,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267199999999992,
+                  "heightM": 600.0000000002616,
+                  "headingRad": 0.26179938779914913,
+                  "pitchRad": -0.5235987755982991,
+                  "rollRad": 6.283185307179586,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 3,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "voice-move-end-prewarm",
+                  "cacheHit": false,
+                  "cacheAgeMs": null,
+                  "elapsedMs": 10482.5,
+                  "completedRenderRevision": 5
+                },
+                {
+                  "kind": "depth-pick",
+                  "caller": "voice-move-end-prewarm",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 12684.100000000006,
+                  "pickElapsedMs": 2200,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267200000000006,
+                  "heightM": 129999.99999993874,
+                  "headingRad": 6.283185307179586,
+                  "pitchRad": -1.5707963267948966,
+                  "rollRad": 0,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 5,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "depth-pick",
+                  "caller": "camera-orientation-move-end",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 12712.399999999994,
+                  "pickElapsedMs": 0,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267200000000006,
+                  "heightM": 129999.99999993874,
+                  "headingRad": 6.283185307179586,
+                  "pitchRad": -1.5707963267948966,
+                  "rollRad": 0,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 5,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "hud-summary-context",
+                  "cacheHit": true,
+                  "cacheAgeMs": 1432.1000000000058,
+                  "elapsedMs": 14116.299999999988,
+                  "completedRenderRevision": 6
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "voice-move-end-prewarm",
+                  "cacheHit": true,
+                  "cacheAgeMs": 1949.5,
+                  "elapsedMs": 14633.799999999988,
+                  "completedRenderRevision": 6
+                }
+              ],
+              "omittedRows": 0
+            }
+          }
+        },
+        "warmupBoundary": null,
+        "measurementBoundary": null,
+        "cleanupConfirmed": true,
+        "finalSnapshot": {
+          "scenario": "idle",
+          "run": 1,
+          "documentRole": "provider-sample-1",
+          "documentId": "provider-document-1",
+          "captureOrdinal": 0,
+          "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+          "active": true,
+          "elapsedMs": 20793.600000000006,
+          "completedRenderRevision": 8,
+          "canvas": {
+            "left": 0,
+            "top": 0,
+            "width": 1440,
+            "height": 900,
+            "drawingBufferWidth": 1440,
+            "drawingBufferHeight": 900
+          },
+          "camera": {
+            "longitudeDeg": -97.74309999999998,
+            "latitudeDeg": 30.267200000000006,
+            "heightM": 129999.99999993874,
+            "headingRad": 6.283185307179586,
+            "pitchRad": -1.5707963267948966,
+            "rollRad": 0
+          },
+          "pickCounts": {
+            "camera-orientation-move-end": 2,
+            "voice-move-end-prewarm": 1
+          },
+          "cacheCounts": {
+            "voice-move-end-prewarm": {
+              "hits": 1,
+              "misses": 1,
+              "agesMs": [
+                1949.5
+              ]
+            },
+            "hud-summary-context": {
+              "hits": 1,
+              "misses": 0,
+              "agesMs": [
+                1432.1000000000058
+              ]
+            }
+          },
+          "rows": [
+            {
+              "kind": "depth-pick",
+              "caller": "camera-orientation-move-end",
+              "inputCapturedBeforePick": true,
+              "elapsedMs": 8977,
+              "pickElapsedMs": 1124.3999999999942,
+              "x": 720,
+              "y": 450,
+              "longitudeDeg": -97.74309999999998,
+              "latitudeDeg": 30.267199999999992,
+              "heightM": 600.0000000002616,
+              "headingRad": 0.26179938779914913,
+              "pitchRad": -0.5235987755982991,
+              "rollRad": 6.283185307179586,
+              "positionWorld": [
+                -742897.2382877241,
+                -5463629.833118254,
+                3196293.52591379
+              ],
+              "directionWorld": [
+                0.33709011263658617,
+                0.8154931692376236,
+                0.47046907112947434
+              ],
+              "upWorld": [
+                0.06025171383249175,
+                -0.5173780701589535,
+                0.8536332136807029
+              ],
+              "viewMatrix": [
+                0.9395424348814169,
+                0.06025171383249175,
+                -0.33709011263658617,
+                0,
+                -0.2594047483092279,
+                -0.5173780701589535,
+                -0.8154931692376236,
+                0,
+                -0.2235378930108383,
+                0.8536332136807029,
+                -0.47046907112947434,
+                0,
+                -4815.321360349306,
+                -5510463.7417059615,
+                -3202218.875688838,
+                1
+              ],
+              "projectionMatrix": [
+                1.7320508075688774,
+                0,
+                0,
+                0,
+                0,
+                2.771281292110204,
+                0,
+                0,
+                0,
+                0,
+                -1.00000000002,
+                -1,
+                0,
+                0,
+                -0.200000000002,
+                0
+              ],
+              "sceneMode": 3,
+              "frustumType": "other-or-unavailable",
+              "fov": 1.0471975511965976,
+              "near": 0.1,
+              "far": 10000000000,
+              "left": 0,
+              "top": 0,
+              "width": 1440,
+              "height": 900,
+              "drawingBufferWidth": 1440,
+              "drawingBufferHeight": 900,
+              "completedRenderRevision": 3,
+              "resultKind": "hit",
+              "errorName": null
+            },
+            {
+              "kind": "view-target-cache",
+              "caller": "voice-move-end-prewarm",
+              "cacheHit": false,
+              "cacheAgeMs": null,
+              "elapsedMs": 10482.5,
+              "completedRenderRevision": 5
+            },
+            {
+              "kind": "depth-pick",
+              "caller": "voice-move-end-prewarm",
+              "inputCapturedBeforePick": true,
+              "elapsedMs": 12684.100000000006,
+              "pickElapsedMs": 2200,
+              "x": 720,
+              "y": 450,
+              "longitudeDeg": -97.74309999999998,
+              "latitudeDeg": 30.267200000000006,
+              "heightM": 129999.99999993874,
+              "headingRad": 6.283185307179586,
+              "pitchRad": -1.5707963267948966,
+              "rollRad": 0,
+              "positionWorld": [
+                -757954.9417831191,
+                -5574371.553231931,
+                3261515.4316794802
+              ],
+              "directionWorld": [
+                0.11636158373587388,
+                0.8557800292723379,
+                -0.5040838455347639
+              ],
+              "upWorld": [
+                0.06791602383794143,
+                0.49948767455780124,
+                0.8636547207483348
+              ],
+              "viewMatrix": [
+                0.9908821299915159,
+                0.06791602383794143,
+                -0.11636158373587388,
+                0,
+                -0.13473160157690037,
+                0.49948767455780124,
+                -0.8557800292723379,
+                0,
+                1.9428902930940242e-16,
+                0.8636547207483348,
+                0.5040838455347639,
+                0,
+                6.481526366296603e-11,
+                18983.970775677357,
+                -6502709.9294979945,
+                1
+              ],
+              "projectionMatrix": [
+                1.7320508075688774,
+                0,
+                0,
+                0,
+                0,
+                2.771281292110204,
+                0,
+                0,
+                0,
+                0,
+                -1.00000000002,
+                -1,
+                0,
+                0,
+                -0.200000000002,
+                0
+              ],
+              "sceneMode": 3,
+              "frustumType": "other-or-unavailable",
+              "fov": 1.0471975511965976,
+              "near": 0.1,
+              "far": 10000000000,
+              "left": 0,
+              "top": 0,
+              "width": 1440,
+              "height": 900,
+              "drawingBufferWidth": 1440,
+              "drawingBufferHeight": 900,
+              "completedRenderRevision": 5,
+              "resultKind": "hit",
+              "errorName": null
+            },
+            {
+              "kind": "depth-pick",
+              "caller": "camera-orientation-move-end",
+              "inputCapturedBeforePick": true,
+              "elapsedMs": 12712.399999999994,
+              "pickElapsedMs": 0,
+              "x": 720,
+              "y": 450,
+              "longitudeDeg": -97.74309999999998,
+              "latitudeDeg": 30.267200000000006,
+              "heightM": 129999.99999993874,
+              "headingRad": 6.283185307179586,
+              "pitchRad": -1.5707963267948966,
+              "rollRad": 0,
+              "positionWorld": [
+                -757954.9417831191,
+                -5574371.553231931,
+                3261515.4316794802
+              ],
+              "directionWorld": [
+                0.11636158373587388,
+                0.8557800292723379,
+                -0.5040838455347639
+              ],
+              "upWorld": [
+                0.06791602383794143,
+                0.49948767455780124,
+                0.8636547207483348
+              ],
+              "viewMatrix": [
+                0.9908821299915159,
+                0.06791602383794143,
+                -0.11636158373587388,
+                0,
+                -0.13473160157690037,
+                0.49948767455780124,
+                -0.8557800292723379,
+                0,
+                1.9428902930940242e-16,
+                0.8636547207483348,
+                0.5040838455347639,
+                0,
+                6.481526366296603e-11,
+                18983.970775677357,
+                -6502709.9294979945,
+                1
+              ],
+              "projectionMatrix": [
+                1.7320508075688774,
+                0,
+                0,
+                0,
+                0,
+                2.771281292110204,
+                0,
+                0,
+                0,
+                0,
+                -1.00000000002,
+                -1,
+                0,
+                0,
+                -0.200000000002,
+                0
+              ],
+              "sceneMode": 3,
+              "frustumType": "other-or-unavailable",
+              "fov": 1.0471975511965976,
+              "near": 0.1,
+              "far": 10000000000,
+              "left": 0,
+              "top": 0,
+              "width": 1440,
+              "height": 900,
+              "drawingBufferWidth": 1440,
+              "drawingBufferHeight": 900,
+              "completedRenderRevision": 5,
+              "resultKind": "hit",
+              "errorName": null
+            },
+            {
+              "kind": "view-target-cache",
+              "caller": "hud-summary-context",
+              "cacheHit": true,
+              "cacheAgeMs": 1432.1000000000058,
+              "elapsedMs": 14116.299999999988,
+              "completedRenderRevision": 6
+            },
+            {
+              "kind": "view-target-cache",
+              "caller": "voice-move-end-prewarm",
+              "cacheHit": true,
+              "cacheAgeMs": 1949.5,
+              "elapsedMs": 14633.799999999988,
+              "completedRenderRevision": 6
+            }
+          ],
+          "omittedRows": 0
+        }
+      },
+      "trackingSetup": null,
+      "renderBoundaryProgressBinding": {
+        "ownerId": "provider-sample-1:provider-document-1",
+        "status": "cleanup-failed",
+        "setupTimeoutMs": 5000,
+        "setupElapsedMs": 2.377438000003167,
+        "cleanup": {
+          "removed": false,
+          "elapsedMs": 252.23440100000153,
+          "error": {
+            "name": "TimeoutError",
+            "message": "Render boundary progress binding cleanup timed out."
+          }
+        },
+        "disposeReason": "capture-failed",
+        "ignoredCallbacks": {
+          "malformedInvocation": 0,
+          "unownedInvocation": 3
+        }
+      },
+      "providerSampleCpuProfile": {
+        "schema": "gev-provider-sample-cpu-profile-window/v1",
+        "enabled": true,
+        "targetScenario": "idle",
+        "targetRun": 1,
+        "captureOrdinal": 0,
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1",
+        "status": "incomplete",
+        "scope": "idle run 1 from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing",
+        "performanceAcceptanceEligible": false,
+        "profilerStarted": true,
+        "stopReason": "capture-failed",
+        "profile": {
+          "schema": "gev-render-boundary-cpu-profile-ref/v1",
+          "label": "provider-idle-1-warmup-through-measurement-boundary",
+          "status": "incomplete",
+          "performanceAcceptanceEligible": false,
+          "target": {
+            "scenario": "idle",
+            "run": 1,
+            "captureOrdinal": 0,
+            "documentRole": "provider-sample-1",
+            "documentId": "provider-document-1"
+          },
+          "fileName": "provider-idle-1-cpu-profile.json",
+          "sha256": "a5de0fcad49deb512f05ea447b4c5b88b227f949bfcc194d08e8321d49bbd263",
+          "byteLength": 185574,
+          "profilerErrors": [
+            "Profiler.disable exceeded 2000 ms."
+          ],
+          "lateSessionCleanup": null,
+          "windowCapReached": false,
+          "windowCapMs": null,
+          "profileWindowMs": 8408.268,
+          "stopOverrunMs": 0
+        },
+        "startedHostElapsedMs": 55051.483639,
+        "windowStartRequestedHostElapsedMs": 55051.566383,
+        "windowEndRequestedHostElapsedMs": 62373.316388,
+        "windowCapReached": false,
+        "windowCapMs": null,
+        "profileWindowMs": 8408.268,
+        "stopOverrunMs": 0,
+        "completedHostElapsedMs": 64695.048183
+      },
+      "clockStart": {
+        "schema": "gev-phased-monotonic-wall-clock/v1",
+        "phase": "warmup",
+        "epochMs": 1791460800004,
+        "elapsedMs": 4,
+        "warmupMs": 1000,
+        "measurementMs": 1000,
+        "warmupNativeElapsedMs": 4.300000000017462,
+        "measurementNativeElapsedMs": null,
+        "startCount": 1,
+        "measurementStartCount": 0
+      },
+      "warmupBoundaryObservation": {
+        "schema": "gev-render-boundary-observation/v1",
+        "invocationId": "fc18983b-31a2-442e-ac58-2688668f6fb0",
+        "label": "Warmup boundary",
+        "status": "host-observation-deadline",
+        "hostTimeoutMs": 6000,
+        "hostElapsedMs": 6268.0082360000015,
+        "hostDispatchElapsedMs": 1.013595999997051,
+        "hostProgressBindingSetupElapsedMs": null,
+        "progressBindingOwnerId": "provider-sample-1:provider-document-1",
+        "progressBindingSetupElapsedMs": 2.377438000003167,
+        "pageEntryObserved": true,
+        "pageEntryHostReceiptElapsedMs": 2612.4190180000005,
+        "progressEvents": [
+          {
+            "stage": "page-entry",
+            "hostReceiptElapsedMs": 2612.4190180000005,
+            "afterHostDeadline": false,
+            "details": {
+              "pageElapsedMs": 0
+            }
+          },
+          {
+            "stage": "listener-registered",
+            "hostReceiptElapsedMs": 2613.031052999999,
+            "afterHostDeadline": false,
+            "details": {
+              "pageElapsedMs": 0,
+              "listenerRegistered": true
+            }
+          },
+          {
+            "stage": "fixture-clock-held",
+            "hostReceiptElapsedMs": 2613.4078579999987,
+            "afterHostDeadline": false,
+            "details": {
+              "pageElapsedMs": 0.1999999999825377,
+              "fixtureClockPhase": "warmup-held",
+              "fixtureClockElapsedMs": 1000,
+              "fixtureClockEpochMs": 1791460801000,
+              "fixtureClockWarmupMs": 1000,
+              "fixtureClockMeasurementMs": 1000,
+              "fixtureClockWarmupNativeElapsedMs": 3617.600000000006,
+              "fixtureClockMeasurementNativeElapsedMs": null,
+              "fixtureClockStartCount": 1,
+              "fixtureClockMeasurementStartCount": 0
+            }
+          },
+          {
+            "stage": "render-request-started",
+            "hostReceiptElapsedMs": 2613.7919970000003,
+            "afterHostDeadline": false,
+            "details": {
+              "pageElapsedMs": 0.29999999998835847,
+              "renderRequestAvailable": true,
+              "renderRequestStarted": true
+            }
+          },
+          {
+            "stage": "render-request-completed",
+            "hostReceiptElapsedMs": 2614.2343640000036,
+            "afterHostDeadline": false,
+            "details": {
+              "pageElapsedMs": 0.39999999999417923,
+              "renderRequestCompleted": true
+            }
+          }
+        ],
+        "ignoredProgressEvents": {
+          "wrongInvocation": 0,
+          "malformed": 0,
+          "overflow": 0
+        },
+        "hostEvaluationOverheadResidualMs": 2617.308236000019,
+        "page": {
+          "status": "settled",
+          "settleElapsedMs": 3650.6999999999825,
+          "error": null,
+          "diagnostics": {
+            "phase": "settled",
+            "pageEntryElapsedMs": 0,
+            "pageElapsedMs": 3650.6999999999825,
+            "listenerRegistered": true,
+            "listenerRegistrationElapsedMs": 0,
+            "renderRequestAvailable": true,
+            "renderRequestStarted": true,
+            "renderRequestStartElapsedMs": 0.29999999998835847,
+            "renderRequestCompleted": true,
+            "renderRequestCompleteElapsedMs": 0.39999999999417923,
+            "postRenderObserved": true,
+            "postRenderElapsedMs": 3650.0999999999767,
+            "renderLoopRetirement": null,
+            "finalObservation": {
+              "schema": "gev-depth-pick-attribution-boundary/v1",
+              "label": "warmup-boundary",
+              "available": true,
+              "scenario": "idle",
+              "run": 1,
+              "documentRole": "provider-sample-1",
+              "documentId": "provider-document-1",
+              "captureOrdinal": 0,
+              "ownerToken": "idle:1:provider-sample-1:provider-document-1",
+              "active": true,
+              "elapsedMs": 17745.100000000006,
+              "completedRenderRevision": 7,
+              "canvas": {
+                "left": 0,
+                "top": 0,
+                "width": 1440,
+                "height": 900,
+                "drawingBufferWidth": 1440,
+                "drawingBufferHeight": 900
+              },
+              "camera": {
+                "longitudeDeg": -97.74309999999998,
+                "latitudeDeg": 30.267200000000006,
+                "heightM": 129999.99999993874,
+                "headingRad": 6.283185307179586,
+                "pitchRad": -1.5707963267948966,
+                "rollRad": 0
+              },
+              "pickCounts": {
+                "camera-orientation-move-end": 2,
+                "voice-move-end-prewarm": 1
+              },
+              "cacheCounts": {
+                "voice-move-end-prewarm": {
+                  "hits": 1,
+                  "misses": 1
+                },
+                "hud-summary-context": {
+                  "hits": 1,
+                  "misses": 0
+                }
+              },
+              "rows": [
+                {
+                  "kind": "depth-pick",
+                  "caller": "camera-orientation-move-end",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 8977,
+                  "pickElapsedMs": 1124.3999999999942,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267199999999992,
+                  "heightM": 600.0000000002616,
+                  "headingRad": 0.26179938779914913,
+                  "pitchRad": -0.5235987755982991,
+                  "rollRad": 6.283185307179586,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 3,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "voice-move-end-prewarm",
+                  "cacheHit": false,
+                  "cacheAgeMs": null,
+                  "elapsedMs": 10482.5,
+                  "completedRenderRevision": 5
+                },
+                {
+                  "kind": "depth-pick",
+                  "caller": "voice-move-end-prewarm",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 12684.100000000006,
+                  "pickElapsedMs": 2200,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267200000000006,
+                  "heightM": 129999.99999993874,
+                  "headingRad": 6.283185307179586,
+                  "pitchRad": -1.5707963267948966,
+                  "rollRad": 0,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 5,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "depth-pick",
+                  "caller": "camera-orientation-move-end",
+                  "inputCapturedBeforePick": true,
+                  "elapsedMs": 12712.399999999994,
+                  "pickElapsedMs": 0,
+                  "x": 720,
+                  "y": 450,
+                  "longitudeDeg": -97.74309999999998,
+                  "latitudeDeg": 30.267200000000006,
+                  "heightM": 129999.99999993874,
+                  "headingRad": 6.283185307179586,
+                  "pitchRad": -1.5707963267948966,
+                  "rollRad": 0,
+                  "sceneMode": 3,
+                  "frustumType": "other-or-unavailable",
+                  "fov": 1.0471975511965976,
+                  "near": 0.1,
+                  "far": 10000000000,
+                  "left": 0,
+                  "top": 0,
+                  "width": 1440,
+                  "height": 900,
+                  "drawingBufferWidth": 1440,
+                  "drawingBufferHeight": 900,
+                  "completedRenderRevision": 5,
+                  "resultKind": "hit",
+                  "errorName": null
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "hud-summary-context",
+                  "cacheHit": true,
+                  "cacheAgeMs": 1432.1000000000058,
+                  "elapsedMs": 14116.299999999988,
+                  "completedRenderRevision": 6
+                },
+                {
+                  "kind": "view-target-cache",
+                  "caller": "voice-move-end-prewarm",
+                  "cacheHit": true,
+                  "cacheAgeMs": 1949.5,
+                  "elapsedMs": 14633.799999999988,
+                  "completedRenderRevision": 6
+                }
+              ],
+              "omittedRows": 0
+            },
+            "finalObservationErrorName": null,
+            "beforeRenderRequestObservation": {
+              "schema": "gev-phased-monotonic-wall-clock/v1",
+              "phase": "warmup-held",
+              "epochMs": 1791460801000,
+              "elapsedMs": 1000,
+              "warmupMs": 1000,
+              "measurementMs": 1000,
+              "warmupNativeElapsedMs": 3617.600000000006,
+              "measurementNativeElapsedMs": null,
+              "startCount": 1,
+              "measurementStartCount": 0
+            },
+            "beforeRenderRequestErrorName": null,
+            "pageTimerFired": false,
+            "pageTimerElapsedMs": null,
+            "cleanup": {
+              "timerCleared": true,
+              "listenerRemoved": true
+            }
+          }
+        },
+        "pageError": null,
+        "hostError": {
+          "name": "TimeoutError",
+          "message": "Warmup boundary: host observation deadline elapsed."
+        },
+        "pendingPageResultAtDeadline": true,
+        "latePageResultObserved": true,
+        "cleanup": {
+          "hostTimerCleared": true,
+          "progressBindingRemoved": null,
+          "progressInvocationReleased": true,
+          "progressBindingCleanupElapsedMs": 0.12051600000268081,
+          "progressInvocationReleaseElapsedMs": 0.12051600000268081
+        }
+      },
+      "warmupBoundary": {
+        "schema": "gev-phased-monotonic-wall-clock/v1",
+        "phase": "warmup-held",
+        "epochMs": 1791460801000,
+        "elapsedMs": 1000,
+        "warmupMs": 1000,
+        "measurementMs": 1000,
+        "warmupNativeElapsedMs": 3617.600000000006,
+        "measurementNativeElapsedMs": null,
+        "startCount": 1,
+        "measurementStartCount": 0
+      },
+      "performanceDiagnosticsDocuments": [
+        {
+          "documentRole": "startup-1",
+          "documentId": "startup-document-1",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        },
+        {
+          "documentRole": "main-setup",
+          "documentId": "main-measured-document",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        },
+        {
+          "documentRole": "provider-sample-1",
+          "documentId": "provider-document-1",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        }
+      ]
+    },
+    "completedSamplesRetained": 0,
+    "startupSamplesRetained": 1
+  },
+  "evidenceTruncated": true
+}

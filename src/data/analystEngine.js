@@ -1015,6 +1015,22 @@ export function createAnalystEngine(providers) {
     const windows = [
       ...new Set(layersQueried.map((layer) => layer.window).filter(Boolean)),
     ];
+    const temporalContext = providers.getTemporalContext?.() || {};
+    const investigationTimeMs = providers.now?.() ?? Date.now();
+    const normalizedQuery = {
+      version: 1,
+      layers: [...layers],
+      scope: { ...(spec.scope || { kind: followUp ? 'anywhere' : 'view' }) },
+      filters: spec.filters.map(({ field, op, value }) => ({
+        field,
+        op,
+        value,
+      })),
+      sortBy: spec.sortBy || null,
+      sortDir: spec.sortDir || 'asc',
+      limit: spec.limit,
+      followUp,
+    };
     const caveats = [];
     if (totals.truncated)
       caveats.push(
@@ -1038,6 +1054,32 @@ export function createAnalystEngine(providers) {
 
     const result = {
       ok: true,
+      resultMetadata: {
+        schemaVersion: 1,
+        normalizedQuery,
+        sourceMode: temporalContext.source || 'live',
+        investigationTime: {
+          mode: temporalContext.mode || 'live',
+          timeMs: investigationTimeMs,
+          source: temporalContext.source || 'live',
+          recordingId: temporalContext.recordingId || null,
+        },
+        includedLayers: layersQueried.map((layer) => ({
+          layerKey: layer.layerKey,
+          status: layer.status,
+        })),
+        records: {
+          total: totals.total,
+          returned: totals.returned,
+          matched: selection.count,
+          listed: selection.items.length,
+          truncated: totals.truncated,
+        },
+        evidenceRefs: selection.items.map((item) => ({
+          layerKey: item.layerKey,
+          id: String(item.icao24 ?? item.id),
+        })),
+      },
       count: selection.count,
       // False when a layer was capped: the count is then a floor and the
       // ranking covers only the records examined.

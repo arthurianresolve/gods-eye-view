@@ -42,6 +42,10 @@ export function createMilitarySnapshotRenderer({
         aircraft,
         {
           observedAtMs: receiptNowMs,
+          sourceId: snapshot.source,
+          sourceCoverage: snapshot.coverage,
+          sourceFreshness: snapshot.freshness,
+          sourceComplete: snapshot.complete,
           floorWarmPoints: _floorWarmPoints,
           modelOwnsVisual: aircraft.onGround
             ? rendering._modelOwnsVisual(icao24)
@@ -122,9 +126,10 @@ export function createMilitarySnapshotRenderer({
       if (flightState._billboards.has(icao24)) {
         const bb = flightState._billboards.get(icao24);
         if (!isTracked) {
-          bb.color = rendering
+          const nextColor = rendering
             ._fleetBillboardColor(icao24, meta)
             .withAlpha(cyberSonarBaseAlpha(bb));
+          if (!Cesium.Color.equals(bb.color, nextColor)) bb.color = nextColor;
         }
         // Position AND rotation are owned by the fleet pass (_fleetTick);
         // course changes land on the next rotation pass (forced below).

@@ -1,0 +1,30 @@
+{
+  "schema": "gev-paint-low-alpha-regression-review/v1",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "scope": "Unit failure control for a rejected unpublished prototype; no browser or performance claim.",
+  "diagnosis": "Scalar buffer prototype removes keyholeAlpha object field, but cached publication still reads it. NaN bypasses the 0.001 threshold and publishes invisible hits/actions on its second stable frame.",
+  "appendedTestSha256": "63fc0d8eba6838353835358225c2f23d60e7f26d7d54f6628bdfbff716626953",
+  "rows": [
+    {
+      "name": "named-reference",
+      "runtimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+      "testSha256": "3f988992e3dcadc6aeebb84d7aea09c0088c363e92b70d969699a7531c44ec29",
+      "stdoutSha256": "8f52b9b1e08219a1c9b0d03b645a988c2d18f4574587f11d4082219b3acfc396",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "failures": []
+    },
+    {
+      "name": "rejected-scalar",
+      "runtimeSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302",
+      "testSha256": "3f988992e3dcadc6aeebb84d7aea09c0088c363e92b70d969699a7531c44ec29",
+      "stdoutSha256": "897114ba96aa5ac161f3a6f38b7724a96633a9d8d3014e04138bbaa7554bef9c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 1,
+      "failures": [
+        "root cached-paint low-alpha output remains absent on consecutive stable frames"
+      ]
+    }
+  ]
+}

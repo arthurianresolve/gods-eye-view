@@ -1,0 +1,63 @@
+{
+  "scope": "settings, persisted asset equality and natural browser cleanup; no GPU performance claim",
+  "candidateCommit": "1a8d4928424f84349e4b9c6b411ce3f1b328459b",
+  "reviews": [
+    {
+      "platform": "windows",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "c76f449d2f9c892d1305cacfd1feb16e290d0ca86eb29584e9e3ed03dcd29a0c",
+      "naturalCloseMs": [
+        2354.1824999999953,
+        856.7527000000118,
+        603.4664999999804,
+        935.4549999999581,
+        1338.0206999999937
+      ],
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "macos",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "4a7c46a7a036602e4d5bc199ae01a88e5a46c2ab745aa067a1e8fc6bf57f32d3",
+      "naturalCloseMs": [
+        1410.7498750000013,
+        717.8037919999988,
+        394.1742499999964,
+        433.8895000000048,
+        553.1421249999985
+      ],
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "ubuntu",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "0007b662821bdc021b8ce15b3354db6d1cc757f4bc7f436b544bd4dd528aff79",
+      "naturalCloseMs": [
+        424.01019400000223,
+        622.1214780000009,
+        387.2581740000023,
+        671.3496569999988,
+        272.2351110000018
+      ],
+      "hardwareRenderingValidated": false
+    }
+  ]
+}

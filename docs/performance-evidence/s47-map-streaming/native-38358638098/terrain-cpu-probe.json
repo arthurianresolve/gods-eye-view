@@ -1,0 +1,91 @@
+{
+  "schema": "gev-map-terrain-cpu-probe/v1",
+  "cesiumVersion": "1.138.0",
+  "fixtureId": "austin-map-streaming-synthetic-v1",
+  "manifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
+  "scope": "Pinned CPU worker functions; scoped isolated-process TaskProcessor seam; no actual worker transport or rendering",
+  "reports": [
+    {
+      "tile": {
+        "x": 0,
+        "y": 0,
+        "level": 0
+      },
+      "meshVertices": 289,
+      "children": [
+        {
+          "x": 0,
+          "y": 0,
+          "level": 1,
+          "available": true,
+          "vertices": 289,
+          "min": 282.98471022675255,
+          "max": 404.9855037079989,
+          "boundsFinite": true
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "level": 1,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "level": 1,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "level": 1,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        }
+      ]
+    },
+    {
+      "tile": {
+        "x": 0,
+        "y": 0,
+        "level": 1
+      },
+      "meshVertices": 289,
+      "children": [
+        {
+          "x": 0,
+          "y": 0,
+          "level": 2,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "level": 2,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "level": 2,
+          "available": false,
+          "error": "Expected options.horizonOcclusionPoint to be typeof object, actual typeof was undefined"
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "level": 2,
+          "available": true,
+          "vertices": 289,
+          "min": 285.99993896298105,
+          "max": 404.9855037079989,
+          "boundsFinite": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38186850267",
+  "commit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+  "rawSha256": "b233c9c0525000c242f8700b0f46dc11c7a6b7cba258ec19c9741f6ac72039c5",
+  "status": "failed",
+  "failedPhase": "entities-lifetime",
+  "error": "Error: Cable scene did not reach three stable completed frames.\n    at waitForStableScene (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:487:9)\n    at async mapStackWitness (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1024:3)\n    at async runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:219:31)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:730:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:875:16)",
+  "completedSamples": 0,
+  "completedComparisons": 0,
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "externalRequests": 0,
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserCloseCompleted": true,
+  "scope": "Failure occurs in the existing Entity lifetime during mapStackWitness, before collection-mode samples. No cable correctness or benefit acceptance. The early readiness path does not retain predicate observations; cause remains unresolved."
+}

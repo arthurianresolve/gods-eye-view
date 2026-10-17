@@ -1,0 +1,36 @@
+{
+  "reviewedOn": "2026-10-13",
+  "reviewedCommit": "3f4cad81d86c55973328111067cb903d129504d4",
+  "status": "rejected-pending-correction",
+  "scope": "Immutable wiring source and independent Node reproductions; no build/browser run",
+  "findings": [
+    {
+      "id": "async-responder-fallback",
+      "method": "Execute the proposed nullish-coalescing composition with the actual generated map fixture delivery adapter and a counted fallback for /api/flights",
+      "observed": { "mapResult": null, "fallbackCalls": 0 },
+      "expectedFallbackCalls": 1,
+      "cause": "The async map responder returns a Promise even for an unowned URL, so nullish coalescing never reaches the flight responder."
+    },
+    {
+      "id": "success-report-omission",
+      "method": "Inspect immutable final workload construction and finalized aggregate assignments",
+      "observed": "Map capture/documents are supplied to assertCaptureIntegrity options instead of the final workload; finalized aggregate delivery is assigned only to failureProgress, leaving the successful report's local fixtureDelivery unchanged.",
+      "required": "Publish the finalized native map evidence in the actual success envelope after confirmed document cleanup."
+    },
+    {
+      "id": "outer-identity-validation-bypass",
+      "method": "Execute the immutable outer validator with its own new test's inner-validator seam; vary only fields owned by the outer envelope",
+      "falseAccepts": [
+        "Missing source identity",
+        "Wrong application commit, harness commit and build receipt",
+        "Failed integrity",
+        "Missing captures and cleanup evidence"
+      ],
+      "cause": "The new map branch returns before the common provenance, sample and cleanup assertions.",
+      "required": "Validate a producer-shaped complete envelope and reject wrong identity, integrity and cleanup while retaining the inner fixture/route validator."
+    }
+  ],
+  "browserDecodeObserved": false,
+  "renderedReadinessObserved": false,
+  "performanceAcceptanceEligible": false
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "cesiumVersion": "1.138.0",
+  "engineVersion": "22.3.0",
+  "license": "Apache-2.0",
+  "provenance": "Candidate no-op terrain-collision transform fast path for CesiumJS 1.138.0 / @cesium/engine 22.3.0. It checks world-space camera height before switching to identity and leaves the original correction path unchanged when a correction is due.",
+  "files": [
+    {
+      "relativePath": "@cesium/engine/Source/Scene/ScreenSpaceCameraController.js",
+      "oldText": "  let transform;\n  let mag;\n  if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {",
+      "newText": "  let transform;\n  let mag;\n  if (\n    mode === SceneMode.SCENE3D &&\n    !Matrix4.equals(camera.transform, Matrix4.IDENTITY)\n  ) {\n    ellipsoid.cartesianToCartographic(\n      camera.positionWC,\n      scratchAdjustHeightCartographic,\n    );\n    if (\n      scratchAdjustHeightCartographic.height >=\n      controller._minimumCollisionTerrainHeight\n    ) {\n      return;\n    }\n    const globeHeight = scene.globeHeight;\n    if (!defined(globeHeight)) {\n      return;\n    }\n    const height = globeHeight + controller.minimumZoomDistance;\n    const difference = globeHeight - controller._lastGlobeHeight;\n    const percentDifference = difference / controller._lastGlobeHeight;\n    const heightWouldUpdate =\n      scratchAdjustHeightCartographic.height < height &&\n      (cameraChanged || Math.abs(percentDifference) <= 0.1);\n    if (!heightWouldUpdate) {\n      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {\n        controller._lastGlobeHeight = globeHeight;\n      } else {\n        controller._lastGlobeHeight += difference * 0.1;\n      }\n      return;\n    }\n  }\n  if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {",
+      "sourceSha256": "d71453cc57e8faf96a82514b15a93420c58a9b8f4975ceda06cb67f02c881ead",
+      "patchedSha256": "a6fc009113bd302f45b100f0e8f22eae14b7ffc8a3b9ecef639af9e1ca07089e"
+    },
+    {
+      "relativePath": "cesium/Build/CesiumUnminified/Cesium.js",
+      "oldText": "    let transform3;\n    let mag;\n    if (!Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)) {",
+      "newText": "    let transform3;\n    let mag;\n    if (\n      mode2 === SceneMode_default.SCENE3D &&\n      !Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)\n    ) {\n      ellipsoid.cartesianToCartographic(\n        camera.positionWC,\n        scratchAdjustHeightCartographic,\n      );\n      if (\n        scratchAdjustHeightCartographic.height >= controller._minimumCollisionTerrainHeight\n      ) {\n        return;\n      }\n      const globeHeight = scene.globeHeight;\n      if (!defined_default(globeHeight)) {\n        return;\n      }\n      const height = globeHeight + controller.minimumZoomDistance;\n      const difference = globeHeight - controller._lastGlobeHeight;\n      const percentDifference = difference / controller._lastGlobeHeight;\n      const heightWouldUpdate =\n        scratchAdjustHeightCartographic.height < height &&\n        (cameraChanged || Math.abs(percentDifference) <= 0.1);\n      if (!heightWouldUpdate) {\n        if (cameraChanged || Math.abs(percentDifference) <= 0.1) {\n          controller._lastGlobeHeight = globeHeight;\n        } else {\n          controller._lastGlobeHeight += difference * 0.1;\n        }\n        return;\n      }\n    }\n    if (!Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)) {",
+      "sourceSha256": "1e4cc6f4b76d4c48df12ce7160a07d0ef009244b073f0a4048384f1d413158d2",
+      "patchedSha256": "7c0d49dd1c34eba8b740a5310b08fb59ced1405e7d399d710ef86d810224d063"
+    },
+    {
+      "relativePath": "cesium/Build/CesiumUnminified/index.cjs",
+      "oldText": "  let transform3;\n  let mag;\n  if (!Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)) {",
+      "newText": "  let transform3;\n  let mag;\n  if (\n    mode2 === SceneMode_default.SCENE3D &&\n    !Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)\n  ) {\n    ellipsoid.cartesianToCartographic(\n      camera.positionWC,\n      scratchAdjustHeightCartographic,\n    );\n    if (\n      scratchAdjustHeightCartographic.height >= controller._minimumCollisionTerrainHeight\n    ) {\n      return;\n    }\n    const globeHeight = scene.globeHeight;\n    if (!defined_default(globeHeight)) {\n      return;\n    }\n    const height = globeHeight + controller.minimumZoomDistance;\n    const difference = globeHeight - controller._lastGlobeHeight;\n    const percentDifference = difference / controller._lastGlobeHeight;\n    const heightWouldUpdate =\n      scratchAdjustHeightCartographic.height < height &&\n      (cameraChanged || Math.abs(percentDifference) <= 0.1);\n    if (!heightWouldUpdate) {\n      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {\n        controller._lastGlobeHeight = globeHeight;\n      } else {\n        controller._lastGlobeHeight += difference * 0.1;\n      }\n      return;\n    }\n  }\n  if (!Matrix4_default.equals(camera.transform, Matrix4_default.IDENTITY)) {",
+      "sourceSha256": "7c233e615767d9183e053c16a72d0bd1bea98ed888f88a86fe55711a54fd3367",
+      "patchedSha256": "b2bdd3e35e38f2f7a985360bb955a343f239c71339f3b8fa549d5afa0c21f254"
+    },
+    {
+      "relativePath": "cesium/Build/Cesium/Cesium.js",
+      "oldText": "let o=n.camera,r=n.ellipsoid??ie.WGS84,s=n.mapProjection,a,c;F.equals(o.transform,F.IDENTITY)||(",
+      "newText": "let o=n.camera,r=n.ellipsoid??ie.WGS84,s=n.mapProjection,a,c;if(i===se.SCENE3D&&!F.equals(o.transform,F.IDENTITY)){r.cartesianToCartographic(o.positionWC,QIt);if(QIt.height>=e._minimumCollisionTerrainHeight)return;let v=n.globeHeight;if(!l(v))return;let h=v+e.minimumZoomDistance,g=v-e._lastGlobeHeight,f=g/e._lastGlobeHeight;if(!(QIt.height<h&&(t||Math.abs(f)<=.1))){t||Math.abs(f)<=.1?e._lastGlobeHeight=v:e._lastGlobeHeight+=g*.1;return}}F.equals(o.transform,F.IDENTITY)||(",
+      "sourceSha256": "90966c1f22604d00f24013288f7176c6e564587fd7e16205e169e9700eaa982a",
+      "patchedSha256": "14312c40d18a203c98501266f70f0191830c158627e5d88d1ec96bf8f9b4e7f2"
+    },
+    {
+      "relativePath": "cesium/Build/Cesium/index.cjs",
+      "oldText": "let o=n.camera,r=n.ellipsoid??te.WGS84,a=n.mapProjection,s,c;M.equals(o.transform,M.IDENTITY)||(",
+      "newText": "let o=n.camera,r=n.ellipsoid??te.WGS84,a=n.mapProjection,s,c;if(i===oe.SCENE3D&&!M.equals(o.transform,M.IDENTITY)){r.cartesianToCartographic(o.positionWC,$Bt);if($Bt.height>=e._minimumCollisionTerrainHeight)return;let v=n.globeHeight;if(!l(v))return;let h=v+e.minimumZoomDistance,g=v-e._lastGlobeHeight,f=g/e._lastGlobeHeight;if(!($Bt.height<h&&(t||Math.abs(f)<=.1))){t||Math.abs(f)<=.1?e._lastGlobeHeight=v:e._lastGlobeHeight+=g*.1;return}}M.equals(o.transform,M.IDENTITY)||(",
+      "sourceSha256": "9ac3d1f3541165c8379fa6e7d4c110946fc9b5bfad58c73bb6299e2fe0f250ae",
+      "patchedSha256": "3aafe7d915b7596edc501189dda0e9d8daae5a76238324591f7da64e9175efef"
+    }
+  ]
+}

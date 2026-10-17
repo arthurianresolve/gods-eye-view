@@ -1,0 +1,56 @@
+{
+  "schema": "gev-prewarm-disposal-reproduction/v1",
+  "commit": "84004e110f5233c869e9b6f9d51a8900fcfd307b",
+  "scope": "Actual action-runner disposal and Cesium event; deterministic queued callbacks. No browser latency or full-soak claim.",
+  "expected": {
+    "listenersAfterDispose": 0,
+    "pendingCallbacksAfterDispose": 0,
+    "picksAfterDrain": 0
+  },
+  "outcomes": [
+    {
+      "stage": "debounce-pending",
+      "before": {
+        "listeners": 1,
+        "timers": 1,
+        "idle": 0,
+        "picks": 0
+      },
+      "afterDispose": {
+        "listeners": 1,
+        "timers": 1,
+        "idle": 0,
+        "picks": 0
+      },
+      "afterDrain": {
+        "listeners": 1,
+        "timers": 0,
+        "idle": 0,
+        "picks": 1
+      },
+      "latePickAfterDispose": true
+    },
+    {
+      "stage": "idle-pending",
+      "before": {
+        "listeners": 1,
+        "timers": 0,
+        "idle": 1,
+        "picks": 0
+      },
+      "afterDispose": {
+        "listeners": 1,
+        "timers": 0,
+        "idle": 1,
+        "picks": 0
+      },
+      "afterDrain": {
+        "listeners": 1,
+        "timers": 0,
+        "idle": 0,
+        "picks": 1
+      },
+      "latePickAfterDispose": true
+    }
+  ]
+}

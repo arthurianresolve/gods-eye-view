@@ -1,0 +1,57 @@
+{
+  "conclusion": "success",
+  "headSha": "98a403f28442fcc485435facf7d9980eb01a58ce",
+  "jobs": [
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497837,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497837"
+    },
+    {
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497857,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497857"
+    },
+    {
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497950,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497950"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497956,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497956"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497967,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497967"
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673497997,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673497997"
+    },
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "databaseId": 114673498192,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034/job/114673498192"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38207294034"
+}

@@ -1,0 +1,418 @@
+TAP version 13
+# Subtest: capture CLI removes the future-document registration only after document retirement
+ok 1 - capture CLI removes the future-document registration only after document retirement
+  ---
+  duration_ms: 2695.9105
+  type: 'test'
+  ...
+# Subtest: page observer is serializable, bounded, and captures per-pick inputs and caller
+ok 2 - page observer is serializable, bounded, and captures per-pick inputs and caller
+  ---
+  duration_ms: 3.7797
+  type: 'test'
+  ...
+# Subtest: observer rejects unowned callers and does not dispose a replacement owner
+ok 3 - observer rejects unowned callers and does not dispose a replacement owner
+  ---
+  duration_ms: 0.6577
+  type: 'test'
+  ...
+# Subtest: actual observer output validates and survives the failed-capture smoke projection
+ok 4 - actual observer output validates and survives the failed-capture smoke projection
+  ---
+  duration_ms: 6.2184
+  type: 'test'
+  ...
+# Subtest: warmup timeout before assignment retains final rows, owner and cleanup
+ok 5 - warmup timeout before assignment retains final rows, owner and cleanup
+  ---
+  duration_ms: 2.0596
+  type: 'test'
+  ...
+# Subtest: setup-document retirement permits no owner, but requires cleanup for an installed owner
+ok 6 - setup-document retirement permits no owner, but requires cleanup for an installed owner
+  ---
+  duration_ms: 0.2324
+  type: 'test'
+  ...
+# Subtest: same-runner packet validates invariants and reports objective separately
+ok 7 - same-runner packet validates invariants and reports objective separately
+  ---
+  duration_ms: 6.1173
+  type: 'test'
+  ...
+# Subtest: a small valid change remains comparable but misses the target
+ok 8 - a small valid change remains comparable but misses the target
+  ---
+  duration_ms: 0.9674
+  type: 'test'
+  ...
+# Subtest: eligibility is reported independently for each experimental candidate
+ok 9 - eligibility is reported independently for each experimental candidate
+  ---
+  duration_ms: 0.6098
+  type: 'test'
+  ...
+# Subtest: moving query time into a slower boot does not look like an end-to-end win
+ok 10 - moving query time into a slower boot does not look like an end-to-end win
+  ---
+  duration_ms: 0.65
+  type: 'test'
+  ...
+# Subtest: CBA order and same-host comparisons are enforced
+ok 11 - CBA order and same-host comparisons are enforced
+  ---
+  duration_ms: 6.5418
+  type: 'test'
+  ...
+# Subtest: AB and BA compare backend variants without requiring the early-query report
+ok 12 - AB and BA compare backend variants without requiring the early-query report
+  ---
+  duration_ms: 2.1916
+  type: 'test'
+  ...
+# Subtest: same-platform renderer comparisons support all recovery operating systems
+ok 13 - same-platform renderer comparisons support all recovery operating systems
+  ---
+  duration_ms: 2.8018
+  type: 'test'
+  ...
+# Subtest: a failed early candidate does not invalidate a completed backend comparison
+ok 14 - a failed early candidate does not invalidate a completed backend comparison
+  ---
+  duration_ms: 0.5243
+  type: 'test'
+  ...
+# Subtest: a sequence without the required driver control cannot compare a candidate
+ok 15 - a sequence without the required driver control cannot compare a candidate
+  ---
+  duration_ms: 0.6362
+  type: 'test'
+  ...
+# Subtest: dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed
+ok 16 - dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed
+  ---
+  duration_ms: 3.1313
+  type: 'test'
+  ...
+# Subtest: future-document registration removal leaves the current probe live and is not repeated
+ok 17 - future-document registration removal leaves the current probe live and is not repeated
+  ---
+  duration_ms: 8.4453
+  type: 'test'
+  ...
+# Subtest: capture retirement keeps the registration through its single document lifetime
+ok 18 - capture retirement keeps the registration through its single document lifetime
+  ---
+  duration_ms: 3.1942
+  type: 'test'
+  ...
+# Subtest: early probe does not install in a subframe document
+ok 19 - early probe does not install in a subframe document
+  ---
+  duration_ms: 1.2351
+  type: 'test'
+  ...
+# Subtest: an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation
+ok 20 - an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation
+  ---
+  duration_ms: 3.2461
+  type: 'test'
+  ...
+# Subtest: ordinary cleanup leaves render scheduling unchanged unless retirement is requested
+ok 21 - ordinary cleanup leaves render scheduling unchanged unless retirement is requested
+  ---
+  duration_ms: 1.7926
+  type: 'test'
+  ...
+# Subtest: retirement rejection fails cleanup with bounded explicit state
+ok 22 - retirement rejection fails cleanup with bounded explicit state
+  ---
+  duration_ms: 2.0337
+  type: 'test'
+  ...
+# Subtest: failed early registration removal is recorded and never retried at final cleanup
+ok 23 - failed early registration removal is recorded and never retried at final cleanup
+  ---
+  duration_ms: 8.2374
+  type: 'test'
+  ...
+# Subtest: late early-registration acknowledgement is reused without a duplicate removal
+ok 24 - late early-registration acknowledgement is reused without a duplicate removal
+  ---
+  duration_ms: 17.7641
+  type: 'test'
+  ...
+# Subtest: late registration-removal errors retain host receipt elapsed time and original timeout
+ok 25 - late registration-removal errors retain host receipt elapsed time and original timeout
+  ---
+  duration_ms: 44.7624
+  type: 'test'
+  ...
+# Subtest: reinstalling in one Page invalidates prior registration acknowledgement
+ok 26 - reinstalling in one Page invalidates prior registration acknowledgement
+  ---
+  duration_ms: 1.6055
+  type: 'test'
+  ...
+# Subtest: early probe preserves native getContext and captures identity once before scene observation
+ok 27 - early probe preserves native getContext and captures identity once before scene observation
+  ---
+  duration_ms: 1.5072
+  type: 'test'
+  ...
+# Subtest: early probe cleanup reports an unconfirmed timeout instead of success
+ok 28 - early probe cleanup reports an unconfirmed timeout instead of success
+  ---
+  duration_ms: 12.5448
+  type: 'test'
+  ...
+# Subtest: cleanup evidence verifies the live hook and listeners plus registration acknowledgement
+ok 29 - cleanup evidence verifies the live hook and listeners plus registration acknowledgement
+  ---
+  duration_ms: 2.2864
+  type: 'test'
+  ...
+# Subtest: document and future-registration cleanup failures remain separately attributed
+ok 30 - document and future-registration cleanup failures remain separately attributed
+  ---
+  duration_ms: 1.2575
+  type: 'test'
+  ...
+# Subtest: a fresh installation in the same Page is cleaned instead of reusing prior-document proof
+ok 31 - a fresh installation in the same Page is cleaned instead of reusing prior-document proof
+  ---
+  duration_ms: 2.0593
+  type: 'test'
+  ...
+# Subtest: cleanup timeout preserves separate stages and records late completion
+ok 32 - cleanup timeout preserves separate stages and records late completion
+  ---
+  duration_ms: 40.2942
+  type: 'test'
+  ...
+# Subtest: cleanup attempts every owned listener and bounded failure reports retain stage evidence
+ok 33 - cleanup attempts every owned listener and bounded failure reports retain stage evidence
+  ---
+  duration_ms: 2.3836
+  type: 'test'
+  ...
+# Subtest: late page cleanup retains bounded page timing without converting the host timeout
+ok 34 - late page cleanup retains bounded page timing without converting the host timeout
+  ---
+  duration_ms: 13.4878
+  type: 'test'
+  ...
+# Subtest: late retirement acknowledgement remains a timeout but retains its bounded state
+ok 35 - late retirement acknowledgement remains a timeout but retains its bounded state
+  ---
+  duration_ms: 15.9581
+  type: 'test'
+  ...
+# Subtest: late document errors discard untrusted status and error fields after timeout
+ok 36 - late document errors discard untrusted status and error fields after timeout
+  ---
+  duration_ms: 32.0569
+  type: 'test'
+  ...
+# Subtest: early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts
+ok 37 - early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts
+  ---
+  duration_ms: 4.1903
+  type: 'test'
+  ...
+# Subtest: early probe accepts a valid zero-duration clock sample
+ok 38 - early probe accepts a valid zero-duration clock sample
+  ---
+  duration_ms: 1.3876
+  type: 'test'
+  ...
+# Subtest: provider document retires rendering before audit and interception teardown
+ok 39 - provider document retires rendering before audit and interception teardown
+  ---
+  duration_ms: 3.6847
+  type: 'test'
+  ...
+# Subtest: unconfirmed renderer retirement fails before audits or interception release
+ok 40 - unconfirmed renderer retirement fails before audits or interception release
+  ---
+  duration_ms: 1.2999
+  type: 'test'
+  ...
+# Subtest: an audit failure preserves the interception and document for outer cleanup
+ok 41 - an audit failure preserves the interception and document for outer cleanup
+  ---
+  duration_ms: 0.6382
+  type: 'test'
+  ...
+# Subtest: capture clock validation consumes the actual phased producer and rejects phase/time drift
+ok 42 - capture clock validation consumes the actual phased producer and rejects phase/time drift
+  ---
+  duration_ms: 7.2792
+  type: 'test'
+  ...
+# Subtest: smoke CLI parser preserves the candidate SHA and output path
+ok 43 - smoke CLI parser preserves the candidate SHA and output path
+  ---
+  duration_ms: 1.1746
+  type: 'test'
+  ...
+# Subtest: provider CPU profile set binds first two idle and first motion windows to exact documents
+ok 44 - provider CPU profile set binds first two idle and first motion windows to exact documents
+  ---
+  duration_ms: 34.0164
+  type: 'test'
+  ...
+# Subtest: failed later profile window preserves the earlier ordered sidecar indexes
+ok 45 - failed later profile window preserves the earlier ordered sidecar indexes
+  ---
+  duration_ms: 65.9388
+  type: 'test'
+  ...
+# Subtest: capture CLI validator accepts only the complete six-sample hosted smoke contract
+ok 46 - capture CLI validator accepts only the complete six-sample hosted smoke contract
+  ---
+  duration_ms: 25.1043
+  type: 'test'
+  ...
+# Subtest: scene frame attribution is bounded and permanently ineligible for comparison
+ok 47 - scene frame attribution is bounded and permanently ineligible for comparison
+  ---
+  duration_ms: 22.3341
+  type: 'test'
+  ...
+# Subtest: capture CLI validates the selected infrastructure workload and rejects dense substitution
+ok 48 - capture CLI validates the selected infrastructure workload and rejects dense substitution
+  ---
+  duration_ms: 544.885
+  type: 'test'
+  ...
+# Subtest: infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+ok 49 - infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+  ---
+  duration_ms: 189.8162
+  type: 'test'
+  ...
+# Subtest: capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+ok 50 - capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+  ---
+  duration_ms: 10.4671
+  type: 'test'
+  ...
+# Subtest: capture CLI accepts empty startup worker audits only when no worker path was observed
+ok 51 - capture CLI accepts empty startup worker audits only when no worker path was observed
+  ---
+  duration_ms: 5.2063
+  type: 'test'
+  ...
+# Subtest: capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+ok 52 - capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+  ---
+  duration_ms: 18.2297
+  type: 'test'
+  ...
+# Subtest: capture CLI rejects missing, altered or unreported comparison contracts
+ok 53 - capture CLI rejects missing, altered or unreported comparison contracts
+  ---
+  duration_ms: 14.2031
+  type: 'test'
+  ...
+# Subtest: capture CLI requires usable frame-interval evidence for moving and tracking samples
+ok 54 - capture CLI requires usable frame-interval evidence for moving and tracking samples
+  ---
+  duration_ms: 56.7889
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves legitimately unavailable zero-frame idle timing
+ok 55 - capture CLI preserves legitimately unavailable zero-frame idle timing
+  ---
+  duration_ms: 4.9316
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+ok 56 - smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+  ---
+  duration_ms: 0.6651
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves a bounded completed capture report after outer validation failure
+ok 57 - smoke compaction preserves a bounded completed capture report after outer validation failure
+  ---
+  duration_ms: 0.6243
+  type: 'test'
+  ...
+# Subtest: smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+ok 58 - smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+  ---
+  duration_ms: 2.717
+  type: 'test'
+  ...
+# Subtest: smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+ok 59 - smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+  ---
+  duration_ms: 0.1602
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process on timeout
+ok 60 - bounded child runner stops an owned process on timeout
+  ---
+  duration_ms: 650.3896
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process when output exceeds its cap
+ok 61 - bounded child runner stops an owned process when output exceeds its cap
+  ---
+  duration_ms: 506.487
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops a separately owned browser process
+ok 62 - bounded child runner stops a separately owned browser process
+  ---
+  duration_ms: 1102.3347
+  type: 'test'
+  ...
+# Subtest: bounded child runner cleans the owned browser when the CLI exits with failure
+ok 63 - bounded child runner cleans the owned browser when the CLI exits with failure
+  ---
+  duration_ms: 764.0583
+  type: 'test'
+  ...
+# Subtest: bounded child failure keeps sanitized stderr and the latest capture progress
+ok 64 - bounded child failure keeps sanitized stderr and the latest capture progress
+  ---
+  duration_ms: 370.2266
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves hash-bound raw reports on success and failure
+ok 65 - capture CLI preserves hash-bound raw reports on success and failure
+  ---
+  duration_ms: 22.0659
+  type: 'test'
+  ...
+# Subtest: capture CLI report sidecar marks missing, malformed, and oversized reports
+ok 66 - capture CLI report sidecar marks missing, malformed, and oversized reports
+  ---
+  duration_ms: 26.4349
+  type: 'test'
+  ...
+# Subtest: capture CLI closes the browser after page creation fails inside its lifecycle
+ok 67 - capture CLI closes the browser after page creation fails inside its lifecycle
+  ---
+  duration_ms: 2941.8058
+  type: 'test'
+  ...
+# Subtest: invalid smoke input writes a bounded failure artifact without launching a browser
+ok 68 - invalid smoke input writes a bounded failure artifact without launching a browser
+  ---
+  duration_ms: 2977.8524
+  type: 'test'
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 68
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13015.5239

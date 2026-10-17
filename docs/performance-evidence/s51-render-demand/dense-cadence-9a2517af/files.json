@@ -1,0 +1,47 @@
+[
+  {
+    "file": "cesium-patches.log.gz",
+    "bytes": 75,
+    "sha256": "b9de2d69b761b9c734c3e1ccc2f72393c35853a33ac9d6f5c100ddddd3d08f44",
+    "rawBytes": 59,
+    "rawSha256": "44b512a36e2f030584fd07114c14b46ea7784d78dfb0639b82b2fb629c1f15e2"
+  },
+  {
+    "file": "focused.log.gz",
+    "bytes": 2434,
+    "sha256": "617380f8e1f4900c9cbab7c07124ebdd57b5609ac40166f04f98e4521a24138c",
+    "rawBytes": 5422,
+    "rawSha256": "8db710db847732a5ca2dc9e1d8ae7cc521d4af91b66f548c8fdefeb6c7bd8162"
+  },
+  {
+    "file": "full-node24.log.gz",
+    "bytes": 241739,
+    "sha256": "92035d132c48e7479a1ff98d168082cc056ac9a1f7d19e88de89a0b013a7ee84",
+    "rawBytes": 786303,
+    "rawSha256": "7d077e908b53cc256e9b060650fad2b0eb13f6bebe30cc58276c23eba51e4263"
+  },
+  {
+    "file": "negative.log.gz",
+    "bytes": 1076,
+    "sha256": "a8ce17d2cab08297a30c11869cf2b242d214b36be7e097388594042f2dd0486f",
+    "rawBytes": 3650,
+    "rawSha256": "3ccc1db066d2154c49dfe3ac14dda6e12e534ba2bf41d172ac4b3d5c8f5ef863"
+  },
+  {
+    "file": "panel-key-contention-review.json",
+    "bytes": 859,
+    "sha256": "b97a65b877e9e5171df38c7f0ea1e1e069e220eec98bdce8da7c524326f3d321"
+  },
+  {
+    "file": "panel-key-diagnostic.log.gz",
+    "bytes": 161,
+    "sha256": "17ced1af9c1b8dbcdb5104044f30d8083901354dc428481bd861543dbdada7cf",
+    "rawBytes": 194,
+    "rawSha256": "0baf204eaa70678495174227c21cc8dd80fc2fe55b3a5f02d95220d9cb5bad8e"
+  },
+  {
+    "file": "review.json",
+    "bytes": 1076,
+    "sha256": "4285451dfc8c2d0f9be673cb61f98c576bdebb830df3c2f3a0c73e0accc5a1df"
+  }
+]

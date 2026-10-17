@@ -1,0 +1,35 @@
+{
+  "source": "14d24ca3d14623ecaa2f59ecf7dfc5b8d92bfd27",
+  "node": "v24.16.0",
+  "results": [
+    {
+      "artifact": "focused.log",
+      "command": [
+        "node",
+        "--test",
+        "scripts/performance/aircraftBillboardMutationAudit.test.mjs",
+        "src/layers/flights/records.test.mjs",
+        "src/layers/military/records.test.mjs",
+        "src/layers/flights/snapshotRenderer.test.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "artifact": "audit.json",
+      "command": [
+        "node",
+        "scripts/performance/aircraftBillboardMutationAudit.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "artifact": "format.log",
+      "command": [
+        "node",
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ]
+}
