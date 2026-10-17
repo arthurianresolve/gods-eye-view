@@ -61,22 +61,36 @@ if ($handle -eq [IntPtr]::Zero) { throw 'Owned browser window handle is unavaila
 $previous = [GevOwnedBrowserWindow]::GetForegroundWindow()
 $previousPid = [uint32]0
 $previousThread = [GevOwnedBrowserWindow]::GetWindowThreadProcessId($previous, [ref]$previousPid)
+$targetPid = [uint32]0
+$targetThread = [GevOwnedBrowserWindow]::GetWindowThreadProcessId($handle, [ref]$targetPid)
 $currentThread = [GevOwnedBrowserWindow]::GetCurrentThreadId()
-$attached = $false
+$attachedToPrevious = $false
+$attachedToTarget = $false
 if ($previousThread -ne 0 -and $previousThread -ne $currentThread) {
-  $attached = [GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $previousThread, $true)
+  $attachedToPrevious = [GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $previousThread, $true)
+}
+if ($targetThread -ne 0 -and $targetThread -ne $currentThread -and $targetThread -ne $previousThread) {
+  $attachedToTarget = [GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $targetThread, $true)
 }
 try {
-  $shown = [GevOwnedBrowserWindow]::ShowWindow($handle, 9)
-  $broughtToTop = [GevOwnedBrowserWindow]::BringWindowToTop($handle)
-  $setForeground = [GevOwnedBrowserWindow]::SetForegroundWindow($handle)
-  Start-Sleep -Milliseconds 100
-  $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
-  $foregroundPid = [uint32]0
-  [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
-  $confirmed = $foreground -eq $handle
+  $focusAttempts = 0
+  $confirmed = $false
+  do {
+    $focusAttempts += 1
+    $shown = [GevOwnedBrowserWindow]::ShowWindow($handle, 9)
+    $broughtToTop = [GevOwnedBrowserWindow]::BringWindowToTop($handle)
+    $setForeground = [GevOwnedBrowserWindow]::SetForegroundWindow($handle)
+    Start-Sleep -Milliseconds 50
+    $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
+    $foregroundPid = [uint32]0
+    [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
+    $confirmed = $foreground -eq $handle
+  } while ((-not $confirmed) -and $focusAttempts -lt 40)
 } finally {
-  if ($attached) {
+  if ($attachedToTarget) {
+    [void][GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $targetThread, $false)
+  }
+  if ($attachedToPrevious) {
     [void][GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $previousThread, $false)
   }
 }
@@ -91,7 +105,12 @@ $desktopState = if ($foregroundProcessName -eq 'LockApp') { 'locked' } else { 'i
   windowHandleAvailable = $handle -ne [IntPtr]::Zero
   windowHandleSource = $handleSource
   handlePollAttempts = $attempts
-  inputAttached = $attached
+  inputAttached = $attachedToPrevious -or $attachedToTarget
+  attachedToPrevious = $attachedToPrevious
+  attachedToTarget = $attachedToTarget
+  previousThread = $previousThread
+  targetThread = $targetThread
+  focusAttempts = $focusAttempts
   showWindowAccepted = $shown
   bringWindowToTopAccepted = $broughtToTop
   setForegroundAccepted = $setForeground
@@ -136,23 +155,60 @@ export async function focusOwnedWindowsBrowserWindow({
       'Windows foreground activation timeout must be positive.',
     );
 
+  const maximumAttempts = 3;
+  const attempts = [];
+  const startedAt = Date.now();
   let stdout;
-  try {
-    ({ stdout } = await runner(browserPid, timeoutMs));
-  } catch (cause) {
+  let finalCause;
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) break;
+    const remainingAttempts = maximumAttempts - attempt + 1;
+    const attemptTimeoutMs = Math.max(
+      1,
+      Math.floor(remainingMs / remainingAttempts),
+    );
+    try {
+      ({ stdout } = await runner(browserPid, attemptTimeoutMs));
+      break;
+    } catch (cause) {
+      finalCause = cause;
+      let evidence = null;
+      try {
+        evidence = JSON.parse(String(cause?.stdout || '').trim());
+      } catch {
+        // Preserve a bounded retry record without inventing missing evidence.
+      }
+      attempts.push({
+        attempt,
+        timeoutMs: attemptTimeoutMs,
+        status: evidence?.status || 'runner-failed-before-evidence',
+        desktopState: evidence?.desktopState || null,
+        windowHandleAvailable: evidence?.windowHandleAvailable ?? null,
+        foregroundPid: evidence?.foregroundPid ?? null,
+      });
+      if (evidence?.desktopState === 'locked') {
+        const error = new Error(
+          'Windows desktop is locked; foreground hardware capture cannot start.',
+          { cause },
+        );
+        error.name = 'HostWindowActivationError';
+        error.evidence = evidence;
+        error.activationAttempts = attempts;
+        throw error;
+      }
+      if (attempt < maximumAttempts && Date.now() - startedAt < timeoutMs)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  if (stdout == null) {
     const error = new Error(
-      'Windows could not activate the owned performance browser window.',
-      { cause },
+      'Windows could not activate the owned performance browser window after bounded retries.',
+      { cause: finalCause },
     );
     error.name = 'HostWindowActivationError';
-    try {
-      error.evidence = JSON.parse(String(cause?.stdout || '').trim());
-      if (error.evidence?.desktopState === 'locked')
-        error.message =
-          'Windows desktop is locked; foreground hardware capture cannot start.';
-    } catch {
-      // A pre-evidence PowerShell failure is preserved through the cause.
-    }
+    error.evidence = attempts.at(-1) || null;
+    error.activationAttempts = attempts;
     throw error;
   }
   let evidence;

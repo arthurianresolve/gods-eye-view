@@ -1244,7 +1244,14 @@ async function writeCaptureFailure(error, { refresh = false } = {}) {
     scenario: failureProgress.current?.scenario || failureProgress.scenario,
     run: failureProgress.current?.run || failureProgress.run,
     error,
-    errorActual: error?.actual,
+    errorActual:
+      error?.actual ??
+      (error?.name === 'HostWindowActivationError'
+        ? {
+            evidence: error.evidence ?? null,
+            activationAttempts: error.activationAttempts ?? [],
+          }
+        : undefined),
     errorExpected: error?.expected,
     errorOperator: error?.operator,
     current: performanceDiagnosticsDocuments.length
