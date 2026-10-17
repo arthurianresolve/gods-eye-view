@@ -15,9 +15,9 @@ export async function retireProviderDocument({
   for (const [name, operation] of [
     ['renderer retirement', retireRenderer],
     ['worker audit', auditWorkers],
-    ['progress binding disposal', disposeProgressBinding],
     ['fixture interception stop', stopInterception],
     ['document close', closeDocument],
+    ['progress binding disposal', disposeProgressBinding],
     ['fixture interception release', releaseInterception],
   ]) {
     if (typeof operation !== 'function')

@@ -97,14 +97,45 @@ test('scripted motion completion does not wait for another animation frame', asy
   assert.doesNotMatch(completion, /await motionFinished/);
 });
 
-test('scripted motion explicitly wakes request-render scenes on every pose', async () => {
+test('moving samples own a bounded Viewer render pump and restore the default loop', async () => {
   const source = await fs.readFile(SCRIPT, 'utf8');
+  const ownership = source.indexOf('const renderDemandOwnership = {');
   const applyDistance = source.indexOf('const applyDistance = (distance) => {');
   const finishMotion = source.indexOf('finishMotion =', applyDistance);
-  assert.ok(applyDistance >= 0 && finishMotion > applyDistance);
+  const returnedSample = source.indexOf('return {', finishMotion);
+  const finallyBlock = source.indexOf('} finally {', returnedSample);
+  assert.ok(
+    ownership >= 0 &&
+      applyDistance > ownership &&
+      finishMotion > applyDistance &&
+      returnedSample > finishMotion &&
+      finallyBlock > returnedSample,
+  );
+  const acquisition = source.slice(ownership, applyDistance);
+  assert.match(acquisition, /scenarioName !== 'idle'/);
+  assert.match(acquisition, /viewer\.useDefaultRenderLoop = false;/);
+  assert.match(
+    acquisition,
+    /requestAnimationFrame\(\(\) => requestAnimationFrame\(resolve\)\)/,
+  );
+  assert.match(acquisition, /renderDemandOwnership\.manualFramePump = true;/);
   const poseUpdate = source.slice(applyDistance, finishMotion);
   assert.match(poseUpdate, /viewer\.camera\.moveRight\(distance\);/);
-  assert.match(poseUpdate, /scene\.requestRender\(\);/);
+  const motionPump = source.slice(finishMotion, returnedSample);
+  assert.match(motionPump, /updateMotion\(elapsed\);/);
+  assert.match(motionPump, /viewer\.render\(\);/);
+  const completion = source.slice(finishMotion, finallyBlock);
+  assert.match(
+    completion,
+    /if \(renderDemandOwnership\.requested\) viewer\.render\(\);/,
+  );
+  assert.match(completion, /restoreMeasurementRenderDemand\(\);/);
+  assert.match(completion, /renderDemandOwnership,/);
+  const cleanup = source.slice(
+    finallyBlock,
+    source.indexOf('},\n        {', finallyBlock),
+  );
+  assert.match(cleanup, /restoreMeasurementRenderDemand\(\);/);
 });
 
 test('fresh dense provider documents synchronize engine and visual density', async () => {

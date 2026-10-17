@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import {
   createBoundaryProgressRecorder,
@@ -668,6 +669,34 @@ test('default binding cleanup tolerates hosted-scale protocol delay', async () =
   assert.equal(cleanup.removed, true);
   assert.equal(cleanup.error, null);
   assert.ok(cleanup.elapsedMs >= 300 && cleanup.elapsedMs < 1500);
+});
+
+test('document closure finalizes an inactive binding without a protocol removal', async () => {
+  let removeCalls = 0;
+  const page = {
+    async exposeFunction() {},
+    async removeExposedFunction() {
+      removeCalls += 1;
+      throw new Error('closed documents cannot service protocol removal');
+    },
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:closed-document',
+  });
+  assert.equal(binding.deactivate(), true);
+  assert.equal(
+    binding.register(randomUUID(), () => ({})),
+    false,
+  );
+  const cleanup = await binding.dispose({ documentClosed: true });
+  assert.deepEqual(cleanup, {
+    removed: true,
+    elapsedMs: 0,
+    error: null,
+    removalMethod: 'document-close',
+  });
+  assert.equal(removeCalls, 0);
 });
 
 test('concurrent binding disposal waits for the same pending removal outcome', async () => {

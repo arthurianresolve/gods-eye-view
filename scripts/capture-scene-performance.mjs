@@ -1188,7 +1188,25 @@ async function stopSceneFrameAttribution(reason, sample = null) {
   return stopped;
 }
 
-async function disposeActiveRenderBoundaryProgressBinding(reason) {
+function deactivateActiveRenderBoundaryProgressBinding(reason) {
+  const binding = activeRenderBoundaryProgressBinding;
+  const record = activeRenderBoundaryProgressBindingRecord;
+  if (!binding || !record) return null;
+  record.status = 'inactive-awaiting-document-close';
+  record.disposeReason = reason;
+  const deactivated = binding.deactivate?.() === true;
+  record.deactivation = {
+    confirmed: deactivated,
+    method: 'host-handlers-cleared',
+  };
+  record.ignoredCallbacks = { ...binding.ignoredCallbacks };
+  return record.deactivation;
+}
+
+async function disposeActiveRenderBoundaryProgressBinding(
+  reason,
+  { documentClosed = false } = {},
+) {
   const binding = activeRenderBoundaryProgressBinding;
   const record = activeRenderBoundaryProgressBindingRecord;
   if (!binding || !record) return null;
@@ -1197,7 +1215,7 @@ async function disposeActiveRenderBoundaryProgressBinding(reason) {
   record.status = 'disposing';
   record.disposeReason = reason;
   try {
-    const cleanup = await binding.dispose();
+    const cleanup = await binding.dispose({ documentClosed });
     record.cleanup = cleanup;
     record.ignoredCallbacks = { ...binding.ignoredCallbacks };
     record.status = cleanup.removed ? 'disposed' : 'cleanup-failed';
@@ -3963,8 +3981,10 @@ try {
         providerSampleWorkerAuditComplete = true;
       },
       disposeProgressBinding: async () => {
-        const bindingCleanup =
-          await disposeActiveRenderBoundaryProgressBinding('document-replaced');
+        const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
+          'document-replaced',
+          { documentClosed: true },
+        );
         if (bindingCleanup && !bindingCleanup.removed)
           throw new Error(
             'Render-boundary binding cleanup failed before document replacement.',
@@ -4703,8 +4723,55 @@ try {
           let resolveMeasurement = null;
           let motionFrameRequest = null;
           let finishMotion = () => {};
+          const renderDemandOwnership = {
+            requested: scenarioName !== 'idle',
+            beforeRequestRenderMode: Boolean(scene.requestRenderMode),
+            beforeUseDefaultRenderLoop: viewer.useDefaultRenderLoop,
+            defaultLoopQuiesced: false,
+            manualFramePump: false,
+            restored: scenarioName === 'idle',
+            restoreReason:
+              scenarioName === 'idle' ? 'idle-sample-unchanged' : null,
+          };
+          let renderDemandCleanupAttempted = false;
+          const restoreMeasurementRenderDemand = () => {
+            if (renderDemandCleanupAttempted) return;
+            renderDemandCleanupAttempted = true;
+            if (!renderDemandOwnership.requested) return;
+            viewer.useDefaultRenderLoop =
+              renderDemandOwnership.beforeUseDefaultRenderLoop;
+            scene.requestRender();
+            renderDemandOwnership.restored =
+              viewer.useDefaultRenderLoop ===
+              renderDemandOwnership.beforeUseDefaultRenderLoop;
+            renderDemandOwnership.restoreReason = renderDemandOwnership.restored
+              ? 'restored-original-default-loop-state'
+              : 'default-loop-state-restore-failed';
+          };
           try {
+            // Programmatic motion runs outside Cesium's input handlers, and a
+            // hosted software renderer can leave the default loop latched even
+            // while its public flags say it is active. Moving samples therefore
+            // own one bounded public Viewer.render() pump. Quiesce the default
+            // loop first so baseline and candidate cannot double-render. Idle
+            // samples retain the production loop exactly as configured.
+            if (renderDemandOwnership.requested) {
+              viewer.useDefaultRenderLoop = false;
+              await new Promise((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(resolve)),
+              );
+              renderDemandOwnership.defaultLoopQuiesced =
+                viewer.useDefaultRenderLoop === false;
+              if (!renderDemandOwnership.defaultLoopQuiesced)
+                throw new Error(
+                  'Performance capture could not quiesce the default render loop.',
+                );
+              renderDemandOwnership.manualFramePump = true;
+            }
             if (stagedClock) stagedClock.startMeasurement(expectedRunOrdinal);
+            intervals.length = 0;
+            previous = null;
+            renderedFrameCount = 0;
             startedAt = performance.now();
             window.__gevWeatherMeasurementStartedAt = startedAt;
             const measurementWait = new Promise((resolve) => {
@@ -4720,6 +4787,7 @@ try {
               clearTimeout(measurementTimer);
               resolveMeasurement?.();
             };
+            let updateMotion = () => {};
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
               // A timer-step route accumulates missed callbacks and makes a slow
@@ -4732,14 +4800,12 @@ try {
                   endTransform: home.transform,
                 });
                 viewer.camera.moveRight(distance);
-                // Explicit-render scenes do not promise that a camera mutation
-                // performed by this separate RAF owner will wake Cesium's next
-                // render. Own the wake so slow/software renderers still expose
-                // measured frame intervals instead of only the terminal frame.
-                scene.requestRender();
                 motionDistance = distance;
               };
               finishMotion = () => applyDistance((durationMs * 16) / 50);
+              updateMotion = (elapsed) => applyDistance((elapsed * 16) / 50);
+            }
+            if (renderDemandOwnership.requested) {
               motionStartedAt = performance.now();
               const move = () => {
                 motionFrameRequest = null;
@@ -4748,8 +4814,8 @@ try {
                   durationMs,
                   Math.max(0, performance.now() - motionStartedAt),
                 );
-                const distance = (elapsed * 16) / 50;
-                applyDistance(distance);
+                updateMotion(elapsed);
+                viewer.render();
                 if (elapsed >= durationMs) return;
                 motionFrameRequest = requestAnimationFrame(move);
               };
@@ -4783,6 +4849,7 @@ try {
             // another animation frame. Slow hardware must still reach the same
             // absolute route endpoint without extending the measured window.
             finishMotion();
+            if (renderDemandOwnership.requested) viewer.render();
             // A parked request-render scene is allowed to stop scheduling
             // animation frames. Requiring one here left idle captures pending
             // until Puppeteer's unrelated protocol timeout. Motion already
@@ -4818,6 +4885,7 @@ try {
               .forEach((entry) => longTasks.push(entry.duration));
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
+            restoreMeasurementRenderDemand();
             return {
               durationMs: performance.now() - startedAt,
               renderedFrameCount,
@@ -4870,6 +4938,7 @@ try {
                 motionDistanceM: motionDistance,
               },
               phasedClockEnd: clockEnd,
+              renderDemandOwnership,
               ...(recordFrameWindow
                 ? {
                     sceneFrameDiagnosticWindow: {
@@ -4887,6 +4956,7 @@ try {
             clearTimeout(initialDelayTimer);
             if (motionFrameRequest != null)
               cancelAnimationFrame(motionFrameRequest);
+            restoreMeasurementRenderDemand();
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
             window.removeEventListener('blur', onBlur);
@@ -5138,9 +5208,10 @@ try {
               measurementProgressRecord.measurement,
             );
         }
-        const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
-          'both-boundaries-complete',
-        );
+        const bindingDeactivation =
+          deactivateActiveRenderBoundaryProgressBinding(
+            'both-boundaries-complete',
+          );
         if (depthPickAttributionEnabled && activeDepthPickAttribution) {
           const finalObservation =
             measurementBoundarySettle?.page?.diagnostics?.finalObservation ??
@@ -5152,9 +5223,9 @@ try {
           failureProgress.workload.depthPickAttribution =
             depthPickAttributionEnvelope();
         }
-        if (bindingCleanup && !bindingCleanup.removed)
+        if (bindingDeactivation && !bindingDeactivation.confirmed)
           throw new Error(
-            'Render-boundary binding cleanup failed after sample boundaries.',
+            'Render-boundary binding deactivation failed after sample boundaries.',
           );
         const trackingEnd =
           scenario === 'selected-aircraft-tracking'
@@ -5890,9 +5961,21 @@ try {
     };
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
+  if (providerContext) {
+    await providerContext.close();
+    providerContext = null;
+    const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
+      'capture-success-document-closed',
+      { documentClosed: true },
+    );
+    if (bindingCleanup && !bindingCleanup.removed)
+      throw new Error(
+        'Render-boundary binding cleanup was not confirmed by document closure.',
+      );
+  }
   if (workerAuditMode === 'receipt-only' && finalizeReceiptOnlyDocumentAudit) {
-    if (providerContext) await providerContext.close();
-    else await closeReceiptOnlyAuditPage(page);
+    if (!providerContext && !page.isClosed())
+      await closeReceiptOnlyAuditPage(page);
     finalizeReceiptOnlyDocumentAudit();
     finalizeReceiptOnlyDocumentAudit = null;
   }

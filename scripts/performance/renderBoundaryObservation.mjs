@@ -126,6 +126,7 @@ export async function prepareRenderBoundaryProgressBinding({
   const ignoredCallbacks = { malformedInvocation: 0, unownedInvocation: 0 };
   const setupStartedAt = now();
   let disposed = false;
+  let inactive = false;
   let removePromise = null;
   let disposePromise = null;
   const remove = () => {
@@ -139,6 +140,7 @@ export async function prepareRenderBoundaryProgressBinding({
     page.exposeFunction(name, (invocationId, stage, details) => {
       if (
         disposed ||
+        inactive ||
         typeof invocationId !== 'string' ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           invocationId,
@@ -210,6 +212,7 @@ export async function prepareRenderBoundaryProgressBinding({
     register(invocationId, receiver) {
       if (
         disposed ||
+        inactive ||
         typeof invocationId !== 'string' ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           invocationId,
@@ -224,11 +227,28 @@ export async function prepareRenderBoundaryProgressBinding({
     unregister(invocationId) {
       return handlers.delete(invocationId);
     },
+    deactivate() {
+      if (disposed) return false;
+      inactive = true;
+      handlers.clear();
+      return true;
+    },
     ignoredCallbacks,
-    dispose() {
+    dispose({ documentClosed = false } = {}) {
       if (!disposePromise) {
         disposed = true;
+        inactive = true;
         handlers.clear();
+        if (documentClosed) {
+          cleanupElapsedMs = 0;
+          disposePromise = Promise.resolve({
+            removed: true,
+            elapsedMs: cleanupElapsedMs,
+            error: null,
+            removalMethod: 'document-close',
+          });
+          return disposePromise;
+        }
         disposePromise = (async () => {
           const cleanupStartedAt = now();
           const outcome = await timeoutResult(
@@ -245,6 +265,7 @@ export async function prepareRenderBoundaryProgressBinding({
             removed: outcome.kind === 'completed',
             elapsedMs: cleanupElapsedMs,
             error: cleanupError,
+            removalMethod: 'remove-exposed-function',
           };
         })();
       }

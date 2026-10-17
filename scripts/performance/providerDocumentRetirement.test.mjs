@@ -20,9 +20,9 @@ test('provider document retires rendering before audit and interception teardown
   assert.deepEqual(calls, [
     'retire-renderer',
     'audit-workers',
-    'dispose-binding',
     'stop-interception',
     'close-document',
+    'dispose-binding',
     'release-interception',
   ]);
   assert.deepEqual(result, { retired: true, closed: true });
@@ -154,9 +154,9 @@ test('provider retirement cancels external and API requests before target closur
   assert.deepEqual(lifecycle, [
     'renderer',
     'audit',
-    'binding',
     'stop',
     'target-close',
+    'binding',
     'release',
   ]);
   assert.deepEqual(client.commands, ['Fetch.enable']);
