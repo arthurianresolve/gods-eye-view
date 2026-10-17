@@ -296,6 +296,53 @@ test('a missing workspace completion times out and removes its observer', async 
   assert.equal(disconnected, true);
 });
 
+test('workspace completion accepts a new latched restore when the status mutation is missed', async () => {
+  const previous = { status: 'applied', workspaceId: 'workspace-a' };
+  let current = previous;
+  let poll;
+  let intervalCleared = false;
+  const status = { textContent: 'Opened “Investigation”.' };
+  const select = { value: 'workspace-a' };
+  const button = {
+    disabled: false,
+    click() {
+      current = { status: 'applied', workspaceId: 'workspace-a' };
+      poll();
+    },
+  };
+  const scope = {
+    __godsEyeView: {
+      workspaceLibraryPanel: { restore: { getState: () => current } },
+    },
+    document: {
+      querySelector: () => ({
+        querySelector: (selector) =>
+          selector === '[data-status]'
+            ? status
+            : selector === '[data-workspace-select]'
+              ? select
+              : button,
+      }),
+    },
+    MutationObserver: class {
+      observe() {}
+      disconnect() {}
+    },
+    setInterval(callback) {
+      poll = callback;
+      return 1;
+    },
+    clearInterval() {
+      intervalCleared = true;
+    },
+    setTimeout,
+    clearTimeout,
+  };
+  await clickAndWaitForWorkspaceOpen(scope, 100);
+  assert.equal(intervalCleared, true);
+  assert.notEqual(current, previous);
+});
+
 test('network preflight requires actual worker interception, not merely DNS failure', async () => {
   const probe = createFixtureNetworkProbe('http://localhost:4174');
   const result = [
