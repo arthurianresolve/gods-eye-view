@@ -785,6 +785,24 @@ test('real local terrain and selection lifecycle report validates as a complete 
   });
 });
 
+test('streamed-tile validator accepts both valid browser event orders at the Fetch pause', () => {
+  const report = validReport();
+  for (const checkpoint of [
+    report.streamedTiles.supersededContent.browserAtPause,
+    report.streamedTileHttpEvidence.contentInterception.browserAtPause,
+  ]) {
+    checkpoint.counts.content.requests = 0;
+    checkpoint.counts.content.responses = 0;
+    checkpoint.counts.content.failed = 0;
+    checkpoint.pendingCount = 0;
+    checkpoint.requests = [];
+  }
+  assert.equal(validateTerrainPickingLifecycleReport(report).status, 'passed');
+
+  report.streamedTileHttpEvidence.contentInterception.browserAtPause.counts.content.responses = 1;
+  assert.throws(() => validateTerrainPickingLifecycleReport(report));
+});
+
 test('validator rejects missing cycles, unfinished workers, stale selection, or incomplete cleanup', () => {
   const missing = validReport();
   missing.cycles.pop();

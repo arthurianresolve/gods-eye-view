@@ -521,10 +521,9 @@ function validStreamedTileEvidence(report, expectedCycles) {
       1 ||
     evidence.supersededContent.delivery?.server?.counts?.content
       ?.successfulResponses !== 1 ||
-    evidence.supersededContent.browserAtPause?.counts?.content?.requests !==
-      1 ||
-    evidence.supersededContent.browserAtPause?.counts?.content?.completed !==
-      0 ||
+    !validPausedContentBrowserCheckpoint(
+      evidence.supersededContent.browserAtPause,
+    ) ||
     evidence.supersededContent.serverAtPause?.counts?.content?.requests !== 0 ||
     !validStreamedTileSwitch(
       evidence.firstVisibleActivation,
@@ -610,8 +609,9 @@ function validStreamedTileEvidence(report, expectedCycles) {
       1 ||
     http.contentInterception.reactivationDelivery?.serverCounts
       ?.successfulResponses !== 1 ||
-    http.contentInterception.browserAtPause?.counts?.content?.requests !== 1 ||
-    http.contentInterception.browserAtPause?.counts?.content?.completed !== 0 ||
+    !validPausedContentBrowserCheckpoint(
+      http.contentInterception.browserAtPause,
+    ) ||
     http.contentInterception.serverAtPause?.counts?.content?.requests !== 0 ||
     report.fixtureCleanup?.final?.map?.primitives !== 0 ||
     report.fixtureCleanup?.final?.map?.cacheEntries !== 0
@@ -716,6 +716,34 @@ function validSuccessfulContentRequest(row) {
     Number.isFinite(row.encodedDataLength) &&
     row.encodedDataLength > 0
   );
+}
+
+function validPausedContentBrowserCheckpoint(snapshot) {
+  const counts = snapshot?.counts?.content;
+  if (!counts || ![0, 1].includes(counts.requests)) return false;
+  for (const field of ['responses', 'completed', 'failed']) {
+    if (counts[field] !== undefined && counts[field] !== 0) return false;
+  }
+  if (
+    snapshot.origin !== undefined &&
+    snapshot.origin !== 'fixture-origin-only'
+  )
+    return false;
+  if (snapshot.overflowCount !== undefined && snapshot.overflowCount !== 0)
+    return false;
+  if (
+    snapshot.pendingCount !== undefined &&
+    ![0, 1].includes(snapshot.pendingCount)
+  )
+    return false;
+  if (snapshot.requests !== undefined) {
+    if (!Array.isArray(snapshot.requests)) return false;
+    const contentRows = snapshot.requests.filter(
+      (row) => row?.kind === 'content',
+    );
+    if (contentRows.length !== counts.requests) return false;
+  }
+  return true;
 }
 
 function validStreamedBrowserEvidence(snapshot, assets) {

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  CAPTURE_CLI_TIMEOUT_MS,
   MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
   assertCaptureCleanupEvidence,
   assertRendererLoopRetirementEvidence,
@@ -1135,6 +1136,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
 });
 
 test('weather smoke uses a bounded phased diagnostic without changing the default smoke schedule', () => {
+  assert.equal(CAPTURE_CLI_TIMEOUT_MS, 300_000);
   assert.deepEqual(smokeCaptureSchedule(WEATHER_EFFECTS_WORKLOAD_ID), {
     runs: 1,
     warmupMs: 1000,

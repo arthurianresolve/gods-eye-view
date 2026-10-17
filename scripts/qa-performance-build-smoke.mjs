@@ -99,7 +99,10 @@ const ROOT = await realpath(
 );
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
-const CAPTURE_CLI_TIMEOUT_MS = 180 * 1000;
+// The dense integration capture runs six independent browser samples. On the
+// hosted two-core SwiftShader runner, the measured route can legitimately need
+// more than three minutes even though each stage remains independently bounded.
+export const CAPTURE_CLI_TIMEOUT_MS = 300 * 1000;
 const MAP_FAULT_CLEANUP_RESERVE_MS = 15_000;
 const MAP_FAULT_CONTROL_SCENARIO_IDS = Object.freeze([
   'esri-metadata-missing-v1',
