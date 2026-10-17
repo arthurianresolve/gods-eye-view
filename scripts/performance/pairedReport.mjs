@@ -903,6 +903,37 @@ function layerSignature(layers, label) {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
+function normalizeDormantOneSidedLayers(
+  baselineConditions,
+  candidateConditions,
+  diagnostics,
+) {
+  const baselineLayers = baselineConditions.environment.layers;
+  const candidateLayers = candidateConditions.environment.layers;
+  const baselineIds = new Set(baselineLayers.map((layer) => layer.id));
+  const candidateIds = new Set(candidateLayers.map((layer) => layer.id));
+  const isDormant = (layer) => layer.enabled === false && layer.count === 0;
+
+  const normalize = (layers, otherIds, side) =>
+    layers.filter((layer) => {
+      if (otherIds.has(layer.id)) return true;
+      if (!isDormant(layer)) return true;
+      diagnostics[side].add(layer.id);
+      return false;
+    });
+
+  baselineConditions.environment.layers = normalize(
+    baselineLayers,
+    candidateIds,
+    'baselineOnly',
+  );
+  candidateConditions.environment.layers = normalize(
+    candidateLayers,
+    baselineIds,
+    'candidateOnly',
+  );
+}
+
 function assertWeatherPhaseEvidenceForPairedReport(
   observations,
   fixture,
@@ -1824,6 +1855,10 @@ export function validatePairedPerformanceReports({
 
   // Application revision is the sole condition that may vary. Run metrics are
   // deliberately omitted because they are the measured outputs of this pair.
+  const conditionNormalization = {
+    baselineOnly: new Set(),
+    candidateOnly: new Set(),
+  };
   for (const scenario of baseline.workload.scenarios) {
     const baseRuns = base.byScenario.get(scenario);
     const candidateRuns = next.byScenario.get(scenario);
@@ -1841,9 +1876,17 @@ export function validatePairedPerformanceReports({
         }
         return conditions;
       };
+      const baselineConditions = pairedConditions(baseRun);
+      const candidateConditions = pairedConditions(candidateRun);
+      for (const key of ['before', 'after'])
+        normalizeDormantOneSidedLayers(
+          baselineConditions[key],
+          candidateConditions[key],
+          conditionNormalization,
+        );
       equal(
-        pairedConditions(baseRun),
-        pairedConditions(candidateRun),
+        baselineConditions,
+        candidateConditions,
         `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
       );
       assertRouteDescriptorsEquivalent(
@@ -1957,6 +2000,11 @@ export function validatePairedPerformanceReports({
           candidate.fixtureDelivery.fulfilledResponseCount,
         perSample: candidate.fixtureDelivery.perSampleResponseCounts || null,
       },
+    },
+    conditionNormalization: {
+      rule: 'ignore-one-sided-disabled-zero-count-layers',
+      baselineOnly: [...conditionNormalization.baselineOnly].sort(),
+      candidateOnly: [...conditionNormalization.candidateOnly].sort(),
     },
     regressionsOver10Pct: Object.keys(scenarios).filter(
       (scenario) => scenarios[scenario].regressionOver10Pct,

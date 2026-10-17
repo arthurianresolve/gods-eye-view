@@ -64,6 +64,55 @@ test('valid paired reports calculate scenario medians, objective and regressions
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
 });
 
+test('paired reports normalize only one-sided disabled zero-count layers', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const sample of candidate.captures)
+    for (const point of [sample.conditions.before, sample.conditions.after])
+      point.environment.layers.push({
+        id: 'candidate-only-dormant',
+        enabled: false,
+        count: 0,
+      });
+
+  const result = validate(baseline, candidate);
+  assert.equal(result.status, 'comparable');
+  assert.deepEqual(result.conditionNormalization, {
+    rule: 'ignore-one-sided-disabled-zero-count-layers',
+    baselineOnly: [],
+    candidateOnly: ['candidate-only-dormant'],
+  });
+
+  for (const mutation of [
+    { enabled: true, count: 0 },
+    { enabled: false, count: 1 },
+  ]) {
+    const changed = structuredClone(candidate);
+    for (const sample of changed.captures)
+      for (const point of [sample.conditions.before, sample.conditions.after])
+        Object.assign(
+          point.environment.layers.find(
+            (layer) => layer.id === 'candidate-only-dormant',
+          ),
+          mutation,
+        );
+    assert.throws(
+      () => validate(baseline, changed),
+      /sample populations do not match contract|baseline and candidate conditions differ/,
+    );
+  }
+
+  const changedSharedPopulation = structuredClone(candidate);
+  for (const sample of changedSharedPopulation.captures)
+    for (const point of [sample.conditions.before, sample.conditions.after])
+      point.environment.layers.find((layer) => layer.id === 'flights').count +=
+        1;
+  assert.throws(
+    () => validate(baseline, changedSharedPopulation),
+    /wrong population|sample populations do not match contract|baseline and candidate conditions differ/,
+  );
+});
+
 test('paired renderer evidence ignores only one-time query duration', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);
