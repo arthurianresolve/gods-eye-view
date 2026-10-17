@@ -58,6 +58,7 @@ const SCRIPT_ROOT = path.resolve(
 );
 const BROWSER_CLOSE_TIMEOUT_MS = 5000;
 const PAGE_PROTOCOL_TIMEOUT_MS = 5000;
+const COLD_APPLICATION_TIMEOUT_MS = 180_000;
 const VIEWPORT = Object.freeze({ width: 1440, height: 1000 });
 const CESIUM_VERSION = JSON.parse(
   readFileSync(
@@ -914,7 +915,13 @@ export async function runCctvLifecycle({
         'CCTV lifecycle requires the declared clean application/harness commit.',
       );
     const base = new URL(url).origin;
-    browser = await deps.launchFixtureBrowser({ protocolTimeout: 15_000 });
+    // The first Vite module-graph load plus SwiftShader context creation can
+    // exceed Puppeteer's short command timeout on Windows and hosted runners.
+    // Keep the transport and application-state deadlines aligned so a live
+    // document can finish booting instead of failing at Page.navigate first.
+    browser = await deps.launchFixtureBrowser({
+      protocolTimeout: COLD_APPLICATION_TIMEOUT_MS,
+    });
     report.environment.browserVersion = await withDeadline(
       () => browser.version(),
       'read browser version',
@@ -968,6 +975,7 @@ export async function runCctvLifecycle({
     report.phase = 'application-boot';
     await deps.bootFixturePage(page, base, {
       hash: cctvLifecycleShareHash(fixture.view),
+      applicationReadyTimeoutMs: COLD_APPLICATION_TIMEOUT_MS,
       onProgress: (phase) => {
         report.phase = `application-boot:${phase}`;
         progress({ phase: report.phase });

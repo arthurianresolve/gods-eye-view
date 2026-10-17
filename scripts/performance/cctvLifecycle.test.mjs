@@ -1418,6 +1418,8 @@ function createCctvRunnerDependencies({
   let enableCalls = 0;
   let onFulfilled;
   let rendererReads = 0;
+  let browserLaunchOptions = null;
+  let bootOptions = null;
   let pageClosed = false;
   let bootHash = null;
   const worker = {
@@ -1638,7 +1640,8 @@ function createCctvRunnerDependencies({
   };
   const dependencies = {
     gitIdentity: () => identity,
-    launchFixtureBrowser: async () => {
+    launchFixtureBrowser: async (options) => {
+      browserLaunchOptions = options;
       order.push('browser-launch');
       return browser;
     },
@@ -1646,11 +1649,9 @@ function createCctvRunnerDependencies({
       onFulfilled = options.onFulfilled;
       return { page, errors: [], verifyNetwork: async () => true };
     },
-    bootFixturePage: async (
-      _page,
-      _base,
-      { hash, onProgress: bootProgress },
-    ) => {
+    bootFixturePage: async (_page, _base, options) => {
+      const { hash, onProgress: bootProgress } = options;
+      bootOptions = options;
       order.push('boot');
       bootHash = hash;
       bootProgress('ready');
@@ -1711,6 +1712,12 @@ function createCctvRunnerDependencies({
     get bootHash() {
       return bootHash;
     },
+    get browserLaunchOptions() {
+      return browserLaunchOptions;
+    },
+    get bootOptions() {
+      return bootOptions;
+    },
   };
 }
 
@@ -1757,6 +1764,8 @@ test('CCTV runner completes the full serialized lifecycle and closes owned resou
   assert.equal(report.pageClose.openPageCount, 0);
   assert.equal(report.environment.browserVersion, 'HeadlessChrome/152.0.0.0');
   assert.equal(runner.bootHash, '#lat=30.2672&lon=-97.7431');
+  assert.equal(runner.browserLaunchOptions.protocolTimeout, 180_000);
+  assert.equal(runner.bootOptions.applicationReadyTimeoutMs, 180_000);
   assert.ok(report.environment.host.osRelease);
   assert.equal(
     runner.rendererReads,
