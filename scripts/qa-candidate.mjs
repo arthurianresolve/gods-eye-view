@@ -172,9 +172,14 @@ export function requiresPerformanceEvidence(
   }
 }
 
-function commandCheck(label, command, args, { env = process.env } = {}) {
+function commandCheck(
+  label,
+  command,
+  args,
+  { env = process.env, cwd = ROOT } = {},
+) {
   const result = spawnSync(command, args, {
-    cwd: ROOT,
+    cwd,
     env: { ...env, PUPPETEER_SKIP_DOWNLOAD: '1' },
     encoding: 'utf8',
     shell: process.platform === 'win32',
@@ -190,9 +195,9 @@ function commandCheck(label, command, args, { env = process.env } = {}) {
   };
 }
 
-function gitCommit() {
+function gitCommit(cwd = ROOT) {
   const result = spawnSync('git', ['rev-parse', 'HEAD'], {
-    cwd: ROOT,
+    cwd,
     encoding: 'utf8',
   });
   return result.status === 0 ? result.stdout.trim() : 'unknown';
@@ -201,8 +206,12 @@ function gitCommit() {
 export async function runCandidateMatrix({
   env = process.env,
   now = () => new Date(),
-  commit = gitCommit(),
+  candidateRoot = ROOT,
+  commit,
 } = {}) {
+  candidateRoot = path.resolve(candidateRoot);
+  commit ||= gitCommit(candidateRoot);
+  const validatorCommit = gitCommit(ROOT);
   const checks = [];
   const phase = env.GEV_VALIDATION_PHASE || 'pre-release';
   if (!['pre-release', 'post-publication'].includes(phase))
@@ -216,14 +225,16 @@ export async function runCandidateMatrix({
     ? ['status', '--porcelain']
     : ['status', '--porcelain', '--untracked-files=no'];
   const tree = spawnSync('git', statusArgs, {
-    cwd: ROOT,
+    cwd: candidateRoot,
     encoding: 'utf8',
   });
   checks.push({
     id: 'exact-commit',
     required: true,
     status:
-      tree.status === 0 && !tree.stdout.trim() && commit === gitCommit()
+      tree.status === 0 &&
+      !tree.stdout.trim() &&
+      commit === gitCommit(candidateRoot)
         ? 'passed'
         : 'failed',
     summary: 'Tracked files must match the reported candidate commit.',
@@ -234,7 +245,26 @@ export async function runCandidateMatrix({
     ['unit', ['test']],
     ['production-build', ['run', 'build']],
   ])
-    checks.push(commandCheck(label, npm, args, { env }));
+    checks.push(commandCheck(label, npm, args, { env, cwd: candidateRoot }));
+
+  if (candidateRoot !== ROOT) {
+    const validatorTree = spawnSync('git', ['status', '--porcelain'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    checks.push({
+      id: 'validation-harness',
+      required: true,
+      status:
+        validatorTree.status === 0 &&
+        !validatorTree.stdout.trim() &&
+        /^[a-f0-9]{40}$/.test(validatorCommit)
+          ? 'passed'
+          : 'failed',
+      summary:
+        'The separately committed validation harness must remain clean.',
+    });
+  }
 
   const appUrl = String(env.GEV_CANDIDATE_URL || '').trim();
   if (appUrl) {
@@ -249,7 +279,10 @@ export async function runCandidateMatrix({
       ['render-resolution', 'qa:render-resolution'],
     ])
       checks.push(
-        commandCheck(id, npm, ['run', script, '--', '--url', appUrl], { env }),
+        commandCheck(id, npm, ['run', script, '--', '--url', appUrl], {
+          env,
+          cwd: candidateRoot,
+        }),
       );
   } else {
     checks.push({
@@ -355,17 +388,34 @@ export async function runCandidateMatrix({
     }
   }
   const finalTree = spawnSync('git', statusArgs, {
-    cwd: ROOT,
+    cwd: candidateRoot,
     encoding: 'utf8',
   });
   if (
     finalTree.status !== 0 ||
     finalTree.stdout.trim() ||
-    commit !== gitCommit()
+    commit !== gitCommit(candidateRoot)
   ) {
     const exact = checks.find((check) => check.id === 'exact-commit');
     exact.status = 'failed';
     exact.summary = 'Candidate source changed while validation was running.';
+  }
+  if (candidateRoot !== ROOT) {
+    const validatorTree = spawnSync('git', ['status', '--porcelain'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    if (
+      validatorTree.status !== 0 ||
+      validatorTree.stdout.trim() ||
+      validatorCommit !== gitCommit(ROOT)
+    ) {
+      const validator = checks.find(
+        (check) => check.id === 'validation-harness',
+      );
+      validator.status = 'failed';
+      validator.summary = 'Validation harness changed while checks were running.';
+    }
   }
   const readiness = evaluateCandidateReadiness(
     phase === 'post-publication'
@@ -382,6 +432,7 @@ export async function runCandidateMatrix({
     schemaVersion: 1,
     generatedAt: now().toISOString(),
     commit,
+    validatorCommit,
     phase,
     performanceEvidenceRequired,
     performanceAcceptancePolicyId:
@@ -407,9 +458,14 @@ async function main(args) {
   const output =
     outputIndex >= 0 ? path.resolve(args[outputIndex + 1] || '') : null;
   const env = { ...process.env };
+  const candidateRootIndex = args.indexOf('--candidate-root');
+  const candidateRoot =
+    candidateRootIndex >= 0
+      ? path.resolve(args[candidateRootIndex + 1] || '')
+      : ROOT;
   if (args.includes('--require-performance-evidence'))
     env.GEV_REQUIRE_PERFORMANCE_EVIDENCE = '1';
-  const report = await runCandidateMatrix({ env });
+  const report = await runCandidateMatrix({ env, candidateRoot });
   if (output) {
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, {
