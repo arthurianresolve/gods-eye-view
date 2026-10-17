@@ -2098,6 +2098,9 @@ test('close trace ignores unrelated and pre-close protocol text without retainin
   send(JSON.stringify({ method: 'Browser.close', id: 6 }));
   receive(JSON.stringify({ id: 6, sessionId: 'worker-session', result: {} }));
   receive(JSON.stringify({ id: 6, method: 'Target.attachedToTarget' }));
+  const active = trace.snapshot(5);
+  assert.equal(active.browserCloseRequestSeen, true);
+  assert.equal(active.browserCloseAcknowledgementSeen, false);
   const summary = trace.finish(5);
   assert.equal(summary.browserCloseRequestSeen, true);
   assert.equal(summary.browserCloseAcknowledgementSeen, false);
@@ -2128,6 +2131,7 @@ test('close trace correlates Browser.close acknowledgement but keeps process wai
   };
   const outcome = await closeRecoveryBrowser(browser, {
     timeoutMs: 20,
+    postDisconnectExitTimeoutMs: 5,
     closeTrace: trace,
     forceProcess: async () => {
       child.exitCode = 0;
@@ -2138,6 +2142,8 @@ test('close trace correlates Browser.close acknowledgement but keeps process wai
   const protocol = outcome.observation.protocolCloseTrace;
   assert.equal(outcome.closeCompleted, false);
   assert.equal(outcome.observation.closeStatus, 'timed-out');
+  assert.equal(outcome.observation.postDisconnectExitWaitAttempted, true);
+  assert.equal(outcome.observation.effectiveCloseDeadlineMs, 25);
   assert.equal(protocol.browserCloseRequestSeen, true);
   assert.equal(protocol.browserCloseAcknowledgementSeen, true);
   assert.equal(protocol.browserCloseAcknowledgementError, false);
@@ -2148,6 +2154,48 @@ test('close trace correlates Browser.close acknowledgement but keeps process wai
   assert.equal(browser.listenerCount('disconnected'), 0);
   assert.equal(child.listenerCount('exit'), 0);
   assert.equal(JSON.stringify(protocol).includes('secret'), false);
+});
+
+test('acknowledged disconnect receives a separate bounded process-drain window', async () => {
+  const child = fakeBrowserProcess();
+  const trace = createRecoveryBrowserCloseTrace();
+  const send = trace.logger('puppeteer:protocol:SEND');
+  const receive = trace.logger('puppeteer:protocol:RECV');
+  const browser = new EventEmitter();
+  let forced = false;
+  browser.process = () => child;
+  browser.close = () => {
+    send(JSON.stringify({ method: 'Browser.close', id: 73 }));
+    receive(JSON.stringify({ id: 73, result: {} }));
+    browser.emit('disconnected');
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        resolve();
+      }, 25);
+    });
+  };
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 10,
+    postDisconnectExitTimeoutMs: 100,
+    closeTrace: trace,
+    forceProcess: async () => {
+      forced = true;
+      return { attempted: true, confirmed: true };
+    },
+  });
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.observation.closeStatus, 'completed');
+  assert.equal(outcome.observation.closeDeadlineMs, 10);
+  assert.equal(outcome.observation.effectiveCloseDeadlineMs, 110);
+  assert.equal(outcome.observation.postDisconnectExitWaitAttempted, true);
+  assert.equal(
+    outcome.observation.protocolCloseTrace.browserDisconnected,
+    true,
+  );
+  assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(forced, false);
 });
 
 test('close trace distinguishes missing and late acknowledgements and bounds messages', () => {

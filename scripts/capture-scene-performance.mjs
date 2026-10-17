@@ -4730,6 +4730,11 @@ try {
                   endTransform: home.transform,
                 });
                 viewer.camera.moveRight(distance);
+                // Explicit-render scenes do not promise that a camera mutation
+                // performed by this separate RAF owner will wake Cesium's next
+                // render. Own the wake so slow/software renderers still expose
+                // measured frame intervals instead of only the terminal frame.
+                scene.requestRender();
                 motionDistance = distance;
               };
               finishMotion = () => applyDistance((durationMs * 16) / 50);

@@ -561,6 +561,25 @@ export function createRecoveryBrowserCloseTrace({
   let disconnectedElapsedMs = null;
   let finished = false;
 
+  const summarize = (deadlineMs = null) => ({
+    scope: 'owned-browser-close-only',
+    browserCloseRequestSeen: requestElapsedMs !== null,
+    browserCloseRequestElapsedMs: requestElapsedMs,
+    browserCloseAcknowledgementSeen: acknowledgementElapsedMs !== null,
+    browserCloseAcknowledgementElapsedMs: acknowledgementElapsedMs,
+    browserCloseAcknowledgementLate:
+      acknowledgementElapsedMs !== null &&
+      Number.isFinite(deadlineMs) &&
+      acknowledgementElapsedMs > deadlineMs,
+    browserCloseAcknowledgementError: acknowledgementError,
+    browserDisconnected: disconnectedElapsedMs !== null,
+    browserDisconnectedElapsedMs: disconnectedElapsedMs,
+    malformedCloseMessage,
+    protocolMessageCount: messageCount,
+    protocolMessageOverflow: overflow,
+    protocolObservationComplete: !overflow,
+  });
+
   const elapsed = () => Math.max(0, now() - startedAt);
   const logProtocol = (direction, args) => {
     if (!active) return;
@@ -629,28 +648,14 @@ export function createRecoveryBrowserCloseTrace({
     recordDisconnected() {
       if (active) disconnectedElapsedMs ??= elapsed();
     },
+    snapshot(deadlineMs = null) {
+      return active && !finished ? summarize(deadlineMs) : null;
+    },
     finish(deadlineMs = null) {
       if (finished) return null;
       active = false;
       finished = true;
-      return {
-        scope: 'owned-browser-close-only',
-        browserCloseRequestSeen: requestElapsedMs !== null,
-        browserCloseRequestElapsedMs: requestElapsedMs,
-        browserCloseAcknowledgementSeen: acknowledgementElapsedMs !== null,
-        browserCloseAcknowledgementElapsedMs: acknowledgementElapsedMs,
-        browserCloseAcknowledgementLate:
-          acknowledgementElapsedMs !== null &&
-          Number.isFinite(deadlineMs) &&
-          acknowledgementElapsedMs > deadlineMs,
-        browserCloseAcknowledgementError: acknowledgementError,
-        browserDisconnected: disconnectedElapsedMs !== null,
-        browserDisconnectedElapsedMs: disconnectedElapsedMs,
-        malformedCloseMessage,
-        protocolMessageCount: messageCount,
-        protocolMessageOverflow: overflow,
-        protocolObservationComplete: !overflow,
-      };
+      return summarize(deadlineMs);
     },
   };
 }
@@ -761,6 +766,7 @@ export async function closeRecoveryBrowser(
     platform = process.platform,
     killProcess = process.kill,
     processInfoTimeoutMs = SYSTEM_INFO_PROCESS_TIMEOUT_MS,
+    postDisconnectExitTimeoutMs = 5000,
   } = {},
 ) {
   const child = browser.process?.() ?? null;
@@ -819,7 +825,7 @@ export async function closeRecoveryBrowser(
     }
   };
 
-  const settleWithin = async (operation) => {
+  const settleWithin = async (operation, deadlineMs = timeoutMs) => {
     let timer;
     const settled = Promise.resolve()
       .then(operation)
@@ -831,13 +837,21 @@ export async function closeRecoveryBrowser(
       return await Promise.race([
         settled,
         new Promise((resolve) => {
-          timer = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs);
+          timer = setTimeout(() => resolve({ kind: 'timeout' }), deadlineMs);
         }),
       ]);
     } finally {
       clearTimeout(timer);
     }
   };
+
+  const acknowledgedCloseDisconnect = (trace) =>
+    trace?.browserCloseRequestSeen === true &&
+    trace.browserCloseAcknowledgementSeen === true &&
+    trace.browserCloseAcknowledgementError === false &&
+    trace.browserDisconnected === true &&
+    trace.malformedCloseMessage === false &&
+    trace.protocolObservationComplete === true;
 
   let forcedProcessTermination = false;
   let forceProcessStatus = forceProcess ? 'not-needed' : 'not-configured';
@@ -856,7 +870,24 @@ export async function closeRecoveryBrowser(
     }
     const closeStartedAt = now();
     closeTrace?.begin?.();
-    const closeResult = await settleWithin(() => browser.close());
+    const closePromise = Promise.resolve().then(() => browser.close());
+    let closeResult = await settleWithin(() => closePromise);
+    let postDisconnectExitWaitAttempted = false;
+    if (
+      closeResult.kind === 'timeout' &&
+      Number.isFinite(postDisconnectExitTimeoutMs) &&
+      postDisconnectExitTimeoutMs > 0 &&
+      acknowledgedCloseDisconnect(closeTrace?.snapshot?.(timeoutMs))
+    ) {
+      // Browser.close has already been accepted and the protocol transport has
+      // disconnected. Give the owned process a separate bounded drain window
+      // for profile/file teardown before treating it as a hung close.
+      postDisconnectExitWaitAttempted = true;
+      closeResult = await settleWithin(
+        () => closePromise,
+        postDisconnectExitTimeoutMs,
+      );
+    }
     const closeCompleted = closeResult.kind === 'resolved';
     const closeStatus = closeCompleted
       ? 'completed'
@@ -938,6 +969,11 @@ export async function closeRecoveryBrowser(
       observation: {
         closeStatus,
         closeDeadlineMs: timeoutMs,
+        effectiveCloseDeadlineMs:
+          timeoutMs +
+          (postDisconnectExitWaitAttempted ? postDisconnectExitTimeoutMs : 0),
+        postDisconnectExitTimeoutMs,
+        postDisconnectExitWaitAttempted,
         closeStartHostMs: closeStartedAt,
         closeSettledHostMs: closeSettledAt,
         closeElapsedMs,

@@ -97,6 +97,16 @@ test('scripted motion completion does not wait for another animation frame', asy
   assert.doesNotMatch(completion, /await motionFinished/);
 });
 
+test('scripted motion explicitly wakes request-render scenes on every pose', async () => {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  const applyDistance = source.indexOf('const applyDistance = (distance) => {');
+  const finishMotion = source.indexOf('finishMotion =', applyDistance);
+  assert.ok(applyDistance >= 0 && finishMotion > applyDistance);
+  const poseUpdate = source.slice(applyDistance, finishMotion);
+  assert.match(poseUpdate, /viewer\.camera\.moveRight\(distance\);/);
+  assert.match(poseUpdate, /scene\.requestRender\(\);/);
+});
+
 test('fresh dense provider documents synchronize engine and visual density', async () => {
   const source = await fs.readFile(SCRIPT, 'utf8');
   const freshDocumentStart = source.indexOf(
