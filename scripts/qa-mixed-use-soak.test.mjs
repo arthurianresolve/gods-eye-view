@@ -686,6 +686,17 @@ test('missing and sparse heap checkpoints cannot pass as zero growth', () => {
   assert.equal(evaluateSoakStability(sparse).status, 'pending');
 });
 
+test('retention accepts atomic hardware cycles up to twelve minutes apart', () => {
+  const report = stableReport();
+  report.checkpoints = [0, 28, 34, 44.25, 52, 58, 60].map((minutes) => ({
+    elapsedMs: minutes * 60_000,
+    metrics: metrics(),
+  }));
+  assert.equal(evaluateSoakStability(report).status, 'passed');
+  report.checkpoints[3].elapsedMs = 46.1 * 60_000;
+  assert.equal(evaluateSoakStability(report).status, 'pending');
+});
+
 test('retention compares owned gauges rather than cumulative provider activity', () => {
   const report = stableReport();
   report.checkpoints.forEach((point, index) => {

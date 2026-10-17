@@ -294,14 +294,21 @@ test('failed hosted envelope or cleanup cannot be hidden by a passing inner soak
 
 test('hosted envelope rejects contradictory commits, source provenance and environments', async (t) => {
   const cases = [
-    ...['commit', 'harnessCommit'].map((field) => [
-      `outer-${field}`,
+    [
+      'outer-commit',
       (value) => {
-        value[field] = baselineCommit;
+        value.commit = baselineCommit;
       },
       /does not match the candidate/,
-    ]),
-    ...['candidateCommit', 'applicationCommit', 'harnessCommit'].map(
+    ],
+    [
+      'outer-harnessCommit',
+      (value) => {
+        value.harnessCommit = baselineCommit;
+      },
+      /harnessCommit disagree/,
+    ],
+    ...['candidateCommit', 'applicationCommit'].map(
       (field) => [
         `inner-${field}`,
         (value) => {
@@ -310,6 +317,13 @@ test('hosted envelope rejects contradictory commits, source provenance and envir
         /does not match the candidate/,
       ],
     ),
+    [
+      'inner-harnessCommit',
+      (value) => {
+        value.soak.harnessCommit = baselineCommit;
+      },
+      /harnessCommit disagree/,
+    ],
     ...[
       'sourceDirtyAtStart',
       'harnessDirtyAtStart',
@@ -828,6 +842,22 @@ test('raw retention is recomputed and requires source, duration, sorted checkpoi
   assert.equal(passed.retention[0].stability.status, 'passed');
   assert.equal(passed.retention[0].renderer.kind, 'native-gpu');
   assert.equal(passed.retention[0].artifactFormat, 'standalone-soak');
+
+  const separateHarness = baselineCommit;
+  const harnessArtifact = await setup.writeArtifact(
+    'soak-separate-harness',
+    makeRetentionReport({ harnessCommit: separateHarness }),
+  );
+  const harnessValidated = evaluateManifestPerformanceEvidence(
+    {
+      retention: [
+        { environmentId: 'windows-separate-harness', report: harnessArtifact },
+      ],
+    },
+    { manifestPath: setup.manifestPath, candidateCommit },
+  );
+  assert.equal(harnessValidated.retentionOutcome.status, 'passed');
+  assert.equal(harnessValidated.retention[0].harnessCommit, separateHarness);
 
   const noGc = await setup.writeArtifact(
     'soak-no-gc',

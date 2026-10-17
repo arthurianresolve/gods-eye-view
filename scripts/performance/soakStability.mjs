@@ -1,5 +1,10 @@
 export const FULL_SOAK_MS = 60 * 60_000;
 const RETENTION_WINDOW_MS = 30 * 60_000;
+// Checkpoints are collected only after an equivalent mixed-use cycle drains.
+// A hardware-rendered cycle is intentionally atomic and can slightly exceed
+// ten minutes on the minimum Windows GPU, so allow a bounded twelve-minute
+// interval while still requiring at least four post-GC observations.
+const RETENTION_CHECKPOINT_MAX_GAP_MS = 12 * 60_000;
 // Gauges describe current ownership. Monotonic diagnostic counters (for example
 // providerCacheReuses or providerLoadsStarted) are expected to increase and must
 // never be interpreted as retained resources. Unknown metrics remain outside
@@ -108,7 +113,9 @@ export function evaluateSoakStability({ durationMs, checkpoints = [] }) {
     window.some(
       (p, index) =>
         !(p.metrics?.JSHeapUsedSize > 0) ||
-        (index > 0 && p.elapsedMs - window[index - 1].elapsedMs > 10 * 60_000),
+        (index > 0 &&
+          p.elapsedMs - window[index - 1].elapsedMs >
+            RETENTION_CHECKPOINT_MAX_GAP_MS),
     )
   )
     pending.push('Final 30-minute post-GC heap checkpoints are unavailable.');

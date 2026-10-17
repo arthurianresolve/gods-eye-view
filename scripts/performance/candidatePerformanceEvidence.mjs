@@ -297,21 +297,22 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
   const errors = [];
   const pending = [];
   const hostedEnvelope = report?.schema === 'gev-hosted-native-renderer/v1';
+  let envelope = null;
   if (hostedEnvelope) {
-    const envelope = report;
+    envelope = report;
     report = envelope.soak;
     if (envelope.status === 'failed')
       errors.push('Hosted soak envelope reports a failed run.');
     else if (envelope.status !== 'passed')
       pending.push('Hosted soak envelope did not reach a completed status.');
-    for (const field of ['commit', 'harnessCommit']) {
-      if (envelope[field] == null)
-        pending.push(`Hosted soak envelope ${field} is unavailable.`);
-      else if (envelope[field] !== candidateCommit)
-        errors.push(
-          `Hosted soak envelope ${field} does not match the candidate.`,
-        );
-    }
+    if (envelope.commit == null)
+      pending.push('Hosted soak envelope commit is unavailable.');
+    else if (envelope.commit !== candidateCommit)
+      errors.push('Hosted soak envelope commit does not match the candidate.');
+    if (envelope.harnessCommit == null)
+      pending.push('Hosted soak envelope harnessCommit is unavailable.');
+    else if (!SHA1.test(envelope.harnessCommit))
+      errors.push('Hosted soak envelope harnessCommit is invalid.');
     // Preserve both observations. Never fill missing inner provenance from
     // the wrapper or let a passing inner run hide an outer cleanup failure.
     for (const field of [
@@ -404,8 +405,15 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
     errors.push('Raw soak applicationCommit does not match the candidate.');
   if (report?.harnessCommit == null)
     pending.push('Raw soak harnessCommit is unavailable.');
-  else if (report.harnessCommit !== candidateCommit)
-    errors.push('Raw soak harnessCommit does not match the candidate.');
+  else if (!SHA1.test(report.harnessCommit))
+    errors.push('Raw soak harnessCommit is invalid.');
+  if (
+    hostedEnvelope &&
+    envelope.harnessCommit != null &&
+    report?.harnessCommit != null &&
+    envelope.harnessCommit !== report.harnessCommit
+  )
+    errors.push('Hosted soak envelope and inner harnessCommit disagree.');
   if (
     report?.sourceDirtyAtStart === true ||
     report?.sourceChangedDuringRun === true ||
@@ -480,6 +488,7 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
   return {
     environmentId,
     candidateCommit,
+    harnessCommit: report?.harnessCommit || null,
     artifactFormat: hostedEnvelope ? 'hosted-envelope' : 'standalone-soak',
     renderer,
     primaryEligible,
