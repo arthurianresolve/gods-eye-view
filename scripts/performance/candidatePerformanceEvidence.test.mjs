@@ -308,15 +308,13 @@ test('hosted envelope rejects contradictory commits, source provenance and envir
       },
       /harnessCommit disagree/,
     ],
-    ...['candidateCommit', 'applicationCommit'].map(
-      (field) => [
-        `inner-${field}`,
-        (value) => {
-          value.soak[field] = baselineCommit;
-        },
-        /does not match the candidate/,
-      ],
-    ),
+    ...['candidateCommit', 'applicationCommit'].map((field) => [
+      `inner-${field}`,
+      (value) => {
+        value.soak[field] = baselineCommit;
+      },
+      /does not match the candidate/,
+    ]),
     [
       'inner-harnessCommit',
       (value) => {

@@ -261,8 +261,7 @@ export async function runCandidateMatrix({
         /^[a-f0-9]{40}$/.test(validatorCommit)
           ? 'passed'
           : 'failed',
-      summary:
-        'The separately committed validation harness must remain clean.',
+      summary: 'The separately committed validation harness must remain clean.',
     });
   }
 
@@ -414,7 +413,8 @@ export async function runCandidateMatrix({
         (check) => check.id === 'validation-harness',
       );
       validator.status = 'failed';
-      validator.summary = 'Validation harness changed while checks were running.';
+      validator.summary =
+        'Validation harness changed while checks were running.';
     }
   }
   const readiness = evaluateCandidateReadiness(

@@ -433,8 +433,7 @@ export async function createRenderedSoakDriver(
                 : null;
             return {
               enabled:
-                window.__godsEyeView?.dataManager?.isEnabled?.('cctv') ||
-                false,
+                window.__godsEyeView?.dataManager?.isEnabled?.('cctv') || false,
               activeCamera: compact(ui?.activeCamera),
               cameras: (ui?.cameras || []).map(compact).slice(0, 8),
               visible: !document.hidden,
@@ -655,19 +654,16 @@ export async function createRenderedSoakDriver(
           .module.setParams({ autoHop: false, showProjection: true });
       });
       await refreshCameraHealthAtBoundary('outage');
-      await waitForCameraState(
-        'outage-health',
-        () => {
-          const layer =
-            window.__godsEyeView.dataManager.layers.get('cctv').module;
-          return (
-            layer
-              .getUIState()
-              .cameras.find((row) => row.id === 'fixture-camera-0')
-              ?.healthReason === 'upstream-http-error'
-          );
-        },
-      );
+      await waitForCameraState('outage-health', () => {
+        const layer =
+          window.__godsEyeView.dataManager.layers.get('cctv').module;
+        return (
+          layer
+            .getUIState()
+            .cameras.find((row) => row.id === 'fixture-camera-0')
+            ?.healthReason === 'upstream-http-error'
+        );
+      });
       const cameraSelection = await page.evaluate(() => {
         // Workspace pinning and replay can legitimately leave the inspector
         // locked. Clear it at the ownership boundary immediately before the
@@ -708,10 +704,7 @@ export async function createRenderedSoakDriver(
       });
       assert.equal(cameraSelection.inspector.hidden, false);
       assert.equal(cameraSelection.inspector.pinned, 'false');
-      assert.match(
-        cameraSelection.inspector.text,
-        /upstream-http-error/,
-      );
+      assert.match(cameraSelection.inspector.text, /upstream-http-error/);
       assert.equal(
         await page.evaluate(() =>
           window.__godsEyeView.dataManager.layers
@@ -731,19 +724,16 @@ export async function createRenderedSoakDriver(
           .module.setParams({ autoHop: false, showProjection: true });
       });
       await refreshCameraHealthAtBoundary('recovery');
-      await waitForCameraState(
-        'recovery-health',
-        () => {
-          const layer =
-            window.__godsEyeView.dataManager.layers.get('cctv').module;
-          return (
-            layer
-              .getUIState()
-              .cameras.find((row) => row.id === 'fixture-camera-0')
-              ?.healthReason === 'delivered'
-          );
-        },
-      );
+      await waitForCameraState('recovery-health', () => {
+        const layer =
+          window.__godsEyeView.dataManager.layers.get('cctv').module;
+        return (
+          layer
+            .getUIState()
+            .cameras.find((row) => row.id === 'fixture-camera-0')
+            ?.healthReason === 'delivered'
+        );
+      });
       await page.evaluate(() =>
         window.__godsEyeView.dataManager.layers
           .get('cctv')
