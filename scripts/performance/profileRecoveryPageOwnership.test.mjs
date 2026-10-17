@@ -28,8 +28,13 @@ const BASE = 'http://127.0.0.1:4173';
 const POWERSHELL_READY_MARKER = '__GEV_POWERSHELL_TEST_READY__';
 // Hosted Windows can spend more than five seconds starting a clean PowerShell
 // process while concurrent CI jobs scan and install dependencies. This bounds
-// that prerequisite separately from the five-second script execution budget.
+// that prerequisite separately from the script execution budget.
 const POWERSHELL_INTEGRATION_STARTUP_TIMEOUT_MS = 15_000;
+// Keep live hosted-runner integration probes bounded without forcing their
+// execution through the deliberately tight synthetic timeout used below.
+// Hosted Windows can pause an otherwise trivial PowerShell script for several
+// seconds under concurrent runner activity after the ready marker is flushed.
+const POWERSHELL_INTEGRATION_EXECUTION_TIMEOUT_MS = 15_000;
 const POWERSHELL_TEST_SCRIPT_TIMEOUT_MS = 5_000;
 const POWERSHELL_TEST_CLEANUP_TIMEOUT_MS = 1_000;
 const POWERSHELL_TEST_OUTPUT_LIMIT_BYTES = 64 * 1024;
@@ -375,6 +380,7 @@ async function runPowerShellIntegrationScript(script, t) {
   try {
     const result = await runBoundedPowerShellTestScript(script, {
       startupTimeoutMs: POWERSHELL_INTEGRATION_STARTUP_TIMEOUT_MS,
+      executionTimeoutMs: POWERSHELL_INTEGRATION_EXECUTION_TIMEOUT_MS,
     });
     t.diagnostic(
       JSON.stringify({
