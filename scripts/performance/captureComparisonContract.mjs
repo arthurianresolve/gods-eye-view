@@ -1823,11 +1823,32 @@ export function createObservedMapStreamingComparisonContract({
   assert.equal(delivery?.fixtureId, fixture.id);
   assert.equal(delivery?.manifestSha256, fixture.manifestSha256);
   assert.equal(delivery?.cleanupConfirmed, true);
-  const assets = (delivery.assets || []).map((asset) => ({
-    path: asset.path,
-    sha256: asset.sha256,
-    byteLength: asset.byteLength,
-  }));
+  const assetPaths = new Set();
+  const assetFamilies = new Set();
+  const assets = (delivery.assets || []).map((asset) => {
+    assert.match(asset?.path || '', /^[A-Za-z0-9._/-]{1,256}$/);
+    const pathSegments = asset.path.split('/');
+    assert.ok(
+      pathSegments.every(
+        (segment) => segment && segment !== '.' && segment !== '..',
+      ),
+      'map delivery asset paths must stay inside the fixture',
+    );
+    assert.equal(
+      assetPaths.has(asset.path),
+      false,
+      'map delivery asset paths must be unique',
+    );
+    assetPaths.add(asset.path);
+    assert.match(asset?.sha256 || '', /^[a-f0-9]{64}$/);
+    assert.ok(Number.isSafeInteger(asset?.byteLength) && asset.byteLength > 0);
+    assetFamilies.add(pathSegments[0]);
+    return {
+      path: asset.path,
+      sha256: asset.sha256,
+      byteLength: asset.byteLength,
+    };
+  });
   assert.ok(assets.length > 0, 'map fixture delivery assets are required');
   return {
     schema: 'gev-performance-comparison-contract/v1',
@@ -1845,7 +1866,11 @@ export function createObservedMapStreamingComparisonContract({
       fixtureId: delivery.fixtureId,
       manifestSha256: delivery.manifestSha256,
       cleanupConfirmed: delivery.cleanupConfirmed,
-      assets,
+      // Exact tile requests are intentionally retained in fixtureDelivery on
+      // the report, where each side is validated against the pinned manifest.
+      // Cesium may settle the same route with an adjacent ancestor tile, so a
+      // dynamic request list is not a stable cross-build comparison input.
+      observedAssetFamilies: [...assetFamilies].sort(),
     },
     routes: {
       [MAP_STREAMING_SCENARIO]: {

@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import { evaluateMotionFrameBudget } from './motionBudget.mjs';
-import { createObservedInfrastructureComparisonContract } from './captureComparisonContract.mjs';
+import {
+  createObservedInfrastructureComparisonContract,
+  createObservedMapStreamingComparisonContract,
+} from './captureComparisonContract.mjs';
 
 import {
   baselineCommit,
@@ -255,6 +258,56 @@ test('five-run map streaming contracts compare transition readiness and reject i
   );
   assert.equal(result.scenarios['map-streaming-route'].changePct, -25);
   assert.deepEqual(result.regressionsOver10Pct, []);
+
+  const adjacentTile = makeMapReport(candidateCommit, 15);
+  const additionalAsset = {
+    path: 'tileset/adjacent-tile.glb',
+    sha256: 'c'.repeat(64),
+    byteLength: 12,
+  };
+  adjacentTile.fixtureDelivery.assets.push(additionalAsset);
+  assert.equal(
+    validatePairedPerformanceReports({
+      baseline,
+      candidate: adjacentTile,
+      expectedAppCommits: {
+        baseline: baselineCommit,
+        candidate: candidateCommit,
+      },
+    }).status,
+    'comparable',
+    'timing-dependent adjacent tile requests stay diagnostic when the pinned fixture and route match',
+  );
+
+  const differentAssetFamily = makeMapReport(candidateCommit, 15);
+  const unrelatedAsset = {
+    path: 'unrelated/content.bin',
+    sha256: 'd'.repeat(64),
+    byteLength: 8,
+  };
+  differentAssetFamily.fixtureDelivery.assets.push(unrelatedAsset);
+  differentAssetFamily.comparisonContract =
+    createObservedMapStreamingComparisonContract({
+      fixture: {
+        id: differentAssetFamily.workload.fixture.id,
+        manifestSha256: differentAssetFamily.workload.fixture.sha256,
+      },
+      mapStreamingCapture: differentAssetFamily.workload.mapStreamingCapture,
+      environment: differentAssetFamily.environment,
+      workload: differentAssetFamily.workload,
+    });
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate: differentAssetFamily,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /map comparison contracts differ/,
+  );
 
   const incomplete = makeMapReport(candidateCommit, 15);
   incomplete.workload.mapStreamingCapture.journeys.pop();
