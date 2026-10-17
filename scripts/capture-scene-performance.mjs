@@ -1702,9 +1702,17 @@ function observeWeatherEffectsRuntimeState() {
   );
   const clock = layer('weather-radar')?.getDiagnostics?.()?.clock;
   const wind = layer('wind')?.getParams?.();
+  const rawSatelliteInfrared =
+    layer('weather-satellite')?.getParams?.()?.infrared;
+  const satelliteInfrared =
+    rawSatelliteInfrared === 'filtered' || rawSatelliteInfrared === 100
+      ? 'filtered'
+      : rawSatelliteInfrared === 'full' || rawSatelliteInfrared === 0
+        ? 'full'
+        : rawSatelliteInfrared;
   const visualState = {
     satelliteProduct: layer('weather-satellite')?.getParams?.()?.product,
-    satelliteInfrared: layer('weather-satellite')?.getParams?.()?.infrared,
+    satelliteInfrared,
     radarOpacity: layer('weather-radar')?.getParams?.()?.opacity,
     lightningOpacity: layer('weather-lightning')?.getParams?.()?.opacity,
     windModel: wind?.model?.toLowerCase(),

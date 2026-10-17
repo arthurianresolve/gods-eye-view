@@ -366,6 +366,7 @@ test('serialized weather phase driver selects every source through the real cloc
   const clock = createWeatherClock();
   const modules = new Map();
   const productEvidence = new Map();
+  let satelliteInfrared = 'filtered';
   const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
   const unregister = ids.map((id) => {
     let shown = null;
@@ -400,7 +401,7 @@ test('serialized weather phase driver selects every source through the real cloc
       },
       getParams: () =>
         id === 'weather-satellite'
-          ? { product: 'clouds-regional', infrared: 'filtered' }
+          ? { product: 'clouds-regional', infrared: satelliteInfrared }
           : { opacity: 'strong' },
     });
     return remove;
@@ -523,6 +524,27 @@ test('serialized weather phase driver selects every source through the real cloc
       Array.from(startupPreflight.reset.sourceObservationTimes),
       Array(3).fill(fixture.timeline.at(-1)),
     );
+    assert.equal(
+      startupPreflight.playback.visualState.satelliteInfrared,
+      'filtered',
+    );
+
+    satelliteInfrared = 100;
+    const numericPreflight = await prepareWeatherEffectsTimeline({
+      page,
+      fixture,
+    });
+    assert.equal(
+      numericPreflight.playback.visualState.satelliteInfrared,
+      'filtered',
+      'the numeric 100% cloud filter must normalize to the legacy semantic state',
+    );
+    satelliteInfrared = 50;
+    await assert.rejects(
+      prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
+      /Weather history or wind playback state did not match the fixture/,
+    );
+    satelliteInfrared = 'filtered';
 
     productEvidence.get('weather-lightning').historyFrames = 2;
     await assert.rejects(

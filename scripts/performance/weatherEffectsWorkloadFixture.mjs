@@ -1262,6 +1262,22 @@ export async function prepareWeatherEffectsTimelineInPage({
   const satelliteParams = productLayers[1]?.getParams?.();
   const radarParams = productLayers[0]?.getParams?.();
   const lightningParams = productLayers[2]?.getParams?.();
+  // The original weather API exposed the two semantic cloud-filter states as
+  // `filtered`/`full`. Newer builds expose the same endpoints on a 0-100
+  // strength scale. Keep the comparison contract semantic so a baseline and
+  // candidate with equivalent pixels do not fail solely because the public
+  // representation evolved.
+  const rawSatelliteInfrared = satelliteParams?.infrared;
+  const satelliteInfraredStrength =
+    rawSatelliteInfrared === 'filtered'
+      ? 100
+      : rawSatelliteInfrared === 'full'
+        ? 0
+        : Number.isInteger(rawSatelliteInfrared) &&
+            rawSatelliteInfrared >= 0 &&
+            rawSatelliteInfrared <= 100
+          ? rawSatelliteInfrared
+          : null;
   if (
     !wind ||
     typeof wind.model !== 'string' ||
@@ -1269,7 +1285,7 @@ export async function prepareWeatherEffectsTimelineInPage({
     wind.overlay !== 'speed' ||
     wind.paused !== false ||
     satelliteParams?.product !== 'clouds-regional' ||
-    satelliteParams?.infrared !== 'filtered' ||
+    satelliteInfraredStrength !== 100 ||
     radarParams?.opacity !== 'strong' ||
     lightningParams?.opacity !== 'strong' ||
     productStats.some((stats) => !timeline.includes(stats?.observedAt))
@@ -1303,7 +1319,7 @@ export async function prepareWeatherEffectsTimelineInPage({
       displayedAtStart: reset.times,
       visualState: {
         satelliteProduct: satelliteParams.product,
-        satelliteInfrared: satelliteParams.infrared,
+        satelliteInfrared: 'filtered',
         radarOpacity: radarParams.opacity,
         lightningOpacity: lightningParams.opacity,
         windModel: wind.model.toLowerCase(),
