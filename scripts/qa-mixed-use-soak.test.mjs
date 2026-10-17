@@ -569,6 +569,7 @@ test('rendered soak owns a longer bounded cold-application startup allowance', a
     'utf8',
   );
   assert.match(source, /applicationReadyTimeoutMs:\s*180_000/);
+  assert.match(source, /RENDERED_WORKSPACE_TIMEOUT_MS\s*=\s*120_000/);
   assert.doesNotMatch(source, /await import\(['"]\/(?:src|scripts)\//);
 });
 

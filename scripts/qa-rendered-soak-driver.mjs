@@ -22,6 +22,8 @@ import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPag
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
 import { createRecordingBundle } from '../src/recording/bundle.js';
 
+const RENDERED_WORKSPACE_TIMEOUT_MS = 120_000;
+
 export function isRecoverableApplicationPrewarmFailure(error) {
   const state = error?.fixtureStartupDiagnostics?.state;
   return Boolean(
@@ -507,7 +509,10 @@ export async function createRenderedSoakDriver(
       }, id);
       const onWorkspacePhase = (phase) =>
         console.log('SOAK phase ' + iteration + ' ' + phase);
-      await openWorkspace(page, id, { onProgress: onWorkspacePhase });
+      await openWorkspace(page, id, {
+        timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
+        onProgress: onWorkspacePhase,
+      });
       await importFixtureGeometry(page, 'Rendered soak ' + iteration, {
         onProgress: onWorkspacePhase,
       });
@@ -804,7 +809,9 @@ export async function createRenderedSoakDriver(
       await page.waitForFunction(
         () => window.__godsEyeView.aircraftSource.getState().mode === 'live',
       );
-      await openWorkspace(page, id);
+      await openWorkspace(page, id, {
+        timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
+      });
       assert.deepEqual(errors, []);
       return {
         sourceToggles: 8,
