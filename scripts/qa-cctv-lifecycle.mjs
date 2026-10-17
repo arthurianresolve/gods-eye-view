@@ -1249,6 +1249,8 @@ export async function runCctvLifecycle({
     if (error?.drainStability) report.lastDrainStability = error.drainStability;
     if (error?.drainHistory) report.lastDrainHistory = error.drainHistory;
     if (error?.sceneReadiness) report.sceneReadiness = error.sceneReadiness;
+    if (error?.lifecycleFailureEvidence)
+      report.workerPreflightFailure = error.lifecycleFailureEvidence;
   } finally {
     if (page) {
       if (

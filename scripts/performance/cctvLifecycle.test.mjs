@@ -1883,6 +1883,28 @@ test('CCTV runner retains the original phase/error and closes acquired resources
   assert.ok(order.includes('browser-close'));
 });
 
+test('CCTV runner retains structured worker preflight failure evidence', async () => {
+  const { dependencies, commit } = createCctvRunnerDependencies();
+  const evidence = {
+    schema: 'gev-lifecycle-failure-evidence/v1',
+    caseId: 'worker-preflight',
+    failedPhase: 'worker-preflight-validation',
+  };
+  dependencies.readWorkerPreflight = async () => {
+    const error = new Error('synthetic worker preflight failure');
+    error.lifecycleFailureEvidence = evidence;
+    throw error;
+  };
+  const report = await runCctvLifecycle({
+    url: 'http://localhost:4174',
+    expectedCommit: commit,
+    dependencies,
+  });
+  assert.equal(report.status, 'failed');
+  assert.equal(report.failedPhase, 'worker-aware-fixture-preflight');
+  assert.deepEqual(report.workerPreflightFailure, evidence);
+});
+
 test('CCTV runner does not mark a toggle passed before warmed-resource reuse is verified', async () => {
   const { dependencies, commit } = createCctvRunnerDependencies({
     resubmitOnFirstCycle: true,

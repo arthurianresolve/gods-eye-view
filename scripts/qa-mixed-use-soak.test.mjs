@@ -613,7 +613,9 @@ test('sealed-preview worker probe uses the application Cesium module and retains
         },
         TaskProcessor,
       },
-      __gevSoakWorkers: { snapshot: () => ({ pending: 0 }) },
+      __gevSoakWorkers: {
+        snapshot: () => ({ pending: 0, processorDestroyed: destroyed }),
+      },
       performance: { now: () => 10 },
       setTimeout,
       clearTimeout,
@@ -625,6 +627,7 @@ test('sealed-preview worker probe uses the application Cesium module and retains
     ['resolved', 'resolved', 'rejected-as-expected', 'resolved'],
   );
   assert.equal(result.diagnostics.pending, 0);
+  assert.equal(result.diagnostics.processorDestroyed, true);
   assert.equal(destroyed, true);
 });
 

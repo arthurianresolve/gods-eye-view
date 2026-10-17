@@ -42,6 +42,7 @@ export async function runCesiumWorkerProbeInPage(
   const processor = new CesiumRef.TaskProcessor('createGeometry', 1);
   const startedAt = performance.now();
   const results = [];
+  let probe;
   try {
     for (const task of tasks) {
       let timer;
@@ -82,18 +83,22 @@ export async function runCesiumWorkerProbeInPage(
         clearTimeout(timer);
       }
     }
-    const probe = {
+    probe = {
       status: 'passed',
       durationMs: performance.now() - startedAt,
       tasks: results,
     };
-    return includeDiagnostics
-      ? {
-          probe,
-          diagnostics: globalThis.__gevSoakWorkers?.snapshot?.() || null,
-        }
-      : probe;
   } finally {
     processor.destroy();
   }
+  // Worker diagnostics must describe the settled boundary after the probe has
+  // released its TaskProcessor. Reading inside the try's return expression
+  // observes the worker before `finally` destroys it and creates a false
+  // lifecycle failure even though every task completed.
+  return includeDiagnostics
+    ? {
+        probe,
+        diagnostics: globalThis.__gevSoakWorkers?.snapshot?.() || null,
+      }
+    : probe;
 }
