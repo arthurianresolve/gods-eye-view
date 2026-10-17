@@ -5,6 +5,7 @@ import {
   safeReferenceUrl,
 } from '../evidence/evidence.js';
 import { createArchiveLookup } from '../evidence/archiveLookup.js';
+import { t } from '../i18n/index.js';
 
 const SELECTED = 'gev:awareness-subject-selected';
 const CLEARED = 'gev:awareness-subject-cleared';
@@ -16,11 +17,11 @@ const ENTITY_CLEARED = 'gev:entity-selection-cleared';
 function formatTime(value) {
   return Number.isFinite(value)
     ? `${new Date(value).toISOString()} UTC`
-    : 'Not provided by source';
+    : t('Not provided by source');
 }
 
 function formatAge(value, now = Date.now()) {
-  if (!Number.isFinite(value)) return 'Unknown';
+  if (!Number.isFinite(value)) return t('Unknown');
   const seconds = Math.max(0, Math.floor((now - value) / 1000));
   if (seconds < 60) return `${seconds}s old`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m old`;
@@ -182,7 +183,7 @@ export class EvidencePanel {
       return;
     }
     node.textContent =
-      value == null || value === '' ? 'Unknown' : String(value);
+      value == null || value === '' ? t('Unknown') : String(value);
   }
 
   _publishEvidence(detail) {
@@ -306,7 +307,7 @@ export class EvidencePanel {
       const target = safeReferenceUrl(url);
       if (!target || evidence.references.length >= 8) return;
       const preview = document.createElement('div');
-      preview.textContent = 'Archive lookup URL: ' + target;
+      preview.textContent = t('Archive lookup URL: {url}', { url: target });
       const status = document.createElement('div');
       status.setAttribute('role', 'status');
       // A source observation can suggest a requested date, never a capture date.
@@ -316,11 +317,11 @@ export class EvidencePanel {
         : undefined;
       const requested = document.createElement('div');
       requested.textContent = timestamp
-        ? 'Requested date: ' + formatTime(requestedAt)
-        : 'Requested date: latest available';
+        ? t('Requested date: {date}', { date: formatTime(requestedAt) })
+        : t('Requested date: latest available');
       const button = makeButton('Find archived copy', async () => {
         button.disabled = true;
-        status.textContent = 'Looking up archive…';
+        status.textContent = t('Looking up archive…');
         try {
           const result = await this.archiveLookup.lookup({
             url: target,
@@ -329,7 +330,7 @@ export class EvidencePanel {
           });
           if (signal.aborted) return;
           if (result.state !== 'available' || !result.reference) {
-            status.textContent = 'No archived copy found.';
+            status.textContent = t('No archived copy found.');
             return;
           }
           const reference = normalizeEvidence({
@@ -337,10 +338,10 @@ export class EvidencePanel {
           }).references[0];
           if (!reference || reference.kind !== 'archive')
             throw new Error('Malformed archive result');
-          status.textContent =
-            'Closest archive capture: ' +
-            formatTime(reference.archiveAt) +
-            '. This may differ from the requested date and does not prove the underlying event. ';
+          status.textContent = t(
+            'Closest archive capture: {time}. This may differ from the requested date and does not prove the underlying event.',
+            { time: formatTime(reference.archiveAt) },
+          );
           const attach = makeButton('Attach archived reference', () => {
             if (signal.aborted) return;
             this._replaceReferences([...evidence.references, reference]);
@@ -351,10 +352,10 @@ export class EvidencePanel {
           if (signal.aborted) return;
           const message =
             error.code === 'rate-limited'
-              ? 'Archive lookup rate limited. Try again later.'
+              ? t('Archive lookup rate limited. Try again later.')
               : error.state === 'malformed'
-                ? 'Archive returned malformed data.'
-                : 'Archive lookup failed. You can try again.';
+                ? t('Archive returned malformed data.')
+                : t('Archive lookup failed. You can try again.');
           status.textContent = message;
         } finally {
           if (!signal.aborted) button.disabled = false;
@@ -379,17 +380,18 @@ export class EvidencePanel {
       );
       remove.setAttribute(
         'aria-label',
-        'Remove reference: ' + link.textContent,
+        t('Remove reference: {title}', { title: link.textContent }),
       );
       row.append(link, document.createTextNode(' '), remove);
       if (reference.kind === 'archive') {
         const date = document.createElement('div');
-        date.textContent =
-          'Archive capture: ' +
-          formatTime(reference.archiveAt) +
-          ' · Looked up: ' +
-          formatTime(reference.lookedUpAt) +
-          '. Capture time is separate from source observation time.';
+        date.textContent = t(
+          'Archive capture: {capture} · Looked up: {lookup}. Capture time is separate from source observation time.',
+          {
+            capture: formatTime(reference.archiveAt),
+            lookup: formatTime(reference.lookedUpAt),
+          },
+        );
         row.append(date);
       } else {
         seen.add(reference.url);
@@ -401,7 +403,7 @@ export class EvidencePanel {
       appendLookup(evidence.sourceUrl, container);
     if (!evidence.references.length) {
       const empty = document.createElement('div');
-      empty.textContent = 'None attached';
+      empty.textContent = t('None attached');
       container.prepend(empty);
     }
     const facility = evidence.entityRef.layerKey === 'local-datacenters';
@@ -416,7 +418,7 @@ export class EvidencePanel {
         : 'https://…';
       input.setAttribute(
         'aria-label',
-        isFacility ? 'PeeringDB facility URL' : 'Public reference URL',
+        t(isFacility ? 'PeeringDB facility URL' : 'Public reference URL'),
       );
       const status = document.createElement('span');
       status.setAttribute('role', 'status');
@@ -428,16 +430,16 @@ export class EvidencePanel {
             : safeReferenceUrl(input.value);
           if (!url) {
             status.textContent = isFacility
-              ? 'Use a public PeeringDB /fac/{id} URL.'
-              : 'Use a public HTTPS URL without credentials.';
+              ? t('Use a public PeeringDB /fac/{id} URL.')
+              : t('Use a public HTTPS URL without credentials.');
             return;
           }
           if (evidence.references.length >= 8) {
-            status.textContent = 'Maximum of 8 references reached.';
+            status.textContent = t('Maximum of 8 references reached.');
             return;
           }
           if (evidence.references.some((reference) => reference.url === url)) {
-            status.textContent = 'This reference is already attached.';
+            status.textContent = t('This reference is already attached.');
             return;
           }
           this._replaceReferences([
@@ -445,7 +447,7 @@ export class EvidencePanel {
             {
               kind: 'user-linked',
               url,
-              title: isFacility ? 'PeeringDB facility (user-linked)' : url,
+              title: isFacility ? t('PeeringDB facility (user-linked)') : url,
             },
           ]);
         },
@@ -454,8 +456,9 @@ export class EvidencePanel {
       container.append(form);
     }
     const hint = document.createElement('div');
-    hint.textContent =
-      'Pin this evidence in a workspace to save its references.';
+    hint.textContent = t(
+      'Pin this evidence in a workspace to save its references.',
+    );
     container.append(hint);
   }
 
@@ -469,26 +472,28 @@ export class EvidencePanel {
     this.panel.dataset.pinned = String(pinned);
     const title = this.panel.querySelector('[data-evidence-title]');
     if (title)
-      title.textContent =
+      title.textContent = t(
         detail.kind === 'forecast'
           ? 'FORECAST EVIDENCE'
           : pinned
             ? 'PINNED RESULT EVIDENCE'
-            : 'EVIDENCE';
+            : 'EVIDENCE',
+      );
     const evidence = normalizeEvidence(detail.evidence || {});
     this.currentDetail = detail;
     this.currentEvidence = evidence;
     const name = String(
-      detail.label || evidence.entityRef.id || 'Selected object',
+      detail.label || evidence.entityRef.id || t('Selected object'),
     );
     const announcement = this.panel.querySelector('[data-evidence-status]');
     if (announcement)
-      announcement.textContent =
-        'Evidence for ' +
-        name +
-        '. ' +
-        evidence.references.length +
-        ' public references.';
+      announcement.textContent = t(
+        'Evidence for {name}. {count} public references.',
+        {
+          name,
+          count: evidence.references.length,
+        },
+      );
     this._set('subject', name);
     this._set('layer', evidence.entityRef.layerKey);
     this._showEvidenceFacts(evidence, detail.cameraState);
@@ -505,7 +510,7 @@ export class EvidencePanel {
     this.pinned = false;
     this.panel.dataset.pinned = 'false';
     const title = this.panel.querySelector('[data-evidence-title]');
-    if (title) title.textContent = 'EVIDENCE';
+    if (title) title.textContent = t('EVIDENCE');
     if (this.panel.hidden) return;
     const shouldRestore = restoreFocus;
     this.panel.hidden = true;

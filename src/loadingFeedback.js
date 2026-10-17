@@ -275,6 +275,7 @@ export function reduceTrafficSyncFeedback(
       // Neutral default: the layer always supplies its own LIVE/SIMULATED
       // label, and a fallback string must never claim a live feed on a
       // keyless build.
+      // i18n-ignore: translated in src/ui/shellFeedback.js
       label: label || 'syncing road network',
       progressText: hasProgress ? `${progressPct}%` : '...',
     };
@@ -423,6 +424,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
     );
     return {
       state: 'retry',
+      // i18n-ignore: translated in src/ui/shellFeedback.js
       label: (
         camera.cameraRetry.error || 'Overpass temporarily unavailable'
       ).toUpperCase(),
@@ -469,6 +471,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
   if (active.length === 1 && active[0].cameraRetry && !summary.disabling) {
     return {
       state: 'loading',
+      // i18n-ignore: translated in src/ui/shellFeedback.js
       label: active[0].cameraRetry.retrying
         ? 'RETRYING ALPR CAMERAS'
         : 'FETCHING ALPR CAMERAS',
@@ -483,6 +486,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
   ) {
     return {
       state: 'loading',
+      // i18n-ignore: translated in src/ui/shellFeedback.js
       label: active[0].installationRetry.retrying
         ? 'RETRYING MAPPED SITES'
         : 'FETCHING MAPPED SITES',

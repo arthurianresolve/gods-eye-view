@@ -3,6 +3,7 @@
  * data files, line-delimited GeoJSON parsing and analyst records.
  */
 import { createEvidenceEnvelope } from '../evidence/evidence.js';
+import { msg } from '../i18n/marker.js';
 
 // Resolved by Vite in builds and relative to this module in other consumers,
 // when read, so importing this module never needs a module URL.
@@ -136,7 +137,7 @@ export function mapAnalystRecord(raw, layerId = '') {
               {
                 kind: 'peeringdb',
                 url: `https://www.peeringdb.com/search?q=${encodeURIComponent(name || text(raw?.id))}`,
-                title: 'Search this facility in PeeringDB',
+                title: msg('Search this facility in PeeringDB'),
               },
             ]
           : [],

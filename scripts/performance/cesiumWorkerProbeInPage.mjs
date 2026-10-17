@@ -7,7 +7,10 @@
 export async function runCesiumWorkerProbeInPage(
   { includeDiagnostics = false, timeoutMs = 10_000 } = {},
 ) {
-  const CesiumRef = globalThis.Cesium;
+  // The application deliberately exposes its single bundled Cesium module as
+  // __CESIUM__.  The plain `Cesium` global only exists in script-tag builds and
+  // is absent from the production Vite bundle exercised by CI.
+  const CesiumRef = globalThis.__CESIUM__ || globalThis.Cesium;
   if (
     !CesiumRef?.BoxGeometry ||
     !CesiumRef?.Cartesian3 ||

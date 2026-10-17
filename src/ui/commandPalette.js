@@ -1,3 +1,5 @@
+import { applyDocumentTranslations, t } from '../i18n/index.js';
+
 export const WORKFLOW_LAYOUTS = Object.freeze({
   explore: Object.freeze(['control-panel', 'location-bar']),
   investigate: Object.freeze(['location-bar', 'data-panel', 'evidence-panel']),
@@ -128,15 +130,16 @@ export function createCommandPalette({
   const dialog = documentRef.createElement('dialog');
   dialog.className = 'gev-command-palette';
   dialog.setAttribute('aria-labelledby', 'gev-command-title');
-  dialog.innerHTML = `<form method="dialog"><header><h2 id="gev-command-title">Search commands</h2><button aria-label="Close command palette" value="close">×</button></header><label for="gev-command-search">Find an action</label><input id="gev-command-search" type="search" autocomplete="off" /><p class="gev-command-hint">Type to filter · Escape closes</p><div class="gev-command-results" role="listbox" aria-label="Available commands"></div></form>`;
+  dialog.innerHTML = `<form method="dialog"><header><h2 id="gev-command-title" data-i18n>Search commands</h2><button aria-label="Close command palette" data-i18n-aria-label value="close">×</button></header><label for="gev-command-search" data-i18n>Find an action</label><input id="gev-command-search" type="search" autocomplete="off" /><p class="gev-command-hint" data-i18n>Type to filter · Escape closes</p><div class="gev-command-results" role="listbox" aria-label="Available commands" data-i18n-aria-label></div></form>`;
+  applyDocumentTranslations(dialog);
   documentRef.body.append(dialog);
   const search = dialog.querySelector('#gev-command-search');
   const results = dialog.querySelector('.gev-command-results');
   const trigger = documentRef.createElement('button');
   trigger.type = 'button';
   trigger.className = 'gev-command-trigger';
-  trigger.setAttribute('aria-label', 'Search commands');
-  trigger.title = 'Search commands (Ctrl+K)';
+  trigger.setAttribute('aria-label', t('Search commands'));
+  trigger.title = t('Search commands (Ctrl+K)');
   trigger.textContent = '⌕';
   triggerHost?.prepend(trigger);
   let currentEntries = [];
@@ -151,11 +154,11 @@ export function createCommandPalette({
       button.dataset.index = String(index);
       button.disabled = !command.available;
       const name = documentRef.createElement('strong');
-      name.textContent = command.label;
+      name.textContent = t(command.label);
       const description = documentRef.createElement('span');
       description.textContent = command.available
-        ? command.description || ''
-        : command.reason || 'Unavailable';
+        ? t(command.description || '')
+        : t(command.reason || 'Unavailable');
       button.append(name, description);
       button.addEventListener('click', async () => {
         if (!command.available) return;
@@ -166,7 +169,7 @@ export function createCommandPalette({
     }
     if (!currentEntries.length) {
       const empty = documentRef.createElement('p');
-      empty.textContent = 'No matching commands.';
+      empty.textContent = t('No matching commands.');
       results.append(empty);
     }
   }

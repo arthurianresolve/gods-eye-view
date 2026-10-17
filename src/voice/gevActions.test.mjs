@@ -1577,7 +1577,9 @@ test('generic layer visibility exposes lifecycle truth for every manager phase a
   });
   // The voice envelope is additive and states the failure plainly.
   assert.equal(say, "Couldn't turn on radio.");
-  assert.equal(display.title, 'radio');
+  // The card names the layer, not its id; the result keeps the id.
+  assert.equal(display.title, 'Radio');
+  assert.deepEqual(display.lines, ['Radio layer unavailable']);
 });
 
 test('generic voice visibility maps Space Missions to the explicit mission layer', async () => {
@@ -4514,7 +4516,7 @@ test('voice Radio: a key that geocodes to nothing still places the station, keyl
   const requests = [];
   installKeyedFetch(t, async (url) => {
     requests.push(String(url));
-    if (String(url).startsWith('https://maps.googleapis.com/')) {
+    if (String(url).startsWith('/api/google/geocode')) {
       return {
         ok: true,
         json: async () => ({ status: 'ZERO_RESULTS', results: [] }),
@@ -4550,7 +4552,7 @@ test('voice Radio: a key that geocodes to nothing still places the station, keyl
   assert.ok(Math.abs(calls[0].criteria.anchor.lon - 107.1839) < 1e-9);
   // Google is asked first and exactly once; Photon answers unbiased, in one call.
   assert.equal(
-    requests.filter((url) => url.includes('maps.googleapis.com')).length,
+    requests.filter((url) => url.includes('/api/google/geocode')).length,
     1,
   );
   assert.equal(
@@ -4573,7 +4575,7 @@ test('voice Radio: the keyless path applies no country filter the keyed path wou
   // keyed install placed a station. The label may carry it; the filter may not.
   const { calls, dataManager } = radioSelectionHarness();
   installKeyedFetch(t, async (url) =>
-    String(url).startsWith('https://maps.googleapis.com/')
+    String(url).startsWith('/api/google/geocode')
       ? {
           ok: true,
           json: async () => ({ status: 'ZERO_RESULTS', results: [] }),
@@ -4675,6 +4677,56 @@ test('ALPR common names toggle only the registered camera layer through the norm
       assert.equal(result.ok, true);
       assert.equal(result.layerId, 'alpr-cameras');
       assert.deepEqual(calls.at(-1), ['alpr-cameras', value]);
+    }
+  }
+});
+
+test('GNSS integrity and interference common names toggle only the GNSS layer through the normal voice action', async () => {
+  globalThis.window = globalThis.window || {
+    clearTimeout,
+    setTimeout,
+    requestIdleCallback: null,
+  };
+  const viewer = {
+    clock: { onTick: { addEventListener: () => () => {} } },
+    scene: { canvas: { addEventListener() {}, removeEventListener() {} } },
+    camera: { moveEnd: { addEventListener() {} } },
+  };
+  const calls = [];
+  let enabled = false;
+  const dataManager = {
+    layers: new Map([['gnss-integrity', { module: {} }]]),
+    getAll: () => [{ id: 'gnss-integrity', name: 'GNSS Integrity' }],
+    isEnabled: () => enabled,
+    setEnabled: async (id, value) => {
+      calls.push([id, value]);
+      enabled = value;
+      return true;
+    },
+  };
+  const runner = createGevActionRunner({
+    viewer,
+    styleManager: {},
+    dataManager,
+  });
+  for (const alias of [
+    'gnss-integrity',
+    'gnss integrity',
+    'navigation integrity',
+    'low navigation accuracy',
+    'gnss interference',
+    'gps interference',
+    'gps jamming',
+    'gnss',
+  ]) {
+    for (const value of [true, false]) {
+      const result = await runner('set_layer_visibility', {
+        layerId: alias,
+        enabled: value,
+      });
+      assert.equal(result.ok, true);
+      assert.equal(result.layerId, 'gnss-integrity');
+      assert.deepEqual(calls.at(-1), ['gnss-integrity', value]);
     }
   }
 });

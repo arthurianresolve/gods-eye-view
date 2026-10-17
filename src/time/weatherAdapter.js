@@ -44,7 +44,7 @@ export function createInvestigationWeatherAdapter({
       const remove = capabilities.register({
         id,
         mode: 'provider-history',
-        label: 'Observed weather imagery',
+        label: msg('Observed weather imagery'),
         coverage,
         selectAt: async ({ targetMs }) => {
           const frame = weatherClock.selectFor(
@@ -104,3 +104,4 @@ export function createInvestigationWeatherAdapter({
     },
   });
 }
+import { msg } from '../i18n/marker.js';

@@ -1,3 +1,5 @@
+import { t } from '../i18n/index.js';
+
 /** Offer an explicit reload when the Cesium drawing context is lost. */
 export function installWebGlRecovery(
   viewer,
@@ -26,8 +28,9 @@ export function installWebGlRecovery(
     event.preventDefault?.();
     if (!active) return;
     status.dataset.state = 'lost';
-    message.textContent =
-      '3D graphics were interrupted. Reload to restore this view.';
+    message.textContent = t(
+      '3D graphics were interrupted. Reload to restore this view.',
+    );
     status.hidden = false;
   };
   const onReload = () => {

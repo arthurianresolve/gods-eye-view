@@ -91,7 +91,7 @@ export function updateCctvHealth(
  *   GET /api/cctv/sources        — list all registered camera sources
  *   GET /api/cctv/health         — per-camera health/status report
  *   GET /api/cctv/stream/:id     — stream info (feedType, URLs) for a camera
- *   GET /api/cctv/media/:id      — proxy live video/image media from upstream
+ *   GET /api/cctv/media/:id      — proxy live video media from upstream
  *   GET /api/cctv/frame/:id      — single frame with fallback chain
  *
  * @returns {import('vite').Plugin}
@@ -227,6 +227,8 @@ export function cctvProxy({
               sourceKind:
                 source.sourceKind || (source.url ? 'configured' : 'fallback'),
               poseSource: source.poseSource,
+              model: source.model || '',
+              manufacturer: source.manufacturer || '',
               license: source.license,
               credit: source.credit || '',
               code: source.code || '',
@@ -277,6 +279,21 @@ export function cctvProxy({
           const source = sourceById.get(cameraId);
           const mediaUrl = source?.url || '';
           const feedType = normalizeFeedType(source?.feedType || 'image');
+          // Live feeds only. A still camera is served by /frame, whose fetch
+          // keeps redirects on the registered origin, accepts only image/* and
+          // caps the body; relaying it here would bypass all three.
+          if (!isVideoFeedType(feedType) && feedType !== 'mjpeg') {
+            res.writeHead(404, {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+            });
+            res.end(
+              JSON.stringify({
+                error: 'No live media for this camera; use the frame endpoint',
+              }),
+            );
+            return;
+          }
           const leaseId = url.searchParams.get('lease');
           if (feedType === 'hls' && !/^[a-f0-9-]{36}$/i.test(leaseId || '')) {
             res.writeHead(400);

@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { createEarthquakeEvidence } from './evidence.js';
+import { t } from '../../i18n/index.js';
 import {
   EARTHQUAKE_OVERLAY_SOURCE_ID,
   EARTHQUAKE_OVERLAY_COHORT_LIMIT,
@@ -14,6 +15,10 @@ export {
   createUsgsEarthquakeSource,
   EARTHQUAKE_HISTORY_WINDOW_MS,
 } from './source.js';
+
+// A portable package (no i18n): the error stays English data and the layer
+// panel shows it translated.
+const msg = (text) => text;
 
 /** Own one earthquake display and its refresh lifecycle. */
 export function createEarthquakesLayer({ source, overlayHost } = {}) {
@@ -201,7 +206,7 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
         if (request.signal.aborted || _request !== request || !_enabled)
           return false;
         console.warn('[Data:Earthquakes] Fetch error:', e);
-        _lastError = e?.message || 'Earthquake source unavailable';
+        _lastError = e?.message || msg('Earthquake source unavailable');
         if (historyTargetMs !== null) {
           _dataSource.entities.removeAll();
           _count = 0;
@@ -249,7 +254,7 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
           ? capabilities.register({
               id: 'earthquakes',
               mode: 'provider-history',
-              label: 'USGS earthquake events',
+              label: msg('USGS earthquake events'),
               coverage: { from: Date.UTC(1900, 0, 1), to: Date.now() },
               selectAt: async ({ targetMs, signal }) => {
                 const snapshot = await source.getSnapshotAt(targetMs, {
@@ -363,11 +368,11 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
         historyWindow: _historyWindow,
         loadingLabel:
           _historyStatus === 'loading'
-            ? 'HISTORY · loading'
+            ? t('HISTORY · loading')
             : _historyStatus === 'unavailable'
-              ? 'HISTORY · unavailable'
+              ? t('HISTORY · unavailable')
               : _historyStatus === 'available'
-                ? `HISTORY · ${_historyEffectiveTime}`
+                ? t('HISTORY · {time}', { time: _historyEffectiveTime })
                 : '',
       };
     },

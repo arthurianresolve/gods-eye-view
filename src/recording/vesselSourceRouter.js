@@ -34,7 +34,7 @@ export function createVesselSourceRouter({ live, recorded } = {}) {
       remove: registry.register({
         id: layerId,
         mode: 'live',
-        label: live.label || 'Live vessel feed',
+        label: live.label || msg('Live vessel feed'),
         readLive,
       }),
     };
@@ -142,3 +142,4 @@ export function createVesselSourceRouter({ live, recorded } = {}) {
     },
   });
 }
+import { msg } from '../i18n/marker.js';

@@ -1,5 +1,6 @@
 import { adaptFirmsRecords } from '../../data/firmsAdapt.js';
 import { fireDetectionKey } from '../../data/firmsLabels.js';
+import { msg } from '../../i18n/index.js';
 
 export function createIngestion({
   layerState,
@@ -104,8 +105,8 @@ export function createIngestion({
         error,
       );
       layerState._error = historical
-        ? 'historical data unavailable'
-        : 'live feed unavailable';
+        ? msg('historical data unavailable')
+        : msg('live feed unavailable');
       if (historical) {
         layerState._historyStatus = 'unavailable';
         layerState._historyLoadedTargetMs = targetMs;

@@ -1,3 +1,6 @@
+// Restore labels are marked with msg(); ui/shareRestoration.js translates them.
+// Local, not i18n/marker.js: the token-ledger tests run this file in isolation.
+const msg = (text) => text;
 import { normalizeIdSwitches, patchRequestedIdSwitches } from './idSwitches.js';
 import reservationRows from './layerStateTokenReservations.json' with { type: 'json' };
 
@@ -297,6 +300,24 @@ function imageryPinOption(key, token) {
   });
 }
 
+function satelliteFilterOption() {
+  const percentage = boundedIntegerOption('infrared', 'i', 100, {
+    min: 0,
+    max: 100,
+  });
+  return Object.freeze({
+    ...percentage,
+    normalize: (value) =>
+      value === 'filtered'
+        ? 100
+        : value === 'full'
+          ? 0
+          : percentage.normalize(value),
+    decode: (value) =>
+      value === 'f' ? 100 : value === 'a' ? 0 : percentage.decode(value),
+  });
+}
+
 const OPTION_GROUPS = Object.freeze({
   traffic: Object.freeze([
     enumOption('roadMode', 'r', null, ['tomtom', 'osm', 'hybrid'], {
@@ -318,10 +339,7 @@ const OPTION_GROUPS = Object.freeze({
     }),
   ]),
   'weather-satellite': Object.freeze([
-    enumOption('infrared', 'i', 'filtered', ['filtered', 'full'], {
-      filtered: 'f',
-      full: 'a',
-    }),
+    satelliteFilterOption(),
     enumOption('opacity', 'o', 'strong', ['light', 'strong'], {
       light: 'l',
       strong: 's',
@@ -459,19 +477,19 @@ export const SHARE_TRACKING_RESTORE_POLICIES = Object.freeze({
     optionOwner: 'flights',
     optionKey: 'selectedFlightsTrackingId',
     expiryWindowMs: 90_000,
-    label: 'flight',
+    label: msg('flight'),
   }),
   military: Object.freeze({
     optionOwner: 'flights',
     optionKey: 'selectedMilitaryTrackingId',
     expiryWindowMs: 45_000,
-    label: 'military flight',
+    label: msg('military flight'),
   }),
   satellites: Object.freeze({
     optionOwner: 'satellites',
     optionKey: 'selectedSatTrackingId',
     expiryWindowMs: 300_000,
-    label: 'satellite',
+    label: msg('satellite'),
   }),
 });
 
@@ -569,6 +587,11 @@ export const LAYER_STATE_TOKEN_RESERVATIONS =
  */
 export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({
+    id: 'air-quality',
+    token: '4',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'ais-live-vessels',
     token: 'a',
     disposition: 'enabled-only',
@@ -607,6 +630,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: 'f',
     disposition: 'enabled+options',
     optionOwner: 'flights',
+  }),
+  Object.freeze({
+    id: 'gnss-integrity',
+    token: '3',
+    disposition: 'enabled-only',
   }),
   Object.freeze({ id: 'local-dams', token: 'q', disposition: 'enabled-only' }),
   Object.freeze({

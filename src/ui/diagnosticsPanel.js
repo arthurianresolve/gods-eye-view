@@ -3,6 +3,8 @@ import {
   createSettingsBackup,
   parseSettingsBackup,
 } from '../diagnostics/portable.js';
+import { applyDocumentTranslations } from '../i18n/index.js';
+import { t } from '../i18n/index.js';
 
 function download(name, value) {
   const url = URL.createObjectURL(
@@ -32,23 +34,24 @@ export function createDiagnosticsPanel({
   const root = document.createElement('details');
   root.className = 'gev-diagnostics';
   root.innerHTML = `
-    <summary>DIAGNOSTICS &amp; SETTINGS</summary>
+    <summary data-i18n>DIAGNOSTICS &amp; SETTINGS</summary>
     <div class="gev-diagnostics-body">
-      <p>Reports are created on demand and stay on this device until you download them. Credentials, transcripts, headers and local paths are excluded.</p>
+      <p data-i18n>Reports are created on demand and stay on this device until you download them. Credentials, transcripts, headers and local paths are excluded.</p>
       <div class="workspace-library-actions">
-        <button type="button" data-action="preview-report">PREVIEW DIAGNOSTICS</button>
-        <button type="button" data-action="export-report" disabled>DOWNLOAD REPORT</button>
-        <button type="button" data-action="export-settings">EXPORT SETTINGS</button>
+        <button type="button" data-action="preview-report" data-i18n>PREVIEW DIAGNOSTICS</button>
+        <button type="button" data-action="export-report" disabled data-i18n>DOWNLOAD REPORT</button>
+        <button type="button" data-action="export-settings" data-i18n>EXPORT SETTINGS</button>
       </div>
-      <label>Import settings backup <input data-settings-file type="file" accept="application/json,.json" /></label>
+      <label><span data-i18n>Import settings backup</span> <input data-settings-file type="file" accept="application/json,.json" /></label>
       <div data-settings-review hidden>
         <p data-settings-summary></p>
-        <button type="button" data-action="apply-settings" disabled>APPLY SETTINGS</button>
-        <button type="button" data-action="cancel-settings">CANCEL</button>
+        <button type="button" data-action="apply-settings" disabled data-i18n>APPLY SETTINGS</button>
+        <button type="button" data-action="cancel-settings" data-i18n>CANCEL</button>
       </div>
-      <p data-status role="status" aria-live="polite">No diagnostic report has been collected.</p>
-      <pre data-preview hidden aria-label="Sanitized diagnostics preview"></pre>
+      <p data-status role="status" aria-live="polite" data-i18n>No diagnostic report has been collected.</p>
+      <pre data-preview hidden aria-label="Sanitized diagnostics preview" data-i18n-aria-label></pre>
     </div>`;
+  applyDocumentTranslations(root);
   container.append(root);
   const status = root.querySelector('[data-status]');
   const preview = root.querySelector('[data-preview]');
@@ -68,35 +71,47 @@ export function createDiagnosticsPanel({
         preview.textContent = JSON.stringify(report, null, 2);
         preview.hidden = false;
         reportButton.disabled = false;
-        status.textContent = 'Sanitized local diagnostics are ready to review.';
+        status.textContent = t(
+          'Sanitized local diagnostics are ready to review.',
+        );
       } else if (action === 'export-report') {
         if (!report) return;
         download('gev-diagnostics.json', report);
-        status.textContent = 'Downloaded the previewed diagnostics report.';
+        status.textContent = t('Downloaded the previewed diagnostics report.');
       } else if (action === 'export-settings') {
         download(
           'gev-settings.json',
           createSettingsBackup(await getSettings()),
         );
-        status.textContent =
-          'Downloaded allowlisted preferences. Workspace data is a separate export.';
+        status.textContent = t(
+          'Downloaded allowlisted preferences. Workspace data is a separate export.',
+        );
       } else if (action === 'apply-settings') {
         if (!stagedSettings) return;
         await applySettings(stagedSettings);
         stagedSettings = null;
         settingsReview.hidden = true;
         settingsInput.value = '';
-        status.textContent =
-          'Settings were applied after full-file validation.';
+        status.textContent = t(
+          'Settings were applied after full-file validation.',
+        );
       } else if (action === 'cancel-settings') {
         stagedSettings = null;
         settingsReview.hidden = true;
         settingsInput.value = '';
-        status.textContent =
-          'Settings import cancelled; current settings were not changed.';
+        status.textContent = t(
+          'Settings import cancelled; current settings were not changed.',
+        );
       }
     } catch (error) {
-      status.textContent = `${action === 'apply-settings' ? 'Settings were not applied' : 'Action failed'}: ${error.message}`;
+      status.textContent = t('{action}: {error}', {
+        action: t(
+          action === 'apply-settings'
+            ? 'Settings were not applied'
+            : 'Action failed',
+        ),
+        error: error.message,
+      });
     }
   }
 
@@ -115,14 +130,30 @@ export function createDiagnosticsPanel({
         throw new RangeError('Settings backup exceeds 128 KiB.');
       stagedSettings = parseSettingsBackup(await file.text());
       const sourceCount = stagedSettings.sourceSelections.length;
-      settingsSummary.textContent = `Validated version ${stagedSettings.version}: ${sourceCount} source selections, ${Object.keys(stagedSettings.visualPreferences).length} visual preferences, ${stagedSettings.units.distance}/${stagedSettings.units.speed}/${stagedSettings.units.temperature} units. Applying replaces only these settings.`;
+      settingsSummary.textContent = t(
+        'Validated version {version}: {sources} source selections, {visuals} visual preferences, {distance}/{speed}/{temperature} units. Applying replaces only these settings.',
+        {
+          version: stagedSettings.version,
+          sources: sourceCount,
+          visuals: Object.keys(stagedSettings.visualPreferences).length,
+          distance: stagedSettings.units.distance,
+          speed: stagedSettings.units.speed,
+          temperature: stagedSettings.units.temperature,
+        },
+      );
       settingsReview.hidden = false;
       applyButton.disabled = false;
-      status.textContent =
-        'Review the allowlisted settings, then explicitly apply or cancel.';
+      status.textContent = t(
+        'Review the allowlisted settings, then explicitly apply or cancel.',
+      );
     } catch (error) {
       settingsInput.value = '';
-      status.textContent = `Settings backup rejected without changes: ${error.message}`;
+      status.textContent = t(
+        'Settings backup rejected without changes: {error}',
+        {
+          error: error.message,
+        },
+      );
     }
   });
   return Object.freeze({

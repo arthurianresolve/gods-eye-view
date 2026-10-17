@@ -573,7 +573,7 @@ test('rendered soak owns a longer bounded cold-application startup allowance', a
   assert.doesNotMatch(source, /await import\(['"]\/(?:src|scripts)\//);
 });
 
-test('sealed-preview worker probe uses the loaded Cesium global and retains diagnostics', async () => {
+test('sealed-preview worker probe uses the application Cesium module and retains diagnostics', async () => {
   let destroyed = false;
   class TaskProcessor {
     constructor() {
@@ -600,7 +600,7 @@ test('sealed-preview worker probe uses the loaded Cesium global and retains diag
     `(${runCesiumWorkerProbeInPage.toString()})(input)`,
     {
       input: { includeDiagnostics: true },
-      Cesium: {
+      __CESIUM__: {
         Cartesian3: class {
           constructor(x, y, z) {
             Object.assign(this, { x, y, z });

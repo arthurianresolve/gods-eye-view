@@ -105,7 +105,7 @@ export function createRecordedAircraftSource({
   }
 
   const api = {
-    label: 'Local aircraft recording',
+    label: msg('Local aircraft recording'),
     async selectRecording(id) {
       const requestGeneration = ++generation;
       const workspace = await storage.getWorkspace(String(id));
@@ -226,7 +226,7 @@ export function createRecordedAircraftSource({
         remove = registry.register({
           id: layerId,
           mode: 'recorded',
-          label: `Local recording · ${selected.id}`,
+          label: `${msg('Local recording ·')} ${selected.id}`,
           coverage: interval,
           selectAt: async ({ targetMs: requested }) => {
             const selection = selectAt(requested);
@@ -255,3 +255,4 @@ export function createRecordedAircraftSource({
 
   return Object.freeze(api);
 }
+import { msg } from '../i18n/marker.js';

@@ -333,3 +333,21 @@ test('map switching suspends old mesh reads until settled owner arrives, without
     'settled error/fallback binds the no-tileset owner',
   );
 });
+
+test('sampler: a cell just across the antimeridian is still near the viewer', () => {
+  reset();
+  let calls = 0;
+  const scene = fakeScene(() => {
+    calls += 1;
+    return undefined;
+  });
+  sampleMeshFloorCells(scene, [{ lat: -16.8, lon: -179.999 }], {
+    viewerLat: -16.8,
+    viewerLon: 179.999,
+  });
+  sampleMeshFloorCells(scene, [{ lat: -16.81, lon: 179.999 }], {
+    viewerLat: -16.81,
+    viewerLon: -179.999,
+  });
+  assert.equal(calls, 2, 'about 200 m apart, so both cells are probed');
+});

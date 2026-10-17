@@ -40,7 +40,7 @@ export function createAircraftSourceRouter({ live, recorded } = {}) {
       remove: registry.register({
         id: layerId,
         mode: 'live',
-        label: live.label || 'Live aircraft feed',
+        label: live.label || msg('Live aircraft feed'),
         readLive,
       }),
     };
@@ -137,3 +137,4 @@ export function createAircraftSourceRouter({ live, recorded } = {}) {
     },
   });
 }
+import { msg } from '../i18n/marker.js';

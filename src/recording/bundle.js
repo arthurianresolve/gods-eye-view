@@ -321,7 +321,7 @@ export async function importRecordingBundle(
   const document = {
     ...recording.document,
     id: destinationId,
-    title: `${String(recording.document.title || recording.document.id).slice(0, 180)} (imported)`,
+    title: `${String(recording.document.title || recording.document.id).slice(0, 180)} ${msg('(imported)')}`,
     importedAt: now(),
   };
   const saved = await storage.commitWorkspace({
@@ -333,3 +333,4 @@ export async function importRecordingBundle(
   });
   return Object.freeze({ ...saved, id: destinationId, kind: recording.kind });
 }
+import { msg } from '../i18n/marker.js';

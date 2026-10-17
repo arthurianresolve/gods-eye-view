@@ -151,7 +151,7 @@ export function createDirectorPersistence({
       kind: 'director-project',
       schemaVersion: DIRECTOR_PERSISTENCE_VERSION,
       projectVersion: project.version,
-      title: 'Director project',
+      title: msg('Director project'),
       updatedAt: timestamp,
       assetRefs,
     };
@@ -250,3 +250,4 @@ export function createDirectorPersistence({
 
   return Object.freeze({ save, load });
 }
+import { msg } from '../i18n/marker.js';

@@ -5,11 +5,13 @@ import {
 
 const models = Object.freeze({
   gfs: {
+    // i18n-ignore: official forecast model identifier.
     label: 'NOAA GFS',
     source: 'NOAA GFS',
     license: 'U.S. public domain',
   },
   ifs: {
+    // i18n-ignore: official forecast model identifier.
     label: 'ECMWF IFS',
     source: 'ECMWF IFS',
     license: 'CC BY 4.0; ECMWF Terms of Use also apply',

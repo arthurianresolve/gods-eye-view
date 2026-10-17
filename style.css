@@ -26,6 +26,7 @@
 @import './src/ui/styles/commandPalette.css';
 @import './src/ui/styles/workspaceLibrary.css';
 @import './src/ui/styles/diagnostics.css';
+@import './src/ui/styles/locale-picker.css';
 
 @import './src/ui/styles/weather.css';
 @import './src/ui/styles/panel-surfaces.css';

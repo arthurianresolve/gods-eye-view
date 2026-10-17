@@ -3,6 +3,7 @@ import {
   reduceVoiceCard,
   voiceCardView,
 } from './voiceCardPresentation.js';
+import { t } from '../i18n/index.js';
 
 /** Hide an idle card this long after its last update. */
 export const VOICE_CARD_IDLE_MS = 14000;
@@ -184,8 +185,11 @@ export class VoiceCardControls {
       const inspect = doc.createElement('button');
       inspect.type = 'button';
       inspect.className = 'gev-voice-card-referent-inspect';
-      inspect.textContent = 'Inspect evidence';
-      inspect.setAttribute('aria-label', `Inspect evidence for ${ref.label}`);
+      inspect.textContent = t('Inspect evidence');
+      inspect.setAttribute(
+        'aria-label',
+        t('Inspect evidence for {label}', { label: ref.label }),
+      );
       inspect.addEventListener('click', () => {
         const view = doc.defaultView;
         if (!view?.dispatchEvent || !view.CustomEvent) return;

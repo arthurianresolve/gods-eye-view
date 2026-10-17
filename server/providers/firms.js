@@ -6,6 +6,7 @@ import {
   filterTrailing24h,
   parseFirmsCsv,
 } from '../../src/data/firmsCsv.js';
+import { readResponseTextCapped } from './common/http.js';
 
 /**
  * NASA FIRMS live active-fire proxy with a memory + disk cache.
@@ -46,6 +47,8 @@ export function firmsProxy({
     'VIIRS_SNPP_NRT',
     'MODIS_NRT',
   ];
+  /** Bound each upstream response without constraining normal heavy-fire pulls. */
+  const FIRMS_MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
   const CACHE_DIR = path.join(workingDirectory, '.gev-cache');
   const CACHE_PATH = path.join(CACHE_DIR, 'firms.json');
 
@@ -97,9 +100,12 @@ export function firmsProxy({
   async function fetchSource(key, source, { date = null, days = 2 } = {}) {
     const datePath = date ? `/${date}` : '';
     const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/${source}/world/${days}${datePath}`;
-    const res = await fetchImpl(url, { signal: AbortSignal.timeout(60_000) });
+    const signal = AbortSignal.timeout(60_000);
+    const res = await fetchImpl(url, { signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const records = parseFirmsCsv(await res.text());
+    const records = parseFirmsCsv(
+      await readResponseTextCapped(res, FIRMS_MAX_RESPONSE_BYTES, signal),
+    );
     if (records === null) throw new Error('non-CSV upstream response');
     return records;
   }

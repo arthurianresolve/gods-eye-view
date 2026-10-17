@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { cyberSonarBaseAlpha } from '../../cyberSonar.js';
 import { CLASS_SCALE_2D } from '../../data/aircraftClass.js';
 import {
   turnRateFromFixHistory,
@@ -7,12 +8,7 @@ import {
 } from '../../data/motionModel.js';
 import { aircraftIcon } from '../../data/aircraftIcons.js';
 import { POSITION_HISTORY_LIMIT } from './recordPolicy.js';
-import {
-  BILLBOARD_SCALE,
-  GROUND_SCALE,
-  TRACKED_ICON_COLOR,
-  MIL_ICON_COLOR,
-} from './policy.js';
+import { BILLBOARD_SCALE, GROUND_SCALE, TRACKED_ICON_COLOR } from './policy.js';
 
 /** Apply military record changes to Cesium resources and existing follow operations. */
 export function createMilitarySnapshotRenderer({
@@ -129,6 +125,12 @@ export function createMilitarySnapshotRenderer({
 
       if (flightState._billboards.has(icao24)) {
         const bb = flightState._billboards.get(icao24);
+        if (!isTracked) {
+          const nextColor = rendering
+            ._fleetBillboardColor(icao24, meta)
+            .withAlpha(cyberSonarBaseAlpha(bb));
+          if (!Cesium.Color.equals(bb.color, nextColor)) bb.color = nextColor;
+        }
         // Position AND rotation are owned by the fleet pass (_fleetTick);
         // course changes land on the next rotation pass (forced below).
         // Ground flips (landing/takeoff) restyle this SAME billboard in
@@ -165,7 +167,9 @@ export function createMilitarySnapshotRenderer({
           // Screen-projected rotation lands on the next fleet tick.
           rotation: 0,
           alignedAxis: Cesium.Cartesian3.ZERO,
-          color: isTracked ? TRACKED_ICON_COLOR : MIL_ICON_COLOR,
+          color: isTracked
+            ? TRACKED_ICON_COLOR
+            : rendering._fleetBillboardColor(icao24, meta),
           sizeInMeters: false,
           scaleByDistance: rendering._normalBillboardScaleByDistance(),
           // Grounded/near-surface planes sit at/below the photoreal tile

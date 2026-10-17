@@ -28,6 +28,7 @@ import {
 } from './workspaceImportRead.js';
 import { setTextIfChanged } from './textUpdate.js';
 import { consumeInBatches } from '../imports/cooperative.js';
+import { applyDocumentTranslations, t } from '../i18n/index.js';
 
 const safeJson = (value) => JSON.stringify(value ?? null);
 
@@ -58,86 +59,87 @@ export function createWorkspaceLibraryPanel({
   const root = document.createElement('details');
   root.className = 'workspace-library';
   root.innerHTML = `
-    <summary>WORKSPACES</summary>
+    <summary data-i18n>WORKSPACES</summary>
     <div class="workspace-library-body">
       <details class="gev-first-task-guide" open>
-        <summary>START HERE · SELECT → INSPECT → SAVE</summary>
+        <summary data-i18n>START HERE · SELECT → INSPECT → SAVE</summary>
         <ol>
-          <li>Choose a live object, or start the clearly marked offline demo.</li>
-          <li>Select a record and open its evidence inspector to review source and time.</li>
-          <li>Save the workspace to reopen this view and its permitted local data.</li>
+          <li data-i18n>Choose a live object, or start the clearly marked offline demo.</li>
+          <li data-i18n>Select a record and open its evidence inspector to review source and time.</li>
+          <li data-i18n>Save the workspace to reopen this view and its permitted local data.</li>
         </ol>
       </details>
-      <label>Investigation <select data-workspace-select aria-label="Saved investigation"><option value="">No saved investigations</option></select></label>
+      <label><span data-i18n>Investigation</span> <select data-workspace-select aria-label="Saved investigation" data-i18n-aria-label><option value="" data-i18n>No saved investigations</option></select></label>
       <div class="workspace-library-actions">
-        <button type="button" data-action="save">SAVE</button>
-        <button type="button" data-action="save-as">SAVE AS</button>
-        <button type="button" data-action="open">OPEN</button>
-        <button type="button" data-action="duplicate">DUPLICATE</button>
-        <button type="button" data-action="export">EXPORT</button>
-        <button type="button" data-action="recover">RECOVER</button>
-        <button type="button" data-action="delete">DELETE</button>
-        <button type="button" data-action="synthetic-demo">SHOW SYNTHETIC OFFLINE DEMO</button>
-        <button type="button" data-action="undo" aria-label="Undo authored change">UNDO</button>
-        <button type="button" data-action="redo" aria-label="Redo authored change">REDO</button>
+        <button type="button" data-action="save" data-i18n>SAVE</button>
+        <button type="button" data-action="save-as" data-i18n>SAVE AS</button>
+        <button type="button" data-action="open" data-i18n>OPEN</button>
+        <button type="button" data-action="duplicate" data-i18n>DUPLICATE</button>
+        <button type="button" data-action="export" data-i18n>EXPORT</button>
+        <button type="button" data-action="recover" data-i18n>RECOVER</button>
+        <button type="button" data-action="delete" data-i18n>DELETE</button>
+        <button type="button" data-action="synthetic-demo" data-i18n>SHOW SYNTHETIC OFFLINE DEMO</button>
+        <button type="button" data-action="undo" aria-label="Undo authored change" data-i18n-aria-label data-i18n>UNDO</button>
+        <button type="button" data-action="redo" aria-label="Redo authored change" data-i18n-aria-label data-i18n>REDO</button>
       </div>
-      <label>Recovery point <select data-revision-select aria-label="Prior complete revision"><option value="">No prior revision</option></select></label>
-      <label>Import backup <input data-import type="file" accept="application/json,.json" /></label>
+      <label><span data-i18n>Recovery point</span> <select data-revision-select aria-label="Prior complete revision" data-i18n-aria-label><option value="" data-i18n>No prior revision</option></select></label>
+      <label><span data-i18n>Import backup</span> <input data-import type="file" accept="application/json,.json" /></label>
       <fieldset data-saved-queries>
-        <legend>Saved queries</legend>
-        <label>Name <input data-query-name type="text" maxlength="100" value="New query" /></label>
-        <label>Layers <select data-query-layers multiple size="5" aria-label="Query data layers"></select></label>
-        <label>Scope <select data-query-scope aria-label="Query geographic scope"><option value="anywhere">All loaded data</option><option value="view">Around current view centre</option></select></label>
-        <label>Filter field <select data-query-field aria-label="Optional filter field"><option value="">No filter</option></select></label>
-        <label>Filter operator <select data-query-operator aria-label="Filter operator"><option value="eq">equals</option><option value="contains">contains</option><option value="gt">greater than</option><option value="gte">at least</option><option value="lt">less than</option><option value="lte">at most</option><option value="neq">not equal</option></select></label>
-        <label>Filter value <input data-query-value type="text" maxlength="160" /></label>
-        <label>Order by <select data-query-sort aria-label="Result ordering"><option value="">Default ordering</option></select></label>
-        <label>Direction <select data-query-direction><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
-        <label>Maximum listed <input data-query-limit type="number" min="1" max="500" step="1" value="50" /></label>
-        <label>Saved query <select data-query-saved aria-label="Saved query"><option value="">No saved queries</option></select></label>
+        <legend data-i18n>Saved queries</legend>
+        <label><span data-i18n>Name</span> <input data-query-name type="text" maxlength="100" value="New query" /></label>
+        <label><span data-i18n>Layers</span> <select data-query-layers multiple size="5" aria-label="Query data layers" data-i18n-aria-label></select></label>
+        <label><span data-i18n>Scope</span> <select data-query-scope aria-label="Query geographic scope" data-i18n-aria-label><option value="anywhere" data-i18n>All loaded data</option><option value="view" data-i18n>Around current view centre</option></select></label>
+        <label><span data-i18n>Filter field</span> <select data-query-field aria-label="Optional filter field" data-i18n-aria-label><option value="" data-i18n>No filter</option></select></label>
+        <label><span data-i18n>Filter operator</span> <select data-query-operator aria-label="Filter operator" data-i18n-aria-label><option value="eq" data-i18n>equals</option><option value="contains" data-i18n>contains</option><option value="gt" data-i18n>greater than</option><option value="gte" data-i18n>at least</option><option value="lt" data-i18n>less than</option><option value="lte" data-i18n>at most</option><option value="neq" data-i18n>not equal</option></select></label>
+        <label><span data-i18n>Filter value</span> <input data-query-value type="text" maxlength="160" /></label>
+        <label><span data-i18n>Order by</span> <select data-query-sort aria-label="Result ordering" data-i18n-aria-label><option value="" data-i18n>Default ordering</option></select></label>
+        <label><span data-i18n>Direction</span> <select data-query-direction><option value="asc" data-i18n>Ascending</option><option value="desc" data-i18n>Descending</option></select></label>
+        <label><span data-i18n>Maximum listed</span> <input data-query-limit type="number" min="1" max="500" step="1" value="50" /></label>
+        <label><span data-i18n>Saved query</span> <select data-query-saved aria-label="Saved query" data-i18n-aria-label><option value="" data-i18n>No saved queries</option></select></label>
         <div class="workspace-library-actions">
-          <button type="button" data-action="save-query">SAVE QUERY</button>
-          <button type="button" data-action="load-query">LOAD QUERY</button>
-          <button type="button" data-action="run-query">RUN AT SELECTED TIME</button>
-          <button type="button" data-action="pin-query-result">PIN RESULT</button>
+          <button type="button" data-action="save-query" data-i18n>SAVE QUERY</button>
+          <button type="button" data-action="load-query" data-i18n>LOAD QUERY</button>
+          <button type="button" data-action="run-query" data-i18n>RUN AT SELECTED TIME</button>
+          <button type="button" data-action="pin-query-result" data-i18n>PIN RESULT</button>
         </div>
-        <p data-query-status role="status" aria-live="polite">Queries inspect records already loaded by their source layers.</p>
-        <div data-query-result role="region" aria-label="Inspectable query result" aria-live="polite"></div>
+        <p data-query-status role="status" aria-live="polite" data-i18n>Queries inspect records already loaded by their source layers.</p>
+        <div data-query-result role="region" aria-label="Inspectable query result" data-i18n-aria-label aria-live="polite"></div>
       </fieldset>
       <fieldset data-geo-import>
-        <legend>Import geographic file</legend>
-        <label>File <input data-geo-file type="file" accept=".geojson,.json,.csv,.kml,.gpx,application/geo+json,text/csv,application/vnd.google-earth.kml+xml,application/gpx+xml" /></label>
+        <legend data-i18n>Import geographic file</legend>
+        <label><span data-i18n>File</span> <input data-geo-file type="file" accept=".geojson,.json,.csv,.kml,.gpx,application/geo+json,text/csv,application/vnd.google-earth.kml+xml,application/gpx+xml" /></label>
         <div data-csv-mapping hidden>
-          <label>Latitude <select data-column="latitude"></select></label>
-          <label>Longitude <select data-column="longitude"></select></label>
-          <label>ID (optional) <select data-column="id"></select></label>
-          <label>Time (optional) <select data-column="time"></select></label>
-          <button type="button" data-action="preview-import">PREVIEW CSV</button>
+          <label><span data-i18n>Latitude</span> <select data-column="latitude"></select></label>
+          <label><span data-i18n>Longitude</span> <select data-column="longitude"></select></label>
+          <label><span data-i18n>ID (optional)</span> <select data-column="id"></select></label>
+          <label><span data-i18n>Time (optional)</span> <select data-column="time"></select></label>
+          <button type="button" data-action="preview-import" data-i18n>PREVIEW CSV</button>
         </div>
-        <label>Attribution <input data-attribution type="text" maxlength="500" placeholder="Source or license, if known" /></label>
-        <p data-import-status role="status" aria-live="polite">Choose a GeoJSON, CSV, KML, or GPX file to preview.</p>
+        <label><span data-i18n>Attribution</span> <input data-attribution type="text" maxlength="500" placeholder="Source or license, if known" data-i18n-placeholder /></label>
+        <p data-import-status role="status" aria-live="polite" data-i18n>Choose a GeoJSON, CSV, KML, or GPX file to preview.</p>
         <div data-import-review hidden>
           <p data-import-summary></p>
-          <button type="button" data-action="apply-import" disabled>APPLY TO WORKSPACE</button>
-          <button type="button" data-action="cancel-import">CANCEL</button>
+          <button type="button" data-action="apply-import" disabled data-i18n>APPLY TO WORKSPACE</button>
+          <button type="button" data-action="cancel-import" data-i18n>CANCEL</button>
         </div>
       </fieldset>
       <p data-usage></p>
-      <p data-status role="status" aria-live="polite">Ready. Save an investigation to reopen this view later.</p>
+      <p data-status role="status" aria-live="polite" data-i18n>Ready. Save an investigation to reopen this view later.</p>
       <fieldset data-comparison>
-        <legend>Evidence comparison</legend>
-        <p data-comparison-source>No selected evidence to pin yet. Select a record and inspect its evidence.</p>
+        <legend data-i18n>Evidence comparison</legend>
+        <p data-comparison-source data-i18n>No selected evidence to pin yet. Select a record and inspect its evidence.</p>
         <div class="workspace-library-actions">
-          <button type="button" data-action="pin-a">PIN AS A</button>
-          <button type="button" data-action="pin-b">PIN AS B</button>
-          <button type="button" data-action="compare">COMPARE A / B</button>
-          <button type="button" data-action="report-json">JSON</button>
-          <button type="button" data-action="report-csv">CSV</button>
-          <button type="button" data-action="report-markdown">MARKDOWN</button>
+          <button type="button" data-action="pin-a" data-i18n>PIN AS A</button>
+          <button type="button" data-action="pin-b" data-i18n>PIN AS B</button>
+          <button type="button" data-action="compare" data-i18n>COMPARE A / B</button>
+          <button type="button" data-action="report-json" data-i18n>JSON</button>
+          <button type="button" data-action="report-csv" data-i18n>CSV</button>
+          <button type="button" data-action="report-markdown" data-i18n>MARKDOWN</button>
         </div>
-        <div data-comparison-results role="region" aria-label="Evidence comparison results" aria-live="polite"></div>
+        <div data-comparison-results role="region" aria-label="Evidence comparison results" data-i18n-aria-label aria-live="polite"></div>
       </fieldset>
     </div>`;
+  applyDocumentTranslations(root);
   container.prepend(root);
   const select = root.querySelector('[data-workspace-select]');
   const revisions = root.querySelector('[data-revision-select]');
@@ -258,7 +260,7 @@ export function createWorkspaceLibraryPanel({
       return;
     if (importOwnerIsCurrent()) return;
     resetStagedImport({
-      status: 'Import preview cancelled because its workspace changed.',
+      status: t('Import preview cancelled because its workspace changed.'),
       clearFile: true,
     });
   }
@@ -459,9 +461,14 @@ export function createWorkspaceLibraryPanel({
       )
         return;
       savedQuerySelect.value = id;
-      queryStatus.textContent = `Saved query “${query.name}” with explicit layer, filter, order and time intent.`;
+      queryStatus.textContent = t(
+        'Saved query “{name}” with explicit layer, filter, order and time intent.',
+        { name: query.name },
+      );
     } catch (error) {
-      queryStatus.textContent = `Query was not saved: ${error.message}`;
+      queryStatus.textContent = t('Query was not saved: {error}', {
+        error: error.message,
+      });
     }
   }
 
@@ -470,7 +477,7 @@ export function createWorkspaceLibraryPanel({
       (query) => query.id === savedQuerySelect.value,
     );
     if (!item) {
-      queryStatus.textContent = 'Choose a saved query to load.';
+      queryStatus.textContent = t('Choose a saved query to load.');
       return;
     }
     queryLayers.querySelectorAll('option').forEach((option) => {
@@ -487,7 +494,10 @@ export function createWorkspaceLibraryPanel({
     querySort.value = item.query.sortBy || '';
     root.querySelector('[data-query-direction]').value = item.query.sortDir;
     root.querySelector('[data-query-limit]').value = String(item.query.limit);
-    queryStatus.textContent = `Loaded “${item.name}”. Review and edit the query before running.`;
+    queryStatus.textContent = t(
+      'Loaded “{name}”. Review and edit the query before running.',
+      { name: item.name },
+    );
   }
 
   function cancelQueryRendering() {
@@ -506,14 +516,27 @@ export function createWorkspaceLibraryPanel({
     queryRenderController = controller;
     queryResultHost.replaceChildren();
     if (!result?.ok) {
-      queryStatus.textContent = result?.error || 'Query could not run.';
+      queryStatus.textContent = result?.error || t('Query could not run.');
       if (queryRenderController === controller) queryRenderController = null;
       return false;
     }
     const metadata = result.resultMetadata || {};
     const coverage = metadata.records || {};
     const summary = document.createElement('p');
-    summary.textContent = `${result.complete === false ? 'At least ' : ''}${result.count} matched; ${coverage.returned ?? 'unknown'} loaded records returned for inspection${coverage.truncated ? ' (source data was truncated)' : ''}. Scope: ${result.scopeLabel}. Time mode: ${metadata.sourceMode || 'unknown'} at ${metadata.investigationTime?.timeMs ? new Date(metadata.investigationTime.timeMs).toISOString() : 'unknown'}.`;
+    summary.textContent = t(
+      '{prefix}{count} matched; {returned} loaded records returned for inspection{truncated}. Scope: {scope}. Time mode: {mode} at {time}.',
+      {
+        prefix: result.complete === false ? t('At least ') : '',
+        count: result.count,
+        returned: coverage.returned ?? t('unknown'),
+        truncated: coverage.truncated ? t(' (source data was truncated)') : '',
+        scope: result.scopeLabel,
+        mode: metadata.sourceMode || t('unknown'),
+        time: metadata.investigationTime?.timeMs
+          ? new Date(metadata.investigationTime.timeMs).toISOString()
+          : t('unknown'),
+      },
+    );
     queryResultHost.append(summary);
     const table = document.createElement('table');
     const head = document.createElement('thead');
@@ -522,8 +545,8 @@ export function createWorkspaceLibraryPanel({
       'Layer',
       'Record',
       'Coordinates',
-      'Time',
-      'Evidence',
+      t('Time'),
+      t('Evidence'),
     ]) {
       const cell = document.createElement('th');
       cell.textContent = label;
@@ -535,7 +558,12 @@ export function createWorkspaceLibraryPanel({
     table.append(body);
     queryResultHost.append(table);
     const layers = document.createElement('p');
-    layers.textContent = `Queried layers: ${(metadata.includedLayers || []).map((layer) => `${layer.layerKey} (${layer.status})`).join(', ') || query.layers.join(', ')}.`;
+    layers.textContent = t('Queried layers: {layers}.', {
+      layers:
+        (metadata.includedLayers || [])
+          .map((layer) => `${layer.layerKey} (${layer.status})`)
+          .join(', ') || query.layers.join(', '),
+    });
     queryResultHost.append(layers);
     const records = Array.isArray(result.items) ? result.items : [];
     function* rows() {
@@ -556,10 +584,10 @@ export function createWorkspaceLibraryPanel({
           if (index === 4 && record.evidence?.entityRef?.id != null) {
             const inspect = document.createElement('button');
             inspect.type = 'button';
-            inspect.textContent = 'INSPECT';
+            inspect.textContent = t('INSPECT');
             inspect.setAttribute(
               'aria-label',
-              `Inspect evidence for ${record.id}`,
+              t('Inspect evidence for {id}', { id: record.id }),
             );
             inspect.addEventListener('click', () => {
               window.dispatchEvent(
@@ -588,8 +616,9 @@ export function createWorkspaceLibraryPanel({
         disposed
       )
         return false;
-      queryStatus.textContent =
-        'This result is a fixed snapshot. Editing the form does not change it; run again to capture a new result.';
+      queryStatus.textContent = t(
+        'This result is a fixed snapshot. Editing the form does not change it; run again to capture a new result.',
+      );
       return true;
     } catch (error) {
       if (controller.signal.aborted) return false;
@@ -601,7 +630,7 @@ export function createWorkspaceLibraryPanel({
 
   async function runQuery() {
     if (!analystEngine) {
-      queryStatus.textContent = 'The local query engine is unavailable.';
+      queryStatus.textContent = t('The local query engine is unavailable.');
       return;
     }
     queryController?.abort('superseded-query');
@@ -617,7 +646,7 @@ export function createWorkspaceLibraryPanel({
         updatedAt: now(),
         query: readQueryIntent(),
       });
-      queryStatus.textContent = 'Querying loaded records…';
+      queryStatus.textContent = t('Querying loaded records…');
       const result = await analystEngine.query(parsed.query, {
         signal: controller.signal,
       });
@@ -625,24 +654,27 @@ export function createWorkspaceLibraryPanel({
       latestQueryResult = { result, query: parsed };
       await renderQueryResult(result, parsed.query, generation);
       if (!result.ok)
-        queryStatus.textContent = result.error || 'Query unavailable.';
+        queryStatus.textContent = result.error || t('Query unavailable.');
     } catch (error) {
       if (!controller.signal.aborted)
-        queryStatus.textContent = `Query was not run: ${error.message}`;
+        queryStatus.textContent = t('Query was not run: {error}', {
+          error: error.message,
+        });
     }
   }
 
   async function pinQueryResult() {
     if (!active || !latestQueryResult?.result?.ok) {
-      queryStatus.textContent =
-        'Run a successful query and save a workspace before pinning its result.';
+      queryStatus.textContent = t(
+        'Run a successful query and save a workspace before pinning its result.',
+      );
       return;
     }
     const { result, query } = latestQueryResult;
     const metadata = result.resultMetadata || {};
     const captured = createEvidenceSnapshot({
       id: `${active.id}-query-${now()}`,
-      title: `Query · ${query.name}`,
+      title: t('Query · {name}', { name: query.name }),
       capturedAt: metadata.investigationTime?.timeMs || now(),
       temporal: metadata.investigationTime,
       scope: query.query.scope,
@@ -666,9 +698,14 @@ export function createWorkspaceLibraryPanel({
         },
       ];
       await persistWorkspace({ pinnedEvidence });
-      queryStatus.textContent = `Pinned ${captured.records.length} query result records as an immutable evidence snapshot.`;
+      queryStatus.textContent = t(
+        'Pinned {count} query result records as an immutable evidence snapshot.',
+        { count: captured.records.length },
+      );
     } catch (error) {
-      queryStatus.textContent = `Could not pin query result: ${error.message}`;
+      queryStatus.textContent = t('Could not pin query result: {error}', {
+        error: error.message,
+      });
     }
   }
 
@@ -696,12 +733,12 @@ export function createWorkspaceLibraryPanel({
           records: [
             {
               id: 'demo-point-a',
-              properties: { name: 'SYNTHETIC DEMO A', status: 'NOT LIVE' },
+              properties: { name: 'SYNTHETIC DEMO A', status: t('NOT LIVE') },
               geometry: { type: 'Point', coordinates: [lon, lat] },
             },
             {
               id: 'demo-point-b',
-              properties: { name: 'SYNTHETIC DEMO B', status: 'NOT LIVE' },
+              properties: { name: 'SYNTHETIC DEMO B', status: t('NOT LIVE') },
               geometry: {
                 type: 'Point',
                 coordinates: [
@@ -830,7 +867,9 @@ export function createWorkspaceLibraryPanel({
       title:
         title ||
         active?.title ||
-        `Investigation ${new Date(now()).toLocaleDateString()}`,
+        t('Investigation {date}', {
+          date: new Date(now()).toLocaleDateString(),
+        }),
       view,
       filters: {},
       annotations: [...view.annotations],
@@ -1407,19 +1446,40 @@ export function createWorkspaceLibraryPanel({
       preview.bounds?.map((value) => Number(value.toFixed(4))).join(', ') ||
       'none';
     const rejected = preview.rejectedRows.length
-      ? ` First rejected row: ${preview.rejectedRows[0].row} — ${preview.rejectedRows[0].reason}`
+      ? t(' First rejected row: {row} — {reason}', {
+          row: preview.rejectedRows[0].row,
+          reason: preview.rejectedRows[0].reason,
+        })
       : '';
     const timeRange = preview.timeRange
-      ? ` Time range: ${new Date(preview.timeRange[0]).toISOString()} — ${new Date(preview.timeRange[1]).toISOString()}.`
+      ? t(' Time range: {from} — {to}.', {
+          from: new Date(preview.timeRange[0]).toISOString(),
+          to: new Date(preview.timeRange[1]).toISOString(),
+        })
       : '';
     const warnings = preview.warnings?.length
-      ? ` Notes: ${preview.warnings.join(' ')}`
+      ? t(' Notes: {warnings}', { warnings: preview.warnings.join(' ') })
       : '';
-    importSummary.textContent = `${preview.accepted} accepted, ${preview.rejected} rejected. Bounds [west, south, east, north]: ${bounds}. ${preview.timeInterpretation}${timeRange}${warnings}${rejected}`;
+    importSummary.textContent = t(
+      '{accepted} accepted, {rejected} rejected. Bounds [west, south, east, north]: {bounds}. {interpretation}{timeRange}{warnings}{rejectedDetails}',
+      {
+        accepted: preview.accepted,
+        rejected: preview.rejected,
+        bounds,
+        interpretation: preview.timeInterpretation,
+        timeRange,
+        warnings,
+        rejectedDetails: rejected,
+      },
+    );
     syncImportApplyButton();
     importStatus.textContent = active
-      ? 'Review counts, bounds, time interpretation, and attribution, then choose Apply to save this layer.'
-      : 'Preview ready. Open or save a workspace before applying the import.';
+      ? t(
+          'Review counts, bounds, time interpretation, and attribution, then choose Apply to save this layer.',
+        )
+      : t(
+          'Preview ready. Open or save a workspace before applying the import.',
+        );
   }
 
   async function previewStagedImport() {
@@ -1438,7 +1498,7 @@ export function createWorkspaceLibraryPanel({
     importReview.hidden = true;
     importSummary.textContent = '';
     syncImportApplyButton();
-    importStatus.textContent = 'Preparing import preview…';
+    importStatus.textContent = t('Preparing import preview…');
     importController?.abort('superseded-preview');
     importController = new AbortController();
     const signal = importController.signal;
@@ -1461,7 +1521,9 @@ export function createWorkspaceLibraryPanel({
         showPreview(preview, owner);
     } catch (error) {
       if (signal.aborted || !importOwnerIsCurrent(owner)) return;
-      importStatus.textContent = `Preview failed: ${error.message}`;
+      importStatus.textContent = t('Preview failed: {error}', {
+        error: error.message,
+      });
       stagedPreview = null;
       importReview.hidden = true;
       syncImportApplyButton();
@@ -1535,7 +1597,10 @@ export function createWorkspaceLibraryPanel({
         return;
       if (!current()) return;
       if (stillOwnsInput && importInputGeneration === completionGeneration)
-        importStatus.textContent = `Imported ${entry.accepted} features in workspace revision ${active.revision}.`;
+        importStatus.textContent = t(
+          'Imported {count} features in workspace revision {revision}.',
+          { count: entry.accepted, revision: active.revision },
+        );
     } catch (error) {
       if (!current()) return;
       if (
@@ -1544,8 +1609,10 @@ export function createWorkspaceLibraryPanel({
       )
         importStatus.textContent =
           error.code === 'revision-conflict'
-            ? 'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.'
-            : `Import was not applied: ${error.message}`;
+            ? t(
+                'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.',
+              )
+            : t('Import was not applied: {error}', { error: error.message });
     } finally {
       applyingImport = false;
       cancelButton.disabled = false;
@@ -1556,7 +1623,7 @@ export function createWorkspaceLibraryPanel({
   function cancelStagedImport() {
     if (applyingImport) return;
     resetStagedImport({
-      status: 'Import cancelled. The workspace was not changed.',
+      status: t('Import cancelled. The workspace was not changed.'),
       clearFile: true,
     });
   }
@@ -1569,7 +1636,9 @@ export function createWorkspaceLibraryPanel({
       return;
     }
     if (file.size > IMPORT_LIMITS.bytes) {
-      importStatus.textContent = `Import files are limited to ${IMPORT_LIMITS.bytes / 1024 / 1024} MiB.`;
+      importStatus.textContent = t('Import files are limited to {size} MiB.', {
+        size: IMPORT_LIMITS.bytes / 1024 / 1024,
+      });
       return;
     }
     const owner = importReadOwner.begin(file, {
@@ -1582,7 +1651,7 @@ export function createWorkspaceLibraryPanel({
     // replacement, cancellation or disposal then interrupts the mapping
     // setup instead of waiting for a stale header result to settle.
     importController = new AbortController();
-    importStatus.textContent = 'Reading import file…';
+    importStatus.textContent = t('Reading import file…');
     try {
       const read =
         typeof file.arrayBuffer === 'function'
@@ -1610,8 +1679,8 @@ export function createWorkspaceLibraryPanel({
           blank.value = '';
           blank.textContent =
             field === 'latitude' || field === 'longitude'
-              ? 'Choose a column'
-              : 'No mapping';
+              ? t('Choose a column')
+              : t('No mapping');
           selectColumn.append(blank);
           for (const header of headers) {
             const option = document.createElement('option');
@@ -1634,8 +1703,9 @@ export function createWorkspaceLibraryPanel({
           if (match >= 0) selectColumn.value = headers[match];
         }
         csvMapping.hidden = false;
-        importStatus.textContent =
-          'Map latitude and longitude columns explicitly, then preview. Dates must include a UTC offset.';
+        importStatus.textContent = t(
+          'Map latitude and longitude columns explicitly, then preview. Dates must include a UTC offset.',
+        );
       } else {
         csvMapping.hidden = true;
         await previewStagedImport();
@@ -1643,7 +1713,7 @@ export function createWorkspaceLibraryPanel({
     } catch (error) {
       if (!importOwnerIsCurrent(owner)) return;
       resetStagedImport({
-        status: `Could not read file: ${error.message}`,
+        status: t('Could not read file: {error}', { error: error.message }),
       });
     }
   });
@@ -1687,8 +1757,10 @@ export function createWorkspaceLibraryPanel({
         ],
       });
       if (!saved || !workspaceSaveOwnerIsCurrent(saveOwner)) return;
-      root.querySelector('[data-comparison-source]').textContent =
-        `Pinned selected evidence as ${slot}.`;
+      root.querySelector('[data-comparison-source]').textContent = t(
+        'Pinned selected evidence as {slot}.',
+        { slot },
+      );
       setStatus(
         `Pinned evidence ${slot} in workspace revision ${active.revision}.`,
         'saved',
@@ -1720,8 +1792,15 @@ export function createWorkspaceLibraryPanel({
     const host = root.querySelector('[data-comparison-results]');
     host.replaceChildren();
     const table = document.createElement('table');
-    table.innerHTML =
-      '<thead><tr><th>Change</th><th>Entity</th><th>Interpretation</th></tr></thead>';
+    const head = document.createElement('thead');
+    const header = document.createElement('tr');
+    for (const label of ['Change', 'Entity', 'Interpretation']) {
+      const cell = document.createElement('th');
+      cell.textContent = t(label);
+      header.append(cell);
+    }
+    head.append(header);
+    table.append(head);
     const body = document.createElement('tbody');
     table.append(body);
     host.append(table);
@@ -1851,8 +1930,10 @@ export function createWorkspaceLibraryPanel({
       event.detail?.evidence || event.detail?.record?.evidence || event.detail;
     if (!evidence?.entityRef?.layerKey) return;
     latestEvidence = evidence;
-    root.querySelector('[data-comparison-source]').textContent =
-      `Selected evidence: ${evidence.entityRef.layerKey}:${evidence.entityRef.id}.`;
+    root.querySelector('[data-comparison-source]').textContent = t(
+      'Selected evidence: {layer}: {id}.',
+      { layer: evidence.entityRef.layerKey, id: evidence.entityRef.id },
+    );
   };
   const evidenceEvents = [
     'gev:evidence-updated',

@@ -215,6 +215,8 @@ test('consumer build includes only infrastructure code and resolves assets under
   const output = result.output;
   const entry = output.find((item) => item.type === 'chunk' && item.isEntry);
   const sources = Object.keys(entry.modules).filter((id) => id.endsWith('.js'));
+  // marker.js is a no-runtime-cost compile-time i18n marker used by the
+  // infrastructure evidence data; it does not add an application dependency.
   assert.deepEqual(sources.map((id) => id.split('/').at(-1)).sort(), [
     'evidence.js',
     'infrastructure.js',
@@ -222,6 +224,7 @@ test('consumer build includes only infrastructure code and resolves assets under
     'infrastructureOverlayEntry.js',
     'localGeojsonCore.js',
     'localGeojsonLod.js',
+    'marker.js',
   ]);
   assert.deepEqual(
     entry.imports,

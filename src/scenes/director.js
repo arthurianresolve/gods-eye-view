@@ -23,9 +23,12 @@ import * as Cesium from 'cesium';
 import {
   SCENE_APPEND_RECIPES,
   SCENE_RECIPES,
+  displaySceneTitle,
+  displayShotTitle,
   getSceneAppendRecipeById,
 } from './recipes.js';
 import { sceneLayerPlan, sceneRequiresContextModeExit } from './scenePolicy.js';
+import { t, tn, msg } from '../i18n/index.js';
 import { createSceneDataPacks } from './dataPacks/controller.js';
 import { createSceneInteractions } from './interactions.js';
 import { createSceneSharing } from './sharing.js';
@@ -62,6 +65,7 @@ import {
 } from '../director/document.js';
 import { createDirectorPersistence } from './persistence.js';
 import { createWorkspaceHistory } from '../workspaces/history.js';
+import { sceneSaveFailureReason } from './sceneSaveError.js';
 
 /** @constant {string} localStorage key for the serialized project */
 const STORAGE_KEY = 'godsEyeView.sceneProject.v2';
@@ -140,7 +144,7 @@ export class SceneDirector {
       )
         return;
       if (this._usesAuthoredCamera && !this._claimingCamera)
-        this.stopScene('Camera ownership changed');
+        this.stopScene(msg('Camera ownership changed'));
     };
     this._cameraHandoffUnsubscribe =
       styleManager.subscribeCameraHandoff?.(yieldCamera);
@@ -207,8 +211,10 @@ export class SceneDirector {
 
     this._presentation = {
       status: this._storageReadError
-        ? 'Saved project could not be read; storage preserved. Import a valid file to resume saving.'
-        : 'Ready',
+        ? t(
+            'Saved project could not be read; storage preserved. Import a valid file to resume saving.',
+          )
+        : t('Ready'),
       progress: 0,
       runtime: '',
       playbackActive: false,
@@ -219,20 +225,22 @@ export class SceneDirector {
       ...this._presentation,
       hasRun: !!this._lastRunJson,
     }));
-    this._bootstrapLegacyShotPacks();
-    // Upgrade only already-installed packs; unrelated Scenes are untouched.
-    for (const scene of this._project.scenes) {
-      for (const marker of [...(scene.appliedShotPacks || [])]) {
-        const recipe = getSceneAppendRecipeById(marker.id);
-        if (
-          recipe?.expansionFromVersion &&
-          marker.version > 0 &&
-          marker.version <= recipe.expansionFromVersion
-        ) {
-          this.appendShotPack(scene.id, marker.id, {
-            render: false,
-            announce: false,
-          });
+    if (!this._storageReadError) {
+      this._bootstrapLegacyShotPacks();
+      // Upgrade only already-installed packs; unrelated Scenes are untouched.
+      for (const scene of this._project.scenes) {
+        for (const marker of [...(scene.appliedShotPacks || [])]) {
+          const recipe = getSceneAppendRecipeById(marker.id);
+          if (
+            recipe?.expansionFromVersion &&
+            marker.version > 0 &&
+            marker.version <= recipe.expansionFromVersion
+          ) {
+            this.appendShotPack(scene.id, marker.id, {
+              render: false,
+              announce: false,
+            });
+          }
         }
       }
     }
@@ -246,7 +254,7 @@ export class SceneDirector {
           return;
         const scene = this._getSelectedScene();
         if (!scene?.releaseLayerIds?.includes(change.layerId)) return;
-        this.stopScene('Scene layer turned off');
+        this.stopScene(msg('Scene layer turned off'));
       });
   }
 
@@ -276,7 +284,7 @@ export class SceneDirector {
     this._controls?.destroy();
     this._state.destroy();
     this._destroyPromise = Promise.resolve().then(async () => {
-      this.stopScene('Stopped');
+      this.stopScene(msg('Stopped'));
       this._loadAbort?.abort();
       this._loadGeneration++;
       this.viewer.camera.cancelFlight();
@@ -443,9 +451,11 @@ export class SceneDirector {
   _saveProject({ recordHistory = true } = {}) {
     if (this._storageReadError) {
       this._toastStorageError(
-        'Scene not saved — existing saved project could not be read. Export edits or import a valid file.',
+        t(
+          'Scene not saved — existing saved project could not be read. Export edits or import a valid file.',
+        ),
       );
-      return;
+      return false;
     }
     this._project.updatedAt = new Date().toISOString();
     let valid = false;
@@ -459,17 +469,26 @@ export class SceneDirector {
       // Private browsing / block-all-cookies / quota-exceeded throws here. The
       // in-memory project stays usable this session, but persistence failed —
       // tell the user instead of crashing the caller (M11).
+      // A validation failure is logged with its technical path and check;
+      // the toast says it in words (sceneSaveError.js).
+      const invalid = e instanceof SceneDocumentError;
       console.warn(
-        '[Scenes] Could not persist project (storage unavailable):',
+        invalid
+          ? '[Scenes] Could not persist project (invalid project data):'
+          : '[Scenes] Could not persist project (storage unavailable):',
         e,
       );
       this._toastStorageError(
-        e instanceof SceneDocumentError
-          ? `Scene not saved — ${e.message}`
+        invalid
+          ? t('Scene not saved — {reason}', {
+              reason: sceneSaveFailureReason(e),
+            })
           : undefined,
       );
+      return false;
     }
     if (valid) this._queueDurableSave();
+    return valid;
   }
 
   canUndoAuthoring() {
@@ -524,7 +543,7 @@ export class SceneDirector {
 
   /** Surface a "scene not saved" notice via the global toast + scene status line. */
   _toastStorageError(
-    message = 'Scene not saved — browser storage unavailable',
+    message = t('Scene not saved — browser storage unavailable'),
   ) {
     this._updateStatus(message);
     try {
@@ -553,7 +572,10 @@ export class SceneDirector {
 
   _shotOutcome(type, scene, shot, index = scene.shots.indexOf(shot)) {
     if (type === 'shot-loaded')
-      this._presentation.status = `Loaded: ${scene.title} / ${shot.title}`;
+      this._presentation.status = t('Loaded: {scene} / {shot}', {
+        scene: displaySceneTitle(scene),
+        shot: displayShotTitle(shot.title, shot, scene),
+      });
     this._publish({
       type,
       sceneId: scene.id,
@@ -572,7 +594,16 @@ export class SceneDirector {
     this._controls = new SceneControls({
       subscribe: (listener) => this.subscribe(listener),
       read: () => ({
-        scenes: this._project.scenes,
+        // The panel shows display titles; shots keep the stored title for
+        // editing and matching.
+        scenes: this._project.scenes.map((scene) => ({
+          ...scene,
+          title: displaySceneTitle(scene),
+          shots: scene.shots.map((shot) => ({
+            ...shot,
+            displayTitle: displayShotTitle(shot.title, shot, scene),
+          })),
+        })),
         selectedSceneId: this._selectedSceneId,
         selectedShotId: this._selectedShotId,
         running: this._running,
@@ -668,6 +699,7 @@ export class SceneDirector {
 
     const scene = {
       id: uid('scene'),
+      // i18n-ignore: stored English, like normalizeProject; displaySceneTitle translates it.
       title: sceneName.trim() || `Scene ${this._project.scenes.length + 1}`,
       shots: [],
     };
@@ -946,7 +978,9 @@ export class SceneDirector {
             ));
       if (!inventoryMatches) {
         this._updateStatus(
-          `Cannot update ${recipe.title}: shot inventory changed`,
+          t('Cannot update {scene}: shot inventory changed', {
+            scene: t(recipe.title),
+          }),
         );
         return {
           appended: false,
@@ -977,7 +1011,9 @@ export class SceneDirector {
         );
       if (!sourcePackMatches) {
         this._updateStatus(
-          `Cannot update ${recipe.title}: evidence beats changed`,
+          t('Cannot update {scene}: evidence beats changed', {
+            scene: t(recipe.title),
+          }),
         );
         return {
           appended: false,
@@ -1000,7 +1036,9 @@ export class SceneDirector {
     }));
     if (resolvedPatches.some(({ shot }) => !shot)) {
       this._updateStatus(
-        `Cannot update ${recipe.title}: shot bindings are incomplete`,
+        t('Cannot update {scene}: shot bindings are incomplete', {
+          scene: t(recipe.title),
+        }),
       );
       return {
         appended: false,
@@ -1072,16 +1110,26 @@ export class SceneDirector {
     }
     this._selectedSceneId = scene.id;
     this._selectedShotId = appendedShots[0]?.id || this._selectedShotId;
-    this._saveProject();
+    const saved = this._saveProject();
     if (render) {
       this._renderSceneSelect();
       this._renderShotList();
     }
-    if (announce) {
+    if (announce && saved) {
       this._updateStatus(
         marker
-          ? `Updated ${patchedShotCount} ${patchedShotCount === 1 ? 'shot' : 'shots'}: ${recipe.title}`
-          : `Appended ${appendedShots.length} shots: ${recipe.title}`,
+          ? tn(
+              patchedShotCount,
+              'Updated {count} shot: {scene}',
+              'Updated {count} shots: {scene}',
+              { scene: t(recipe.title) },
+            )
+          : tn(
+              appendedShots.length,
+              'Appended {count} shot: {scene}',
+              'Appended {count} shots: {scene}',
+              { scene: t(recipe.title) },
+            ),
       );
     }
     return {
@@ -1103,13 +1151,14 @@ export class SceneDirector {
 
     const camera = this.styleManager.getCameraState();
     if (!camera) {
-      this._updateStatus('Cannot capture shot: camera not ready');
+      this._updateStatus(t('Cannot capture shot: camera not ready'));
       return;
     }
 
     const shot = normalizeShot(
       {
         id: uid('shot'),
+        // i18n-ignore: stored English; displayShotTitle translates it when shown.
         title: `Shot ${scene.shots.length + 1}`,
         durationSec: DEFAULT_SHOT_DURATION_SEC,
         holdSec: DEFAULT_HOLD_SEC,
@@ -1122,9 +1171,16 @@ export class SceneDirector {
 
     scene.shots.push(shot);
     this._selectedShotId = shot.id;
-    this._saveProject();
+    const saved = this._saveProject();
     this._shotOutcome('shot-captured', scene, shot);
-    this._updateStatus(`Captured: ${scene.title} / ${shot.title}`);
+    if (saved) {
+      this._updateStatus(
+        t('Captured: {scene} / {shot}', {
+          scene: displaySceneTitle(scene),
+          shot: displayShotTitle(shot.title, shot, scene),
+        }),
+      );
+    }
   }
 
   /**
@@ -1137,7 +1193,7 @@ export class SceneDirector {
 
     const shot = scene.shots.find((item) => item.id === this._selectedShotId);
     if (!shot) {
-      this._updateStatus('Select a shot first');
+      this._updateStatus(t('Select a shot first'));
       return;
     }
 
@@ -1150,9 +1206,16 @@ export class SceneDirector {
     shot.visual = this.styleManager.getVisualState();
     shot.layers = this._captureLayerStates();
 
-    this._saveProject();
+    const saved = this._saveProject();
     this._shotOutcome('shot-updated', scene, shot);
-    this._updateStatus(`Updated: ${scene.title} / ${shot.title}`);
+    if (saved) {
+      this._updateStatus(
+        t('Updated: {scene} / {shot}', {
+          scene: displaySceneTitle(scene),
+          shot: displayShotTitle(shot.title, shot, scene),
+        }),
+      );
+    }
   }
 
   /**
@@ -1258,7 +1321,11 @@ export class SceneDirector {
       const released = await this._releaseSceneLayers(previousScene, token);
       if (!released || token.cancelled) {
         if (!token.cancelled)
-          this._updateStatus(`Could not leave scene: ${previousScene.title}`);
+          this._updateStatus(
+            t('Could not leave scene: {scene}', {
+              scene: displaySceneTitle(previousScene),
+            }),
+          );
         return;
       }
       this._loadedSceneId = null;
@@ -1308,7 +1375,12 @@ export class SceneDirector {
         seeking: true,
       });
       if (this._loadAbort === controller) this._loadAbort = null;
-      this._updateStatus(`Seeked: ${scene.title} / ${shot.title}`);
+      this._updateStatus(
+        t('Seeked: {scene} / {shot}', {
+          scene: displaySceneTitle(scene),
+          shot: displayShotTitle(shot.title, shot, scene),
+        }),
+      );
       this._activateInteractions(scene, shot);
       return { started: true, shotId };
     }
@@ -1670,14 +1742,19 @@ export class SceneDirector {
       running: false,
       seeking: true,
     });
-    this._updateStatus(`Seeked: ${scene.title} / ${shot.title}`);
+    this._updateStatus(
+      t('Seeked: {scene} / {shot}', {
+        scene: displaySceneTitle(scene),
+        shot: displayShotTitle(shot.title, shot, scene),
+      }),
+    );
     return true;
   }
 
   /** Seek the complete authored scene state to an exact clock position. */
   seekScene(sceneId, progress) {
     if (this._destroyed) return Promise.resolve(false);
-    this.stopScene('Seeking scene clock');
+    this.stopScene(msg('Seeking scene clock'));
     const generation = ++this._sceneSeekGeneration;
     return this._trackWork(this._seekScene(sceneId, progress, generation));
   }
@@ -1747,7 +1824,7 @@ export class SceneDirector {
       this._claimingCamera = false;
     }
     if (claimed === false) {
-      this._updateStatus('Camera unavailable — exit cockpit first');
+      this._updateStatus(t('Camera unavailable — exit cockpit first'));
       return false;
     }
     return true;
@@ -1869,20 +1946,20 @@ export class SceneDirector {
   ) {
     if (this._running) return { started: false, reason: 'already-running' };
 
-    let queue = this._buildPlaybackQueue(
-      sceneId || this._selectedSceneId || this._project.scenes[0]?.id,
-      { single },
-    );
+    const startSceneId =
+      sceneId || this._selectedSceneId || this._project.scenes[0]?.id;
+    let queue = this._buildPlaybackQueue(startSceneId, { single });
     if (afterShotId !== null) {
       const index = queue.findIndex(
-        ({ scene, shot }) => scene.id === sceneId && shot.id === afterShotId,
+        ({ scene, shot }) =>
+          scene.id === startSceneId && shot.id === afterShotId,
       );
       if (index < 0) return { started: false, reason: 'shot-not-found' };
       queue = queue.slice(index + 1);
       if (!queue.length) return { started: false, reason: 'scene-complete' };
     }
     if (!queue.length) {
-      this._updateStatus('No shots to run');
+      this._updateStatus(t('No shots to run'));
       return { started: false, reason: 'no-shots' };
     }
 
@@ -1954,10 +2031,11 @@ export class SceneDirector {
     // Initialize telemetry accumulator for this run
     this._activeRun = {
       recipeId: `project-${PROJECT_VERSION}`,
+      // i18n-ignore: run telemetry record, downloaded as JSON
       title: 'Editable Scene Run',
       startedAt: new Date().toISOString(),
       estimatedDurationSec,
-      scenesRun: queue.length,
+      scenesRun: new Set(queue.map(({ scene }) => scene.id)).size,
       events: [],
     };
 
@@ -1965,6 +2043,7 @@ export class SceneDirector {
     this._logEvent('scene_run_start', { count: queue.length });
     this._setPlaybackKeyboardEnabled(true);
 
+    let runResult = { started: true, shots: queue.length };
     try {
       await playSceneQueue(queue, {
         token,
@@ -1975,13 +2054,19 @@ export class SceneDirector {
         releaseOnFinish: preview,
       });
     } catch (error) {
-      this._updateStatus(`Error: ${error.message || 'run failed'}`);
+      this._updateStatus(
+        t('Error: {message}', {
+          message: error.message || 'run failed',
+        }),
+      );
       this._logEvent('scene_run_error', {
         message: error.message || 'unknown error',
       });
+      runResult = { started: false, reason: 'run-failed' };
     } finally {
       this._finishRun();
     }
+    return runResult;
   }
 
   /**
@@ -2019,9 +2104,11 @@ export class SceneDirector {
    * enabled while the post-await check skips its params. The manager rolls an
    * aborted enable back through the module's own disable().
    *
-   * @param {string} [reason='Stopped'] - Human-readable cancellation reason
+   * @param {string} [reason='Stopped'] - Cancellation reason, in English: it
+   *   is logged as data and translated only for the status line (callers mark
+   *   theirs with msg()).
    */
-  stopScene(reason = 'Stopped') {
+  stopScene(reason = msg('Stopped')) {
     this._setSceneMediaPlayback();
     this._interactions?.clear();
     this._dataPacks?.clear();
@@ -2036,7 +2123,7 @@ export class SceneDirector {
     if (!this._running || !this._runToken) return;
     this._runToken.cancelled = true;
     this._runAbort?.abort();
-    this._updateStatus(reason);
+    this._updateStatus(t(reason));
     this._logEvent('scene_stopped', { reason });
   }
 
@@ -2093,7 +2180,7 @@ export class SceneDirector {
     if (action.type === 'shot') {
       if (this._interactionTransitions >= 64) {
         this._updateStatus(
-          'Scene transition limit reached — load a shot to reset',
+          t('Scene transition limit reached — load a shot to reset'),
         );
         return false;
       }
@@ -2136,7 +2223,7 @@ export class SceneDirector {
     try {
       payload = stringifySceneDocument(this._project);
     } catch (error) {
-      this._updateStatus(`Export failed: ${error.message}`);
+      this._updateStatus(t('Export failed: {error}', { error: error.message }));
       return;
     }
     // Trigger a browser download via a temporary anchor element
@@ -2149,7 +2236,7 @@ export class SceneDirector {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    this._presentation.status = 'Project exported';
+    this._presentation.status = t('Project exported');
     this._publish({ type: 'project-exported', project: this._project });
   }
 
@@ -2179,7 +2266,7 @@ export class SceneDirector {
       )
         return false;
       // Validate before touching playback, selection or the saved project.
-      this.stopScene('Importing project');
+      this.stopScene(msg('Importing project'));
       await Promise.allSettled([...(this._pendingWork || [])]);
       if (this._destroyed || generation !== this._importGeneration) return;
       if (
@@ -2208,9 +2295,9 @@ export class SceneDirector {
       this._selectedShotId =
         selection?.shotId || project.scenes[0]?.shots[0]?.id || null;
       this._loadedSceneId = null;
-      this._saveProject();
+      const saved = this._saveProject();
       this._publish({ type: 'project-imported', project });
-      this._updateStatus(`Imported ${file.name}`);
+      if (saved) this._updateStatus(t('Imported {file}', { file: file.name }));
       return true;
     } catch (error) {
       if (
@@ -2221,8 +2308,8 @@ export class SceneDirector {
         return false;
       this._updateStatus(
         error instanceof SceneDocumentError
-          ? `Import failed: ${error.message}`
-          : 'Import failed (could not read JSON file)',
+          ? t('Import failed: {error}', { error: error.message })
+          : t('Import failed (could not read JSON file)'),
       );
     }
   }
@@ -2322,7 +2409,9 @@ export class SceneDirector {
     }
 
     if (refused.length) {
-      this._updateStatus(`Layers refused: ${refused.join(', ')}`);
+      this._updateStatus(
+        t('Layers refused: {layers}', { layers: refused.join(', ') }),
+      );
       this._logEvent('shot_layers_refused', { layerIds: [...refused] });
     }
     return { applied, refused, cancelled: false };
@@ -2413,7 +2502,7 @@ export class SceneDirector {
         result.error || 'unknown reason',
       );
       this._updateStatus(
-        `Could not exit ${mode} — scene layers may be refused`,
+        t('Could not exit {mode} — scene layers may be refused', { mode }),
       );
       this._logEvent('context_mode_exit_failed', {
         mode,
@@ -2439,7 +2528,7 @@ export class SceneDirector {
       token,
     );
     if (!completed && !token.cancelled && !this._destroyed)
-      this.stopScene('Camera move interrupted');
+      this.stopScene(msg('Camera move interrupted'));
   }
 
   /**
@@ -2528,7 +2617,7 @@ export class SceneDirector {
       const pending = readers.filter(({ read }) => read()?.pending === true);
       if (!pending.length) return;
       if (pending.some(({ maxWaitMs }) => Date.now() - began >= maxWaitMs)) {
-        this.stopScene('Scene media timed out');
+        this.stopScene(msg('Scene media timed out'));
         throw new Error(
           'Scene media did not finish within its bounded playback window',
         );

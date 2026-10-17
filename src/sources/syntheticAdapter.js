@@ -1,10 +1,11 @@
 import { createSourceAdapter } from './adapterContract.js';
+import { msg } from '../i18n/marker.js';
 
 /** Keyless fixture for source contributors; this data is never live telemetry. */
 export function createSyntheticSourceAdapter({ now = () => Date.now() } = {}) {
   return createSourceAdapter({
     id: 'synthetic-example',
-    label: 'Synthetic adapter example',
+    label: msg('Synthetic adapter example'),
     attribution: 'Gods-Eye-View synthetic development fixture',
     capabilities: { temporalModes: ['live'] },
     retention: {

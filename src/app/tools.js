@@ -1,4 +1,5 @@
 import { SceneDirector } from '../scenes/director.js';
+import { msg } from '../i18n/index.js';
 import * as Cesium from 'cesium';
 import { createAnalystEngine } from '../data/analystEngine.js';
 import { layerSnapshot } from '../data/layerSnapshot.js';
@@ -12,6 +13,7 @@ import { createDiagnosticsPanel } from '../ui/diagnosticsPanel.js';
 import { loadStoredErrors } from '../voice/realtimeDiagnostics.js';
 import { initAnnotations } from '../annotations/index.js';
 import { initDrawTool } from '../annotations/drawTool.js';
+import { initGeoFileImport } from '../ui/geoFileImport.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
@@ -276,80 +278,87 @@ export async function createApplicationTools({
     },
     commands: [
       {
-        label: 'Save workspace',
-        description: 'Save the current view as an investigation',
+        label: msg('Save workspace'),
+        description: msg('Save the current view as an investigation'),
         keywords: 'investigation persist',
         availability: (context) =>
           context.workspaceStorage
             ? true
             : {
                 available: false,
-                reason: 'Workspace storage is not initialized',
+                reason: msg('Workspace storage is not initialized'),
               },
         run: (context) => context.workspaceLibraryPanel.saveCurrent(),
       },
       {
-        label: 'Open workspace library',
-        description: 'Reopen, duplicate, import or recover an investigation',
+        label: msg('Open workspace library'),
+        description: msg(
+          'Reopen, duplicate, import or recover an investigation',
+        ),
         keywords: 'open import recover',
         run: (context) => context.workspaceLibraryPanel.openLibrary(),
       },
       {
-        label: 'Show synthetic offline demo',
-        description:
+        label: msg('Show synthetic offline demo'),
+        description: msg(
           'Create a clearly labeled local demo with no network source',
+        ),
         keywords: 'demo offline example synthetic first use',
         run: (context) => context.workspaceLibraryPanel.showOfflineDemo(),
       },
       {
-        label: 'Undo scene authoring change',
-        description: 'Restore the previous Director scene project revision',
+        label: msg('Undo scene authoring change'),
+        description: msg(
+          'Restore the previous Director scene project revision',
+        ),
         keywords: 'director scene edit undo',
         availability: (context) =>
           context.sceneDirector?.canUndoAuthoring?.()
             ? true
             : {
                 available: false,
-                reason: 'No saved scene edit can be undone right now',
+                reason: msg('No saved scene edit can be undone right now'),
               },
         run: (context) => context.sceneDirector.undoAuthoring(),
       },
       {
-        label: 'Redo scene authoring change',
-        description: 'Reapply a Director scene project revision',
+        label: msg('Redo scene authoring change'),
+        description: msg('Reapply a Director scene project revision'),
         keywords: 'director scene edit redo',
         availability: (context) =>
           context.sceneDirector?.canRedoAuthoring?.()
             ? true
             : {
                 available: false,
-                reason: 'No scene edit can be redone right now',
+                reason: msg('No scene edit can be redone right now'),
               },
         run: (context) => context.sceneDirector.redoAuthoring(),
       },
       {
-        label: 'Undo authored change',
-        description: 'Restore the previous saved annotation or authored view',
+        label: msg('Undo authored change'),
+        description: msg(
+          'Restore the previous saved annotation or authored view',
+        ),
         keywords: 'revert edit mark drawing',
         availability: (context) =>
           context.workspaceLibraryPanel.canUndo()
             ? true
             : {
                 available: false,
-                reason: 'No authored workspace change to undo',
+                reason: msg('No authored workspace change to undo'),
               },
         run: (context) => context.workspaceLibraryPanel.undo(),
       },
       {
-        label: 'Redo authored change',
-        description: 'Reapply the next authored workspace change',
+        label: msg('Redo authored change'),
+        description: msg('Reapply the next authored workspace change'),
         keywords: 'reapply edit mark drawing',
         availability: (context) =>
           context.workspaceLibraryPanel.canRedo()
             ? true
             : {
                 available: false,
-                reason: 'No authored workspace change to redo',
+                reason: msg('No authored workspace change to redo'),
               },
         run: (context) => context.workspaceLibraryPanel.redo(),
       },
@@ -360,42 +369,47 @@ export async function createApplicationTools({
         run: (context) => context.workflowLayouts.apply(layout),
       })),
       {
-        label: 'Restore previous panel layout',
-        description: 'Leave a temporary workflow layout',
+        label: msg('Restore previous panel layout'),
+        description: msg('Leave a temporary workflow layout'),
         availability: (context) =>
           context.workflowLayouts.active
             ? true
             : {
                 available: false,
-                reason: 'No temporary workflow layout is active',
+                reason: msg('No temporary workflow layout is active'),
               },
         run: (context) => context.workflowLayouts.restore(),
       },
       {
-        label: 'Return timeline to live',
-        description: 'Switch aircraft and vessel time back to current feeds',
+        label: msg('Return timeline to live'),
+        description: msg(
+          'Switch aircraft and vessel time back to current feeds',
+        ),
         keywords: 'time replay now',
         availability: (context) =>
           context.investigationTime
             ? true
-            : { available: false, reason: 'Investigation time is unavailable' },
+            : {
+                available: false,
+                reason: msg('Investigation time is unavailable'),
+              },
         run: (context) => context.investigationTime.returnLive(),
       },
       {
-        label: 'Clear selected data layers',
-        description: 'Turn off the currently selected data layers',
+        label: msg('Clear selected data layers'),
+        description: msg('Turn off the currently selected data layers'),
         keywords: 'remove hide data',
         run: (context) => context.styleManager.clearSelectedLayers(),
       },
       {
-        label: 'Reset to full globe',
-        description: 'Return to the full globe camera view',
+        label: msg('Reset to full globe'),
+        description: msg('Return to the full globe camera view'),
         keywords: 'camera home world',
         run: (context) => context.styleManager.resetToGlobeView(),
       },
       {
-        label: 'Open evidence inspector',
-        description: 'Show source, observation time and coverage details',
+        label: msg('Open evidence inspector'),
+        description: msg('Show source, observation time and coverage details'),
         keywords: 'inspect provenance evidence',
         run: (context) =>
           context.styleManager.setPanelCollapsed('evidence-panel', false, {
@@ -426,6 +440,16 @@ export async function createApplicationTools({
   // lifetime rather than to whoever last pressed the button.
   const drawTool = initDrawTool({ viewer, annotations });
   defer(() => drawTool?.destroy());
+  // DISPLAY ▸ Import: the person's own GeoJSON/KML/KMZ/GPX files, each its
+  // own data source. They live for the page session, so the application
+  // lifetime removes them and the drop listeners on the viewer container.
+  const geoFileImport = initGeoFileImport({
+    viewer,
+    navigation: styleManager,
+    ground: operations.surface?.groundFloor,
+    subscribeMapSource: (listener) => mapStackController?.subscribe?.(listener),
+  });
+  defer(() => geoFileImport?.destroy());
   // DATA ▸ Recent Imagery: the box tool claims the pointer like Draw and the
   // panel lives on the right rail, so both belong to the application
   // lifetime. The tileset lets the layer drape while the globe is hidden.

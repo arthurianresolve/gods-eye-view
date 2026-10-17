@@ -113,7 +113,7 @@ export function createRecordedVesselSource({
   }
 
   const api = {
-    label: 'Local vessel recording',
+    label: msg('Local vessel recording'),
     async selectRecording(id) {
       const request = ++generation;
       const workspace = await storage.getWorkspace(String(id));
@@ -272,7 +272,7 @@ export function createRecordedVesselSource({
         remove = registry.register({
           id: layerId,
           mode: 'recorded',
-          label: `Local vessel recording · ${selected.id}`,
+          label: `${msg('Local vessel recording ·')} ${selected.id}`,
           coverage: interval,
           selectAt: async ({ targetMs: requested }) => {
             const sample = latestFor(requested);
@@ -300,3 +300,4 @@ export function createRecordedVesselSource({
   };
   return Object.freeze(api);
 }
+import { msg } from '../i18n/marker.js';

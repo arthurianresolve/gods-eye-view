@@ -1,9 +1,10 @@
 import { createRailTimeline } from './railTimeline.js';
 import { createInvestigationTimelineController } from './investigationTimelineController.js';
 import { recordingBundleStream } from '../recording/bundle.js';
+import { t } from '../i18n/index.js';
 
 function iso(value) {
-  if (!Number.isFinite(value)) return 'Unavailable';
+  if (!Number.isFinite(value)) return t('Unavailable');
   try {
     return new Date(value)
       .toISOString()
@@ -63,17 +64,18 @@ export function createInvestigationTimeline({
 
   const root = document.createElement('section');
   root.className = 'investigation-timeline';
-  root.setAttribute('aria-label', 'Investigation timeline');
+  root.setAttribute('aria-label', t('Investigation timeline'));
   const heading = document.createElement('h3');
   heading.className = 'data-layer-group-heading';
-  heading.textContent = 'INVESTIGATION TIMELINE';
+  heading.textContent = t('INVESTIGATION TIMELINE');
   const captureGroup = document.createElement('fieldset');
   captureGroup.className = 'investigation-timeline-capture';
   const captureLegend = document.createElement('legend');
-  captureLegend.textContent = 'Local region capture';
+  captureLegend.textContent = t('Local region capture');
   const captureHelp = document.createElement('p');
-  captureHelp.textContent =
-    'Starts at the camera position. Radius is limited to 250 km; source retention and export permission is checked before capture.';
+  captureHelp.textContent = t(
+    'Starts at the camera position. Radius is limited to 250 km; source retention and export permission is checked before capture.',
+  );
   const captureRegion = document.createElement('div');
   captureRegion.className = 'investigation-timeline-capture-region';
   const coordinateInput = (label, name, value, min, max, step) => {
@@ -171,19 +173,19 @@ export function createInvestigationTimeline({
   );
   const selectionLabel = document.createElement('label');
   selectionLabel.className = 'investigation-timeline-select-label';
-  selectionLabel.textContent = 'Saved aircraft recording';
+  selectionLabel.textContent = t('Saved aircraft recording');
   const selection = document.createElement('select');
   selection.className =
     'investigation-timeline-select investigation-timeline-aircraft-select';
-  selection.setAttribute('aria-label', 'Saved aircraft recording');
+  selection.setAttribute('aria-label', t('Saved aircraft recording'));
   selectionLabel.appendChild(selection);
   const vesselSelectionLabel = document.createElement('label');
   vesselSelectionLabel.className = 'investigation-timeline-select-label';
-  vesselSelectionLabel.textContent = 'Saved vessel recording';
+  vesselSelectionLabel.textContent = t('Saved vessel recording');
   const vesselSelection = document.createElement('select');
   vesselSelection.className =
     'investigation-timeline-select investigation-timeline-vessel-select';
-  vesselSelection.setAttribute('aria-label', 'Saved vessel recording');
+  vesselSelection.setAttribute('aria-label', t('Saved vessel recording'));
   vesselSelectionLabel.appendChild(vesselSelection);
   const coverage = document.createElement('div');
   coverage.className = 'investigation-timeline-coverage';
@@ -195,7 +197,7 @@ export function createInvestigationTimeline({
   times.setAttribute('aria-atomic', 'true');
   const gaps = document.createElement('ul');
   gaps.className = 'investigation-timeline-gaps';
-  gaps.setAttribute('aria-label', 'Recorded coverage gaps');
+  gaps.setAttribute('aria-label', t('Recorded coverage gaps'));
   const notice = document.createElement('div');
   notice.className = 'investigation-timeline-notice';
   notice.setAttribute('role', 'status');
@@ -203,10 +205,10 @@ export function createInvestigationTimeline({
   const controls = document.createElement('div');
   controls.className = 'investigation-timeline-controls';
   const rateLabel = document.createElement('label');
-  rateLabel.textContent = 'Speed';
+  rateLabel.textContent = t('Speed');
   const rate = document.createElement('select');
   rate.className = 'investigation-timeline-rate';
-  rate.setAttribute('aria-label', 'Replay speed');
+  rate.setAttribute('aria-label', t('Replay speed'));
   for (const [value, label] of [
     ['-1', 'Reverse 1×'],
     ['0.5', '0.5×'],
@@ -216,26 +218,26 @@ export function createInvestigationTimeline({
   ]) {
     const option = document.createElement('option');
     option.value = value;
-    option.textContent = label;
+    option.textContent = t(label);
     rate.appendChild(option);
   }
   rate.value = '1';
   rateLabel.appendChild(rate);
   const exportButton = button(
     document,
-    'Export',
-    'Download the selected local recording',
+    t('Export'),
+    t('Download the selected local recording'),
   );
   const importButton = button(
     document,
-    'Import bundle',
-    'Verify and add an aircraft or vessel recording bundle',
+    t('Import bundle'),
+    t('Verify and add an aircraft or vessel recording bundle'),
   );
   const importInput = document.createElement('input');
   importInput.type = 'file';
   importInput.accept = '.gev-recording-bundle.json,application/json';
   importInput.hidden = true;
-  importInput.setAttribute('aria-label', 'Select a recording bundle');
+  importInput.setAttribute('aria-label', t('Select a recording bundle'));
   const deleteButton = button(
     document,
     'Delete',
@@ -321,15 +323,27 @@ export function createInvestigationTimeline({
       vesselCaptureStarting;
     stopVesselCapture.disabled = !vesselActive;
     aircraftCaptureStatus.textContent = aircraftActive
-      ? `Aircraft capture: ${aircraftCapture.sourceId} · ${aircraftCapture.observationCount} fix(es) · ${aircraftCapture.gapCount} gap(s).`
+      ? t('Aircraft capture: {source} · {fixes} fix(es) · {gaps} gap(s).', {
+          source: aircraftCapture.sourceId,
+          fixes: aircraftCapture.observationCount,
+          gaps: aircraftCapture.gapCount,
+        })
       : aircraftSourceId
-        ? `Aircraft source: ${aircraftSourceId}.`
-        : 'Aircraft capture unavailable: enable the Flights layer to select its current source.';
+        ? t('Aircraft source: {source}.', { source: aircraftSourceId })
+        : t(
+            'Aircraft capture unavailable: enable the Flights layer to select its current source.',
+          );
     vesselCaptureStatus.textContent = vesselActive
-      ? `Vessel capture: ${vesselCapture.sourceId} · ${vesselCapture.positionCount} fix(es) · ${vesselCapture.gapCount} gap(s).`
+      ? t('Vessel capture: {source} · {fixes} fix(es) · {gaps} gap(s).', {
+          source: vesselCapture.sourceId,
+          fixes: vesselCapture.positionCount,
+          gaps: vesselCapture.gapCount,
+        })
       : vesselSourceId
-        ? `Vessel source: ${vesselSourceId}.`
-        : 'Vessel capture unavailable: enable the AIS live-vessels layer to select its current source.';
+        ? t('Vessel source: {source}.', { source: vesselSourceId })
+        : t(
+            'Vessel capture unavailable: enable the AIS live-vessels layer to select its current source.',
+          );
   };
   function render(state) {
     if (destroyed) return;
@@ -352,8 +366,8 @@ export function createInvestigationTimeline({
         const placeholder = document.createElement('option');
         placeholder.value = '';
         placeholder.textContent = records.length
-          ? `Choose a ${label} recording…`
-          : `No saved ${label} recordings`;
+          ? t('Choose a {type} recording…', { type: label })
+          : t('No saved {type} recordings', { type: label });
         control.appendChild(placeholder);
         for (const record of records) {
           const option = document.createElement('option');
@@ -379,14 +393,29 @@ export function createInvestigationTimeline({
       mode: hasRecording ? 'history' : 'latest',
       playing: state.playing,
       disabled: !hasRecording || state.ticks.length < 2,
-      readout: hasRecording ? `Replay · ${iso(state.requestedTimeMs)}` : 'Live',
+      readout: hasRecording
+        ? t('Replay · {time}', { time: iso(state.requestedTimeMs) })
+        : t('Live'),
     });
     coverage.textContent = state.coverage
-      ? `Coverage ${iso(state.coverage.from)} — ${iso(state.coverage.to)}${state.gaps.length ? ` · ${state.gaps.length} gap(s)` : ''}`
-      : 'Coverage appears after a recording is selected.';
+      ? t('Coverage {from} — {to}{gaps}', {
+          from: iso(state.coverage.from),
+          to: iso(state.coverage.to),
+          gaps: state.gaps.length
+            ? t(' · {count} gap(s)', { count: state.gaps.length })
+            : '',
+        })
+      : t('Coverage appears after a recording is selected.');
     times.textContent = hasRecording
-      ? `Requested: ${iso(state.requestedTimeMs)} · Aircraft sample: ${iso(state.aircraftSampleTimeMs)} · Vessel sample: ${iso(state.vesselSampleTimeMs)}`
-      : 'Requested time and actual sample time will be shown separately.';
+      ? t(
+          'Requested: {requested} · Aircraft sample: {aircraft} · Vessel sample: {vessel}',
+          {
+            requested: iso(state.requestedTimeMs),
+            aircraft: iso(state.aircraftSampleTimeMs),
+            vessel: iso(state.vesselSampleTimeMs),
+          },
+        )
+      : t('Requested time and actual sample time will be shown separately.');
     gaps.replaceChildren();
     for (const gap of state.gaps) {
       const item = document.createElement('li');
@@ -447,10 +476,16 @@ export function createInvestigationTimeline({
     };
     try {
       await service.start({ id: `${idPrefix}${suffix}`, sourceId, region });
-      captureNotice.textContent = `${kind === 'aircraft' ? 'Aircraft' : 'Vessel'} recording started for ${sourceId}.`;
+      captureNotice.textContent = t('{kind} recording started for {source}.', {
+        kind: t(kind === 'aircraft' ? 'Aircraft' : 'Vessel'),
+        source: sourceId,
+      });
       await controller.refreshRecordings();
     } catch (error) {
-      captureNotice.textContent = `Recording was not started: ${error?.message || 'the source or region could not be validated.'}`;
+      captureNotice.textContent = t('Recording was not started: {reason}', {
+        reason:
+          error?.message || t('the source or region could not be validated.'),
+      });
     } finally {
       if (kind === 'aircraft') aircraftCaptureStarting = false;
       else vesselCaptureStarting = false;
@@ -463,18 +498,24 @@ export function createInvestigationTimeline({
     try {
       await recordingService?.stop?.('user');
       await controller.refreshRecordings();
-      captureNotice.textContent = 'Aircraft recording stopped and saved.';
+      captureNotice.textContent = t('Aircraft recording stopped and saved.');
     } catch (error) {
-      captureNotice.textContent = `Aircraft recording could not be saved: ${error?.message || 'storage error.'}`;
+      captureNotice.textContent = t(
+        'Aircraft recording could not be saved: {error}',
+        { error: error?.message || t('storage error.') },
+      );
     }
   };
   const onStopVesselCapture = async () => {
     try {
       await vesselRecordingService?.stop?.('user');
       await controller.refreshRecordings();
-      captureNotice.textContent = 'Vessel recording stopped and saved.';
+      captureNotice.textContent = t('Vessel recording stopped and saved.');
     } catch (error) {
-      captureNotice.textContent = `Vessel recording could not be saved: ${error?.message || 'storage error.'}`;
+      captureNotice.textContent = t(
+        'Vessel recording could not be saved: {error}',
+        { error: error?.message || t('storage error.') },
+      );
     }
   };
   const onExport = async () => {
@@ -489,7 +530,7 @@ export function createInvestigationTimeline({
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch {
-      notice.textContent = 'The selected recording could not be exported.';
+      notice.textContent = t('The selected recording could not be exported.');
     }
   };
   const onImport = () => importInput.click();
@@ -502,19 +543,23 @@ export function createInvestigationTimeline({
     } catch (error) {
       notice.textContent =
         error?.code === 'recording-too-large'
-          ? 'That recording bundle exceeds the 120 MiB import limit.'
-          : 'The recording bundle failed validation and was not imported.';
+          ? t('That recording bundle exceeds the 120 MiB import limit.')
+          : t('The recording bundle failed validation and was not imported.');
     }
   };
   const onDelete = async () => {
     const id = controller.getState().recordingId;
     if (!id) return;
-    if (!document.defaultView?.confirm?.(`Delete local recording ${id}?`))
+    if (
+      !document.defaultView?.confirm?.(
+        t('Delete local recording {id}?', { id }),
+      )
+    )
       return;
     try {
       await controller.deleteSelected();
     } catch {
-      notice.textContent = 'The selected recording could not be deleted.';
+      notice.textContent = t('The selected recording could not be deleted.');
     }
   };
   selection.addEventListener('change', onAircraftSelection);
