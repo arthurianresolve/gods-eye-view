@@ -41,7 +41,7 @@ test('Windows activation accepts only evidence for the owned browser PID', async
     platform: 'win32',
     runner: async (browserPid, timeoutMs) => {
       assert.equal(browserPid, 42);
-      assert.equal(timeoutMs, 5000);
+      assert.equal(timeoutMs, 7500);
       return {
         stdout: JSON.stringify({
           schema: WINDOWS_FOREGROUND_SCHEMA,
@@ -68,7 +68,7 @@ test('Windows activation retries transient focus arbitration failures within one
       assert.equal(browserPid, 42);
       assert.ok(timeoutMs > 0 && timeoutMs <= 3000);
       timeouts.push(timeoutMs);
-      if (calls < 3) {
+      if (calls < 2) {
         const error = new Error('focus arbitration rejected');
         error.stdout = JSON.stringify({
           schema: WINDOWS_FOREGROUND_SCHEMA,
@@ -91,8 +91,8 @@ test('Windows activation retries transient focus arbitration failures within one
       };
     },
   });
-  assert.equal(calls, 3);
-  assert.equal(timeouts[0], 1000);
+  assert.equal(calls, 2);
+  assert.equal(timeouts[0], 1500);
   assert.equal(evidence.foregroundConfirmed, true);
 });
 
@@ -121,12 +121,46 @@ test('Windows activation exposes bounded evidence after retry exhaustion', async
     (error) => {
       assert.equal(error.name, 'HostWindowActivationError');
       assert.match(error.message, /bounded retries/);
-      assert.equal(error.activationAttempts.length, 3);
+      assert.equal(error.activationAttempts.length, 2);
       assert.equal(error.evidence.status, 'foreground-not-confirmed');
+      assert.equal(
+        error.evidence.runnerFailure.message,
+        'focus arbitration rejected',
+      );
       return true;
     },
   );
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
+});
+
+test('Windows activation preserves bounded runner timeout diagnostics', async () => {
+  await assert.rejects(
+    focusOwnedWindowsBrowserWindow({
+      browserPid: 42,
+      platform: 'win32',
+      timeoutMs: 3000,
+      runner: async () => {
+        const error = new Error('runner exceeded its deadline');
+        error.code = 'ETIMEDOUT';
+        error.signal = 'SIGTERM';
+        error.killed = true;
+        error.stderr = 'bounded helper timeout';
+        throw error;
+      },
+    }),
+    (error) => {
+      assert.equal(error.activationAttempts.length, 2);
+      assert.deepEqual(error.evidence.runnerFailure, {
+        name: 'Error',
+        code: 'ETIMEDOUT',
+        signal: 'SIGTERM',
+        killed: true,
+        message: 'runner exceeded its deadline',
+        stderr: 'bounded helper timeout',
+      });
+      return true;
+    },
+  );
 });
 
 test('Windows activation rejects invalid PID, malformed and unconfirmed evidence', async () => {

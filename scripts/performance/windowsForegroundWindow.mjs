@@ -74,8 +74,14 @@ if ($targetThread -ne 0 -and $targetThread -ne $currentThread -and $targetThread
 }
 try {
   $focusAttempts = 0
-  $confirmed = $false
-  do {
+  $shown = $null
+  $broughtToTop = $null
+  $setForeground = $null
+  $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
+  $foregroundPid = [uint32]0
+  [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
+  $confirmed = $foregroundPid -eq [uint32]$browserPid
+  while ((-not $confirmed) -and $focusAttempts -lt 40) {
     $focusAttempts += 1
     $shown = [GevOwnedBrowserWindow]::ShowWindow($handle, 9)
     $broughtToTop = [GevOwnedBrowserWindow]::BringWindowToTop($handle)
@@ -84,8 +90,8 @@ try {
     $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
     $foregroundPid = [uint32]0
     [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
-    $confirmed = $foreground -eq $handle
-  } while ((-not $confirmed) -and $focusAttempts -lt 40)
+    $confirmed = $foregroundPid -eq [uint32]$browserPid
+  }
 } finally {
   if ($attachedToTarget) {
     [void][GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $targetThread, $false)
@@ -114,6 +120,8 @@ $desktopState = if ($foregroundProcessName -eq 'LockApp') { 'locked' } else { 'i
   showWindowAccepted = $shown
   bringWindowToTopAccepted = $broughtToTop
   setForegroundAccepted = $setForeground
+  foregroundHandleMatchesTargetHandle = $foreground -eq $handle
+  foregroundOwnedByBrowser = $foregroundPid -eq [uint32]$browserPid
   foregroundConfirmed = $confirmed
   foregroundPid = $foregroundPid
   foregroundProcessName = $foregroundProcessName
@@ -155,7 +163,11 @@ export async function focusOwnedWindowsBrowserWindow({
       'Windows foreground activation timeout must be positive.',
     );
 
-  const maximumAttempts = 3;
+  // Each PowerShell invocation compiles the small user32 bridge and can spend
+  // up to four seconds finding/activating a Chrome window. Two attempts leave
+  // enough time for that bounded native work without allowing process startup
+  // to consume an artificially tiny per-attempt deadline.
+  const maximumAttempts = 2;
   const attempts = [];
   const startedAt = Date.now();
   let stdout;
@@ -186,6 +198,20 @@ export async function focusOwnedWindowsBrowserWindow({
         desktopState: evidence?.desktopState || null,
         windowHandleAvailable: evidence?.windowHandleAvailable ?? null,
         foregroundPid: evidence?.foregroundPid ?? null,
+        runnerFailure: {
+          name: String(cause?.name || 'Error').slice(0, 80),
+          code:
+            typeof cause?.code === 'string' || Number.isInteger(cause?.code)
+              ? cause.code
+              : null,
+          signal: typeof cause?.signal === 'string' ? cause.signal : null,
+          killed: cause?.killed === true,
+          message: String(cause?.message || cause || '').slice(0, 512),
+          stderr:
+            String(cause?.stderr || '')
+              .trim()
+              .slice(-512) || null,
+        },
       });
       if (evidence?.desktopState === 'locked') {
         const error = new Error(
