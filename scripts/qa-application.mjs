@@ -12,6 +12,7 @@ import {
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
   normalizeRenderDemandAngleDegrees,
+  assessRenderDemandMapProviderTraffic,
   assessRenderDemandSnapshotStability,
   classifyRenderDemandRequest,
   respondToRenderDemandApiFixture,
@@ -335,7 +336,11 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       let latest = null;
       let previousTileDemand = null;
       let stableTileDemandCount = 0;
-      while (performance.now() - startedAt < 20_000) {
+      // A cold development-server compilation can consume most of the old
+      // 20-second window before the scene first becomes ready. Keep the gate
+      // bounded, but leave enough time to collect the four consecutive state
+      // samples that the acceptance contract actually requires.
+      while (performance.now() - startedAt < 30_000) {
         const map = app.mapStackController.getState();
         const cartographic = viewer.camera.positionCartographic;
         if (!cartographic)
@@ -816,20 +821,23 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     });
     const providerRequestsAfterForeground = observedMapProviderRequestCount;
     const interceptedRequestsAfterForeground = expectedBlockedMapProviderCount;
-    staticObservation.mapProviderTraffic = {
-      observedBefore: providerRequestsBeforeForeground,
-      observedAfter: providerRequestsAfterForeground,
-      interceptedBefore: interceptedRequestsBeforeForeground,
-      interceptedAfter: interceptedRequestsAfterForeground,
-      pendingAfter: pendingMapProviderRequests.size,
-      trackingOverflow: mapProviderRequestTrackingOverflow,
-      stable:
-        providerRequestsBeforeForeground === providerRequestsAfterForeground &&
-        interceptedRequestsBeforeForeground ===
-          interceptedRequestsAfterForeground &&
-        pendingMapProviderRequests.size === 0 &&
-        !mapProviderRequestTrackingOverflow,
-    };
+    // Fixture-blocked OSM content can issue one bounded retry when an allowed
+    // final render wakes Cesium's globe traversal. Requiring a literal zero
+    // request delta made the idle-render assertion depend on whether that
+    // retry landed just before or just after the observation boundary. Tie the
+    // retry allowance to completed renders instead: a request storm still
+    // fails, while the two-frame idle contract remains the controlling bound.
+    staticObservation.mapProviderTraffic = assessRenderDemandMapProviderTraffic(
+      {
+        observedBefore: providerRequestsBeforeForeground,
+        observedAfter: providerRequestsAfterForeground,
+        interceptedBefore: interceptedRequestsBeforeForeground,
+        interceptedAfter: interceptedRequestsAfterForeground,
+        completedPostRenderCount: staticObservation.completedPostRenderCount,
+        pendingAfter: pendingMapProviderRequests.size,
+        trackingOverflow: mapProviderRequestTrackingOverflow,
+      },
+    );
     reportState.traffic = {
       expectedBootstrapApiCount,
       expectedRenderDemandApiCount,

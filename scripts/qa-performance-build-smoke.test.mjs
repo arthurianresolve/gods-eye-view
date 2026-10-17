@@ -75,6 +75,7 @@ import {
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
+import { createReceiptOnlyWorkerAuditDocument } from './performance/receiptOnlyWorkerAudit.mjs';
 import { createDeterministicMapStreamingFixture } from './performance/mapStreamingFixture.mjs';
 import { createMapStreamingFixtureDelivery } from './performance/mapStreamingFixtureDelivery.mjs';
 import {
@@ -2745,6 +2746,14 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
       },
     })),
   );
+  const documentTopology = createCaptureDocumentTopology({
+    startupRuns: 1,
+    captureCount: captures.length,
+  });
+  if (workerAuditMode === 'receipt-only')
+    captures.forEach((capture, index) =>
+      Object.assign(capture, documentTopology.samples[index]),
+    );
   const source = {
     appCommit: 'b'.repeat(40),
     harnessCommit: 'c'.repeat(40),
@@ -2752,60 +2761,117 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     buildProvenance: {
       schema: 'gev-capture-build-provenance/v1',
       status: 'verified-local-build-and-served-assets-before-and-after',
+      appCommit: 'b'.repeat(40),
+      harnessCommit: 'c'.repeat(40),
       receiptSha256: 'd'.repeat(64),
-      pageAssetAudit: {
-        workerAuditMode,
-        scriptRequestCount: 12,
-        loadedAssetPaths: ['assets/index.js'],
-        unexpectedAssetPaths: [],
-        cesiumWorkerBlobAudits: Array.from({ length: 8 }, (_, index) => ({
-          status: 'receipt-derived-worker-blobs-validated',
-          auditMode:
-            workerAuditMode === 'prewarm' && index >= 2
-              ? 'prewarm'
-              : 'diagnostic',
-        })),
-      },
+      pageAssetAudit: null,
     },
   };
-  const workerAuditRoles = [
-    'startup-1',
-    'main-setup',
-    ...captures.map((sample, index) => `provider-sample-${index + 1}`),
+  const receiptOnlyAssetPaths = [
+    'index.html',
+    'assets/index.js',
+    'cesium/Cesium.js',
   ];
-  source.buildProvenance.pageAssetAudit.workerAuditDocuments =
-    workerAuditRoles.map((documentRole) => {
-      const measuredProviderDocument =
-        documentRole.startsWith('provider-sample-');
-      const prewarm = workerAuditMode === 'prewarm' && measuredProviderDocument;
-      return {
-        documentRole,
-        mode: prewarm ? 'prewarm' : 'diagnostic',
-        validation: {
-          status: 'receipt-derived-worker-blobs-validated',
-          auditMode: prewarm ? 'prewarm' : 'diagnostic',
-          createdScriptBlobCount: 8,
-        },
-        restoration: {
-          nativeCreateObjectURLRestored: true,
-          registryEmpty: true,
-          createdScriptBlobCountAtRestore: 8,
-          overflowCountAtRestore: 0,
-          auditedCreatedScriptBlobCount: 8,
-          auditedOverflowCount: 0,
-        },
-        observedWorkerTargetCount: 1,
-        observedBlobRequestCount: 1,
-        ...(prewarm
-          ? {
-              lateUseCheck: {
-                status: 'observed-late-code-paths-within-prewarm-inventory',
-                unusedLateBlobCreationObservable: false,
-              },
-            }
-          : {}),
-      };
-    });
+  const receiptOnlyBundleSha256 = 'e'.repeat(64);
+  const receiptOnlyWorkerSourceSha256 = 'f'.repeat(64);
+  const receiptOnlyAllowedModuleCount = 110;
+  if (workerAuditMode === 'receipt-only') {
+    const embeddedWorkerContract = {
+      schema: 'gev-cesium-embedded-worker-contract/v1',
+      bundlePath: 'cesium/Cesium.js',
+      bundleSha256: receiptOnlyBundleSha256,
+      workerSourceSha256: receiptOnlyWorkerSourceSha256,
+      allowedModuleCount: receiptOnlyAllowedModuleCount,
+    };
+    source.buildProvenance.pageAssetAudit = {
+      schema: 'gev-receipt-only-worker-audit/v1',
+      status: 'all-document-receipt-paths-validated',
+      workerAuditMode: 'receipt-only',
+      appCommit: source.appCommit,
+      harnessCommit: source.harnessCommit,
+      receiptSha256: source.buildProvenance.receiptSha256,
+      liveBlobBodyAttestation: 'unavailable-by-design',
+      pageInstrumentation: {
+        createObjectUrlWrapped: false,
+        workerApiWrapped: false,
+        blobBodyRegistryInstalled: false,
+        debuggerAttached: false,
+        profilerEnabled: false,
+        observation: 'external-puppeteer-request-and-worker-target-events-only',
+      },
+      workerSource: {
+        derivation: 'receipt-embedded-cesium-bundle',
+        ...embeddedWorkerContract,
+        liveBlobBodyAttestation: 'unavailable-by-design',
+      },
+      scriptRequestCount: 12,
+      loadedAssetPaths: ['assets/index.js', 'cesium/Cesium.js'],
+      unexpectedAssetPaths: [],
+      workerAuditDocuments: documentTopology.workerAudits.map((document) =>
+        createReceiptOnlyWorkerAuditDocument({
+          ...document,
+          appCommit: source.appCommit,
+          harnessCommit: source.harnessCommit,
+          receiptSha256: source.buildProvenance.receiptSha256,
+          baseUrl: 'http://127.0.0.1:4174/',
+          expectedAssetPaths: receiptOnlyAssetPaths,
+          requestedAssetPaths: ['assets/index.js', 'cesium/Cesium.js'],
+          workerTargetUrls: ['blob:http://127.0.0.1:4174/worker-1'],
+          blobRequestUrls: ['blob:http://127.0.0.1:4174/worker-1'],
+          embeddedWorkerContract,
+        }),
+      ),
+    };
+  } else {
+    source.buildProvenance.pageAssetAudit = {
+      workerAuditMode,
+      scriptRequestCount: 12,
+      loadedAssetPaths: ['assets/index.js'],
+      unexpectedAssetPaths: [],
+      cesiumWorkerBlobAudits: Array.from({ length: 8 }, (_, index) => ({
+        status: 'receipt-derived-worker-blobs-validated',
+        auditMode:
+          workerAuditMode === 'prewarm' && index >= 2
+            ? 'prewarm'
+            : 'diagnostic',
+      })),
+    };
+    source.buildProvenance.pageAssetAudit.workerAuditDocuments =
+      documentTopology.workerAudits.map(({ documentRole, documentId }) => {
+        const measuredProviderDocument =
+          documentRole.startsWith('provider-sample-');
+        const prewarm =
+          workerAuditMode === 'prewarm' && measuredProviderDocument;
+        return {
+          documentRole,
+          documentId,
+          mode: prewarm ? 'prewarm' : 'diagnostic',
+          validation: {
+            status: 'receipt-derived-worker-blobs-validated',
+            auditMode: prewarm ? 'prewarm' : 'diagnostic',
+            createdScriptBlobCount: 8,
+          },
+          restoration: {
+            nativeCreateObjectURLRestored: true,
+            registryEmpty: true,
+            createdScriptBlobCountAtRestore: 8,
+            overflowCountAtRestore: 0,
+            auditedCreatedScriptBlobCount: 8,
+            auditedOverflowCount: 0,
+          },
+          observedWorkerTargetCount: 1,
+          observedBlobRequestCount: 1,
+          ...(prewarm
+            ? {
+                lateUseCheck: {
+                  status: 'observed-late-code-paths-within-prewarm-inventory',
+                  unusedLateBlobCreationObservable: false,
+                },
+              }
+            : {}),
+        };
+      });
+  }
   const workload = {
     warmupMs: 1000,
     durationPerSampleMs: 1000,
@@ -2837,26 +2903,15 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   const performanceDiagnostics = {
     requested:
       'disabled-after-app-ready-before-warmup-when-supported-per-document',
-    documents: [
-      {
-        documentRole: 'startup-1',
+    documents: documentTopology.diagnostics.map(
+      ({ documentRole, documentId }) => ({
+        documentRole,
+        documentId,
         requested: true,
         hookAvailable: true,
         disabled: true,
-      },
-      {
-        documentRole: 'main-setup',
-        requested: true,
-        hookAvailable: true,
-        disabled: true,
-      },
-      ...captures.map((sample, index) => ({
-        documentRole: `provider-sample-${index + 1}`,
-        requested: true,
-        hookAvailable: true,
-        disabled: true,
-      })),
-    ],
+      }),
+    ),
   };
   const comparisonContract = createObservedDenseComparisonContract({
     fixture,
@@ -2876,8 +2931,19 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
       workload,
       captures,
       diagnosticsDocuments: performanceDiagnostics.documents,
-      workerBlobAuditInstrumented: true,
+      workerBlobAuditInstrumented: workerAuditMode !== 'receipt-only',
       workerBlobAuditMode: workerAuditMode,
+      receiptOnlyWorkerAuditEvidence:
+        workerAuditMode === 'receipt-only'
+          ? {
+              pageAssetAudit: source.buildProvenance.pageAssetAudit,
+              expectedDocuments: documentTopology.workerAudits,
+              expectedAssetPaths: receiptOnlyAssetPaths,
+              bundleSha256: receiptOnlyBundleSha256,
+              workerSourceSha256: receiptOnlyWorkerSourceSha256,
+              allowedModuleCount: receiptOnlyAllowedModuleCount,
+            }
+          : null,
       hardwareRequired: false,
     }),
   };
@@ -3838,6 +3904,29 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
       }),
     /sampleCount/,
   );
+});
+
+test('dense capture validator accepts receipt-only worker evidence without live blob arrays', () => {
+  const report = validCaptureCliReport('receipt-only');
+  const pageAudit = report.source.buildProvenance.pageAssetAudit;
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    workerAuditMode: 'receipt-only',
+    receiptOnlyWorkerContract: {
+      assetPaths: ['index.html', 'assets/index.js', 'cesium/Cesium.js'],
+      bundleSha256: pageAudit.workerSource.bundleSha256,
+      workerSourceSha256: pageAudit.workerSource.workerSourceSha256,
+      allowedModuleCount: pageAudit.workerSource.allowedModuleCount,
+    },
+  };
+
+  assert.equal(validateCaptureCliReport(report, expected).status, 'passed');
+  const incomplete = structuredClone(report);
+  incomplete.source.buildProvenance.pageAssetAudit.workerAuditDocuments.pop();
+  assert.throws(() => validateCaptureCliReport(incomplete, expected));
 });
 
 test('capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason', () => {

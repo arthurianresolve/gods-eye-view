@@ -10,7 +10,10 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
-import { validateMissionRenderDemandReport } from './performance/missionRenderDemand.mjs';
+import {
+  compareMissionEndpointPngs,
+  validateMissionRenderDemandReport,
+} from './performance/missionRenderDemand.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_OUT = 'qa-artifacts/mission-render-demand.json';
@@ -234,7 +237,9 @@ export async function runMissionRenderDemand({ out = DEFAULT_OUT } = {}) {
   let primaryError = null;
   let serverCloseFailure = null;
   let totalPngBytes = 0;
+  const endpointPngs = new Map();
   report.pngArtifacts = [];
+  report.endpointComparisons = [];
   report.pageErrors = [];
   await writeReport(outPath, report);
   try {
@@ -336,6 +341,7 @@ export async function runMissionRenderDemand({ out = DEFAULT_OUT } = {}) {
             if (png.length !== trial.endpointPngBytes)
               throw new Error('Endpoint image artifact changed after capture.');
             await writeFile(pngPath, png);
+            endpointPngs.set(`${scenario}/${repeat}/${variant}`, png);
             report.pngArtifacts.push({
               file: pngName,
               scenario,
@@ -368,6 +374,24 @@ export async function runMissionRenderDemand({ out = DEFAULT_OUT } = {}) {
           if (pageErrors.length)
             throw new Error(`Fixture page error: ${pageErrors.at(-1)}`);
         }
+      }
+    }
+    for (const scenario of SCENARIOS) {
+      for (let repeat = 1; repeat <= 5; repeat += 1) {
+        const controlPng = endpointPngs.get(
+          `${scenario}/${repeat}/continuous-control`,
+        );
+        const candidatePng = endpointPngs.get(
+          `${scenario}/${repeat}/demand-candidate`,
+        );
+        report.endpointComparisons.push(
+          await compareMissionEndpointPngs({
+            scenario,
+            repeat,
+            controlPng,
+            candidatePng,
+          }),
+        );
       }
     }
     report.summary = validateMissionRenderDemandReport(report, { repeats: 5 });

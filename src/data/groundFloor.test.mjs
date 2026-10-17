@@ -72,6 +72,26 @@ test('rendered mesh cells follow tileset identity while Re:Earth floors remain s
   assert.equal(floor.cachedGroundFloor(point.lat, point.lon), 118);
 });
 
+test('test mesh clear preserves the active tileset owner for deterministic reseeding', () => {
+  const floor = createGroundFloor({
+    terrain: {
+      cachedRealEllipsoidalGround: () => 100,
+      resolveEllipsoidalGround: async () => [],
+    },
+  });
+  const source = {};
+  const point = { lat: 30.3, lon: -97.8 };
+
+  floor.setMeshFloorPreferred(true);
+  assert.equal(floor.setMeshFloorSource(source), true);
+  floor.reportMeshFloorCell(point.lat, point.lon, 125);
+  floor._clearMeshFloorCellsForTest();
+  assert.equal(floor.cachedMeshFloor(point.lat, point.lon), null);
+  assert.equal(floor.setMeshFloorSource(source), false);
+  floor.reportMeshFloorCell(point.lat, point.lon, 440);
+  assert.equal(floor.cachedMeshFloor(point.lat, point.lon), 440);
+});
+
 test('floorAltitudeM lifts a below-ground altitude to ground + lift', () => {
   // RS46 case: baro+N ≈ 334 m but the ridge is ~400 m ellipsoidal.
   const got = floorAltitudeM(334, 400);

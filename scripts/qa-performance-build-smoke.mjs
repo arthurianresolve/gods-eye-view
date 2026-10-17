@@ -2983,9 +2983,37 @@ export function validateCaptureCliReport(report, expected) {
   );
   assert.ok(pageAudit.loadedAssetPaths?.length > 0);
   assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
-  for (const workerAudit of pageAudit.cesiumWorkerBlobAudits || [])
-    assert.equal(workerAudit.status, 'receipt-derived-worker-blobs-validated');
-  assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
+  if (workerAuditMode === 'receipt-only') {
+    const topology = createCaptureDocumentTopology({
+      startupRuns: report.workload?.startupRuns,
+      captureCount: report.captures?.length,
+    });
+    assert.equal(
+      validateReceiptOnlyWorkerAuditEnvelope({
+        pageAssetAudit: pageAudit,
+        appCommit: expected.appSha,
+        harnessCommit: expected.harnessSha,
+        receiptSha256: expected.receiptSha256,
+        expectedDocuments: topology.workerAudits,
+        expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+        bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+        workerSourceSha256:
+          expected.receiptOnlyWorkerContract?.workerSourceSha256,
+        allowedModuleCount:
+          expected.receiptOnlyWorkerContract?.allowedModuleCount,
+      }),
+      true,
+      'receipt-only mode must validate the immutable receipt path for every document',
+    );
+    assert.equal(pageAudit.cesiumWorkerBlobAudits, undefined);
+  } else {
+    for (const workerAudit of pageAudit.cesiumWorkerBlobAudits || [])
+      assert.equal(
+        workerAudit.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+    assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
+  }
   assert.equal(report.workload?.warmupMs, 1000);
   assert.equal(report.workload?.durationPerSampleMs, 1000);
   assert.equal(report.workload?.runsPerScenario, 2);
@@ -3092,48 +3120,53 @@ export function validateCaptureCliReport(report, expected) {
       'shader evidence must cover the exact documents in the diagnostic inventory',
     );
   }
-  const workerAuditDocuments = pageAudit.workerAuditDocuments;
-  assert.ok(Array.isArray(workerAuditDocuments));
-  assert.deepEqual(
-    workerAuditDocuments.map((entry) => entry.documentRole).sort(),
-    expectedRoles,
-  );
-  for (const entry of workerAuditDocuments) {
-    const measuredProviderDocument =
-      entry.documentRole.startsWith('provider-sample-');
-    assert.equal(
-      entry.mode,
-      workerAuditMode === 'prewarm' && measuredProviderDocument
-        ? 'prewarm'
-        : 'diagnostic',
+  if (workerAuditMode !== 'receipt-only') {
+    const workerAuditDocuments = pageAudit.workerAuditDocuments;
+    assert.ok(Array.isArray(workerAuditDocuments));
+    assert.deepEqual(
+      workerAuditDocuments.map((entry) => entry.documentRole).sort(),
+      expectedRoles,
     );
-    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
-    assert.equal(entry.restoration?.registryEmpty, true);
-    assert.equal(entry.restoration.overflowCountAtRestore, 0);
-    assert.equal(
-      entry.restoration.createdScriptBlobCountAtRestore,
-      entry.restoration.auditedCreatedScriptBlobCount,
-    );
-    if (entry.validation === null) {
-      assert.equal(entry.restoration.auditedCreatedScriptBlobCount, 0);
-      assert.equal(entry.observedWorkerTargetCount, 0);
-      assert.equal(entry.observedBlobRequestCount, 0);
-      assert.equal(entry.restoration.createdScriptBlobCountAtRestore, 0);
-    } else {
+    for (const entry of workerAuditDocuments) {
+      const measuredProviderDocument =
+        entry.documentRole.startsWith('provider-sample-');
       assert.equal(
-        entry.validation.status,
-        'receipt-derived-worker-blobs-validated',
+        entry.mode,
+        workerAuditMode === 'prewarm' && measuredProviderDocument
+          ? 'prewarm'
+          : 'diagnostic',
       );
-    }
-    if (workerAuditMode === 'prewarm' && measuredProviderDocument) {
-      assert.equal(entry.validation.auditMode, 'prewarm');
+      assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+      assert.equal(entry.restoration?.registryEmpty, true);
+      assert.equal(entry.restoration.overflowCountAtRestore, 0);
       assert.equal(
-        entry.lateUseCheck?.status,
-        'observed-late-code-paths-within-prewarm-inventory',
+        entry.restoration.createdScriptBlobCountAtRestore,
+        entry.restoration.auditedCreatedScriptBlobCount,
       );
-      assert.equal(entry.lateUseCheck?.unusedLateBlobCreationObservable, false);
-    } else if (entry.validation) {
-      assert.equal(entry.validation.auditMode, 'diagnostic');
+      if (entry.validation === null) {
+        assert.equal(entry.restoration.auditedCreatedScriptBlobCount, 0);
+        assert.equal(entry.observedWorkerTargetCount, 0);
+        assert.equal(entry.observedBlobRequestCount, 0);
+        assert.equal(entry.restoration.createdScriptBlobCountAtRestore, 0);
+      } else {
+        assert.equal(
+          entry.validation.status,
+          'receipt-derived-worker-blobs-validated',
+        );
+      }
+      if (workerAuditMode === 'prewarm' && measuredProviderDocument) {
+        assert.equal(entry.validation.auditMode, 'prewarm');
+        assert.equal(
+          entry.lateUseCheck?.status,
+          'observed-late-code-paths-within-prewarm-inventory',
+        );
+        assert.equal(
+          entry.lateUseCheck?.unusedLateBlobCreationObservable,
+          false,
+        );
+      } else if (entry.validation) {
+        assert.equal(entry.validation.auditMode, 'diagnostic');
+      }
     }
   }
   for (const entry of diagnosticDocuments) {
@@ -3163,8 +3196,24 @@ export function validateCaptureCliReport(report, expected) {
     workload: report.workload,
     captures: report.captures,
     diagnosticsDocuments: diagnosticDocuments,
-    workerBlobAuditInstrumented: true,
+    workerBlobAuditInstrumented: workerAuditMode !== 'receipt-only',
     workerBlobAuditMode: workerAuditMode,
+    receiptOnlyWorkerAuditEvidence:
+      workerAuditMode === 'receipt-only'
+        ? {
+            pageAssetAudit: pageAudit,
+            expectedDocuments: createCaptureDocumentTopology({
+              startupRuns: report.workload.startupRuns,
+              captureCount: report.captures.length,
+            }).workerAudits,
+            expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+            bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+            workerSourceSha256:
+              expected.receiptOnlyWorkerContract?.workerSourceSha256,
+            allowedModuleCount:
+              expected.receiptOnlyWorkerContract?.allowedModuleCount,
+          }
+        : null,
     hardwareRequired: false,
   });
   if (expected.sceneFrameDiagnostics)
@@ -3192,10 +3241,11 @@ export function validateCaptureCliReport(report, expected) {
     report.comparisonReadiness?.reasons,
     observedReadinessReasons,
   );
-  assert.ok(
+  assert.equal(
     observedReadinessReasons.includes(
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     ),
+    workerAuditMode !== 'receipt-only',
   );
   if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
     assert.ok(report.environment?.renderer);

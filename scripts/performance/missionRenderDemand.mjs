@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import sharp from 'sharp';
 import { cameraPosesEquivalent } from './routeEquivalence.mjs';
 
 const SCENARIOS = new Set([
@@ -259,6 +261,87 @@ function validateTrial(trial, expected) {
   }
 }
 
+export const MISSION_ENDPOINT_VISUAL_TOLERANCE = Object.freeze({
+  maximumChangedPixelRatio: 0.0001,
+  maximumMeanAbsoluteChannelError: 0.005,
+  maximumRmsChannelError: 0.5,
+});
+
+/** Compare decoded endpoint pixels with a bounded software-renderer tolerance. */
+export async function compareMissionEndpointPngs({
+  scenario,
+  repeat,
+  controlPng,
+  candidatePng,
+}) {
+  if (!Buffer.isBuffer(controlPng) || !Buffer.isBuffer(candidatePng))
+    throw new TypeError(
+      'Mission endpoint comparison requires two PNG buffers.',
+    );
+  const [control, candidate] = await Promise.all(
+    [controlPng, candidatePng].map((png) =>
+      sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+    ),
+  );
+  if (
+    control.info.width !== candidate.info.width ||
+    control.info.height !== candidate.info.height ||
+    control.info.channels !== 4 ||
+    candidate.info.channels !== 4 ||
+    control.data.length !== candidate.data.length
+  )
+    throw new Error('Mission endpoint image dimensions or channels differ.');
+
+  let changedPixelCount = 0;
+  let absoluteChannelError = 0;
+  let squaredChannelError = 0;
+  let maximumChannelDelta = 0;
+  for (let offset = 0; offset < control.data.length; offset += 4) {
+    let pixelChanged = false;
+    for (let channel = 0; channel < 4; channel += 1) {
+      const delta = Math.abs(
+        control.data[offset + channel] - candidate.data[offset + channel],
+      );
+      if (delta > 0) pixelChanged = true;
+      absoluteChannelError += delta;
+      squaredChannelError += delta * delta;
+      maximumChannelDelta = Math.max(maximumChannelDelta, delta);
+    }
+    if (pixelChanged) changedPixelCount += 1;
+  }
+  const pixelCount = control.info.width * control.info.height;
+  const channelCount = control.data.length;
+  const changedPixelRatio = changedPixelCount / pixelCount;
+  const meanAbsoluteChannelError = absoluteChannelError / channelCount;
+  const rmsChannelError = Math.sqrt(squaredChannelError / channelCount);
+  const withinTolerance =
+    changedPixelRatio <=
+      MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumChangedPixelRatio &&
+    meanAbsoluteChannelError <=
+      MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumMeanAbsoluteChannelError &&
+    rmsChannelError <= MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumRmsChannelError;
+
+  return {
+    schema: 'gev-mission-endpoint-image-comparison/v1',
+    scenario,
+    repeat,
+    method: 'decoded-rgba-absolute-difference',
+    width: control.info.width,
+    height: control.info.height,
+    pixelCount,
+    controlPngSha256: createHash('sha256').update(controlPng).digest('hex'),
+    candidatePngSha256: createHash('sha256').update(candidatePng).digest('hex'),
+    exactMatch: changedPixelCount === 0,
+    changedPixelCount,
+    changedPixelRatio,
+    meanAbsoluteChannelError,
+    rmsChannelError,
+    maximumChannelDelta,
+    tolerance: { ...MISSION_ENDPOINT_VISUAL_TOLERANCE },
+    withinTolerance,
+  };
+}
+
 function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
@@ -301,6 +384,24 @@ export function validateMissionRenderDemandReport(
     const key = `${trial.scenario}/${trial.repeat}/${trial.variant}`;
     requireCondition(!slots.has(key), 'Duplicate mission fixture trial.');
     slots.set(key, trial);
+  }
+  requireCondition(
+    Array.isArray(report.endpointComparisons) &&
+      report.endpointComparisons.length === SCENARIOS.size * repeats,
+    'Mission endpoint comparison evidence is incomplete.',
+  );
+  const endpointComparisons = new Map();
+  for (const comparison of report.endpointComparisons) {
+    const key = `${comparison?.scenario}/${comparison?.repeat}`;
+    requireCondition(
+      SCENARIOS.has(comparison?.scenario) &&
+        Number.isSafeInteger(comparison?.repeat) &&
+        comparison.repeat >= 1 &&
+        comparison.repeat <= repeats &&
+        !endpointComparisons.has(key),
+      'Mission endpoint comparison identity is invalid or duplicated.',
+    );
+    endpointComparisons.set(key, comparison);
   }
   const pairs = [];
   for (const scenario of SCENARIOS) {
@@ -357,11 +458,51 @@ export function validateMissionRenderDemandReport(
         cameraPosesEquivalent(control.cameraPose, candidate.cameraPose),
         'Paired camera pose changed beyond bounded numeric roundoff.',
       );
+      const endpointComparison = endpointComparisons.get(
+        `${scenario}/${repeat}`,
+      );
+      const finiteNonnegative = (value) => Number.isFinite(value) && value >= 0;
       requireCondition(
-        control.endpointPngSha256 === candidate.endpointPngSha256 &&
-          control.endpointPixels.rgbaSha256 ===
-            candidate.endpointPixels.rgbaSha256,
-        'Paired endpoint images differ.',
+        endpointComparison?.schema ===
+          'gev-mission-endpoint-image-comparison/v1' &&
+          endpointComparison.method === 'decoded-rgba-absolute-difference' &&
+          endpointComparison.width === 960 &&
+          endpointComparison.height === 640 &&
+          endpointComparison.pixelCount === 960 * 640 &&
+          endpointComparison.controlPngSha256 === control.endpointPngSha256 &&
+          endpointComparison.candidatePngSha256 ===
+            candidate.endpointPngSha256 &&
+          Number.isSafeInteger(endpointComparison.changedPixelCount) &&
+          endpointComparison.changedPixelCount >= 0 &&
+          endpointComparison.changedPixelCount <=
+            endpointComparison.pixelCount &&
+          finiteNonnegative(endpointComparison.changedPixelRatio) &&
+          Math.abs(
+            endpointComparison.changedPixelRatio -
+              endpointComparison.changedPixelCount /
+                endpointComparison.pixelCount,
+          ) <= Number.EPSILON &&
+          finiteNonnegative(endpointComparison.meanAbsoluteChannelError) &&
+          finiteNonnegative(endpointComparison.rmsChannelError) &&
+          Number.isSafeInteger(endpointComparison.maximumChannelDelta) &&
+          endpointComparison.maximumChannelDelta >= 0 &&
+          endpointComparison.maximumChannelDelta <= 255 &&
+          endpointComparison.exactMatch ===
+            (endpointComparison.changedPixelCount === 0) &&
+          (!endpointComparison.exactMatch ||
+            (endpointComparison.meanAbsoluteChannelError === 0 &&
+              endpointComparison.rmsChannelError === 0 &&
+              endpointComparison.maximumChannelDelta === 0)) &&
+          stableJson(endpointComparison.tolerance) ===
+            stableJson(MISSION_ENDPOINT_VISUAL_TOLERANCE) &&
+          endpointComparison.changedPixelRatio <=
+            MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumChangedPixelRatio &&
+          endpointComparison.meanAbsoluteChannelError <=
+            MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumMeanAbsoluteChannelError &&
+          endpointComparison.rmsChannelError <=
+            MISSION_ENDPOINT_VISUAL_TOLERANCE.maximumRmsChannelError &&
+          endpointComparison.withinTolerance === true,
+        'Paired endpoint images exceed the bounded decoded-pixel tolerance.',
       );
       requireCondition(
         control.rendering.renderModeAtStart === 'continuous' &&

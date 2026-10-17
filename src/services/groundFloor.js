@@ -549,13 +549,17 @@ export function createGroundFloor({ terrain, signal }) {
     return h != null ? h : null;
   }
 
-  /** Test hook: clears mesh cells (never called at runtime — cells are valid all session). */
+  /**
+   * Test hook: clears mesh cells while preserving the active surface owner.
+   * Resetting owner identity here creates a race with the live sampler: cells
+   * seeded immediately after a clear land in the unscoped cache, then vanish
+   * from reads when the sampler re-announces the unchanged tileset.
+   * Never called at runtime — cells are valid all session.
+   */
   function _clearMeshFloorCellsForTest() {
     _meshCellsBySource = new WeakMap();
     _unscopedMeshCells.clear();
     _noSourceMeshCells.clear();
-    _meshSource = null;
-    _meshSourceKnown = false;
     _meshSourcePending = false;
   }
 

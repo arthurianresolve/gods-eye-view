@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { validateMissionRenderDemandReport } from './missionRenderDemand.mjs';
+import sharp from 'sharp';
+import {
+  compareMissionEndpointPngs,
+  MISSION_ENDPOINT_VISUAL_TOLERANCE,
+  validateMissionRenderDemandReport,
+} from './missionRenderDemand.mjs';
 
 const scenarios = ['static-empty', 'unselected-orbit', 'selected-live'];
 const variants = ['continuous-control', 'demand-candidate'];
@@ -184,6 +189,9 @@ function makeTrial(scenario, variant, repeat) {
 
 function validReport() {
   const commit = 'a'.repeat(40);
+  const trials = scenarios.flatMap((scenario) =>
+    variants.map((variant) => makeTrial(scenario, variant, 1)),
+  );
   return {
     schema: 'gev-mission-render-demand/v1',
     status: 'running',
@@ -196,9 +204,32 @@ function validReport() {
       productionBundle: false,
     },
     fixtureIdentity: 'mission-render-demand-two-launches-per-page-epoch/v1',
-    trials: scenarios.flatMap((scenario) =>
-      variants.map((variant) => makeTrial(scenario, variant, 1)),
-    ),
+    trials,
+    endpointComparisons: scenarios.map((scenario) => ({
+      schema: 'gev-mission-endpoint-image-comparison/v1',
+      scenario,
+      repeat: 1,
+      method: 'decoded-rgba-absolute-difference',
+      width: 960,
+      height: 640,
+      pixelCount: 960 * 640,
+      controlPngSha256: trials.find(
+        (trial) =>
+          trial.scenario === scenario && trial.variant === 'continuous-control',
+      ).endpointPngSha256,
+      candidatePngSha256: trials.find(
+        (trial) =>
+          trial.scenario === scenario && trial.variant === 'demand-candidate',
+      ).endpointPngSha256,
+      exactMatch: true,
+      changedPixelCount: 0,
+      changedPixelRatio: 0,
+      meanAbsoluteChannelError: 0,
+      rmsChannelError: 0,
+      maximumChannelDelta: 0,
+      tolerance: { ...MISSION_ENDPOINT_VISUAL_TOLERANCE },
+      withinTolerance: true,
+    })),
   };
 }
 
@@ -213,6 +244,42 @@ test('summarizes complete paired real-viewer fixture observations', () => {
     summary.byScenario['unselected-orbit'].medianCandidateMatrixUpdates,
     2,
   );
+});
+
+test('decoded endpoint comparison accepts bounded raster noise and rejects visible drift', async () => {
+  const width = 100;
+  const height = 100;
+  const controlRaw = Buffer.alloc(width * height * 4);
+  const nearRaw = Buffer.from(controlRaw);
+  nearRaw[0] = 80;
+  const farRaw = Buffer.from(nearRaw);
+  farRaw[4] = 80;
+  const encode = (raw) =>
+    sharp(raw, { raw: { width, height, channels: 4 } })
+      .png()
+      .toBuffer();
+  const [controlPng, nearPng, farPng] = await Promise.all(
+    [controlRaw, nearRaw, farRaw].map(encode),
+  );
+
+  const near = await compareMissionEndpointPngs({
+    scenario: 'static-empty',
+    repeat: 1,
+    controlPng,
+    candidatePng: nearPng,
+  });
+  assert.equal(near.changedPixelCount, 1);
+  assert.equal(near.changedPixelRatio, 0.0001);
+  assert.equal(near.withinTolerance, true);
+
+  const far = await compareMissionEndpointPngs({
+    scenario: 'static-empty',
+    repeat: 1,
+    controlPng,
+    candidatePng: farPng,
+  });
+  assert.equal(far.changedPixelCount, 2);
+  assert.equal(far.withinTolerance, false);
 });
 
 test('camera comparisons allow only the shared pose-roundoff bounds and exclude setup timing', () => {
@@ -300,7 +367,7 @@ test('camera comparisons allow only the shared pose-roundoff bounds and exclude 
   );
 });
 
-test('retained failed hosted report passes the corrected offline trial validator', () => {
+test('retained failed hosted report passes the corrected offline trial validator', async () => {
   const retained = JSON.parse(
     readFileSync(
       new URL(
@@ -311,7 +378,30 @@ test('retained failed hosted report passes the corrected offline trial validator
     ),
   );
   assert.equal(retained.status, 'failed');
-  const validationInput = { ...retained, status: 'running' };
+  const endpointComparisons = await Promise.all(
+    scenarios.flatMap((scenario) =>
+      Array.from({ length: 5 }, async (_, index) => {
+        const repeat = index + 1;
+        const retainedPng = readFileSync(
+          new URL(
+            `../../docs/performance-evidence/mission-render-demand-38046523488-images/${scenario}.png`,
+            import.meta.url,
+          ),
+        );
+        return compareMissionEndpointPngs({
+          scenario,
+          repeat,
+          controlPng: retainedPng,
+          candidatePng: retainedPng,
+        });
+      }),
+    ),
+  );
+  const validationInput = {
+    ...retained,
+    status: 'running',
+    endpointComparisons,
+  };
   assert.equal(
     validateMissionRenderDemandReport(validationInput, { repeats: 5 }).status,
     'passed',
@@ -360,6 +450,9 @@ test('rejects changed pixels, viewport, and a non-rendered final frame', () => {
   for (const mutate of [
     (report) => {
       report.trials[1].endpointPngSha256 = 'b'.repeat(64);
+    },
+    (report) => {
+      report.endpointComparisons[0].withinTolerance = false;
     },
     (report) => {
       report.trials[1].visualSettings.viewportWidth = 959;

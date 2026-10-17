@@ -7,6 +7,7 @@ import {
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
   normalizeRenderDemandAngleDegrees,
+  assessRenderDemandMapProviderTraffic,
   assessRenderDemandSnapshotStability,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
@@ -35,6 +36,55 @@ import {
 } from '../../src/sources/live/standalone.js';
 
 const BASE = 'http://127.0.0.1:4173/';
+
+test('render-demand map traffic permits only render-bounded blocked retries', () => {
+  assert.deepEqual(
+    assessRenderDemandMapProviderTraffic({
+      observedBefore: 185,
+      observedAfter: 186,
+      interceptedBefore: 185,
+      interceptedAfter: 186,
+      completedPostRenderCount: 2,
+      pendingAfter: 0,
+      trackingOverflow: false,
+    }),
+    {
+      observedBefore: 185,
+      observedAfter: 186,
+      interceptedBefore: 185,
+      interceptedAfter: 186,
+      observedDelta: 1,
+      interceptedDelta: 1,
+      retryBudget: 2,
+      pendingAfter: 0,
+      trackingOverflow: false,
+      stable: true,
+    },
+  );
+  for (const traffic of [
+    { observedAfter: 188, interceptedAfter: 188 },
+    { observedAfter: 186, interceptedAfter: 185 },
+    { observedAfter: 186, interceptedAfter: 186, pendingAfter: 1 },
+    {
+      observedAfter: 186,
+      interceptedAfter: 186,
+      completedPostRenderCount: 0,
+    },
+  ])
+    assert.equal(
+      assessRenderDemandMapProviderTraffic({
+        observedBefore: 185,
+        observedAfter: 186,
+        interceptedBefore: 185,
+        interceptedAfter: 186,
+        completedPostRenderCount: 2,
+        pendingAfter: 0,
+        trackingOverflow: false,
+        ...traffic,
+      }).stable,
+      false,
+    );
+});
 
 test('render-demand traffic classifier distinguishes known offline bootstrap/map requests from unexpected requests', () => {
   const origin = 'http://127.0.0.1:4173';
@@ -91,7 +141,7 @@ test('render-demand traffic classifier distinguishes known offline bootstrap/map
     assert.equal(classify(`${origin}${path}`, method), 'unexpected-api');
   const blockedFonts = [
     'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
-    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
+    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,upload_file,view_in_ar,visibility,visibility_off',
   ];
   for (const fontUrl of blockedFonts)
     assert.equal(

@@ -55,6 +55,51 @@ export function normalizeRenderDemandAngleDegrees(value) {
   return ((((value + 180) % 360) + 360) % 360) - 180;
 }
 
+/** Bound fixture-blocked map retries to the completed renders that can cause them. */
+export function assessRenderDemandMapProviderTraffic({
+  observedBefore,
+  observedAfter,
+  interceptedBefore,
+  interceptedAfter,
+  completedPostRenderCount,
+  pendingAfter,
+  trackingOverflow,
+} = {}) {
+  const counts = [
+    observedBefore,
+    observedAfter,
+    interceptedBefore,
+    interceptedAfter,
+    completedPostRenderCount,
+    pendingAfter,
+  ];
+  if (
+    counts.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+    typeof trackingOverflow !== 'boolean'
+  )
+    throw new TypeError('Render-demand map traffic counters are invalid.');
+  const observedDelta = observedAfter - observedBefore;
+  const interceptedDelta = interceptedAfter - interceptedBefore;
+  const retryBudget = completedPostRenderCount;
+  return {
+    observedBefore,
+    observedAfter,
+    interceptedBefore,
+    interceptedAfter,
+    observedDelta,
+    interceptedDelta,
+    retryBudget,
+    pendingAfter,
+    trackingOverflow,
+    stable:
+      observedDelta >= 0 &&
+      observedDelta === interceptedDelta &&
+      observedDelta <= retryBudget &&
+      pendingAfter === 0 &&
+      !trackingOverflow,
+  };
+}
+
 const RENDER_DEMAND_BOOTSTRAP_API_ROUTES = new Set(['GET /api/setup/status']);
 const RENDER_DEMAND_CONTROLLED_API_ROUTES = new Map([
   ['GET /api/google/tiles-token', { status: 200, body: '{}' }],
@@ -71,7 +116,7 @@ const RENDER_DEMAND_MILITARY_POLL_INTERVAL_MS = 15_000;
 
 const RENDER_DEMAND_BLOCKED_FONT_URLS = new Set([
   'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,upload_file,view_in_ar,visibility,visibility_off',
 ]);
 const RENDER_DEMAND_MAP_PROVIDER_HOSTS = new Map([
   [
