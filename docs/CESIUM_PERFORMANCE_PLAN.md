@@ -39,7 +39,7 @@ human review, or performance-objective achievement is inferred from this slice.
 | Slice | Deliverable and primary files/gates | Engineering | Automatic | Primary evidence |
 | --- | --- | --- | --- | --- |
 | S61 | Frozen upstream merge, evidence ledger, native profile; capture/common observer, paired report, matrix | implemented | focused pass; dependency suites pending | pending shared matrix |
-| S62 | Deterministic Cesium paths, gzip/br, immutable caches | pending | pending | pending |
+| S62 | Deterministic Cesium paths, gzip/br, immutable caches | implemented | focused helper pass; Vite build pending dependencies | pending build artifact evidence |
 | S63 | Production Node HTTP host and security behavior | pending | pending | pending |
 | S64 | Bounded diagnostics and Auto eligibility | pending | pending | pending |
 | S65 | Remove unchanged still CCTV demand; retain continuous video/fades and cleanup | pending | pending | pending |

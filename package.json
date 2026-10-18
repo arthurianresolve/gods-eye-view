@@ -118,6 +118,9 @@
     "./build/vite": {
       "node": "./build/vite.js"
     },
+    "./build/assets": {
+      "node": "./build/assetDistribution.js"
+    },
     "./server/providers/live": {
       "node": "./server/providers/live.js"
     },

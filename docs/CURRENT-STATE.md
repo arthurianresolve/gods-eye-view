@@ -1,5 +1,18 @@
 # God's Eye View Current State
 
+## S62 distribution assets — October 18, 2026
+
+The build now derives a deterministic SHA-256 digest from the patched Cesium
+distribution bytes in path order and supplies the digest path through
+`vite-plugin-cesium`'s supported `cesiumBaseUrl` option. The reusable Node-only
+asset helper emits deterministic raw, gzip and Brotli artifact metadata and
+classifies only content-addressed application assets and the Cesium digest path
+as immutable; HTML, webmanifest and build metadata remain revalidation assets.
+Traversal and symlinked asset paths are rejected. The helper does not alter API
+privacy or caching and leaves old-tab asset retention available for S63's host.
+Focused helper tests pass; dependency-backed Vite build verification remains
+pending local dependency installation.
+
 Shared distance checks use `src/geoDistance.js` with `{ lat, lon }` points and
 the IUGG mean spherical Earth radius, 6371.0088 km. `greatCircleKm` is
 canonical; `greatCircleMeters` is its exact metre conversion. Missing,

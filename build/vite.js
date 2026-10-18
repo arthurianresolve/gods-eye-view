@@ -4,6 +4,7 @@ import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
 import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
+import { computeCesiumDistributionDigestSync } from './assetDistribution.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -60,13 +61,22 @@ export function createBrowserViteConfig({
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
   command,
+  root = process.cwd(),
 } = {}) {
+  let cesiumBaseUrl = '/cesium/';
+  if (command === 'build') {
+    try {
+      cesiumBaseUrl = `/${computeCesiumDistributionDigestSync({ root }).path}/`;
+    } catch {
+      // Dependency identity validation reports the actionable missing-package error.
+    }
+  }
   return {
     plugins: [
       // First, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
       cesiumDependencyIdentityPlugin(),
-      cesium(),
+      cesium({ cesiumBaseUrl }),
       applicationHtmlPlugin(),
       ...plugins,
       embedFramingPlugin(),
