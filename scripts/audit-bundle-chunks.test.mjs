@@ -15,6 +15,12 @@ test('bundle audit separates static initial imports from dynamic voice/locale ch
       path.join(root, 'voice-lazy.js'),
       'export const realtime = true;',
     );
+    await writeFile(path.join(root, 'voice-b.js'), 'export const b = true;');
+    await writeFile(
+      path.join(root, 'shared.js'),
+      'export const shared = true;',
+    );
+    await writeFile(path.join(root, 'style.css'), 'body{}');
     await writeFile(
       path.join(root, '.vite/manifest.json'),
       JSON.stringify({
@@ -25,7 +31,25 @@ test('bundle audit separates static initial imports from dynamic voice/locale ch
           dynamicImports: ['src/voice/realtime.js'],
         },
         'src/assets.js': { file: 'assets.js' },
-        'src/voice/realtime.js': { file: 'voice-lazy.js' },
+        'src/voice/realtime.js': {
+          file: 'voice-lazy.js',
+          dynamicImports: ['src/voice/b.js'],
+          imports: ['src/style.css'],
+        },
+        'src/voice/b.js': { file: 'voice-b.js', imports: ['src/shared.js'] },
+        'src/shared.js': { file: 'shared.js' },
+        'src/style.css': { file: 'style.css' },
+      }),
+    );
+    await writeFile(
+      path.join(root, 'diagnostic-chunk-modules.json'),
+      JSON.stringify({
+        chunks: [
+          {
+            file: 'voice-lazy.js',
+            modules: { 'src/voice/realtime.js': { renderedLength: 27 } },
+          },
+        ],
       }),
     );
     const report = await auditBundle({ root });
@@ -36,11 +60,19 @@ test('bundle audit separates static initial imports from dynamic voice/locale ch
     );
     assert.equal(
       report.dynamic.bytes,
-      Buffer.byteLength('export const realtime = true;'),
+      Buffer.byteLength('export const realtime = true;') +
+        Buffer.byteLength('export const b = true;') +
+        Buffer.byteLength('export const shared = true;'),
     );
     assert.ok(report.initial.gzipBytes > 0);
     assert.ok(report.initial.brotliBytes > 0);
-    assert.deepEqual(report.dynamic.chunks[0].modules, []);
+    assert.deepEqual(
+      report.dynamic.chunks.map((chunk) => chunk.file),
+      ['shared.js', 'voice-b.js', 'voice-lazy.js'],
+    );
+    assert.deepEqual(report.dynamic.chunks[2].modules, [
+      { id: 'src/voice/realtime.js', renderedBytes: 27 },
+    ]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

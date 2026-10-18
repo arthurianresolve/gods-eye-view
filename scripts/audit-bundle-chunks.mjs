@@ -17,10 +17,22 @@ import { brotliCompressSync, gzipSync } from 'node:zlib';
 export async function auditBundle({
   root,
   manifestPath = '.vite/manifest.json',
+  diagnosticsPath = 'diagnostic-chunk-modules.json',
 }) {
   const absoluteRoot = path.resolve(root);
   const manifestFile = path.resolve(absoluteRoot, manifestPath);
   const manifest = JSON.parse(await readFile(manifestFile, 'utf8'));
+  let diagnostics = new Map();
+  try {
+    const diagnostic = JSON.parse(
+      await readFile(path.resolve(absoluteRoot, diagnosticsPath), 'utf8'),
+    );
+    diagnostics = new Map(
+      (diagnostic.chunks || []).map((chunk) => [chunk.file, chunk.modules]),
+    );
+  } catch {
+    // Standard Vite manifests do not contain module lengths; attribution stays empty.
+  }
   const records = Object.entries(manifest).sort(([a], [b]) =>
     a.localeCompare(b),
   );
@@ -30,14 +42,22 @@ export async function auditBundle({
   const entries = records.filter(([, value]) => value.isEntry);
   const initial = new Set();
   const dynamic = new Set();
-  const visit = (record, target) => {
-    if (!record || target.has(record.file)) return;
+  const visit = (record, target, followDynamic = false) => {
+    if (!record || !/\.m?js$/i.test(record.file) || target.has(record.file))
+      return;
     target.add(record.file);
     for (const imported of record.imports || []) {
       const child = byKey.get(imported);
       if (!child)
         throw new Error(`manifest import key is missing: ${imported}`);
-      visit(child, target);
+      visit(child, target, followDynamic);
+    }
+    if (!followDynamic) return;
+    for (const imported of record.dynamicImports || []) {
+      const child = byKey.get(imported);
+      if (!child)
+        throw new Error(`manifest dynamic import key is missing: ${imported}`);
+      visit(child, target, true);
     }
   };
   for (const [, entry] of entries) {
@@ -46,7 +66,7 @@ export async function auditBundle({
       const child = byKey.get(imported);
       if (!child)
         throw new Error(`manifest dynamic import key is missing: ${imported}`);
-      visit(child, dynamic);
+      visit(child, dynamic, true);
     }
   }
   for (const file of initial) dynamic.delete(file);
@@ -55,7 +75,9 @@ export async function auditBundle({
     const record = records
       .map(([, value]) => value)
       .find((value) => value.file === file);
-    const modules = Object.entries(record?.modules || {})
+    const modules = Object.entries(
+      record?.modules || diagnostics.get(file) || {},
+    )
       .map(([id, value]) => ({
         id,
         renderedBytes:
@@ -105,7 +127,7 @@ async function compressedSize(chunks, root, compressor) {
   const bodies = await Promise.all(
     chunks.map((chunk) => readFile(path.join(root, chunk.file))),
   );
-  return compressor(Buffer.concat(bodies)).byteLength;
+  return bodies.reduce((total, body) => total + compressor(body).byteLength, 0);
 }
 
 if (
