@@ -11,15 +11,16 @@ explicit embed ancestors are opt-in through `GEV_EMBED_FRAME_ANCESTORS` and
 `?embed=1`. Previous roots can provide only manifest-owned immutable assets.
 The release staging script includes the host, provider/source modules and
 shared headers, with `ws` declared as a runtime dependency. Node-only host
-checks pass; packaged `npm ci --omit=dev` startup and Vite integration remain
-pending because local dependency installation is incomplete.
+checks pass. A clean install and production build now pass on VM105; an
+unpacked production-only dependency install and actual HTTP startup/shutdown
+smoke also pass. The live service remains on its verified release.
 
 The host correction hardens this boundary with Node's dotenv parser, startup
 manifest fail-closed behavior, cached manifest maps, symlink rejection, GET and
 HEAD gating, range suffix handling, stream error handling, strong encoding
 specific ETags, and embed framing that removes X-Frame-Options only when the
 shared embed-document policy permits it. Focused host tests cover these paths;
-packaged dependency startup remains pending VM validation.
+packaged dependency startup and route checks subsequently passed on VM105.
 
 ## S64 bounded diagnostics and Auto eligibility — October 18, 2026
 

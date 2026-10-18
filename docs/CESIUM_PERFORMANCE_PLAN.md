@@ -30,24 +30,31 @@ DPR, SSE1, MSAA/effects/populations, storage, evidence and camera identity stay
 in force; unavailable physical Mac/discrete-GPU and human-accessibility evidence
 remain explicitly unverified.
 
-S61 status is separated as follows: implementation is present in the harness and
-documentation; automatic focused checks pass; VM dependency-backed build and
-checks are available, while the primary Windows comparison remains pending.
-No stable publication, human review, or performance-objective achievement is
-inferred from this slice.
+Build storage and Linux validation now run in an isolated directory on VM105.
+The production service continues to use its verified release. A clean Node 26
+install and the production build passed at `c8918393`; the unpacked
+`3aaeb656` production package passed `npm ci --omit=dev`, startup,
+HTTP/API/setup-route checks and shutdown. The VM's virtual CPU lacks the
+instructions required by the image-test dependency, so complete native image
+checks run on standard GitHub runners. Nesting LXC inside this VM would retain
+that CPU restriction and does not help the Windows GPU measurements.
 
-| Slice | Deliverable and primary files/gates                                                                    | Engineering                                               | Automatic                                            | Primary evidence                |
-| ----- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------- |
-| S61   | Frozen upstream merge, evidence ledger, native profile; capture/common observer, paired report, matrix | implemented                                               | focused pass; dependency suites pending              | pending shared matrix           |
-| S62   | Deterministic Cesium paths, gzip/br, immutable caches                                                  | implemented                                               | focused helper pass; Vite build pending dependencies | pending build artifact evidence |
-| S63   | Production Node HTTP host and security behavior                                                        | pending                                                   | pending                                              | pending                         |
-| S64   | Bounded diagnostics and Auto eligibility                                                               | implemented (`266c2c43`)                                  | focused checks authored; VM integration pending      | pending shared matrix           |
-| S65   | Remove unchanged still CCTV demand; retain continuous video/fades and cleanup                          | implemented (`1ac2fadf`, follow-up under review)          | focused behavior checks pending VM run               | pending shared matrix           |
-| S66   | Hidden HUD work suppression with cadence preservation                                                  | implemented (`4b7db519`, `b8aa48e9`)                      | HUD phase test authored; VM suite pending            | pending shared matrix           |
-| S67   | Async locale preparation and explicit catalog retry                                                    | implemented (`ec2b48e0`, `70775333`)                      | 19 locale checks pass; full VM/build pending         | pending shared matrix           |
-| S68   | Lazy heavy voice adapter with shared runner correctness                                                | decision pending; audit added (`audit-bundle-chunks.mjs`) | VM bundle/correctness evidence pending               | pending shared matrix           |
-| S69   | Exact Node 24/26 CI, eight-row Windows matrix, attestation                                             | pending                                                   | pending                                              | pending                         |
-| S70   | Private VM105 staging, HTTPS/API verification, final soak and rollback                                 | pending                                                   | pending                                              | pending                         |
+Implementation, automated validation and primary Windows evidence remain
+separate. Draft PR #6 runs the broader integration checks; no stable publication,
+human review or performance-objective achievement is inferred from a build pass.
+
+| Slice | Deliverable | Engineering | Automatic validation | Primary evidence |
+| --- | --- | --- | --- | --- |
+| S61 | Frozen upstream reconciliation; native/legacy capture profiles | implemented; profile corrections `c8918393` | 66 profile/map/matrix checks pass; full CI pending | pending shared matrix |
+| S62 | Patched Cesium content paths, gzip/Brotli, cache manifest | implemented | clean VM production build passes | pending candidate artifact verification |
+| S63 | Production Node HTTP host and release packaging | implemented; host corrections `9db16e2f` | 26 focused checks; unpacked production-only install and HTTP smoke pass | pending deployment verification |
+| S64 | Bounded diagnostics and Auto sample eligibility | implemented; availability corrections `3aaeb656` | 17 diagnostics/policy checks pass | pending shared matrix |
+| S65 | Owned still-camera refresh, final frame, video/fade preservation | implemented; lifecycle correction `7aacac04` | 116 CCTV/profile checks pass on VM Node 26 | pending shared matrix |
+| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | focused phase tests authored; full CI pending | pending shared matrix |
+| S67 | Async locale preparation, races and retry | implemented | 19 locale checks pass; VM build passes | pending startup/browser checks |
+| S68 | Measure and evaluate voice adapter splitting | decision pending; bundle audit implemented | audit unit checks pass; actual bundle analysis in progress | pending comparison/decision |
+| S69 | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | in progress | draft PR checks in progress | pending Windows matrix |
+| S70 | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | pending candidate | isolated VM storage and production package smoke verified | pending deployment and final soak |
 
 ## Matrix execution update - 16 October 2026
 

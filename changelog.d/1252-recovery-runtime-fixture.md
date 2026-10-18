@@ -1,0 +1,1 @@
+Portable recovery fixtures now copy the same declared production runtime files as the release packager, so staging validates a complete current package while still rejecting missing files and corrupted updates.
