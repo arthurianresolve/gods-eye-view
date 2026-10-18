@@ -46,6 +46,7 @@ export async function runMixedUseSoak({
   checkpointIntervalMs = 5 * 60_000,
   intervalMs = 250,
   recordingBundleOut = null,
+  location = null,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
@@ -55,6 +56,7 @@ export async function runMixedUseSoak({
     browserOptions,
     expectedCommit,
     prewarmApplication,
+    location,
   });
   let report, runFailure;
   const exportRecordingBundle = async () => {
@@ -106,6 +108,7 @@ export async function runMixedUseSoak({
       graphics: driver.graphics || null,
       renderingEvidence: driver.renderingEvidence || null,
       environment: driver.environment || null,
+      location: driver.location || null,
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
       startupPrewarm: driver.startupPrewarm || null,
@@ -250,6 +253,11 @@ if (
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
       recordingBundleOut: value('--recording-bundle-out', null),
+      location: {
+        latitude: Number(value('--latitude', 40.7)),
+        longitude: Number(value('--longitude', -73.9)),
+        altitude: Number(value('--altitude', 1000)),
+      },
       browserOptions: hasFlag('--headed')
         ? {
             headless: false,

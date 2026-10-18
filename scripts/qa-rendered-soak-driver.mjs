@@ -23,6 +23,32 @@ import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture
 import { createRecordingBundle } from '../src/recording/bundle.js';
 
 const RENDERED_WORKSPACE_TIMEOUT_MS = 120_000;
+const DEFAULT_SOAK_LOCATION = Object.freeze({
+  latitude: 40.7,
+  longitude: -73.9,
+  altitude: 1000,
+});
+
+/** Normalize the fixture's geographic center so soak evidence names its view. */
+export function resolveRenderedSoakLocation(location = {}) {
+  const normalized = {
+    latitude: Number(location.latitude ?? DEFAULT_SOAK_LOCATION.latitude),
+    longitude: Number(location.longitude ?? DEFAULT_SOAK_LOCATION.longitude),
+    altitude: Number(location.altitude ?? DEFAULT_SOAK_LOCATION.altitude),
+  };
+  if (
+    !Number.isFinite(normalized.latitude) ||
+    normalized.latitude < -90 ||
+    normalized.latitude > 90 ||
+    !Number.isFinite(normalized.longitude) ||
+    normalized.longitude < -180 ||
+    normalized.longitude > 180 ||
+    !Number.isFinite(normalized.altitude) ||
+    normalized.altitude <= 0
+  )
+    throw new TypeError('Rendered soak location is invalid.');
+  return normalized;
+}
 
 export function isRecoverableApplicationPrewarmFailure(error) {
   const state = error?.fixtureStartupDiagnostics?.state;
@@ -75,8 +101,14 @@ async function prewarmRenderedApplication(browser, base) {
 /** Exercise the actual application, renderer, layer lifecycle and UI controllers. */
 export async function createRenderedSoakDriver(
   base,
-  { browserOptions = {}, expectedCommit, prewarmApplication = false } = {},
+  {
+    browserOptions = {},
+    expectedCommit,
+    prewarmApplication = false,
+    location,
+  } = {},
 ) {
+  const soakLocation = resolveRenderedSoakLocation(location);
   const browser = await launchFixtureBrowser(browserOptions);
   const closeBrowser = createOwnedSoakCloser(browser);
   let startupPrewarm = null;
@@ -128,7 +160,10 @@ export async function createRenderedSoakDriver(
                   properties: { name: 'Synthetic datacenter ' + n },
                   geometry: {
                     type: 'Point',
-                    coordinates: [-73.9 + n * 0.002, 40.7],
+                    coordinates: [
+                      soakLocation.longitude + n * 0.002,
+                      soakLocation.latitude,
+                    ],
                   },
                 }),
               ).join('\n'),
@@ -142,8 +177,8 @@ export async function createRenderedSoakDriver(
                 sourceKind: 'configured',
                 url: 'https://example.test/frame',
                 credit: 'https://example.test/camera',
-                lat: 40.7,
-                lon: -73.9 + n * 0.001,
+                lat: soakLocation.latitude,
+                lon: soakLocation.longitude + n * 0.001,
                 feedType: 'image',
                 headingDeg: 90,
                 fovDeg: 60,
@@ -620,13 +655,13 @@ export async function createRenderedSoakDriver(
       // Real proxy-shaped health, image delivery/decoding and automatic alternative.
       console.log('SOAK camera outage');
       cameraFailure = true;
-      await page.evaluate(async () => {
+      await page.evaluate(async (location) => {
         const app = window.__godsEyeView;
         await app.dataManager.setEnabled('cctv', true);
         const destination = app.viewer.camera.position.constructor.fromDegrees(
-          -73.9,
-          40.7,
-          1000,
+          location.longitude,
+          location.latitude,
+          location.altitude,
         );
         const current = app.viewer.camera.position;
         // Reapplying an identical Cesium view starts another terrain quadtree
@@ -641,7 +676,7 @@ export async function createRenderedSoakDriver(
         app.dataManager.layers
           .get('cctv')
           .module.setParams({ autoHop: false, showProjection: true });
-      });
+      }, soakLocation);
       // Exercise the real visibility lifecycle, then cross the serialized
       // refresh boundary so the assertion observes a provider response made
       // after the fixture changed state.
@@ -816,6 +851,7 @@ export async function createRenderedSoakDriver(
       page,
       warmupIterations: 2,
       scope: 'rendered-application-fixtures',
+      location: soakLocation,
       workerPreflight,
       applicationCommit,
       renderer,

@@ -8,7 +8,10 @@ import {
   resolveExpectedApplicationCommit,
   runMixedUseSoak,
 } from './qa-mixed-use-soak.mjs';
-import { isRecoverableApplicationPrewarmFailure } from './qa-rendered-soak-driver.mjs';
+import {
+  isRecoverableApplicationPrewarmFailure,
+  resolveRenderedSoakLocation,
+} from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
@@ -47,6 +50,25 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
       },
     },
   },
+});
+
+test('rendered soak location accepts Ampfing coordinates and rejects invalid views', () => {
+  assert.deepEqual(
+    resolveRenderedSoakLocation({
+      latitude: 48.2582,
+      longitude: 12.421,
+      altitude: 731,
+    }),
+    { latitude: 48.2582, longitude: 12.421, altitude: 731 },
+  );
+  assert.throws(
+    () => resolveRenderedSoakLocation({ latitude: 91 }),
+    /location is invalid/,
+  );
+  assert.throws(
+    () => resolveRenderedSoakLocation({ altitude: 0 }),
+    /location is invalid/,
+  );
 });
 
 test('workspace/import phase diagnostics serialize and omit URLs and payloads', () => {
