@@ -128,6 +128,9 @@ export async function validateFinalVisualQualification(
   assert.equal(report.environment?.foregroundConfirmed, true);
   assert.ok(typeof report.environment?.renderer?.vendor === 'string' && report.environment.renderer.vendor);
   assert.match(report.environment?.renderer?.device || '', /UHD\s*620/i);
+  assert.match(`${report.environment.renderer.vendor} ${report.environment.renderer.device}`, /ANGLE/i);
+  assert.match(`${report.environment.renderer.vendor} ${report.environment.renderer.device}`, /Direct3D\s*11|D3D11/i);
+  assert.ok(typeof report.environment.renderer.browserVersion === 'string' && report.environment.renderer.browserVersion);
   assertProfile(report.environment?.nativeSharpnessProfile, 'environment');
   assert.ok(Array.isArray(report.environment?.populations));
   assert.ok(report.environment?.camera?.id);

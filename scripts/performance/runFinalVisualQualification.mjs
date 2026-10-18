@@ -157,6 +157,9 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   let page;
   let prepared;
   let foregroundSession;
+  let failure = null;
+  let stage = 'launch';
+  let states = [];
   let observedProfile = null;
   try {
     const context = await browser.createBrowserContext();
@@ -197,7 +200,12 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
     if (!Number.isSafeInteger(browserPid)) throw new Error('Browser PID unavailable for foreground proof.');
     foregroundSession = createWindowsForegroundActivationSession({ browserPid });
     await foregroundSession.start({ timeoutMs: 15_000 });
-    const states = [];
+    stage = 'capture-states';
+    await page.waitForFunction(() => {
+      const module = window.__godsEyeView?.dataManager?.layers?.get('cctv')?.module;
+      const camera = module?.getUIState?.()?.cameras?.find((item) => item.active);
+      return camera?.id === 'qa-cctv-lifecycle-camera-001' && camera.decodeStatus === 'ok' && Number.isFinite(camera.decodeLastSuccessAt);
+    }, { timeout: 15_000, polling: 100 });
     for (const id of STATES) {
       if (id === 'hud-visible' || id === 'hud-restored') {
         const result = await page.evaluate(() => window.__godsEyeView?.styleManager?.setHudVisible?.('on'));
@@ -219,7 +227,10 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));
       states.push({ id, completedRender, foreground, ...observed, [label]: png });
     }
-    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserClosed: false };
+    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version(), browserClosed: false };
+  } catch (error) {
+    failure = error;
+    throw error;
   } finally {
     let teardownError = null;
     try {
@@ -236,6 +247,9 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       await browser.close();
     } catch (error) {
       teardownError ||= error;
+    }
+    if (failure) {
+      await fs.writeFile(path.join(out, `final-visual-${label}-partial.json`), JSON.stringify({ schema: 'gev-final-visual-qualification/partial-v1', label, stage, error: { name: failure.name, message: String(failure.message).slice(0, 500) }, completedStates: states, teardown: { browserClosed: true, error: teardownError ? String(teardownError.message).slice(0, 500) : null } }, null, 2));
     }
     if (teardownError) throw new Error('Visual qualification teardown was not confirmed.', { cause: teardownError });
   }
@@ -274,6 +288,12 @@ export async function produceFinalVisualQualification(options) {
       throw new Error(`Baseline/candidate observed state differs for ${STATES[index]}.`);
   }
   const environment = baseline.states[0];
+  if (baseline.browserVersion !== candidate.browserVersion)
+    throw new Error('Baseline/candidate browser versions differ.');
+  const baselineRenderer = baseline.states[0].checkpoint.renderer;
+  const candidateRenderer = candidate.states[0].checkpoint.renderer;
+  if (JSON.stringify(baselineRenderer) !== JSON.stringify(candidateRenderer))
+    throw new Error('Baseline/candidate renderer identities differ.');
   const report = {
     schema: 'gev-final-visual-qualification/v1',
     harness: { baselineSha: options['harness-sha'], candidateSha: options['harness-sha'], buildHarnessCommit: options['harness-sha'], visualHarnessCommit: options['visual-harness-sha'] },
@@ -284,11 +304,12 @@ export async function produceFinalVisualQualification(options) {
       renderer: {
         vendor: environment.checkpoint.renderer?.vendor,
         device: environment.checkpoint.renderer?.name,
+        browserVersion: baseline.browserVersion,
       },
       nativeSharpnessProfile: environment.profile,
       populations: [{ id: 'cctv', enabled: true, count: environment.populations.cctv }],
       camera: { id: fixture.cameraId, ...environment.camera },
-      foregroundConfirmed: true,
+      foregroundConfirmed: baseline.states.every((state) => state.foreground.foregroundConfirmed === true) && candidate.states.every((state) => state.foreground.foregroundConfirmed === true),
     },
     masks: [],
     states: STATES.map((id, index) => ({
