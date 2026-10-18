@@ -362,6 +362,20 @@ const fixtureTimeoutMs = Math.max(
   Math.min(180_000, Number(option('--fixture-timeout-ms', '90000')) || 90_000),
 );
 const out = option('--out', null);
+// Diagnostic-only raw frame trace. It is intentionally opt-in and excluded
+// from normal comparison reports because per-frame records add measurable
+// serialization overhead.
+const frameTraceOut = option('--frame-trace-out', null);
+if (
+  args.includes('--frame-trace-out') &&
+  (!frameTraceOut || frameTraceOut.startsWith('--'))
+)
+  throw new Error(
+    '--frame-trace-out requires a separate diagnostic output path.',
+  );
+if (frameTraceOut && out && path.resolve(frameTraceOut) === path.resolve(out))
+  throw new Error('--frame-trace-out must differ from --out.');
+const frameTraceEnabled = Boolean(frameTraceOut);
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
@@ -4761,6 +4775,7 @@ try {
           delay,
           recordFrameWindow,
           expectedRunOrdinal,
+          frameTraceEnabled,
         }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
@@ -4779,21 +4794,87 @@ try {
           document.addEventListener('visibilitychange', onVisibility);
           const intervals = [];
           const longTasks = [];
+          const longTaskTrace = frameTraceEnabled ? [] : null;
           let previous = null;
           let renderedFrameCount = 0;
+          let lastPreRenderAt = null;
+          const frameTrace = frameTraceEnabled ? [] : null;
+          const boundedDiagnosticLabel = (value) => {
+            if (typeof value === 'string') return value.slice(0, 96);
+            if (
+              value == null ||
+              typeof value === 'number' ||
+              typeof value === 'boolean'
+            )
+              return String(value);
+            try {
+              return JSON.stringify(value).slice(0, 96);
+            } catch {
+              return null;
+            }
+          };
+          const onPreRender = () => {
+            if (frameTrace && frameTrace.length < 4096)
+              lastPreRenderAt = performance.now();
+          };
           const onRender = () => {
             renderedFrameCount += 1;
             const now = performance.now();
             if (previous != null) intervals.push(now - previous);
             previous = now;
+            if (frameTrace && frameTrace.length < 4096) {
+              const governor =
+                window.__godsEyeView.getRenderGovernorDiagnostics?.() || null;
+              frameTrace.push({
+                postRenderAtMs: now,
+                preRenderAtMs: lastPreRenderAt,
+                routePhaseMs:
+                  motionStartedAt == null
+                    ? null
+                    : Math.max(0, now - motionStartedAt),
+                intervalMs:
+                  frameTrace.length > 0
+                    ? now - frameTrace[frameTrace.length - 1].postRenderAtMs
+                    : null,
+                sceneRenderWallMs:
+                  lastPreRenderAt == null
+                    ? null
+                    : Math.max(0, now - lastPreRenderAt),
+                focused: document.hasFocus(),
+                visible: !document.hidden,
+                requestRenderMode: Boolean(scene.requestRenderMode),
+                governor: governor
+                  ? {
+                      mode: governor.mode ?? null,
+                      holds: Array.isArray(governor.holds)
+                        ? governor.holds
+                            .slice(0, 32)
+                            .map(boundedDiagnosticLabel)
+                        : null,
+                      scheduledUpdates: Array.isArray(governor.scheduledUpdates)
+                        ? governor.scheduledUpdates
+                            .slice(0, 32)
+                            .map(boundedDiagnosticLabel)
+                        : null,
+                    }
+                  : null,
+              });
+            }
           };
+          if (frameTrace) scene.preRender?.addEventListener?.(onPreRender);
           scene.postRender.addEventListener(onRender);
           let observer = null;
           if (typeof PerformanceObserver !== 'undefined') {
             try {
               observer = new PerformanceObserver((list) => {
-                for (const entry of list.getEntries())
+                for (const entry of list.getEntries()) {
                   longTasks.push(entry.duration);
+                  if (longTaskTrace && longTaskTrace.length < 2048)
+                    longTaskTrace.push({
+                      startTimeMs: Number(entry.startTime),
+                      durationMs: Number(entry.duration),
+                    });
+                }
               });
               observer.observe({ type: 'longtask', buffered: false });
             } catch {
@@ -4968,11 +5049,17 @@ try {
               delete window.__gevWeatherMeasurementStartedAt;
               delete window.__gevWeatherMeasurementAbort;
             }
-            observer
-              ?.takeRecords?.()
-              .forEach((entry) => longTasks.push(entry.duration));
+            observer?.takeRecords?.().forEach((entry) => {
+              longTasks.push(entry.duration);
+              if (longTaskTrace && longTaskTrace.length < 2048)
+                longTaskTrace.push({
+                  startTimeMs: Number(entry.startTime),
+                  durationMs: Number(entry.duration),
+                });
+            });
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
+            if (frameTrace) scene.preRender?.removeEventListener?.(onPreRender);
             restoreMeasurementRenderDemand();
             return {
               durationMs: performance.now() - startedAt,
@@ -4987,10 +5074,27 @@ try {
                   ? null
                   : 'no scene postRender samples in this window',
               },
+              ...(frameTrace
+                ? {
+                    frameTrace,
+                    frameTraceWindow: {
+                      timeOriginMs: performance.timeOrigin,
+                      startPerformanceNowMs: startedAt,
+                      endPerformanceNowMs: performance.now(),
+                      preRenderAvailable: Boolean(
+                        scene.preRender?.addEventListener,
+                      ),
+                      truncated: renderedFrameCount > frameTrace.length,
+                      recordedFrames: frameTrace.length,
+                      observedFrames: renderedFrameCount,
+                    },
+                  }
+                : {}),
               longTasks: {
                 count: longTasks.length,
                 maxMs: longTasks.length ? Math.max(...longTasks) : null,
               },
+              ...(longTaskTrace ? { longTaskTrace } : {}),
               memory,
               layers: [],
               totalObjects: null,
@@ -5047,6 +5151,7 @@ try {
             restoreMeasurementRenderDemand();
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
+            if (frameTrace) scene.preRender?.removeEventListener?.(onPreRender);
             window.removeEventListener('blur', onBlur);
             document.removeEventListener('visibilitychange', onVisibility);
             if (window.__gevWeatherMeasurementStartedAt === startedAt) {
@@ -5061,6 +5166,7 @@ try {
           delay: delayMs,
           recordFrameWindow: collectSceneFrameAttribution,
           expectedRunOrdinal: phaseRunOrdinal,
+          frameTraceEnabled,
         },
       );
       const samplePromise = runSceneMeasurementWithHostDeadline({
@@ -6310,6 +6416,10 @@ try {
     comparisonReadinessReasons.push(
       'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
     );
+  if (frameTraceEnabled)
+    comparisonReadinessReasons.push(
+      'diagnostic-frame-trace-instrumentation-is-ineligible-for-comparison',
+    );
   const comparisonEligible = comparisonReadinessReasons.length === 0;
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
@@ -6396,6 +6506,40 @@ try {
     process.stdout.write(`Wrote ${path.resolve(out)}\n`);
   } else {
     process.stdout.write(json);
+  }
+  if (frameTraceOut) {
+    const trace = {
+      schema: 'gev-performance-frame-trace/v1',
+      diagnosticOnly: true,
+      appCommit: source.appCommit,
+      harnessCommit: source.harnessCommit,
+      buildHarnessCommit: source.buildHarnessCommit,
+      workloadId: workload.providerFixture || workload.workloadId || null,
+      fixtureId: workload.fixtureId || null,
+      profile: comparisonProfile,
+      url: new URL(url).origin,
+      captures: captures.map((sample) => ({
+        scenario: sample.scenario,
+        run: sample.run,
+        durationMs: sample.durationMs,
+        frameTrace: sample.frameTrace || [],
+        frameTraceWindow: sample.frameTraceWindow || null,
+        longTaskTrace: sample.longTaskTrace || [],
+        longTasks: sample.longTasks || null,
+        renderDemandOwnership: sample.renderDemandOwnership || null,
+        foregroundContinuity: sample.foregroundContinuity || null,
+        cameraPath: sample.cameraPath || null,
+      })),
+      limits: { maxFramesPerCapture: 4096, maxCaptures: captures.length },
+      note: 'Diagnostic-only preRender/postRender wall times; sceneRenderWallMs is not GPU execution time.',
+    };
+    await fs.mkdir(path.dirname(path.resolve(frameTraceOut)), {
+      recursive: true,
+    });
+    await fs.writeFile(frameTraceOut, `${JSON.stringify(trace, null, 2)}\n`, {
+      flag: 'wx',
+    });
+    process.stdout.write(`Wrote ${path.resolve(frameTraceOut)}\n`);
   }
   if (nativeRendererEvidence && nativeRendererEvidence.status !== 'verified')
     process.exitCode = 2;
