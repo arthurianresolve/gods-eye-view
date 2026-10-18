@@ -115,12 +115,26 @@ async function assertPng(record, root, label) {
 export async function captureQualificationPng(page, outputPath) {
   if (!page || typeof page.screenshot !== 'function')
     throw new TypeError('A Puppeteer page is required for PNG qualification.');
-  const bytes = Buffer.from(await page.screenshot({ type: 'png' }));
+  const screenshotStartedAt = performance.now();
+  const bytes = Buffer.from(
+    await page.screenshot({ type: 'png', optimizeForSpeed: true }),
+  );
+  const screenshotElapsedMs = Math.max(
+    0,
+    performance.now() - screenshotStartedAt,
+  );
   if (bytes.length > 16 * 1024 * 1024)
     throw new Error('Qualification PNG exceeds its bounded size.');
   const dimensions = pngDimensions(bytes);
+  const fileWriteStartedAt = performance.now();
   await fs.writeFile(outputPath, bytes, { flag: 'wx' });
-  return { path: path.basename(outputPath), sha256: sha256(bytes), dimensions };
+  return {
+    path: path.basename(outputPath),
+    sha256: sha256(bytes),
+    dimensions,
+    screenshotElapsedMs,
+    fileWriteElapsedMs: Math.max(0, performance.now() - fileWriteStartedAt),
+  };
 }
 
 export async function validateFinalVisualQualification(

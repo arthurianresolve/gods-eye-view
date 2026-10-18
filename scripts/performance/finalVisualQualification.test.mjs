@@ -9,6 +9,7 @@ import {
   FINAL_VISUAL_QUALIFICATION_SCHEMA,
   FINAL_VISUAL_STATES,
   FINAL_VISUAL_TIME_MS,
+  captureQualificationPng,
   validateFinalVisualQualification,
 } from './finalVisualQualification.mjs';
 
@@ -191,6 +192,27 @@ test('accepts complete matched hardware observations and decoded PNGs', async (t
     await validateFinalVisualQualification(report, { evidenceRoot: root }),
     { schema: report.schema, status: 'passed', states: 4 },
   );
+});
+
+test('captures lossless PNG with speed optimization and separate timing metadata', async (t) => {
+  const png = await createPng();
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gev-final-png-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let options;
+  const record = await captureQualificationPng(
+    {
+      async screenshot(value) {
+        options = value;
+        return png;
+      },
+    },
+    path.join(root, 'capture.png'),
+  );
+  assert.deepEqual(options, { type: 'png', optimizeForSpeed: true });
+  assert.deepEqual(record.dimensions, dimensions);
+  assert.equal(record.sha256, digest(png));
+  assert.ok(record.screenshotElapsedMs >= 0);
+  assert.ok(record.fileWriteElapsedMs >= 0);
 });
 
 test('rejects contradictory or missing evidence at the relevant observation', async (t) => {
