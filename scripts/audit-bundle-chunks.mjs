@@ -12,8 +12,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
-
-const VOICE_OR_LOCALE = /(?:voice|realtime|i18n[\\/]|locales[\\/](?:es|ru))/i;
+import { brotliCompressSync, gzipSync } from 'node:zlib';
 
 export async function auditBundle({
   root,
@@ -25,8 +24,8 @@ export async function auditBundle({
   const records = Object.entries(manifest).sort(([a], [b]) =>
     a.localeCompare(b),
   );
-  const byFile = new Map(
-    records.map(([key, value]) => [value.file, { key, ...value }]),
+  const byKey = new Map(
+    records.map(([key, value]) => [key, { key, ...value }]),
   );
   const entries = records.filter(([, value]) => value.isEntry);
   const initial = new Set();
@@ -34,23 +33,41 @@ export async function auditBundle({
   const visit = (record, target) => {
     if (!record || target.has(record.file)) return;
     target.add(record.file);
-    for (const imported of record.imports || [])
-      visit(byFile.get(imported), target);
+    for (const imported of record.imports || []) {
+      const child = byKey.get(imported);
+      if (!child)
+        throw new Error(`manifest import key is missing: ${imported}`);
+      visit(child, target);
+    }
   };
   for (const [, entry] of entries) {
     visit(entry, initial);
-    for (const imported of entry.dynamicImports || [])
-      visit(byFile.get(imported), dynamic);
+    for (const imported of entry.dynamicImports || []) {
+      const child = byKey.get(imported);
+      if (!child)
+        throw new Error(`manifest dynamic import key is missing: ${imported}`);
+      visit(child, dynamic);
+    }
   }
   for (const file of initial) dynamic.delete(file);
   async function describe(file) {
     const bytes = await readFile(path.join(absoluteRoot, file));
+    const record = records
+      .map(([, value]) => value)
+      .find((value) => value.file === file);
+    const modules = Object.entries(record?.modules || {})
+      .map(([id, value]) => ({
+        id,
+        renderedBytes:
+          typeof value === 'number'
+            ? value
+            : (value?.renderedBytes ?? value?.renderedLength ?? null),
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
     return {
       file,
       bytes: bytes.byteLength,
-      voiceOrLocale:
-        VOICE_OR_LOCALE.test(file) ||
-        VOICE_OR_LOCALE.test(bytes.toString('utf8')),
+      modules,
     };
   }
   const [initialChunks, dynamicChunks] = await Promise.all([
@@ -66,11 +83,29 @@ export async function auditBundle({
     entries: entries
       .map(([key, value]) => ({ key, file: value.file }))
       .sort((a, b) => a.key.localeCompare(b.key)),
-    initial: { bytes: sum(initialChunks), chunks: initialChunks },
+    initial: {
+      bytes: sum(initialChunks),
+      gzipBytes: await compressedSize(initialChunks, absoluteRoot, gzipSync),
+      brotliBytes: await compressedSize(
+        initialChunks,
+        absoluteRoot,
+        brotliCompressSync,
+      ),
+      chunks: initialChunks,
+    },
     dynamic: { bytes: sum(dynamicChunks), chunks: dynamicChunks },
+    attribution:
+      'module rendered lengths are reported only when supplied by diagnostic Vite manifest metadata; no source-text attribution is inferred',
     scope:
-      'uncompressed emitted JavaScript bytes; static entry imports are initial, dynamic imports are separate; CSS/assets excluded',
+      'emitted JavaScript bytes only; static entry imports are initial, all dynamic descendants are separate; CSS/assets excluded',
   };
+}
+
+async function compressedSize(chunks, root, compressor) {
+  const bodies = await Promise.all(
+    chunks.map((chunk) => readFile(path.join(root, chunk.file))),
+  );
+  return compressor(Buffer.concat(bodies)).byteLength;
 }
 
 if (

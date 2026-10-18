@@ -21,8 +21,8 @@ test('bundle audit separates static initial imports from dynamic voice/locale ch
         'src/main.js': {
           file: 'index.js',
           isEntry: true,
-          imports: ['assets.js'],
-          dynamicImports: ['voice-lazy.js'],
+          imports: ['src/assets.js'],
+          dynamicImports: ['src/voice/realtime.js'],
         },
         'src/assets.js': { file: 'assets.js' },
         'src/voice/realtime.js': { file: 'voice-lazy.js' },
@@ -38,13 +38,34 @@ test('bundle audit separates static initial imports from dynamic voice/locale ch
       report.dynamic.bytes,
       Buffer.byteLength('export const realtime = true;'),
     );
-    assert.equal(
-      report.initial.chunks.some((chunk) => chunk.voiceOrLocale),
-      false,
+    assert.ok(report.initial.gzipBytes > 0);
+    assert.ok(report.initial.brotliBytes > 0);
+    assert.deepEqual(report.dynamic.chunks[0].modules, []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('bundle audit fails closed when a manifest graph key is missing', async () => {
+  const root = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-bundle-audit-missing-'),
+  );
+  try {
+    await mkdir(path.join(root, '.vite'), { recursive: true });
+    await writeFile(path.join(root, 'index.js'), 'export const app = true;');
+    await writeFile(
+      path.join(root, '.vite/manifest.json'),
+      JSON.stringify({
+        'src/main.js': {
+          file: 'index.js',
+          isEntry: true,
+          imports: ['missing.js'],
+        },
+      }),
     );
-    assert.equal(
-      report.dynamic.chunks.some((chunk) => chunk.voiceOrLocale),
-      true,
+    await assert.rejects(
+      auditBundle({ root }),
+      /manifest import key is missing/,
     );
   } finally {
     await rm(root, { recursive: true, force: true });

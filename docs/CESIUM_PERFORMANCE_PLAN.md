@@ -31,10 +31,10 @@ in force; unavailable physical Mac/discrete-GPU and human-accessibility evidence
 remain explicitly unverified.
 
 S61 status is separated as follows: implementation is present in the harness and
-documentation; automatic focused checks pass; full dependency-backed automatic
-gates and the primary Windows comparison remain pending until the local runtime
-has sufficient disk for its isolated dependency install. No stable publication,
-human review, or performance-objective achievement is inferred from this slice.
+documentation; automatic focused checks pass; VM dependency-backed build and
+checks are available, while the primary Windows comparison remains pending.
+No stable publication, human review, or performance-objective achievement is
+inferred from this slice.
 
 | Slice | Deliverable and primary files/gates                                                                    | Engineering                                               | Automatic                                            | Primary evidence                |
 | ----- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------- |
