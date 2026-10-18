@@ -59,6 +59,31 @@ test('capture provenance binds full application and harness SHAs to the receipt'
   await assert.rejects(capture.verifyAfterCapture(), /already ran/);
 });
 
+test('capture provenance separates producer checkout from build harness receipt', async () => {
+  const producerSha = 'e'.repeat(40);
+  const calls = [];
+  const capture = await beginCaptureBuildProvenance({
+    receipt,
+    expectedAppCommit: appSha,
+    expectedHarnessCommit: producerSha,
+    expectedBuildHarnessCommit: harnessSha,
+    captureProducerCommit: producerSha,
+    harnessRoot: 'producer-root',
+    actualHarnessRoot: 'producer-root',
+    buildHarnessRoot: 'builder-root',
+    baseUrl: 'http://127.0.0.1:4173/',
+    captureUrl: 'http://127.0.0.1:4173/',
+    verifyImpl: async (options) => {
+      calls.push(options.expectedHarnessCommit);
+      return result;
+    },
+  });
+  assert.equal(capture.source.harnessCommit, producerSha);
+  assert.equal(capture.source.captureProducerCommit, producerSha);
+  assert.equal(capture.source.buildHarnessCommit, harnessSha);
+  assert.deepEqual(calls, [harnessSha]);
+});
+
 test('capture provenance rejects wrong SHAs and changes between the two served checks', async () => {
   await assert.rejects(
     beginCaptureBuildProvenance({

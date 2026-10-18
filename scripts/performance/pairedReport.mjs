@@ -972,6 +972,10 @@ function validateBuildProvenance(source, side) {
     source.harnessCommit,
     `${side}: receipt harness SHA mismatch`,
   );
+  assert.match(provenance.captureProducerCommit || provenance.harnessCommit, SHA1, `${side}: capture producer SHA missing`);
+  assert.equal(provenance.captureProducerCommit || provenance.harnessCommit, source.harnessCommit, `${side}: capture producer SHA mismatch`);
+  if (provenance.buildHarnessCommit)
+    assert.match(provenance.buildHarnessCommit, SHA1, `${side}: build harness SHA malformed`);
   assert.match(
     provenance.scope || '',
     /browser response bytes are not independently attested/,
@@ -1665,6 +1669,8 @@ export function validatePairedPerformanceReports({
     candidate.source.harnessCommit,
     'Harness revisions must match',
   );
+  if (baseline.source.buildProvenance?.buildHarnessCommit || candidate.source.buildProvenance?.buildHarnessCommit)
+    assert.equal(baseline.source.buildProvenance?.buildHarnessCommit, candidate.source.buildProvenance?.buildHarnessCommit, 'Build harness revisions must match');
   for (const key of [
     'nodeVersion',
     'npmVersion',

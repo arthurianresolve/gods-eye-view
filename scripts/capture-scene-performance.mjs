@@ -385,9 +385,11 @@ const buildProvenanceOptions = {
   receipt: option('--build-receipt', null),
   checkoutRoot: option('--app-checkout', null),
   harnessRoot: option('--harness-checkout', null),
+  buildHarnessRoot: option('--build-harness-checkout', null),
   buildRoot: option('--build-root', null),
   expectedAppCommit: option('--expected-app-sha', null),
   expectedHarnessCommit: option('--expected-harness-sha', null),
+  expectedBuildHarnessCommit: option('--expected-build-harness-sha', null),
   baseUrl: option('--served-base-url', null),
 };
 const buildProfileOptionIndex = args.indexOf('--build-profile');
@@ -412,6 +414,12 @@ if (mapStreamingWorkloadSelected && workerAuditMode !== 'diagnostic')
 const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
   Boolean,
 );
+if ((buildProvenanceOptions.buildHarnessRoot && !buildProvenanceOptions.expectedBuildHarnessCommit) || (!buildProvenanceOptions.buildHarnessRoot && buildProvenanceOptions.expectedBuildHarnessCommit))
+  throw new Error('--build-harness-checkout and --expected-build-harness-sha must be supplied together.');
+if (buildProvenanceEnabled && !buildProvenanceOptions.buildHarnessRoot)
+  buildProvenanceOptions.buildHarnessRoot = buildProvenanceOptions.harnessRoot;
+if (buildProvenanceEnabled && !buildProvenanceOptions.expectedBuildHarnessCommit)
+  buildProvenanceOptions.expectedBuildHarnessCommit = buildProvenanceOptions.expectedHarnessCommit;
 if (
   buildProvenanceEnabled &&
   Object.values(buildProvenanceOptions).some((value) => !value)
@@ -562,6 +570,7 @@ if (buildProvenanceEnabled) {
     actualHarnessRoot,
     captureUrl: url,
     expectedBuildProfile,
+    captureProducerCommit: harnessSource.commit,
   });
   const bundlePath = resolveCesiumBundlePath(buildReceipt.assets);
   captureWorkerContract = deriveCesiumEmbeddedWorkerContract({
@@ -588,7 +597,8 @@ if (infrastructureWorkloadSelected) {
     );
 }
 const source = {
-  harnessCommit: harnessSource.commit,
+  harnessCommit: captureProvenance?.source.captureProducerCommit || harnessSource.commit,
+  buildHarnessCommit: captureProvenance?.source.buildHarnessCommit || null,
   harnessDirtyWorktree: harnessSource.dirtyWorktree,
   appCommit:
     captureProvenance?.source.appCommit ||
