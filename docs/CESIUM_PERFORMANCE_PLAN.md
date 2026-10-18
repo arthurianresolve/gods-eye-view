@@ -182,6 +182,17 @@ the isolated test result and input hashes are stored in
 `native-soak-review-20261018T184655812Z`. Physical execution of this option remains
 pending and will be reported separately from the 1,440 × 900 comparison matrix.
 
+Consumer revision `028ee57f` fixes idle-cadence classification. The previous
+consumer applied the motion regression threshold to idle frame intervals, even
+though request-render scheduling intentionally omits unchanged frames. The raw
+medians and changes remain recorded; only idle cadence is classified as a
+measurement outside the motion-latency gate. Scripted motion, tracking and map
+regressions still fail. All 91 paired-report, manifest and matrix tests pass on
+VM105 with both supported Node versions. Re-evaluating the hash-verified original
+operating reports preserves the measured +80.8% idle interval change and -0.5%
+motion change, with no motion regression. The running matrix remains on its
+frozen producer; final analysis must name this separate consumer revision.
+
 ## Matrix execution update - 16 October 2026
 
 The final S60 matrix now has one executable, fail-closed schedule. The

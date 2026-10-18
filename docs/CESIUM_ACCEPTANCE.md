@@ -99,6 +99,11 @@ denominator is unchanged.
   250 ms. A repeatable regression above 10% in motion p95, activation, peak heap
   or retained resources blocks acceptance of the affected optimization until it
   is fixed or reverted. An inconclusive comparison remains pending.
+- Idle rendered-frame intervals describe render demand, not motion latency.
+  Preserve their raw medians and percentage changes without applying the motion
+  regression gate to them. Longer idle intervals can reflect fewer unchanged
+  frames; they do not by themselves prove reduced GPU power or correct periodic
+  animation. Existing cadence, functional and retention checks still apply.
 - Keep the separate 60-minute mixed-use retention run and final 30-minute heap
   growth limit of 5%. Application-owned resources must return to their equivalent
   warmed checkpoints; there must be no abandoned jobs or persistent ownership
