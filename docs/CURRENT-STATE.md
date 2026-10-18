@@ -6007,6 +6007,16 @@ framing policy, and gates API requests with the shared Host allowlist. Static
 responses support byte-identified gzip/Brotli, conditional GET/HEAD and bounded
 ranges. Shutdown drains connections with a deadline and fires provider cleanup.
 
+The first deployment with content-digested Cesium paths can retain a verified
+copy of the previous distribution through `GEV_PREVIOUS_ASSET_ROOTS`. Besides
+declared immutable assets, only manifest-listed legacy `Cesium.js`, Workers,
+Assets, ThirdParty and Widgets files with distribution file types are eligible.
+Legacy paths use `no-cache` and conditional validation; current assets take
+precedence. Old HTML, configuration, unlisted files and directory escapes stay
+unavailable. Provision the retained copy and its manifest separately; do not
+modify an already verified release or add files to the new attested artifact.
+Fourteen production-host tests pass, including old-tab worker/texture delivery.
+
 The release packager includes the provider registry's runtime helpers and keeps
 historical recovery packages readable. The focused Windows Node 24 host/staging
 suite passes 26 checks. VM105 clean unpacked production installation and the

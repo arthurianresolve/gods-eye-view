@@ -224,6 +224,20 @@ async function regularFile(file, root = null) {
   return info?.isFile() && !info.isSymbolicLink() ? info : null;
 }
 
+// Pre-digest releases used these public Cesium URLs. An already-open tab can
+// request another worker or texture after deployment. Keep only manifest-listed
+// distribution assets reachable from an explicitly retained root; these URLs
+// must revalidate because they do not carry a content digest.
+function isLegacyCesiumAsset(relative) {
+  return (
+    relative === 'cesium/Cesium.js' ||
+    (/^cesium\/(?:Assets|Workers|ThirdParty|Widgets)\//.test(relative) &&
+      /\.(?:js|css|json|png|jpe?g|gif|svg|wasm|ktx2|xml|woff2?)$/.test(
+        relative,
+      ))
+  );
+}
+
 export function createStaticHandler({ root, previousRoots = [] } = {}) {
   const currentRoot = path.resolve(root);
   const previous = previousRoots.map((item) => path.resolve(item));
@@ -275,7 +289,9 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
       for (const { root: candidate, records: candidateIndex } of older) {
         const candidateRecord = candidateIndex.get(relative);
         if (
-          candidateRecord?.cache === 'immutable' &&
+          (candidateRecord?.cache === 'immutable' ||
+            (candidateRecord?.cache === 'revalidate' &&
+              isLegacyCesiumAsset(relative))) &&
           (await regularFile(path.join(candidate, relative), candidate))
         ) {
           record = candidateRecord;

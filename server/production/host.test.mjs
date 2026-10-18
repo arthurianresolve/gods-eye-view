@@ -224,6 +224,73 @@ test('previous releases serve only declared immutable assets', async (t) => {
   assert.equal((await request(instance, '/.env')).status, 404);
 });
 
+test('retained legacy Cesium workers and textures revalidate while other old paths stay private', async (t) => {
+  const legacy = {
+    'cesium/Cesium.js': 'legacy engine',
+    'cesium/Workers/createGeometry.js': 'legacy worker',
+    'cesium/Assets/Textures/pin.png': 'legacy texture',
+    'cesium/Widgets/widgets.css': 'legacy CSS',
+    'cesium/ThirdParty/draco.wasm': 'legacy decoder',
+  };
+  const previous = await fixture(t, {
+    'index.html': 'old application',
+    'config.json': 'old configuration',
+    'cesium/private.json': 'not a distribution path',
+    'cesium/Assets/preview.html': 'not a distribution asset type',
+    ...legacy,
+  });
+  const current = await fixture(t, { 'index.html': 'current application' });
+  const instance = await serve(t, current, { previousRoots: [previous] });
+  for (const [file, expected] of Object.entries(legacy)) {
+    const response = await request(instance, `/${file}`);
+    assert.equal(response.status, 200, file);
+    assert.equal(response.body.toString(), expected, file);
+    assert.equal(response.headers['cache-control'], 'no-cache', file);
+    const revalidated = await request(instance, `/${file}`, {
+      'if-none-match': response.headers.etag,
+    });
+    assert.equal(revalidated.status, 304, file);
+  }
+  await writeFile(
+    path.join(previous, 'cesium/Workers/unlisted.js'),
+    'not listed',
+  );
+  for (const file of [
+    'config.json',
+    'cesium/private.json',
+    'cesium/Assets/preview.html',
+    'cesium/Workers/unlisted.js',
+  ]) {
+    assert.equal((await request(instance, `/${file}`)).status, 404, file);
+  }
+  const withoutRetention = await serve(t, current);
+  assert.equal(
+    (await request(withoutRetention, '/cesium/Cesium.js')).status,
+    404,
+  );
+  assert.equal(
+    (await request(instance)).body.toString(),
+    'current application',
+  );
+});
+
+test('current Cesium assets take precedence over retained legacy files', async (t) => {
+  const file = 'cesium/Workers/createGeometry.js';
+  const previous = await fixture(t, {
+    'index.html': 'old',
+    [file]: 'old worker',
+  });
+  const current = await fixture(t, {
+    'index.html': 'new',
+    [file]: 'current worker',
+  });
+  const instance = await serve(t, current, { previousRoots: [previous] });
+  assert.equal(
+    (await request(instance, `/${file}`)).body.toString(),
+    'current worker',
+  );
+});
+
 test('symlinked parent escape is refused even for a manifest-listed asset', async (t) => {
   const root = await fixture(t, { 'index.html': 'app' });
   const outside = await fixture(t, { 'secret.js': 'private' });
