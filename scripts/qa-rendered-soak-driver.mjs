@@ -44,6 +44,10 @@ export function readNativeResolutionEvidenceInPage() {
       width: canvas.width,
       height: canvas.height,
     },
+    sceneDrawingBuffer: {
+      width: viewer.scene.drawingBufferWidth,
+      height: viewer.scene.drawingBufferHeight,
+    },
     resolutionScale: viewer.resolutionScale,
     useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
     maximumScreenSpaceError: globe.maximumScreenSpaceError,
@@ -54,11 +58,16 @@ export function assertNativeResolutionEvidence(
   evidence,
   expectedDpr,
   label,
-  expectedSettings = null,
+  expectedGeometry = null,
 ) {
-  if (!Number.isFinite(expectedDpr) || expectedDpr <= 0)
+  if (typeof expectedDpr !== 'number' || !Number.isFinite(expectedDpr) || expectedDpr <= 0)
     throw new TypeError('Native device pixel ratio is invalid.');
-  if (Math.abs(evidence?.devicePixelRatio - expectedDpr) > 0.01)
+  if (
+    typeof evidence?.devicePixelRatio !== 'number' ||
+    !Number.isFinite(evidence.devicePixelRatio) ||
+    evidence.devicePixelRatio <= 0 ||
+    Math.abs(evidence.devicePixelRatio - expectedDpr) > 0.01
+  )
     throw new Error(`${label} native device pixel ratio changed.`);
   if (
     typeof evidence?.useBrowserRecommendedResolution !== 'boolean' ||
@@ -66,8 +75,12 @@ export function assertNativeResolutionEvidence(
     !Number.isFinite(evidence?.maximumScreenSpaceError)
   )
     throw new Error(`${label} native sharpness settings are unavailable.`);
+  const expectedSettings = expectedGeometry?.settings || {
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+  };
   if (
-    expectedSettings &&
     (evidence.useBrowserRecommendedResolution !==
       expectedSettings.useBrowserRecommendedResolution ||
       evidence.resolutionScale !== expectedSettings.resolutionScale ||
@@ -75,15 +88,23 @@ export function assertNativeResolutionEvidence(
   )
     throw new Error(`${label} native sharpness settings changed.`);
   const canvas = evidence?.canvas;
-  const expectedWidth = Math.floor(canvas?.clientWidth * expectedDpr);
-  const expectedHeight = Math.floor(canvas?.clientHeight * expectedDpr);
+  const expectedCanvas = expectedGeometry?.canvas || {
+    clientWidth: 1440,
+    clientHeight: 1000,
+    width: Math.floor(1440 * expectedDpr),
+    height: Math.floor(1000 * expectedDpr),
+  };
   if (
     !Number.isInteger(canvas?.clientWidth) ||
     !Number.isInteger(canvas?.clientHeight) ||
     canvas.clientWidth <= 0 ||
     canvas.clientHeight <= 0 ||
-    canvas.width !== expectedWidth ||
-    canvas.height !== expectedHeight
+    canvas.clientWidth !== expectedCanvas.clientWidth ||
+    canvas.clientHeight !== expectedCanvas.clientHeight ||
+    canvas.width !== expectedCanvas.width ||
+    canvas.height !== expectedCanvas.height ||
+    evidence.sceneDrawingBuffer?.width !== canvas.width ||
+    evidence.sceneDrawingBuffer?.height !== canvas.height
   )
     throw new Error(`${label} native drawing buffer differs from CSS size.`);
   return evidence;

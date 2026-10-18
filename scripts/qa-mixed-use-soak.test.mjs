@@ -88,7 +88,13 @@ test('native soak viewport is opt-in and validates the observed DPR/buffer', () 
   assert.throws(() => resolveNativeSoakViewport(0), /device pixel ratio/);
   const evidence = {
     devicePixelRatio: 2,
-    canvas: { clientWidth: 1440, clientHeight: 1000, width: 2880, height: 2000 },
+    canvas: {
+      clientWidth: 1440,
+      clientHeight: 1000,
+      width: 2880,
+      height: 2000,
+    },
+    sceneDrawingBuffer: { width: 2880, height: 2000 },
     resolutionScale: 1,
     useBrowserRecommendedResolution: false,
     maximumScreenSpaceError: 1,
@@ -102,15 +108,23 @@ test('native soak viewport is opt-in and validates the observed DPR/buffer', () 
     () => assertNativeResolutionEvidence(evidence, 1, 'test'),
     /device pixel ratio/,
   );
+  for (const value of [undefined, Number.NaN, '2'])
+    assert.throws(
+      () => assertNativeResolutionEvidence({ ...evidence, devicePixelRatio: value }, 2, 'test'),
+      /device pixel ratio/,
+    );
+  assert.throws(
+    () => assertNativeResolutionEvidence({ ...evidence, resolutionScale: 0.5 }, 2, 'test'),
+    /sharpness settings changed/,
+  );
   assert.throws(
     () =>
       assertNativeResolutionEvidence(
-        { ...evidence, resolutionScale: 0.5 },
+        { ...evidence, canvas: { ...evidence.canvas, clientWidth: 1441 } },
         2,
         'test',
-        evidence,
       ),
-    /sharpness settings changed/,
+    /drawing buffer/,
   );
 });
 
@@ -968,6 +982,34 @@ test('soak reports completed driver operations and labels short runs as smoke', 
     status: 'passed',
     durationMs: 12,
   });
+});
+
+test('soak report preserves native resolution at initial and retained checkpoints', async () => {
+  let now = 0;
+  const initial = { observedDpr: 2, initial: { devicePixelRatio: 2 } };
+  const report = await runMixedUseSoak({
+    durationMs: 100,
+    intervalMs: 0,
+    now: () => now,
+    driver: {
+      nativeResolution: initial,
+      retainedMetrics: async () => ({ nativeResolution: { devicePixelRatio: 2 } }),
+      runCycle: async () => {
+        now += 100;
+        return {
+          sourceToggles: 1,
+          replaySeeks: 1,
+          imports: 1,
+          workspaceReloads: 1,
+          archiveFailures: 1,
+          cameraRecoveries: 1,
+        };
+      },
+    },
+  });
+  assert.deepEqual(report.nativeResolution, initial);
+  assert.equal(report.firstRetainedMetrics.nativeResolution.devicePixelRatio, 2);
+  assert.equal(report.lastRetainedMetrics.nativeResolution.devicePixelRatio, 2);
 });
 
 test('requested soak recording output is portable and reported without embedding it in the soak report', async () => {
