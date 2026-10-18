@@ -283,6 +283,11 @@ export function createApplicationViewer({
     baseLayer: false,
     creditContainer,
     msaaSamples: 4,
+    // Render at the display's native device-pixel ratio. Cesium defaults to
+    // CSS-pixel rendering, which makes imagery and labels visibly soft on
+    // HiDPI displays. The resolution guard below still caps the framebuffer
+    // when the GPU cannot support the requested native size.
+    useBrowserRecommendedResolution: false,
     // The false experiment requires matched capture and GPU evidence before
     // becoming the default. The fresh-frame path works with either setting.
     contextOptions: { webgl: { preserveDrawingBuffer } },

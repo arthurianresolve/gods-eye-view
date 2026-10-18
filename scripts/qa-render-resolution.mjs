@@ -22,7 +22,11 @@ try {
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.stack || error.message));
-  await page.setViewport({ width: 2560, height: 1440 });
+  await page.setViewport({
+    width: 2560,
+    height: 1440,
+    deviceScaleFactor: 2,
+  });
   await page.evaluateOnNewDocument(() => {
     for (const Context of [
       globalThis.WebGLRenderingContext,
@@ -80,13 +84,17 @@ try {
       textureLimit: gl.getParameter(gl.MAX_TEXTURE_SIZE),
       renderbufferLimit: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
       resolutionScale: viewer.resolutionScale,
+      useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
+      devicePixelRatio: window.devicePixelRatio,
     };
   });
   assert.equal(first.textureLimit, 2048);
   assert.equal(first.renderbufferLimit, 2048);
   assert.ok(first.width <= first.textureLimit, JSON.stringify(first));
   assert.ok(first.height <= first.renderbufferLimit, JSON.stringify(first));
-  assert.ok(first.resolutionScale < 0.8, JSON.stringify(first));
+  assert.equal(first.useBrowserRecommendedResolution, false);
+  assert.equal(first.devicePixelRatio, 2);
+  assert.ok(first.resolutionScale < 0.4, JSON.stringify(first));
 
   await page.evaluate(() => {
     window.__godsEyeView.viewer.resolutionScale = 1.5;
@@ -95,11 +103,15 @@ try {
     () => window.__godsEyeView.viewer.resolutionScale,
   );
   assert.ok(
-    constrainedScale < 0.8,
+    constrainedScale < 0.4,
     `scale escaped framebuffer cap: ${constrainedScale}`,
   );
 
-  await page.setViewport({ width: 1280, height: 720 });
+  await page.setViewport({
+    width: 600,
+    height: 360,
+    deviceScaleFactor: 2,
+  });
   await page.waitForFunction(
     () => window.__godsEyeView.viewer.resolutionScale >= 1.49,
     // Headless/background pages do not always advance requestAnimationFrame
@@ -129,12 +141,20 @@ try {
     return {
       width: viewer.canvas.width,
       height: viewer.canvas.height,
+      clientWidth: viewer.canvas.clientWidth,
+      clientHeight: viewer.canvas.clientHeight,
       scale: viewer.resolutionScale,
+      useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
+      devicePixelRatio: window.devicePixelRatio,
     };
   });
   assert.ok(resized.width <= 2048, JSON.stringify(resized));
   assert.ok(resized.height <= 2048, JSON.stringify(resized));
   assert.equal(resized.scale, 1.5);
+  assert.equal(resized.useBrowserRecommendedResolution, false);
+  assert.equal(resized.devicePixelRatio, 2);
+  assert.equal(resized.width, resized.clientWidth * 3);
+  assert.equal(resized.height, resized.clientHeight * 3);
   const recovery = await page.evaluate(() => {
     const viewer = window.__godsEyeView.viewer;
     const event = new Event('webglcontextlost', { cancelable: true });
