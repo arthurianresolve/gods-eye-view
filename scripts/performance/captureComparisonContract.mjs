@@ -2058,7 +2058,9 @@ export function getCaptureComparisonIneligibilityReasons({
     const receiptOnlyValid = validateReceiptOnlyWorkerAuditEnvelope({
       pageAssetAudit: receiptOnlyWorkerAuditEvidence?.pageAssetAudit,
       appCommit: source?.buildProvenance?.appCommit,
-      harnessCommit: source?.buildProvenance?.harnessCommit,
+      harnessCommit:
+        source?.buildProvenance?.captureProducerCommit ??
+        source?.buildProvenance?.harnessCommit,
       receiptSha256: source?.buildProvenance?.receiptSha256,
       expectedDocuments: receiptOnlyWorkerAuditEvidence?.expectedDocuments,
       expectedAssetPaths: receiptOnlyWorkerAuditEvidence?.expectedAssetPaths,

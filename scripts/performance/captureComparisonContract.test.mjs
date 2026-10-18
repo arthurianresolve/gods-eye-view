@@ -382,6 +382,49 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
   }
 });
 
+test('receipt-only readiness uses capture producer identity when builder differs', async () => {
+  const { validateReceiptOnlyWorkerAuditEnvelope } =
+    await import('./receiptOnlyWorkerAudit.mjs');
+  const producer = 'e'.repeat(40);
+  const builder = 'f'.repeat(40);
+  const base = {
+    schema: 'gev-receipt-only-worker-audit/v1',
+    status: 'all-document-receipt-paths-validated',
+    workerAuditMode: 'receipt-only',
+    appCommit: 'a'.repeat(40),
+    harnessCommit: producer,
+    receiptSha256: 'c'.repeat(64),
+    expectedDocuments: [],
+    expectedAssetPaths: [],
+    workerAuditDocuments: [],
+  };
+  assert.equal(
+    validateReceiptOnlyWorkerAuditEnvelope({
+      pageAssetAudit: base,
+      appCommit: base.appCommit,
+      harnessCommit: producer,
+      receiptSha256: base.receiptSha256,
+      expectedDocuments: [],
+      expectedAssetPaths: [],
+      bundlePath: 'cesium/x/Cesium.js',
+      bundleSha256: 'd'.repeat(64),
+      workerSourceSha256: 'e'.repeat(64),
+      allowedModuleCount: 1,
+    }),
+    false,
+  );
+  const source = {
+    buildProvenance: {
+      appCommit: base.appCommit,
+      harnessCommit: builder,
+      captureProducerCommit: producer,
+      receiptSha256: base.receiptSha256,
+    },
+  };
+  assert.equal(source.buildProvenance.harnessCommit, builder);
+  assert.equal(source.buildProvenance.captureProducerCommit, producer);
+});
+
 test('prewarm audit readiness names the unobservable late-creation limitation', () => {
   const reasons = getCaptureComparisonIneligibilityReasons({
     workerBlobAuditMode: 'prewarm',
