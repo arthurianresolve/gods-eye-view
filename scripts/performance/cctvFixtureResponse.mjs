@@ -13,7 +13,9 @@ export function captureCctvFixtureResponse(fixture, url, baseOrigin) {
       contentType: 'application/json',
       body: JSON.stringify({ cameras: fixture.health }),
     };
-  if (url.pathname === `/api/cctv/frame/${encodeURIComponent(fixture.cameraId)}`)
+  if (
+    url.pathname === `/api/cctv/frame/${encodeURIComponent(fixture.cameraId)}`
+  )
     return {
       status: 200,
       contentType: 'image/png',

@@ -44,18 +44,18 @@ Implementation, automated validation and primary Windows evidence remain
 separate. Draft PR #6 runs the broader integration checks; no stable publication,
 human review or performance-objective achievement is inferred from a build pass.
 
-| Slice | Deliverable | Engineering | Automatic validation | Primary evidence |
-| --- | --- | --- | --- | --- |
-| S61 | Frozen upstream reconciliation; native/legacy capture profiles | implemented; profile corrections `c8918393` | profile checks and exact CI pass at `9721b202` | pending shared matrix |
-| S62 | Patched Cesium content paths, gzip/Brotli, cache manifest | implemented | four clean VM builds; archive and attestation verified at `9721b202` | pending final candidate qualification |
-| S63 | Production Node HTTP host and release packaging | implemented; host corrections `9db16e2f` | production-only install and 16 private HTTP checks pass at `9721b202` | pending deployment verification |
-| S64 | Bounded diagnostics and Auto sample eligibility | implemented; availability corrections `3aaeb656` | focused checks and exact CI pass at `9721b202` | pending shared matrix |
-| S65 | Owned still-camera refresh, final frame, video/fade preservation | implemented; lifecycle correction `7aacac04` | 116 focused checks and exact CI pass at `9721b202` | pending shared matrix |
-| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | 24 focused checks and exact CI pass at `9721b202` | pending shared matrix |
-| S67 | Async locale preparation, races and retry | implemented | 19 focused checks, builds and browser gates pass at `9721b202` | pending shared matrix |
-| S68 | Measure and evaluate voice adapter splitting | narrow split evaluated and rejected; audit implemented | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed |
-| S69 | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper implemented | 49 focused Windows checks pass; exact CI, tracking and signed packaging pass at prior `9721b202`; replacement candidate needs fresh gates | `9721b202` matrix failed at a foreground-runner timeout; new matrix pending |
-| S70 | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | prior candidate staged privately; production remains at `e7a878e` | downloaded archive, source manifest, attestation and private host checks verified at `9721b202` | pending qualified deployment and final soak |
+| Slice | Deliverable                                                       | Engineering                                                                 | Automatic validation                                                                                                      | Primary evidence                                                                              |
+| ----- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                 | profile checks and exact CI pass at `19065997`                                                                            | baseline operating-view capture complete; shared matrix pending                               |
+| S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                 | four clean VM builds; archive and attestation verified at `19065997`                                                      | pending final candidate qualification                                                         |
+| S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                    | production-only install and 16 private HTTP checks pass at `19065997`                                                     | pending deployment verification                                                               |
+| S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                            | focused checks and exact CI pass at `19065997`                                                                            | pending shared matrix                                                                         |
+| S65   | Owned still-camera refresh, final frame, video/fade preservation  | implemented; lifecycle correction `7aacac04`                                | 116 focused checks and exact CI pass at `19065997`                                                                        | pending shared matrix and final visual control                                                |
+| S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                 | 24 focused checks and exact CI pass at `19065997`                                                                         | pending shared matrix and final visual control                                                |
+| S67   | Async locale preparation, races and retry                         | implemented                                                                 | 19 focused checks, builds and browser gates pass at `19065997`                                                            | pending shared matrix                                                                         |
+| S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                      | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed                                                 |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper implemented                                    | 49 focused Windows checks, 3 headless interception checks, exact CI, tracking and signed packaging pass at `19065997`     | full baseline operating block passes; shared matrix resumed after verified preview correction |
+| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `19065997` artifact staged privately; production remains at `e7a878e` | downloaded archive, all 2,126 manifest entries, attestation and 16 private host checks verified at `19065997`             | pending qualified deployment and final soak                                                   |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
 records the failed matrix and separate phase-timing runs. Most observed helper
@@ -65,10 +65,61 @@ now compiles once per capture without relaxing foreground eligibility or timeout
 Its protocol rejects stale, malformed and unconfirmed responses, and shutdown
 requires confirmation. The real Windows helper probe passed 11 activations and
 closed both owned processes; this diagnostic is not a workload comparison.
-Prior exact-commit checks are [CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133053101),
-[tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133058804),
-and [signed candidate packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133064701).
-They are historical evidence for `9721b202`, not passes for the next candidate.
+Current exact-commit checks at `19065997a3f6360d68cb9ed5b389c4754856b596` are
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39138855931),
+[tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39138859043),
+and [signed candidate packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39138863292).
+The [pull-request CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39138856726)
+also passes its published layer-token checks. Manually selected diagnostic jobs
+are intentionally skipped outside their requested workflow modes; those skips
+are not passes. Earlier `9721b202` results remain historical evidence.
+
+The frozen `19065997` capture producer completed five startup, five idle and
+five motion runs against both baseline `e7a878e` and candidate `19065997` on the
+physical Windows UHD 620. Both raw reports remain unchanged and the pair passes
+the comparison validator. Median run-level motion p95 is 456.4 ms for baseline
+and 454.0 ms for candidate (about 0.5% lower); this does not establish a material
+speedup. Both sides retain 68,049 objects, native DPR 2 and a 2,880 × 1,800 drawing
+buffer. Their top-level comparison-profile label was
+missing, while every before/after observation proves the native profile.
+Consumer correction `02764f4e` validates all three profile locations at every
+boundary and rejects explicit contradictions; 13 focused checks and an
+offline replay of the actual report pass. This separate orchestration revision
+does not relabel the capture producer or rebuild either application.
+
+The resumed candidate attempt stopped before browser launch during served-byte
+verification. Vite marks direct `.br` sidecar URLs with `Content-Encoding: br`;
+Node fetch decodes the response before the verifier compares it with the
+compressed file receipt. A raw HTTP diagnostic confirms the 205,413-byte wire
+body matches the receipt exactly, while fetch returns 728,308 decoded bytes.
+This is a preview/verifier representation mismatch, not evidence of corrupted
+application assets. Test-only preview helper `c81b0f37` serves receipt-listed
+physical sidecars without automatic decoding. All 1,778 normal application
+responses retain identical bytes and semantic headers; all 880 sidecar responses
+match their compressed receipts. The helper changes no production server,
+application build, or capture producer. The matrix resumed with the existing
+baseline report and completed its operating-view pair.
+
+The following Dense candidate block completed all 15 timed samples but failed
+final integrity validation because its aggregate report environment omitted the
+native sharpness profile already present at each sample boundary. Its bounded
+failure report retains only four complete samples, so this block must be rerun.
+It remains failed. Reports and wrapper logs are preserved with verified hashes
+on VM105 in `windows-evidence-19065997-operating-dense-failure`.
+
+Correction `8d9c7120` derives the aggregate profile from independently observed
+boundaries and rejects disagreement. The corrected capture producer is recorded
+separately from the unchanged `19065997` build-harness receipts. The matrix can
+pin a producer per workload, requiring the same producer on both sides of each
+pair. This allows verified reuse of the original operating pair without
+relabeling it or rebuilding either application. Short diagnostics are not
+substitutes for the five-run qualification blocks.
+
+The narrow S65/S66 visual producer now records delivered and decoded fixture
+frames, independently observed settings, the actual hardware renderer,
+foreground ownership, settled HUD presentation and confirmed cleanup. It
+compares decoded PNG pixels with no masks; 29 focused validator and observer
+checks pass. Physical execution remains pending.
 
 ## Matrix execution update - 16 October 2026
 

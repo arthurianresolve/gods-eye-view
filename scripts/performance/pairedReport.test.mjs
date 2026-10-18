@@ -32,6 +32,46 @@ function validate(
   });
 }
 
+test('paired reports bind a distinct capture producer while preserving builder identity', () => {
+  const pair = () =>
+    [makeReport(baselineCommit), makeReport(candidateCommit)].map((report) => {
+      const builder = report.source.harnessCommit;
+      report.source.harnessCommit = 'd'.repeat(40);
+      report.source.buildHarnessCommit = builder;
+      report.source.buildProvenance.captureProducerCommit =
+        report.source.harnessCommit;
+      report.source.buildProvenance.buildHarnessCommit = builder;
+      return report;
+    });
+  assert.equal(validate(...pair()).status, 'comparable');
+  for (const invalid of [null, '', 'bad']) {
+    for (const field of ['captureProducerCommit', 'buildHarnessCommit']) {
+      const reports = pair();
+      reports[1].source.buildProvenance[field] = invalid;
+      assert.throws(
+        () => validate(...reports),
+        /producer SHA|build harness SHA/,
+      );
+    }
+    const reports = pair();
+    reports[1].source.buildHarnessCommit = invalid;
+    assert.throws(() => validate(...reports), /source build harness SHA/);
+  }
+  const missingProducer = pair();
+  delete missingProducer[1].source.buildProvenance.captureProducerCommit;
+  assert.throws(() => validate(...missingProducer), /producer SHA mismatch/);
+  const differentBuilders = pair();
+  differentBuilders[1].source.buildProvenance.harnessCommit = 'e'.repeat(40);
+  differentBuilders[1].source.buildProvenance.buildHarnessCommit = 'e'.repeat(
+    40,
+  );
+  differentBuilders[1].source.buildHarnessCommit = 'e'.repeat(40);
+  assert.throws(
+    () => validate(...differentBuilders),
+    /Build harness revisions must match/,
+  );
+});
+
 test('valid paired reports calculate scenario medians, objective and regressions separately', () => {
   const result = validate();
   assert.equal(result.status, 'comparable');

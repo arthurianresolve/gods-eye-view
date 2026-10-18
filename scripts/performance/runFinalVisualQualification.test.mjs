@@ -20,12 +20,18 @@ test('visual state page callback serializes without Node or outer bindings', () 
           },
           _adaptiveQuality: { getMode: () => 'manual' },
           getVisualState: () => ({ hud: { visible: true } }),
-          hud: { getMode: () => 'on', visible: true, getVariant: () => 'tactical' },
+          hud: {
+            getMode: () => 'on',
+            visible: true,
+            getVariant: () => 'tactical',
+          },
         },
         viewer: {
           resolutionScale: 1,
           scene: {
-            context: { _gl: { getContextAttributes: () => ({ antialias: false }) } },
+            context: {
+              _gl: { getContextAttributes: () => ({ antialias: false }) },
+            },
             msaaSamples: 4,
             postProcessStages: { fxaa: { enabled: true } },
           },
@@ -39,7 +45,13 @@ test('visual state page callback serializes without Node or outer bindings', () 
     Date: { now: () => Date.parse('2026-10-08T12:00:00.000Z') },
   };
   const source = `(${readQualificationStateInPage.toString()})`;
-  const result = vm.runInNewContext(source, context)({ checkpointValue: checkpoint, profileValue: { id: 'native-sharpness-v1' } });
+  const result = vm.runInNewContext(
+    source,
+    context,
+  )({
+    checkpointValue: checkpoint,
+    profileValue: { id: 'native-sharpness-v1' },
+  });
   assert.equal(result.settings.densityPct, 75);
   assert.equal(result.hud.visible, true);
   assert.equal(result.checkpoint.cameraView.containsFixture, true);
