@@ -309,7 +309,11 @@ export async function validateFinalVisualQualification(
       );
       const presentation = state.presentation?.[side];
       assert.ok(
-        presentationStayedSettled(presentation?.before, presentation?.after),
+        presentationStayedSettled(
+          presentation?.before,
+          presentation?.after,
+          state.id !== 'hud-hidden',
+        ),
         `${state.id} ${side} presentation changed during capture`,
       );
       assert.ok(

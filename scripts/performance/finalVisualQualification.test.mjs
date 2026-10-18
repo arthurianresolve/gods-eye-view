@@ -71,13 +71,20 @@ async function fixture(t) {
     msaaSamples: 4,
     fxaa: true,
   };
-  const phase = {
-    revision: 1,
-    recordingVisible: true,
-    summaryTypingComplete: true,
-    summary: 'Synthetic CCTV fixture',
-    documentVisible: true,
-    documentFocused: true,
+  const phaseFor = (id) => {
+    const visible = id !== 'hud-hidden';
+    return {
+      revision: 1,
+      hudVisible: visible,
+      hudOpacity: visible ? 1 : 0,
+      hudVisibility: visible ? 'visible' : 'hidden',
+      hudDisplay: 'block',
+      recordingVisible: true,
+      summaryTypingComplete: true,
+      summary: 'Synthetic CCTV fixture',
+      documentVisible: true,
+      documentFocused: true,
+    };
   };
   const teardown = {
     browserClosed: true,
@@ -149,8 +156,14 @@ async function fixture(t) {
         candidate: { visible: id !== 'hud-hidden' },
       },
       presentation: {
-        baseline: { before: phase, after: phase },
-        candidate: { before: phase, after: phase },
+        baseline: {
+          before: phaseFor(id),
+          after: phaseFor(id),
+        },
+        candidate: {
+          before: phaseFor(id),
+          after: phaseFor(id),
+        },
       },
       frameDelivery: {
         baseline: { count: 1, sha256: '1'.repeat(64), matchesFixture: true },
@@ -293,6 +306,13 @@ test('rejects contradictory or missing evidence at the relevant observation', as
       'phase changed',
       (r) => {
         r.states[0].presentation.candidate.after.revision++;
+      },
+      /presentation changed/,
+    ],
+    [
+      'HUD transition incomplete',
+      (r) => {
+        r.states[2].presentation.candidate.after.hudOpacity = 0.42;
       },
       /presentation changed/,
     ],

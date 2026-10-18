@@ -9,6 +9,7 @@ export function installVisualPresentationBoundaryInPage() {
       text: root.textContent,
       display: getComputedStyle(root).display,
       visibility: getComputedStyle(root).visibility,
+      opacity: getComputedStyle(root).opacity,
       recording:
         document.getElementById('hud-rec-dot')?.style.visibility || 'visible',
     });
@@ -32,8 +33,13 @@ export function installVisualPresentationBoundaryInPage() {
       refresh();
       const hud = window.__godsEyeView?.styleManager?.hud;
       const summary = document.getElementById('hud-summary');
+      const style = getComputedStyle(root);
       return {
         revision,
+        hudVisible: hud?.visible === true,
+        hudOpacity: Number.parseFloat(style.opacity),
+        hudVisibility: style.visibility,
+        hudDisplay: style.display,
         recordingVisible:
           document.getElementById('hud-rec-dot')?.style.visibility !== 'hidden',
         summaryTypingComplete: hud?._summaryTypingInterval == null,
@@ -60,7 +66,19 @@ export function disposeVisualPresentationBoundaryInPage() {
   window.__gevVisualPresentationBoundary?.dispose();
 }
 
-export function presentationStayedSettled(before, after) {
+export function presentationStayedSettled(
+  before,
+  after,
+  expectedHudVisible = true,
+) {
+  const settledHud = (value) =>
+    value?.hudVisible === expectedHudVisible &&
+    value?.hudDisplay !== 'none' &&
+    value?.hudVisibility === (expectedHudVisible ? 'visible' : 'hidden') &&
+    Number.isFinite(value?.hudOpacity) &&
+    (expectedHudVisible
+      ? value.hudOpacity >= 0.999
+      : value.hudOpacity <= 0.001);
   return (
     Number.isSafeInteger(before?.revision) &&
     before.revision === after?.revision &&
@@ -74,6 +92,8 @@ export function presentationStayedSettled(before, after) {
     before.documentVisible === true &&
     after.documentVisible === true &&
     before.documentFocused === true &&
-    after.documentFocused === true
+    after.documentFocused === true &&
+    settledHud(before) &&
+    settledHud(after)
   );
 }

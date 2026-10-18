@@ -443,10 +443,18 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       let accepted = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
         await page.waitForFunction(
-          () => {
+          (expectedHudVisible) => {
             const proof = window.__gevVisualPresentationBoundary?.read();
             return (
               proof?.recordingVisible === true &&
+              proof?.hudVisible === expectedHudVisible &&
+              proof?.hudDisplay !== 'none' &&
+              proof?.hudVisibility ===
+                (expectedHudVisible ? 'visible' : 'hidden') &&
+              Number.isFinite(proof?.hudOpacity) &&
+              (expectedHudVisible
+                ? proof.hudOpacity >= 0.999
+                : proof.hudOpacity <= 0.001) &&
               proof.summaryTypingComplete &&
               proof.summary.length > 0 &&
               proof.documentVisible &&
@@ -456,6 +464,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             );
           },
           { polling: 25, timeout: 15_000 },
+          id !== 'hud-hidden',
         );
         const completedRender = await page.evaluate(
           waitForCctvLifecycleRenderInPage,
@@ -481,7 +490,11 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           path.join(out, `${id}-${label}-attempt-${attempt}.png`),
         );
         const after = await page.evaluate(readVisualPresentationBoundaryInPage);
-        const unchanged = presentationStayedSettled(before, after);
+        const unchanged = presentationStayedSettled(
+          before,
+          after,
+          id !== 'hud-hidden',
+        );
         attempts.push({
           attempt,
           before,
