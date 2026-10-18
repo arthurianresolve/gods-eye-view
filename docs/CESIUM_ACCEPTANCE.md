@@ -13,7 +13,7 @@ recorded separately. Exact candidate `19065997` passes the full automatic gates;
 the final shared matrix and candidate soak remain pending. No stable publication
 or human-review result is implied.
 
-This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
+This amendment governs the remaining S47–S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows
 UHD 620 machine and Linux VM105, and the experiment results already recorded.

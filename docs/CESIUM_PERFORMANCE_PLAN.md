@@ -54,8 +54,8 @@ human review or performance-objective achievement is inferred from a build pass.
 | S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                 | 24 focused checks and exact CI pass at `19065997`                                                                         | pending shared matrix and final visual control                                                |
 | S67   | Async locale preparation, races and retry                         | implemented                                                                 | 19 focused checks, builds and browser gates pass at `19065997`                                                            | pending shared matrix                                                                         |
 | S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                      | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed                                                 |
-| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper and reporting corrections implemented          | exact app CI, tracking and signed packaging pass at `19065997`; QA CI passes at `673f0346`                                | operating-view pair validated; seven rows running under reviewed producer `d372aaa6`           |
-| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `19065997` artifact staged privately; production remains at `e7a878e` | downloaded archive, all 2,126 manifest entries, attestation and 16 private host checks verified at `19065997`             | pending qualified deployment and final soak                                                   |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper and reporting corrections implemented          | exact app CI, tracking and signed packaging pass at `19065997`; QA CI passes at `e2cdaac6`                                | operating-view pair validated; seven rows running under reviewed producer `d372aaa6`           |
+| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `19065997` release prepared on VM105; production remains at `e7a878e` | archive, attestation, 16 private host checks and all 2,126 files in the prepared release verified                          | pending qualified deployment and native-resolution final soak                                |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
 records the failed matrix and separate phase-timing runs. Most observed helper
@@ -145,9 +145,42 @@ uses an owned, bounded debugger pause for settled screenshots and independently
 checks raw scanline phase evidence before and after each copy. Exact decoded
 pixel equality remains required, with no masks or image edits. Eighteen helper,
 serialized-page-callback and presentation-observer tests pass on VM105's Node
-26; native image-validation tests and physical execution of the revised method
-remain pending. The pause is restricted to appearance comparison. Performance,
-animation behavior and retention still require the unpaused matrix and soak.
+26. All seven [CI jobs at `e2cdaac6`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039264)
+also pass, including native image-validation tests on Node 24/26, all three
+platform recovery jobs and browser journeys. Its
+[candidate verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039281)
+passes. Physical execution of the revised visual method remains pending. The
+pause is restricted to appearance comparison. Performance, animation behavior
+and retention still require the unpaused matrix and soak.
+
+The prepared VM105 release is
+`/opt/gods-eye-view-releases/19065997a3f6360d68cb9ed5b389c4754856b596-verified`.
+All 2,126 packaged files match the signed artifact after copying the verified
+production-only dependency installation. The existing service unit and release
+drop-in still match the rollback backup. HTTPS serves the prior `e7a878e` HTML
+with valid TLS hostname verification and HSTS. The VM's resolver does not resolve
+the private hostname; this check used the existing reverse-proxy address returned
+by the Windows resolver, preserving TLS verification and global DNS settings.
+
+An offline review of the unchanged operating-view reports records median
+app-ready time of 9,190 ms baseline and 4,370 ms candidate, and median idle
+render counts of 248 versus 98 per minute. These are fixture-specific startup
+and render-demand observations. Longer intervals between unchanged idle frames
+are distinct from motion latency. End-of-sample heap snapshots are available;
+they do not establish continuous peak heap or post-GC retention. The final soak
+must retain its own memory measurements and declare its actual viewport/DPR.
+
+The final soak has an explicit `--native-resolution` option, reviewed at
+`d0df3908`. It observes the display DPR before viewport emulation, then uses a
+declared 1,440 × 1,000 CSS viewport at that DPR. Initial, warmed, intermediate
+and final retained checkpoints record the canvas and actual scene drawing
+buffers, resolution scale, browser-resolution policy and globe SSE. Missing or
+changed measurements, reduced buffers, and departures from scale 1 / native
+resolution / SSE 1 fail qualification. The original software-test default is
+unchanged. All 38 focused soak tests pass on VM105 with Node 24.16.0 and 26.11.0;
+the isolated test result and input hashes are stored in
+`native-soak-review-20261018T184655812Z`. Physical execution of this option remains
+pending and will be reported separately from the 1,440 × 900 comparison matrix.
 
 ## Matrix execution update - 16 October 2026
 

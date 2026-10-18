@@ -1,6 +1,36 @@
 # God's Eye View Current State
 
-## S61–S70 validation checkpoint — October 18, 2026
+## Current S61–S70 checkpoint — October 18, 2026, 18:48 UTC
+
+The application remains frozen at `19065997`; subsequent changes affect QA and
+documentation only. Its exact CI, tracking, signed artifact and VM105 package
+verification pass. The revised visual producer `e2cdaac6` passes all seven
+[CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039264)
+and [candidate verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039281).
+The production service still runs the verified `e7a878e` release.
+
+The Windows UHD 620 operating-view pair is complete and comparable at native
+DPR 2, Manual/DENSE/75% and unchanged populations. Median motion p95 is 456.4 ms
+baseline versus 454.0 ms candidate; no material motion speedup is claimed.
+The remaining seven rows are running with reviewed reporting producer
+`d372aaa6`, keeping the original operating pair and application/build revisions
+unchanged. The dense candidate has completed all 15 timed samples; its baseline
+is still running. Short preflights remain diagnostic evidence only.
+
+The exact signed release is prepared on VM105, with all 2,126 packaged files
+verified in its final release directory. Service configuration and rollback
+copies still match. Deployment, the final CCTV/HUD screenshot comparison and
+the Ampfing retention soak remain pending. The visual check briefly pauses
+JavaScript delivery for settled snapshots and verifies the observed scanline
+phase; unpaused captures remain the source of performance and behavior evidence.
+The final soak's native-resolution option is reviewed at `d0df3908`; all 38
+focused tests pass on VM105 with both Node 24 and 26. It observes native DPR
+before viewport emulation and rejects missing, reduced or changed resolution
+at equivalent checkpoints. Physical execution remains pending. See
+[the current ledger](CESIUM_PERFORMANCE_PLAN.md)
+for implementation, automatic-validation and primary-machine evidence separately.
+
+## Earlier S61–S70 checkpoint at `9721b202` — October 18, 2026
 
 At `9721b202`, exact Node 24/26 CI, production builds, browser gates,
 Windows onboarding, platform installation/recovery, tracking and signed
