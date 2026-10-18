@@ -40,6 +40,15 @@ for the next still refresh. Live video and active focus fades retain continuous
 rendering; selection, health fallback, cancellation and late-result ownership
 remain unchanged. CCTV browser validation is pending VM dependency install.
 
+## S66 hidden HUD and unchanged-write suppression — October 18, 2026
+
+HUD telemetry writes now compare the next text with the current DOM value before
+mutating it. Timestamp and REC maintenance pause while the document is hidden,
+then resume their existing cadence and blink phase; data collection and
+accessible state remain active through established paths. S65 projection demand
+contracts have focused cadence, media-edge and disposal checks; full CCTV
+browser behavior remains a VM gate.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium

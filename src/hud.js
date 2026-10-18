@@ -344,12 +344,14 @@ export class IntelHUD {
   _startTimers() {
     // Timestamp — every second
     this._timestampInterval = setInterval(() => {
+      if (document.hidden) return;
       const el = document.getElementById('hud-timestamp');
-      if (el) el.textContent = this._formatUTC();
+      this._setHudText(el, this._formatUTC());
     }, 1000);
 
     // REC blink — every 800ms
     this._recBlinkInterval = setInterval(() => {
+      if (document.hidden) return;
       this._recBlinkState = !this._recBlinkState;
       const dot = document.getElementById('hud-rec-dot');
       if (dot)
@@ -382,6 +384,11 @@ export class IntelHUD {
     const mi = String(now.getUTCMinutes()).padStart(2, '0');
     const s = String(now.getUTCSeconds()).padStart(2, '0');
     return `${y}-${mo}-${d} ${h}:${mi}:${s}Z`;
+  }
+
+  /** Update a HUD node only when its visible value changed. */
+  _setHudText(element, value) {
+    if (element && element.textContent !== value) element.textContent = value;
   }
 
   /**
@@ -442,20 +449,20 @@ export class IntelHUD {
       mgrsLabel = formatted;
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = `MGRS: ${formatted}`;
+      this._setHudText(el, `MGRS: ${formatted}`);
     } catch {
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = 'MGRS: ---';
+      this._setHudText(el, 'MGRS: ---');
     }
 
     // Lat/Lon DMS
     const llEl = document.getElementById('hud-latlon');
-    if (llEl) llEl.textContent = `${latDMS} ${lonDMS}`;
+    this._setHudText(llEl, `${latDMS} ${lonDMS}`);
     const bottomEl = document.getElementById('hud-bottom-line');
     if (bottomEl) {
       // i18n-ignore: sensor codes
-      bottomEl.textContent = `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`;
+      this._setHudText(bottomEl, `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`);
     }
 
     // GSD (Ground Sample Distance): approximate resolution in meters per pixel
@@ -471,7 +478,7 @@ export class IntelHUD {
     const gsdEl = document.getElementById('hud-gsd');
     if (gsdEl)
       // i18n-ignore: sensor codes
-      gsdEl.textContent = `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`;
+      this._setHudText(gsdEl, `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`);
 
     // Altitude — reported as height above MEAN SEA LEVEL. `altM` is the raw
     // ellipsoidal camera height, which reads far below zero wherever the geoid
@@ -484,7 +491,7 @@ export class IntelHUD {
     const sunEl = this._estimateSunElevation(latDeg, lonDeg);
     if (altEl)
       // i18n-ignore: sensor codes
-      altEl.textContent = `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`;
+      this._setHudText(altEl, `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`);
 
     // Collection timestamp
     const collEl = document.getElementById('hud-coll');
@@ -494,7 +501,7 @@ export class IntelHUD {
       const m = String(now.getUTCMinutes()).padStart(2, '0');
       const s = String(now.getUTCSeconds()).padStart(2, '0');
       // i18n-ignore: sensor codes
-      collEl.textContent = `COLL: ${h}:${m}:${s}Z`;
+      this._setHudText(collEl, `COLL: ${h}:${m}:${s}Z`);
     }
 
     // Off-nadir angle (ONA): camera pitch of -90 deg is nadir (straight down),
@@ -503,7 +510,7 @@ export class IntelHUD {
     const ona = Math.max(0, 90 + pitchDeg);
     const onaEl = document.getElementById('hud-ona');
     // i18n-ignore: sensor codes
-    if (onaEl) onaEl.textContent = `ONA: ${ona.toFixed(1)}°`;
+    this._setHudText(onaEl, `ONA: ${ona.toFixed(1)}°`);
 
     // `altM` stays the raw ellipsoidal camera height the sensor model reads
     // (GSD/NIIRS, view band). `altMslM` is the ADDITIVE display datum — the
@@ -893,7 +900,7 @@ export class IntelHUD {
       return;
     }
     const el = document.getElementById('hud-summary');
-    if (el) el.textContent = text;
+    this._setHudText(el, text);
   }
 
   async _summaryContext() {
