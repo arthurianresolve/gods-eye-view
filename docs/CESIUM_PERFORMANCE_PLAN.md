@@ -46,7 +46,7 @@ human review or performance-objective achievement is inferred from a build pass.
 
 | Slice | Deliverable                                                       | Engineering                                                                 | Automatic validation                                                                                                      | Primary evidence                                                                              |
 | ----- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                 | profile checks and exact CI pass at `19065997`                                                                            | baseline operating-view capture complete; shared matrix pending                               |
+| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                 | profile checks and exact CI pass at `19065997`                                                                            | operating-view pair validated; remaining seven matrix rows running                           |
 | S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                 | four clean VM builds; archive and attestation verified at `19065997`                                                      | pending final candidate qualification                                                         |
 | S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                    | production-only install and 16 private HTTP checks pass at `19065997`                                                     | pending deployment verification                                                               |
 | S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                            | focused checks and exact CI pass at `19065997`                                                                            | pending shared matrix                                                                         |
@@ -54,7 +54,7 @@ human review or performance-objective achievement is inferred from a build pass.
 | S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                 | 24 focused checks and exact CI pass at `19065997`                                                                         | pending shared matrix and final visual control                                                |
 | S67   | Async locale preparation, races and retry                         | implemented                                                                 | 19 focused checks, builds and browser gates pass at `19065997`                                                            | pending shared matrix                                                                         |
 | S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                      | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed                                                 |
-| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper implemented                                    | 49 focused Windows checks, 3 headless interception checks, exact CI, tracking and signed packaging pass at `19065997`     | full baseline operating block passes; shared matrix resumed after verified preview correction |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper and reporting corrections implemented          | exact app CI, tracking and signed packaging pass at `19065997`; QA CI passes at `673f0346`                                | operating-view pair validated; seven rows running under reviewed producer `d372aaa6`           |
 | S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `19065997` artifact staged privately; production remains at `e7a878e` | downloaded archive, all 2,126 manifest entries, attestation and 16 private host checks verified at `19065997`             | pending qualified deployment and final soak                                                   |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
@@ -115,11 +115,39 @@ pair. This allows verified reuse of the original operating pair without
 relabeling it or rebuilding either application. Short diagnostics are not
 substitutes for the five-run qualification blocks.
 
-The narrow S65/S66 visual producer now records delivered and decoded fixture
-frames, independently observed settings, the actual hardware renderer,
-foreground ownership, settled HUD presentation and confirmed cleanup. It
-compares decoded PNG pixels with no masks; 29 focused validator and observer
-checks pass. Physical execution remains pending.
+The weather preflight exposed a reporting compatibility mismatch: both frozen
+applications return numeric `infrared: 100` for the fixture's `filtered` mode.
+Reviewed producer `d372aaa6` accepts that exact numeric value or the legacy
+`filtered` string, retains the raw runtime values, and rejects other values.
+All 35 focused weather/comparison checks pass. A separate UHD 620 diagnostic
+completed startup, idle and scripted motion, including the weather timeline,
+with native DPR 2 and a 2,880 × 1,800 drawing buffer. Its short warmup and single
+repetition are diagnostic only. At 17:53:50 UTC on 18 October the full seven-row
+remainder started with the original five-run/30-second-warmup/60-second-measurement
+contract. It retains the verified operating pair and records the new producer
+separately from unchanged app/build-harness `19065997`.
+
+QA revision `673f0346` also passes
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39150286469)
+and [candidate verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39150286495).
+These validate the QA changes at their own revision; they do not replace the
+frozen application checks or imply hardware acceptance.
+
+The narrow S65/S66 visual producer records delivered and decoded fixture
+frames, effective settings, the hardware renderer, foreground ownership and
+confirmed cleanup. Two unpaused physical attempts failed their presentation
+stability checks before candidate comparison. PNG capture took 1.7–1.9 seconds,
+longer than the HUD's 800 ms REC blink; the canvas scanline also uses a separate
+animation clock. Those reports remain failed evidence.
+
+The revised [visual qualification method](../scripts/performance/FINAL_VISUAL_QUALIFICATION.md)
+uses an owned, bounded debugger pause for settled screenshots and independently
+checks raw scanline phase evidence before and after each copy. Exact decoded
+pixel equality remains required, with no masks or image edits. Eighteen helper,
+serialized-page-callback and presentation-observer tests pass on VM105's Node
+26; native image-validation tests and physical execution of the revised method
+remain pending. The pause is restricted to appearance comparison. Performance,
+animation behavior and retention still require the unpaused matrix and soak.
 
 ## Matrix execution update - 16 October 2026
 

@@ -6,8 +6,10 @@ existing CCTV fixture, completed-render observer, foreground proof and teardown
 contracts. It records four fixed states: `still-settled`, `hud-visible`,
 `hud-hidden`, and `hud-restored`.
 
-After each caller-observed completed render, use `captureQualificationPng(page,
-outputPath)` to write a bounded PNG. The report must include the exact
+After each caller-observed completed render, use the owned debugger session in
+`captureWithDebuggerPause` to observe and copy the settled frame. Its screenshot
+callback calls `captureQualificationPng(page, outputPath)` to write a lossless,
+bounded PNG. The report must include the exact
 application and harness SHAs, build receipt hashes, native-sharpness-v1
 environment/profile, Intel UHD 620 renderer identity, fixed camera/populations,
 foreground and completed-render evidence, and both PNG records for every state.
@@ -33,16 +35,36 @@ The narrow `qa-cctv-still-hud-v1` fixture reuses the CCTV lifecycle source and
 frame bytes, with a declared 2,000 m top-down view so the projection is visible.
 It freezes the wall clock at 2026-10-08 12:00 UTC and seeds fixture-only random
 values before application boot. Browser animation timers and rendering remain
-active. The viewport is 1440 by 900 CSS pixels at the actual device pixel ratio;
+active while the scene settles and between snapshots. The viewport is 1440 by
+900 CSS pixels at the actual device pixel ratio;
 Manual/DENSE/75%, native scale, SSE 1 and MSAA 4 remain unchanged.
 
 A read-only observer waits for the real summary typewriter to finish and the
-REC indicator's visible phase. It rejects a screenshot if HUD content or phase
-changes during capture, including a complete blink cycle. At most three attempts
-per state are permitted; all attempted PNGs and observations are retained. The
-image response digest and active camera decode health must match the fixture.
-This control checks settled appearance; existing timer/lifecycle tests remain
-responsible for animation cadence. It is not a latency benchmark.
+REC indicator's visible phase. An owned CDP session then pauses JavaScript
+delivery and samples the detection canvas's existing scanline phase at both
+edges. It captures only phase zero, with settled HUD content, and checks both
+observations again before resuming. It does not edit canvas pixels, styles,
+animation parameters or application timers. The validator independently derives
+the phase from eight raw alpha rows, checks their CSS-to-native-pixel mapping,
+and rejects missing, contradictory or changed evidence.
+
+This bounded pause addresses a measured fixture limitation: ordinary PNG
+capture on this machine took 1.7–1.9 seconds, longer than the HUD's 800 ms REC
+blink. The first unpaused attempts remain failed evidence. Wall-clock freezing
+alone does not synchronize the canvas scanline, which uses `performance.now()`.
+The paused control verifies settled appearance only. Existing timer/lifecycle
+tests, unpaused workload runs and the soak verify behavior and cadence; paused
+capture timings are never performance evidence.
+
+At most 12 eligibility attempts and three PNGs per state are permitted. Every
+attempt is retained, including its observed phase and cleanup result. Enable,
+pause and pause-event delivery share a five-second deadline; before-read, PNG
+capture and after-read share a 15-second deadline. Resume, disable and detach
+have bounded cleanup attempts. Cleanup failure fails qualification even if a
+PNG was produced, and late operations cannot start another paused read. Only an
+observed ineligible phase is retryable; protocol, read and cleanup errors remain
+failures. The image response digest and active camera decode health must match
+the fixture. Masks and phase editing remain forbidden.
 
 Failure reports preserve the original stage and error, completed observations,
 and cleanup evidence. Page, context, interceptor, observer, foreground helper and

@@ -92,11 +92,13 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
     .filter((row) => row.rightAlpha > 0)
     .map((row) => row.cssRow);
   const sameEdges =
+    rows.length === 8 &&
     JSON.stringify(leftRows) === JSON.stringify(rightRows) &&
     (leftRows.join(',') === '0,4' || leftRows.join(',') === '2,6');
   const phase = sameEdges ? (leftRows[0] === 0 ? 0 : 2) : null;
   const hudSettled =
-    expectedHudVisible === undefined || boundary.hudVisible === expectedHudVisible;
+    expectedHudVisible === undefined ||
+    boundary.hudVisible === expectedHudVisible;
   return {
     hud: boundary,
     phase,

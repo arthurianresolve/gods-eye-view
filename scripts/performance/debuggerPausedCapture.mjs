@@ -38,7 +38,9 @@ function callbackExpression(callback, args) {
 function cleanupError(stage, error) {
   return {
     stage,
-    message: String(error?.message || error).slice(0, 240),
+    message: String(error?.message || error)
+      .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+      .slice(0, 240),
   };
 }
 
@@ -98,7 +100,7 @@ export async function captureWithDebuggerPause({
   let primaryError = null;
   const cleanupErrors = [];
   let result = null;
-  let cleanup = { resumed: false, disabled: false, detached: false };
+  const cleanup = { resumed: false, disabled: false, detached: false };
   try {
     const pauseRemaining = (label) => {
       const remaining = Math.ceil(pauseDeadline - performance.now());

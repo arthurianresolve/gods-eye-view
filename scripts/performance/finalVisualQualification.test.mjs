@@ -96,7 +96,20 @@ async function fixture(t) {
   const phaseEvidence = {
     before: 0,
     after: 0,
-    dimensions: { before: dimensions, after: dimensions },
+    dimensions: {
+      before: {
+        ...dimensions,
+        cssWidth: dimensions.width,
+        cssHeight: dimensions.height,
+        dpr: 1,
+      },
+      after: {
+        ...dimensions,
+        cssWidth: dimensions.width,
+        cssHeight: dimensions.height,
+        dpr: 1,
+      },
+    },
     alphaRows: { before: alphaRows, after: alphaRows },
   };
   const teardown = {
@@ -368,6 +381,34 @@ test('rejects contradictory or missing evidence at the relevant observation', as
         r.states[0].phase.candidate.before = 2;
       },
       /phase claim/,
+    ],
+    [
+      'phase pixel row inconsistent with DPR',
+      (r) => {
+        r.states[0].phase.candidate.alphaRows.before[1].pixelRow = 2;
+      },
+      /pixel row/,
+    ],
+    [
+      'phase CSS dimensions differ',
+      (r) => {
+        r.states[0].phase.candidate.dimensions.before.cssWidth = 720;
+      },
+      /CSS width/,
+    ],
+    [
+      'phase DPR differs',
+      (r) => {
+        r.states[0].phase.candidate.dimensions.after.dpr = 2;
+      },
+      /DPR/,
+    ],
+    [
+      'phase edges contradict',
+      (r) => {
+        r.states[0].phase.candidate.alphaRows.after[0].rightAlpha = 0;
+      },
+      /edge alpha rows differ/,
     ],
     [
       'phase cleanup missing',

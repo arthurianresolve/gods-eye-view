@@ -12,6 +12,8 @@ function fakePage({
   enableError = false,
   pauseError = false,
   pauseOnEnable = true,
+  enableGate = null,
+  detachError = false,
 } = {}) {
   const events = new EventEmitter();
   const calls = [];
@@ -22,6 +24,7 @@ function fakePage({
     listenerCount: events.listenerCount.bind(events),
     async send(method, params) {
       calls.push({ method, params });
+      if (method === 'Debugger.enable' && enableGate) await enableGate;
       if (method === 'Debugger.enable' && enableError)
         throw new Error('enable failed');
       if (method === 'Debugger.pause' && pauseError)
@@ -45,6 +48,7 @@ function fakePage({
     },
     async detach() {
       calls.push({ method: 'detach' });
+      if (detachError) throw new Error('detach failed');
     },
   };
   return {
@@ -202,11 +206,89 @@ test('operation timeout remains bounded and resumes before cleanup', async () =>
 });
 
 test('successful capture reports cleanup failure instead of returning early', async () => {
-  const fake = fakePage({ disableError: true });
+  for (const [flag, failedStage] of [
+    ['resumeError', 'resume'],
+    ['disableError', 'disable'],
+    ['detachError', 'detach'],
+  ]) {
+    const fake = fakePage({ [flag]: true });
+    await assert.rejects(
+      captureWithDebuggerPause({
+        page: fake.page,
+        screenshot: fake.screenshot,
+      }),
+      (error) =>
+        error?.message === 'Paused capture cleanup failed.' &&
+        error.cleanupErrors?.some(({ stage }) => stage === failedStage),
+    );
+  }
+});
+
+test('a late enable completion cannot pause the page after timeout cleanup', async () => {
+  let resolveEnable;
+  const enableGate = new Promise((resolve) => {
+    resolveEnable = resolve;
+  });
+  const fake = fakePage({ enableGate });
   await assert.rejects(
-    captureWithDebuggerPause({ page: fake.page, screenshot: fake.screenshot }),
-    (error) =>
-      error?.message === 'Paused capture cleanup failed.' &&
-      error.cleanupErrors?.some(({ stage }) => stage === 'disable'),
+    captureWithDebuggerPause({
+      page: fake.page,
+      screenshot: fake.screenshot,
+      pauseTimeoutMs: 20,
+    }),
+    /deadline exceeded/,
+  );
+  resolveEnable();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(
+    fake.calls.some(({ method }) => method === 'Debugger.pause'),
+    false,
+  );
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+  assert.equal(fake.calls.at(-1).method, 'detach');
+});
+
+test('a late screenshot result cannot perform another paused read after cleanup', async () => {
+  let resolveScreenshot;
+  const pending = new Promise((resolve) => {
+    resolveScreenshot = resolve;
+  });
+  const fake = fakePage();
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      readCallback: () => 1,
+      screenshot: () => pending,
+      operationTimeoutMs: 20,
+    }),
+    /deadline exceeded/,
+  );
+  resolveScreenshot(Buffer.from('late-png'));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(
+    fake.calls.filter(({ method }) => method === 'Debugger.evaluateOnCallFrame')
+      .length,
+    1,
+  );
+  assert.equal(fake.calls.at(-1).method, 'detach');
+});
+
+test('ineligible snapshots preserve observations and require successful cleanup', async () => {
+  const fake = fakePage();
+  const result = await captureWithDebuggerPause({
+    page: fake.page,
+    readCallback: () => ({ phase: 2 }),
+    screenshot: () => null,
+  });
+  assert.equal(result.screenshot, null);
+  assert.deepEqual(result.cleanup, {
+    resumed: true,
+    disabled: true,
+    detached: true,
+  });
+  const broken = fakePage({ resumeError: true });
+  await assert.rejects(
+    captureWithDebuggerPause({ page: broken.page, screenshot: () => null }),
+    /cleanup failed/,
   );
 });

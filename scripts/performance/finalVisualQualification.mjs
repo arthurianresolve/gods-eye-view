@@ -61,18 +61,33 @@ function assertProfile(profile, label) {
   );
 }
 
-function deriveScanlinePhase(rows, label) {
+function deriveScanlinePhase(rows, dpr, label) {
   assert.ok(Array.isArray(rows) && rows.length === 8, `${label} alpha rows`);
   rows.forEach((row, index) => {
     assert.equal(row?.cssRow, index, `${label} CSS row`);
-    assert.ok(Number.isInteger(row?.pixelRow) && row.pixelRow >= 0, `${label} pixel row`);
-    assert.ok(Number.isInteger(row?.leftAlpha) && row.leftAlpha >= 0 && row.leftAlpha <= 255, `${label} left alpha`);
-    assert.ok(Number.isInteger(row?.rightAlpha) && row.rightAlpha >= 0 && row.rightAlpha <= 255, `${label} right alpha`);
+    assert.equal(row?.pixelRow, Math.floor(index * dpr), `${label} pixel row`);
+    assert.ok(
+      Number.isInteger(row?.leftAlpha) &&
+        row.leftAlpha >= 0 &&
+        row.leftAlpha <= 255,
+      `${label} left alpha`,
+    );
+    assert.ok(
+      Number.isInteger(row?.rightAlpha) &&
+        row.rightAlpha >= 0 &&
+        row.rightAlpha <= 255,
+      `${label} right alpha`,
+    );
   });
   const left = rows.filter((row) => row.leftAlpha > 0).map((row) => row.cssRow);
-  const right = rows.filter((row) => row.rightAlpha > 0).map((row) => row.cssRow);
+  const right = rows
+    .filter((row) => row.rightAlpha > 0)
+    .map((row) => row.cssRow);
   assert.deepEqual(left, right, `${label} edge alpha rows differ`);
-  assert.ok(left.join(',') === '0,4' || left.join(',') === '2,6', `${label} phase rows`);
+  assert.ok(
+    left.join(',') === '0,4' || left.join(',') === '2,6',
+    `${label} phase rows`,
+  );
   return left[0] === 0 ? 0 : 2;
 }
 
@@ -86,7 +101,22 @@ function assertPhaseEvidence(phase, profile, label) {
       expected,
       `${label} ${edge} dimensions`,
     );
-    const derived = deriveScanlinePhase(phase.alphaRows?.[edge], `${label} ${edge}`);
+    assert.equal(
+      dimensions.cssWidth,
+      profile.viewport.width,
+      `${label} ${edge} CSS width`,
+    );
+    assert.equal(
+      dimensions.cssHeight,
+      profile.viewport.height,
+      `${label} ${edge} CSS height`,
+    );
+    assert.equal(dimensions.dpr, profile.viewport.dpr, `${label} ${edge} DPR`);
+    const derived = deriveScanlinePhase(
+      phase.alphaRows?.[edge],
+      dimensions.dpr,
+      `${label} ${edge}`,
+    );
     assert.equal(phase[edge], derived, `${label} ${edge} phase claim`);
   }
   assert.equal(phase.before, 0, `${label} before phase`);

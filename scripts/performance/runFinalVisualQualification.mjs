@@ -49,7 +49,6 @@ import {
 } from './profileRecoveryPageOwnership.mjs';
 import {
   installVisualPresentationBoundaryInPage,
-  readVisualPresentationBoundaryInPage,
   disposeVisualPresentationBoundaryInPage,
   presentationStayedSettled,
 } from './visualPresentationBoundary.mjs';
@@ -500,13 +499,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
                 readBefore?.hud,
                 expectedHudVisible,
               );
-              if (readBefore?.phase !== 0 || !settled) {
-                const error = new Error(
-                  readBefore?.reason || 'Visual snapshot is not eligible.',
-                );
-                error.code = 'VISUAL_SNAPSHOT_INELIGIBLE';
-                throw error;
-              }
+              if (readBefore?.phase !== 0 || !settled) return null;
               pngCount++;
               return captureQualificationPng(
                 page,
@@ -515,19 +508,20 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             },
           });
         } catch (error) {
-          if (error?.code !== 'VISUAL_SNAPSHOT_INELIGIBLE') throw error;
           attempts.push({
             attempt,
             accepted: false,
-            reason: String(error?.message || error).slice(0, 240),
+            error: boundedError(error),
           });
-          continue;
+          states.push({ id, captureFailed: true, presentation: { attempts } });
+          throw error;
         }
         const before = pausedCapture.readBefore?.hud;
         const after = pausedCapture.readAfter?.hud;
         const beforePhase = pausedCapture.readBefore?.phase;
         const afterPhase = pausedCapture.readAfter?.phase;
         const unchanged =
+          Boolean(pausedCapture.screenshot) &&
           beforePhase === 0 &&
           afterPhase === 0 &&
           presentationStayedSettled(before, after, expectedHudVisible);
@@ -546,6 +540,12 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             after: pausedCapture.readAfter?.alphaRows,
           },
           cleanup: pausedCapture.cleanup,
+          reason: pausedCapture.screenshot
+            ? null
+            : pausedCapture.readBefore?.reason ||
+              (beforePhase !== 0
+                ? 'scanline-phase-not-zero'
+                : 'hud-presentation-unsettled'),
           accepted: unchanged,
           image: pausedCapture.screenshot,
         });
@@ -578,7 +578,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       if (!accepted) {
         states.push({ id, captureFailed: true, presentation: { attempts } });
         throw new Error(
-          `HUD changed during all bounded capture attempts for ${id}.`,
+          `No settled, phase-matched snapshot within bounded capture attempts for ${id}.`,
         );
       }
       states.push(accepted);
