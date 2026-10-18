@@ -32,7 +32,11 @@ import { applyNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFixtureWallClockOnPage } from './productionFlightFixture.mjs';
 import { createWindowsForegroundActivationSession } from './windowsForegroundWindow.mjs';
 import { classifyRenderer, readBrowserGraphicsInfo } from './rendererEvidence.mjs';
-import { closeOwnedRecoveryPage } from './profileRecoveryPageOwnership.mjs';
+import {
+  closeOwnedRecoveryPage,
+  closeRecoveryBrowser,
+  stopOwnedRecoveryProcessTree,
+} from './profileRecoveryPageOwnership.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXED_TIME = '2026-10-12T18:00:00.000Z';
@@ -217,12 +221,30 @@ export function readAustinDiagnosticObservation() {
     cctvParams: cctv?.getParams?.() ?? null,
     satellites: satellites?.getDiagnostics?.() ?? satellites?.getStats?.() ?? null,
     satelliteParams: satellites?.getParams?.() ?? null,
+    satelliteWitness: (() => {
+      try {
+        const row = satellites?.getAllPositions?.(1000)?.find?.((item) => Number(item?.noradId ?? item?.id) === 25544);
+        return row ? { latitude: Number(row.latitude), longitude: Number(row.longitude), altitude: Number(row.altitude ?? row.height ?? 0) } : null;
+      } catch { return null; }
+    })(),
     requestRenderMode: viewer?.scene?.requestRenderMode ?? null,
     clock: viewer?.clock?.currentTime
       ? { dayNumber: viewer.clock.currentTime.dayNumber, secondsOfDay: viewer.clock.currentTime.secondsOfDay }
       : null,
     viewport: rect ? { width: rect.width, height: rect.height, dpr: window.devicePixelRatio } : null,
     drawingBuffer: canvas ? { width: canvas.width, height: canvas.height } : null,
+    windPhaseTime: (() => {
+      try {
+        const primitives = viewer?.scene?.primitives;
+        for (let index = 0; index < Math.min(primitives?.length ?? 0, 2048); index++) {
+          const primitive = primitives.get(index);
+          const material = primitive?.appearance?.material;
+          const phase = material?.uniforms?.phaseTime;
+          if (Number.isFinite(phase)) return phase;
+        }
+      } catch {}
+      return null;
+    })(),
     postRender: window.__gevAustinDiagnosticObserver?.read?.() ?? null,
   };
 }
@@ -237,6 +259,7 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
   const browserPid = browser.process()?.pid;
   let foregroundSession = null;
   let page = null;
+  let context = null;
   let prepared = null;
   let delivery = null;
   const cleanupErrors = [];
@@ -245,7 +268,8 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
     foregroundSession = createWindowsForegroundActivationSession({ browserPid });
     await foregroundSession.start({ timeoutMs: 15_000 });
     const origin = new URL(url).origin;
-    page = await browser.newPage();
+    context = await browser.createBrowserContext();
+    page = await context.newPage();
     await installFixtureWallClockOnPage(page, fixture.fixedTimeMs, { phasedClock: true }, [WARMUP_MS, OBSERVATION_MS, 1000]);
     delivery = createAustinOperatingFixtureDelivery(fixture, origin);
     prepared = await prepareFixturePage(browser, origin, {
@@ -260,7 +284,7 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
     const setup = await page.evaluate(configureAustinDiagnosticFixture, fixture);
     const environment = await page.evaluate(() => window.__godsEyeView?.getPerformanceEnvironment?.() ?? null);
     const observedAppCommit = environment?.source?.appCommit ?? environment?.appCommit ?? null;
-    if (observedAppCommit && observedAppCommit !== appSha)
+    if (!observedAppCommit || observedAppCommit !== appSha)
       throw new Error(`${label} application environment commit differs from requested revision.`);
     await page.waitForFunction(
       (expected) => {
@@ -292,12 +316,13 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
     }
     await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1.finishMeasurement(1));
     const graphics = await readBrowserGraphicsInfo(browser);
-    const renderer = await page.evaluate(() => {
+    const renderer = environment?.renderer ?? await page.evaluate(() => {
       const canvas = window.__godsEyeView?.viewer?.scene?.canvas;
       const gl = window.__godsEyeView?.viewer?.scene?.context?._gl ?? canvas?.getContext?.('webgl') ?? canvas?.getContext?.('webgl2');
       return gl ? { renderer: gl.getParameter(gl.RENDERER), vendor: gl.getParameter(gl.VENDOR) } : null;
     });
-    const rendererClassification = classifyRenderer(renderer?.renderer, graphics);
+    const rendererName = typeof renderer === 'string' ? renderer : renderer?.renderer;
+    const rendererClassification = classifyRenderer(rendererName, graphics);
     if (!rendererClassification.accelerationVerified)
       throw new Error(`${label} native hardware WebGL proof is unavailable.`);
     const windVisibilityProbe = await page.evaluate(async () => {
@@ -305,14 +330,24 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
       const home = window.__gevAustinDiagnosticHome;
       if (!viewer?.camera || !home) return { status: 'unavailable', reason: 'camera-home-missing' };
       const globe = viewer.scene.globe;
+      const phase = () => {
+        try {
+          const primitives = viewer.scene.primitives;
+          for (let index = 0; index < Math.min(primitives?.length ?? 0, 2048); index++) {
+            const value = primitives.get(index)?.appearance?.material?.uniforms?.phaseTime;
+            if (Number.isFinite(value)) return value;
+          }
+        } catch {}
+        return null;
+      };
       const current = globe.ellipsoid.cartesianToCartographic(viewer.camera.position);
       const elevated = globe.ellipsoid.cartographicToCartesian({ longitude: current.longitude, latitude: current.latitude, height: 60000 });
       viewer.camera.setView({ destination: elevated, orientation: { heading: viewer.camera.heading, pitch: viewer.camera.pitch, roll: viewer.camera.roll } });
       await new Promise((resolve) => setTimeout(resolve, 1500));
       const wind = window.__godsEyeView?.dataManager?.layers?.get('wind')?.module;
-      const first = wind?.getDiagnostics?.() ?? null;
+      const first = { diagnostics: wind?.getDiagnostics?.() ?? null, phaseTime: phase() };
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      const second = wind?.getDiagnostics?.() ?? null;
+      const second = { diagnostics: wind?.getDiagnostics?.() ?? null, phaseTime: phase() };
       viewer.camera.setView({ destination: home.position, orientation: { direction: home.direction, up: home.up } });
       return { status: 'observed', first, second, intervention: 'elevated-60000m-after-natural-observation' };
     });
@@ -338,22 +373,45 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
     return { label, appSha, browserPid, setup, environment, graphics, renderer, rendererClassification, profile, samples, final, windVisibilityProbe, delivery: summary, foreground: await foregroundSession.request(browserPid, 15_000), teardown: { cleanupErrors } };
   } finally {
     try { await page?.evaluate(() => window.__gevAustinDiagnosticObserver?.dispose?.()); } catch {}
-    try { if (page && !page.isClosed()) await closeOwnedRecoveryPage(page, browser, 5000); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    if (prepared?.interception) {
+      try {
+        const drained = await prepared.interception.stopAndDrain();
+        if (!drained?.confirmed) throw new Error('Fixture interception did not drain.');
+      } catch (error) { cleanupErrors.push(boundedError(error)); }
+    }
+    try {
+      if (page && context && !page.isClosed()) {
+        const closed = await closeOwnedRecoveryPage(page, context, 5000);
+        if (!closed?.closeCompleted || closed.openPageCount !== 0) throw new Error('Owned diagnostic page did not close.');
+      }
+    } catch (error) { cleanupErrors.push(boundedError(error)); }
     try { await cleanupFixturePageDiagnostics(page); } catch (error) { cleanupErrors.push(boundedError(error)); }
     try { delivery?.dispose?.(); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    if (prepared?.interception) {
+      try {
+        const released = await prepared.interception.releaseSession({ targetClosed: page?.isClosed() === true });
+        if (!released?.confirmed) throw new Error('Fixture interception release was not confirmed.');
+      } catch (error) { cleanupErrors.push(boundedError(error)); }
+    }
+    try { await context?.close?.(); } catch (error) { cleanupErrors.push(boundedError(error)); }
     try { await foregroundSession?.dispose?.(); } catch (error) { cleanupErrors.push(boundedError(error)); }
-    try { await browser.close(); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    try {
+      const closed = await closeRecoveryBrowser(browser, { timeoutMs: 5000, forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()) });
+      if (!closed?.closeCompleted || closed.forcedProcessTermination === true) throw new Error('Owned browser shutdown was not confirmed.');
+    } catch (error) { cleanupErrors.push(boundedError(error)); }
   }
 }
 
 export async function runAustinOperatingRenderDemandDiagnostic({ baselineUrl, candidateUrl, baselineSha, candidateSha, out }) {
   for (const [label, value] of [['baseline', baselineUrl], ['candidate', candidateUrl]]) {
     const parsed = new URL(value);
-    if (!['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol))
+    if (!['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash || (parsed.pathname !== '/' && parsed.pathname !== ''))
       throw new Error(`${label} URL must be a loopback HTTP(S) origin.`);
   }
   if (!/^[a-f0-9]{40}$/i.test(baselineSha) || !/^[a-f0-9]{40}$/i.test(candidateSha) || baselineSha.toLowerCase() === candidateSha.toLowerCase())
     throw new Error('Baseline and candidate application SHAs must be distinct full Git SHAs.');
+  if (await fs.stat(path.resolve(out)).then(() => true).catch(() => false))
+    throw new Error(`Diagnostic output already exists: ${out}`);
   const fixture = createAustinOperatingWorkloadFixture(FIXED_TIME);
   const results = [];
   for (const side of [
