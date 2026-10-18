@@ -2170,7 +2170,24 @@ try {
     foregroundActivationSession = createWindowsForegroundActivationSession({
       browserPid: ownedBrowserPid,
     });
-    await foregroundActivationSession.start({ timeoutMs: 15_000 });
+    failureProgress.phase = 'initialize-foreground-helper';
+    failureProgress.current = { phase: failureProgress.phase };
+    try {
+      await foregroundActivationSession.start({ timeoutMs: 15_000 });
+    } catch (error) {
+      error.name = 'HostWindowActivationError';
+      error.foregroundActivation = {
+        schema: 'gev-windows-owned-browser-foreground-diagnostic/v1',
+        category: error.gevTimeout ? 'timeout' : 'process-failure',
+        runnerExited: null,
+        runnerTimedOut: error.gevTimeout === true,
+        runnerKilled: error.killed === true,
+        ...(typeof error.signal === 'string'
+          ? { runnerSignal: error.signal.slice(0, 32) }
+          : {}),
+      };
+      throw error;
+    }
   }
   failureProgress.phase = 'startup-navigation';
   const startupUrl = new URL(url);
@@ -6470,7 +6487,12 @@ try {
     }
   }
   weatherEffectsFixtureDelivery?.dispose();
-  await foregroundActivationSession?.dispose();
+  try {
+    await foregroundActivationSession?.dispose();
+  } catch (error) {
+    captureFailure ||= error;
+    process.exitCode = 1;
+  }
   foregroundActivationSession = null;
   for (const [
     responsePage,

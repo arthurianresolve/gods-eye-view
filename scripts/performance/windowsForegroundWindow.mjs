@@ -134,9 +134,9 @@ $previous = [GevOwnedBrowserWindow]::GetForegroundWindow()
 $alreadyForeground = $previous -eq $handle
 $attached = $false
 if ($alreadyForeground) {
-  $shown = $true
-  $broughtToTop = $true
-  $setForeground = $true
+  $shown = $null
+  $broughtToTop = $null
+  $setForeground = $null
 } else {
   $shown = [GevOwnedBrowserWindow]::ShowWindowAsync($handle, 9)
   $broughtToTop = $null
@@ -205,18 +205,19 @@ function persistentPowerShellScript() {
     .replace(/\nif \(-not \$confirmed\) \{ exit 2 \}\s*$/, '\n')
     .replace(/^\$browserPid = .*\n/, '')
     .replace(
-      "schema = '${WINDOWS_FOREGROUND_SCHEMA}'",
-      "requestId = $requestId\n  schema = '${WINDOWS_FOREGROUND_SCHEMA}'",
+      `schema = '${WINDOWS_FOREGROUND_SCHEMA}'`,
+      `requestId = $requestId\n  schema = '${WINDOWS_FOREGROUND_SCHEMA}'`,
     )
     .replace(
       '} | ConvertTo-Json -Compress',
-      '} | ConvertTo-Json -Compress\n[Console]::Out.WriteLine($response)',
+      '}\n$responseJson = $response | ConvertTo-Json -Compress\n[Console]::Out.WriteLine($responseJson)',
     )
     .replace('[pscustomobject]@{', '$response = [pscustomobject]@{');
   return String.raw`$ErrorActionPreference = 'Stop'
 if (-not ('GevOwnedBrowserWindow' -as [type])) {
 ${addType}
 }
+
 [Console]::Out.WriteLine('{"schema":"${FOREGROUND_DIAGNOSTIC_SCHEMA}","status":"ready"}')
 [Console]::Out.Flush()
 while (($request = [Console]::In.ReadLine()) -ne $null) {
@@ -233,11 +234,16 @@ ${body}
       browserPid = $browserPid
       foregroundConfirmed = $false
     }
-    [Console]::Out.WriteLine($response | ConvertTo-Json -Compress)
+    $responseJson = $response | ConvertTo-Json -Compress
+    [Console]::Out.WriteLine($responseJson)
   }
   [Console]::Out.Flush()
 }
 `;
+}
+
+export function getWindowsForegroundPowerShellScript() {
+  return persistentPowerShellScript();
 }
 
 export function createWindowsForegroundActivationSession({
@@ -256,11 +262,14 @@ export function createWindowsForegroundActivationSession({
   let child = null;
   let buffer = '';
   let ready = null;
+  let startPromise = null;
+  let initialized = false;
   let pending = null;
   let nextRequestId = 1;
   let disposed = false;
   let unusable = false;
   let disposePromise = null;
+  let childFailure = null;
   const MAX_BUFFER_BYTES = 64 * 1024;
   const takeLine = () => {
     const index = buffer.indexOf('\n');
@@ -279,6 +288,7 @@ export function createWindowsForegroundActivationSession({
   const fail = (error) => {
     if (unusable) return;
     unusable = true;
+    initialized = false;
     const currentReady = ready;
     const currentPending = pending;
     ready = null;
@@ -290,6 +300,7 @@ export function createWindowsForegroundActivationSession({
     } catch {}
   };
   const onData = (chunk) => {
+    if (disposed || unusable) return;
     buffer += String(chunk);
     if (Buffer.byteLength(buffer, 'utf8') > MAX_BUFFER_BYTES) {
       fail(new Error('Foreground helper output exceeded its bounded limit.'));
@@ -307,6 +318,7 @@ export function createWindowsForegroundActivationSession({
             parsed?.status !== 'ready'
           )
             throw new Error('Helper startup failed.');
+          initialized = true;
           settle(current, 'resolve');
         } catch (error) {
           settle(current, 'reject', error);
@@ -317,9 +329,19 @@ export function createWindowsForegroundActivationSession({
         pending = null;
         try {
           const parsed = JSON.parse(line);
-          if (parsed?.requestId !== current.requestId)
+          if (
+            parsed?.schema !== WINDOWS_FOREGROUND_SCHEMA ||
+            parsed?.requestId !== current.requestId ||
+            parsed?.browserPid !== browserPid
+          )
             throw new Error('Foreground helper response sequence mismatch.');
           settle(current, 'resolve', { stdout: line });
+          if (
+            parsed.status !== 'foreground-confirmed' ||
+            parsed.foregroundConfirmed !== true ||
+            parsed.foregroundPid !== browserPid
+          )
+            fail(new Error('Foreground helper returned unconfirmed evidence.'));
         } catch (error) {
           settle(current, 'reject', error);
           fail(error);
@@ -332,54 +354,71 @@ export function createWindowsForegroundActivationSession({
   const start = async ({ timeoutMs = 15_000 } = {}) => {
     if (disposed || unusable)
       throw new Error('Foreground helper is unavailable.');
-    if (child) return;
-    try {
-      child = spawnImpl(
-        'powershell.exe',
-        [
-          '-NoProfile',
-          '-NonInteractive',
-          '-Command',
-          persistentPowerShellScript(),
-        ],
-        { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] },
-      );
-    } catch (error) {
-      fail(error);
-      throw error;
-    }
-    child.stdout.on('data', onData);
-    const failure = (error) =>
-      fail(
-        error instanceof Error ? error : new Error('Foreground helper exited.'),
-      );
-    child.once('error', failure);
-    child.once('exit', (code, signal) => {
-      if (!disposed && !unusable)
-        failure(
-          Object.assign(new Error('Foreground helper exited.'), {
-            code,
-            signal,
-          }),
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+      throw new TypeError('Foreground helper timeout must be positive.');
+    if (startPromise) return startPromise;
+    if (child) return initialized;
+    startPromise = (async () => {
+      try {
+        child = spawnImpl(
+          'powershell.exe',
+          [
+            '-NoProfile',
+            '-NonInteractive',
+            '-Command',
+            persistentPowerShellScript(),
+          ],
+          { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] },
         );
-    });
-    await new Promise((resolve, reject) => {
-      const operation = { resolve, reject, timer: null };
-      ready = operation;
-      operation.timer = setTimeout(() => {
-        if (ready) {
-          const error = new Error('Foreground helper startup timed out.');
-          error.gevTimeout = true;
-          fail(error);
-        }
-      }, timeoutMs);
-      operation.timer.unref?.();
-    });
+      } catch (error) {
+        fail(error);
+        throw error;
+      }
+      child.stdout.on('data', onData);
+      const failure = (error) =>
+        fail(
+          error instanceof Error
+            ? error
+            : new Error('Foreground helper exited.'),
+        );
+      childFailure = failure;
+      child.once('error', failure);
+      child.stdin?.once?.('error', failure);
+      child.once('exit', (code, signal) => {
+        if (!disposed && !unusable)
+          failure(
+            Object.assign(new Error('Foreground helper exited.'), {
+              code,
+              signal,
+            }),
+          );
+      });
+      await new Promise((resolve, reject) => {
+        const operation = { resolve, reject, timer: null };
+        ready = operation;
+        operation.timer = setTimeout(() => {
+          if (ready === operation) {
+            const error = new Error('Foreground helper startup timed out.');
+            error.gevTimeout = true;
+            fail(error);
+          }
+        }, timeoutMs);
+        operation.timer.unref?.();
+      });
+      return true;
+    })();
+    try {
+      return await startPromise;
+    } finally {
+      startPromise = null;
+    }
   };
   const request = async (requestedPid, timeoutMs) => {
     if (requestedPid !== browserPid)
       throw new Error('Foreground helper PID mismatch.');
-    if (!child || disposed || unusable)
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+      throw new TypeError('Foreground helper timeout must be positive.');
+    if (!child || !initialized || disposed || unusable)
       throw new Error('Foreground helper is unavailable.');
     if (pending) throw new Error('Foreground helper request already pending.');
     const requestId = nextRequestId++;
@@ -395,7 +434,7 @@ export function createWindowsForegroundActivationSession({
       };
       child.stdin.once?.('error', operation.stdinError);
       operation.timer = setTimeout(() => {
-        if (pending) {
+        if (pending === operation) {
           const error = new Error('Foreground helper request timed out.');
           error.gevTimeout = true;
           fail(error);
@@ -407,13 +446,14 @@ export function createWindowsForegroundActivationSession({
       child.stdin.write(`${requestId}:${requestedPid}\n`);
     } catch (error) {
       fail(error);
-      throw error;
+      return response;
     }
     return response;
   };
   const dispose = async () => {
     if (disposePromise) return disposePromise;
     disposed = true;
+    initialized = false;
     const currentReady = ready;
     const currentPending = pending;
     ready = null;
@@ -422,27 +462,48 @@ export function createWindowsForegroundActivationSession({
     settle(currentPending, 'reject', new Error('Foreground helper disposed.'));
     const ownedChild = child;
     child = null;
-    if (!ownedChild) return;
-    disposePromise = new Promise((resolve) => {
+    if (!ownedChild) {
+      disposePromise = Promise.resolve();
+      return disposePromise;
+    }
+    disposePromise = new Promise((resolve, reject) => {
       let finished = false;
-      const finish = () => {
+      let closeTimer;
+      let killTimer;
+      const finish = (error) => {
         if (finished) return;
         finished = true;
+        if (closeTimer) clearTimeout(closeTimer);
+        if (killTimer) clearTimeout(killTimer);
         ownedChild.removeListener?.('exit', finish);
         ownedChild.removeListener?.('close', finish);
-        resolve();
+        ownedChild.stdout?.removeListener?.('data', onData);
+        ownedChild.removeListener?.('error', childFailure);
+        ownedChild.stdin?.removeListener?.('error', childFailure);
+        buffer = '';
+        error ? reject(error) : resolve();
       };
-      ownedChild.once?.('exit', finish);
       ownedChild.once?.('close', finish);
+      if (
+        (ownedChild.exitCode !== null && ownedChild.exitCode !== undefined) ||
+        ownedChild.signalCode
+      ) {
+        finish();
+        return;
+      }
       try {
         ownedChild.stdin.end();
       } catch {}
-      setTimeout(() => {
+      killTimer = setTimeout(() => {
         try {
           ownedChild.kill();
         } catch {}
-        finish();
-      }, 1000).unref?.();
+        closeTimer = setTimeout(() => {
+          finish(new Error('Foreground helper did not confirm process exit.'));
+        }, 1000);
+        closeTimer.unref?.();
+      }, 1000);
+      killTimer.unref?.();
     });
     return disposePromise;
   };

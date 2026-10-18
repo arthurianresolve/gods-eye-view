@@ -24,6 +24,7 @@ class FakePowerShellChild extends EventEmitter {
               requestId,
               status: 'foreground-confirmed',
               browserPid: 42,
+              foregroundPid: 42,
               foregroundConfirmed: true,
             })}\n`,
           ),
@@ -36,6 +37,10 @@ class FakePowerShellChild extends EventEmitter {
 
   kill() {
     this.killed = true;
+    queueMicrotask(() => {
+      this.emit('exit', null, 'SIGTERM');
+      this.emit('close');
+    });
     return true;
   }
 }
@@ -113,7 +118,10 @@ test('Windows activation session reuses one initialized helper and disposes it',
       return child;
     },
   });
-  await session.start({ timeoutMs: 1000 });
+  await Promise.all([
+    session.start({ timeoutMs: 1000 }),
+    session.start({ timeoutMs: 1000 }),
+  ]);
   const first = await session.request(42, 1000);
   const second = await session.request(42, 1000);
   assert.match(first.stdout, /foreground-confirmed/);
@@ -129,7 +137,9 @@ test('Windows activation session reuses one initialized helper and disposes it',
     /if \(-not \('\GevOwnedBrowserWindow' -as \[type\]\)\)/,
   );
   assert.match(spawnArguments[1][3], /Add-Type -TypeDefinition/);
-  assert.match(spawnArguments[1][3], /Out\.WriteLine\(\$response\)/);
+  assert.match(spawnArguments[1][3], /Out\.WriteLine\(\$responseJson\)/);
+  assert.match(spawnArguments[1][3], /requestId = \$requestId/);
+  assert.doesNotMatch(spawnArguments[1][3], /export function/);
   assert.doesNotMatch(spawnArguments[1][3], /exit 2/);
   await session.dispose();
   await session.dispose();
@@ -163,6 +173,32 @@ test('Windows activation session fails closed on request timeout and does not re
   );
   assert.equal(child.killed, true);
   await assert.rejects(session.request(42, 1000), /unavailable/);
+  await session.dispose();
+});
+
+test('Windows activation session rejects requests before readiness and write failures without orphaning', async () => {
+  const child = new FakePowerShellChild();
+  const session = createWindowsForegroundActivationSession({
+    browserPid: 42,
+    platform: 'win32',
+    spawnImpl: () => child,
+  });
+  await assert.rejects(session.request(42, 100), /unavailable/);
+  queueMicrotask(() =>
+    child.stdout.emit(
+      'data',
+      `${JSON.stringify({
+        schema: 'gev-windows-owned-browser-foreground-diagnostic/v1',
+        status: 'ready',
+      })}\n`,
+    ),
+  );
+  await session.start({ timeoutMs: 1000 });
+  child.stdin.write = () => {
+    throw new Error('pipe closed');
+  };
+  await assert.rejects(session.request(42, 1000), /pipe closed/);
+  assert.equal(child.killed, true);
   await session.dispose();
 });
 
