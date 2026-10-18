@@ -16,10 +16,20 @@ const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
 async function extractRawSampleCallback() {
   const source = await fs.readFile(SCRIPT, 'utf8');
   let callbackSource = null;
+  const callbackArrays = new Map();
   const linter = new Linter({ configType: 'flat' });
   const rule = {
     create(context) {
       return {
+        VariableDeclarator(node) {
+          if (
+            node.id?.type === 'Identifier' &&
+            node.id.name === 'sampleArguments' &&
+            node.init?.type === 'ArrayExpression'
+          ) {
+            callbackArrays.set(node.id.name, node.init);
+          }
+        },
         CallExpression(node) {
           if (
             callbackSource ||
@@ -28,7 +38,12 @@ async function extractRawSampleCallback() {
             node.callee.property?.name !== 'evaluate'
           )
             return;
-          const candidate = node.arguments[0];
+          const argument = node.arguments[0];
+          const candidate =
+            argument?.type === 'SpreadElement' &&
+            argument.argument?.type === 'Identifier'
+              ? callbackArrays.get(argument.argument.name)?.elements?.[0]
+              : argument;
           if (
             candidate?.type !== 'ArrowFunctionExpression' ||
             !candidate.async ||
@@ -58,6 +73,11 @@ async function extractRawSampleCallback() {
   );
   assert.deepEqual(messages, []);
   assert.ok(callbackSource, 'raw sample page callback was not found');
+  assert.match(
+    source,
+    /const sampleArguments\s*=\s*\[[\s\S]*?page\.evaluate\(\.\.\.sampleArguments\)/,
+    'raw sample callback must execute through the sample argument array',
+  );
   return callbackSource;
 }
 
@@ -417,7 +437,7 @@ test('timed samples reacquire foreground after warmup and before measurement', a
     measurementActivation,
   );
   const rawMeasurement = source.indexOf(
-    'const rawSamplePromise = page.evaluate(',
+    'const rawSamplePromise = Promise.resolve().then(() =>',
     measurementObservation,
   );
   assert.ok(
