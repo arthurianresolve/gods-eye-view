@@ -1,0 +1,150 @@
+{
+  "schema": "gev-dam-tail-diagnostic-review/v1",
+  "reviewedAt": "2026-10-18T22:29:15.661Z",
+  "protocolSha256": "298238dbc4f0a2424e5a40a53dbb0b6a78f1df92f43b41576a493df7ee25c424",
+  "summarySha256": "132e667a8cab6a4054d175a9b604f82d64df9c1e82895474eff60da34e6a2dfc",
+  "diagnosticOnly": true,
+  "acceptance": "Original five-run dams/cables failures remain failed. Four alternating diagnostic captures reproduce longer candidate callback gaps; no cause or waiver established.",
+  "rows": [
+    {
+      "role": "baseline-1",
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "frames": 238,
+      "frameInterval": {
+        "p50": 254.19999998807907,
+        "p95": 283.7999999821186,
+        "p99": 300.80000001192093,
+        "max": 485.59999999403954,
+        "samples": 237
+      },
+      "renderCallWallTime": {
+        "p50": 12.099999994039536,
+        "p95": 16.80000001192093,
+        "p99": 19.100000023841858,
+        "max": 21.399999976158142,
+        "samples": 238
+      },
+      "cameraWallTime": {
+        "p50": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.6000000238418579,
+        "max": 0.7000000178813934,
+        "samples": 238
+      },
+      "callbackGap": {
+        "p50": 242,
+        "p95": 268.80000001192093,
+        "p99": 284,
+        "max": 470.90000000596046,
+        "samples": 237
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    },
+    {
+      "role": "candidate-2",
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "frames": 232,
+      "frameInterval": {
+        "p50": 257.09999999403954,
+        "p95": 462.09999999403954,
+        "p99": 534.1999999880791,
+        "max": 562.0999999940395,
+        "samples": 231
+      },
+      "renderCallWallTime": {
+        "p50": 12.5,
+        "p95": 18.599999994039536,
+        "p99": 22.30000001192093,
+        "max": 26.5,
+        "samples": 232
+      },
+      "cameraWallTime": {
+        "p50": 0.20000001788139343,
+        "p95": 0.5,
+        "p99": 0.5999999940395355,
+        "max": 0.699999988079071,
+        "samples": 232
+      },
+      "callbackGap": {
+        "p50": 244.90000000596046,
+        "p95": 442.59999999403954,
+        "p99": 524.1999999880791,
+        "max": 541.1999999880791,
+        "samples": 231
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    },
+    {
+      "role": "baseline-3",
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "frames": 211,
+      "frameInterval": {
+        "p50": 288.2000000178814,
+        "p95": 325.5,
+        "p99": 343.7999999821186,
+        "max": 541.5,
+        "samples": 210
+      },
+      "renderCallWallTime": {
+        "p50": 15.300000011920929,
+        "p95": 20.700000017881393,
+        "p99": 21.5,
+        "max": 22.599999994039536,
+        "samples": 211
+      },
+      "cameraWallTime": {
+        "p50": 0.29999998211860657,
+        "p95": 0.5,
+        "p99": 0.800000011920929,
+        "max": 0.800000011920929,
+        "samples": 211
+      },
+      "callbackGap": {
+        "p50": 273.40000000596046,
+        "p95": 306.2999999821186,
+        "p99": 323.90000000596046,
+        "max": 534.5,
+        "samples": 210
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    },
+    {
+      "role": "candidate-4",
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "frames": 238,
+      "frameInterval": {
+        "p50": 250.09999999403954,
+        "p95": 439.5,
+        "p99": 507.09999999403954,
+        "max": 527.6999999880791,
+        "samples": 237
+      },
+      "renderCallWallTime": {
+        "p50": 10.900000005960464,
+        "p95": 17.600000023841858,
+        "p99": 19.900000005960464,
+        "max": 21,
+        "samples": 238
+      },
+      "cameraWallTime": {
+        "p50": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.5,
+        "max": 0.699999988079071,
+        "samples": 238
+      },
+      "callbackGap": {
+        "p50": 239.59999999403954,
+        "p95": 426.5,
+        "p99": 495.40000000596046,
+        "max": 510.90000000596046,
+        "samples": 237
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    }
+  ]
+}

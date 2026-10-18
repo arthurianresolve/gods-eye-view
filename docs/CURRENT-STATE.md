@@ -1,13 +1,15 @@
 # God's Eye View Current State
 
-## Current S61–S70 checkpoint — October 18, 2026
+## Current S61–S70 checkpoint — October 19, 2026
 
 The application remains frozen at `19065997`; subsequent changes affect QA and
 documentation. Exact CI, tracking, signed artifact and VM105 package verification
 pass. The production service continues to run verified release `e7a878e`.
-[QA CI at `6c0db98b`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39157995268)
-also passes all seven selected jobs, with optional diagnostic modes explicitly
-skipped rather than counted as hardware evidence.
+The eight-row native Windows matrix completed six pairs before its weather
+baseline failed. Dams and cables exceed the 10% motion regression threshold;
+map streaming has not run. These findings block candidate deployment. The
+[current matrix report](performance-evidence/s69-native-matrix-20261019/README.md)
+keeps complete comparisons, failed attempts and diagnostic-only results separate.
 
 The Windows UHD 620 operating and Dense pairs are complete and comparable at
 native DPR 2, Manual/DENSE/75% and unchanged populations. Operating motion p95
@@ -18,8 +20,30 @@ The parked Austin +80.8% inter-render interval is separately resolved by a
 hash-bound diagnostic disposition at `7aa89243`. Wind is intentionally invisible
 at 12,000 m on both builds, satellites still move, and wind resumes with matching
 geometry and advancing phase at 60,000 m. The raw regression flag remains true;
-this disposition clears no other metric. The remaining matrix has resumed with
-all five complete raw reports preserved unchanged.
+this disposition clears no other metric. All twelve reports from the six
+completed pairs are preserved unchanged. Dam motion p95 rises from 300.1 to
+409.9 ms (+36.6%); cables rise from 339.2 to 549.7 ms (+62.1%). Combined
+infrastructure is 2.7% lower, so a blanket inference about all infrastructure
+would be unsupported.
+
+A separate four-capture dam trace repeats the tail slowdown. Most of the
+additional interval occurs between the return from `viewer.render` and the next
+animation-frame callback; this is not a measurement of GPU execution time. A
+one-change HUD control produced 295.3 ms p95, but the paired unchanged candidate
+also produced 299.0 ms. This does not establish the guard as the cause; its
+temporary removal is not retained. No runtime fix or acceptance waiver follows
+from these traces alone.
+
+Weather QA revision `fb8a6c33` retains bounded expected/observed phase timestamps
+when the existing transition check fails; its predicates and deadline remain
+unchanged. All 30 focused checks pass under Node 24 and 26 on VM105. One short
+baseline and candidate weather diagnostic both completed, but they do not replace
+the failed five-run block or establish weather qualification.
+[CI at `fb8a6c33`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39172161048)
+passes all seven selected jobs, including Node 24/26, platform recovery and
+browser journeys. Its
+[release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39172161051)
+also passes. Optional diagnostic job skips are not hardware passes.
 
 The corrected CCTV visual fixture waits for the globe before activation and
 pauses captures at a task boundary. Three states match exactly; the fourth has
