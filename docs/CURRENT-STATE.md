@@ -14,6 +14,17 @@ shared headers, with `ws` declared as a runtime dependency. Node-only host
 checks pass; packaged `npm ci --omit=dev` startup and Vite integration remain
 pending because local dependency installation is incomplete.
 
+## S64 bounded diagnostics and Auto eligibility — October 18, 2026
+
+Auto quality now evaluates only consecutive visible continuous-demand frames;
+request-render gaps and the first frame after demand resumes reset eligibility,
+while genuinely slow continuous frames remain eligible. Diagnostics retain a
+bounded 120-sample history, report frame p50/p95/p99 values, optionally observe
+long tasks with teardown and generation guards, and cache renderer identity per
+WebGL context with loss/restoration invalidation. Unsupported GPU, draw-call,
+long-task and tile-backlog metrics remain explicitly unavailable. Focused
+controller and monitor tests pass; browser/integration gates remain pending.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium

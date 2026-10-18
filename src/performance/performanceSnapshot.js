@@ -191,6 +191,8 @@ export function createPerformanceMonitor({
   let destroyed = false;
   let removeListener = null;
   let longTaskObserver = null;
+  let observerGeneration = 0;
+  let removeContextListeners = null;
   const onPostRender = () => {
     if (!active) return;
     const current = now();
@@ -212,6 +214,9 @@ export function createPerformanceMonitor({
     removeListener = null;
     longTaskObserver?.disconnect();
     longTaskObserver = null;
+    observerGeneration += 1;
+    removeContextListeners?.();
+    removeContextListeners = null;
     active = nextEnabled;
     enabled = active;
     previousFrameAt = null;
@@ -228,16 +233,27 @@ export function createPerformanceMonitor({
           ? unsubscribe
           : () => scene.postRender.removeEventListener?.(onPostRender);
     }
+    const generation = observerGeneration;
     if (observeLongTasks && typeof PerformanceObserver === 'function') {
       try {
         longTaskObserver = new PerformanceObserver((list) => {
-          if (!active || destroyed) return;
+          if (!active || destroyed || generation !== observerGeneration) return;
           for (const entry of list.getEntries()) snapshot.record('longTask', entry.duration, { startTime: entry.startTime });
         });
         longTaskObserver.observe({ type: 'longtask', buffered: false });
       } catch {
         longTaskObserver = null;
       }
+    }
+    const canvas = scene?.canvas;
+    if (canvas?.addEventListener) {
+      const invalidate = () => invalidatePerformanceEnvironmentCache(scene?.context?._gl);
+      canvas.addEventListener('webglcontextlost', invalidate);
+      canvas.addEventListener('webglcontextrestored', invalidate);
+      removeContextListeners = () => {
+        canvas.removeEventListener('webglcontextlost', invalidate);
+        canvas.removeEventListener('webglcontextrestored', invalidate);
+      };
     }
   }
   if (enabled) setEnabled(true);

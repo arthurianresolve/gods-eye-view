@@ -178,6 +178,23 @@ test('Auto keeps slow continuous frames but ignores request-render gaps', () => 
   f.controller.destroy();
 });
 
+test('Auto excludes the first frame after demand mode returns to continuous mode', () => {
+  const f = controllerFixture(75);
+  f.controller.setMode('auto', { persist: false });
+  f.scene.requestRenderMode = true;
+  f.frame(0);
+  f.frame(150);
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.scene.requestRenderMode = false;
+  f.frame(300); // transition boundary is excluded
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.frame(450); // subsequent continuous frame is eligible
+  assert.equal(f.controller.policy.samples.length, 1);
+  f.controller.setMode('manual', { persist: false });
+  assert.equal(f.density, 75);
+  f.controller.destroy();
+});
+
 test('external restoration updates the Manual status without changing mode', () => {
   const states = [];
   const f = controllerFixture(75);
