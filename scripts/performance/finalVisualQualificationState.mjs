@@ -47,3 +47,69 @@ export function readQualificationStateInPage({
     profile: profileValue,
   };
 }
+
+/** Read-only paused-frame evidence for the detection scanline phase. */
+export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
+  const boundary = window.__gevVisualPresentationBoundary?.read?.();
+  const canvas = document.getElementById('world-overlay-detection-surface');
+  const rect = canvas?.getBoundingClientRect?.();
+  const context = canvas?.getContext?.('2d', { willReadFrequently: true });
+  if (!boundary || !canvas || !rect || !context)
+    throw new Error('Visual snapshot phase surfaces are unavailable.');
+  const dprX = canvas.width / rect.width;
+  const dprY = canvas.height / rect.height;
+  if (
+    !Number.isFinite(dprX) ||
+    !Number.isFinite(dprY) ||
+    dprX <= 0 ||
+    dprY <= 0 ||
+    Math.abs(dprX - dprY) > 0.01
+  )
+    throw new Error('Visual snapshot phase dimensions are unavailable.');
+  const dpr = dprX;
+  const rows = [];
+  for (let cssRow = 0; cssRow < 8; cssRow++) {
+    const pixelRow = Math.floor(cssRow * dpr);
+    if (pixelRow >= canvas.height) break;
+    const left = context.getImageData(0, pixelRow, 1, 1).data;
+    const right = context.getImageData(
+      Math.max(0, canvas.width - 1),
+      pixelRow,
+      1,
+      1,
+    ).data;
+    rows.push({
+      cssRow,
+      pixelRow,
+      leftAlpha: left[3],
+      rightAlpha: right[3],
+    });
+  }
+  const leftRows = rows
+    .filter((row) => row.leftAlpha > 0)
+    .map((row) => row.cssRow);
+  const rightRows = rows
+    .filter((row) => row.rightAlpha > 0)
+    .map((row) => row.cssRow);
+  const sameEdges =
+    JSON.stringify(leftRows) === JSON.stringify(rightRows) &&
+    (leftRows.join(',') === '0,4' || leftRows.join(',') === '2,6');
+  const phase = sameEdges ? (leftRows[0] === 0 ? 0 : 2) : null;
+  if (
+    expectedHudVisible !== undefined &&
+    boundary.hudVisible !== expectedHudVisible
+  )
+    throw new Error('Visual snapshot HUD state differs from requested state.');
+  return {
+    hud: boundary,
+    phase,
+    alphaRows: rows,
+    dimensions: {
+      cssWidth: rect.width,
+      cssHeight: rect.height,
+      width: canvas.width,
+      height: canvas.height,
+      dpr,
+    },
+  };
+}

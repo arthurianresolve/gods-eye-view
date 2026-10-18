@@ -21,11 +21,18 @@ function withTimeout(operation, timeoutMs, label) {
   ]).finally(() => clearTimeout(timer));
 }
 
-function callbackExpression(callback) {
+function callbackExpression(callback, args) {
   if (callback == null) return null;
   if (typeof callback !== 'function')
     throw new TypeError('Paused read callback must be a function.');
-  return `(${callback.toString()})()`;
+  let serializedArgs = '';
+  if (args !== undefined) {
+    serializedArgs = JSON.stringify(args);
+    if (serializedArgs === undefined || serializedArgs.length > 4096)
+      throw new TypeError('Paused read callback arguments are not bounded.');
+    serializedArgs = `(${serializedArgs})`;
+  }
+  return `(${callback.toString()})(${serializedArgs})`;
 }
 
 function cleanupError(stage, error) {
@@ -44,6 +51,7 @@ function cleanupError(stage, error) {
 export async function captureWithDebuggerPause({
   page,
   readCallback = null,
+  readCallbackArgs,
   screenshot,
   pauseTimeoutMs,
   operationTimeoutMs,
@@ -60,11 +68,13 @@ export async function captureWithDebuggerPause({
     DEFAULT_OPERATION_TIMEOUT_MS,
     'operationTimeoutMs',
   );
-  const expression = callbackExpression(readCallback);
+  const expression = callbackExpression(readCallback, readCallbackArgs);
   const session = await page.createCDPSession();
   if (!session?.send || !session?.on || !session?.detach)
     throw new TypeError('The owned CDP session is incomplete.');
   let pausedEvent = null;
+  let closed = false;
+  const pauseDeadline = performance.now() + pauseLimit;
   let pauseResolve;
   let pauseTimer;
   const pausePromise = new Promise((resolve, reject) => {
@@ -79,7 +89,7 @@ export async function captureWithDebuggerPause({
   // cleanup.
   void pausePromise.catch(() => {});
   const onPaused = (event) => {
-    if (pausedEvent) return;
+    if (closed || pausedEvent) return;
     pausedEvent = event;
     clearTimeout(pauseTimer);
     pauseResolve(event);
@@ -88,22 +98,35 @@ export async function captureWithDebuggerPause({
   let primaryError = null;
   const cleanupErrors = [];
   let result = null;
+  let cleanup = { resumed: false, disabled: false, detached: false };
   try {
+    const pauseRemaining = (label) => {
+      const remaining = Math.ceil(pauseDeadline - performance.now());
+      if (remaining < 1) throw new Error(`${label} deadline exceeded.`);
+      return remaining;
+    };
     await withTimeout(
       () => session.send('Debugger.enable'),
-      pauseLimit,
+      pauseRemaining('Debugger.enable'),
       'Debugger.enable',
     );
     await withTimeout(
       () => session.send('Debugger.pause'),
-      pauseLimit,
+      pauseRemaining('Debugger.pause'),
       'Debugger.pause',
     );
     const event = await pausePromise;
     const callFrameId = event?.callFrames?.[0]?.callFrameId;
     if (!callFrameId) throw new Error('Debugger pause has no top call frame.');
+    const operationDeadline = performance.now() + operationLimit;
+    const operationRemaining = (label) => {
+      const remaining = Math.ceil(operationDeadline - performance.now());
+      if (remaining < 1) throw new Error(`${label} deadline exceeded.`);
+      return remaining;
+    };
     const evaluateRead = async () => {
       if (!expression) return null;
+      if (closed) throw new Error('Paused read was canceled.');
       const evaluated = await withTimeout(
         () =>
           session.send('Debugger.evaluateOnCallFrame', {
@@ -112,23 +135,28 @@ export async function captureWithDebuggerPause({
             returnByValue: true,
             silent: true,
           }),
-        operationLimit,
+        operationRemaining('Debugger.evaluateOnCallFrame'),
         'Debugger.evaluateOnCallFrame',
       );
       if (evaluated?.exceptionDetails || evaluated?.result?.subtype === 'error')
         throw new Error('Paused read callback failed.');
+      if (closed) throw new Error('Paused read was canceled.');
       return evaluated?.result?.value;
     };
     const readBefore = await evaluateRead();
     const screenshotResult = await withTimeout(
-      screenshot,
-      operationLimit,
+      async () => {
+        if (closed) throw new Error('Paused screenshot was canceled.');
+        const value = await screenshot(readBefore);
+        if (closed) throw new Error('Paused screenshot was canceled.');
+        return value;
+      },
+      operationRemaining('paused screenshot'),
       'paused screenshot',
     );
     const readAfter = await evaluateRead();
     result = {
       pause: {
-        callFrameId,
         reason:
           typeof event?.reason === 'string' ? event.reason.slice(0, 80) : null,
       },
@@ -139,6 +167,7 @@ export async function captureWithDebuggerPause({
   } catch (error) {
     primaryError = error;
   } finally {
+    closed = true;
     clearTimeout(pauseTimer);
     session.off?.('Debugger.paused', onPaused);
     if (!session.off) session.removeListener?.('Debugger.paused', onPaused);
@@ -149,6 +178,7 @@ export async function captureWithDebuggerPause({
           operationLimit,
           'Debugger.resume',
         );
+        cleanup.resumed = true;
       } catch (error) {
         cleanupErrors.push(cleanupError('resume', error));
       }
@@ -159,11 +189,13 @@ export async function captureWithDebuggerPause({
         operationLimit,
         'Debugger.disable',
       );
+      cleanup.disabled = true;
     } catch (error) {
       cleanupErrors.push(cleanupError('disable', error));
     }
     try {
       await withTimeout(() => session.detach(), operationLimit, 'CDP detach');
+      cleanup.detached = true;
     } catch (error) {
       cleanupErrors.push(cleanupError('detach', error));
     }
@@ -177,5 +209,6 @@ export async function captureWithDebuggerPause({
     error.cleanupErrors = cleanupErrors;
     throw error;
   }
+  result.cleanup = cleanup;
   return result;
 }

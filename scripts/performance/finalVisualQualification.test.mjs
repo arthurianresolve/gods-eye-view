@@ -166,6 +166,26 @@ async function fixture(t) {
           after: phaseFor(id),
         },
       },
+      captureMethod: {
+        baseline: 'debugger-paused-snapshot',
+        candidate: 'debugger-paused-snapshot',
+      },
+      phase: {
+        baseline: {
+          before: 0,
+          after: 0,
+          dimensions: { width: 1440, height: 900 },
+        },
+        candidate: {
+          before: 0,
+          after: 0,
+          dimensions: { width: 1440, height: 900 },
+        },
+      },
+      pauseCleanup: {
+        baseline: { resumed: true, disabled: true, detached: true },
+        candidate: { resumed: true, disabled: true, detached: true },
+      },
       frameDelivery: {
         baseline: { count: 1, sha256: '1'.repeat(64), matchesFixture: true },
         candidate: { count: 1, sha256: '1'.repeat(64), matchesFixture: true },

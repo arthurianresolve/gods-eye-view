@@ -37,7 +37,11 @@ import { createWindowsForegroundActivationSession } from './windowsForegroundWin
 import { verifyServedBuildAssets } from './buildProvenance.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFrozenWallClock } from './productionFlightFixture.mjs';
-import { readQualificationStateInPage } from './finalVisualQualificationState.mjs';
+import {
+  readQualificationStateInPage,
+  readVisualSnapshotPhaseInPage,
+} from './finalVisualQualificationState.mjs';
+import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
 import {
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
@@ -441,7 +445,8 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         throw new Error(`Foreground proof failed for ${id}.`);
       const attempts = [];
       let accepted = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      let pngCount = 0;
+      for (let attempt = 1; attempt <= 12 && pngCount < 3; attempt++) {
         await page.waitForFunction(
           (expectedHudVisible) => {
             const proof = window.__gevVisualPresentationBoundary?.read();
@@ -482,35 +487,66 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           throw new Error(
             'Completed render lacks a selected, materialized CCTV still projection.',
           );
-        const before = await page.evaluate(
-          readVisualPresentationBoundaryInPage,
-        );
-        const png = await captureQualificationPng(
-          page,
-          path.join(out, `${id}-${label}-attempt-${attempt}.png`),
-        );
-        const after = await page.evaluate(readVisualPresentationBoundaryInPage);
-        const unchanged = presentationStayedSettled(
-          before,
-          after,
-          id !== 'hud-hidden',
-        );
+        const expectedHudVisible = id !== 'hud-hidden';
+        let pausedCapture;
+        try {
+          pausedCapture = await captureWithDebuggerPause({
+            page,
+            readCallback: readVisualSnapshotPhaseInPage,
+            readCallbackArgs: { expectedHudVisible },
+            screenshot: (readBefore) => {
+              if (readBefore?.phase !== 0)
+                throw new Error('Visual scanline phase is not eligible.');
+              pngCount++;
+              return captureQualificationPng(
+                page,
+                path.join(out, `${id}-${label}-attempt-${pngCount}.png`),
+              );
+            },
+          });
+        } catch (error) {
+          attempts.push({
+            attempt,
+            accepted: false,
+            reason: String(error?.message || error).slice(0, 240),
+          });
+          continue;
+        }
+        const before = pausedCapture.readBefore?.hud;
+        const after = pausedCapture.readAfter?.hud;
+        const beforePhase = pausedCapture.readBefore?.phase;
+        const afterPhase = pausedCapture.readAfter?.phase;
+        const unchanged =
+          beforePhase === 0 &&
+          afterPhase === 0 &&
+          presentationStayedSettled(before, after, expectedHudVisible);
         attempts.push({
           attempt,
           before,
           after,
+          phaseBefore: beforePhase,
+          phaseAfter: afterPhase,
+          phaseDimensions: pausedCapture.readBefore?.dimensions,
+          cleanup: pausedCapture.cleanup,
           accepted: unchanged,
-          image: png,
+          image: pausedCapture.screenshot,
         });
         if (!unchanged) continue;
         accepted = {
           id,
           completedRender,
           foreground,
+          captureMethod: 'debugger-paused-snapshot',
+          pauseCleanup: pausedCapture.cleanup,
+          phase: {
+            before: beforePhase,
+            after: afterPhase,
+            dimensions: pausedCapture.readBefore?.dimensions,
+          },
           ...observed,
           presentation: { before, after, attempts },
           frameDelivery: { ...frameDelivery },
-          [label]: png,
+          [label]: pausedCapture.screenshot,
         };
         break;
       }
@@ -873,6 +909,18 @@ async function produceFinalVisualQualificationInternal(options, progress) {
       presentation: {
         baseline: baseline.states[index].presentation,
         candidate: candidate.states[index].presentation,
+      },
+      captureMethod: {
+        baseline: baseline.states[index].captureMethod,
+        candidate: candidate.states[index].captureMethod,
+      },
+      phase: {
+        baseline: baseline.states[index].phase,
+        candidate: candidate.states[index].phase,
+      },
+      pauseCleanup: {
+        baseline: baseline.states[index].pauseCleanup,
+        candidate: candidate.states[index].pauseCleanup,
       },
       frameDelivery: {
         baseline: baseline.states[index].frameDelivery,

@@ -322,6 +322,33 @@ export async function validateFinalVisualQualification(
         `${state.id} ${side} observed camera differs`,
       );
       const presentation = state.presentation?.[side];
+      assert.equal(
+        state.captureMethod?.[side],
+        'debugger-paused-snapshot',
+        `${state.id} ${side} capture method`,
+      );
+      assert.deepEqual(
+        state.pauseCleanup?.[side],
+        { resumed: true, disabled: true, detached: true },
+        `${state.id} ${side} paused cleanup`,
+      );
+      assert.equal(
+        state.phase?.[side]?.before,
+        0,
+        `${state.id} ${side} phase before`,
+      );
+      assert.equal(
+        state.phase?.[side]?.after,
+        0,
+        `${state.id} ${side} phase after`,
+      );
+      assert.ok(
+        Number.isInteger(state.phase?.[side]?.dimensions?.width) &&
+          Number.isInteger(state.phase?.[side]?.dimensions?.height) &&
+          state.phase[side].dimensions.width > 0 &&
+          state.phase[side].dimensions.height > 0,
+        `${state.id} ${side} phase dimensions`,
+      );
       assert.ok(
         presentationStayedSettled(
           presentation?.before,
