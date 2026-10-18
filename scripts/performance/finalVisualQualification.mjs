@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -82,11 +83,16 @@ async function assertPng(record, root, label) {
     info.isFile() && !info.isSymbolicLink(),
     `${label} PNG must be a regular file`,
   );
+  assert.ok(info.size > 24 && info.size <= 16 * 1024 * 1024, `${label} PNG size is outside the bounded limit`);
   const bytes = await fs.readFile(file);
   const dimensions = pngDimensions(bytes);
+  const decoded = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.equal(decoded.info.format, 'raw', `${label} PNG did not decode to pixels`);
+  assert.equal(decoded.info.width, dimensions.width, `${label} decoded width`);
+  assert.equal(decoded.info.height, dimensions.height, `${label} decoded height`);
   assert.equal(record.sha256, sha256(bytes), `${label} PNG digest`);
   assert.deepEqual(record.dimensions, dimensions, `${label} PNG dimensions`);
-  return bytes;
+  return { bytes, pixels: decoded.data, pixelInfo: decoded.info };
 }
 
 /** Capture one bounded lossless PNG after the caller has observed a completed render. */
@@ -178,11 +184,8 @@ export async function validateFinalVisualQualification(
       root,
       `${state.id} candidate`,
     );
-    assert.deepEqual(
-      candidate,
-      baseline,
-      `${state.id} rendered pixels changed`,
-    );
+    assert.deepEqual(candidate.pixels, baseline.pixels, `${state.id} decoded rendered pixels changed`);
+    assert.deepEqual(candidate.pixelInfo, baseline.pixelInfo, `${state.id} decoded pixel dimensions changed`);
   }
   return {
     schema: report.schema,
