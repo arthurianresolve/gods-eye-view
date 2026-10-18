@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { localSdrCardView } from './localSdrPresentation.js';

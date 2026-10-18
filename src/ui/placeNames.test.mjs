@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('ru')]);
 // Preset place names show in the UI language at the presentation boundary
 // (voice results, location pills, HUD); the preset data stays English.
 import { test } from 'node:test';

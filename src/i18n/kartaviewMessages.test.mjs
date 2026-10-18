@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from './index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // KartaView texts are English data (msg() in providers/kartaview/) shown
 // through translateKnown, so each needs an entry in every catalog.
 import { test } from 'node:test';

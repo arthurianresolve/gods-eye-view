@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // Flights / Military feed failure texts reach the DATA LAYERS row in the
 // UI language; the feeds keep them in English.
 import { test } from 'node:test';

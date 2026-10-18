@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // Wind source failures are English data (src/layers/wind/source.js) and
 // are shown in the UI language; the HTTP line keeps its status number.
 import test from 'node:test';

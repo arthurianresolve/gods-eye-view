@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // The SDR status line and stats write numbers in the UI language, like
 // the frequency next to them ("Сканирование 101,1 МГц…").
 import test from 'node:test';

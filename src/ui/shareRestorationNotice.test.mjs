@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('ru'), prepareTestLocale('es')]);
 // Share-tracking restore notices are ready-made sentences per policy: a label
 // dropped into a template cannot take the case (ru) or article (es) needed.
 import { test } from 'node:test';

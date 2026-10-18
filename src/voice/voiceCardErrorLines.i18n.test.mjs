@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // A failed tool step: the card shows the tool error in the UI language; the
 // result keeps gevActions' English for the model.
 import assert from 'node:assert/strict';

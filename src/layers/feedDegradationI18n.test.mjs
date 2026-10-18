@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es')]);
 // The AIS degradation chip and the traffic "SIMULATED — <reason>" text read in
 // the UI language; English keeps its wording.
 import { test } from 'node:test';

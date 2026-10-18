@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // The DATA LAYERS row shows the English status texts that GNSS, Transit,
 // CelesTrak and AQHI produce in the UI language.
 import assert from 'node:assert/strict';

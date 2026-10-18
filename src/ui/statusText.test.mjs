@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // Layer status texts arrive as English data and show in the UI language by
 // their shape; English shows exactly as it came.
 import assert from 'node:assert/strict';

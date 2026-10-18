@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // Box-tool and model refusals on the Recent Imagery notice line are
 // shown in the UI language; the layer keeps them in English.
 import { test } from 'node:test';

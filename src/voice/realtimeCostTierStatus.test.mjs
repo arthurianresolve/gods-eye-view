@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // The status after a tier switch names the tier in the interface
 // language, as the tier button does; the stored tier value stays English.
 import test from 'node:test';

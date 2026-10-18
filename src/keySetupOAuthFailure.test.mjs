@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from './i18n/index.js';
+await Promise.all([prepareTestLocale('ru')]);
 // A failed ChatGPT OAuth check whose only reason is our own fallback sentence
 // shows it alone; a server-sent reason keeps the «OAuth check failed» wrapper.
 import test from 'node:test';

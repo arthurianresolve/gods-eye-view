@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // The voice card names layers, sources and distances in the interface
 // language; what the model receives stays English.
 import test from 'node:test';

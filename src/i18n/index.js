@@ -22,7 +22,6 @@ const LOADERS = Object.freeze({
   ru: () => import('./locales/ru.json', { with: { type: 'json' } }),
 });
 const pendingLoads = new Map();
-let preparationGeneration = 0;
 
 let currentLocale = DEFAULT_LOCALE;
 let requestedLocale = DEFAULT_LOCALE;
@@ -43,8 +42,13 @@ export function prepareLocale(
     setLocale(normalized);
     return Promise.resolve(normalized);
   }
-  if (pendingLoads.has(normalized)) return pendingLoads.get(normalized);
-  const generation = ++preparationGeneration;
+  if (pendingLoads.has(normalized)) {
+    // A repeated request is the latest preference even when another locale's
+    // load completed in between. Re-select it so the shared pending result
+    // installs only while it is still the active request.
+    setLocale(normalized);
+    return pendingLoads.get(normalized);
+  }
   const loader = loaders[normalized];
   if (typeof loader !== 'function')
     return Promise.reject(new Error(`No catalog loader for ${normalized}`));
@@ -55,15 +59,11 @@ export function prepareLocale(
   const pending = load
     .then((module) => {
       CATALOGS[normalized] = module.default;
-      if (generation === preparationGeneration && currentLocale === normalized)
-        formatterCache.clear();
+      if (currentLocale === normalized) formatterCache.clear();
       return normalized;
     })
     .catch((error) => {
-      if (
-        generation === preparationGeneration &&
-        currentLocale === normalized
-      ) {
+      if (currentLocale === normalized) {
         setLocale(DEFAULT_LOCALE, { preserveRequested: true });
       }
       throw error;

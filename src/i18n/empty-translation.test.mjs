@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from './index.js';
+await Promise.all([prepareTestLocale('es')]);
 // An empty or blank translation must not count as done.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

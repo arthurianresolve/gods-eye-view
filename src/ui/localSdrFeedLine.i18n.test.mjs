@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es')]);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setLocale } from '../i18n/index.js';

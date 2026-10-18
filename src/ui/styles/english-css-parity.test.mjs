@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es')]);
 // Layout rules written for long translations must not change the English
 // rendering: every rule checked here has no `html:not([lang='en'])` guard,
 // so it applies to English too.

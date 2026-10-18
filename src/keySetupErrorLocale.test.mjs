@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from './i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // A refused key save reads in the panel's language: the server sends `code`
 // and `params` beside its English `error`, the panel builds the sentence.
 import test from 'node:test';

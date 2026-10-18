@@ -1,3 +1,5 @@
+import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
 // Shell toasts, prompts and launcher labels: pin that they are marked in the
 // code, present in every shipped catalog, and that no bare literal is left at
 // the call sites (`window.prompt/confirm` and constants are invisible to the
