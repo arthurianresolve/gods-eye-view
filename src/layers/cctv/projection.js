@@ -8,6 +8,7 @@ import {
   PROJECTION_CANVAS_HEIGHT,
   PROJECTION_ACTIVE_REFRESH_MS,
   PROJECTION_IDLE_REFRESH_MS,
+  PROJECTION_TEXTURE_SWAP_MS,
 } from './policy.js';
 
 export function createProjection({
@@ -18,6 +19,86 @@ export function createProjection({
 }) {
   const { holdContinuousRender, releaseContinuousRender } = services.render;
   const requestRender = services.render?.governorRequestRender || (() => {});
+  const stillOwner = Symbol('cctv-still');
+  let cancelStillUpdate = null;
+  let removeVisibilityListener = null;
+  let projectionStarted = false;
+  let updateGeneration = 0;
+
+  const visible = () =>
+    projectionStarted &&
+    layerState._enabled &&
+    layerState._viewer &&
+    !(typeof document !== 'undefined' && document.hidden);
+  const currentRuntime = (record, runtime) =>
+    !runtime.disposed && record.projection === runtime;
+  const activeRuntime = (record, runtime) =>
+    visible() &&
+    layerState._showProjection &&
+    currentRuntime(record, runtime) &&
+    parts.selection.getActiveRecord() === record;
+  const stillCadence = (record) =>
+    record.camera.id === layerState._activeCameraId
+      ? PROJECTION_ACTIVE_REFRESH_MS
+      : PROJECTION_IDLE_REFRESH_MS;
+
+  function cancelScheduledStill() {
+    updateGeneration++;
+    cancelStillUpdate?.();
+    cancelStillUpdate = null;
+  }
+
+  function scheduleStillUpdate(callback, delay) {
+    cancelScheduledStill();
+    const generation = updateGeneration;
+    const run = () => {
+      if (generation !== updateGeneration || !visible()) return;
+      cancelStillUpdate = null;
+      callback();
+    };
+    if (services.render.scheduleRenderUpdate) {
+      cancelStillUpdate = services.render.scheduleRenderUpdate(
+        stillOwner,
+        run,
+        delay,
+      );
+    } else {
+      const timer = setTimeout(run, delay);
+      cancelStillUpdate = () => clearTimeout(timer);
+    }
+  }
+
+  function attachStillImage(record, runtime) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.crossOrigin = 'anonymous';
+    runtime.image = image;
+    image.onload = () => {
+      if (!currentRuntime(record, runtime) || runtime.image !== image) return;
+      runtime.imageLoading = false;
+      runtime.imageReady = true;
+      runtime.imageStamp++;
+      runtime.nextImageRetryAt = 0;
+      if (!activeRuntime(record, runtime)) return;
+      reportClientHealth(record.camera.id, 'ok', 'decode-ok');
+      parts.frames.drawProjectionFrame(record, { refresh: false });
+      parts.frames.refreshProjectionTextures(record);
+      requestRender('cctv-still-ready');
+      scheduleNextStillUpdate(record, runtime);
+    };
+    image.onerror = () => {
+      if (!currentRuntime(record, runtime) || runtime.image !== image) return;
+      runtime.imageLoading = false;
+      runtime.imageReady = false;
+      runtime.nextImageRetryAt = Date.now() + stillCadence(record);
+      if (!activeRuntime(record, runtime)) return;
+      reportClientHealth(record.camera.id, 'failed', 'decode-failure');
+      parts.frames.drawProjectionFrame(record, { refresh: false });
+      parts.frames.refreshProjectionTextures(record);
+      requestRender('cctv-still-failed');
+      scheduleNextStillUpdate(record, runtime);
+    };
+  }
 
   function reportClientHealth(cameraId, status, reasonCode) {
     parts.health?.recordClientHealth?.(cameraId, {
@@ -220,7 +301,7 @@ export function createProjection({
       canvasStamp: 1,
       lastSwappedCanvasStamp: 0,
       disposed: false,
-      retryTimer: 0,
+      nextImageRetryAt: 0,
     };
 
     parts.frames.paintProjectionPlaceholder(ctx, record.camera);
@@ -252,57 +333,19 @@ export function createProjection({
         feedType,
         {
           onFailure: () => {
-            if (runtime.disposed) return;
+            if (!currentRuntime(record, runtime)) return;
             reportClientHealth(record.camera.id, 'failed', 'upstream-failure');
             runtime.video = null;
             runtime.mode = 'image';
-            runtime.image = new Image();
-            runtime.image.decoding = 'async';
-            runtime.image.onload = () => {
-              if (runtime.disposed) return;
-              runtime.imageLoading = false;
-              runtime.imageReady = true;
-              runtime.imageStamp = Date.now();
-            parts.frames.drawProjectionFrame(record);
-            parts.frames.refreshProjectionTextures(record);
-            requestRender('cctv-still-ready');
-              reportClientHealth(record.camera.id, 'ok', 'decode-ok');
-            };
-            runtime.image.onerror = () => {
-              if (runtime.disposed) return;
-              runtime.imageLoading = false;
-              runtime.imageReady = false;
-            scheduleStillRetry(record, runtime);
-              reportClientHealth(record.camera.id, 'failed', 'decode-failure');
-            };
+            attachStillImage(record, runtime);
             runtime.planeMaterial.image = runtime.canvas;
-            parts.frames.refreshProjectionImage(record, true);
+            if (activeRuntime(record, runtime)) startProjectionLoop();
             parts.presentation.notifyListeners();
           },
         },
       );
     } else {
-      const img = new Image();
-      img.decoding = 'async';
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        if (runtime.disposed) return;
-        runtime.imageLoading = false;
-        runtime.imageReady = true;
-        runtime.imageStamp = Date.now();
-        parts.frames.drawProjectionFrame(record);
-        parts.frames.refreshProjectionTextures(record);
-        requestRender('cctv-still-ready');
-        reportClientHealth(record.camera.id, 'ok', 'decode-ok');
-      };
-      img.onerror = () => {
-        if (runtime.disposed) return;
-        runtime.imageLoading = false;
-        runtime.imageReady = false;
-        scheduleStillRetry(record, runtime);
-        reportClientHealth(record.camera.id, 'failed', 'decode-failure');
-      };
-      runtime.image = img;
+      attachStillImage(record, runtime);
     }
 
     // Monitor plane = the frustum's far cap: video feeds bind the video element
@@ -326,17 +369,6 @@ export function createProjection({
     createProjectionPlane(record, runtime, geometry, positions);
 
     return runtime;
-  }
-
-  function scheduleStillRetry(record, runtime) {
-    if (runtime.disposed || runtime.retryTimer) return;
-    const cadence = record.camera.id === layerState._activeCameraId ? PROJECTION_ACTIVE_REFRESH_MS : PROJECTION_IDLE_REFRESH_MS;
-    runtime.retryTimer = setTimeout(() => {
-      runtime.retryTimer = 0;
-      if (runtime.disposed) return;
-      parts.frames.refreshProjectionImage(record, true);
-      startProjectionLoop();
-    }, cadence);
   }
 
   /**
@@ -366,8 +398,8 @@ export function createProjection({
   function destroyProjectionRuntime(runtime) {
     if (!runtime || runtime.disposed) return;
     runtime.disposed = true;
-    if (runtime.retryTimer) clearTimeout(runtime.retryTimer);
-    runtime.retryTimer = 0;
+    if (parts.selection.getActiveRecord()?.projection === runtime)
+      cancelScheduledStill();
     runtime.playback?.dispose();
     runtime.playback = null;
     if (runtime.image) {
@@ -392,63 +424,99 @@ export function createProjection({
   }
 
   function startProjectionLoop() {
+    if (!layerState._enabled || !layerState._viewer) return;
+    projectionStarted = true;
+    if (!removeVisibilityListener && typeof document !== 'undefined') {
+      const documentOwner = document;
+      const onVisibility = () => {
+        cancelScheduledStill();
+        syncAnimation();
+        if (visible()) scheduleStillUpdate(refreshProjectionWork, 0);
+      };
+      documentOwner.addEventListener('visibilitychange', onVisibility);
+      removeVisibilityListener = () =>
+        documentOwner.removeEventListener('visibilitychange', onVisibility);
+    }
+    cancelScheduledStill();
+    syncAnimation();
+    // Selection finishes geometry/visibility writes before this one-shot runs.
+    if (visible()) scheduleStillUpdate(refreshProjectionWork, 0);
+  }
+
+  function refreshProjectionWork() {
+    if (!visible()) return;
+    const active = parts.selection.getActiveRecord();
+    if (layerState._showProjection && active) {
+      const runtime = ensureProjectionRuntime(active);
+      if (runtime?.mode === 'image') {
+        parts.frames.drawProjectionFrame(active);
+        parts.frames.refreshProjectionTextures(active);
+        scheduleNextStillUpdate(active, runtime);
+      }
+    }
+    syncAnimation();
+  }
+
+  function scheduleNextStillUpdate(record, runtime) {
+    cancelScheduledStill();
+    if (!activeRuntime(record, runtime) || runtime.mode !== 'image') return;
+    let due = runtime.imageLoading
+      ? Infinity
+      : Math.max(
+          (runtime.lastImageRefreshAt || 0) + stillCadence(record),
+          runtime.nextImageRetryAt || 0,
+        );
+    // A fast decode can arrive inside the existing 1Hz upload throttle. Keep
+    // that final texture upload owned, rather than dropping it until next fetch.
+    if (
+      runtime.planeEntity?.show &&
+      runtime.planeMaterial &&
+      runtime.canvasStamp !== runtime.lastSwappedCanvasStamp
+    ) {
+      due = Math.min(
+        due,
+        (runtime.lastTextureSwapAt || 0) + PROJECTION_TEXTURE_SWAP_MS,
+      );
+    }
+    if (Number.isFinite(due))
+      scheduleStillUpdate(
+        () => {
+          if (activeRuntime(record, runtime)) refreshProjectionWork();
+        },
+        Math.max(1, due - Date.now()),
+      );
+  }
+
+  function syncAnimation() {
+    if (!visible() || !parts.model.projectionLoopIsNeeded()) {
+      if (layerState._projectionRaf)
+        cancelAnimationFrame(layerState._projectionRaf);
+      layerState._projectionRaf = 0;
+      releaseContinuousRender('cctv-projection');
+      return;
+    }
     if (layerState._projectionRaf) return;
-    if (!parts.model.projectionLoopIsNeeded()) return;
-    // The armed projection loop uploads video textures / runs focus fades per
-    // frame — the scene must render continuously while it runs. Released when
-    // the tick self-stops. (perf wave 2)
     holdContinuousRender('cctv-projection');
-
-    const tick = () => {
-      if (!layerState._viewer || !parts.model.projectionLoopIsNeeded()) {
-        layerState._projectionRaf = 0;
-        releaseContinuousRender('cctv-projection');
-        const active = parts.selection.getActiveRecord();
-        const runtime = active?.projection;
-        if (active && runtime?.mode === 'image' && runtime.imageReady && !layerState._projectionStillWakeTimer) {
-          const cadence = active.camera.id === layerState._activeCameraId ? PROJECTION_ACTIVE_REFRESH_MS : PROJECTION_IDLE_REFRESH_MS;
-          const wait = Math.max(0, cadence - (Date.now() - (runtime.lastImageRefreshAt || 0)));
-          layerState._projectionStillWakeTimer = setTimeout(() => {
-            layerState._projectionStillWakeTimer = 0;
-            startProjectionLoop();
-          }, wait);
-        }
-        return;
-      }
-
-      parts.rendering.refreshCctvFocusStyles(performance.now());
-
-      const active = parts.selection.getActiveRecord();
-      if (layerState._enabled && layerState._showProjection && active) {
-        ensureProjectionRuntime(active);
-        if (active.projection && !active.projection.video) {
-          parts.frames.drawProjectionFrame(active);
-          parts.frames.refreshProjectionTextures(active);
-        }
-      }
-
-      layerState._projectionRaf = requestAnimationFrame(tick);
-    };
-
-    layerState._projectionRaf = requestAnimationFrame(tick);
+    layerState._projectionRaf = requestAnimationFrame(() => {
+      layerState._projectionRaf = 0;
+      if (visible()) parts.rendering.refreshCctvFocusStyles(performance.now());
+      syncAnimation();
+      if (!layerState._projectionRaf) requestRender('cctv-projection-settled');
+    });
   }
 
   /** Cancels the projection animation loop. */
 
   function stopProjectionLoop() {
+    projectionStarted = false;
+    cancelScheduledStill();
+    removeVisibilityListener?.();
+    removeVisibilityListener = null;
     if (layerState._projectionRaf) {
       cancelAnimationFrame(layerState._projectionRaf);
       layerState._projectionRaf = 0;
     }
     releaseContinuousRender('cctv-projection');
-    for (const runtime of layerState._projectionEntities || []) {
-      if (runtime.retryTimer) clearTimeout(runtime.retryTimer);
-      runtime.retryTimer = 0;
-    }
-    if (layerState._projectionStillWakeTimer) {
-      clearTimeout(layerState._projectionStillWakeTimer);
-      layerState._projectionStillWakeTimer = 0;
-    }
   }
 
   /**

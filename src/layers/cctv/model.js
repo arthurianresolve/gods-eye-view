@@ -2,7 +2,7 @@ import * as Cesium from 'cesium';
 import { greatCircleKm } from '../../geoDistance.js';
 import { staticFrameRefreshMs } from '../../data/cctvLod.js';
 import { frameFetchDue, cardFetchPolicy } from '../../data/cctvCards.js';
-import { DEFAULT_CAMERA_CALIBRATION, PROJECTION_ACTIVE_REFRESH_MS, PROJECTION_IDLE_REFRESH_MS } from './policy.js';
+import { DEFAULT_CAMERA_CALIBRATION } from './policy.js';
 
 export function createModel({ state: layerState, services, parts, source }) {
   const { focusPassIsNeeded, getFocusTarget } = services.focus;
@@ -481,12 +481,7 @@ export function createModel({ state: layerState, services, parts, source }) {
       const active = parts.selection.getActiveRecord();
       if (active) {
         const runtime = active.projection;
-        if (!runtime || runtime.video || runtime.imageLoading) return true;
-        if (runtime.imageReady) {
-          const refreshMs = active.camera.id === layerState._activeCameraId ? PROJECTION_ACTIVE_REFRESH_MS : PROJECTION_IDLE_REFRESH_MS;
-          return Date.now() - (runtime.lastImageRefreshAt || 0) >= refreshMs;
-        }
-        return runtime.lastImageRefreshAt === 0;
+        if (runtime?.video && !runtime.disposed) return true;
       }
     }
     return focusPassIsNeeded(
