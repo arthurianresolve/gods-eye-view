@@ -4477,8 +4477,9 @@ try {
           `Austin phased clock did not start its declared run: ${JSON.stringify(clockStart)}`,
         );
       failureProgress.current.clockStart = clockStart;
+      let nativeSharpnessProfile = null;
       if (comparisonProfile === 'native-sharpness-v1') {
-        const nativeSharpnessProfile = await page.evaluate(
+        nativeSharpnessProfile = await page.evaluate(
           applyNativeSharpnessProfile,
         );
         failureProgress.current.nativeSharpnessProfile = nativeSharpnessProfile;
@@ -4703,6 +4704,8 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      if (nativeSharpnessProfile)
+        sceneBefore.environment.nativeSharpnessProfile = nativeSharpnessProfile;
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneBefore,
@@ -5407,6 +5410,8 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      if (nativeSharpnessProfile)
+        sceneAfter.environment.nativeSharpnessProfile = nativeSharpnessProfile;
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneAfter,
@@ -5889,6 +5894,7 @@ try {
   const integrity = assertCaptureIntegrity(captures, {
     expectedCommit: source.appCommit,
     qualityMode,
+    requireNativeSharpnessProfile: comparisonProfile === 'native-sharpness-v1',
     expectedDensityPct,
     expectedCounts: {
       ...(fixture ? { flights: effectiveFixtureAircraftCount } : {}),

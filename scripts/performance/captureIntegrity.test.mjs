@@ -79,6 +79,23 @@ test('matched samples pass and independent scenarios keep their own camera paths
   );
 });
 
+test('native comparison requires the observed profile on every boundary', () => {
+  const value = sample();
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 1440, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1440, height: 900 },
+  };
+  value.conditions.before.environment.nativeSharpnessProfile = profile;
+  value.conditions.after.environment.nativeSharpnessProfile = structuredClone(profile);
+  assert.equal(assertCaptureIntegrity([value], { ...options, requireNativeSharpnessProfile: true }).status, 'passed');
+  delete value.conditions.after.environment.nativeSharpnessProfile;
+  assert.throws(() => assertCaptureIntegrity([value], { ...options, requireNativeSharpnessProfile: true }), /native sharpness profile/);
+});
+
 test('wrong builds, missing populations, changed settings and background samples are rejected', () => {
   const changes = [
     (s) => {
