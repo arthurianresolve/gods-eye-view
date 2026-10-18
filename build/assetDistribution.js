@@ -1,5 +1,11 @@
 import { createHash } from 'node:crypto';
-import { promises as fs, readdirSync, lstatSync, statSync, readFileSync } from 'node:fs';
+import {
+  promises as fs,
+  readdirSync,
+  lstatSync,
+  statSync,
+  readFileSync,
+} from 'node:fs';
 import path from 'node:path';
 import {
   brotliCompressSync,
@@ -60,7 +66,11 @@ async function walk(root, relative = '') {
     .sort((left, right) => comparePath(left, right));
   const files = [];
   for (const name of names) {
-    if (name.endsWith('.gz') || name.endsWith('.br') || name === 'asset-manifest.json')
+    if (
+      name.endsWith('.gz') ||
+      name.endsWith('.br') ||
+      name === 'asset-manifest.json'
+    )
       continue;
     const next = relative ? `${relative}/${name}` : name;
     if ((await fs.lstat(path.join(root, next))).isSymbolicLink())
@@ -116,10 +126,13 @@ export function computeCesiumDistributionDigestSync({
   const files = [];
   const visit = (relative = '') => {
     const directory = path.join(sourceRoot, relative);
-    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => comparePath(a.name, b.name))) {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort(
+      (a, b) => comparePath(a.name, b.name),
+    )) {
       const next = relative ? `${relative}/${entry.name}` : entry.name;
       const absolute = path.join(sourceRoot, next);
-      if (lstatSync(absolute).isSymbolicLink()) throw new Error(`Symlinked asset is not allowed: ${next}`);
+      if (lstatSync(absolute).isSymbolicLink())
+        throw new Error(`Symlinked asset is not allowed: ${next}`);
       if (statSync(absolute).isDirectory()) visit(next);
       else if (statSync(absolute).isFile()) files.push(safeRelativePath(next));
       else throw new Error(`Unsupported asset entry: ${next}`);
@@ -134,19 +147,30 @@ export function computeCesiumDistributionDigestSync({
     hash.update('\0');
   }
   const digest = hash.digest('hex');
-  return { schema: CESIUM_DIGEST_SCHEMA, digest, path: `cesium/${digest}`, files: files.length };
+  return {
+    schema: CESIUM_DIGEST_SCHEMA,
+    digest,
+    path: `cesium/${digest}`,
+    files: files.length,
+  };
 }
 
 export function isCompressibleAsset(relativePath) {
-  return COMPRESSIBLE.has(path.posix.extname(safeRelativePath(relativePath)).toLowerCase());
+  return COMPRESSIBLE.has(
+    path.posix.extname(safeRelativePath(relativePath)).toLowerCase(),
+  );
 }
 
-export function classifyAsset(relativePath, { cesiumDigest, immutablePaths } = {}) {
+export function classifyAsset(
+  relativePath,
+  { cesiumDigest, immutablePaths } = {},
+) {
   const safePath = safeRelativePath(relativePath);
   if (immutablePaths?.has(safePath) && CONTENT_HASHED_ASSET.test(safePath))
     return 'immutable';
-  const immutable =
-    Boolean(cesiumDigest && safePath.startsWith(`cesium/${cesiumDigest}/`));
+  const immutable = Boolean(
+    cesiumDigest && safePath.startsWith(`cesium/${cesiumDigest}/`),
+  );
   return immutable ? 'immutable' : 'revalidate';
 }
 
@@ -227,7 +251,11 @@ export async function writeAssetArtifacts(
     brotliQuality = 5,
   } = {},
 ) {
-  if (!Number.isInteger(brotliQuality) || brotliQuality < 0 || brotliQuality > 11)
+  if (
+    !Number.isInteger(brotliQuality) ||
+    brotliQuality < 0 ||
+    brotliQuality > 11
+  )
     throw new Error('Brotli quality must be an integer between 0 and 11.');
   const absoluteRoot = path.resolve(root);
   const manifest = await createAssetManifest(absoluteRoot, {
@@ -253,7 +281,9 @@ export async function writeAssetArtifacts(
         params: { [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality },
       });
       entry.brotli = compressed.length;
-      entry.brotliSha256 = createHash('sha256').update(compressed).digest('hex');
+      entry.brotliSha256 = createHash('sha256')
+        .update(compressed)
+        .digest('hex');
       await fs.writeFile(target, compressed);
       sidecars.push(`${entry.path}.br`);
     }
@@ -275,7 +305,10 @@ export function assetDistributionPlugin({ cesiumDigest = null } = {}) {
     },
     generateBundle(_options, bundle) {
       for (const [fileName, item] of Object.entries(bundle)) {
-        if (item.type === 'chunk' || (item.type === 'asset' && !/\.html?$/i.test(fileName)))
+        if (
+          item.type === 'chunk' ||
+          (item.type === 'asset' && !/\.html?$/i.test(fileName))
+        )
           immutablePaths.add(safeRelativePath(fileName));
       }
     },
@@ -283,8 +316,11 @@ export function assetDistributionPlugin({ cesiumDigest = null } = {}) {
       order: 'post',
       sequential: true,
       async handler() {
-      if (!outDir) throw new Error('Asset distribution output directory was not resolved.');
-      await writeAssetArtifacts(outDir, { cesiumDigest, immutablePaths });
+        if (!outDir)
+          throw new Error(
+            'Asset distribution output directory was not resolved.',
+          );
+        await writeAssetArtifacts(outDir, { cesiumDigest, immutablePaths });
       },
     },
   };

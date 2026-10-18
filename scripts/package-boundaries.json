@@ -3955,7 +3955,8 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/geoDistance.js"
     ],
     "external": ["pbf"]
   },
@@ -4077,7 +4078,8 @@
       "src/tools/views.js",
       "src/tools/globePanel.js",
       "src/tools/queries/panelRequest.js",
-      "src/data/detectionPolicy.js"
+      "src/data/detectionPolicy.js",
+      "src/geoDistance.js"
     ],
     "external": ["satellite.js"]
   },

@@ -217,7 +217,8 @@ export class IntelHUD {
       const timestamp = document.getElementById('hud-timestamp');
       this._setHudText(timestamp, this._formatUTC());
       const dot = document.getElementById('hud-rec-dot');
-      if (dot) dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
+      if (dot)
+        dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
       if (this._visible) this._updateCameraData();
     };
     // One-shot guards so the very first summary lands immediately instead of
@@ -471,7 +472,10 @@ export class IntelHUD {
     const bottomEl = document.getElementById('hud-bottom-line');
     if (bottomEl) {
       // i18n-ignore: sensor codes
-      this._setHudText(bottomEl, `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`);
+      this._setHudText(
+        bottomEl,
+        `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`,
+      );
     }
 
     // GSD (Ground Sample Distance): approximate resolution in meters per pixel
@@ -487,7 +491,10 @@ export class IntelHUD {
     const gsdEl = document.getElementById('hud-gsd');
     if (gsdEl)
       // i18n-ignore: sensor codes
-      this._setHudText(gsdEl, `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`);
+      this._setHudText(
+        gsdEl,
+        `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`,
+      );
 
     // Altitude — reported as height above MEAN SEA LEVEL. `altM` is the raw
     // ellipsoidal camera height, which reads far below zero wherever the geoid
@@ -500,7 +507,10 @@ export class IntelHUD {
     const sunEl = this._estimateSunElevation(latDeg, lonDeg);
     if (altEl)
       // i18n-ignore: sensor codes
-      this._setHudText(altEl, `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`);
+      this._setHudText(
+        altEl,
+        `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`,
+      );
 
     // Collection timestamp
     const collEl = document.getElementById('hud-coll');

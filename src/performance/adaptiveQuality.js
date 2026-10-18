@@ -198,11 +198,7 @@ export class AdaptiveQualityController {
       this.policy.resetWindow();
       return;
     }
-    const result = this.policy.observe(
-      interval,
-      now,
-      this.readDensity(),
-    );
+    const result = this.policy.observe(interval, now, this.readDensity());
     this.lastFrameAt = now;
     this.previousDemand = demand;
     if (this.mode === 'auto' && result) {

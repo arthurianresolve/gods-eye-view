@@ -220,7 +220,10 @@ export function createObservedDenseComparisonContract({
     'capture and environment populations differ',
   );
   for (const [index, sample] of captures.entries()) {
-    if (environment.nativeSharpnessProfile || sample.settings?.before?.nativeSharpnessProfile) {
+    if (
+      environment.nativeSharpnessProfile ||
+      sample.settings?.before?.nativeSharpnessProfile
+    ) {
       assert.ok(
         sample.settings?.before?.nativeSharpnessProfile,
         `capture ${index + 1} is missing its before sharpness profile`,
@@ -230,7 +233,13 @@ export function createObservedDenseComparisonContract({
         `capture ${index + 1} is missing its after sharpness profile`,
       );
       assertNativeSharpnessProfile(
-        { environment: { nativeSharpnessProfile: environment.nativeSharpnessProfile ?? sample.settings.before.nativeSharpnessProfile } },
+        {
+          environment: {
+            nativeSharpnessProfile:
+              environment.nativeSharpnessProfile ??
+              sample.settings.before.nativeSharpnessProfile,
+          },
+        },
         `capture ${index + 1} environment`,
       );
       assert.deepEqual(

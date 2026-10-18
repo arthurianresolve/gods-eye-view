@@ -19,10 +19,18 @@ import {
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'gev-assets-'));
   await mkdir(path.join(root, 'assets'), { recursive: true });
-  await mkdir(path.join(root, 'cesium', '0123456789abcdef'), { recursive: true });
+  await mkdir(path.join(root, 'cesium', '0123456789abcdef'), {
+    recursive: true,
+  });
   await writeFile(path.join(root, 'index.html'), '<html></html>');
-  await writeFile(path.join(root, 'assets', 'app-deadbeef.js'), 'console.log(1);');
-  await writeFile(path.join(root, 'cesium', '0123456789abcdef', 'Cesium.js'), 'patched');
+  await writeFile(
+    path.join(root, 'assets', 'app-deadbeef.js'),
+    'console.log(1);',
+  );
+  await writeFile(
+    path.join(root, 'cesium', '0123456789abcdef', 'Cesium.js'),
+    'patched',
+  );
   await writeFile(path.join(root, 'photo.png'), Buffer.from([1, 2, 3]));
   return root;
 }
@@ -39,13 +47,28 @@ test('asset digest is deterministic and changes when bytes change', async () => 
 
 test('manifest emits deterministic compression metadata and cache classes', async () => {
   const root = await fixture();
-  const first = await createAssetManifest(root, { cesiumDigest: '0123456789abcdef' });
-  const second = await createAssetManifest(root, { cesiumDigest: '0123456789abcdef' });
+  const first = await createAssetManifest(root, {
+    cesiumDigest: '0123456789abcdef',
+  });
+  const second = await createAssetManifest(root, {
+    cesiumDigest: '0123456789abcdef',
+  });
   assert.deepEqual(first, second);
-  assert.equal(first.assets.find((entry) => entry.path === 'index.html').cache, 'revalidate');
-  assert.equal(first.assets.find((entry) => entry.path.startsWith('cesium/')).cache, 'immutable');
-  assert.ok(first.assets.find((entry) => entry.path.endsWith('.js')).brotli > 0);
-  assert.deepEqual(first.assets.find((entry) => entry.path === 'photo.png').contentEncoding, []);
+  assert.equal(
+    first.assets.find((entry) => entry.path === 'index.html').cache,
+    'revalidate',
+  );
+  assert.equal(
+    first.assets.find((entry) => entry.path.startsWith('cesium/')).cache,
+    'immutable',
+  );
+  assert.ok(
+    first.assets.find((entry) => entry.path.endsWith('.js')).brotli > 0,
+  );
+  assert.deepEqual(
+    first.assets.find((entry) => entry.path === 'photo.png').contentEncoding,
+    [],
+  );
   assert.equal(isCompressibleAsset('photo.png'), false);
   assert.equal(
     first.assets.find((entry) => entry.path === 'photo.png').contentType,
@@ -55,7 +78,10 @@ test('manifest emits deterministic compression metadata and cache classes', asyn
   const fixed = await createAssetManifest(root, {
     immutablePaths: new Set(['assets/fixed.js']),
   });
-  assert.equal(fixed.assets.find((entry) => entry.path === 'assets/fixed.js').cache, 'revalidate');
+  assert.equal(
+    fixed.assets.find((entry) => entry.path === 'assets/fixed.js').cache,
+    'revalidate',
+  );
   assert.equal(
     classifyAsset('assets/app-deadbeef.js', {
       immutablePaths: new Set(['assets/app-deadbeef.js']),
@@ -66,8 +92,14 @@ test('manifest emits deterministic compression metadata and cache classes', asyn
 
 test('asset paths reject traversal and absolute names', async () => {
   const root = await fixture();
-  await assert.rejects(() => computeContentDigest(root, ['../secret']), /Unsafe asset path/);
-  await assert.rejects(() => computeContentDigest(root, ['/secret']), /Unsafe asset path/);
+  await assert.rejects(
+    () => computeContentDigest(root, ['../secret']),
+    /Unsafe asset path/,
+  );
+  await assert.rejects(
+    () => computeContentDigest(root, ['/secret']),
+    /Unsafe asset path/,
+  );
 });
 
 test('artifact output includes compressed bytes only for eligible types', async () => {
@@ -95,22 +127,38 @@ test('sync and async Cesium digests agree and emitted sidecars round-trip', asyn
     immutablePaths: new Set(['assets/app-deadbeef.js']),
     brotliQuality: 4,
   });
-  const manifest = JSON.parse(await readFile(path.join(root, 'asset-manifest.json'), 'utf8'));
+  const manifest = JSON.parse(
+    await readFile(path.join(root, 'asset-manifest.json'), 'utf8'),
+  );
   assert.deepEqual(manifest.sidecars, output.sidecars);
   const raw = await readFile(path.join(root, 'index.html'));
-  assert.deepEqual(gunzipSync(await readFile(path.join(root, 'index.html.gz'))), raw);
-  assert.deepEqual(brotliDecompressSync(await readFile(path.join(root, 'index.html.br'))), raw);
+  assert.deepEqual(
+    gunzipSync(await readFile(path.join(root, 'index.html.gz'))),
+    raw,
+  );
+  assert.deepEqual(
+    brotliDecompressSync(await readFile(path.join(root, 'index.html.br'))),
+    raw,
+  );
   assert.ok(output.sidecars.includes('index.html.br'));
-  const writtenManifest = manifest.assets.find((entry) => entry.path === 'index.html');
-  assert.equal(writtenManifest.gzip, (await readFile(path.join(root, 'index.html.gz'))).length);
-  assert.equal(writtenManifest.brotli, (await readFile(path.join(root, 'index.html.br'))).length);
+  const writtenManifest = manifest.assets.find(
+    (entry) => entry.path === 'index.html',
+  );
+  assert.equal(
+    writtenManifest.gzip,
+    (await readFile(path.join(root, 'index.html.gz'))).length,
+  );
+  assert.equal(
+    writtenManifest.brotli,
+    (await readFile(path.join(root, 'index.html.br'))).length,
+  );
   await rm(root, { recursive: true, force: true });
 });
 
 test('missing Cesium distribution and symlinked assets fail clearly', async () => {
   const root = await fixture();
-  await assert.rejects(
-    () => computeCesiumDistributionDigest({ root, distributionRoot: 'missing' }),
+  await assert.rejects(() =>
+    computeCesiumDistributionDigest({ root, distributionRoot: 'missing' }),
   );
   const link = path.join(root, 'link.js');
   try {

@@ -143,7 +143,8 @@ export function observeCommonScene({
     )
       fail('declared native sharpness profile');
   }
-  if (nativeSharpnessProfile) settings.nativeSharpnessProfile = nativeSharpnessProfile;
+  if (nativeSharpnessProfile)
+    settings.nativeSharpnessProfile = nativeSharpnessProfile;
   for (const key of ['resolutionScale', 'msaaSamples'])
     if (!Number.isFinite(settings[key])) fail(`effective ${key}`);
   for (const key of ['antialias', 'fxaa'])
