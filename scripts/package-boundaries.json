@@ -3931,7 +3931,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["cesium", "pbf"]
   },
