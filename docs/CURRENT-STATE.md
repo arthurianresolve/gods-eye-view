@@ -6005,3 +6005,13 @@ The release packager includes the provider registry's runtime helpers and keeps
 historical recovery packages readable. The focused Windows Node 24 host/staging
 suite passes 26 checks. VM105 clean unpacked production installation and the
 full dependency-backed integration gates remain separate validation steps.
+
+## S64 diagnostic review — 18 October 2026
+
+The local performance snapshot now reports tile-load backlog only after a real
+Cesium progress event, explicit long-task availability, bounded render-hold
+owners, and unavailable draw/GPU execution counts as null. Renderer identity is
+cached until context recovery or re-enabling instrumentation. Context, tile,
+visibility and long-task observers are removed on disable/dispose; stale observer
+callbacks cannot enter a new observation session. Seventeen focused Node 24
+snapshot/Auto tests pass. No hardware improvement is inferred from diagnostics.

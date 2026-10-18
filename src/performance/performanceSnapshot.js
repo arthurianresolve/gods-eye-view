@@ -37,12 +37,18 @@ function clone(value) {
 function percentile(values, fraction) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)];
+  return sorted[
+    Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)
+  ];
 }
 
 function framePercentiles(samples) {
   const values = samples
-    .filter((sample) => sample.name === 'frameInterval' && sample.metadata?.mayIncludeIntentionalIdle === false)
+    .filter(
+      (sample) =>
+        sample.name === 'frameInterval' &&
+        sample.metadata?.mayIncludeIntentionalIdle === false,
+    )
     .map((sample) => sample.durationMs);
   return {
     eligibleFrameCount: values.length,
@@ -193,6 +199,10 @@ export function createPerformanceMonitor({
   let longTaskObserver = null;
   let observerGeneration = 0;
   let removeContextListeners = null;
+  let removeTileListener = null;
+  let removeVisibilityListener = null;
+  let tileLoadBacklog = null;
+  let longTaskStatus = observeLongTasks ? 'unavailable' : 'disabled';
   const onPostRender = () => {
     if (!active) return;
     const current = now();
@@ -217,6 +227,12 @@ export function createPerformanceMonitor({
     observerGeneration += 1;
     removeContextListeners?.();
     removeContextListeners = null;
+    removeTileListener?.();
+    removeTileListener = null;
+    removeVisibilityListener?.();
+    removeVisibilityListener = null;
+    longTaskStatus = observeLongTasks ? 'unavailable' : 'disabled';
+    tileLoadBacklog = null;
     active = nextEnabled;
     enabled = active;
     previousFrameAt = null;
@@ -226,6 +242,7 @@ export function createPerformanceMonitor({
     }
     if (!snapshot) snapshot = new PerformanceSnapshot({ now });
     scene = viewer?.scene;
+    invalidatePerformanceEnvironmentCache(scene?.context?._gl);
     if (scene?.postRender?.addEventListener) {
       const unsubscribe = scene.postRender.addEventListener(onPostRender);
       removeListener =
@@ -234,20 +251,54 @@ export function createPerformanceMonitor({
           : () => scene.postRender.removeEventListener?.(onPostRender);
     }
     const generation = observerGeneration;
-    if (observeLongTasks && typeof PerformanceObserver === 'function') {
+    if (
+      observeLongTasks &&
+      typeof PerformanceObserver === 'function' &&
+      PerformanceObserver.supportedEntryTypes?.includes('longtask')
+    ) {
       try {
         longTaskObserver = new PerformanceObserver((list) => {
           if (!active || destroyed || generation !== observerGeneration) return;
-          for (const entry of list.getEntries()) snapshot.record('longTask', entry.duration, { startTime: entry.startTime });
+          for (const entry of list.getEntries())
+            snapshot.record('longTask', entry.duration, {
+              startTime: entry.startTime,
+            });
         });
         longTaskObserver.observe({ type: 'longtask', buffered: false });
+        longTaskStatus = 'observing';
       } catch {
+        longTaskObserver?.disconnect();
         longTaskObserver = null;
       }
     }
+    const progress = scene?.globe?.tileLoadProgressEvent;
+    if (progress?.addEventListener) {
+      const onProgress = (count) => {
+        if (
+          active &&
+          generation === observerGeneration &&
+          Number.isSafeInteger(count) &&
+          count >= 0
+        )
+          tileLoadBacklog = count;
+      };
+      removeTileListener =
+        progress.addEventListener(onProgress) ||
+        (() => progress.removeEventListener?.(onProgress));
+    }
+    const documentRef = globalThis.document;
+    if (documentRef?.addEventListener) {
+      const visibility = () => {
+        previousFrameAt = null;
+      };
+      documentRef.addEventListener('visibilitychange', visibility);
+      removeVisibilityListener = () =>
+        documentRef.removeEventListener('visibilitychange', visibility);
+    }
     const canvas = scene?.canvas;
     if (canvas?.addEventListener) {
-      const invalidate = () => invalidatePerformanceEnvironmentCache(scene?.context?._gl);
+      const invalidate = () =>
+        invalidatePerformanceEnvironmentCache(scene?.context?._gl);
       canvas.addEventListener('webglcontextlost', invalidate);
       canvas.addEventListener('webglcontextrestored', invalidate);
       removeContextListeners = () => {
@@ -304,6 +355,7 @@ export function createPerformanceMonitor({
         appCommit,
         harnessCommit,
       });
+      const diagnostics = readDiagnostics();
       return {
         ...snapshot.snapshot({
           identity: environment,
@@ -317,10 +369,12 @@ export function createPerformanceMonitor({
               ? readResourceCounts({
                   viewer,
                   dataManager,
-                  diagnostics: readDiagnostics(),
+                  diagnostics,
                   ownership: readOwnership(),
                 })
               : {}),
+            tileLoadBacklog,
+            drawCalls: null,
             ...(clone(extra.resources) || {}),
           },
           timings: {
@@ -328,6 +382,7 @@ export function createPerformanceMonitor({
               ? {
                   gpuExecutionMs: null,
                   frameIntervalScope: 'completed-frame-wall-time',
+                  longTaskStatus,
                 }
               : {}),
             ...(enabled ? clone(readTimings()) || {} : {}),
@@ -336,6 +391,14 @@ export function createPerformanceMonitor({
         }),
         available: true,
         historyScope: 'since-first-enable',
+        renderDemand: {
+          mode: diagnostics?.mode ?? null,
+          holds: Array.isArray(diagnostics?.holds)
+            ? diagnostics.holds
+                .slice(0, MAX_RESOURCE_OWNERS)
+                .map((owner) => String(owner).slice(0, 64))
+            : null,
+        },
       };
     },
     destroy() {
@@ -364,8 +427,13 @@ export function readPerformanceEnvironment({
     else {
       try {
         const extension = gl.getExtension?.('WEBGL_debug_renderer_info');
-        renderer = gl.getParameter?.(extension?.UNMASKED_RENDERER_WEBGL || gl.RENDERER) || null;
-        vendor = gl.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl.VENDOR) || null;
+        renderer =
+          gl.getParameter?.(
+            extension?.UNMASKED_RENDERER_WEBGL || gl.RENDERER,
+          ) || null;
+        vendor =
+          gl.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl.VENDOR) ||
+          null;
       } catch {
         // Renderer strings are optional and must never break the application.
       }
