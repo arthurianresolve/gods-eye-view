@@ -17,6 +17,7 @@ export function createProjection({
   source,
 }) {
   const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const requestRender = services.render?.governorRequestRender || (() => {});
 
   function reportClientHealth(cameraId, status, reasonCode) {
     parts.health?.recordClientHealth?.(cameraId, {
@@ -219,6 +220,7 @@ export function createProjection({
       canvasStamp: 1,
       lastSwappedCanvasStamp: 0,
       disposed: false,
+      retryTimer: 0,
     };
 
     parts.frames.paintProjectionPlaceholder(ctx, record.camera);
@@ -261,12 +263,16 @@ export function createProjection({
               runtime.imageLoading = false;
               runtime.imageReady = true;
               runtime.imageStamp = Date.now();
+            parts.frames.drawProjectionFrame(record);
+            parts.frames.refreshProjectionTextures(record);
+            requestRender('cctv-still-ready');
               reportClientHealth(record.camera.id, 'ok', 'decode-ok');
             };
             runtime.image.onerror = () => {
               if (runtime.disposed) return;
               runtime.imageLoading = false;
               runtime.imageReady = false;
+            scheduleStillRetry(record, runtime);
               reportClientHealth(record.camera.id, 'failed', 'decode-failure');
             };
             runtime.planeMaterial.image = runtime.canvas;
@@ -284,12 +290,16 @@ export function createProjection({
         runtime.imageLoading = false;
         runtime.imageReady = true;
         runtime.imageStamp = Date.now();
+        parts.frames.drawProjectionFrame(record);
+        parts.frames.refreshProjectionTextures(record);
+        requestRender('cctv-still-ready');
         reportClientHealth(record.camera.id, 'ok', 'decode-ok');
       };
       img.onerror = () => {
         if (runtime.disposed) return;
         runtime.imageLoading = false;
         runtime.imageReady = false;
+        scheduleStillRetry(record, runtime);
         reportClientHealth(record.camera.id, 'failed', 'decode-failure');
       };
       runtime.image = img;
@@ -316,6 +326,17 @@ export function createProjection({
     createProjectionPlane(record, runtime, geometry, positions);
 
     return runtime;
+  }
+
+  function scheduleStillRetry(record, runtime) {
+    if (runtime.disposed || runtime.retryTimer) return;
+    const cadence = record.camera.id === layerState._activeCameraId ? PROJECTION_ACTIVE_REFRESH_MS : PROJECTION_IDLE_REFRESH_MS;
+    runtime.retryTimer = setTimeout(() => {
+      runtime.retryTimer = 0;
+      if (runtime.disposed) return;
+      parts.frames.refreshProjectionImage(record, true);
+      startProjectionLoop();
+    }, cadence);
   }
 
   /**
@@ -345,6 +366,8 @@ export function createProjection({
   function destroyProjectionRuntime(runtime) {
     if (!runtime || runtime.disposed) return;
     runtime.disposed = true;
+    if (runtime.retryTimer) clearTimeout(runtime.retryTimer);
+    runtime.retryTimer = 0;
     runtime.playback?.dispose();
     runtime.playback = null;
     if (runtime.image) {
@@ -418,6 +441,10 @@ export function createProjection({
       layerState._projectionRaf = 0;
     }
     releaseContinuousRender('cctv-projection');
+    for (const runtime of layerState._projectionEntities || []) {
+      if (runtime.retryTimer) clearTimeout(runtime.retryTimer);
+      runtime.retryTimer = 0;
+    }
     if (layerState._projectionStillWakeTimer) {
       clearTimeout(layerState._projectionStillWakeTimer);
       layerState._projectionStillWakeTimer = 0;
