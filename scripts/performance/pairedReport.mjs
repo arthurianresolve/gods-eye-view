@@ -977,6 +977,10 @@ function validateBuildProvenance(source, side) {
     assert.match(provenance.buildHarnessCommit || '', SHA1, `${side}: build harness SHA malformed`);
     assert.equal(provenance.buildHarnessCommit, provenance.harnessCommit, `${side}: build harness SHA mismatch`);
   }
+  if (Object.hasOwn(source, 'buildHarnessCommit')) {
+    assert.match(source.buildHarnessCommit || '', SHA1, `${side}: source build harness SHA malformed`);
+    assert.equal(source.buildHarnessCommit, provenance.harnessCommit, `${side}: source build harness SHA mismatch`);
+  }
   assert.match(
     provenance.scope || '',
     /browser response bytes are not independently attested/,
