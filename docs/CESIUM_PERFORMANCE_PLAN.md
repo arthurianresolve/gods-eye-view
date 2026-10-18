@@ -46,7 +46,7 @@ human review or performance-objective achievement is inferred from a build pass.
 
 | Slice | Deliverable                                                       | Engineering                                                                 | Automatic validation                                                                                                      | Primary evidence                                                                              |
 | ----- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                 | profile checks and exact CI pass at `19065997`                                                                            | operating-view pair validated; remaining seven matrix rows running                           |
+| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                 | profile checks and exact CI pass at `19065997`                                                                            | comparable operating pair exposes animated-idle regression; matrix interrupted               |
 | S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                 | four clean VM builds; archive and attestation verified at `19065997`                                                      | pending final candidate qualification                                                         |
 | S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                    | production-only install and 16 private HTTP checks pass at `19065997`                                                     | pending deployment verification                                                               |
 | S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                            | focused checks and exact CI pass at `19065997`                                                                            | pending shared matrix                                                                         |
@@ -54,7 +54,7 @@ human review or performance-objective achievement is inferred from a build pass.
 | S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                 | 24 focused checks and exact CI pass at `19065997`                                                                         | pending shared matrix and final visual control                                                |
 | S67   | Async locale preparation, races and retry                         | implemented                                                                 | 19 focused checks, builds and browser gates pass at `19065997`                                                            | pending shared matrix                                                                         |
 | S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                      | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed                                                 |
-| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper and reporting corrections implemented          | exact app CI, tracking and signed packaging pass at `19065997`; QA CI passes at `e2cdaac6`                                | operating-view pair validated; seven rows running under reviewed producer `d372aaa6`           |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper and reporting corrections implemented          | exact app CI, tracking and signed packaging pass at `19065997`; QA CI passes at `91425248`                                | qualification interrupted for animated-idle regression diagnosis                              |
 | S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `19065997` release prepared on VM105; production remains at `e7a878e` | archive, attestation, 16 private host checks and all 2,126 files in the prepared release verified                          | pending qualified deployment and native-resolution final soak                                |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
@@ -164,11 +164,22 @@ by the Windows resolver, preserving TLS verification and global DNS settings.
 
 An offline review of the unchanged operating-view reports records median
 app-ready time of 9,190 ms baseline and 4,370 ms candidate, and median idle
-render counts of 248 versus 98 per minute. These are fixture-specific startup
-and render-demand observations. Longer intervals between unchanged idle frames
-are distinct from motion latency. End-of-sample heap snapshots are available;
-they do not establish continuous peak heap or post-GC retention. The final soak
-must retain its own memory measurements and declare its actual viewport/DPR.
+render counts of 248 versus 98 per minute. The parked operating view still
+animates wind and satellites: its median run-level frame-interval p95 rises
+from 561.7 ms to 1,015.5 ms (+80.8%). Fewer frames are therefore not an accepted
+idle saving. The broad idle exemption introduced in `4a24624b` through
+`089e86d3` is reverted; its passing unit tests established implementation of
+that exemption, not its suitability for this animated workload. Earlier
+offline interpretation artifacts remain preserved but superseded.
+
+The remaining matrix was deliberately interrupted during candidate datacenter
+captures to investigate this regression. Complete operating and Dense pairs
+and the datacenter baseline remain evidence; incomplete samples are not passes.
+The scripted-motion capture owns a manual render pump, while parked captures
+use the production loop, so unchanged motion p95 does not clear a production
+animation-cadence regression. No candidate deployment has occurred. A focused
+diagnostic must identify the cause before qualification resumes. End-of-sample
+heap snapshots do not establish continuous peak heap or post-GC retention.
 
 The final soak has an explicit `--native-resolution` option, reviewed at
 `d0df3908`. It observes the display DPR before viewport emulation, then uses a
@@ -181,17 +192,6 @@ unchanged. All 38 focused soak tests pass on VM105 with Node 24.16.0 and 26.11.0
 the isolated test result and input hashes are stored in
 `native-soak-review-20261018T184655812Z`. Physical execution of this option remains
 pending and will be reported separately from the 1,440 × 900 comparison matrix.
-
-Consumer revision `028ee57f` fixes idle-cadence classification. The previous
-consumer applied the motion regression threshold to idle frame intervals, even
-though request-render scheduling intentionally omits unchanged frames. The raw
-medians and changes remain recorded; only idle cadence is classified as a
-measurement outside the motion-latency gate. Scripted motion, tracking and map
-regressions still fail. All 91 paired-report, manifest and matrix tests pass on
-VM105 with both supported Node versions. Re-evaluating the hash-verified original
-operating reports preserves the measured +80.8% idle interval change and -0.5%
-motion change, with no motion regression. The running matrix remains on its
-frozen producer; final analysis must name this separate consumer revision.
 
 ## Matrix execution update - 16 October 2026
 

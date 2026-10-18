@@ -1990,12 +1990,7 @@ export function validatePairedPerformanceReports({
       baselineMedianP95Ms,
       candidateMedianP95Ms,
       changePct,
-      // Idle cadence is governed by request-render demand. A larger interval
-      // can reflect fewer unchanged frames, rather than slower motion. Keep
-      // the measurement; functional/cadence checks still verify visual updates.
-      regressionOver10Pct: scenario === 'idle' ? false : changePct > 10,
-      regressionScope:
-        scenario === 'idle' ? 'measurement-only-idle-cadence' : 'motion-gate',
+      regressionOver10Pct: changePct > 10,
     };
   }
 

@@ -2,6 +2,14 @@
 
 Policy: `gev-cesium-acceptance/2026-10-15`.
 
+A parked camera does not establish a static scene. The operating fixture keeps
+wind and satellite animation enabled, so its idle frame-interval regression
+remains subject to investigation. The broad idle exemption at `4a24624b` through
+`089e86d3` is reverted. Qualification is interrupted after the candidate's
+operating idle p95 increased 80.8%; fewer delivered frames cannot be credited as
+an efficiency gain without proving preserved visible animation. The working
+VM105 deployment remains unchanged while this is diagnosed.
+
 The approved S61–S70 follow-up is recorded in the performance plan. S61 is
 engineering work for the frozen upstream merge, historical evidence ledger and
 the native sharpness profile; it does not close candidate qualification or the
@@ -99,11 +107,6 @@ denominator is unchanged.
   250 ms. A repeatable regression above 10% in motion p95, activation, peak heap
   or retained resources blocks acceptance of the affected optimization until it
   is fixed or reverted. An inconclusive comparison remains pending.
-- Idle rendered-frame intervals describe render demand, not motion latency.
-  Preserve their raw medians and percentage changes without applying the motion
-  regression gate to them. Longer idle intervals can reflect fewer unchanged
-  frames; they do not by themselves prove reduced GPU power or correct periodic
-  animation. Existing cadence, functional and retention checks still apply.
 - Keep the separate 60-minute mixed-use retention run and final 30-minute heap
   growth limit of 5%. Application-owned resources must return to their equivalent
   warmed checkpoints; there must be no abandoned jobs or persistent ownership
