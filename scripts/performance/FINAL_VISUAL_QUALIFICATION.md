@@ -40,8 +40,9 @@ active while the scene settles and between snapshots. The viewport is 1440 by
 Manual/DENSE/75%, native scale, SSE 1 and MSAA 4 remain unchanged.
 
 A read-only observer waits for the real summary typewriter to finish and the
-REC indicator's visible phase. An owned CDP session then pauses JavaScript
-delivery and samples the detection canvas's existing scanline phase at both
+REC indicator's visible phase. An owned CDP session dispatches a separate
+`debugger;` evaluation task, then pauses JavaScript delivery and samples the
+detection canvas's existing scanline phase at both
 edges. It captures only phase zero, with settled HUD content, and checks both
 observations again before resuming. It does not edit canvas pixels, styles,
 animation parameters or application timers. The validator independently derives
@@ -55,6 +56,14 @@ alone does not synchronize the canvas scanline, which uses `performance.now()`.
 The paused control verifies settled appearance only. Existing timer/lifecycle
 tests, unpaused workload runs and the soak verify behavior and cadence; paused
 capture timings are never performance evidence.
+
+The pause begins at the new evaluation task boundary. Interrupting arbitrary
+JavaScript with `Debugger.pause` can stop Cesium during rendering and block
+the compositor needed for a screenshot. The unchanged baseline hit that
+15-second capture deadline; a separate baseline diagnostic captured the full
+2880-by-1800 image at the task boundary in 1.84 seconds. That diagnostic proves
+capture feasibility, not paired visual acceptance. Failed earlier captures
+remain failures and the capture deadline remains unchanged.
 
 At most 12 eligibility attempts and three PNGs per state are permitted. Every
 attempt is retained, including its observed phase and cleanup result. Enable,

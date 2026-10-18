@@ -12,6 +12,7 @@ function fakePage({
   enableError = false,
   pauseError = false,
   pauseOnEnable = true,
+  taskCompletesWithoutPause = false,
   enableGate = null,
   detachError = false,
 } = {}) {
@@ -27,15 +28,18 @@ function fakePage({
       if (method === 'Debugger.enable' && enableGate) await enableGate;
       if (method === 'Debugger.enable' && enableError)
         throw new Error('enable failed');
-      if (method === 'Debugger.pause' && pauseError)
+      if (method === 'Runtime.evaluate' && pauseError)
         throw new Error('pause failed');
-      if (method === 'Debugger.pause' && pauseOnEnable) {
+      if (method === 'Runtime.evaluate' && taskCompletesWithoutPause) return {};
+      if (method === 'Runtime.evaluate' && pauseOnEnable) {
         queueMicrotask(() =>
           events.emit('Debugger.paused', {
             callFrames: frame ? [{ callFrameId: 'top-frame' }] : [],
           }),
         );
+        return new Promise(() => {});
       }
+      if (method === 'Runtime.evaluate') return new Promise(() => {});
       if (method === 'Debugger.evaluateOnCallFrame') {
         if (evaluateError) return { exceptionDetails: { text: 'read failed' } };
         return { result: { type: 'object', value: { readOnly: true } } };
@@ -81,13 +85,19 @@ test('pauses, evaluates a serializable read and cleans up the owned session', as
     fake.calls.map(({ method }) => method),
     [
       'Debugger.enable',
-      'Debugger.pause',
+      'Runtime.evaluate',
       'Debugger.evaluateOnCallFrame',
       'Debugger.evaluateOnCallFrame',
       'Debugger.resume',
       'Debugger.disable',
       'detach',
     ],
+  );
+  assert.equal(result.pause.boundary, 'runtime-task');
+  assert.match(fake.calls[1].params.expression, /^debugger;/);
+  assert.equal(
+    fake.calls.some(({ method }) => method === 'Debugger.pause'),
+    false,
   );
 });
 
@@ -121,7 +131,7 @@ test('rejects a pause without a top call frame and still disables/detaches', asy
     fake.calls.map(({ method }) => method),
     [
       'Debugger.enable',
-      'Debugger.pause',
+      'Runtime.evaluate',
       'Debugger.resume',
       'Debugger.disable',
       'detach',
@@ -187,7 +197,7 @@ test('pause timeout removes the listener and never resumes an unpaused session',
   );
   assert.deepEqual(
     fake.calls.map(({ method }) => method),
-    ['Debugger.enable', 'Debugger.pause', 'Debugger.disable', 'detach'],
+    ['Debugger.enable', 'Runtime.evaluate', 'Debugger.disable', 'detach'],
   );
   assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
 });
@@ -203,6 +213,22 @@ test('operation timeout remains bounded and resumes before cleanup', async () =>
     /paused screenshot deadline exceeded/,
   );
   assert.ok(fake.calls.some(({ method }) => method === 'Debugger.resume'));
+});
+
+test('a task that completes without pausing cannot qualify a screenshot', async () => {
+  const fake = fakePage({ taskCompletesWithoutPause: true });
+  let captures = 0;
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      screenshot: () => captures++,
+      pauseTimeoutMs: 100,
+    }),
+    /completed without pausing/,
+  );
+  assert.equal(captures, 0);
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+  assert.equal(fake.calls.at(-1).method, 'detach');
 });
 
 test('successful capture reports cleanup failure instead of returning early', async () => {
@@ -241,7 +267,7 @@ test('a late enable completion cannot pause the page after timeout cleanup', asy
   resolveEnable();
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(
-    fake.calls.some(({ method }) => method === 'Debugger.pause'),
+    fake.calls.some(({ method }) => method === 'Runtime.evaluate'),
     false,
   );
   assert.equal(fake.session.listenerCount('Debugger.paused'), 0);

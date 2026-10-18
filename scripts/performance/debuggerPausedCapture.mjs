@@ -78,9 +78,11 @@ export async function captureWithDebuggerPause({
   let closed = false;
   const pauseDeadline = performance.now() + pauseLimit;
   let pauseResolve;
+  let pauseReject;
   let pauseTimer;
   const pausePromise = new Promise((resolve, reject) => {
     pauseResolve = resolve;
+    pauseReject = reject;
     pauseTimer = setTimeout(
       () => reject(new Error('Debugger pause deadline exceeded.')),
       pauseLimit,
@@ -112,11 +114,25 @@ export async function captureWithDebuggerPause({
       pauseRemaining('Debugger.enable'),
       'Debugger.enable',
     );
-    await withTimeout(
-      () => session.send('Debugger.pause'),
-      pauseRemaining('Debugger.pause'),
-      'Debugger.pause',
-    );
+    pauseRemaining('Runtime.evaluate');
+    // Dispatch a new task rather than interrupting an arbitrary render stack.
+    // Interrupting Cesium while it is submitting a frame can leave the
+    // compositor waiting for that stack to unwind, blocking a paused capture.
+    // This command completes only after resume; awaiting it here would deadlock.
+    void session
+      .send('Runtime.evaluate', {
+        expression: 'debugger;\n//# sourceURL=gev-qualification-pause.js',
+        silent: true,
+      })
+      .then(
+        () => {
+          if (!pausedEvent && !closed)
+            pauseReject(new Error('Pause task completed without pausing.'));
+        },
+        (error) => {
+          if (!closed) pauseReject(error);
+        },
+      );
     const event = await pausePromise;
     const callFrameId = event?.callFrames?.[0]?.callFrameId;
     if (!callFrameId) throw new Error('Debugger pause has no top call frame.');
@@ -159,6 +175,7 @@ export async function captureWithDebuggerPause({
     const readAfter = await evaluateRead();
     result = {
       pause: {
+        boundary: 'runtime-task',
         reason:
           typeof event?.reason === 'string' ? event.reason.slice(0, 80) : null,
       },
