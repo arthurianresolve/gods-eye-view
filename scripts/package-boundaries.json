@@ -58,7 +58,8 @@
       "src/data/idSwitches.js",
       "src/data/layerStateTokenReservations.json",
       "src/evidence/evidence.js",
-      "src/data/detectionPolicy.js"
+      "src/data/detectionPolicy.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },

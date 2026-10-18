@@ -1,5 +1,18 @@
 # God's Eye View Current State
 
+Shared distance checks use `src/geoDistance.js` with `{ lat, lon }` points and
+the IUGG mean spherical Earth radius, 6371.0088 km. `greatCircleKm` is
+canonical; `greatCircleMeters` is its exact metre conversion. Missing,
+non-finite, and out-of-range points (latitude outside ±90, longitude outside
+±180) return `Infinity`, so threshold and nearest-item consumers exclude invalid
+positions. Older exported `haversineKm` entry points remain as compatibility
+wrappers only. `src/data/approxDistance.js`, the equirectangular
+viewer-proximity approximation, is deliberately separate. Four great-circle
+copies remain for a follow-up: `src/data/adminBoundaries.js` and
+`src/tools/area.js` pass unwrapped longitudes across the antimeridian, while
+`src/sources/adsbRecords.js` and `server/providers/common/geo.js` keep their own
+implementations.
+
 ## Candidate validation — October 8, 2026
 
 The refreshed local candidate matrix passes formatting, package boundaries, 6,328
