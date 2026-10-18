@@ -145,6 +145,18 @@ export async function stageRelease({
       absolute: path.join(source, relative),
       relative,
     })),
+    ...(await listFiles(path.join(source, 'server'))).map((entry) => ({
+      ...entry,
+      relative: path.posix.join('server', entry.relative),
+    })),
+    ...(await listFiles(path.join(source, 'src'))).map((entry) => ({
+      ...entry,
+      relative: path.posix.join('src', entry.relative),
+    })),
+    ...['build/securityHeaders.js', 'build/allowedHosts.js', 'build/embed-framing.js'].map((relative) => ({
+      absolute: path.join(source, relative),
+      relative,
+    })),
   ];
   for (const entry of filesToCopy) {
     const info = await lstat(entry.absolute);

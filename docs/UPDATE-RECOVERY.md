@@ -31,6 +31,13 @@ The extracted artifact contains the checksummed production bundle and source
 metadata. Use a fresh application directory for the candidate; keep the prior
 install until the candidate starts and its workspace opens.
 
+For the VM105 development staging path, keep the prior verified release root
+until the candidate host has started and its HTTPS workspace and API checks
+pass. Configure the service to the exact staged release directory, retain the
+previous root only for manifest-owned immutable assets, and roll back the
+service directory to the prior root if startup or verification fails. Never
+serve a previous root's HTML, API responses, or unlisted files.
+
 ## Pinokio update behavior
 
 The Pinokio updater previews the configured upstream, lists incoming commits

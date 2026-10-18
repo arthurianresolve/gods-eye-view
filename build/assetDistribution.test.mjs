@@ -51,6 +51,11 @@ test('manifest emits deterministic compression metadata and cache classes', asyn
     first.assets.find((entry) => entry.path === 'photo.png').contentType,
     'image/png',
   );
+  await writeFile(path.join(root, 'assets', 'fixed.js'), 'fixed');
+  const fixed = await createAssetManifest(root, {
+    immutablePaths: new Set(['assets/fixed.js']),
+  });
+  assert.equal(fixed.assets.find((entry) => entry.path === 'assets/fixed.js').cache, 'revalidate');
   assert.equal(
     classifyAsset('assets/app-deadbeef.js', {
       immutablePaths: new Set(['assets/app-deadbeef.js']),
@@ -96,6 +101,9 @@ test('sync and async Cesium digests agree and emitted sidecars round-trip', asyn
   assert.deepEqual(gunzipSync(await readFile(path.join(root, 'index.html.gz'))), raw);
   assert.deepEqual(brotliDecompressSync(await readFile(path.join(root, 'index.html.br'))), raw);
   assert.ok(output.sidecars.includes('index.html.br'));
+  const writtenManifest = manifest.assets.find((entry) => entry.path === 'index.html');
+  assert.equal(writtenManifest.gzip, (await readFile(path.join(root, 'index.html.gz'))).length);
+  assert.equal(writtenManifest.brotli, (await readFile(path.join(root, 'index.html.br'))).length);
   await rm(root, { recursive: true, force: true });
 });
 

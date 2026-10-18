@@ -1,5 +1,19 @@
 # God's Eye View Current State
 
+## S63 production host — October 18, 2026
+
+The candidate now includes a Vite-free Node HTTP production host. It loads
+operator settings with process environment precedence, composes the existing
+provider, MCP and voice middleware, returns JSON 404s for unknown APIs, and
+serves the S62 manifest with MIME, ETag, conditional, HEAD, range and gzip or
+Brotli negotiation. Shared browser security headers are used by build and host;
+explicit embed ancestors are opt-in through `GEV_EMBED_FRAME_ANCESTORS` and
+`?embed=1`. Previous roots can provide only manifest-owned immutable assets.
+The release staging script includes the host, provider/source modules and
+shared headers, with `ws` declared as a runtime dependency. Node-only host
+checks pass; packaged `npm ci --omit=dev` startup and Vite integration remain
+pending because local dependency installation is incomplete.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium

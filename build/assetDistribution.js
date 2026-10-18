@@ -24,6 +24,7 @@ const COMPRESSIBLE = new Set([
   '.webmanifest',
   '.xml',
 ]);
+const CONTENT_HASHED_ASSET = /^assets\/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+$/;
 const CONTENT_TYPES = Object.freeze({
   '.css': 'text/css',
   '.html': 'text/html',
@@ -142,9 +143,9 @@ export function isCompressibleAsset(relativePath) {
 
 export function classifyAsset(relativePath, { cesiumDigest, immutablePaths } = {}) {
   const safePath = safeRelativePath(relativePath);
-  if (immutablePaths?.has(safePath)) return 'immutable';
+  if (immutablePaths?.has(safePath) && CONTENT_HASHED_ASSET.test(safePath))
+    return 'immutable';
   const immutable =
-    immutablePaths?.has(safePath) === true ||
     Boolean(cesiumDigest && safePath.startsWith(`cesium/${cesiumDigest}/`));
   return immutable ? 'immutable' : 'revalidate';
 }
@@ -152,7 +153,12 @@ export function classifyAsset(relativePath, { cesiumDigest, immutablePaths } = {
 /** Build deterministic raw/gzip/Brotli metadata without writing application APIs. */
 export async function createAssetManifest(
   root,
-  { cesiumDigest = null, immutablePaths = null } = {},
+  {
+    cesiumDigest = null,
+    immutablePaths = null,
+    brotliQuality = 5,
+    includeCompression = true,
+  } = {},
 ) {
   const absoluteRoot = path.resolve(root);
   const files = await listAssetFiles(absoluteRoot);
@@ -170,9 +176,13 @@ export async function createAssetManifest(
       contentEncoding: [],
     };
     if (isCompressibleAsset(relativePath)) {
-      entry.gzip = gzipSync(bytes, { level: 9, mtime: 0 }).length;
-      entry.brotli = brotliCompressSync(bytes).length;
       entry.contentEncoding = ['br', 'gzip'];
+      if (includeCompression) {
+        entry.gzip = gzipSync(bytes, { level: 9, mtime: 0 }).length;
+        entry.brotli = brotliCompressSync(bytes, {
+          params: { [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality },
+        }).length;
+      }
     }
     assets.push(entry);
   }
@@ -196,7 +206,11 @@ export async function createAssetArtifacts(root, options = {}) {
         ? gzipSync(bytes, { level: 9, mtime: 0 })
         : null,
       brotli: entry.contentEncoding.includes('br')
-        ? brotliCompressSync(bytes)
+        ? brotliCompressSync(bytes, {
+            params: {
+              [zlibConstants.BROTLI_PARAM_QUALITY]: options.brotliQuality ?? 5,
+            },
+          })
         : null,
     });
   }
@@ -219,6 +233,7 @@ export async function writeAssetArtifacts(
   const manifest = await createAssetManifest(absoluteRoot, {
     cesiumDigest,
     immutablePaths,
+    includeCompression: false,
   });
   const sidecars = [];
   for (const entry of manifest.assets) {
@@ -226,17 +241,18 @@ export async function writeAssetArtifacts(
     const bytes = await fs.readFile(path.join(absoluteRoot, entry.path));
     if (entry.contentEncoding.includes('gzip')) {
       const target = path.join(absoluteRoot, `${entry.path}.gz`);
-      await fs.writeFile(target, gzipSync(bytes, { level: 9, mtime: 0 }));
+      const compressed = gzipSync(bytes, { level: 9, mtime: 0 });
+      entry.gzip = compressed.length;
+      await fs.writeFile(target, compressed);
       sidecars.push(`${entry.path}.gz`);
     }
     if (entry.contentEncoding.includes('br')) {
       const target = path.join(absoluteRoot, `${entry.path}.br`);
-      await fs.writeFile(
-        target,
-        brotliCompressSync(bytes, {
-          params: { [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality },
-        }),
-      );
+      const compressed = brotliCompressSync(bytes, {
+        params: { [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality },
+      });
+      entry.brotli = compressed.length;
+      await fs.writeFile(target, compressed);
       sidecars.push(`${entry.path}.br`);
     }
   }
@@ -261,9 +277,12 @@ export function assetDistributionPlugin({ cesiumDigest = null } = {}) {
           immutablePaths.add(safeRelativePath(fileName));
       }
     },
-    async closeBundle() {
+    closeBundle: {
+      order: 'post',
+      async handler() {
       if (!outDir) throw new Error('Asset distribution output directory was not resolved.');
       await writeAssetArtifacts(outDir, { cesiumDigest, immutablePaths });
+      },
     },
   };
 }
