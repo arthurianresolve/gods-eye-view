@@ -36,9 +36,13 @@ export function installRawReceiptAssetMiddleware({
   const root = path.resolve(buildRoot);
   const allowed = new Map();
   for (const asset of receipt?.assets || []) {
-    if (SIDECAR.test(asset?.path || '')) allowed.set(asset.path, asset);
+    if (!SIDECAR.test(asset?.path || '')) continue;
+    const relative = safeAssetPath(asset.path);
+    if (!relative || relative !== asset.path || !Number.isSafeInteger(asset.bytes) || asset.bytes < 0 || asset.bytes > MAX_SIDE_CAR_BYTES)
+      throw new Error('Receipt sidecar path or byte length is invalid.');
+    allowed.set(relative, asset);
   }
-  if (allowed.size === 0) throw new Error('Receipt contains no compressed sidecar assets.');
+  if (allowed.size === 0) return { allowedPaths: [], root, installed: false };
   let rootReal;
   const ready = fs.realpath(root).then((value) => {
     rootReal = value;
@@ -72,6 +76,7 @@ export function installRawReceiptAssetMiddleware({
       // endpoint, never the browser's normal compressed asset path.
       if (req.method === 'HEAD') return res.end?.();
       const stream = createReadStream(realFile);
+      res.once?.('close', () => stream.destroy());
       stream.once('error', (error) => {
         if (!res.headersSent) sendError(res, 500, 'Receipt sidecar read failed.');
         else res.destroy?.(error);

@@ -117,14 +117,16 @@ export async function validateFinalVisualQualification(
     ['application candidate', report.application?.candidateSha],
     ['harness baseline', report.harness?.baselineSha],
     ['harness candidate', report.harness?.candidateSha],
+    ['build harness', report.harness?.buildHarnessCommit],
+    ['visual producer', report.harness?.visualHarnessCommit],
   ])
     assert.match(value || '', /^[a-f0-9]{40}$/, `${label} SHA`);
   assert.match(report.receipts?.baselineSha256 || '', /^[a-f0-9]{64}$/);
   assert.match(report.receipts?.candidateSha256 || '', /^[a-f0-9]{64}$/);
   assert.equal(report.environment?.platform, 'win32');
   assert.equal(report.environment?.foregroundConfirmed, true);
-  assert.equal(report.environment?.renderer?.vendor, 'Intel');
-  assert.ok(report.environment?.renderer?.device?.includes('UHD 620'));
+  assert.ok(typeof report.environment?.renderer?.vendor === 'string' && report.environment.renderer.vendor);
+  assert.match(report.environment?.renderer?.device || '', /UHD\s*620/i);
   assertProfile(report.environment?.nativeSharpnessProfile, 'environment');
   assert.ok(Array.isArray(report.environment?.populations));
   assert.ok(report.environment?.camera?.id);

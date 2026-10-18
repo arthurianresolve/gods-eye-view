@@ -3,6 +3,8 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { PassThrough } from 'node:stream';
+import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { createServer } from 'node:http';
 import test from 'node:test';
 import {
   installRawReceiptAssetMiddleware,
@@ -27,13 +29,16 @@ function response() {
 async function setup(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gev-raw-receipt-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const bytes = Buffer.from([0, 1, 2, 3, 4, 5]);
+  const source = Buffer.from('raw receipt sidecar fixture payload');
+  const bytes = brotliCompressSync(source);
+  const gzip = gzipSync(source);
   await fs.mkdir(path.join(root, 'assets'), { recursive: true });
   await fs.writeFile(path.join(root, 'assets', 'main.js.br'), bytes);
+  await fs.writeFile(path.join(root, 'assets', 'main.js.gz'), gzip);
   const handlers = [];
   installRawReceiptAssetMiddleware({
     buildRoot: root,
-    receipt: { assets: [{ path: 'assets/main.js.br', bytes: bytes.length }] },
+    receipt: { assets: [{ path: 'assets/main.js.br', bytes: bytes.length }, { path: 'assets/main.js.gz', bytes: gzip.length }] },
     middlewares: { use(handler) { handlers.push(handler); } },
   });
   return { root, bytes, handler: handlers[0] };
@@ -51,6 +56,21 @@ test('raw receipt sidecar serves exact Brotli bytes without content encoding', a
   assert.deepEqual(Buffer.concat(chunks), bytes);
   assert.equal(headers.get('content-encoding'), undefined);
   assert.equal(headers.get('content-type'), 'application/octet-stream');
+});
+
+test('HEAD and loopback HTTP preserve compressed bytes for both sidecar encodings', async (t) => {
+  const { bytes, handler } = await setup(t);
+  const server = createServer((req, res) => handler(req, res, () => { res.statusCode = 404; res.end(); }));
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => server.close());
+  const port = server.address().port;
+  const head = await fetch(`http://127.0.0.1:${port}/assets/main.js.br`, { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(await head.arrayBuffer().then((value) => value.byteLength), 0);
+  assert.equal(head.headers.get('content-encoding'), null);
+  const get = await fetch(`http://127.0.0.1:${port}/assets/main.js.br`);
+  assert.deepEqual(Buffer.from(await get.arrayBuffer()), bytes);
+  assert.equal(get.headers.get('content-encoding'), null);
 });
 
 test('normal assets fall through and unknown/traversal/non-GET sidecars are bounded', async (t) => {
@@ -74,4 +94,11 @@ test('normal assets fall through and unknown/traversal/non-GET sidecars are boun
 
 test('sidecar bound is finite and explicit', () => {
   assert.equal(RAW_RECEIPT_ASSET_MAX_BYTES, 64 * 1024 * 1024);
+});
+
+test('empty sidecar receipts are a no-op', async () => {
+  const handlers = { use() { throw new Error('must not install'); } };
+  const result = installRawReceiptAssetMiddleware({ buildRoot: path.resolve('.'), receipt: { assets: [] }, middlewares: handlers });
+  assert.deepEqual(result.allowedPaths, []);
+  assert.equal(result.installed, false);
 });
