@@ -32,6 +32,14 @@ WebGL context with loss/restoration invalidation. Unsupported GPU, draw-call,
 long-task and tile-backlog metrics remain explicitly unavailable. Focused
 controller and monitor tests pass; browser/integration gates remain pending.
 
+## S65 CCTV demand gating — October 18, 2026
+
+Still-image projection loops release their continuous render hold once the
+image, pose and visual output settle, then schedule a bounded one-shot wakeup
+for the next still refresh. Live video and active focus fades retain continuous
+rendering; selection, health fallback, cancellation and late-result ownership
+remain unchanged. CCTV browser validation is pending VM dependency install.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium

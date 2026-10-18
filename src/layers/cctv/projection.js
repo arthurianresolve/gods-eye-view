@@ -6,6 +6,8 @@ import {
   PLANE_OUTLINE_COLOR,
   PROJECTION_CANVAS_WIDTH,
   PROJECTION_CANVAS_HEIGHT,
+  PROJECTION_ACTIVE_REFRESH_MS,
+  PROJECTION_IDLE_REFRESH_MS,
 } from './policy.js';
 
 export function createProjection({
@@ -378,6 +380,16 @@ export function createProjection({
       if (!layerState._viewer || !parts.model.projectionLoopIsNeeded()) {
         layerState._projectionRaf = 0;
         releaseContinuousRender('cctv-projection');
+        const active = parts.selection.getActiveRecord();
+        const runtime = active?.projection;
+        if (active && runtime?.mode === 'image' && runtime.imageReady && !layerState._projectionStillWakeTimer) {
+          const cadence = active.camera.id === layerState._activeCameraId ? PROJECTION_ACTIVE_REFRESH_MS : PROJECTION_IDLE_REFRESH_MS;
+          const wait = Math.max(0, cadence - (Date.now() - (runtime.lastImageRefreshAt || 0)));
+          layerState._projectionStillWakeTimer = setTimeout(() => {
+            layerState._projectionStillWakeTimer = 0;
+            startProjectionLoop();
+          }, wait);
+        }
         return;
       }
 
@@ -406,6 +418,10 @@ export function createProjection({
       layerState._projectionRaf = 0;
     }
     releaseContinuousRender('cctv-projection');
+    if (layerState._projectionStillWakeTimer) {
+      clearTimeout(layerState._projectionStillWakeTimer);
+      layerState._projectionStillWakeTimer = 0;
+    }
   }
 
   /**

@@ -477,8 +477,17 @@ export function createModel({ state: layerState, services, parts, source }) {
 
   function projectionLoopIsNeeded() {
     if (!layerState._enabled || !layerState._viewer) return false;
-    if (layerState._showProjection && parts.selection.getActiveRecord())
-      return true;
+    if (layerState._showProjection) {
+      const active = parts.selection.getActiveRecord();
+      if (active) {
+        const runtime = active.projection;
+        if (!runtime || runtime.video || runtime.imageLoading) return true;
+        if (runtime.imageReady) {
+          const refreshMs = active.camera.id === layerState._activeCameraId ? 1000 : 10000;
+          return Date.now() - (runtime.lastImageRefreshAt || 0) >= refreshMs;
+        }
+      }
+    }
     return focusPassIsNeeded(
       getFocusTarget(),
       layerState._activeFocusStyleCount,
