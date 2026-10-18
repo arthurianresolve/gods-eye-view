@@ -8,6 +8,9 @@ function fakePage({
   evaluateError = false,
   screenshotError = false,
   resumeError = false,
+  disableError = false,
+  enableError = false,
+  pauseError = false,
   pauseOnEnable = true,
 } = {}) {
   const events = new EventEmitter();
@@ -19,7 +22,11 @@ function fakePage({
     listenerCount: events.listenerCount.bind(events),
     async send(method, params) {
       calls.push({ method, params });
-      if (method === 'Debugger.enable' && pauseOnEnable) {
+      if (method === 'Debugger.enable' && enableError)
+        throw new Error('enable failed');
+      if (method === 'Debugger.pause' && pauseError)
+        throw new Error('pause failed');
+      if (method === 'Debugger.pause' && pauseOnEnable) {
         queueMicrotask(() =>
           events.emit('Debugger.paused', {
             callFrames: frame ? [{ callFrameId: 'top-frame' }] : [],
@@ -32,6 +39,8 @@ function fakePage({
       }
       if (method === 'Debugger.resume' && resumeError)
         throw new Error('resume failed');
+      if (method === 'Debugger.disable' && disableError)
+        throw new Error('disable failed');
       return {};
     },
     async detach() {
@@ -56,12 +65,15 @@ test('pauses, evaluates a serializable read and cleans up the owned session', as
     readCallback: () => ({ readOnly: true }),
     screenshot: fake.screenshot,
   });
-  assert.deepEqual(result.readValue, { readOnly: true });
+  assert.deepEqual(result.readBefore, { readOnly: true });
+  assert.deepEqual(result.readAfter, { readOnly: true });
   assert.deepEqual(result.screenshot, Buffer.from('png'));
   assert.deepEqual(
     fake.calls.map(({ method }) => method),
     [
       'Debugger.enable',
+      'Debugger.pause',
+      'Debugger.evaluateOnCallFrame',
       'Debugger.evaluateOnCallFrame',
       'Debugger.resume',
       'Debugger.disable',
@@ -82,8 +94,30 @@ test('rejects a pause without a top call frame and still disables/detaches', asy
   );
   assert.deepEqual(
     fake.calls.map(({ method }) => method),
-    ['Debugger.enable', 'Debugger.resume', 'Debugger.disable', 'detach'],
+    [
+      'Debugger.enable',
+      'Debugger.pause',
+      'Debugger.resume',
+      'Debugger.disable',
+      'detach',
+    ],
   );
+});
+
+test('keeps enable and pause protocol failures bounded and cleans up', async () => {
+  for (const option of [{ enableError: true }, { pauseError: true }]) {
+    const fake = fakePage(option);
+    await assert.rejects(
+      captureWithDebuggerPause({
+        page: fake.page,
+        screenshot: fake.screenshot,
+        pauseTimeoutMs: 100,
+      }),
+      /(?:enable|pause) failed/,
+    );
+    assert.ok(fake.calls.some(({ method }) => method === 'Debugger.disable'));
+    assert.ok(fake.calls.some(({ method }) => method === 'detach'));
+  }
 });
 
 test('keeps read errors primary and resumes the paused debugger', async () => {
@@ -97,6 +131,11 @@ test('keeps read errors primary and resumes the paused debugger', async () => {
     /Paused read callback failed/,
   );
   assert.ok(fake.calls.some(({ method }) => method === 'Debugger.resume'));
+  assert.equal(
+    fake.calls.filter(({ method }) => method === 'Debugger.evaluateOnCallFrame')
+      .length,
+    1,
+  );
 });
 
 test('keeps screenshot errors primary and cleans up after resume failure', async () => {
@@ -123,7 +162,7 @@ test('pause timeout removes the listener and never resumes an unpaused session',
   );
   assert.deepEqual(
     fake.calls.map(({ method }) => method),
-    ['Debugger.enable', 'Debugger.disable', 'detach'],
+    ['Debugger.enable', 'Debugger.pause', 'Debugger.disable', 'detach'],
   );
   assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
 });
@@ -139,4 +178,14 @@ test('operation timeout remains bounded and resumes before cleanup', async () =>
     /paused screenshot deadline exceeded/,
   );
   assert.ok(fake.calls.some(({ method }) => method === 'Debugger.resume'));
+});
+
+test('successful capture reports cleanup failure instead of returning early', async () => {
+  const fake = fakePage({ disableError: true });
+  await assert.rejects(
+    captureWithDebuggerPause({ page: fake.page, screenshot: fake.screenshot }),
+    (error) =>
+      error?.message === 'Paused capture cleanup failed.' &&
+      error.cleanupErrors?.some(({ stage }) => stage === 'disable'),
+  );
 });

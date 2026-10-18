@@ -28,6 +28,13 @@ function callbackExpression(callback) {
   return `(${callback.toString()})()`;
 }
 
+function cleanupError(stage, error) {
+  return {
+    stage,
+    message: String(error?.message || error).slice(0, 240),
+  };
+}
+
 /**
  * Capture one page operation while its owned CDP debugger session is paused.
  * This is intentionally standalone: callers decide whether a paused snapshot
@@ -59,16 +66,18 @@ export async function captureWithDebuggerPause({
     throw new TypeError('The owned CDP session is incomplete.');
   let pausedEvent = null;
   let pauseResolve;
-  let pauseReject;
   let pauseTimer;
   const pausePromise = new Promise((resolve, reject) => {
     pauseResolve = resolve;
-    pauseReject = reject;
     pauseTimer = setTimeout(
       () => reject(new Error('Debugger pause deadline exceeded.')),
       pauseLimit,
     );
   });
+  // The rejection is consumed by the guarded await below; this handler also
+  // prevents a late timeout from becoming an unhandled rejection during CDP
+  // cleanup.
+  void pausePromise.catch(() => {});
   const onPaused = (event) => {
     if (pausedEvent) return;
     pausedEvent = event;
@@ -78,17 +87,23 @@ export async function captureWithDebuggerPause({
   session.on('Debugger.paused', onPaused);
   let primaryError = null;
   const cleanupErrors = [];
+  let result = null;
   try {
     await withTimeout(
       () => session.send('Debugger.enable'),
       pauseLimit,
       'Debugger.enable',
     );
+    await withTimeout(
+      () => session.send('Debugger.pause'),
+      pauseLimit,
+      'Debugger.pause',
+    );
     const event = await pausePromise;
     const callFrameId = event?.callFrames?.[0]?.callFrameId;
     if (!callFrameId) throw new Error('Debugger pause has no top call frame.');
-    let readValue;
-    if (expression) {
+    const evaluateRead = async () => {
+      if (!expression) return null;
       const evaluated = await withTimeout(
         () =>
           session.send('Debugger.evaluateOnCallFrame', {
@@ -102,14 +117,25 @@ export async function captureWithDebuggerPause({
       );
       if (evaluated?.exceptionDetails || evaluated?.result?.subtype === 'error')
         throw new Error('Paused read callback failed.');
-      readValue = evaluated?.result?.value;
-    }
+      return evaluated?.result?.value;
+    };
+    const readBefore = await evaluateRead();
     const screenshotResult = await withTimeout(
       screenshot,
       operationLimit,
       'paused screenshot',
     );
-    return { paused: event, readValue, screenshot: screenshotResult };
+    const readAfter = await evaluateRead();
+    result = {
+      pause: {
+        callFrameId,
+        reason:
+          typeof event?.reason === 'string' ? event.reason.slice(0, 80) : null,
+      },
+      readBefore,
+      readAfter,
+      screenshot: screenshotResult,
+    };
   } catch (error) {
     primaryError = error;
   } finally {
@@ -124,7 +150,7 @@ export async function captureWithDebuggerPause({
           'Debugger.resume',
         );
       } catch (error) {
-        cleanupErrors.push({ stage: 'resume', error });
+        cleanupErrors.push(cleanupError('resume', error));
       }
     }
     try {
@@ -134,12 +160,12 @@ export async function captureWithDebuggerPause({
         'Debugger.disable',
       );
     } catch (error) {
-      cleanupErrors.push({ stage: 'disable', error });
+      cleanupErrors.push(cleanupError('disable', error));
     }
     try {
       await withTimeout(() => session.detach(), operationLimit, 'CDP detach');
     } catch (error) {
-      cleanupErrors.push({ stage: 'detach', error });
+      cleanupErrors.push(cleanupError('detach', error));
     }
   }
   if (primaryError) {
@@ -151,4 +177,5 @@ export async function captureWithDebuggerPause({
     error.cleanupErrors = cleanupErrors;
     throw error;
   }
+  return result;
 }
