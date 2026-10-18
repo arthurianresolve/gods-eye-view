@@ -63,6 +63,16 @@ The locale catalogs are now dynamic imports rather than eager module imports;
 failed requests fall back to English without overwriting the requested
 preference, and an explicit retry can install the recovered catalog.
 
+## S68 heavy voice adapter experiment — October 18, 2026
+
+The lazy realtime-adapter experiment is intentionally rejected. The existing
+voice session constructs its adapter synchronously and binds push-to-talk from
+the trusted gesture path; deferring construction would move microphone
+permission work past that gesture or duplicate the shared control lifecycle.
+The shared action runner, controls, cancellation, radio/cost state and
+permission handling remain eager and unchanged. No bundle split is claimed for
+this rejected experiment.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium
