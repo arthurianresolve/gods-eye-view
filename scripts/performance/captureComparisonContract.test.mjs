@@ -288,14 +288,11 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
   const appCommit = 'a'.repeat(40);
   const harnessCommit = 'b'.repeat(40);
   const receiptSha256 = 'c'.repeat(64);
-  const expectedAssetPaths = [
-    'index.html',
-    'assets/app.js',
-    'cesium/Cesium.js',
-  ];
+  const bundlePath = `cesium/${'f'.repeat(64)}/Cesium.js`;
+  const expectedAssetPaths = ['index.html', 'assets/app.js', bundlePath];
   const embeddedWorkerContract = {
     schema: 'gev-cesium-embedded-worker-contract/v1',
-    bundlePath: 'cesium/Cesium.js',
+    bundlePath,
     bundleSha256: 'd'.repeat(64),
     workerSourceSha256: 'e'.repeat(64),
     allowedModuleCount: 12,
@@ -310,8 +307,8 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
     receiptSha256,
     baseUrl: 'http://127.0.0.1:4173/',
     expectedAssetPaths,
-    requestedAssetPaths: ['assets/app.js', 'cesium/Cesium.js'],
-    workerTargetUrls: ['http://127.0.0.1:4173/cesium/Cesium.js'],
+    requestedAssetPaths: ['assets/app.js', bundlePath],
+    workerTargetUrls: [`http://127.0.0.1:4173/${bundlePath}`],
     blobRequestUrls: [],
     embeddedWorkerContract,
   });
@@ -334,6 +331,7 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
     pageAssetAudit,
     expectedDocuments,
     expectedAssetPaths,
+    bundlePath,
     bundleSha256: embeddedWorkerContract.bundleSha256,
     workerSourceSha256: embeddedWorkerContract.workerSourceSha256,
     allowedModuleCount: embeddedWorkerContract.allowedModuleCount,

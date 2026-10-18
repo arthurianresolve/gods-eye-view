@@ -2062,6 +2062,7 @@ export function getCaptureComparisonIneligibilityReasons({
       receiptSha256: source?.buildProvenance?.receiptSha256,
       expectedDocuments: receiptOnlyWorkerAuditEvidence?.expectedDocuments,
       expectedAssetPaths: receiptOnlyWorkerAuditEvidence?.expectedAssetPaths,
+      bundlePath: receiptOnlyWorkerAuditEvidence?.bundlePath,
       bundleSha256: receiptOnlyWorkerAuditEvidence?.bundleSha256,
       workerSourceSha256: receiptOnlyWorkerAuditEvidence?.workerSourceSha256,
       allowedModuleCount: receiptOnlyWorkerAuditEvidence?.allowedModuleCount,
