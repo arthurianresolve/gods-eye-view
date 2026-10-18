@@ -118,10 +118,10 @@
   },
   "vite-build": {
     "runtime": "node",
-    "exports": ["./build/vite", "./build/html"],
+    "exports": ["./build/vite", "./build/html", "./build/assetDistribution"],
     "modules": [
       "build/vite.js",
-        "build/assetDistribution.js",
+      "build/assetDistribution.js",
       "build/cesium-dependencies.js",
       "build/application-html.js",
       "build/allowedHosts.js",

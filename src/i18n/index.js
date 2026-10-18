@@ -25,6 +25,7 @@ const pendingLoads = new Map();
 let preparationGeneration = 0;
 
 let currentLocale = DEFAULT_LOCALE;
+let requestedLocale = DEFAULT_LOCALE;
 
 /** The catalog for a locale; null for English and unknown codes. */
 export function getCatalog(locale) {
@@ -32,8 +33,12 @@ export function getCatalog(locale) {
 }
 
 /** Prepare a locale catalog before constructing UI. Concurrent requests coalesce. */
-export function prepareLocale(locale, { loaders = LOADERS, force = false } = {}) {
+export function prepareLocale(
+  locale,
+  { loaders = LOADERS, force = false } = {},
+) {
   const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
+  requestedLocale = normalized;
   if (normalized === DEFAULT_LOCALE || (CATALOGS[normalized] && !force)) {
     setLocale(normalized);
     return Promise.resolve(normalized);
@@ -41,25 +46,35 @@ export function prepareLocale(locale, { loaders = LOADERS, force = false } = {})
   if (pendingLoads.has(normalized)) return pendingLoads.get(normalized);
   const generation = ++preparationGeneration;
   const loader = loaders[normalized];
-  if (typeof loader !== 'function') return Promise.reject(new Error(`No catalog loader for ${normalized}`));
+  if (typeof loader !== 'function')
+    return Promise.reject(new Error(`No catalog loader for ${normalized}`));
   setLocale(normalized);
-  const load = loader();
-  const pending = load.then((module) => {
-    CATALOGS[normalized] = module.default;
-    if (generation === preparationGeneration && currentLocale === normalized) formatterCache.clear();
-    return normalized;
-  }).catch((error) => {
-    if (generation === preparationGeneration && currentLocale === normalized) {
-      setLocale(DEFAULT_LOCALE);
-    }
-    throw error;
-  }).finally(() => pendingLoads.delete(normalized));
+  // Defer invocation into a promise so a synchronously throwing injected
+  // loader follows the same rejection and retry path as a dynamic import.
+  const load = Promise.resolve().then(loader);
+  const pending = load
+    .then((module) => {
+      CATALOGS[normalized] = module.default;
+      if (generation === preparationGeneration && currentLocale === normalized)
+        formatterCache.clear();
+      return normalized;
+    })
+    .catch((error) => {
+      if (
+        generation === preparationGeneration &&
+        currentLocale === normalized
+      ) {
+        setLocale(DEFAULT_LOCALE, { preserveRequested: true });
+      }
+      throw error;
+    })
+    .finally(() => pendingLoads.delete(normalized));
   pendingLoads.set(normalized, pending);
   return pending;
 }
 
 /** Retry a failed or superseded locale preparation explicitly. */
-export function retryLocalePreparation(locale = currentLocale) {
+export function retryLocalePreparation(locale = requestedLocale) {
   return prepareLocale(locale);
 }
 
@@ -73,8 +88,9 @@ export function getLocale() {
  * applyDocumentTranslations to reflect it in the DOM.
  * @returns {string} The locale actually applied (normalized).
  */
-export function setLocale(locale) {
+export function setLocale(locale, { preserveRequested = false } = {}) {
   const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
+  if (!preserveRequested) requestedLocale = normalized;
   if (normalized !== currentLocale) {
     currentLocale = normalized;
     formatterCache.clear();

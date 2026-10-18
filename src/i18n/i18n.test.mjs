@@ -40,12 +40,35 @@ test('locale preparation preserves synchronous translation compatibility and coa
 
 test('failed injected catalog falls back to English and explicit retry can recover', async () => {
   await assert.rejects(
-    prepareLocale('es', { force: true, loaders: { es: () => Promise.reject(new Error('offline')) } }),
+    prepareLocale('es', {
+      force: true,
+      loaders: { es: () => Promise.reject(new Error('offline')) },
+    }),
     /offline/,
   );
   assert.equal(t('POWERED UP'), 'POWERED UP');
-  await prepareLocale('es', { force: true, loaders: { es: async () => ({ default: { 'POWERED UP': 'LISTO' } }) } });
+  await prepareLocale('es', {
+    force: true,
+    loaders: { es: async () => ({ default: { 'POWERED UP': 'LISTO' } }) },
+  });
   assert.equal(t('POWERED UP'), 'LISTO');
+});
+
+test('failed preparation keeps the requested locale for a default retry, including sync loader throws', async () => {
+  await assert.rejects(
+    prepareLocale('ru', {
+      force: true,
+      loaders: {
+        ru: () => {
+          throw new Error('sync offline');
+        },
+      },
+    }),
+    /sync offline/,
+  );
+  assert.equal(t('POWERED UP'), 'POWERED UP');
+  await retryLocalePreparation();
+  assert.equal(t('POWERED UP'), 'ЗАПУЩЕНО');
 });
 
 function memoryStorage(initial = {}) {
