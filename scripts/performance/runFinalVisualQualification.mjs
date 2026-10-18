@@ -88,6 +88,7 @@ async function verifyReceipt({ receipt, checkout, build, harnessRoot, harnessSha
 
 async function observedState(page, profile) {
   const checkpoint = await page.evaluate(readCctvLifecycleCheckpointInPage, {
+    includeRenderer: true,
     fixtureView: {
       longitude: -97.7431, latitude: 30.2672, heightM: 25000,
       headingRadians: 0, pitchRadians: -1.2, rollRadians: 0,
@@ -182,6 +183,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   });
   let page;
   let prepared;
+  let observedProfile = null;
   try {
     const context = await browser.createBrowserContext();
     page = await context.newPage();
@@ -231,13 +233,14 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       }
       const completedRender = await page.evaluate(waitForCctvLifecycleRenderInPage, 15_000);
       const profile = await readNativeProfile(page);
+      observedProfile = profile;
       const observed = await observedState(page, profile);
       if (observed.checkpoint.activeCameraId !== fixture.cameraId || observed.cctvParams?.selectedCameraId !== fixture.cameraId || observed.cctvParams?.showProjection !== true || (observed.cctvDiagnostics?.entities || 0) < 1)
         throw new Error('Completed render lacks a selected, materialized CCTV still projection.');
       const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));
       states.push({ id, completedRender, foreground, ...observed, [label]: png });
     }
-    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile, states, browserClosed: false };
+    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserClosed: false };
   } finally {
     if (page) await cleanupFixturePageDiagnostics(page).catch(() => {});
     await browser.close();
@@ -254,6 +257,7 @@ export async function produceFinalVisualQualification(options) {
   await verifyReceipt({ receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['candidate-app-sha'], baseUrl: options['candidate-url'] });
   const baseline = await captureRevision({ label: 'baseline', url: options['baseline-url'], appSha: options['baseline-app-sha'], receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harness: options['harness-root'], out });
   const candidate = await captureRevision({ label: 'candidate', url: options['candidate-url'], appSha: options['candidate-app-sha'], receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harness: options['harness-root'], out });
+  const fixture = createCctvLifecycleFixture();
   for (let index = 0; index < STATES.length; index++) {
     const left = baseline.states[index];
     const right = candidate.states[index];
@@ -276,8 +280,8 @@ export async function produceFinalVisualQualification(options) {
         device: environment.checkpoint.renderer?.name,
       },
       nativeSharpnessProfile: environment.profile,
-      populations: environment.populations,
-      camera: environment.camera,
+      populations: [{ id: 'cctv', enabled: true, count: environment.populations.cctv }],
+      camera: { id: fixture.cameraId, ...environment.camera },
       foregroundConfirmed: true,
     },
     masks: [],
@@ -285,7 +289,7 @@ export async function produceFinalVisualQualification(options) {
       id,
       completedRender: { baseline: true, candidate: true, baselineFrame: baseline.states[index].completedRender.frameNumber, candidateFrame: candidate.states[index].completedRender.frameNumber },
       foreground: { baseline: true, candidate: true },
-      camera: baseline.states[index].camera,
+      camera: { id: fixture.cameraId, ...baseline.states[index].camera },
       cameraByRevision: { baseline: baseline.states[index].camera, candidate: candidate.states[index].camera },
       nativeSharpnessProfile: baseline.states[index].profile,
       nativeSharpnessProfileByRevision: { baseline: baseline.states[index].profile, candidate: candidate.states[index].profile },

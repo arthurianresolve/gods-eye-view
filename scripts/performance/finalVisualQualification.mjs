@@ -165,6 +165,31 @@ export async function validateFinalVisualQualification(
       `${state.id} candidate foreground`,
     );
     assert.deepEqual(
+      state.settings?.baseline,
+      state.settings?.candidate,
+      `${state.id} per-revision settings differ`,
+    );
+    assert.deepEqual(
+      state.populations?.baseline,
+      state.populations?.candidate,
+      `${state.id} per-revision populations differ`,
+    );
+    assert.deepEqual(
+      state.cameraByRevision?.baseline,
+      state.cameraByRevision?.candidate,
+      `${state.id} per-revision camera differs`,
+    );
+    assert.deepEqual(
+      state.hud?.baseline,
+      state.hud?.candidate,
+      `${state.id} per-revision HUD accessibility state differs`,
+    );
+    assert.ok(
+      Number.isSafeInteger(state.timestampMs?.baseline) &&
+        Number.isSafeInteger(state.timestampMs?.candidate),
+      `${state.id} timestamps are missing`,
+    );
+    assert.deepEqual(
       state.camera,
       report.environment.camera,
       `${state.id} camera`,
