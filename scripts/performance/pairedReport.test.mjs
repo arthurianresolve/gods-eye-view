@@ -70,12 +70,16 @@ test('native comparison cannot bypass profile evidence by stripping fields', () 
   baseline.comparisonProfile = 'native-sharpness-v1';
   candidate.comparisonProfile = 'native-sharpness-v1';
   assert.throws(
-    () => validatePairedPerformanceReports({
-      baseline,
-      candidate,
-      expectedAppCommits: { baseline: baselineCommit, candidate: candidateCommit },
-      expectedComparisonProfile: 'native-sharpness-v1',
-    }),
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+        expectedComparisonProfile: 'native-sharpness-v1',
+      }),
     /missing native sharpness profile/,
   );
 });
@@ -739,4 +743,42 @@ test('idle zero-frame windows remain explicitly unavailable', () => {
     changePct: null,
     regressionOver10Pct: false,
   });
+});
+
+test('native map comparison requires profile evidence at every journey boundary', () => {
+  const baseline = makeMapReport(baselineCommit);
+  const candidate = makeMapReport(candidateCommit);
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 800, height: 600, dpr: 1.25 },
+    drawingBuffer: { width: 1000, height: 750 },
+  };
+  for (const report of [baseline, candidate]) {
+    report.comparisonProfile = 'native-sharpness-v1';
+    report.environment.nativeSharpnessProfile = structuredClone(profile);
+    for (const capture of report.captures || [])
+      for (const phase of ['before', 'after']) {
+        capture.conditions ||= {};
+        capture.conditions[phase] ||= {};
+        capture.conditions[phase].environment = {
+          nativeSharpnessProfile: structuredClone(profile),
+        };
+      }
+  }
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+        expectedComparisonProfile: 'native-sharpness-v1',
+      }),
+    /map journey .* missing native sharpness profile/,
+  );
 });

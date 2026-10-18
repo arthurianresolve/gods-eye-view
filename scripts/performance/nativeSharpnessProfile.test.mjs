@@ -15,8 +15,13 @@ test('native profile fixes Cesium resolution and records actual viewport inputs'
         resolutionScale: 0.5,
         scene: {
           globe: { maximumScreenSpaceError: 16 },
-          canvas: { width: 1800, height: 1125, clientWidth: 1440, clientHeight: 900 },
-            context: { _originalGLContext: null },
+          canvas: {
+            width: 1800,
+            height: 1125,
+            clientWidth: 1440,
+            clientHeight: 900,
+          },
+          context: { _originalGLContext: null },
         },
       },
     },
@@ -50,13 +55,25 @@ test('native profile rejects a quality mismatch', () => {
 });
 
 test('page evaluate serialization does not depend on module bindings', () => {
-  const serialized = Function(`return (${applyNativeSharpnessProfile.toString()})`)();
+  const serialized = Function(
+    `return (${applyNativeSharpnessProfile.toString()})`,
+  )();
   const windowObject = {
     innerWidth: 800,
     innerHeight: 600,
     devicePixelRatio: 2,
     __godsEyeView: {
-      viewer: { scene: { globe: {}, canvas: { width: 1600, height: 1200, clientWidth: 800, clientHeight: 600 } } },
+      viewer: {
+        scene: {
+          globe: {},
+          canvas: {
+            width: 1600,
+            height: 1200,
+            clientWidth: 800,
+            clientHeight: 600,
+          },
+        },
+      },
     },
   };
   assert.equal(serialized(windowObject).id, 'native-sharpness-v1');
@@ -78,5 +95,30 @@ test('native profile rejects a drawing-buffer dimension mismatch', () => {
         },
       }),
     /drawing-buffer width differs/,
+  );
+});
+
+test('fractional DPR uses canvas integer conversion at odd viewport sizes', () => {
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 801, height: 603, dpr: 1.25 },
+    drawingBuffer: { width: 1001, height: 753 },
+  };
+  assert.equal(
+    assertNativeSharpnessProfile({
+      environment: { nativeSharpnessProfile: profile },
+    }),
+    true,
+  );
+  profile.drawingBuffer.height = 754;
+  assert.throws(
+    () =>
+      assertNativeSharpnessProfile({
+        environment: { nativeSharpnessProfile: profile },
+      }),
+    /height differs/,
   );
 });

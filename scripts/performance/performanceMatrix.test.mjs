@@ -132,6 +132,10 @@ test('matrix capture invocations use exact acceptance settings and workload mode
     '2026-10-08T12:00:00.000Z',
   );
   assert.equal(dense.args[dense.args.indexOf('--runs') + 1], '5');
+  assert.equal(
+    dense.args[dense.args.indexOf('--comparison-profile') + 1],
+    'legacy',
+  );
   assert.equal(dense.args[dense.args.indexOf('--warmup-ms') + 1], '30000');
   assert.equal(dense.args[dense.args.indexOf('--seconds') + 1], '60');
   assert.equal(dense.args[dense.args.indexOf('--expected-density') + 1], '75');

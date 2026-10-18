@@ -28,7 +28,10 @@ import {
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
-import { assertNativeSharpnessProfile, NATIVE_SHARPNESS_PROFILE_ID } from './nativeSharpnessProfile.mjs';
+import {
+  assertNativeSharpnessProfile,
+  NATIVE_SHARPNESS_PROFILE_ID,
+} from './nativeSharpnessProfile.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -1604,13 +1607,38 @@ export function validatePairedPerformanceReports({
     assert.equal(baseline.comparisonProfile, expectedComparisonProfile);
     assert.equal(candidate.comparisonProfile, expectedComparisonProfile);
     if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID) {
-      for (const [label, report] of [['baseline', baseline], ['candidate', candidate]]) {
+      for (const [label, report] of [
+        ['baseline', baseline],
+        ['candidate', candidate],
+      ]) {
         assertNativeSharpnessProfile(report, `${label} environment`);
+        const mapCapture = report.workload?.mapStreamingCapture;
+        if (mapCapture) {
+          const journeys = mapCapture.journeys || [mapCapture];
+          for (const [index, journey] of journeys.entries()) {
+            for (const phase of ['Before', 'After'])
+              assertNativeSharpnessProfile(
+                {
+                  environment: {
+                    nativeSharpnessProfile:
+                      journey[`settings${phase}`]?.nativeSharpnessProfile,
+                  },
+                },
+                `${label} map journey ${index + 1} ${phase}`,
+              );
+          }
+        }
         for (const [index, capture] of (report.captures || []).entries()) {
           for (const phase of ['before', 'after']) {
             const boundary = capture.conditions?.[phase];
-            assert.ok(boundary?.environment, `${label} capture ${index} ${phase} environment missing`);
-            assertNativeSharpnessProfile({ environment: boundary.environment }, `${label} capture ${index} ${phase}`);
+            assert.ok(
+              boundary?.environment,
+              `${label} capture ${index} ${phase} environment missing`,
+            );
+            assertNativeSharpnessProfile(
+              { environment: boundary.environment },
+              `${label} capture ${index} ${phase}`,
+            );
           }
         }
       }

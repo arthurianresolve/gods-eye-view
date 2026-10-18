@@ -13,6 +13,7 @@ import {
   validateDeterministicMapStreamingFixture,
 } from './mapStreamingFixture.mjs';
 import { MAP_FIXTURE_BUILD_PROFILE_ID } from './buildProvenance.mjs';
+import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID =
@@ -1334,13 +1335,16 @@ export async function runNativeMapStreamingJourneyInPage({
   warmupMs = null,
   command = 'run',
   operationId = null,
+  comparisonProfile = 'legacy',
 }) {
-  if (command === 'start') {
+  if (command === 'start' && comparisonProfile === 'native-sharpness-v1') {
     const viewer = window.__godsEyeView?.viewer;
     const scene = viewer?.scene;
     const globe = scene?.globe;
     if (!viewer || !scene?.canvas || !globe)
-      throw new Error('Map journey native sharpness profile needs Cesium viewer surfaces.');
+      throw new Error(
+        'Map journey native sharpness profile needs Cesium viewer surfaces.',
+      );
     viewer.useBrowserRecommendedResolution = false;
     viewer.resolutionScale = 1;
     globe.maximumScreenSpaceError = 1;
@@ -4851,16 +4855,14 @@ export function validateMapStreamingCaptureReport(
   ]);
   if (profiles.some(Boolean)) {
     for (const [index, profileValue] of profiles.entries()) {
-      assert.ok(profileValue, `Map journey ${index + 1} is missing native sharpness profile.`);
-      assert.equal(profileValue.id, 'native-sharpness-v1');
-      assert.equal(profileValue.useBrowserRecommendedResolution, false);
-      assert.equal(profileValue.resolutionScale, 1);
-      assert.equal(profileValue.maximumScreenSpaceError, 1);
-      assert.ok(Number.isInteger(profileValue.viewport?.width));
-      assert.ok(Number.isInteger(profileValue.viewport?.height));
-      assert.ok(Number.isFinite(profileValue.viewport?.dpr));
-      assert.ok(Number.isInteger(profileValue.drawingBuffer?.width));
-      assert.ok(Number.isInteger(profileValue.drawingBuffer?.height));
+      assert.ok(
+        profileValue,
+        `Map journey ${index + 1} is missing native sharpness profile.`,
+      );
+      assertNativeSharpnessProfile(
+        { environment: { nativeSharpnessProfile: profileValue } },
+        `Map journey boundary ${index + 1}`,
+      );
     }
     for (const journey of journeys)
       assert.deepEqual(

@@ -173,12 +173,11 @@ const declaredDeviceScaleFactor = Math.max(
   0,
   Number(option('--device-scale-factor', '0')) || 0,
 );
-const comparisonProfile = option(
-  '--comparison-profile',
-  'native-sharpness-v1',
-);
+const comparisonProfile = option('--comparison-profile', 'native-sharpness-v1');
 if (!['native-sharpness-v1', 'legacy'].includes(comparisonProfile))
-  throw new Error('--comparison-profile must be native-sharpness-v1 or legacy.');
+  throw new Error(
+    '--comparison-profile must be native-sharpness-v1 or legacy.',
+  );
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
@@ -3860,7 +3859,8 @@ try {
   }
 
   if (mapStreamingWorkloadSelected) {
-    await page.evaluate(applyNativeSharpnessProfile);
+    if (comparisonProfile === 'native-sharpness-v1')
+      await page.evaluate(applyNativeSharpnessProfile);
     failureProgress.phase = 'austin-map-streaming-route';
     failureProgress.workload.mapStreamingCapture = {
       status: 'running',
@@ -3876,6 +3876,7 @@ try {
           durationMs: mapStreamingModule.MAP_STREAMING_ROUTE.durationLimitMs,
           route: mapStreamingModule.MAP_STREAMING_ROUTE,
           warmupMs: mapStreamingModule.MAP_STREAMING_ROUTE.warmupMs,
+          comparisonProfile,
         },
       );
       mapStreamingJourneys.push({ run, ...journey });
@@ -4674,7 +4675,10 @@ try {
         appCommit: source.appCommit,
       });
       if (comparisonProfile === 'native-sharpness-v1')
-        assertNativeSharpnessProfile(sceneBefore, `${scenario} run ${run} before`);
+        assertNativeSharpnessProfile(
+          sceneBefore,
+          `${scenario} run ${run} before`,
+        );
       const austinStateBefore = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
@@ -5375,7 +5379,10 @@ try {
         appCommit: source.appCommit,
       });
       if (comparisonProfile === 'native-sharpness-v1')
-        assertNativeSharpnessProfile(sceneAfter, `${scenario} run ${run} after`);
+        assertNativeSharpnessProfile(
+          sceneAfter,
+          `${scenario} run ${run} after`,
+        );
       const austinStateAfter = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
