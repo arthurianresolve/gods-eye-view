@@ -632,6 +632,29 @@ test('20% objective misses are reported without failing the regression gate', as
   );
 });
 
+test('manifest consumer does not fail on measured idle cadence increase', async () => {
+  const setup = await setupManifest();
+  const comparison = await createComparison(setup, {
+    patch: (baseline, candidate) => {
+      for (const report of [baseline, candidate]) {
+        for (const capture of report.captures.filter((row) => row.scenario === 'idle')) {
+          capture.frameCount = 100;
+          capture.frameIntervalMs = { p50: 50, p95: 50, max: 50, samples: 100 };
+        }
+      }
+      for (const capture of candidate.captures.filter((row) => row.scenario === 'idle'))
+        capture.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 100 };
+    },
+  });
+  setup.evidence.comparisons.push(comparison);
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.comparison.failures.length, 0);
+  assert.equal(result.comparison.status, 'pending');
+});
+
 test('achieved objective percentages remain visible from validated measurements', async () => {
   const setup = await setupManifest();
   setup.evidence.comparisons.push(await createComparison(setup));
