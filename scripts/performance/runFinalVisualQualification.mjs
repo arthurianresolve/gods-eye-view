@@ -175,7 +175,8 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   try {
     const context = await browser.createBrowserContext();
     page = await context.newPage();
-    await page.evaluateOnNewDocument(installFrozenWallClock, FIXED_TIME_MS);`n    await page.evaluateOnNewDocument(installQualificationRandom, 0x51a7e);
+    await page.evaluateOnNewDocument(installFrozenWallClock, FIXED_TIME_MS);
+    await page.evaluateOnNewDocument(installQualificationRandom, 0x51a7e);
     prepared = await prepareFixturePage(browser, new URL(url).origin, {
       page,
       viewport: VIEWPORT,
@@ -374,4 +375,5 @@ export async function produceFinalVisualQualification(options) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   await produceFinalVisualQualification(args(process.argv));
+
 
