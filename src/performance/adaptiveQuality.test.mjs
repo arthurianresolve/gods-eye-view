@@ -161,6 +161,18 @@ test('hidden tabs suspend Auto samples and reset elapsed frame timing', () => {
   f.controller.destroy();
 });
 
+test('Auto ignores intentional periodic gaps and resets consecutive eligibility', () => {
+  const f = controllerFixture(50);
+  f.controller.setMode('auto', { persist: false });
+  f.frame(0);
+  for (let time = 30; time <= 90; time += 30) f.frame(time);
+  f.frame(220); // 130 ms periodic demand gap must not enter the policy window.
+  assert.equal(f.controller.policy.samples.length, 0);
+  for (let time = 250; time <= 2_950; time += 30) f.frame(time);
+  assert.equal(f.density, 25);
+  f.controller.destroy();
+});
+
 test('external restoration updates the Manual status without changing mode', () => {
   const states = [];
   const f = controllerFixture(75);

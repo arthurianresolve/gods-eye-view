@@ -105,6 +105,7 @@ export class AdaptiveQualityController {
     this.storage = storage;
     this.now = now;
     this.policy = new AdaptiveQualityPolicy();
+    this.scene = viewer?.scene || null;
     this.mode = 'manual';
     this.manualDensity = readDensity();
     this.lastFrameAt = null;
@@ -183,8 +184,17 @@ export class AdaptiveQualityController {
       this.lastFrameAt = now;
       return;
     }
+    // Auto is eligible only for visible, consecutive continuous-demand frames.
+    // A request-render gap (including intentional 100–250 ms periodic gaps)
+    // starts a fresh run instead of being misclassified as GPU overload.
+    const interval = now - this.lastFrameAt;
+    if (this.scene?.requestRenderMode || interval > 100) {
+      this.lastFrameAt = now;
+      this.policy.resetWindow();
+      return;
+    }
     const result = this.policy.observe(
-      now - this.lastFrameAt,
+      interval,
       now,
       this.readDensity(),
     );

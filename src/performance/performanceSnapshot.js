@@ -19,6 +19,7 @@ const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
 const POINT_PRIMITIVE_COUNT_MAX = 5_000;
 const POINT_PRIMITIVE_COUNT_UNIT = 'instances';
 const POINT_PRIMITIVE_COVERAGE = 'owned-import-point-collection';
+const RENDERER_CACHE = new WeakMap();
 
 function finite(value) {
   return Number.isFinite(value) ? value : null;
@@ -31,6 +32,24 @@ function clone(value) {
   } catch {
     return null;
   }
+}
+
+function percentile(values, fraction) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)];
+}
+
+function framePercentiles(samples) {
+  const values = samples
+    .filter((sample) => sample.name === 'frameInterval' && sample.metadata?.mayIncludeIntentionalIdle === false)
+    .map((sample) => sample.durationMs);
+  return {
+    eligibleFrameCount: values.length,
+    p50Ms: percentile(values, 0.5),
+    p95Ms: percentile(values, 0.95),
+    p99Ms: percentile(values, 0.99),
+  };
 }
 
 /** Bounded, local-only performance diagnostics for reproducible captures. */
@@ -71,6 +90,7 @@ export class PerformanceSnapshot {
     scene = {},
     timings = {},
   } = {}) {
+    const samples = this.samples.map((sample) => ({ ...sample }));
     return {
       schema: 'gev-performance-snapshot/v1',
       capturedAt: new Date().toISOString(),
@@ -80,8 +100,9 @@ export class PerformanceSnapshot {
       scene: clone(scene) || {},
       resources: clone(resources) || {},
       timings: clone(timings) || {},
+      framePercentiles: framePercentiles(samples),
       counters: Object.fromEntries(this.counters),
-      samples: this.samples.map((sample) => ({ ...sample })),
+      samples,
     };
   }
 }
@@ -158,6 +179,7 @@ export function createPerformanceMonitor({
   readOwnership = () => null,
   appCommit = null,
   harnessCommit = null,
+  observeLongTasks = false,
   now = () => globalThis.performance?.now?.() ?? Date.now(),
 } = {}) {
   let snapshot = null;
@@ -168,6 +190,7 @@ export function createPerformanceMonitor({
   let active = false;
   let destroyed = false;
   let removeListener = null;
+  let longTaskObserver = null;
   const onPostRender = () => {
     if (!active) return;
     const current = now();
@@ -187,6 +210,8 @@ export function createPerformanceMonitor({
     if (destroyed || active === nextEnabled) return;
     if (removeListener) removeListener();
     removeListener = null;
+    longTaskObserver?.disconnect();
+    longTaskObserver = null;
     active = nextEnabled;
     enabled = active;
     previousFrameAt = null;
@@ -202,6 +227,16 @@ export function createPerformanceMonitor({
         typeof unsubscribe === 'function'
           ? unsubscribe
           : () => scene.postRender.removeEventListener?.(onPostRender);
+    }
+    if (observeLongTasks && typeof PerformanceObserver === 'function') {
+      try {
+        longTaskObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) snapshot.record('longTask', entry.duration, { startTime: entry.startTime });
+        });
+        longTaskObserver.observe({ type: 'longtask', buffered: false });
+      } catch {
+        longTaskObserver = null;
+      }
     }
   }
   if (enabled) setEnabled(true);
@@ -229,6 +264,12 @@ export function createPerformanceMonitor({
       retainedRenderedFrameCount: snapshot ? frameCount : null,
       resources: null,
       timings: null,
+      framePercentiles: {
+        eligibleFrameCount: null,
+        p50Ms: null,
+        p95Ms: null,
+        p99Ms: null,
+      },
       counters: snapshot ? Object.fromEntries(snapshot.counters) : {},
       samples: snapshot
         ? snapshot.samples.map((sample) => ({ ...sample }))
@@ -283,6 +324,8 @@ export function createPerformanceMonitor({
     destroy() {
       if (destroyed) return;
       setEnabled(false);
+      longTaskObserver?.disconnect();
+      longTaskObserver = null;
       destroyed = true;
     },
   };
@@ -298,16 +341,19 @@ export function readPerformanceEnvironment({
   const gl = viewer?.scene?.context?._gl || null;
   let renderer = null;
   let vendor = null;
-  try {
-    const extension = gl?.getExtension?.('WEBGL_debug_renderer_info');
-    renderer =
-      gl?.getParameter?.(extension?.UNMASKED_RENDERER_WEBGL || gl?.RENDERER) ||
-      null;
-    vendor =
-      gl?.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl?.VENDOR) ||
-      null;
-  } catch {
-    // Renderer strings are optional and must never break the application.
+  if (gl) {
+    const cached = RENDERER_CACHE.get(gl);
+    if (cached) ({ renderer, vendor } = cached);
+    else {
+      try {
+        const extension = gl.getExtension?.('WEBGL_debug_renderer_info');
+        renderer = gl.getParameter?.(extension?.UNMASKED_RENDERER_WEBGL || gl.RENDERER) || null;
+        vendor = gl.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl.VENDOR) || null;
+      } catch {
+        // Renderer strings are optional and must never break the application.
+      }
+      RENDERER_CACHE.set(gl, { renderer, vendor });
+    }
   }
   const layers = dataManager?.getAll?.() || [];
   return {
