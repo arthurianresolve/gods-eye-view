@@ -4799,6 +4799,8 @@ try {
           let renderedFrameCount = 0;
           let lastPreRenderAt = null;
           let appliedRoutePhaseMs = null;
+          let manualFrameTiming = null;
+          let lastManualFrameTraceRecord = null;
           const frameTrace = frameTraceEnabled ? [] : null;
           const boundedDiagnosticLabel = (value) => {
             if (typeof value === 'string') return value.slice(0, 96);
@@ -4838,6 +4840,13 @@ try {
                   lastPreRenderAt == null
                     ? null
                     : Math.max(0, now - lastPreRenderAt),
+                manualFrameCallbackStartedAtMs:
+                  manualFrameTiming?.callbackStartedAtMs ?? null,
+                cameraUpdateFinishedAtMs:
+                  manualFrameTiming?.cameraUpdateFinishedAtMs ?? null,
+                viewerRenderStartedAtMs:
+                  manualFrameTiming?.viewerRenderStartedAtMs ?? null,
+                viewerRenderReturnedAtMs: null,
                 focused: document.hasFocus(),
                 visible: !document.hidden,
                 requestRenderMode: Boolean(scene.requestRenderMode),
@@ -4857,6 +4866,7 @@ try {
                     }
                   : null,
               });
+              lastManualFrameTraceRecord = frameTrace[frameTrace.length - 1];
             }
           };
           if (frameTrace) scene.preRender?.addEventListener?.(onPreRender);
@@ -4988,14 +4998,39 @@ try {
               const move = () => {
                 motionFrameRequest = null;
                 if (!active) return;
+                const callbackStartedAtMs = frameTrace
+                  ? performance.now()
+                  : null;
                 const elapsed = Math.min(
                   durationMs,
                   Math.max(0, performance.now() - motionStartedAt),
                 );
-                updateMotion(elapsed);
                 appliedRoutePhaseMs =
                   scenarioName === 'scripted-motion' ? elapsed : null;
-                viewer.render();
+                if (!frameTrace) {
+                  updateMotion(elapsed);
+                  viewer.render();
+                } else {
+                  manualFrameTiming = {
+                    callbackStartedAtMs,
+                    cameraUpdateFinishedAtMs: null,
+                    viewerRenderStartedAtMs: null,
+                  };
+                  lastManualFrameTraceRecord = null;
+                  try {
+                    updateMotion(elapsed);
+                    manualFrameTiming.cameraUpdateFinishedAtMs =
+                      performance.now();
+                    manualFrameTiming.viewerRenderStartedAtMs =
+                      performance.now();
+                    viewer.render();
+                    if (lastManualFrameTraceRecord)
+                      lastManualFrameTraceRecord.viewerRenderReturnedAtMs =
+                        performance.now();
+                  } finally {
+                    manualFrameTiming = null;
+                  }
+                }
                 if (elapsed >= durationMs) return;
                 motionFrameRequest = requestAnimationFrame(move);
               };
@@ -5028,8 +5063,36 @@ try {
             // Completion follows the fixed measurement timer, not delivery of
             // another animation frame. Slow hardware must still reach the same
             // absolute route endpoint without extending the measured window.
-            finishMotion();
-            if (renderDemandOwnership.requested) viewer.render();
+            if (renderDemandOwnership.requested) {
+              if (frameTrace) {
+                const callbackStartedAtMs = performance.now();
+                appliedRoutePhaseMs =
+                  scenarioName === 'scripted-motion' ? durationMs : null;
+                manualFrameTiming = {
+                  callbackStartedAtMs,
+                  cameraUpdateFinishedAtMs: null,
+                  viewerRenderStartedAtMs: null,
+                };
+                lastManualFrameTraceRecord = null;
+                try {
+                  finishMotion();
+                  manualFrameTiming.cameraUpdateFinishedAtMs =
+                    performance.now();
+                  manualFrameTiming.viewerRenderStartedAtMs = performance.now();
+                  viewer.render();
+                  if (lastManualFrameTraceRecord)
+                    lastManualFrameTraceRecord.viewerRenderReturnedAtMs =
+                      performance.now();
+                } finally {
+                  manualFrameTiming = null;
+                }
+              } else {
+                finishMotion();
+                viewer.render();
+              }
+            } else {
+              finishMotion();
+            }
             // A parked request-render scene is allowed to stop scheduling
             // animation frames. Requiring one here left idle captures pending
             // until Puppeteer's unrelated protocol timeout. Motion already

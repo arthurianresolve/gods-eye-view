@@ -101,6 +101,7 @@ function createRawSampleHarness({
     setView() {},
     moveRight(distance) {
       currentDistance = distance;
+      clock += 3;
     },
   };
   const scene = {
@@ -217,6 +218,21 @@ test('raw sample tracing resets pre-window frames and records applied route phas
   assert.equal(sample.frameTrace[0].routePhaseMs, 0);
   assert.equal(sample.frameTrace[0].sceneRenderWallMs, 7);
   assert.ok(sample.frameTrace.every((frame) => frame.routePhaseMs !== null));
+  assert.ok(
+    sample.frameTrace.every(
+      (frame) =>
+        Number.isFinite(frame.manualFrameCallbackStartedAtMs) &&
+        Number.isFinite(frame.cameraUpdateFinishedAtMs) &&
+        Number.isFinite(frame.viewerRenderStartedAtMs) &&
+        Number.isFinite(frame.viewerRenderReturnedAtMs) &&
+        frame.manualFrameCallbackStartedAtMs <=
+          frame.cameraUpdateFinishedAtMs &&
+        frame.cameraUpdateFinishedAtMs - frame.manualFrameCallbackStartedAtMs >=
+          3 &&
+        frame.cameraUpdateFinishedAtMs <= frame.viewerRenderStartedAtMs &&
+        frame.viewerRenderStartedAtMs <= frame.viewerRenderReturnedAtMs,
+    ),
+  );
   for (let index = 0; index < sample.frameTrace.length; index++) {
     const frame = sample.frameTrace[index];
     assert.ok(
@@ -228,6 +244,8 @@ test('raw sample tracing resets pre-window frames and records applied route phas
   }
   assert.equal(harness.preRender.size, 0);
   assert.equal(harness.postRender.size, 0);
+  assert.ok(Number.isFinite(sample.frameTrace.at(-1).viewerRenderReturnedAtMs));
+  assert.equal(sample.frameTrace.at(-1).routePhaseMs, 35);
 });
 
 test('raw sample tracing disabled adds no pre-render listener or trace data', async () => {
@@ -243,9 +261,44 @@ test('raw sample tracing disabled adds no pre-render listener or trace data', as
   });
   assert.equal('frameTrace' in sample, false);
   assert.equal('longTaskTrace' in sample, false);
+  assert.equal(
+    sample.frameTrace,
+    undefined,
+    'disabled tracing must not add manual timing fields',
+  );
   assert.equal(harness.preRender.additions, 0);
   assert.equal(harness.preRender.size, 0);
   assert.equal(harness.postRender.size, 0);
+});
+
+test('idle trace records explicit null manual-pump timing fields', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness();
+  const originalSetTimeout = harness.context.setTimeout;
+  harness.context.setTimeout = (handler, delay, ...args) =>
+    originalSetTimeout(() => {
+      if (delay === 10) {
+        harness.preRender.emit();
+        harness.context.performance.now();
+        harness.postRender.emit();
+      }
+      handler(...args);
+    }, delay);
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 10,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+  });
+  assert.ok(sample.frameTrace.length > 0);
+  for (const frame of sample.frameTrace) {
+    assert.equal(frame.manualFrameCallbackStartedAtMs, null);
+    assert.equal(frame.cameraUpdateFinishedAtMs, null);
+    assert.equal(frame.viewerRenderStartedAtMs, null);
+    assert.equal(frame.viewerRenderReturnedAtMs, null);
+  }
 });
 
 test('raw sample trace caps frames and reports truncation without losing observed counts', async () => {
@@ -263,6 +316,12 @@ test('raw sample trace caps frames and reports truncation without losing observe
   assert.equal(sample.frameTraceWindow.recordedFrames, 4096);
   assert.ok(sample.frameTraceWindow.observedFrames >= 4100);
   assert.equal(sample.frameTraceWindow.truncated, true);
+  assert.ok(
+    sample.frameTrace.every((frame) =>
+      Number.isFinite(frame.viewerRenderStartedAtMs),
+    ),
+  );
+  assert.ok(Number.isFinite(sample.frameTrace.at(-1).viewerRenderReturnedAtMs));
   assert.equal(harness.preRender.size, 0);
   assert.equal(harness.postRender.size, 0);
 });
@@ -409,13 +468,10 @@ test('moving samples own a bounded Viewer render pump and restore the default lo
   const poseUpdate = source.slice(applyDistance, finishMotion);
   assert.match(poseUpdate, /viewer\.camera\.moveRight\(distance\);/);
   const motionPump = source.slice(finishMotion, returnedSample);
-  assert.match(motionPump, /updateMotion\(elapsed\);/);
+  assert.match(motionPump, /if \(!frameTrace\)[\s\S]*updateMotion\(elapsed\);/);
   assert.match(motionPump, /viewer\.render\(\);/);
   const completion = source.slice(finishMotion, finallyBlock);
-  assert.match(
-    completion,
-    /if \(renderDemandOwnership\.requested\) viewer\.render\(\);/,
-  );
+  assert.match(completion, /if \(renderDemandOwnership\.requested\) \{/);
   assert.match(completion, /restoreMeasurementRenderDemand\(\);/);
   assert.match(completion, /renderDemandOwnership,/);
   const cleanup = source.slice(
