@@ -15,7 +15,8 @@ function response() {
   const body = new PassThrough();
   const headers = new Map();
   body.headersSent = false;
-  body.setHeader = (name, value) => headers.set(name.toLowerCase(), String(value));
+  body.setHeader = (name, value) =>
+    headers.set(name.toLowerCase(), String(value));
   body.end = (value = '') => {
     body.headersSent = true;
     if (value) body.write(value);
@@ -38,10 +39,19 @@ async function setup(t) {
   const handlers = [];
   installRawReceiptAssetMiddleware({
     buildRoot: root,
-    receipt: { assets: [{ path: 'assets/main.js.br', bytes: bytes.length }, { path: 'assets/main.js.gz', bytes: gzip.length }] },
-    middlewares: { use(handler) { handlers.push(handler); } },
+    receipt: {
+      assets: [
+        { path: 'assets/main.js.br', bytes: bytes.length },
+        { path: 'assets/main.js.gz', bytes: gzip.length },
+      ],
+    },
+    middlewares: {
+      use(handler) {
+        handlers.push(handler);
+      },
+    },
   });
-  return { root, bytes, handler: handlers[0] };
+  return { root, bytes, gzip, handler: handlers[0] };
 }
 
 test('raw receipt sidecar serves exact Brotli bytes without content encoding', async (t) => {
@@ -59,24 +69,42 @@ test('raw receipt sidecar serves exact Brotli bytes without content encoding', a
 });
 
 test('HEAD and loopback HTTP preserve compressed bytes for both sidecar encodings', async (t) => {
-  const { bytes, handler } = await setup(t);
-  const server = createServer((req, res) => handler(req, res, () => { res.statusCode = 404; res.end(); }));
+  const { bytes, gzip, handler } = await setup(t);
+  const server = createServer((req, res) => {
+    if (/\.(br|gz)$/.test(req.url)) res.setHeader('content-encoding', 'gzip');
+    res.setHeader('x-unchanged', 'fixture');
+    handler(req, res, () => {
+      res.setHeader('content-type', 'text/plain');
+      res.end('ordinary-asset');
+    });
+  });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => server.close());
+  t.after(() => new Promise((resolve) => server.close(resolve)));
   const port = server.address().port;
-  const head = await fetch(`http://127.0.0.1:${port}/assets/main.js.br`, { method: 'HEAD' });
+  const head = await fetch(`http://127.0.0.1:${port}/assets/main.js.br`, {
+    method: 'HEAD',
+  });
   assert.equal(head.status, 200);
   assert.equal(await head.arrayBuffer().then((value) => value.byteLength), 0);
   assert.equal(head.headers.get('content-encoding'), null);
   const get = await fetch(`http://127.0.0.1:${port}/assets/main.js.br`);
   assert.deepEqual(Buffer.from(await get.arrayBuffer()), bytes);
   assert.equal(get.headers.get('content-encoding'), null);
+  const gzipGet = await fetch(`http://127.0.0.1:${port}/assets/main.js.gz`);
+  assert.deepEqual(Buffer.from(await gzipGet.arrayBuffer()), gzip);
+  assert.equal(gzipGet.headers.get('content-encoding'), null);
+  const normal = await fetch(`http://127.0.0.1:${port}/assets/main.js`);
+  assert.equal(normal.headers.get('x-unchanged'), 'fixture');
+  assert.equal(normal.headers.get('content-type'), 'text/plain');
+  assert.equal(await normal.text(), 'ordinary-asset');
 });
 
 test('normal assets fall through and unknown/traversal/non-GET sidecars are bounded', async (t) => {
   const { handler } = await setup(t);
   let passed = false;
-  await handler({ method: 'GET', url: '/assets/main.js' }, {}, () => { passed = true; });
+  await handler({ method: 'GET', url: '/assets/main.js' }, {}, () => {
+    passed = true;
+  });
   assert.equal(passed, true);
   for (const request of [
     { method: 'GET', url: '/assets/missing.js.br' },
@@ -97,8 +125,16 @@ test('sidecar bound is finite and explicit', () => {
 });
 
 test('empty sidecar receipts are a no-op', async () => {
-  const handlers = { use() { throw new Error('must not install'); } };
-  const result = installRawReceiptAssetMiddleware({ buildRoot: path.resolve('.'), receipt: { assets: [] }, middlewares: handlers });
+  const handlers = {
+    use() {
+      throw new Error('must not install');
+    },
+  };
+  const result = installRawReceiptAssetMiddleware({
+    buildRoot: path.resolve('.'),
+    receipt: { assets: [] },
+    middlewares: handlers,
+  });
   assert.deepEqual(result.allowedPaths, []);
   assert.equal(result.installed, false);
 });
