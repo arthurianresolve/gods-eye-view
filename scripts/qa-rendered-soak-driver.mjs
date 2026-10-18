@@ -29,6 +29,72 @@ const DEFAULT_SOAK_LOCATION = Object.freeze({
   altitude: 1000,
 });
 
+export function readNativeResolutionEvidenceInPage() {
+  const app = window.__godsEyeView;
+  const viewer = app?.viewer;
+  const canvas = viewer?.scene?.canvas;
+  const globe = viewer?.scene?.globe;
+  if (!viewer || !canvas || !globe)
+    throw new Error('Native resolution evidence needs an active viewer.');
+  return {
+    devicePixelRatio: window.devicePixelRatio,
+    canvas: {
+      clientWidth: canvas.clientWidth,
+      clientHeight: canvas.clientHeight,
+      width: canvas.width,
+      height: canvas.height,
+    },
+    resolutionScale: viewer.resolutionScale,
+    useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
+    maximumScreenSpaceError: globe.maximumScreenSpaceError,
+  };
+}
+
+export function assertNativeResolutionEvidence(
+  evidence,
+  expectedDpr,
+  label,
+  expectedSettings = null,
+) {
+  if (!Number.isFinite(expectedDpr) || expectedDpr <= 0)
+    throw new TypeError('Native device pixel ratio is invalid.');
+  if (Math.abs(evidence?.devicePixelRatio - expectedDpr) > 0.01)
+    throw new Error(`${label} native device pixel ratio changed.`);
+  if (
+    typeof evidence?.useBrowserRecommendedResolution !== 'boolean' ||
+    !Number.isFinite(evidence?.resolutionScale) ||
+    !Number.isFinite(evidence?.maximumScreenSpaceError)
+  )
+    throw new Error(`${label} native sharpness settings are unavailable.`);
+  if (
+    expectedSettings &&
+    (evidence.useBrowserRecommendedResolution !==
+      expectedSettings.useBrowserRecommendedResolution ||
+      evidence.resolutionScale !== expectedSettings.resolutionScale ||
+      evidence.maximumScreenSpaceError !== expectedSettings.maximumScreenSpaceError)
+  )
+    throw new Error(`${label} native sharpness settings changed.`);
+  const canvas = evidence?.canvas;
+  const expectedWidth = Math.floor(canvas?.clientWidth * expectedDpr);
+  const expectedHeight = Math.floor(canvas?.clientHeight * expectedDpr);
+  if (
+    !Number.isInteger(canvas?.clientWidth) ||
+    !Number.isInteger(canvas?.clientHeight) ||
+    canvas.clientWidth <= 0 ||
+    canvas.clientHeight <= 0 ||
+    canvas.width !== expectedWidth ||
+    canvas.height !== expectedHeight
+  )
+    throw new Error(`${label} native drawing buffer differs from CSS size.`);
+  return evidence;
+}
+
+export function resolveNativeSoakViewport(nativeDpr) {
+  if (!Number.isFinite(nativeDpr) || nativeDpr <= 0)
+    throw new TypeError('Native device pixel ratio is invalid.');
+  return { width: 1440, height: 1000, deviceScaleFactor: nativeDpr };
+}
+
 /** Normalize the fixture's geographic center so soak evidence names its view. */
 export function resolveRenderedSoakLocation(location = {}) {
   const normalized = {
@@ -106,10 +172,14 @@ export async function createRenderedSoakDriver(
     expectedCommit,
     prewarmApplication = false,
     location,
+    nativeResolution = false,
   } = {},
 ) {
   const soakLocation = resolveRenderedSoakLocation(location);
-  const browser = await launchFixtureBrowser(browserOptions);
+  const browser = await launchFixtureBrowser({
+    ...browserOptions,
+    ...(nativeResolution ? { defaultViewport: null } : {}),
+  });
   const closeBrowser = createOwnedSoakCloser(browser);
   let startupPrewarm = null;
   let cameraFailure = true;
@@ -133,10 +203,25 @@ export async function createRenderedSoakDriver(
       startupPrewarm = await prewarmRenderedApplication(browser, base);
       console.log(`SOAK prewarm ${startupPrewarm.status}`);
     }
+    const nativePage = nativeResolution ? await browser.newPage() : null;
+    const nativeDpr = nativePage
+      ? await nativePage.evaluate(() => window.devicePixelRatio)
+      : null;
+    if (
+      nativeResolution &&
+      (!Number.isFinite(nativeDpr) || nativeDpr <= 0)
+    )
+      throw new Error('Native device pixel ratio could not be observed.');
     const { page, errors, verifyNetwork } = await prepareFixturePage(
       browser,
       base,
       {
+        ...(nativePage
+          ? {
+              page: nativePage,
+              viewport: resolveNativeSoakViewport(nativeDpr),
+            }
+          : {}),
         respond(url, request) {
           if (url.hostname === 'terrain.reearth.land')
             return {
@@ -259,6 +344,13 @@ export async function createRenderedSoakDriver(
       // browser gates retain the stricter shared default.
       applicationReadyTimeoutMs: 180_000,
     });
+    const initialNativeResolution = nativeResolution
+      ? assertNativeResolutionEvidence(
+          await page.evaluate(readNativeResolutionEvidenceInPage),
+          nativeDpr,
+          'Initial soak',
+        )
+      : null;
     console.log('SOAK application ready');
     const applicationCommit = await page.evaluate(
       () =>
@@ -861,6 +953,9 @@ export async function createRenderedSoakDriver(
       environment: readHostEnvironment(),
       hardwareRenderingValidated: renderingEvidence.accelerationVerified,
       browserVersion: await browser.version(),
+      nativeResolution: nativeResolution
+        ? { observedDpr: nativeDpr, initial: initialNativeResolution }
+        : null,
       runCycle: cycle,
       metrics: () => page.metrics(),
       /**
@@ -899,11 +994,20 @@ export async function createRenderedSoakDriver(
               }
             : null;
         });
+        const nativeEvidence = nativeResolution
+          ? assertNativeResolutionEvidence(
+              await page.evaluate(readNativeResolutionEvidenceInPage),
+              nativeDpr,
+              'Retained soak checkpoint',
+              initialNativeResolution,
+            )
+          : null;
         return {
           ...(await page.metrics()),
           ...(await session.send('Memory.getDOMCounters')),
           application,
           renderedFrames: previousFrames,
+          nativeResolution: nativeEvidence,
           garbageCollection: {
             status: 'completed',
             method: 'HeapProfiler.collectGarbage',

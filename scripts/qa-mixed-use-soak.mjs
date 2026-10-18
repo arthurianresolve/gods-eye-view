@@ -10,6 +10,10 @@ import {
 } from './performance/soakStability.mjs';
 const DEFAULT_DURATION_MS = FULL_SOAK_MS;
 
+export function resolveNativeResolutionFlag(args = process.argv) {
+  return args.includes('--native-resolution');
+}
+
 export function resolveExpectedApplicationCommit(value, harnessCommit) {
   const commit = String(value || harnessCommit || '').trim();
   if (!/^[a-f0-9]{40}$/.test(commit))
@@ -47,6 +51,7 @@ export async function runMixedUseSoak({
   intervalMs = 250,
   recordingBundleOut = null,
   location = null,
+  nativeResolution = false,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
@@ -57,6 +62,7 @@ export async function runMixedUseSoak({
     expectedCommit,
     prewarmApplication,
     location,
+    nativeResolution,
   });
   let report, runFailure;
   const exportRecordingBundle = async () => {
@@ -108,6 +114,7 @@ export async function runMixedUseSoak({
       graphics: driver.graphics || null,
       renderingEvidence: driver.renderingEvidence || null,
       environment: driver.environment || null,
+      nativeResolution: driver.nativeResolution || null,
       location: driver.location || null,
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
@@ -250,6 +257,7 @@ if (
     report = await runMixedUseSoak({
       expectedCommit: expectedApplicationCommit,
       prewarmApplication: hasFlag('--prewarm-application'),
+      nativeResolution: resolveNativeResolutionFlag(),
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
       recordingBundleOut: value('--recording-bundle-out', null),

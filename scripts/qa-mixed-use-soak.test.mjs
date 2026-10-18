@@ -6,11 +6,14 @@ import vm from 'node:vm';
 import test from 'node:test';
 import {
   resolveExpectedApplicationCommit,
+  resolveNativeResolutionFlag,
   runMixedUseSoak,
 } from './qa-mixed-use-soak.mjs';
 import {
   isRecoverableApplicationPrewarmFailure,
   resolveRenderedSoakLocation,
+  assertNativeResolutionEvidence,
+  resolveNativeSoakViewport,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
@@ -68,6 +71,46 @@ test('rendered soak location accepts Ampfing coordinates and rejects invalid vie
   assert.throws(
     () => resolveRenderedSoakLocation({ altitude: 0 }),
     /location is invalid/,
+  );
+});
+
+test('native soak viewport is opt-in and validates the observed DPR/buffer', () => {
+  assert.equal(resolveNativeResolutionFlag(['node', 'soak']), false);
+  assert.equal(
+    resolveNativeResolutionFlag(['node', 'soak', '--native-resolution']),
+    true,
+  );
+  assert.deepEqual(resolveNativeSoakViewport(2), {
+    width: 1440,
+    height: 1000,
+    deviceScaleFactor: 2,
+  });
+  assert.throws(() => resolveNativeSoakViewport(0), /device pixel ratio/);
+  const evidence = {
+    devicePixelRatio: 2,
+    canvas: { clientWidth: 1440, clientHeight: 1000, width: 2880, height: 2000 },
+    resolutionScale: 1,
+    useBrowserRecommendedResolution: false,
+    maximumScreenSpaceError: 1,
+  };
+  assert.deepEqual(assertNativeResolutionEvidence(evidence, 2, 'test'), evidence);
+  assert.throws(
+    () => assertNativeResolutionEvidence({ ...evidence, canvas: { ...evidence.canvas, width: 1440 } }, 2, 'test'),
+    /drawing buffer/,
+  );
+  assert.throws(
+    () => assertNativeResolutionEvidence(evidence, 1, 'test'),
+    /device pixel ratio/,
+  );
+  assert.throws(
+    () =>
+      assertNativeResolutionEvidence(
+        { ...evidence, resolutionScale: 0.5 },
+        2,
+        'test',
+        evidence,
+      ),
+    /sharpness settings changed/,
   );
 });
 
