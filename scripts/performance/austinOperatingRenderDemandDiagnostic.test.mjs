@@ -9,6 +9,8 @@ test('Austin diagnostic page callbacks are serializable and never pump Cesium', 
   assert.doesNotMatch(installAustinDiagnosticObserver.toString(), /\.render\s*\(/);
   assert.doesNotMatch(readAustinDiagnosticObservation.toString(), /\.render\s*\(/);
   assert.doesNotMatch(installAustinDiagnosticObserver.toString(), /setInterval|setTimeout/);
+  assert.doesNotThrow(() => new Function(`return (${installAustinDiagnosticObserver.toString()})`)());
+  assert.doesNotThrow(() => new Function(`return (${readAustinDiagnosticObservation.toString()})`)());
 });
 
 test('diagnostic observation records the actual governor shape and layer diagnostics', () => {

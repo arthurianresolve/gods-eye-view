@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer';
 import {
   bootFixturePage,
@@ -31,6 +31,8 @@ import {
 import { applyNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFixtureWallClockOnPage } from './productionFlightFixture.mjs';
 import { createWindowsForegroundActivationSession } from './windowsForegroundWindow.mjs';
+import { classifyRenderer, readBrowserGraphicsInfo } from './rendererEvidence.mjs';
+import { closeOwnedRecoveryPage } from './profileRecoveryPageOwnership.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXED_TIME = '2026-10-12T18:00:00.000Z';
@@ -195,7 +197,7 @@ export function readAustinDiagnosticObservation() {
   const viewer = app?.viewer;
   const layer = (id) => manager?.layers?.get(id)?.module ?? null;
   const snapshot = app?.getPerformanceSnapshot?.() ?? null;
-  const renderGovernor = snapshot?.renderGovernor ?? snapshot?.renderDemand ?? null;
+  const renderGovernor = app?.getRenderGovernorDiagnostics?.() ?? snapshot?.renderGovernor ?? snapshot?.renderDemand ?? null;
   const wind = layer('wind');
   const cctv = layer('cctv');
   const satellites = layer('satellites');
@@ -229,7 +231,7 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
   const browser = await puppeteer.launch({
     headless: false,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
-    args: fixtureBrowserArgs(),
+    args: fixtureBrowserArgs({ softwareRendering: false, webglOnly: false }),
     defaultViewport: null,
   });
   const browserPid = browser.process()?.pid;
@@ -237,6 +239,7 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
   let page = null;
   let prepared = null;
   let delivery = null;
+  const cleanupErrors = [];
   try {
     if (!Number.isSafeInteger(browserPid) || browserPid < 1) throw new Error('Owned browser PID unavailable.');
     foregroundSession = createWindowsForegroundActivationSession({ browserPid });
@@ -255,17 +258,64 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
     await foregroundSession.request(browserPid, 15_000);
     await page.evaluate(applyNativeSharpnessProfile);
     const setup = await page.evaluate(configureAustinDiagnosticFixture, fixture);
+    const environment = await page.evaluate(() => window.__godsEyeView?.getPerformanceEnvironment?.() ?? null);
+    const observedAppCommit = environment?.source?.appCommit ?? environment?.appCommit ?? null;
+    if (observedAppCommit && observedAppCommit !== appSha)
+      throw new Error(`${label} application environment commit differs from requested revision.`);
+    await page.waitForFunction(
+      (expected) => {
+        const manager = window.__godsEyeView?.dataManager;
+        return expected.every((id) => {
+          const entry = manager?.layers?.get(id);
+          const stats = entry?.module?.getStats?.() ?? entry?.stats ?? null;
+          return manager?.isEnabled?.(id) === true && Number.isSafeInteger(stats?.count) && stats.count >= 1;
+        });
+      },
+      { timeout: 30_000, polling: 100 },
+      fixture.selectedLayerIds,
+    );
     await page.evaluate(installAustinDiagnosticObserver);
-    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1?.startWarmup?.(1));
+    await page.evaluate(() => {
+      const clock = window.__gevPhasedMonotonicWallClockV1;
+      if (!clock || typeof clock.startWarmup !== 'function' || typeof clock.holdWarmupBoundary !== 'function' || typeof clock.startMeasurement !== 'function' || typeof clock.finishMeasurement !== 'function')
+        throw new Error('Phased wall-clock contract is unavailable.');
+      clock.startWarmup(1);
+    });
     await new Promise((resolve) => setTimeout(resolve, WARMUP_MS));
-    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1?.holdWarmupBoundary?.(1));
-    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1?.startMeasurement?.(1));
+    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1.holdWarmupBoundary(1));
+    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1.startMeasurement(1));
     const samples = [];
     const started = Date.now();
     while (Date.now() - started < OBSERVATION_MS) {
       await new Promise((resolve) => setTimeout(resolve, SAMPLE_MS));
       samples.push(await page.evaluate(readAustinDiagnosticObservation));
     }
+    await page.evaluate(() => window.__gevPhasedMonotonicWallClockV1.finishMeasurement(1));
+    const graphics = await readBrowserGraphicsInfo(browser);
+    const renderer = await page.evaluate(() => {
+      const canvas = window.__godsEyeView?.viewer?.scene?.canvas;
+      const gl = window.__godsEyeView?.viewer?.scene?.context?._gl ?? canvas?.getContext?.('webgl') ?? canvas?.getContext?.('webgl2');
+      return gl ? { renderer: gl.getParameter(gl.RENDERER), vendor: gl.getParameter(gl.VENDOR) } : null;
+    });
+    const rendererClassification = classifyRenderer(renderer?.renderer, graphics);
+    if (!rendererClassification.accelerationVerified)
+      throw new Error(`${label} native hardware WebGL proof is unavailable.`);
+    const windVisibilityProbe = await page.evaluate(async () => {
+      const viewer = window.__godsEyeView?.viewer;
+      const home = window.__gevAustinDiagnosticHome;
+      if (!viewer?.camera || !home) return { status: 'unavailable', reason: 'camera-home-missing' };
+      const globe = viewer.scene.globe;
+      const current = globe.ellipsoid.cartesianToCartographic(viewer.camera.position);
+      const elevated = globe.ellipsoid.cartographicToCartesian({ longitude: current.longitude, latitude: current.latitude, height: 60000 });
+      viewer.camera.setView({ destination: elevated, orientation: { heading: viewer.camera.heading, pitch: viewer.camera.pitch, roll: viewer.camera.roll } });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const wind = window.__godsEyeView?.dataManager?.layers?.get('wind')?.module;
+      const first = wind?.getDiagnostics?.() ?? null;
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const second = wind?.getDiagnostics?.() ?? null;
+      viewer.camera.setView({ destination: home.position, orientation: { direction: home.direction, up: home.up } });
+      return { status: 'observed', first, second, intervention: 'elevated-60000m-after-natural-observation' };
+    });
     const profile = await page.evaluate(() => {
       const viewer = window.__godsEyeView?.viewer;
       const canvas = viewer?.scene?.canvas;
@@ -285,26 +335,40 @@ async function captureSide({ label, url, appSha, fixture, foreground }) {
       requiredAlprTiles: AUSTIN_OPERATING_REQUIRED_ALPR_TILES.map(([z, x, y]) => ({ z, x, y })),
     });
     await page.evaluate(() => window.__gevAustinDiagnosticObserver?.dispose?.());
-    return { label, appSha, browserPid, setup, profile, samples, final, delivery: summary, foreground: await foregroundSession.request(browserPid, 15_000) };
+    return { label, appSha, browserPid, setup, environment, graphics, renderer, rendererClassification, profile, samples, final, windVisibilityProbe, delivery: summary, foreground: await foregroundSession.request(browserPid, 15_000), teardown: { cleanupErrors } };
   } finally {
     try { await page?.evaluate(() => window.__gevAustinDiagnosticObserver?.dispose?.()); } catch {}
-    try { delivery?.dispose?.(); } catch {}
-    try { await cleanupFixturePageDiagnostics(page); } catch {}
-    try { await foregroundSession?.dispose?.(); } catch {}
-    try { await browser.close(); } catch {}
+    try { if (page && !page.isClosed()) await closeOwnedRecoveryPage(page, browser, 5000); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    try { await cleanupFixturePageDiagnostics(page); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    try { delivery?.dispose?.(); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    try { await foregroundSession?.dispose?.(); } catch (error) { cleanupErrors.push(boundedError(error)); }
+    try { await browser.close(); } catch (error) { cleanupErrors.push(boundedError(error)); }
   }
 }
 
 export async function runAustinOperatingRenderDemandDiagnostic({ baselineUrl, candidateUrl, baselineSha, candidateSha, out }) {
+  for (const [label, value] of [['baseline', baselineUrl], ['candidate', candidateUrl]]) {
+    const parsed = new URL(value);
+    if (!['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname) || !['http:', 'https:'].includes(parsed.protocol))
+      throw new Error(`${label} URL must be a loopback HTTP(S) origin.`);
+  }
+  if (!/^[a-f0-9]{40}$/i.test(baselineSha) || !/^[a-f0-9]{40}$/i.test(candidateSha) || baselineSha.toLowerCase() === candidateSha.toLowerCase())
+    throw new Error('Baseline and candidate application SHAs must be distinct full Git SHAs.');
   const fixture = createAustinOperatingWorkloadFixture(FIXED_TIME);
   const results = [];
   for (const side of [
     { label: 'baseline', url: baselineUrl, appSha: baselineSha },
     { label: 'candidate', url: candidateUrl, appSha: candidateSha },
-  ]) results.push(await captureSide({ ...side, fixture }));
+  ]) {
+    try {
+      results.push(await captureSide({ ...side, fixture }));
+    } catch (error) {
+      results.push({ label: side.label, appSha: side.appSha, status: 'failed', error: boundedError(error) });
+    }
+  }
   const report = {
     schema: 'gev-austin-operating-render-demand-diagnostic/v1',
-    status: 'diagnostic-non-comparable',
+    status: results.every((result) => result.status !== 'failed') ? 'diagnostic-non-comparable' : 'diagnostic-failed',
     comparable: false,
     fixture: { id: fixture.id, sha256: fixture.sha256, fixedTime: FIXED_TIME, route: fixture.route, visualState: fixture.visualState },
     timing: { warmupMs: WARMUP_MS, observationMs: OBSERVATION_MS, sampleMs: SAMPLE_MS },
@@ -316,7 +380,7 @@ export async function runAustinOperatingRenderDemandDiagnostic({ baselineUrl, ca
   return report;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const args = parseArgs(process.argv);
   runAustinOperatingRenderDemandDiagnostic({
     baselineUrl: args['baseline-url'],
