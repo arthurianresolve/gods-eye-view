@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The analyst card's empty notes can be a layer's status line: Local ADS-B
 // with every decoder feed stale, Transit with a quiet feed ("(95s old)") or
 // its getStats().coverage text. The card shows them in the UI language; the

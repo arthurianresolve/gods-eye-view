@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The Local ADS-B row's working texts ("3 heard · 5.8 msg/s", "listening",
 // "USB error", feed problems, even as the whole error) read in the UI language.
 import assert from 'node:assert/strict';

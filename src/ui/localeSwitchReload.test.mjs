@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
-await Promise.all([prepareTestLocale('es')]);
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The language picker reloads the page, so it asks first while the
 // reload would lose work (unsaved CCTV calibration, the open cockpit, anything
 // a module registers). Choosing the language already active does nothing.

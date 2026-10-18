@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // A translated vessel type is never cut mid-word on the card.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

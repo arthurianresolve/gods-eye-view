@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The API-key cost tooltip states an incomplete estimate in the
 // interface language; the tracker keeps its English note for diagnostics.
 import test from 'node:test';

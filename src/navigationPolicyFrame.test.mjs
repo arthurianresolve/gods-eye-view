@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from './i18n/index.js';
-await Promise.all([prepareTestLocale('es')]);
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from './i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The Cockpit refusal names its destination in the UI language. The scan
 // below collects every noun the callers hand to the navigation policy, so a
 // noun without its own sentence fails here instead of reaching the page.

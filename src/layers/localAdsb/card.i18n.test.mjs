@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../../i18n/index.js';
-await Promise.all([prepareTestLocale('ru')]);
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The Local ADS-B click card follows the UI language; English keeps its
 // wording (index.test.mjs pins the full English card).
 import test from 'node:test';

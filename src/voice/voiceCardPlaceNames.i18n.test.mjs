@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The voice card names a preset city in the interface language in the
 // fly-to headline and the nearest-aircraft distance line; what the model
 // says stays English.

@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The GNSS source's own failures are English data (source.js); the
 // card's info line shows them in the UI language, the HTTP form included.
 import assert from 'node:assert/strict';

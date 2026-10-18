@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
 await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // Voice card in the UI language: every tool's plan step, the bare "Layer"
 // step, whole error lines and long headlines, the Contacts snapshot clock.
 // What the model receives stays English.

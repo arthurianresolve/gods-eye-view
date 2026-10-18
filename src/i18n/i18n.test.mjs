@@ -25,6 +25,7 @@ afterEach(() => setLocale('en'));
 
 await prepareLocale('es');
 await prepareLocale('ru');
+setLocale('en');
 
 test('locale preparation preserves synchronous translation compatibility and coalesces retries', async () => {
   const [es, ru] = await Promise.all([

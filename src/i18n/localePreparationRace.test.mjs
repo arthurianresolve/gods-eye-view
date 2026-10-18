@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { getLocale, prepareLocale, setLocale, t } from './index.js';
 
 await Promise.all([prepareLocale('es'), prepareLocale('ru')]);
+setLocale('en');
 test.afterEach(() => setLocale('en'));
 
 test('latest repeated pending locale wins an es to ru to es race', async () => {

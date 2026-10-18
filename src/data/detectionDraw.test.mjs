@@ -1,5 +1,9 @@
-import { prepareLocale as prepareTestLocale } from '../i18n/index.js';
-await Promise.all([prepareTestLocale('ru')]);
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // Unit tests for the pure drawing/format helpers behind the detection overlay.
 // These are renderer-agnostic (no Cesium, no DOM) so they pin the Phase-1 label
 // + batching behavior and carry straight into the Phase-2 GPU renderer.
