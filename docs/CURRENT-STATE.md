@@ -1,5 +1,24 @@
 # God's Eye View Current State
 
+## S61–S70 validation checkpoint — October 18, 2026
+
+At `9721b202`, exact Node 24/26 CI, production builds, browser gates,
+Windows onboarding, platform installation/recovery, tracking and signed
+candidate packaging pass. VM105 independently verified the downloaded archive,
+all 2,126 manifest entries, expected GitHub attestation and 16 private production
+HTTP checks. The live service remains on `e7a878e`.
+
+The shared Windows matrix failed before operating-view motion sample 2 because
+the foreground helper exceeded its timeout. Separate diagnostic phase traces
+attribute most observed helper time to repeated PowerShell startup and native
+declaration compilation; they do not establish a Cesium or GPU failure. The
+[diagnosis](performance-evidence/windows-foreground-20261018/README.md) records
+the evidence. A persistent helper now passes 49 focused Windows checks, including
+the actual PowerShell parser and capture CLI. Its replacement candidate
+requires fresh exact-commit checks and hardware qualification. Builds,
+dependencies and large evidence files use isolated VM105 storage, without
+nesting LXC or changing the working service.
+
 ## S63 production host — October 18, 2026
 
 The candidate now includes a Vite-free Node HTTP production host. It loads
@@ -66,13 +85,12 @@ preference, and an explicit retry can install the recovered catalog.
 
 ## S68 heavy voice adapter experiment — October 18, 2026
 
-The lazy realtime-adapter experiment remains decision pending. The existing
-voice session constructs its adapter synchronously and binds push-to-talk from
-the trusted gesture path. A decision requires VM bundle-dependency and
-correctness evidence; no bundle split or measured no-benefit rejection is
-claimed yet. The shared action runner, controls, cancellation, radio/cost
-state and permission handling remain eager and unchanged while that evidence
-is collected.
+The narrow lazy realtime-adapter experiment was evaluated and rejected after
+saving only 940 gzip / 610 Brotli bytes. The paired VM build evidence is in
+[the S68 report](performance-evidence/s68-voice-bundle-20261018/README.md).
+The production voice session still constructs its adapter synchronously and
+binds push-to-talk from the trusted gesture path. The shared action runner,
+controls, cancellation, radio/cost state and permission handling stay unchanged.
 
 The reproducible `scripts/audit-bundle-chunks.mjs` report consumes Vite's
 generated manifest and measures uncompressed initial static-import bytes

@@ -46,16 +46,29 @@ human review or performance-objective achievement is inferred from a build pass.
 
 | Slice | Deliverable | Engineering | Automatic validation | Primary evidence |
 | --- | --- | --- | --- | --- |
-| S61 | Frozen upstream reconciliation; native/legacy capture profiles | implemented; profile corrections `c8918393` | 66 profile/map/matrix checks pass; full CI pending | pending shared matrix |
-| S62 | Patched Cesium content paths, gzip/Brotli, cache manifest | implemented | clean VM production build passes | pending candidate artifact verification |
-| S63 | Production Node HTTP host and release packaging | implemented; host corrections `9db16e2f` | 26 focused checks; unpacked production-only install and HTTP smoke pass | pending deployment verification |
-| S64 | Bounded diagnostics and Auto sample eligibility | implemented; availability corrections `3aaeb656` | 17 diagnostics/policy checks pass | pending shared matrix |
-| S65 | Owned still-camera refresh, final frame, video/fade preservation | implemented; lifecycle correction `7aacac04` | 116 CCTV/profile checks pass on VM Node 26 | pending shared matrix |
-| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | 24 HUD/build tests pass; full CI pending | pending shared matrix |
-| S67 | Async locale preparation, races and retry | implemented | 19 locale checks pass; VM build passes | pending startup/browser checks |
+| S61 | Frozen upstream reconciliation; native/legacy capture profiles | implemented; profile corrections `c8918393` | profile checks and exact CI pass at `9721b202` | pending shared matrix |
+| S62 | Patched Cesium content paths, gzip/Brotli, cache manifest | implemented | four clean VM builds; archive and attestation verified at `9721b202` | pending final candidate qualification |
+| S63 | Production Node HTTP host and release packaging | implemented; host corrections `9db16e2f` | production-only install and 16 private HTTP checks pass at `9721b202` | pending deployment verification |
+| S64 | Bounded diagnostics and Auto sample eligibility | implemented; availability corrections `3aaeb656` | focused checks and exact CI pass at `9721b202` | pending shared matrix |
+| S65 | Owned still-camera refresh, final frame, video/fade preservation | implemented; lifecycle correction `7aacac04` | 116 focused checks and exact CI pass at `9721b202` | pending shared matrix |
+| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | 24 focused checks and exact CI pass at `9721b202` | pending shared matrix |
+| S67 | Async locale preparation, races and retry | implemented | 19 focused checks, builds and browser gates pass at `9721b202` | pending shared matrix |
 | S68 | Measure and evaluate voice adapter splitting | narrow split evaluated and rejected; audit implemented | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed |
-| S69 | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | in progress | draft PR checks in progress | pending Windows matrix |
-| S70 | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | pending candidate | isolated VM storage and production package smoke verified | pending deployment and final soak |
+| S69 | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | persistent foreground helper implemented | 49 focused Windows checks pass; exact CI, tracking and signed packaging pass at prior `9721b202`; replacement candidate needs fresh gates | `9721b202` matrix failed at a foreground-runner timeout; new matrix pending |
+| S70 | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | prior candidate staged privately; production remains at `e7a878e` | downloaded archive, source manifest, attestation and private host checks verified at `9721b202` | pending qualified deployment and final soak |
+
+The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
+records the failed matrix and separate phase-timing runs. Most observed helper
+time was spent starting PowerShell and compiling its native declarations;
+the traced native calls completed in the reproduced timeout. A reusable helper
+now compiles once per capture without relaxing foreground eligibility or timeouts.
+Its protocol rejects stale, malformed and unconfirmed responses, and shutdown
+requires confirmation. The real Windows helper probe passed 11 activations and
+closed both owned processes; this diagnostic is not a workload comparison.
+Prior exact-commit checks are [CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133053101),
+[tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133058804),
+and [signed candidate packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39133064701).
+They are historical evidence for `9721b202`, not passes for the next candidate.
 
 ## Matrix execution update - 16 October 2026
 
