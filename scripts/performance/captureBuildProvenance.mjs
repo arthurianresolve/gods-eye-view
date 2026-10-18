@@ -100,8 +100,16 @@ export async function beginCaptureBuildProvenance({
     expectedBuildHarnessCommit,
     'Receipt build harness SHA mismatch',
   );
-  assert.equal(captureProducerCommit, expectedHarnessCommit, 'Capture producer SHA mismatch');
-  assert.match(captureProducerCommit || '', SHA1, 'Capture producer SHA is malformed');
+  assert.equal(
+    captureProducerCommit,
+    expectedHarnessCommit,
+    'Capture producer SHA mismatch',
+  );
+  assert.match(
+    captureProducerCommit || '',
+    SHA1,
+    'Capture producer SHA is malformed',
+  );
   const expectedProfile = resolveMapFixtureBuildProfile(expectedBuildProfile);
   if (expectedProfile)
     assert.deepEqual(
@@ -152,7 +160,7 @@ export async function beginCaptureBuildProvenance({
     verifyImpl({
       receipt,
       checkoutRoot,
-    harnessRoot: buildHarnessRoot,
+      harnessRoot: buildHarnessRoot,
       buildRoot,
       expectedAppCommit,
       expectedHarnessCommit: expectedBuildHarnessCommit,

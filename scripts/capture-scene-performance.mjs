@@ -6,7 +6,10 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import puppeteer, { CDPSessionEvent } from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
-import { assertCaptureIntegrity, deriveNativeSharpnessProfile } from './performance/captureIntegrity.mjs';
+import {
+  assertCaptureIntegrity,
+  deriveNativeSharpnessProfile,
+} from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import {
   beginCaptureBuildProvenance,
@@ -414,12 +417,23 @@ if (mapStreamingWorkloadSelected && workerAuditMode !== 'diagnostic')
 const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
   Boolean,
 );
-if ((buildProvenanceOptions.buildHarnessRoot && !buildProvenanceOptions.expectedBuildHarnessCommit) || (!buildProvenanceOptions.buildHarnessRoot && buildProvenanceOptions.expectedBuildHarnessCommit))
-  throw new Error('--build-harness-checkout and --expected-build-harness-sha must be supplied together.');
+if (
+  (buildProvenanceOptions.buildHarnessRoot &&
+    !buildProvenanceOptions.expectedBuildHarnessCommit) ||
+  (!buildProvenanceOptions.buildHarnessRoot &&
+    buildProvenanceOptions.expectedBuildHarnessCommit)
+)
+  throw new Error(
+    '--build-harness-checkout and --expected-build-harness-sha must be supplied together.',
+  );
 if (buildProvenanceEnabled && !buildProvenanceOptions.buildHarnessRoot)
   buildProvenanceOptions.buildHarnessRoot = buildProvenanceOptions.harnessRoot;
-if (buildProvenanceEnabled && !buildProvenanceOptions.expectedBuildHarnessCommit)
-  buildProvenanceOptions.expectedBuildHarnessCommit = buildProvenanceOptions.expectedHarnessCommit;
+if (
+  buildProvenanceEnabled &&
+  !buildProvenanceOptions.expectedBuildHarnessCommit
+)
+  buildProvenanceOptions.expectedBuildHarnessCommit =
+    buildProvenanceOptions.expectedHarnessCommit;
 if (
   buildProvenanceEnabled &&
   Object.values(buildProvenanceOptions).some((value) => !value)
@@ -597,7 +611,8 @@ if (infrastructureWorkloadSelected) {
     );
 }
 const source = {
-  harnessCommit: captureProvenance?.source.captureProducerCommit || harnessSource.commit,
+  harnessCommit:
+    captureProvenance?.source.captureProducerCommit || harnessSource.commit,
   buildHarnessCommit: captureProvenance?.source.buildHarnessCommit || null,
   harnessDirtyWorktree: harnessSource.dirtyWorktree,
   appCommit:

@@ -152,7 +152,7 @@ test('paired reports reject absent, mismatched or drifting build provenance', ()
   wrongHarness.source.buildProvenance.harnessCommit = 'd'.repeat(40);
   assert.throws(
     () => validate(base, wrongHarness),
-    /receipt harness SHA mismatch/,
+    /capture producer SHA mismatch/,
   );
 
   const changedAssets = makeReport(candidateCommit);

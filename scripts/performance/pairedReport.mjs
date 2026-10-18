@@ -967,19 +967,47 @@ function validateBuildProvenance(source, side) {
     source.appCommit,
     `${side}: receipt app SHA mismatch`,
   );
-  assert.match(provenance.harnessCommit || '', SHA1, `${side}: receipt harness SHA missing`);
+  assert.match(
+    provenance.harnessCommit || '',
+    SHA1,
+    `${side}: receipt harness SHA missing`,
+  );
   const producerCommit = Object.hasOwn(provenance, 'captureProducerCommit')
     ? provenance.captureProducerCommit
     : provenance.harnessCommit;
-  assert.match(producerCommit || '', SHA1, `${side}: capture producer SHA missing`);
-  assert.equal(producerCommit, source.harnessCommit, `${side}: capture producer SHA mismatch`);
+  assert.match(
+    producerCommit || '',
+    SHA1,
+    `${side}: capture producer SHA missing`,
+  );
+  assert.equal(
+    producerCommit,
+    source.harnessCommit,
+    `${side}: capture producer SHA mismatch`,
+  );
   if (Object.hasOwn(provenance, 'buildHarnessCommit')) {
-    assert.match(provenance.buildHarnessCommit || '', SHA1, `${side}: build harness SHA malformed`);
-    assert.equal(provenance.buildHarnessCommit, provenance.harnessCommit, `${side}: build harness SHA mismatch`);
+    assert.match(
+      provenance.buildHarnessCommit || '',
+      SHA1,
+      `${side}: build harness SHA malformed`,
+    );
+    assert.equal(
+      provenance.buildHarnessCommit,
+      provenance.harnessCommit,
+      `${side}: build harness SHA mismatch`,
+    );
   }
   if (Object.hasOwn(source, 'buildHarnessCommit')) {
-    assert.match(source.buildHarnessCommit || '', SHA1, `${side}: source build harness SHA malformed`);
-    assert.equal(source.buildHarnessCommit, provenance.harnessCommit, `${side}: source build harness SHA mismatch`);
+    assert.match(
+      source.buildHarnessCommit || '',
+      SHA1,
+      `${side}: source build harness SHA malformed`,
+    );
+    assert.equal(
+      source.buildHarnessCommit,
+      provenance.harnessCommit,
+      `${side}: source build harness SHA mismatch`,
+    );
   }
   assert.match(
     provenance.scope || '',
@@ -1674,8 +1702,15 @@ export function validatePairedPerformanceReports({
     candidate.source.harnessCommit,
     'Harness revisions must match',
   );
-  if (baseline.source.buildProvenance?.buildHarnessCommit || candidate.source.buildProvenance?.buildHarnessCommit)
-    assert.equal(baseline.source.buildProvenance?.buildHarnessCommit, candidate.source.buildProvenance?.buildHarnessCommit, 'Build harness revisions must match');
+  if (
+    baseline.source.buildProvenance?.buildHarnessCommit ||
+    candidate.source.buildProvenance?.buildHarnessCommit
+  )
+    assert.equal(
+      baseline.source.buildProvenance?.buildHarnessCommit,
+      candidate.source.buildProvenance?.buildHarnessCommit,
+      'Build harness revisions must match',
+    );
   for (const key of [
     'nodeVersion',
     'npmVersion',

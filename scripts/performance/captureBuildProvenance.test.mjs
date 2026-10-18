@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { beginCaptureBuildProvenance } from './captureBuildProvenance.mjs';
+import {
+  beginCaptureBuildProvenance,
+  projectPublicCaptureBuildProvenance,
+} from './captureBuildProvenance.mjs';
 import { resolveMapFixtureBuildProfile } from './buildProvenance.mjs';
 
 const appSha = 'a'.repeat(40);
@@ -82,6 +85,62 @@ test('capture provenance separates producer checkout from build harness receipt'
   assert.equal(capture.source.captureProducerCommit, producerSha);
   assert.equal(capture.source.buildHarnessCommit, harnessSha);
   assert.deepEqual(calls, [harnessSha]);
+});
+
+test('capture provenance rejects wrong or malformed explicit producer and builder identities', async () => {
+  const base = {
+    receipt,
+    expectedAppCommit: appSha,
+    expectedHarnessCommit: 'e'.repeat(40),
+    expectedBuildHarnessCommit: harnessSha,
+    captureProducerCommit: 'e'.repeat(40),
+    harnessRoot: 'producer-root',
+    actualHarnessRoot: 'producer-root',
+    buildHarnessRoot: 'builder-root',
+    baseUrl: 'http://127.0.0.1:4173/',
+    captureUrl: 'http://127.0.0.1:4173/',
+    verifyImpl: async () => result,
+  };
+  await assert.rejects(
+    beginCaptureBuildProvenance({
+      ...base,
+      captureProducerCommit: 'f'.repeat(40),
+    }),
+    /Capture producer SHA mismatch/,
+  );
+  await assert.rejects(
+    beginCaptureBuildProvenance({ ...base, captureProducerCommit: 'bad' }),
+    /Capture producer SHA mismatch|malformed/,
+  );
+  await assert.rejects(
+    beginCaptureBuildProvenance({
+      ...base,
+      expectedBuildHarnessCommit: 'f'.repeat(40),
+    }),
+    /Receipt build harness SHA mismatch/,
+  );
+  await assert.rejects(
+    beginCaptureBuildProvenance({ ...base, expectedBuildHarnessCommit: '' }),
+    /Expected full build harness SHA/,
+  );
+});
+
+test('public provenance retains explicit producer and builder fields', () => {
+  const projection = projectPublicCaptureBuildProvenance({
+    schema: 'gev-capture-build-provenance/v1',
+    status: 'verified-local-build-and-served-assets-before-and-after',
+    scope: 'browser response bytes are not independently attested',
+    receiptSha256: 'c'.repeat(64),
+    appCommit: appSha,
+    harnessCommit: harnessSha,
+    captureProducerCommit: 'e'.repeat(40),
+    buildHarnessCommit: harnessSha,
+    buildRecipe: {},
+    before: {},
+  });
+  assert.equal(projection.harnessCommit, harnessSha);
+  assert.equal(projection.captureProducerCommit, 'e'.repeat(40));
+  assert.equal(projection.buildHarnessCommit, harnessSha);
 });
 
 test('capture provenance rejects wrong SHAs and changes between the two served checks', async () => {
