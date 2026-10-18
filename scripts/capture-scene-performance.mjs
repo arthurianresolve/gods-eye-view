@@ -4798,6 +4798,7 @@ try {
           let previous = null;
           let renderedFrameCount = 0;
           let lastPreRenderAt = null;
+          let appliedRoutePhaseMs = null;
           const frameTrace = frameTraceEnabled ? [] : null;
           const boundedDiagnosticLabel = (value) => {
             if (typeof value === 'string') return value.slice(0, 96);
@@ -4828,10 +4829,7 @@ try {
               frameTrace.push({
                 postRenderAtMs: now,
                 preRenderAtMs: lastPreRenderAt,
-                routePhaseMs:
-                  motionStartedAt == null
-                    ? null
-                    : Math.max(0, now - motionStartedAt),
+                routePhaseMs: appliedRoutePhaseMs,
                 intervalMs:
                   frameTrace.length > 0
                     ? now - frameTrace[frameTrace.length - 1].postRenderAtMs
@@ -4869,7 +4867,13 @@ try {
               observer = new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
                   longTasks.push(entry.duration);
-                  if (longTaskTrace && longTaskTrace.length < 2048)
+                  if (
+                    longTaskTrace &&
+                    startedAt != null &&
+                    Number.isFinite(entry.startTime) &&
+                    entry.startTime >= startedAt &&
+                    longTaskTrace.length < 2048
+                  )
                     longTaskTrace.push({
                       startTimeMs: Number(entry.startTime),
                       durationMs: Number(entry.duration),
@@ -4941,6 +4945,11 @@ try {
             intervals.length = 0;
             previous = null;
             renderedFrameCount = 0;
+            if (frameTrace) {
+              frameTrace.length = 0;
+              lastPreRenderAt = null;
+            }
+            if (longTaskTrace) longTaskTrace.length = 0;
             startedAt = performance.now();
             window.__gevWeatherMeasurementStartedAt = startedAt;
             const measurementWait = new Promise((resolve) => {
@@ -4984,6 +4993,8 @@ try {
                   Math.max(0, performance.now() - motionStartedAt),
                 );
                 updateMotion(elapsed);
+                appliedRoutePhaseMs =
+                  scenarioName === 'scripted-motion' ? elapsed : null;
                 viewer.render();
                 if (elapsed >= durationMs) return;
                 motionFrameRequest = requestAnimationFrame(move);
@@ -5051,7 +5062,13 @@ try {
             }
             observer?.takeRecords?.().forEach((entry) => {
               longTasks.push(entry.duration);
-              if (longTaskTrace && longTaskTrace.length < 2048)
+              if (
+                longTaskTrace &&
+                startedAt != null &&
+                Number.isFinite(entry.startTime) &&
+                entry.startTime >= startedAt &&
+                longTaskTrace.length < 2048
+              )
                 longTaskTrace.push({
                   startTimeMs: Number(entry.startTime),
                   durationMs: Number(entry.duration),

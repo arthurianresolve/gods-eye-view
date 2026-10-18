@@ -5,11 +5,287 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import vm from 'node:vm';
+import { Linter } from 'eslint';
 import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import { MAP_FIXTURE_BUILD_PROFILE_ID } from './performance/buildProvenance.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
+
+async function extractRawSampleCallback() {
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  let callbackSource = null;
+  const linter = new Linter({ configType: 'flat' });
+  const rule = {
+    create(context) {
+      return {
+        CallExpression(node) {
+          if (
+            callbackSource ||
+            node.callee?.type !== 'MemberExpression' ||
+            node.callee.object?.name !== 'page' ||
+            node.callee.property?.name !== 'evaluate'
+          )
+            return;
+          const candidate = node.arguments[0];
+          if (
+            candidate?.type !== 'ArrowFunctionExpression' ||
+            !candidate.async ||
+            !context.sourceCode
+              .getText(candidate)
+              .includes('frameTraceEnabled') ||
+            !context.sourceCode
+              .getText(candidate)
+              .includes('renderDemandOwnership')
+          )
+            return;
+          callbackSource = context.sourceCode.getText(candidate);
+        },
+      };
+    },
+  };
+  const messages = linter.verify(
+    source,
+    [
+      {
+        languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+        plugins: { capture: { rules: { callback: rule } } },
+        rules: { 'capture/callback': 'error' },
+      },
+    ],
+    { filename: SCRIPT },
+  );
+  assert.deepEqual(messages, []);
+  assert.ok(callbackSource, 'raw sample page callback was not found');
+  return callbackSource;
+}
+
+function createRawSampleHarness({
+  throwOnRender = false,
+  framesPerRender = 1,
+} = {}) {
+  let clock = 1000;
+  let manualStarted = false;
+  let currentDistance = 0;
+  let warmupFrames = 0;
+  const renderedPhases = [];
+  const makeEvent = () => {
+    const listeners = new Set();
+    let additions = 0;
+    return {
+      addEventListener(listener) {
+        additions += 1;
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      removeEventListener(listener) {
+        listeners.delete(listener);
+      },
+      emit() {
+        for (const listener of [...listeners]) listener();
+      },
+      get size() {
+        return listeners.size;
+      },
+      get additions() {
+        return additions;
+      },
+    };
+  };
+  const preRender = makeEvent();
+  const postRender = makeEvent();
+  const windowListeners = new Map();
+  const documentListeners = new Map();
+  const camera = {
+    setView() {},
+    moveRight(distance) {
+      currentDistance = distance;
+    },
+  };
+  const scene = {
+    preRender,
+    postRender,
+    requestRenderMode: true,
+    requestRender() {},
+  };
+  const viewer = {
+    scene,
+    camera,
+    useDefaultRenderLoop: true,
+    render() {
+      manualStarted = true;
+      if (throwOnRender) throw new Error('fake render failure');
+      for (let index = 0; index < framesPerRender; index++) {
+        renderedPhases.push((currentDistance * 50) / 16);
+        preRender.emit();
+        clock += 7;
+        postRender.emit();
+      }
+    },
+  };
+  const windowRef = {
+    __godsEyeView: {
+      viewer,
+      getRenderGovernorDiagnostics: () => ({
+        mode: 'continuous',
+        holds: ['diagnostic'],
+        scheduledUpdates: [],
+      }),
+    },
+    __gevPerformanceHome: {
+      position: {},
+      direction: {},
+      up: {},
+      transform: {},
+    },
+    addEventListener(type, listener) {
+      windowListeners.set(type, listener);
+    },
+    removeEventListener(type, listener) {
+      if (windowListeners.get(type) === listener) windowListeners.delete(type);
+    },
+  };
+  const documentRef = {
+    hidden: false,
+    hasFocus: () => true,
+    addEventListener(type, listener) {
+      documentListeners.set(type, listener);
+    },
+    removeEventListener(type, listener) {
+      if (documentListeners.get(type) === listener)
+        documentListeners.delete(type);
+    },
+  };
+  const context = {
+    window: windowRef,
+    document: documentRef,
+    performance: { now: () => clock, timeOrigin: 1_000_000 },
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    requestAnimationFrame: (callback) =>
+      setTimeout(() => {
+        clock += 16;
+        // Two already-queued default-loop frames may complete while ownership
+        // is being quiesced. They must not enter the measured trace.
+        if (!manualStarted) {
+          preRender.emit();
+          clock += 7;
+          postRender.emit();
+          warmupFrames += 1;
+        }
+        callback(clock);
+      }, 0),
+    cancelAnimationFrame: clearTimeout,
+    PerformanceObserver: undefined,
+  };
+  return {
+    context,
+    scene,
+    preRender,
+    postRender,
+    windowListeners,
+    documentListeners,
+    renderedPhases,
+    get warmupFrames() {
+      return warmupFrames;
+    },
+  };
+}
+
+function runRawSample(callbackSource, harness, parameters) {
+  const callback = vm.runInNewContext(`(${callbackSource})`, harness.context);
+  return callback(parameters);
+}
+
+test('raw sample tracing resets pre-window frames and records applied route phase', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness();
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 35,
+    scenarioName: 'scripted-motion',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+  });
+  assert.ok(sample.frameTrace.length > 0);
+  assert.equal(harness.warmupFrames, 2);
+  assert.equal(sample.frameTrace.length, harness.renderedPhases.length);
+  assert.equal(sample.frameTrace[0].routePhaseMs, 0);
+  assert.equal(sample.frameTrace[0].sceneRenderWallMs, 7);
+  assert.ok(sample.frameTrace.every((frame) => frame.routePhaseMs !== null));
+  for (let index = 0; index < sample.frameTrace.length; index++) {
+    const frame = sample.frameTrace[index];
+    assert.ok(
+      Math.abs(frame.routePhaseMs - harness.renderedPhases[index]) < 1e-9,
+    );
+    assert.ok(
+      frame.preRenderAtMs >= sample.frameTraceWindow.startPerformanceNowMs,
+    );
+  }
+  assert.equal(harness.preRender.size, 0);
+  assert.equal(harness.postRender.size, 0);
+});
+
+test('raw sample tracing disabled adds no pre-render listener or trace data', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness();
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 10,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: false,
+  });
+  assert.equal('frameTrace' in sample, false);
+  assert.equal('longTaskTrace' in sample, false);
+  assert.equal(harness.preRender.additions, 0);
+  assert.equal(harness.preRender.size, 0);
+  assert.equal(harness.postRender.size, 0);
+});
+
+test('raw sample trace caps frames and reports truncation without losing observed counts', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({ framesPerRender: 4100 });
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 1,
+    scenarioName: 'scripted-motion',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+  });
+  assert.equal(sample.frameTrace.length, 4096);
+  assert.equal(sample.frameTraceWindow.recordedFrames, 4096);
+  assert.ok(sample.frameTraceWindow.observedFrames >= 4100);
+  assert.equal(sample.frameTraceWindow.truncated, true);
+  assert.equal(harness.preRender.size, 0);
+  assert.equal(harness.postRender.size, 0);
+});
+
+test('raw sample cleanup removes listeners when rendering throws', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({ throwOnRender: true });
+  await assert.rejects(
+    runRawSample(callback, harness, {
+      durationMs: 10,
+      scenarioName: 'scripted-motion',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: true,
+    }),
+    /fake render failure/,
+  );
+  assert.equal(harness.preRender.size, 0);
+  assert.equal(harness.postRender.size, 0);
+  assert.equal(harness.windowListeners.size, 0);
+  assert.equal(harness.documentListeners.size, 0);
+});
 
 test('startup and main documents are foregrounded before viewer readiness', async () => {
   const source = await fs.readFile(SCRIPT, 'utf8');
