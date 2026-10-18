@@ -84,6 +84,9 @@ async function runCaptureReleaseCase(
     `export function execFile(_file, _args, _options, callback) {
   callback(new Error('unexpected asynchronous child process command'));
 }
+export function spawn() {
+  throw new Error('unexpected foreground helper spawn in headless capture');
+}
 export function execFileSync(_file, args) {
   if (args.includes('rev-parse')) return process.env.GEV_CAPTURE_HARNESS_SHA;
   if (args.includes('status')) return '';
