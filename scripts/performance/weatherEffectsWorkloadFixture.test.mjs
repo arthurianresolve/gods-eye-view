@@ -40,6 +40,7 @@ import {
   recordWeatherMotionPreferencePreflight,
   assertWeatherEffectsMotionPreference,
 } from './weatherEffectsWorkloadFixture.mjs';
+import { createCaptureFailureReport } from './captureFailureReport.mjs';
 
 const BASE = 'http://127.0.0.1:4173/';
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -673,6 +674,193 @@ test('serialized weather phase driver selects every source through the real cloc
     clock.destroy();
     for (const remove of unregister) remove();
   }
+});
+
+test('serialized weather phase selection retains bounded context for every predicate failure', async () => {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const phase = fixture.phaseSchedule.phases[0];
+  const makeInvocation = ({
+    sourceTimes = Array(3).fill(phase.sourceTime),
+    sliderMaximum = '2',
+    clock = { mode: 'history', target: phase.sourceTime, playing: false },
+    phaseOverride = phase,
+  } = {}) => {
+    let now = 100;
+    const slider = {
+      value: String(phase.timelineIndex),
+      max: sliderMaximum,
+      getAttribute: () => null,
+      dispatchEvent: () => {},
+    };
+    const play = { getAttribute: () => 'false' };
+    const root = {
+      querySelector: (selector) =>
+        selector.includes('Observed history')
+          ? slider
+          : selector.includes('Replay observed history')
+            ? play
+            : null,
+    };
+    const layers = new Map(
+      ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+        (id, index) => [
+          id,
+          {
+            module: {
+              getStats: () => ({ observedAt: sourceTimes[index] }),
+              getDiagnostics: () => ({ clock }),
+            },
+          },
+        ],
+      ),
+    );
+    const context = {
+      window: {
+        __gevWeatherMeasurementStartedAt: 100,
+        __godsEyeView: {
+          dataManager: { layers: { get: (id) => layers.get(id) } },
+        },
+      },
+      document: { querySelector: () => root },
+      performance: { now: () => now },
+      setTimeout: (resolve, delay) => {
+        now += delay;
+        queueMicrotask(resolve);
+        return 1;
+      },
+      clearTimeout: () => {},
+      Event,
+    };
+    return {
+      context,
+      args: {
+        phase: phaseOverride,
+        fixtureSha256: fixture.sha256,
+        maximumLatenessMs: 100,
+        measurementStartedAt: 100,
+      },
+    };
+  };
+  const run = (options) => {
+    const { context, args } = makeInvocation(options);
+    return runInNewContext(
+      `(${selectWeatherEffectsPhaseInPage.toString()})(${JSON.stringify(args)})`,
+      context,
+    );
+  };
+  const contextOf = (error) => {
+    const marker = 'context=';
+    const index = error.message.indexOf(marker);
+    assert.ok(index >= 0, error.message);
+    return JSON.parse(error.message.slice(index + marker.length));
+  };
+
+  const success = await run();
+  assert.equal(success.expectedSourceTime, phase.sourceTime);
+  assert.equal(success.fixtureSha256, fixture.sha256);
+
+  for (const failure of [
+    { sourceTimes: Array(3).fill(fixture.timeline[1]) },
+    { sliderMaximum: '1' },
+    { clock: { mode: 'latest', target: phase.sourceTime, playing: false } },
+    { clock: { mode: 'history', target: fixture.timeline[1], playing: false } },
+    { clock: { mode: 'history', target: phase.sourceTime, playing: true } },
+    { sourceTimes: [phase.sourceTime, null, phase.sourceTime] },
+    { clock: null },
+    { phaseOverride: { ...phase, offsetMs: -101 } },
+  ]) {
+    await assert.rejects(run(failure), (error) => {
+      assert.match(
+        error.message,
+        /Weather (?:phase .* was missing, late or wrong|timeline no longer has the three pinned phases)\./,
+      );
+      const context = contextOf(error);
+      assert.deepEqual(context.expectedSourceTimes, [
+        phase.sourceTime,
+        phase.sourceTime,
+        phase.sourceTime,
+      ]);
+      assert.equal(context.fixtureSha256, fixture.sha256);
+      assert.equal(context.phase.id, phase.id);
+      assert.equal(context.slider.max, failure.sliderMaximum ?? '2');
+      assert.ok(Number.isFinite(context.elapsedMs));
+      assert.ok(Number.isFinite(context.deadline.elapsedMs));
+      assert.ok(
+        context.clock.playing === null ||
+          typeof context.clock.playing === 'boolean',
+      );
+      return true;
+    });
+  }
+});
+
+test('weather phase context survives bounded failure-report projection', () => {
+  const context = {
+    expectedSourceTimes: Array(3).fill('2026-10-08T00:00:00Z'),
+    observedSourceTimes: Array(3).fill('2026-10-08T00:00:01Z'),
+    elapsedMs: 101,
+    phase: { id: 'early-history', offsetMs: -101 },
+    deadline: { elapsedMs: 0, absoluteMs: 100 },
+    clock: { mode: 'history', target: '2026-10-08T00:00:01Z', playing: false },
+    slider: { value: '0', max: '2' },
+    fixtureSha256: 'a'.repeat(64),
+  };
+  const message = `Weather phase early-history was missing, late or wrong. context=${JSON.stringify(context)}`;
+  const report = createCaptureFailureReport({
+    phase: 'measure-scene',
+    error: new Error(message),
+    fixture: { id: 'weather', sha256: context.fixtureSha256 },
+    workload: {
+      providerFixture: 'weather-effects',
+      oversized: Array.from({ length: 30 }, () => ({
+        blob: 'x'.repeat(1024),
+        values: Array(256).fill('y'.repeat(1024)),
+      })),
+    },
+  });
+  assert.match(
+    report.failure.message,
+    /^Weather phase early-history was missing, late or wrong\./,
+  );
+  assert.deepEqual(report.failure.weatherPhaseContext, context);
+  const malformed = createCaptureFailureReport({
+    phase: 'measure-scene',
+    error: new Error(
+      'Weather phase early-history was missing, late or wrong. context={bad',
+    ),
+  });
+  assert.equal(malformed.failure.weatherPhaseContext, undefined);
+  const hostile = createCaptureFailureReport({
+    phase: 'measure-scene',
+    error: new Error(
+      `Weather phase ${'x'.repeat(65)} was missing, late or wrong. context=${'x'.repeat(5000)}`,
+    ),
+  });
+  assert.equal(hostile.failure.weatherPhaseContext, undefined);
+  const nonPrimitive = createCaptureFailureReport({
+    phase: 'measure-scene',
+    error: new Error(
+      `Weather phase early-history was missing, late or wrong. context=${JSON.stringify(
+        {
+          ...context,
+          expectedSourceTimes: { malicious: 'value' },
+        },
+      )}`,
+    ),
+  });
+  assert.equal(nonPrimitive.failure.weatherPhaseContext, undefined);
+  const oversized = createCaptureFailureReport({
+    phase: 'measure-scene',
+    error: new Error(
+      `Weather phase early-history was missing, late or wrong. context=${JSON.stringify(
+        {
+          ...context,
+          clock: { ...context.clock, mode: 'x'.repeat(10_000) },
+        },
+      )}`,
+    ),
+  });
+  assert.equal(oversized.failure.weatherPhaseContext, undefined);
 });
 
 test('weather phase driver cancels pending phase work when capture fails early', async () => {

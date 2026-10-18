@@ -1400,6 +1400,52 @@ export async function selectWeatherEffectsPhaseInPage({
   const readClock = () =>
     app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
       ?.clock;
+  const boundedWeatherPhaseContext = (observedAtElapsedMs, deadlineAtMs) => {
+    const clock = readClock();
+    const boundedTime = (value) =>
+      typeof value === 'string' &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)
+        ? value
+        : null;
+    const boundedPhaseId = (value) =>
+      typeof value === 'string' &&
+      /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(value)
+        ? value
+        : null;
+    const boundedSlider = (value) =>
+      typeof value === 'string' && /^\d{1,8}$/.test(value) ? value : null;
+    return JSON.stringify({
+      expectedSourceTimes: Array(3).fill(boundedTime(phase.sourceTime)),
+      observedSourceTimes: sourceObservationTimes.map(boundedTime),
+      elapsedMs: Number.isFinite(observedAtElapsedMs)
+        ? observedAtElapsedMs
+        : null,
+      phase: {
+        id: boundedPhaseId(phase.id),
+        offsetMs: Number.isFinite(phase.offsetMs) ? phase.offsetMs : null,
+      },
+      deadline: {
+        elapsedMs: Number.isFinite(deadlineAtMs - startedAt)
+          ? deadlineAtMs - startedAt
+          : null,
+        absoluteMs: Number.isFinite(deadlineAtMs) ? deadlineAtMs : null,
+      },
+      clock: {
+        mode: ['history', 'latest'].includes(clock?.mode) ? clock.mode : null,
+        target: boundedTime(clock?.target),
+        playing: typeof clock?.playing === 'boolean' ? clock.playing : null,
+      },
+      slider: {
+        value: boundedSlider(slider.value),
+        max: boundedSlider(slider.max),
+      },
+      fixtureSha256:
+        typeof fixtureSha256 === 'string' &&
+        /^[a-f0-9]{64}$/.test(fixtureSha256)
+          ? fixtureSha256
+          : null,
+    });
+  };
   const assertMeasurementOwner = () => {
     if (window.__gevWeatherMeasurementStartedAt !== startedAt)
       throw new Error(
@@ -1414,12 +1460,18 @@ export async function selectWeatherEffectsPhaseInPage({
       setTimeout(resolve, targetElapsedMs - performance.now()),
     );
   assertMeasurementOwner();
-  if (Number(slider.max) !== 2)
-    throw new Error('Weather timeline no longer has the three pinned phases.');
-  slider.value = String(phase.timelineIndex);
-  slider.dispatchEvent(new Event('change', { bubbles: true }));
   const deadline = targetElapsedMs + maximumLatenessMs;
   let sourceObservationTimes = readTimes();
+  if (Number(slider.max) !== 2)
+    throw new Error(
+      `Weather timeline no longer has the three pinned phases. context=${boundedWeatherPhaseContext(
+        performance.now() - startedAt,
+        deadline,
+      )}`,
+    );
+  slider.value = String(phase.timelineIndex);
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+  sourceObservationTimes = readTimes();
   while (
     !sourceObservationTimes.every((time) => time === phase.sourceTime) &&
     performance.now() < deadline
@@ -1440,7 +1492,12 @@ export async function selectWeatherEffectsPhaseInPage({
     clock?.target !== phase.sourceTime ||
     clock?.playing !== false
   )
-    throw new Error(`Weather phase ${phase.id} was missing, late or wrong.`);
+    throw new Error(
+      `Weather phase ${phase.id} was missing, late or wrong. context=${boundedWeatherPhaseContext(
+        observedAtElapsedMs,
+        deadline,
+      )}`,
+    );
   return {
     id: phase.id,
     expectedSourceTime: phase.sourceTime,
