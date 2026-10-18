@@ -637,13 +637,22 @@ test('manifest consumer does not fail on measured idle cadence increase', async 
   const comparison = await createComparison(setup, {
     patch: (baseline, candidate) => {
       for (const report of [baseline, candidate]) {
-        for (const capture of report.captures.filter((row) => row.scenario === 'idle')) {
+        for (const capture of report.captures.filter(
+          (row) => row.scenario === 'idle',
+        )) {
           capture.frameCount = 100;
           capture.frameIntervalMs = { p50: 50, p95: 50, max: 50, samples: 100 };
         }
       }
-      for (const capture of candidate.captures.filter((row) => row.scenario === 'idle'))
-        capture.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 100 };
+      for (const capture of candidate.captures.filter(
+        (row) => row.scenario === 'idle',
+      ))
+        capture.frameIntervalMs = {
+          p50: 100,
+          p95: 100,
+          max: 100,
+          samples: 100,
+        };
     },
   });
   setup.evidence.comparisons.push(comparison);
@@ -653,6 +662,11 @@ test('manifest consumer does not fail on measured idle cadence increase', async 
   });
   assert.equal(result.comparison.failures.length, 0);
   assert.equal(result.comparison.status, 'pending');
+  assert.equal(result.comparisons[0].validation.scenarios.idle.changePct, 100);
+  assert.equal(
+    result.comparisons[0].validation.scenarios.idle.regressionScope,
+    'measurement-only-idle-cadence',
+  );
 });
 
 test('achieved objective percentages remain visible from validated measurements', async () => {

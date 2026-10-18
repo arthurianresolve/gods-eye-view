@@ -108,29 +108,39 @@ test('idle cadence changes remain measured but are excluded from motion regressi
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);
   for (const report of [baseline, candidate]) {
-    for (const capture of report.captures.filter((row) => row.scenario === 'idle')) {
+    for (const capture of report.captures.filter(
+      (row) => row.scenario === 'idle',
+    )) {
       capture.frameCount = 100;
       capture.frameIntervalMs = { p50: 50, p95: 50, max: 50, samples: 100 };
     }
   }
-  for (const capture of candidate.captures.filter((row) => row.scenario === 'idle'))
+  for (const capture of candidate.captures.filter(
+    (row) => row.scenario === 'idle',
+  ))
     capture.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 100 };
   const result = validate(baseline, candidate);
   assert.equal(result.scenarios.idle.changePct, 100);
   assert.equal(result.scenarios.idle.regressionOver10Pct, false);
-  assert.equal(result.scenarios.idle.regressionScope, 'measurement-only-idle-cadence');
+  assert.equal(
+    result.scenarios.idle.regressionScope,
+    'measurement-only-idle-cadence',
+  );
   assert.equal(result.regressionsOver10Pct.includes('idle'), false);
 });
 
-test('the same interval change in scripted motion remains a regression', () => {
-  const baseline = makeReport(baselineCommit);
-  const candidate = makeReport(candidateCommit);
-  for (const capture of candidate.captures.filter((row) => row.scenario === 'scripted-motion'))
-    capture.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 100 };
-  const result = validate(baseline, candidate);
-  assert.equal(result.scenarios['scripted-motion'].regressionOver10Pct, true);
-  assert.ok(result.regressionsOver10Pct.includes('scripted-motion'));
-});
+for (const scenario of ['scripted-motion', 'selected-aircraft-tracking'])
+  test(`longer intervals in ${scenario} remain a regression`, () => {
+    const baseline = makeReport(baselineCommit);
+    const candidate = makeReport(candidateCommit);
+    for (const capture of candidate.captures.filter(
+      (row) => row.scenario === scenario,
+    ))
+      capture.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 100 };
+    const result = validate(baseline, candidate);
+    assert.equal(result.scenarios[scenario].regressionOver10Pct, true);
+    assert.ok(result.regressionsOver10Pct.includes(scenario));
+  });
 
 test('native comparison cannot bypass profile evidence by stripping fields', () => {
   const baseline = makeReport(baselineCommit);
