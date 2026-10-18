@@ -16,11 +16,7 @@ import {
   normalizeLocale,
   writeStoredLocale,
 } from './locale.js';
-// Keep synchronous catalog compatibility for existing callers. prepareLocale
-// still coalesces asynchronous import/retry requests at boot and on demand.
-import es from './locales/es.json' with { type: 'json' };
-import ru from './locales/ru.json' with { type: 'json' };
-const CATALOGS = { en: null, es, ru };
+const CATALOGS = { en: null };
 const LOADERS = Object.freeze({
   es: () => import('./locales/es.json', { with: { type: 'json' } }),
   ru: () => import('./locales/ru.json', { with: { type: 'json' } }),
@@ -36,19 +32,21 @@ export function getCatalog(locale) {
 }
 
 /** Prepare a locale catalog before constructing UI. Concurrent requests coalesce. */
-export function prepareLocale(locale) {
+export function prepareLocale(locale, { loaders = LOADERS, force = false } = {}) {
   const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
-  if (normalized === DEFAULT_LOCALE || CATALOGS[normalized]) {
+  if (normalized === DEFAULT_LOCALE || (CATALOGS[normalized] && !force)) {
     setLocale(normalized);
     return Promise.resolve(normalized);
   }
   if (pendingLoads.has(normalized)) return pendingLoads.get(normalized);
   const generation = ++preparationGeneration;
-  const load = LOADERS[normalized]();
+  const loader = loaders[normalized];
+  if (typeof loader !== 'function') return Promise.reject(new Error(`No catalog loader for ${normalized}`));
+  setLocale(normalized);
+  const load = loader();
   const pending = load.then((module) => {
     CATALOGS[normalized] = module.default;
-    if (generation === preparationGeneration && currentLocale === normalized)
-      formatterCache.clear();
+    if (generation === preparationGeneration && currentLocale === normalized) formatterCache.clear();
     return normalized;
   }).catch((error) => {
     if (generation === preparationGeneration && currentLocale === normalized) {

@@ -23,13 +23,29 @@ import {
 
 afterEach(() => setLocale('en'));
 
+await prepareLocale('es');
+await prepareLocale('ru');
+
 test('locale preparation preserves synchronous translation compatibility and coalesces retries', async () => {
-  const [es, ru] = await Promise.all([prepareLocale('es'), prepareLocale('ru')]);
+  const [es, ru] = await Promise.all([
+    prepareLocale('es', { force: true }),
+    prepareLocale('ru', { force: true }),
+  ]);
   assert.equal(es, 'es');
   assert.equal(ru, 'ru');
   setLocale('ru');
   assert.equal(t('POWERED UP'), 'ЗАПУЩЕНО');
   assert.equal(await retryLocalePreparation('ru'), 'ru');
+});
+
+test('failed injected catalog falls back to English and explicit retry can recover', async () => {
+  await assert.rejects(
+    prepareLocale('es', { force: true, loaders: { es: () => Promise.reject(new Error('offline')) } }),
+    /offline/,
+  );
+  assert.equal(t('POWERED UP'), 'POWERED UP');
+  await prepareLocale('es', { force: true, loaders: { es: async () => ({ default: { 'POWERED UP': 'LISTO' } }) } });
+  assert.equal(t('POWERED UP'), 'LISTO');
 });
 
 function memoryStorage(initial = {}) {

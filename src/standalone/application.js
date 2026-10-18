@@ -7,7 +7,7 @@ import { createStandaloneControls } from './controls.js';
 import { createStandaloneData } from './data.js';
 import { createStandaloneTools } from './tools.js';
 import { resolveLocale, applyDocumentLanguage } from '../i18n/locale.js';
-import { applyDocumentTranslations, prepareLocale, setLocale } from '../i18n/index.js';
+import { applyDocumentTranslations, getLocale, prepareLocale, setLocale } from '../i18n/index.js';
 import { createGoogleTokenSource } from '../maps/googleTokens.js';
 
 // The existing controls and layer catalog contain page-scoped state.
@@ -39,7 +39,7 @@ export function createStandaloneApplication({
   // and every catalog lookup agree from the first painted frame. Module
   // scripts execute after parsing, so the DOM is ready here and every
   // data-i18n* element honors the resolved locale without a reload.
-  const activeLocale = bootLocale;
+  const activeLocale = getLocale();
   setLocale(activeLocale);
   applyDocumentLanguage(document, activeLocale);
   applyDocumentTranslations(document);

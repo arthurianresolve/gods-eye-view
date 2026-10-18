@@ -59,6 +59,10 @@ resolved preference without blank untranslated startup. Locale preparation
 tests cover Spanish/Russian success and coalesced retry compatibility; browser
 startup and dynamic import failure injection remain VM gates.
 
+The locale catalogs are now dynamic imports rather than eager module imports;
+failed requests fall back to English without overwriting the requested
+preference, and an explicit retry can install the recovered catalog.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium
