@@ -33,7 +33,7 @@ import { applyNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import {
   captureQualificationPng,
 } from './finalVisualQualification.mjs';
-import { focusOwnedWindowsBrowserWindow } from './windowsForegroundWindow.mjs';
+import { createWindowsForegroundActivationSession } from './windowsForegroundWindow.mjs';
 import { verifyServedBuildAssets } from './buildProvenance.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFrozenWallClock } from './productionFlightFixture.mjs';
@@ -153,6 +153,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   });
   let page;
   let prepared;
+  let foregroundSession;
   let observedProfile = null;
   try {
     const context = await browser.createBrowserContext();
@@ -191,6 +192,8 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
     });
     const browserPid = browser.process()?.pid;
     if (!Number.isSafeInteger(browserPid)) throw new Error('Browser PID unavailable for foreground proof.');
+    foregroundSession = createWindowsForegroundActivationSession({ browserPid });
+    await foregroundSession.start({ timeoutMs: 15_000 });
     const states = [];
     for (const id of STATES) {
       if (id === 'hud-visible' || id === 'hud-restored') {
@@ -200,8 +203,10 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
         const result = await page.evaluate(() => window.__godsEyeView?.styleManager?.setHudVisible?.('off'));
         if (!result?.ok || result.visible !== false) throw new Error('HUD hidden state failed.');
       }
-      const foreground = await focusOwnedWindowsBrowserWindow({ browserPid, enabled: true });
-      if (foreground.foregroundConfirmed !== true) throw new Error(`Foreground proof failed for ${id}.`);
+      const foregroundReply = await foregroundSession.request(browserPid, 15_000);
+      let foreground;
+      try { foreground = JSON.parse(foregroundReply.stdout); } catch (error) { throw new Error(`Foreground proof was not valid JSON for ${id}.`, { cause: error }); }
+      if (foreground.foregroundConfirmed !== true || foreground.foregroundPid !== browserPid || foreground.status !== 'foreground-confirmed') throw new Error(`Foreground proof failed for ${id}.`);
       const completedRender = await page.evaluate(waitForCctvLifecycleRenderInPage, 15_000);
       const profile = await readNativeProfile(page);
       observedProfile = profile;
@@ -218,6 +223,11 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       if (page) await cleanupFixturePageDiagnostics(page);
     } catch (error) {
       teardownError = error;
+    }
+    try {
+      await foregroundSession?.dispose();
+    } catch (error) {
+      teardownError ||= error;
     }
     try {
       await browser.close();
