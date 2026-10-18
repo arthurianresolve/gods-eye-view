@@ -1,0 +1,1666 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-18T00:24:17.875Z",
+  "commit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "validatorCommit": "d87c8db86e0263b67dd3070205154575dc54a3ea",
+  "phase": "pre-release",
+  "performanceEvidenceRequired": true,
+  "performanceAcceptancePolicyId": "gev-cesium-acceptance/2026-10-15",
+  "validationManifest": {
+    "schemaVersion": 2,
+    "phase": "pre-release",
+    "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+    "checks": [
+      {
+        "id": "platform-installs",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "GitHub-hosted Windows, macOS, and Ubuntu exact-commit recovery jobs",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "ci-final-1b92/run-39035842437/profile-recovery-windows-latest/profile-recovery.json",
+          "ci-final-1b92/run-39035842437/profile-recovery-macos-latest/profile-recovery.json",
+          "ci-final-1b92/run-39035842437/profile-recovery-ubuntu-latest/profile-recovery.json"
+        ],
+        "notes": "Clean install, upgrade, rollback, and persisted-workspace recovery passed on all three supported platforms."
+      },
+      {
+        "id": "mixed-use-soak",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "Physical Windows 10, Intel UHD 620, Chrome 154",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "qa-s60-final-hardware-1b92b573.json"
+        ],
+        "notes": "Completed the 60-minute mixed-use fixture soak with bounded retained resources and post-GC checkpoints."
+      },
+      {
+        "id": "hardware-matrix",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "Primary physical Windows Intel UHD 620; hosted macOS supplemental",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "qa-s60-final-evidence-index-1b92b573.json"
+        ],
+        "notes": "All eight matched workload pairs are comparable on the required physical Windows machine under the amended acceptance policy."
+      },
+      {
+        "id": "accessibility-review",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "pending",
+        "environment": "Human NVDA/Windows, VoiceOver/macOS, and first-use participant review unavailable",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [],
+        "notes": "Automation is available; the required human screen-reader and five-participant evidence has not been fabricated."
+      }
+    ],
+    "performanceEvidence": {
+      "comparisons": [
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "austin-operating-v1",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/operating-view-baseline.json",
+            "sha256": "37fd4e8e6caef186aff50d779c0dacd0b6aabae18e2576e9bbdb6536b3b458df"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/operating-view-candidate.json",
+            "sha256": "406c5897dec3845f4053ed5e52afd2f1444e84020f0573058393662a13c3ec5e"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "measured",
+                "baselineMedianP95Ms": 123.40000000596046,
+                "candidateMedianP95Ms": 119.79999999701977,
+                "changePct": -2.9173419844139463,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 134.29999999701977,
+                "candidateMedianP95Ms": 130.90000000596046,
+                "changePct": -2.531645563019175,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "perSample": null
+              },
+              "candidate": {
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "dense-investigation",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/dense-investigation-baseline.json",
+            "sha256": "e0790c180d0af467097f45d00826a158c0d19c324b00ed37ede6e105417f784a"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/dense-investigation-candidate.json",
+            "sha256": "e2855dbd22131e870d0385967d7bc6eb33e761fcc64db9e0fb1c658bb4482889"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "assessed",
+              "achieved": false,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": false
+              }
+            },
+            "denseTrackingObjective": {
+              "status": "assessed",
+              "achieved": false,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": false
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "measured",
+                "baselineMedianP95Ms": 163.09999999403954,
+                "candidateMedianP95Ms": 174.59999999403954,
+                "changePct": 7.050889025395627,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 165.69999998807907,
+                "candidateMedianP95Ms": 177.5,
+                "changePct": 7.121303568358392,
+                "regressionOver10Pct": false
+              },
+              "selected-aircraft-tracking": {
+                "status": "measured",
+                "baselineMedianP95Ms": 868.1000000089407,
+                "candidateMedianP95Ms": 926.5,
+                "changePct": 6.727335559320105,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "fulfilledResponseCount": 60,
+                "perSample": [
+                  {
+                    "scenario": "idle",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  }
+                ]
+              },
+              "candidate": {
+                "fulfilledResponseCount": 60,
+                "perSample": [
+                  {
+                    "scenario": "idle",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "idle",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "scripted-motion",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 1,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 2,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 3,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 4,
+                    "fulfilledResponseCount": 4
+                  },
+                  {
+                    "scenario": "selected-aircraft-tracking",
+                    "run": 5,
+                    "fulfilledResponseCount": 4
+                  }
+                ]
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "infrastructure-datacenters",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-datacenters-baseline.json",
+            "sha256": "5c55dcb39ec116ee72000a0e5f51a2a367fa7f10b9e3960d9f35f0eea768cba1"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-datacenters-candidate.json",
+            "sha256": "f60fe99b9b527a511cf618c33849e501b2344afbacad7ffda8e5c4f41d7482ae"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "unavailable",
+                "baselineMedianP95Ms": null,
+                "candidateMedianP95Ms": null,
+                "changePct": null,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 110.69999998807907,
+                "candidateMedianP95Ms": 112.90000000596046,
+                "changePct": 1.987353223232434,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "perSample": null
+              },
+              "candidate": {
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "infrastructure-dams",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-dams-baseline.json",
+            "sha256": "b1bc30086404fa8b1f9ea04cf66b9a4cf0c32efcef6c6214f33c7cb581a68432"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-dams-candidate.json",
+            "sha256": "929815a660b0b395ef4ad9a7fffaf5faf2d6ade7d113e26f4f11b7124369bc56"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "unavailable",
+                "baselineMedianP95Ms": null,
+                "candidateMedianP95Ms": null,
+                "changePct": null,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 104.69999998807907,
+                "candidateMedianP95Ms": 104.79999999701977,
+                "changePct": 0.09551099231335483,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "perSample": null
+              },
+              "candidate": {
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "infrastructure-cables",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-cables-baseline.json",
+            "sha256": "5aae83823a892847047f038c981c98c97e3070e13e50648b76c075c458dfee30"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-cables-candidate.json",
+            "sha256": "98e52f9ad58a5208193dde1dc29293b46a68a30c4a9a68cac2bd92ef834ecdf8"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "unavailable",
+                "baselineMedianP95Ms": null,
+                "candidateMedianP95Ms": null,
+                "changePct": null,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 140.09999999403954,
+                "candidateMedianP95Ms": 130.5,
+                "changePct": -6.852248390041371,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "perSample": null
+              },
+              "candidate": {
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "infrastructure",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-baseline.json",
+            "sha256": "630eb8200c580cc1b3a818593ec9947f1fc6f0765bc7c4ade69b0676d0e1a179"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-candidate.json",
+            "sha256": "91385618116b5601719a228a0a3063d6b442b8cf186cc4c77aefd0bd4b0b4532"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "unavailable",
+                "baselineMedianP95Ms": null,
+                "candidateMedianP95Ms": null,
+                "changePct": null,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 143.39999997615814,
+                "candidateMedianP95Ms": 137.40000000596046,
+                "changePct": -4.184100398323044,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "perSample": null
+              },
+              "candidate": {
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "weather-effects",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-baseline.json",
+            "sha256": "0fa22152178281d34d19e9dc46ca280e04d938e84d168049654acfc2fb9533fd"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-candidate.json",
+            "sha256": "800b52a31667200798573c7b4b5bddc2a0878c8694deb73197e4ccc20059a601"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {
+                "scripted-motion": false,
+                "selected-aircraft-tracking": null
+              }
+            },
+            "scenarios": {
+              "idle": {
+                "status": "measured",
+                "baselineMedianP95Ms": 3402.699999988079,
+                "candidateMedianP95Ms": 2118.4000000059605,
+                "changePct": -37.743556587022596,
+                "regressionOver10Pct": false
+              },
+              "scripted-motion": {
+                "status": "measured",
+                "baselineMedianP95Ms": 94.09999999403954,
+                "candidateMedianP95Ms": 92.10000002384186,
+                "changePct": -2.1253984806847623,
+                "regressionOver10Pct": false
+              }
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "fulfilledResponseCount": 771,
+                "perSample": null
+              },
+              "candidate": {
+                "fulfilledResponseCount": 793,
+                "perSample": null
+              }
+            },
+            "conditionNormalization": {
+              "rule": "ignore-one-sided-disabled-zero-count-layers",
+              "baselineOnly": [],
+              "candidateOnly": [
+                "air-quality",
+                "gnss-integrity"
+              ]
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        },
+        {
+          "environmentId": "windows-primary",
+          "workloadId": "austin-map-streaming-v1",
+          "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "platform": "Win32",
+          "hostPlatform": "win32",
+          "baselineArtifact": {
+            "path": "qa-s60-matrix-map-1b92b573-hd87c8db8/map-streaming-baseline.json",
+            "sha256": "0ac74c24c02df4feec8614729930e71d8db288b801c53c6afa5b8dd91b3514d4"
+          },
+          "candidateArtifact": {
+            "path": "qa-s60-matrix-map-1b92b573-hd87c8db8/map-streaming-candidate.json",
+            "sha256": "3f7d38cd84956937ea719d679f4aa3eb858595304814e87693186db3d14b4bbc"
+          },
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "environmentIdentity": "{\"platform\":\"win32\",\"browserPlatform\":\"Win32\",\"architecture\":\"x64\",\"osRelease\":\"10.0.19045\",\"cpu\":\"Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz\",\"memoryBytes\":16907538432,\"hosted\":false,\"runnerImage\":null,\"runnerImageVersion\":null,\"browserName\":\"Chrome\",\"browserVersion\":\"155.0.0.0\",\"renderer\":\"ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)\",\"vendor\":\"Google Inc. (Intel)\",\"graphics\":{\"featureStatus\":{\"webgl\":\"enabled\",\"webgl2\":null,\"gpu_compositing\":\"enabled\",\"opengl\":\"enabled_on\"},\"devices\":[{\"vendor\":\"\",\"device\":\"Intel(R) UHD Graphics 620\",\"driver\":\"30.0.101.1338\"},{\"vendor\":\"\",\"device\":\"Microsoft Basic Render Driver\",\"driver\":\"10.0.19041.7802\"}]},\"viewport\":{\"width\":1440,\"height\":900,\"dpr\":1},\"drawingBuffer\":{\"width\":1440,\"height\":900}}",
+          "validation": {
+            "status": "comparable",
+            "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+            "workloadObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "denseTrackingObjective": {
+              "status": "not-assessed",
+              "achieved": null,
+              "targetImprovementPct": 20,
+              "scenarios": {}
+            },
+            "scenarios": {
+              "map-streaming-route": {
+                "status": "measured",
+                "baselineMedianP95Ms": 2480.9000000059605,
+                "candidateMedianP95Ms": 2541.399999976158,
+                "changePct": 2.438631140717172,
+                "regressionOver10Pct": false
+              }
+            },
+            "mapStreaming": {
+              "metric": "transition-readiness-p95-ms",
+              "baselineRuns": [
+                {
+                  "run": 1,
+                  "transitionReadinessMs": [
+                    4739,
+                    2518.300000011921,
+                    221
+                  ],
+                  "p95Ms": 4739
+                },
+                {
+                  "run": 2,
+                  "transitionReadinessMs": [
+                    2375.199999988079,
+                    1250.199999988079,
+                    251.09999999403954
+                  ],
+                  "p95Ms": 2375.199999988079
+                },
+                {
+                  "run": 3,
+                  "transitionReadinessMs": [
+                    2560.600000023842,
+                    2180.7000000178814,
+                    195.7000000178814
+                  ],
+                  "p95Ms": 2560.600000023842
+                },
+                {
+                  "run": 4,
+                  "transitionReadinessMs": [
+                    2408,
+                    1241.0999999940395,
+                    167.5
+                  ],
+                  "p95Ms": 2408
+                },
+                {
+                  "run": 5,
+                  "transitionReadinessMs": [
+                    2480.9000000059605,
+                    1444.4000000059605,
+                    222.2000000178814
+                  ],
+                  "p95Ms": 2480.9000000059605
+                }
+              ],
+              "candidateRuns": [
+                {
+                  "run": 1,
+                  "transitionReadinessMs": [
+                    4524.299999982119,
+                    2078.5999999940395,
+                    222.69999998807907
+                  ],
+                  "p95Ms": 4524.299999982119
+                },
+                {
+                  "run": 2,
+                  "transitionReadinessMs": [
+                    2104.699999988079,
+                    1312.199999988079,
+                    259.10000002384186
+                  ],
+                  "p95Ms": 2104.699999988079
+                },
+                {
+                  "run": 3,
+                  "transitionReadinessMs": [
+                    2236.699999988079,
+                    3186.5999999940395,
+                    237.2999999821186
+                  ],
+                  "p95Ms": 3186.5999999940395
+                },
+                {
+                  "run": 4,
+                  "transitionReadinessMs": [
+                    2541.399999976158,
+                    1215.5,
+                    171.10000002384186
+                  ],
+                  "p95Ms": 2541.399999976158
+                },
+                {
+                  "run": 5,
+                  "transitionReadinessMs": [
+                    2497.9000000059605,
+                    1324,
+                    242.90000000596046
+                  ],
+                  "p95Ms": 2497.9000000059605
+                }
+              ]
+            },
+            "fixtureDeliveryDiagnostics": {
+              "baseline": {
+                "fulfilledResponseCount": 1072,
+                "perSample": null
+              },
+              "candidate": {
+                "fulfilledResponseCount": 1070,
+                "perSample": null
+              }
+            },
+            "regressionsOver10Pct": []
+          },
+          "error": null
+        }
+      ],
+      "retention": [
+        {
+          "environmentId": "windows-primary",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "harnessCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "artifactFormat": "standalone-soak",
+          "renderer": {
+            "kind": "native-gpu",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": true,
+            "hosted": false,
+            "hostIdentityComplete": true
+          },
+          "primaryEligible": true,
+          "stability": {
+            "status": "passed",
+            "failures": [],
+            "pending": [],
+            "heapGrowthRatio": 0.008868355171993391
+          },
+          "errors": [],
+          "pending": [],
+          "status": "passed",
+          "artifact": {
+            "path": "qa-s60-final-hardware-1b92b573.json",
+            "sha256": "58f3d36024e0a10d9c023cf0c67dc93eeba0fcfc61893771791c18dd30135b6c"
+          }
+        },
+        {
+          "environmentId": "hosted-macos",
+          "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "harnessCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+          "artifactFormat": "hosted-envelope",
+          "renderer": {
+            "kind": "apple-paravirtual-metal",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": false,
+            "hosted": true,
+            "hostIdentityComplete": true
+          },
+          "primaryEligible": false,
+          "stability": {
+            "status": "passed",
+            "failures": [],
+            "pending": [],
+            "heapGrowthRatio": 0.01996880565174696
+          },
+          "errors": [],
+          "pending": [],
+          "status": "passed",
+          "artifact": {
+            "path": "ci-final-1b92/run-39035840601/hosted-soak-39035840601/hosted-native-renderer.json",
+            "sha256": "0862fcac5dde3d922e0b12b1277b88213140c199fa28abc376200876dd02cf2a"
+          }
+        }
+      ],
+      "comparison": {
+        "acceptancePolicyId": "gev-cesium-acceptance/2026-10-15",
+        "status": "passed",
+        "failures": [],
+        "pending": [],
+        "performanceObjectives": [
+          {
+            "id": "dense-motion",
+            "scenario": "scripted-motion",
+            "targetImprovementPct": 20,
+            "actualImprovementPct": -7.121303568358392,
+            "status": "missed"
+          },
+          {
+            "id": "selected-aircraft-tracking",
+            "scenario": "selected-aircraft-tracking",
+            "targetImprovementPct": 20,
+            "actualImprovementPct": -6.727335559320105,
+            "status": "missed"
+          }
+        ],
+        "missingWorkloads": [],
+        "workloadIds": [
+          "dense-investigation",
+          "infrastructure",
+          "map-streaming",
+          "operating-view",
+          "selected-aircraft-tracking",
+          "weather-effects"
+        ],
+        "workloadValidationModes": {
+          "operating-view": "five-pair-timed",
+          "dense-investigation": "five-pair-timed",
+          "selected-aircraft-tracking": "five-pair-timed",
+          "infrastructure": "five-pair-timed-all-four-variants",
+          "weather-effects": "five-pair-timed",
+          "lifecycle-stress": "full-soak-retention",
+          "map-streaming": "five-pair-timed-contract-required"
+        },
+        "infrastructureVariantCoverage": {
+          "requiredVariants": [
+            "infrastructure-datacenters",
+            "infrastructure-dams",
+            "infrastructure-cables",
+            "infrastructure"
+          ],
+          "observedVariants": [
+            "infrastructure",
+            "infrastructure-cables",
+            "infrastructure-dams",
+            "infrastructure-datacenters"
+          ],
+          "missingVariants": []
+        },
+        "environments": [
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "austin-operating-v1",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "dense-investigation",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-datacenters",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-dams",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-cables",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "weather-effects",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "austin-map-streaming-v1",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          }
+        ]
+      },
+      "retentionOutcome": {
+        "status": "passed",
+        "failures": [],
+        "pending": [],
+        "environments": [
+          {
+            "environmentId": "windows-primary",
+            "status": "passed",
+            "primaryEligible": true,
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "artifact": {
+              "path": "qa-s60-final-hardware-1b92b573.json",
+              "sha256": "58f3d36024e0a10d9c023cf0c67dc93eeba0fcfc61893771791c18dd30135b6c"
+            },
+            "stability": {
+              "status": "passed",
+              "failures": [],
+              "pending": [],
+              "heapGrowthRatio": 0.008868355171993391
+            },
+            "errors": [],
+            "pending": [],
+            "reason": null
+          },
+          {
+            "environmentId": "hosted-macos",
+            "status": "supplemental",
+            "primaryEligible": false,
+            "renderer": {
+              "kind": "apple-paravirtual-metal",
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": false,
+              "hosted": true,
+              "hostIdentityComplete": true
+            },
+            "artifact": {
+              "path": "ci-final-1b92/run-39035840601/hosted-soak-39035840601/hosted-native-renderer.json",
+              "sha256": "0862fcac5dde3d922e0b12b1277b88213140c199fa28abc376200876dd02cf2a"
+            },
+            "stability": {
+              "status": "passed",
+              "failures": [],
+              "pending": [],
+              "heapGrowthRatio": 0.01996880565174696
+            },
+            "errors": [],
+            "pending": [],
+            "reason": "Supplemental retention evidence; physical Windows native-GPU evidence is required for acceptance."
+          }
+        ]
+      }
+    }
+  },
+  "phases": {
+    "preRelease": {
+      "passed": true,
+      "releaseReady": false,
+      "failureCount": 0,
+      "pendingCount": 1
+    },
+    "publication": {
+      "passed": true,
+      "releaseReady": false,
+      "failureCount": 0,
+      "pendingCount": 1
+    }
+  },
+  "status": "pending-evidence",
+  "readiness": {
+    "passed": true,
+    "releaseReady": false,
+    "failureCount": 0,
+    "pendingCount": 1
+  },
+  "checks": [
+    {
+      "id": "exact-commit",
+      "required": true,
+      "status": "passed",
+      "summary": "Tracked files must match the reported candidate commit."
+    },
+    {
+      "id": "format",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run format:check",
+      "output": "\n> gods-eye-view@0.2.1 format:check\n> node scripts/format.mjs --check\n\nChecked 1770 source files.\n"
+    },
+    {
+      "id": "boundaries",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run check:boundaries",
+      "output": "\n> gods-eye-view@0.2.1 check:boundaries\n> node scripts/check-import-directions.mjs && node scripts/check-package-boundaries.mjs\n\n{\"modules\":1071,\"portableEntries\":82}\nChecked infrastructure: 3 exports, 8 owned modules.\nChecked application: 1 exports, 1 owned modules.\nChecked investigation-time: 1 exports, 6 owned modules.\nChecked workspace-storage: 1 exports, 3 owned modules.\nChecked workspace-documents: 1 exports, 13 owned modules.\nChecked geographic-imports: 1 exports, 7 owned modules.\nChecked source-adapter-starter: 1 exports, 5 owned modules.\nChecked regional-recording: 1 exports, 13 owned modules.\nChecked viewer: 1 exports, 4 owned modules.\nChecked vite-build: 2 exports, 6 owned modules.\nChecked live-providers: 1 exports, 14 owned modules.\nChecked adsb-lol-source: 1 exports, 1 owned modules.\nChecked place-providers: 1 exports, 15 owned modules.\nChecked place-payloads: 1 exports, 1 owned modules.\nChecked space-providers: 1 exports, 7 owned modules.\nChecked space-requests: 1 exports, 1 owned modules.\nChecked terrain-provider: 1 exports, 2 owned modules.\nChecked terrain-source: 1 exports, 1 owned modules.\nChecked traffic-provider: 1 exports, 7 owned modules.\nChecked traffic-source: 1 exports, 1 owned modules.\nChecked firms-csv: 1 exports, 1 owned modules.\nChecked firms-provider: 1 exports, 5 owned modules.\nChecked gbfs-provider: 1 exports, 7 owned modules.\nChecked gbfs-source: 1 exports, 1 owned modules.\nChecked cctv-provider: 1 exports, 22 owned modules.\nChecked mapillary-provider: 1 exports, 12 owned modules.\nChecked radio-provider: 1 exports, 10 owned modules.\nChecked overpass-provider: 1 exports, 17 owned modules.\nChecked military-installations-provider: 1 exports, 13 owned modules.\nChecked regional-provider: 1 exports, 19 owned modules.\nChecked openai-provider: 1 exports, 26 owned modules.\nChecked standalone-key-setup: 1 exports, 7 owned modules.\nChecked place-search: 1 exports, 20 owned modules.\nChecked panel-disclosure: 1 exports, 1 owned modules.\nChecked surface-keyboard: 1 exports, 1 owned modules.\nChecked panel-rail-layout: 1 exports, 7 owned modules.\nChecked visual-input: 1 exports, 7 owned modules.\nChecked display-controls: 1 exports, 1 owned modules.\nChecked visual-effects: 2 exports, 14 owned modules.\nChecked map-source-controls: 1 exports, 10 owned modules.\nChecked layer-panel: 2 exports, 27 owned modules.\nChecked location-controls: 1 exports, 10 owned modules.\nChecked radio-controls: 1 exports, 9 owned modules.\nChecked cctv-controls: 1 exports, 11 owned modules.\nChecked context-controls: 2 exports, 18 owned modules.\nChecked cockpit-controls: 4 exports, 22 owned modules.\nChecked scene-controls: 1 exports, 7 owned modules.\nChecked ui-shell: 1 exports, 150 owned modules.\nChecked ui-styles: 1 exports, 2 owned modules.\nChecked director: 1 exports, 17 owned modules.\nChecked scenes: 1 exports, 55 owned modules.\nChecked live-observations: 1 exports, 7 owned modules.\nChecked civil-flights: 1 exports, 47 owned modules.\nChecked military-flights: 1 exports, 41 owned modules.\nChecked aircraft-mechanics: 1 exports, 22 owned modules.\nChecked vessel-layer: 1 exports, 29 owned modules.\nChecked earthquakes: 1 exports, 10 owned modules.\nChecked recent-imagery: 1 exports, 11 owned modules.\nChecked fire-layer: 1 exports, 24 owned modules.\nChecked satellites-layer: 1 exports, 30 owned modules.\nChecked launches-layer: 1 exports, 26 owned modules.\nChecked installations-layer: 1 exports, 35 owned modules.\nChecked awareness-layer: 1 exports, 28 owned modules.\nChecked traffic-layer: 1 exports, 43 owned modules.\nChecked bikeshare-layer: 1 exports, 21 owned modules.\nChecked cctv-layer: 1 exports, 43 owned modules.\nChecked street-level-layer: 4 exports, 37 owned modules.\nChecked alpr-cameras: 1 exports, 21 owned modules.\nChecked radio-layer: 1 exports, 33 owned modules.\nChecked submarine-cables: 1 exports, 15 owned modules.\nChecked bundled-cables: 1 exports, 1 owned modules.\nChecked geography: 2 exports, 4 owned modules.\nChecked maps: 6 exports, 18 owned modules.\nChecked voice-connection: 6 exports, 45 owned modules.\nChecked application-components: 16 exports, 882 owned modules.\nChecked application-catalog: 1 exports, 1 owned modules.\nChecked application-layer-construction: 1 exports, 543 owned modules.\nChecked application-operations: 1 exports, 47 owned modules.\nChecked layer-lifecycle: 1 exports, 3 owned modules.\nChecked ui-navigation: 1 exports, 8 owned modules.\nChecked ui-share-restoration: 1 exports, 16 owned modules.\nChecked ui-visual-settings: 1 exports, 26 owned modules.\nChecked ui-panel-chrome: 1 exports, 18 owned modules.\nChecked civil-flight-records: 1 exports, 8 owned modules.\nChecked civil-flight-ingestion: 1 exports, 3 owned modules.\nChecked military-flight-records: 1 exports, 7 owned modules.\nChecked military-flight-ingestion: 1 exports, 2 owned modules.\nChecked vessel-records: 1 exports, 2 owned modules.\nChecked vessel-ingestion: 1 exports, 3 owned modules.\nChecked directions-source: 1 exports, 1 owned modules.\nChecked recent-imagery-source: 1 exports, 3 owned modules.\nChecked directions-layer: 1 exports, 10 owned modules.\nChecked radio-browser-source: 1 exports, 2 owned modules.\nChecked cctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 1 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 8 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 6 owned modules.\nChecked transit-provider: 1 exports, 10 owned modules.\nChecked transit-source: 1 exports, 4 owned modules.\nChecked transit-standalone: 1 exports, 58 owned modules.\nChecked transit-layer: 1 exports, 28 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 9 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 52 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 5 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "id": "unit",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd test",
+      "output": "s, plan steps and the result card (20.6136ms)\n✔ presentation: silent lookups, dismissal and session end (1.1951ms)\n✔ markup: the card nests inside the voice control with every element and a polite live region (2.1462ms)\n✔ controls: render, idle hide, dismiss and idempotent teardown (7.0171ms)\n✔ controls: a control without card markup is inert (1.6295ms)\n✔ controls: analyst evidence referents expose a keyboard accessible pin action (92.54ms)\n✔ presentation: concurrent calls of one tool update their own steps (1.3619ms)\n✔ presentation: stale and unmatched events never reopen the card (1.0597ms)\n✔ es: frame_overhead failure shows the card lines in the UI language (11.9203ms)\n✔ es: select_nearest_aircraft failure shows the card lines in the UI language (3.2474ms)\n✔ es: frame_overhead failure shows the card lines in the UI language (78.8803ms)\n✔ ru: frame_overhead failure shows the card lines in the UI language (4.6908ms)\n✔ ru: select_nearest_aircraft failure shows the card lines in the UI language (1.0874ms)\n✔ ru: frame_overhead failure shows the card lines in the UI language (1.971ms)\n✔ en: the card shows the tool error as the model got it (3.8592ms)\n✔ voice card is in ru for a layer switch (10.4852ms)\n✔ voice card distance is in ru (81.9907ms)\n✔ plan label is in ru (1.548ms)\n✔ voice card is in es for a layer switch (2.9876ms)\n✔ voice card distance is in es (1.9845ms)\n✔ plan label is in es (1.0056ms)\n✔ en: layer switch, distance and plan labels in English (4.4546ms)\n✔ the fly-to headline shows the city in the interface language (6.2806ms)\n✔ the nearest-aircraft distance line shows the city in the interface language (79.6906ms)\n✔ every tool has a plan label, never its raw name (6.4737ms)\n✔ ru plan labels are all translated (1.8097ms)\n✔ es plan labels are all translated (0.5965ms)\n✔ analyst query and an unknown tool in ru and es (0.7854ms)\n✔ a layer step with no layer agrees with \"Capa\" (1.2335ms)\n✔ an error line shows whole, in every language (8.4295ms)\n✔ a successful line keeps its 80-character cap (0.945ms)\n✔ a translated analyst headline fits the card title whole (7.1621ms)\n✔ the snapshot time reads as a UTC clock, dated when not today (97.3955ms)\n✔ the Contacts note shows the clock; the model note stays ISO (26.0149ms)\n✔ plan steps and errors name a preset place in the UI language (3.9092ms)\n✔ the analyst scope names Los Angeles in the UI language (2.6486ms)\n✔ a preset city id names the city in plan steps and narration (3.0083ms)\n✔ every locationId the voice tools accept is a preset city (1.6021ms)\n✔ registry exposes exactly the two tiers the UI offers (8.508ms)\n✔ standard tier still points at the model vite.config.js defaults to (0.6984ms)\n✔ mini tier uses a published mini model id, not a guessed -2-mini variant (0.6184ms)\n✔ mini is cheaper than standard on every single rate (0.7375ms)\n✔ resolveVoiceModel returns the requested tier (0.5967ms)\n✔ resolveVoiceModel tolerates case and whitespace (0.4951ms)\n✔ unknown, empty, and hostile tiers fall back to standard rather than throwing (0.7213ms)\n✔ isKnownVoiceTier separates real tiers from fallbacks (0.4662ms)\n✔ cached tokens are subtracted out of their modality totals (1.0471ms)\n✔ uncached buckets never go negative when cached exceeds the modality total (0.7739ms)\n✔ missing input detail attributes input to audio (over-estimate, never under) (0.4063ms)\n✔ an aggregate cached_tokens without per-modality detail still earns the cache rate (0.3423ms)\n✔ F2: a partial input detail attributes the unexplained residual to audio (0.2632ms)\n✔ F2: a partial output detail attributes its residual to audio too (0.3406ms)\n✔ F2: a fully-explained payload gains no phantom residual (0.3629ms)\n✔ F2: every billed token is accounted for across partial fixtures (0.8851ms)\n✔ F2: a partial payload never costs LESS than the same tokens fully described (0.5142ms)\n✔ splitUsageTokens survives junk without throwing (0.4795ms)\n✔ standard cost is the exact sum of tokens x per-1M rates (0.3409ms)\n✔ mini cost is the exact sum on the mini table (0.2849ms)\n✔ the same session costs materially less on mini (0.3148ms)\n✔ image input tokens are billed (0.3361ms)\n✔ absent usage or rates cost nothing rather than NaN (0.2914ms)\n✔ the $1 test fixture really is $1 on standard rates (0.4425ms)\n✔ cost readout formats to two decimals with a tilde (0.3543ms)\n✔ a nonzero but sub-cent cost never displays as $0.00 (0.2424ms)\n✔ formatCostUsd clamps junk to zero (0.264ms)\n✔ default limits are generous and ordered warn < cap (0.3556ms)\n✔ normalizeCostLimits fills gaps from the defaults (0.7013ms)\n✔ zero or negative thresholds mean \"disabled\", not \"stop immediately\" (1.1788ms)\n✔ unparseable thresholds fall back to defaults (0.3768ms)\n✔ a fresh tracker starts at zero and ok (0.5663ms)\n✔ per-response usage accumulates across the session (0.4497ms)\n✔ the warning fires exactly once, on the crossing record (0.532ms)\n✔ the cap fires exactly once and latches capReached (0.6587ms)\n✔ one huge response crosses both thresholds on the same record (0.3705ms)\n✔ level is monotonic — it never steps back down (0.4392ms)\n✔ exact-threshold equality counts as crossed (0.3321ms)\n✔ zero-cost responses do not advance the response counter (0.7879ms)\n✔ the mini tracker takes far longer to reach the same cap (6.8462ms)\n✔ the tracker reports the model it is charging against (0.7357ms)\n✔ an unknown tier tracks at standard rates rather than free (0.4513ms)\n✔ F3: a known model id resolves to its own rate table (0.6451ms)\n✔ F3: an unrecognised model id bills at the most expensive known rates (0.5924ms)\n✔ F3: empty/garbage model ids still produce a usable worst-case entry (1.3182ms)\n✔ F3: the most expensive model is derived from the registry, not hardcoded (0.4301ms)\n✔ F3: modelId outranks tier when both are supplied (2.1404ms)\n✔ F3: pricing by tier alone would have under-metered an overridden session (1.9214ms)\n✔ F6: serializeCostLimits encodes a disabled threshold as a sentinel (0.4965ms)\n✔ F6: the sentinel normalizes back to a disabled threshold (0.2512ms)\n✔ F6: JSON round-trip preserves disabled, live, and mixed limits (0.5487ms)\n✔ F6: a raw Infinity (pre-sentinel data) is still honoured on read (0.3136ms)\n✔ markIncomplete flags the accounting as partial, without a direction claim (0.7934ms)\n✔ the incomplete marker never claims the total is a minimum (0.5324ms)\n✔ the over-estimate paths that make a floor claim wrong are real (2.4914ms)\n✔ marking incomplete does not change the accrued total (0.421ms)\n✔ an incomplete total still trips the cap on the tokens we did see (0.3014ms)\n✔ reset clears the incomplete marker for the next session (0.3303ms)\n✔ reset clears totals and re-arms both latches for a new session (0.3579ms)\n✔ input transcription is priced with its own model and folds into the session cap (1.4035ms)\n✔ missing weather fails clear instead of inventing effects (3.6754ms)\n✔ a missing weather code is unavailable, not clear (0.8577ms)\n✔ clear weather follows observed cloud cover without precipitation (0.9794ms)\n✔ thunderstorm activates bounded rain, cloud, droplets, and lightning (0.7126ms)\n✔ snow codes never render rain droplets (0.6569ms)\n✔ weather effects attenuate above the ground-weather layer (2.6532ms)\n✔ version-one workspace documents retain optional detection settings (38.5131ms)\n✔ direct pinned envelopes cannot bypass reference import validation (2.9583ms)\n✔ workspace documents normalize the saved view and preserve stable evidence references (3.2875ms)\n✔ workspace documents reject unsafe references, invalid views, future schemas, and excessive payloads (18.0735ms)\n✔ an unversioned draft migrates and arbitrary class instances are not persisted (1.9079ms)\n✔ versioned documents require a complete internally consistent snapshot (12.3711ms)\n✔ workspace history bounds snapshots, isolates workspaces, and drops redo after edits (6.1375ms)\n✔ history ignores oversized snapshots and returns defensive copies (0.864ms)\n✔ workspace library creates, lists, revises, duplicates and deletes with optimistic revisions (73.8272ms)\n✔ workspace bundles export and import verified bytes into a new identity (60.1075ms)\n✔ imported workspace backup rejects future formats and missing referenced assets (21.2501ms)\n✔ restore validates, inspects availability, stages, then applies the requested workspace (16.5809ms)\n✔ new restore requests supersede delayed staging and late work never applies (21.1296ms)\n✔ failed application rolls the captured state back and user navigation wins over late restore (11.0605ms)\n✔ late rollback rejection cannot overwrite a newer applied workspace (8.2363ms)\n✔ pending fulfilled rollback respects replacement ownership (7.0384ms)\n✔ pending fulfilled rollback respects caller-abort ownership (2.4477ms)\n✔ pending fulfilled rollback respects navigation ownership (2.0162ms)\n✔ pending fulfilled rollback respects destroy ownership (3.8408ms)\n✔ pending rejected rollback respects replacement ownership (2.2682ms)\n✔ pending rejected rollback respects caller-abort ownership (2.0245ms)\n✔ pending rejected rollback respects navigation ownership (1.3953ms)\n✔ pending rejected rollback respects destroy ownership (1.3228ms)\n✔ missing workspaces and unknown future documents fail before mutation (1.1871ms)\n✔ caller cancellation and superseding navigation leave a terminal status (15.4261ms)\n✔ a focus request carries the clicked target to any registered listener (2.5236ms)\n✔ requests without a kind or a position are dropped, never dispatched (0.3976ms)\n✔ routing hands the request to the UI policy, which owns the flight (3.1134ms)\n✔ a refusing policy (cockpit owns the camera) never reaches the flight (0.5006ms)\n✔ malformed requests are inert (0.2749ms)\n✔ an unflyable request never reaches the release policy (0.6914ms)\n✔ the transfer flight supersedes any flight in progress and keeps the operator heading (0.6808ms)\n✔ fires frame wider than vessels — a fire is read by its surroundings (0.4788ms)\n✔ every framing is a real oblique standoff, not a nadir or an inside-out sphere (0.7033ms)\n✔ unknown kinds and missing viewers issue no flight (0.4996ms)\nℹ tests 9402\nℹ suites 0\nℹ pass 9392\nℹ fail 0\nℹ cancelled 0\nℹ skipped 10\nℹ todo 0\nℹ duration_ms 555433.8857\n✔ converged focus treatment stays within the GC-bracketed allocation budget (7065.0586ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7339.8514\n✔ steady moving-source frames stay in budget below collision capacity (8883.5533ms)\n✔ steady moving-source frames stay in budget above collision capacity (11935.6081ms)\n✔ steady moving-source frames stay in budget with both local infrastructure sources live (10680.0563ms)\n✔ steady moving-source frames stay in budget with infrastructure and FIRMS live (9648.8005ms)\n✔ steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live (13090.6614ms)\n✔ steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live (20312.5584ms)\n✔ steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live (13790.3753ms)\n✔ steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort (3748.2154ms)\n✔ steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface) (15295.3107ms)\n✔ steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live (11874.0218ms)\n✔ steady moving-source frames stay in budget with every shared-host source and bounded Radio text live (13912.7606ms)\n✔ steady moving-source frames stay in budget with the bounded submarine-cable reference cohort (5869.7027ms)\n✔ steady moving-source frames stay in budget with the air-quality station cohort live (3897.6579ms)\n✔ steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations (17958.6733ms)\nℹ tests 14\nℹ suites 0\nℹ pass 14\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 166293.7866\n"
+    },
+    {
+      "id": "production-build",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run build",
+      "output": "\n> gods-eye-view@0.2.1 prebuild\n> node scripts/apply-cesium-patches.mjs\n\n[cesium-patch] all supported distributions already patched\n\n> gods-eye-view@0.2.1 build\n> vite build\n\nvite v6.4.3 building for production...\ntransforming...\n✓ 926 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/assets/alpr-marker-selected-brackets-LQ7qLcLT.png      4.73 kB\ndist/assets/sdrAudioWorklet-DNmTAQpk.js                     5.15 kB\ndist/assets/alpr-marker-selected-WmayY1kQ.png              10.26 kB\ndist/assets/alpr-marker-normal-COAu686W.png                13.20 kB\ndist/assets/sdr.worker-DNAvcPug.js                         56.34 kB\ndist/index.html                                            88.02 kB │ gzip:    18.59 kB\ndist/assets/san-francisco-DAzZI0CW.json                   222.17 kB │ gzip:    54.75 kB\ndist/assets/landing-point-geo-CiAWPhfe.json               359.27 kB │ gzip:    72.57 kB\ndist/assets/marine-DXAJTUe1.json                          633.34 kB │ gzip:   223.15 kB\ndist/assets/cable-geo-i2PzBJi6.json                       728.31 kB │ gzip:   242.78 kB\ndist/assets/dams-B2lCjFgp.geojsonl                        730.28 kB\ndist/assets/countries-SEaBbd1J.json                       945.84 kB │ gzip:   359.84 kB\ndist/assets/counties-rSPaNADv.json                      1,541.46 kB │ gzip:   531.92 kB\ndist/assets/regions-B5_P_EZ3.json                       1,987.10 kB │ gzip:   683.45 kB\ndist/assets/datacenters-CtzejECr.geojsonl               2,561.98 kB\ndist/assets/states_provinces-DttMB0VZ.json              3,648.92 kB │ gzip: 1,260.07 kB\ndist/assets/names-DA56NpEe.json                         3,856.48 kB │ gzip: 1,716.21 kB\ndist/assets/mapillary-1hssAPdu.css                         84.24 kB │ gzip:    23.67 kB\ndist/assets/index-BpqYk2mD.css                            335.12 kB │ gzip:    57.84 kB\ndist/assets/services-V6NtavJR.js                            2.27 kB │ gzip:     1.09 kB\ndist/assets/places-DZED1K7i.js                              9.36 kB │ gzip:     3.57 kB\ndist/assets/index-CGqcZNpt.js                              84.60 kB │ gzip:    27.81 kB\ndist/assets/hls-bsuTaLC4.js                               595.07 kB │ gzip:   185.87 kB\ndist/assets/mapillary.module-CNpf_Czj.js                1,061.85 kB │ gzip:   273.75 kB\ndist/assets/egm96-universal.esm-D6y_VLZc.js             2,770.50 kB │ gzip: 1,849.99 kB\ndist/assets/index-BBRFU2-k.js                           3,902.85 kB │ gzip: 1,216.62 kB\n✓ built in 21.82s\n\n(!) Some chunks are larger than 1500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n"
+    },
+    {
+      "id": "validation-harness",
+      "required": true,
+      "status": "passed",
+      "summary": "The separately committed validation harness must remain clean."
+    },
+    {
+      "id": "workspace-library",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:workspaces -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:workspaces\n> node scripts/qa-workspace-library.mjs --url http://127.0.0.1:4195\n\nPASS workspace Save as creates a durable revision\nPASS duplicate and open restore a saved workspace\nPASS stale two-tab save is reported without overwriting\nPASS reload retains and reopens the workspace\nPASS command palette search and Escape dismissal\nPASS GeoJSON preview, explicit apply, save and reload rendering\nPASS offline demo is clearly synthetic and saved as its own workspace\nPASS a separate same-origin browser page commits IndexedDB revision and stale UI Save surfaces the conflict\n"
+    },
+    {
+      "id": "public-references",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:references -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:references\n> node scripts/qa-evidence-references.mjs --url http://127.0.0.1:4195\n\nPASS selected datacenter provenance, explicit archive attachment, PeeringDB, pin/save/reload/profile transfer and late-response isolation\n"
+    },
+    {
+      "id": "accessibility-automation",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:accessibility -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:accessibility\n> node scripts/qa-accessibility.mjs --url http://127.0.0.1:4195\n\n{\n  \"scope\": \"automated-keyboard-ax-reflow\",\n  \"browser\": \"Chrome/152.0.7977.75\",\n  \"timestamp\": \"2026-10-18T00:16:13.536Z\",\n  \"checks\": [\n    \"palette-keyboard-discovery\",\n    \"palette-focus-restoration\",\n    \"inspector-focus-restoration\",\n    \"visible-control-accessible-names\",\n    \"scoped-status-announcements\",\n    \"720-css-pixel-reflow\"\n  ],\n  \"accessibilityFocusProbeInstalled\": true,\n  \"accessibleControls\": [\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"button\",\n      \"name\": \"Collapse panel\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"button\",\n      \"name\": \"Close evidence inspector\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"button\",\n      \"name\": \"Find archived copy\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"textbox\",\n      \"name\": \"Public reference URL\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"button\",\n      \"name\": \"Attach public reference\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"textbox\",\n      \"name\": \"PeeringDB facility URL\"\n    },\n    {\n      \"surface\": \"#evidence-panel\",\n      \"role\": \"button\",\n      \"name\": \"Attach facility\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Saved investigation\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"SAVE\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"SAVE AS\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"OPEN\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"DUPLICATE\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"EXPORT\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"RECOVER\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"DELETE\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"SHOW SYNTHETIC OFFLINE DEMO\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"Undo authored change\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"Redo authored change\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Prior complete revision\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"Import backup\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"textbox\",\n      \"name\": \"Name\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"listbox\",\n      \"name\": \"Query data layers\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Query geographic scope\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Optional filter field\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Filter operator\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"textbox\",\n      \"name\": \"Filter value\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Result ordering\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Direction\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"spinbutton\",\n      \"name\": \"Maximum listed\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"combobox\",\n      \"name\": \"Saved query\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"SAVE QUERY\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"LOAD QUERY\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"RUN AT SELECTED TIME\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"PIN RESULT\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"File\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"textbox\",\n      \"name\": \"Attribution\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"PIN AS A\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"PIN AS B\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"COMPARE A / B\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"JSON\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"CSV\"\n    },\n    {\n      \"surface\": \".workspace-library\",\n      \"role\": \"button\",\n      \"name\": \"MARKDOWN\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"spinbutton\",\n      \"name\": \"Latitude\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"spinbutton\",\n      \"name\": \"Longitude\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"spinbutton\",\n      \"name\": \"Radius (km)\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Start aircraft capture\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Stop aircraft capture\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Start vessel capture\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Stop vessel capture\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"combobox\",\n      \"name\": \"Saved aircraft recording\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"combobox\",\n      \"name\": \"Saved vessel recording\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"‹\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"slider\",\n      \"name\": \"Observed history\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"›\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Latest\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Play\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"combobox\",\n      \"name\": \"Replay speed\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Export\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Import bundle\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Delete\"\n    },\n    {\n      \"surface\": \".investigation-timeline\",\n      \"role\": \"button\",\n      \"name\": \"Return live\"\n    }\n  ],\n  \"announcements\": 9,\n  \"reflow\": {\n    \"width\": 620,\n    \"left\": 50,\n    \"right\": 670,\n    \"viewport\": 720,\n    \"contentWidth\": 618,\n    \"clientWidth\": 618\n  },\n  \"humanReviewValidated\": false,\n  \"limitation\": \"720 CSS pixels at DPR 2 checks layout equivalent to 200% of a 1440px viewport; it is not a human browser-zoom, contrast or screen-reader review.\"\n}\n"
+    },
+    {
+      "id": "timeline",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:timeline -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:timeline\n> node scripts/qa-investigation-timeline.mjs --url http://127.0.0.1:4195\n\nInvestigation timeline browser QA passed: aligned replay, visible gaps, source-policy denials, bounded capture controls, return to live and recording transfer into a fresh browser profile.\n"
+    },
+    {
+      "id": "recording",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:recording -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:recording\n> node scripts/qa-aircraft-recording.mjs --url http://127.0.0.1:4195\n\nAircraft recording browser QA passed: bounded antimeridian capture, 60-minute stop, durable reload and gap metadata.\n"
+    },
+    {
+      "id": "evidence-panel",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:evidence-panel -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:evidence-panel\n> node scripts/qa-evidence-panel.mjs --url http://127.0.0.1:4195\n\nPASS: aircraft, AIS, orbital-epoch and forecast evidence, analyst-card keyboard pinning, immutable snapshots, desktop/narrow layout, safe source links, keyboard focus return, unsupported selection and teardown\n"
+    },
+    {
+      "id": "panel-resize",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:panel-resize -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:panel-resize\n> node scripts/qa-panel-resize.mjs --url http://127.0.0.1:4195\n\nPASS: header drag lifts CCTV out of the rail\nPASS: eight resize handles keep the opposite edge pinned\nPASS: minimum size holds from both corners\nPASS: reload restores position and size\nPASS: a collapsed window keeps its height through a drag and a reload\nPASS: header double-click returns the panel to the rail\nPASS: no page errors and no render-loop errors\n"
+    },
+    {
+      "id": "render-resolution",
+      "required": true,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "npm.cmd run qa:render-resolution -- --url http://127.0.0.1:4195",
+      "output": "\n> gods-eye-view@0.2.1 qa:render-resolution\n> node scripts/qa-render-resolution.mjs --url http://127.0.0.1:4195\n\nPASS: constrained WebGL cap, quality restoration, and view-preserving context-loss recovery\n"
+    },
+    {
+      "id": "performance-comparison",
+      "required": true,
+      "status": "passed",
+      "summary": "Acceptance policy: gev-cesium-acceptance/2026-10-15. dense-motion: missed (actual -7.1%; target 20%). selected-aircraft-tracking: missed (actual -6.7%; target 20%). Observed workloads: dense-investigation, infrastructure, map-streaming, operating-view, selected-aircraft-tracking, weather-effects.",
+      "result": {
+        "acceptancePolicyId": "gev-cesium-acceptance/2026-10-15",
+        "status": "passed",
+        "failures": [],
+        "pending": [],
+        "performanceObjectives": [
+          {
+            "id": "dense-motion",
+            "scenario": "scripted-motion",
+            "targetImprovementPct": 20,
+            "actualImprovementPct": -7.121303568358392,
+            "status": "missed"
+          },
+          {
+            "id": "selected-aircraft-tracking",
+            "scenario": "selected-aircraft-tracking",
+            "targetImprovementPct": 20,
+            "actualImprovementPct": -6.727335559320105,
+            "status": "missed"
+          }
+        ],
+        "missingWorkloads": [],
+        "workloadIds": [
+          "dense-investigation",
+          "infrastructure",
+          "map-streaming",
+          "operating-view",
+          "selected-aircraft-tracking",
+          "weather-effects"
+        ],
+        "workloadValidationModes": {
+          "operating-view": "five-pair-timed",
+          "dense-investigation": "five-pair-timed",
+          "selected-aircraft-tracking": "five-pair-timed",
+          "infrastructure": "five-pair-timed-all-four-variants",
+          "weather-effects": "five-pair-timed",
+          "lifecycle-stress": "full-soak-retention",
+          "map-streaming": "five-pair-timed-contract-required"
+        },
+        "infrastructureVariantCoverage": {
+          "requiredVariants": [
+            "infrastructure-datacenters",
+            "infrastructure-dams",
+            "infrastructure-cables",
+            "infrastructure"
+          ],
+          "observedVariants": [
+            "infrastructure",
+            "infrastructure-cables",
+            "infrastructure-dams",
+            "infrastructure-datacenters"
+          ],
+          "missingVariants": []
+        },
+        "environments": [
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "austin-operating-v1",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "dense-investigation",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-datacenters",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-dams",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure-cables",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "infrastructure",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "weather-effects",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          },
+          {
+            "environmentId": "windows-primary",
+            "workloadId": "austin-map-streaming-v1",
+            "status": "measured",
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "reason": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "performance-retention",
+      "required": true,
+      "status": "passed",
+      "summary": "Observed environments: 2.",
+      "result": {
+        "status": "passed",
+        "failures": [],
+        "pending": [],
+        "environments": [
+          {
+            "environmentId": "windows-primary",
+            "status": "passed",
+            "primaryEligible": true,
+            "renderer": {
+              "kind": "native-gpu",
+              "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": true,
+              "hosted": false,
+              "hostIdentityComplete": true
+            },
+            "artifact": {
+              "path": "qa-s60-final-hardware-1b92b573.json",
+              "sha256": "58f3d36024e0a10d9c023cf0c67dc93eeba0fcfc61893771791c18dd30135b6c"
+            },
+            "stability": {
+              "status": "passed",
+              "failures": [],
+              "pending": [],
+              "heapGrowthRatio": 0.008868355171993391
+            },
+            "errors": [],
+            "pending": [],
+            "reason": null
+          },
+          {
+            "environmentId": "hosted-macos",
+            "status": "supplemental",
+            "primaryEligible": false,
+            "renderer": {
+              "kind": "apple-paravirtual-metal",
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": false,
+              "hosted": true,
+              "hostIdentityComplete": true
+            },
+            "artifact": {
+              "path": "ci-final-1b92/run-39035840601/hosted-soak-39035840601/hosted-native-renderer.json",
+              "sha256": "0862fcac5dde3d922e0b12b1277b88213140c199fa28abc376200876dd02cf2a"
+            },
+            "stability": {
+              "status": "passed",
+              "failures": [],
+              "pending": [],
+              "heapGrowthRatio": 0.01996880565174696
+            },
+            "errors": [],
+            "pending": [],
+            "reason": "Supplemental retention evidence; physical Windows native-GPU evidence is required for acceptance."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-installs",
+      "required": true,
+      "status": "passed",
+      "summary": "Clean install and upgrade on Windows, macOS and Linux with a prior supported workspace. (pre-release; GitHub-hosted Windows, macOS, and Ubuntu exact-commit recovery jobs)",
+      "validation": {
+        "id": "platform-installs",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "GitHub-hosted Windows, macOS, and Ubuntu exact-commit recovery jobs",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "ci-final-1b92/run-39035842437/profile-recovery-windows-latest/profile-recovery.json",
+          "ci-final-1b92/run-39035842437/profile-recovery-macos-latest/profile-recovery.json",
+          "ci-final-1b92/run-39035842437/profile-recovery-ubuntu-latest/profile-recovery.json"
+        ],
+        "notes": "Clean install, upgrade, rollback, and persisted-workspace recovery passed on all three supported platforms."
+      }
+    },
+    {
+      "id": "mixed-use-soak",
+      "required": true,
+      "status": "passed",
+      "summary": "60-minute mixed-use run, repeated source toggles, replay seeks, workspace switching, imports and recovery. (pre-release; Physical Windows 10, Intel UHD 620, Chrome 154)",
+      "validation": {
+        "id": "mixed-use-soak",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "Physical Windows 10, Intel UHD 620, Chrome 154",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "qa-s60-final-hardware-1b92b573.json"
+        ],
+        "notes": "Completed the 60-minute mixed-use fixture soak with bounded retained resources and post-GC checkpoints."
+      }
+    },
+    {
+      "id": "hardware-matrix",
+      "required": true,
+      "status": "passed",
+      "summary": "Repeat renderer captures on named supported hardware; software rendering is not GPU evidence. (pre-release; Primary physical Windows Intel UHD 620; hosted macOS supplemental)",
+      "validation": {
+        "id": "hardware-matrix",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "passed",
+        "environment": "Primary physical Windows Intel UHD 620; hosted macOS supplemental",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [
+          "qa-s60-final-evidence-index-1b92b573.json"
+        ],
+        "notes": "All eight matched workload pairs are comparable on the required physical Windows machine under the amended acceptance policy."
+      }
+    },
+    {
+      "id": "accessibility-review",
+      "required": true,
+      "status": "pending",
+      "summary": "Manual keyboard, screen reader, 200% zoom, contrast and five-participant first-task study. (pre-release; Human NVDA/Windows, VoiceOver/macOS, and first-use participant review unavailable)",
+      "validation": {
+        "id": "accessibility-review",
+        "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+        "status": "pending",
+        "environment": "Human NVDA/Windows, VoiceOver/macOS, and first-use participant review unavailable",
+        "timestamp": "2026-10-17T23:31:26.328Z",
+        "artifacts": [],
+        "notes": "Automation is available; the required human screen-reader and five-participant evidence has not been fabricated."
+      }
+    },
+    {
+      "id": "release-tag-match",
+      "required": true,
+      "status": "pending",
+      "summary": "Confirm the tested commit equals the signed/tagged release commit and verify published checksums."
+    }
+  ]
+}

@@ -1,0 +1,3116 @@
+{
+  "scope": "rendered-application-fixtures",
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "",
+        "device": "Intel(R) UHD Graphics 620",
+        "driver": "30.0.101.1338"
+      },
+      {
+        "vendor": "",
+        "device": "Microsoft Basic Render Driver",
+        "driver": "10.0.19041.7802"
+      }
+    ]
+  },
+  "renderingEvidence": {
+    "kind": "native-gpu",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": true
+  },
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "logicalCpus": 8,
+    "memoryBytes": 16907538432,
+    "hosted": false,
+    "runnerImage": null,
+    "runnerImageVersion": null
+  },
+  "applicationCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "workerPreflight": {
+    "status": "passed",
+    "durationMs": 176.79999999701977,
+    "tasks": [
+      {
+        "id": "geometry-cold",
+        "outcome": "resolved"
+      },
+      {
+        "id": "geometry-reuse",
+        "outcome": "resolved"
+      },
+      {
+        "id": "geometry-error",
+        "outcome": "rejected-as-expected"
+      },
+      {
+        "id": "geometry-recovery",
+        "outcome": "resolved"
+      }
+    ],
+    "network": {
+      "status": "passed",
+      "interceptedWorkerRequests": 3
+    }
+  },
+  "startupPrewarm": {
+    "status": "passed",
+    "durationMs": 5554
+  },
+  "warmupIterations": 2,
+  "firstRetainedMetrics": {
+    "Timestamp": 111524.175151,
+    "Documents": 9,
+    "Frames": 7,
+    "JSEventListeners": 664,
+    "Nodes": 6339,
+    "LayoutCount": 1070,
+    "RecalcStyleCount": 1266,
+    "LayoutDuration": 1.224903,
+    "RecalcStyleDuration": 2.380314,
+    "ScriptDuration": 535.139085,
+    "TaskDuration": 568.747101,
+    "JSHeapUsedSize": 255613884,
+    "JSHeapTotalSize": 278573056,
+    "documents": 9,
+    "nodes": 6343,
+    "jsEventListeners": 666,
+    "application": {
+      "resources": {
+        "dataSources": 3,
+        "entities": 12,
+        "primitives": 5,
+        "groundPrimitives": 1,
+        "imageryLayers": 1,
+        "dataLayers": 32,
+        "renderHolds": 0,
+        "scheduledUpdates": 0,
+        "ownerResources": {
+          "maps": {
+            "listeners": 4,
+            "pendingJobs": 0,
+            "primitives": 0,
+            "cacheEntries": 3,
+            "imageryLayers": 1,
+            "estimatedTileBytes": 0,
+            "providerLoadsStarted": 3,
+            "providerCacheReuses": 4,
+            "providerLoadFailures": 0
+          },
+          "imports": {
+            "pendingJobs": 0,
+            "cacheEntries": 1,
+            "pointRepresentation": "primitive-collection",
+            "pointPrimitiveCount": 1,
+            "pointPrimitiveCountUnit": "instances",
+            "pointPrimitiveCoverage": "owned-import-point-collection"
+          },
+          "satellites": {
+            "listeners": 0,
+            "pendingJobs": 0,
+            "primitives": 0,
+            "entities": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          },
+          "cctv": {
+            "listeners": 5,
+            "timers": 0,
+            "pendingJobs": 0,
+            "primitives": 1,
+            "entities": 12,
+            "dataSources": 0,
+            "cacheEntries": 4
+          },
+          "local-datacenters": {
+            "listeners": 1,
+            "timers": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 1
+          },
+          "local-dams": {
+            "listeners": 0,
+            "timers": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          },
+          "telegeography-submarine-cables": {
+            "listeners": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          }
+        }
+      },
+      "scene": {
+        "renderedFrameCount": 299
+      },
+      "timings": {
+        "gpuExecutionMs": null,
+        "frameIntervalScope": "completed-frame-wall-time",
+        "applicationCpu": null,
+        "overlayProjectionMs": 0.09999999403953552,
+        "overlayPlacementMs": 0.10000000894069672,
+        "overlayPaintMs": 0.4000000059604645
+      },
+      "workers": {
+        "instrumented": true,
+        "overflow": false,
+        "pending": 0,
+        "workers": [
+          {
+            "kind": "opaque-worker",
+            "submitted": 294,
+            "completed": 294,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 0,
+            "completed": 0,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": true,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 151,
+            "completed": 151,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 92,
+            "completed": 92,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 39,
+            "completed": 39,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 28,
+            "completed": 28,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 28,
+            "completed": 28,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 14,
+            "completed": 14,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 14,
+            "completed": 14,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 14,
+            "completed": 14,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 65,
+            "completed": 65,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          }
+        ]
+      }
+    },
+    "renderedFrames": 255,
+    "garbageCollection": {
+      "status": "completed",
+      "method": "HeapProfiler.collectGarbage"
+    }
+  },
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "metrics": {
+        "Timestamp": 111524.175151,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6339,
+        "LayoutCount": 1070,
+        "RecalcStyleCount": 1266,
+        "LayoutDuration": 1.224903,
+        "RecalcStyleDuration": 2.380314,
+        "ScriptDuration": 535.139085,
+        "TaskDuration": 568.747101,
+        "JSHeapUsedSize": 255613884,
+        "JSHeapTotalSize": 278573056,
+        "documents": 9,
+        "nodes": 6343,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 4,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 299
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.09999999403953552,
+            "overlayPlacementMs": 0.10000000894069672,
+            "overlayPaintMs": 0.4000000059604645
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 151,
+                "completed": 151,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 92,
+                "completed": 92,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 39,
+                "completed": 39,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 28,
+                "completed": 28,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 28,
+                "completed": 28,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 14,
+                "completed": 14,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 14,
+                "completed": 14,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 14,
+                "completed": 14,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 65,
+                "completed": 65,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 255,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 325664,
+      "metrics": {
+        "Timestamp": 111849.844642,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6340,
+        "LayoutCount": 1422,
+        "RecalcStyleCount": 1665,
+        "LayoutDuration": 1.759226,
+        "RecalcStyleDuration": 3.244878,
+        "ScriptDuration": 845.684184,
+        "TaskDuration": 893.95742,
+        "JSHeapUsedSize": 260964240,
+        "JSHeapTotalSize": 288010240,
+        "documents": 9,
+        "nodes": 6344,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 6,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 370
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.20000000298023224,
+            "overlayPlacementMs": 0,
+            "overlayPaintMs": 0.4000000059604645
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 185,
+                "completed": 185,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 110,
+                "completed": 110,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 51,
+                "completed": 51,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 39,
+                "completed": 39,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 39,
+                "completed": 39,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 20,
+                "completed": 20,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 20,
+                "completed": 20,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 20,
+                "completed": 20,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 83,
+                "completed": 83,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 334,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 893445,
+      "metrics": {
+        "Timestamp": 112417.628963,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6347,
+        "LayoutCount": 2159,
+        "RecalcStyleCount": 2477,
+        "LayoutDuration": 2.714724,
+        "RecalcStyleDuration": 4.977157,
+        "ScriptDuration": 1384.197524,
+        "TaskDuration": 1460.720478,
+        "JSHeapUsedSize": 262132412,
+        "JSHeapTotalSize": 316059648,
+        "documents": 9,
+        "nodes": 6350,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 10,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 492
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0,
+            "overlayPlacementMs": 0.10000000894069672,
+            "overlayPaintMs": 0.19999998807907104
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 146,
+                "completed": 146,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 75,
+                "completed": 75,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 61,
+                "completed": 61,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 61,
+                "completed": 61,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 32,
+                "completed": 32,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 32,
+                "completed": 32,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 32,
+                "completed": 32,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 119,
+                "completed": 119,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 457,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 1217366,
+      "metrics": {
+        "Timestamp": 112741.542558,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6358,
+        "LayoutCount": 2569,
+        "RecalcStyleCount": 2940,
+        "LayoutDuration": 3.214908,
+        "RecalcStyleDuration": 5.886122,
+        "ScriptDuration": 1693.978518,
+        "TaskDuration": 1784.295268,
+        "JSHeapUsedSize": 262678368,
+        "JSHeapTotalSize": 294563840,
+        "documents": 9,
+        "nodes": 6361,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 12,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 563
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.10000000894069672,
+            "overlayPlacementMs": 0.19999998807907104,
+            "overlayPaintMs": 0.4000000059604645
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 164,
+                "completed": 164,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 87,
+                "completed": 87,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 72,
+                "completed": 72,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 72,
+                "completed": 72,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 38,
+                "completed": 38,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 38,
+                "completed": 38,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 38,
+                "completed": 38,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 137,
+                "completed": 137,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 520,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 1803378,
+      "metrics": {
+        "Timestamp": 113327.561573,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6357,
+        "LayoutCount": 3374,
+        "RecalcStyleCount": 3847,
+        "LayoutDuration": 4.221136,
+        "RecalcStyleDuration": 7.774079,
+        "ScriptDuration": 2250.720619,
+        "TaskDuration": 2369.484335,
+        "JSHeapUsedSize": 263032316,
+        "JSHeapTotalSize": 313962496,
+        "documents": 9,
+        "nodes": 6360,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 16,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 704
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.20000000298023224,
+            "overlayPlacementMs": 0,
+            "overlayPaintMs": 0.29999999701976776
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 200,
+                "completed": 200,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 111,
+                "completed": 111,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 94,
+                "completed": 94,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 94,
+                "completed": 94,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 50,
+                "completed": 50,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 50,
+                "completed": 50,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 50,
+                "completed": 50,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 173,
+                "completed": 173,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 658,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 2319408,
+      "metrics": {
+        "Timestamp": 113843.583331,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 662,
+        "Nodes": 6365,
+        "LayoutCount": 4084,
+        "RecalcStyleCount": 4648,
+        "LayoutDuration": 5.179244,
+        "RecalcStyleDuration": 9.447049,
+        "ScriptDuration": 2737.096106,
+        "TaskDuration": 2884.660598,
+        "JSHeapUsedSize": 263542628,
+        "JSHeapTotalSize": 322351104,
+        "documents": 9,
+        "nodes": 6367,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 20,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 824
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.10000000894069672,
+            "overlayPlacementMs": 0.09999999403953552,
+            "overlayPaintMs": 0.4000000059604645
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 236,
+                "completed": 236,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 135,
+                "completed": 135,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 116,
+                "completed": 116,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 116,
+                "completed": 116,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 62,
+                "completed": 62,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 62,
+                "completed": 62,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 62,
+                "completed": 62,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 209,
+                "completed": 209,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 785,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 2779444,
+      "metrics": {
+        "Timestamp": 114303.636894,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 668,
+        "Nodes": 6382,
+        "LayoutCount": 4783,
+        "RecalcStyleCount": 5443,
+        "LayoutDuration": 6.062199,
+        "RecalcStyleDuration": 11.198214,
+        "ScriptDuration": 3166.486828,
+        "TaskDuration": 3343.078476,
+        "JSHeapUsedSize": 264180612,
+        "JSHeapTotalSize": 326545408,
+        "documents": 9,
+        "nodes": 6384,
+        "jsEventListeners": 668,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 24,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 955
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0,
+            "overlayPlacementMs": 0,
+            "overlayPaintMs": 0.5
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 272,
+                "completed": 272,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 159,
+                "completed": 159,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 138,
+                "completed": 138,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 138,
+                "completed": 138,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 74,
+                "completed": 74,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 74,
+                "completed": 74,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 74,
+                "completed": 74,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 245,
+                "completed": 245,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 915,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 3265549,
+      "metrics": {
+        "Timestamp": 114789.732407,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 662,
+        "Nodes": 6386,
+        "LayoutCount": 5446,
+        "RecalcStyleCount": 6184,
+        "LayoutDuration": 6.948338,
+        "RecalcStyleDuration": 12.832007,
+        "ScriptDuration": 3624.303068,
+        "TaskDuration": 3828.464391,
+        "JSHeapUsedSize": 264747564,
+        "JSHeapTotalSize": 334671872,
+        "documents": 9,
+        "nodes": 6388,
+        "jsEventListeners": 668,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 28,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 1070
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.20000000298023224,
+            "overlayPlacementMs": 0.09999999403953552,
+            "overlayPaintMs": 0.30000001192092896
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 308,
+                "completed": 308,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 183,
+                "completed": 183,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 160,
+                "completed": 160,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 160,
+                "completed": 160,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 86,
+                "completed": 86,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 86,
+                "completed": 86,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 86,
+                "completed": 86,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 281,
+                "completed": 281,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 1036,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 3803264,
+      "metrics": {
+        "Timestamp": 115327.445867,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6393,
+        "LayoutCount": 6157,
+        "RecalcStyleCount": 6987,
+        "LayoutDuration": 7.850882,
+        "RecalcStyleDuration": 14.528784,
+        "ScriptDuration": 4133.381576,
+        "TaskDuration": 4365.371451,
+        "JSHeapUsedSize": 265355576,
+        "JSHeapTotalSize": 330215424,
+        "documents": 9,
+        "nodes": 6396,
+        "jsEventListeners": 666,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 32,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 1186
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.10000000894069672,
+            "overlayPlacementMs": 0,
+            "overlayPaintMs": 0.3999999910593033
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 344,
+                "completed": 344,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 207,
+                "completed": 207,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 182,
+                "completed": 182,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 182,
+                "completed": 182,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 317,
+                "completed": 317,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 1143,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    },
+    {
+      "elapsedMs": 3804333,
+      "metrics": {
+        "Timestamp": 115328.520467,
+        "Documents": 9,
+        "Frames": 7,
+        "JSEventListeners": 664,
+        "Nodes": 6342,
+        "LayoutCount": 6197,
+        "RecalcStyleCount": 7027,
+        "LayoutDuration": 7.893332,
+        "RecalcStyleDuration": 14.606442,
+        "ScriptDuration": 4133.440189,
+        "TaskDuration": 4366.370508,
+        "JSHeapUsedSize": 265364980,
+        "JSHeapTotalSize": 285126656,
+        "documents": 9,
+        "nodes": 6344,
+        "jsEventListeners": 664,
+        "application": {
+          "resources": {
+            "dataSources": 3,
+            "entities": 12,
+            "primitives": 5,
+            "groundPrimitives": 1,
+            "imageryLayers": 1,
+            "dataLayers": 32,
+            "renderHolds": 0,
+            "scheduledUpdates": 0,
+            "ownerResources": {
+              "maps": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "cacheEntries": 3,
+                "imageryLayers": 1,
+                "estimatedTileBytes": 0,
+                "providerLoadsStarted": 3,
+                "providerCacheReuses": 32,
+                "providerLoadFailures": 0
+              },
+              "imports": {
+                "pendingJobs": 0,
+                "cacheEntries": 1,
+                "pointRepresentation": "primitive-collection",
+                "pointPrimitiveCount": 1,
+                "pointPrimitiveCountUnit": "instances",
+                "pointPrimitiveCoverage": "owned-import-point-collection"
+              },
+              "satellites": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "primitives": 0,
+                "entities": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "cctv": {
+                "listeners": 5,
+                "timers": 0,
+                "pendingJobs": 0,
+                "primitives": 1,
+                "entities": 12,
+                "dataSources": 0,
+                "cacheEntries": 4
+              },
+              "local-datacenters": {
+                "listeners": 1,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 1
+              },
+              "local-dams": {
+                "listeners": 0,
+                "timers": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              },
+              "telegeography-submarine-cables": {
+                "listeners": 0,
+                "pendingJobs": 0,
+                "dataSources": 0,
+                "cacheEntries": 0
+              }
+            }
+          },
+          "scene": {
+            "renderedFrameCount": 1186
+          },
+          "timings": {
+            "gpuExecutionMs": null,
+            "frameIntervalScope": "completed-frame-wall-time",
+            "applicationCpu": null,
+            "overlayProjectionMs": 0.10000000894069672,
+            "overlayPlacementMs": 0,
+            "overlayPaintMs": 0.3999999910593033
+          },
+          "workers": {
+            "instrumented": true,
+            "overflow": false,
+            "pending": 0,
+            "workers": [
+              {
+                "kind": "opaque-worker",
+                "submitted": 294,
+                "completed": 294,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": true,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 192,
+                "completed": 192,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 344,
+                "completed": 344,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 207,
+                "completed": 207,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 182,
+                "completed": 182,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 182,
+                "completed": 182,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 98,
+                "completed": 98,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 317,
+                "completed": 317,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "terminated": false,
+                "pending": 0,
+                "oldestPendingMs": 0
+              }
+            ]
+          }
+        },
+        "renderedFrames": 1143,
+        "garbageCollection": {
+          "status": "completed",
+          "method": "HeapProfiler.collectGarbage"
+        }
+      }
+    }
+  ],
+  "hardwareRenderingValidated": true,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "operationStatus": "passed",
+  "iterations": 14,
+  "sourceToggles": 112,
+  "replaySeeks": 14,
+  "imports": 14,
+  "workspaceReloads": 28,
+  "archiveFailures": 14,
+  "cameraRecoveries": 14,
+  "durationMs": 3804333,
+  "fullSoak": true,
+  "peakHeapBytes": 330760156,
+  "firstMetrics": {
+    "Timestamp": 111849.009564,
+    "Documents": 9,
+    "Frames": 7,
+    "JSEventListeners": 767,
+    "Nodes": 8866,
+    "LayoutCount": 1411,
+    "RecalcStyleCount": 1654,
+    "LayoutDuration": 1.743564,
+    "RecalcStyleDuration": 3.224437,
+    "ScriptDuration": 845.657475,
+    "TaskDuration": 893.123446,
+    "JSHeapUsedSize": 323312172,
+    "JSHeapTotalSize": 470433792
+  },
+  "lastMetrics": {
+    "Timestamp": 115326.521172,
+    "Documents": 9,
+    "Frames": 7,
+    "JSEventListeners": 767,
+    "Nodes": 9130,
+    "LayoutCount": 6146,
+    "RecalcStyleCount": 6974,
+    "LayoutDuration": 7.835043,
+    "RecalcStyleDuration": 14.500336,
+    "ScriptDuration": 4133.353363,
+    "TaskDuration": 4364.447925,
+    "JSHeapUsedSize": 329099132,
+    "JSHeapTotalSize": 548290560
+  },
+  "lastRetainedMetrics": {
+    "Timestamp": 115328.520467,
+    "Documents": 9,
+    "Frames": 7,
+    "JSEventListeners": 664,
+    "Nodes": 6342,
+    "LayoutCount": 6197,
+    "RecalcStyleCount": 7027,
+    "LayoutDuration": 7.893332,
+    "RecalcStyleDuration": 14.606442,
+    "ScriptDuration": 4133.440189,
+    "TaskDuration": 4366.370508,
+    "JSHeapUsedSize": 265364980,
+    "JSHeapTotalSize": 285126656,
+    "documents": 9,
+    "nodes": 6344,
+    "jsEventListeners": 664,
+    "application": {
+      "resources": {
+        "dataSources": 3,
+        "entities": 12,
+        "primitives": 5,
+        "groundPrimitives": 1,
+        "imageryLayers": 1,
+        "dataLayers": 32,
+        "renderHolds": 0,
+        "scheduledUpdates": 0,
+        "ownerResources": {
+          "maps": {
+            "listeners": 4,
+            "pendingJobs": 0,
+            "primitives": 0,
+            "cacheEntries": 3,
+            "imageryLayers": 1,
+            "estimatedTileBytes": 0,
+            "providerLoadsStarted": 3,
+            "providerCacheReuses": 32,
+            "providerLoadFailures": 0
+          },
+          "imports": {
+            "pendingJobs": 0,
+            "cacheEntries": 1,
+            "pointRepresentation": "primitive-collection",
+            "pointPrimitiveCount": 1,
+            "pointPrimitiveCountUnit": "instances",
+            "pointPrimitiveCoverage": "owned-import-point-collection"
+          },
+          "satellites": {
+            "listeners": 0,
+            "pendingJobs": 0,
+            "primitives": 0,
+            "entities": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          },
+          "cctv": {
+            "listeners": 5,
+            "timers": 0,
+            "pendingJobs": 0,
+            "primitives": 1,
+            "entities": 12,
+            "dataSources": 0,
+            "cacheEntries": 4
+          },
+          "local-datacenters": {
+            "listeners": 1,
+            "timers": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 1
+          },
+          "local-dams": {
+            "listeners": 0,
+            "timers": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          },
+          "telegeography-submarine-cables": {
+            "listeners": 0,
+            "pendingJobs": 0,
+            "dataSources": 0,
+            "cacheEntries": 0
+          }
+        }
+      },
+      "scene": {
+        "renderedFrameCount": 1186
+      },
+      "timings": {
+        "gpuExecutionMs": null,
+        "frameIntervalScope": "completed-frame-wall-time",
+        "applicationCpu": null,
+        "overlayProjectionMs": 0.10000000894069672,
+        "overlayPlacementMs": 0,
+        "overlayPaintMs": 0.3999999910593033
+      },
+      "workers": {
+        "instrumented": true,
+        "overflow": false,
+        "pending": 0,
+        "workers": [
+          {
+            "kind": "opaque-worker",
+            "submitted": 294,
+            "completed": 294,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 0,
+            "completed": 0,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": true,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 192,
+            "completed": 192,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 344,
+            "completed": 344,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 207,
+            "completed": 207,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 182,
+            "completed": 182,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 182,
+            "completed": 182,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 98,
+            "completed": 98,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 98,
+            "completed": 98,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 98,
+            "completed": 98,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 317,
+            "completed": 317,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          }
+        ]
+      }
+    },
+    "renderedFrames": 1143,
+    "garbageCollection": {
+      "status": "completed",
+      "method": "HeapProfiler.collectGarbage"
+    }
+  },
+  "stability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.008868355171993391
+  },
+  "recordingBundleExport": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\qa-s60-final-recording-1b92b573.json",
+    "format": "gods-eye-view-recording-bundle",
+    "version": 1,
+    "recordingId": "recording-rendered-soak",
+    "bytes": 2545
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 4386467.2096,
+      "closeSettledHostMs": 4387732.9107,
+      "closeElapsedMs": 1265.7011000001803,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1209.0136000001803
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "harnessCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "sourceDirtyAtStart": false,
+  "harnessDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessChangedDuringRun": false
+}

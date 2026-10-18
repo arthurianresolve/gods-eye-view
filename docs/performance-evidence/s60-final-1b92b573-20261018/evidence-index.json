@@ -1,0 +1,148 @@
+{
+  "schema": "gev-s60-final-evidence-index/v1",
+  "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "generatedAt": "2026-10-17T23:31:26.323Z",
+  "acceptancePolicyId": "gev-cesium-acceptance/2026-10-15",
+  "comparisons": [
+    {
+      "workload": "operating-view",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/operating-view-baseline.json",
+        "sha256": "37fd4e8e6caef186aff50d779c0dacd0b6aabae18e2576e9bbdb6536b3b458df"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/operating-view-candidate.json",
+        "sha256": "406c5897dec3845f4053ed5e52afd2f1444e84020f0573058393662a13c3ec5e"
+      }
+    },
+    {
+      "workload": "dense-investigation",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/dense-investigation-baseline.json",
+        "sha256": "e0790c180d0af467097f45d00826a158c0d19c324b00ed37ede6e105417f784a"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/dense-investigation-candidate.json",
+        "sha256": "e2855dbd22131e870d0385967d7bc6eb33e761fcc64db9e0fb1c658bb4482889"
+      }
+    },
+    {
+      "workload": "infrastructure-datacenters",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-datacenters-baseline.json",
+        "sha256": "5c55dcb39ec116ee72000a0e5f51a2a367fa7f10b9e3960d9f35f0eea768cba1"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-datacenters-candidate.json",
+        "sha256": "f60fe99b9b527a511cf618c33849e501b2344afbacad7ffda8e5c4f41d7482ae"
+      }
+    },
+    {
+      "workload": "infrastructure-dams",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-dams-baseline.json",
+        "sha256": "b1bc30086404fa8b1f9ea04cf66b9a4cf0c32efcef6c6214f33c7cb581a68432"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-dams-candidate.json",
+        "sha256": "929815a660b0b395ef4ad9a7fffaf5faf2d6ade7d113e26f4f11b7124369bc56"
+      }
+    },
+    {
+      "workload": "infrastructure-cables",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-cables-baseline.json",
+        "sha256": "5aae83823a892847047f038c981c98c97e3070e13e50648b76c075c458dfee30"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-cables-candidate.json",
+        "sha256": "98e52f9ad58a5208193dde1dc29293b46a68a30c4a9a68cac2bd92ef834ecdf8"
+      }
+    },
+    {
+      "workload": "infrastructure",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-baseline.json",
+        "sha256": "630eb8200c580cc1b3a818593ec9947f1fc6f0765bc7c4ade69b0676d0e1a179"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-1b92b573-h4e44871a/infrastructure-candidate.json",
+        "sha256": "91385618116b5601719a228a0a3063d6b442b8cf186cc4c77aefd0bd4b0b4532"
+      }
+    },
+    {
+      "workload": "weather-effects",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-baseline.json",
+        "sha256": "0fa22152178281d34d19e9dc46ca280e04d938e84d168049654acfc2fb9533fd"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-candidate.json",
+        "sha256": "800b52a31667200798573c7b4b5bddc2a0878c8694deb73197e4ccc20059a601"
+      }
+    },
+    {
+      "workload": "map-streaming",
+      "environmentId": "windows-primary",
+      "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "baseline": {
+        "path": "qa-s60-matrix-map-1b92b573-hd87c8db8/map-streaming-baseline.json",
+        "sha256": "0ac74c24c02df4feec8614729930e71d8db288b801c53c6afa5b8dd91b3514d4"
+      },
+      "candidate": {
+        "path": "qa-s60-matrix-map-1b92b573-hd87c8db8/map-streaming-candidate.json",
+        "sha256": "3f7d38cd84956937ea719d679f4aa3eb858595304814e87693186db3d14b4bbc"
+      }
+    }
+  ],
+  "retention": [
+    {
+      "environmentId": "windows-primary",
+      "report": {
+        "path": "qa-s60-final-hardware-1b92b573.json",
+        "sha256": "58f3d36024e0a10d9c023cf0c67dc93eeba0fcfc61893771791c18dd30135b6c"
+      }
+    },
+    {
+      "environmentId": "hosted-macos",
+      "report": {
+        "path": "ci-final-1b92/run-39035840601/hosted-soak-39035840601/hosted-native-renderer.json",
+        "sha256": "0862fcac5dde3d922e0b12b1277b88213140c199fa28abc376200876dd02cf2a"
+      }
+    }
+  ],
+  "mapContinuation": {
+    "path": "qa-s60-matrix-map-1b92b573-hd87c8db8/continuation-result.json",
+    "sha256": "75280b6cae314f8b13a87a782d44cf22dc8405d0d49e8d578d91d6575075f86e"
+  },
+  "weatherReports": {
+    "baseline": {
+      "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-baseline.json",
+      "sha256": "0fa22152178281d34d19e9dc46ca280e04d938e84d168049654acfc2fb9533fd"
+    },
+    "candidate": {
+      "path": "qa-s60-matrix-weather-map-1b92b573-ha20d0a8f/weather-effects-candidate.json",
+      "sha256": "800b52a31667200798573c7b4b5bddc2a0878c8694deb73197e4ccc20059a601"
+    }
+  },
+  "releaseArtifact": {
+    "workflowRun": 39048585545,
+    "archiveSha256": "da05ac4c02e896bb3e66ad3e3a8834b7322446a5c7409af0d2642c0a23c30da9",
+    "attestationVerified": true
+  }
+}
