@@ -3,6 +3,46 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
+test('Windows composition control requires paired diagnostics and headed hardware', () => {
+  const diagnostic = '--windows-no-direct-composition-diagnostic';
+  const required = [
+    '--hardware-required',
+    '--frame-trace-out',
+    'frames.json',
+    '--browser-trace-out',
+    'browser.json',
+  ];
+  for (const args of [
+    [diagnostic],
+    [diagnostic, '--hardware-required'],
+    [diagnostic, ...required, '--headless'],
+    [diagnostic, ...required, '--software-rendering'],
+    [diagnostic, ...required, '--hosted-fixture'],
+    ...(process.platform === 'win32' ? [] : [[diagnostic, ...required]]),
+  ]) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(
+          new URL('../capture-scene-performance.mjs', import.meta.url),
+        ),
+        ...args,
+      ],
+      {
+        encoding: 'utf8',
+        windowsHide: true,
+        timeout: 30_000,
+      },
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /--windows-no-direct-composition-diagnostic (requires a headed hardware capture|is supported only on Windows)/,
+    );
+  }
+});
+
 test('capture CLI rejects either half of an explicit build-harness identity before launching a browser', () => {
   for (const args of [
     ['--build-harness-checkout', 'unused-builder-root'],

@@ -406,6 +406,25 @@ const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
 const hostedFixture = args.includes('--hosted-fixture');
+const windowsCompositionDiagnostic = args.includes(
+  '--windows-no-direct-composition-diagnostic',
+);
+if (
+  windowsCompositionDiagnostic &&
+  (!hardwareRequired ||
+    !frameTraceEnabled ||
+    !browserTraceEnabled ||
+    softwareRendering ||
+    hostedFixture ||
+    args.includes('--headless'))
+)
+  throw new Error(
+    '--windows-no-direct-composition-diagnostic requires a headed hardware capture with frame and browser traces.',
+  );
+if (windowsCompositionDiagnostic && process.platform !== 'win32')
+  throw new Error(
+    '--windows-no-direct-composition-diagnostic is supported only on Windows.',
+  );
 const nativeRenderingDiagnostic = args.includes(
   '--native-rendering-diagnostic',
 );
@@ -1441,6 +1460,7 @@ const browser = await puppeteer.launch({
     '--disable-backgrounding-occluded-windows',
     '--disable-renderer-backgrounding',
     '--disable-background-timer-throttling',
+    ...(windowsCompositionDiagnostic ? ['--disable-direct-composition'] : []),
     ...(hostedFixture ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
     ...rendererLaunchArgs(
       nativeRenderingDiagnostic
@@ -6547,6 +6567,10 @@ try {
     comparisonReadinessReasons.push(
       'diagnostic-browser-trace-instrumentation-is-ineligible-for-comparison',
     );
+  if (windowsCompositionDiagnostic)
+    comparisonReadinessReasons.push(
+      'windows-composition-control-is-ineligible-for-comparison',
+    );
   if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
@@ -6632,6 +6656,18 @@ try {
     graphics,
     integrity,
     workload,
+    ...(windowsCompositionDiagnostic
+      ? {
+          windowsCompositionDiagnostic: {
+            diagnosticOnly: true,
+            requestedBrowserSwitch: '--disable-direct-composition',
+            scope:
+              'owned temporary Chrome process only; no persistent browser or Windows setting changes',
+            effectivePath:
+              'must be established from browser trace; a requested switch alone does not establish it',
+          },
+        }
+      : {}),
     ...(browserTraceEnabled
       ? {
           browserTraceDiagnostics: {
