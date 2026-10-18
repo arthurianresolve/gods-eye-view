@@ -97,7 +97,6 @@ async function withDeadline(
   return outcome.value;
 }
 
-
 function gitIdentity() {
   const commit = execFileSync('git', ['-C', SCRIPT_ROOT, 'rev-parse', 'HEAD'], {
     encoding: 'utf8',
