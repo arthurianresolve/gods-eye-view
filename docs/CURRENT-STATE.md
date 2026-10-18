@@ -14,6 +14,13 @@ shared headers, with `ws` declared as a runtime dependency. Node-only host
 checks pass; packaged `npm ci --omit=dev` startup and Vite integration remain
 pending because local dependency installation is incomplete.
 
+The host correction hardens this boundary with Node's dotenv parser, startup
+manifest fail-closed behavior, cached manifest maps, symlink rejection, GET and
+HEAD gating, range suffix handling, stream error handling, strong encoding
+specific ETags, and embed framing that removes X-Frame-Options only when the
+shared embed-document policy permits it. Focused host tests cover these paths;
+packaged dependency startup remains pending VM validation.
+
 ## S64 bounded diagnostics and Auto eligibility — October 18, 2026
 
 Auto quality now evaluates only consecutive visible continuous-demand frames;

@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { parseEnv as parseDotEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { BROWSER_HEADERS } from '../../build/securityHeaders.js';
 import { isAllowedHost, resolveAllowedHosts } from '../../build/allowedHosts.js';
@@ -30,18 +31,9 @@ const MIME = Object.freeze({
   '.webmanifest': 'application/manifest+json',
 });
 
-function parseEnvFile(text) {
-  const values = {};
-  for (const line of text.split(/\r?\n/)) {
-    const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
-    if (match) values[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
-  }
-  return values;
-}
-
 export async function loadOperatorEnv(root) {
   try {
-    const values = parseEnvFile(await fs.readFile(path.join(root, '.env'), 'utf8'));
+    const values = parseDotEnv(await fs.readFile(path.join(root, '.env'), 'utf8'));
     for (const [key, value] of Object.entries(values))
       if (process.env[key] === undefined) process.env[key] = value;
   } catch (error) {
@@ -94,6 +86,7 @@ function security(res, requestUrl = '') {
   const ancestors = process.env.GEV_EMBED_FRAME_ANCESTORS;
   if (ancestors && isEmbedDocumentRequest(requestUrl)) {
     res.setHeader('Content-Security-Policy', BROWSER_HEADERS['Content-Security-Policy'].replace('frame-ancestors \'none\'', `frame-ancestors ${ancestors}`));
+    res.removeHeader('X-Frame-Options');
   }
 }
 
@@ -118,8 +111,9 @@ function parseRange(header, size) {
   if (!header) return null;
   const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
   if (!match || (!match[1] && !match[2])) return 'invalid';
-  let start = match[1] ? Number(match[1]) : Math.max(0, size - Number(match[2]));
-  let end = match[2] ? Number(match[2]) : size - 1;
+  const suffix = !match[1];
+  let start = suffix ? Math.max(0, size - Number(match[2])) : Number(match[1]);
+  let end = suffix ? size - 1 : (match[2] ? Number(match[2]) : size - 1);
   if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || start >= size) return 'invalid';
   end = Math.min(end, size - 1);
   return { start, end };
@@ -134,16 +128,26 @@ function safePath(root, pathname) {
   return target === root || target.startsWith(`${root}${path.sep}`) ? target : null;
 }
 
-async function readManifest(root) {
+async function readManifest(root, { required = false } = {}) {
   try { return JSON.parse(await fs.readFile(path.join(root, 'asset-manifest.json'), 'utf8')); }
-  catch { return null; }
+  catch (error) {
+    if (required || error.code !== 'ENOENT') throw error;
+    return null;
+  }
+}
+
+async function regularFile(file) {
+  const info = await fs.lstat(file).catch(() => null);
+  return info?.isFile() && !info.isSymbolicLink() ? info : null;
 }
 
 export function createStaticHandler({ root, previousRoots = [] } = {}) {
   const currentRoot = path.resolve(root);
   const previous = previousRoots.map((item) => path.resolve(item));
-  let manifestPromise = readManifest(currentRoot);
+  const manifestPromise = readManifest(currentRoot);
+  const previousManifests = new Map(previous.map((candidate) => [candidate, readManifest(candidate)]));
   const handler = async (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     const url = new URL(req.url || '/', 'http://localhost');
     if (url.pathname.startsWith('/api/')) return next();
     if (/\/(?:\.env|package\.json|node_modules)(?:\/|$)/.test(url.pathname)) return next();
@@ -153,15 +157,13 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
     if (!relative) relative = 'index.html';
     target = path.join(currentRoot, relative);
     let manifest = await manifestPromise;
-    let servingRoot = currentRoot;
-    let record = manifest?.assets?.find((entry) => entry.path === relative);
+    const records = new Map((manifest?.assets || []).map((entry) => [entry.path, entry]));
+    let record = records.get(relative);
     if (!record) {
       for (const candidate of previous) {
-        const candidateManifest = await readManifest(candidate);
+        const candidateManifest = await previousManifests.get(candidate);
         const candidateRecord = candidateManifest?.assets?.find((entry) => entry.path === relative && entry.cache === 'immutable');
-        if (candidateRecord && await fs.stat(path.join(candidate, relative)).catch(() => null)) {
-          servingRoot = candidate;
-          manifest = candidateManifest;
+        if (candidateRecord && await regularFile(path.join(candidate, relative))) {
           record = candidateRecord;
           target = path.join(candidate, relative);
           break;
@@ -172,13 +174,13 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
       if (url.pathname === '/' || !path.extname(relative)) {
         relative = 'index.html';
         target = path.join(currentRoot, relative);
-        record = manifest?.assets?.find((entry) => entry.path === relative);
+        record = records.get(relative);
       }
     }
-    if (!record || !(await fs.stat(target).catch(() => null))) return next();
+    if (!record || !(await regularFile(target))) return next();
     const available = [];
     for (const encoding of ['br', 'gzip'])
-      if (await fs.stat(`${target}.${encoding === 'br' ? 'br' : 'gz'}`).catch(() => null)) available.push(encoding);
+      if (await regularFile(`${target}.${encoding === 'br' ? 'br' : 'gz'}`)) available.push(encoding);
     const encoding = chooseEncoding(req.headers['accept-encoding'], available);
     if (!encoding) { security(res, req.url); res.writeHead(406); return res.end(); }
     const source = encoding === 'br' ? `${target}.br` : encoding === 'gzip' ? `${target}.gz` : target;
@@ -191,7 +193,8 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
     res.setHeader('Cache-Control', record.cache === 'immutable' ? 'public, max-age=31536000, immutable' : 'no-cache');
     if (encoding !== 'identity') res.setHeader('Content-Encoding', encoding);
     if (req.headers['if-none-match'] === etag) { res.writeHead(304); return res.end(); }
-    const stat = await fs.stat(source);
+    const stat = await regularFile(source);
+    if (!stat) return next();
     const range = parseRange(req.headers.range, stat.size);
     if (range === 'invalid') { res.setHeader('Content-Range', `bytes */${stat.size}`); res.writeHead(416); return res.end(); }
     const status = range ? 206 : 200;
@@ -200,7 +203,9 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
     if (range) res.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${stat.size}`);
     if (req.method === 'HEAD') { res.writeHead(status); return res.end(); }
     res.writeHead(status);
-    createReadStream(source, range ? { start: range.start, end: range.end } : undefined).pipe(res);
+    const stream = createReadStream(source, range ? { start: range.start, end: range.end } : undefined);
+    stream.on('error', (error) => { if (!res.headersSent) res.writeHead(500); res.destroy(error); });
+    stream.pipe(res);
   };
   return handler;
 }
@@ -210,6 +215,7 @@ export async function createProductionServer({ root = process.cwd(), dist, host,
   dist ??= path.join(root, 'dist');
   host ??= process.env.HOST || '127.0.0.1';
   port ??= Number(process.env.PORT || 4173);
+  await readManifest(dist ?? path.join(root, 'dist'), { required: true });
   const stack = middlewareStack();
   const allowedHosts = resolveAllowedHosts(process.env.GEV_ALLOWED_HOSTS);
   const { localProviderPlugins } = await import('../providers/local.js');

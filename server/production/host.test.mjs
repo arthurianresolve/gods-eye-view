@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { createStaticHandler } from './host.js';
+import { createStaticHandler, loadOperatorEnv } from './host.js';
 import http from 'node:http';
 
 function request(server, headers = {}, options = {}) {
@@ -34,10 +34,30 @@ test('production static handler serves encoded assets and revalidates HTML', asy
     assert.equal(ranged.status, 206);
     assert.equal(ranged.headers['content-range'], 'bytes 0-2/11');
     assert.equal(ranged.body.toString(), '<h1');
+    const suffix = await request(server, { range: 'bytes=-3' });
+    assert.equal(suffix.status, 206);
+    assert.equal(suffix.body.toString(), 'h1>');
     const notAcceptable = await request(server, { 'accept-encoding': 'identity;q=0' });
     assert.equal(notAcceptable.status, 406);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('operator dotenv parsing preserves quotes and host precedence', async () => {
+  const root = await mkdtemp(path.join(process.env.TEMP || process.cwd(), 'gev-host-env-'));
+  const previous = process.env.GEV_TEST_OPERATOR;
+  process.env.GEV_TEST_OPERATOR = 'process-value';
+  await writeFile(path.join(root, '.env'), "GEV_TEST_OPERATOR=dotenv-value\nGEV_TEST_QUOTED=\"hello world\" # comment\n");
+  try {
+    await loadOperatorEnv(root);
+    assert.equal(process.env.GEV_TEST_OPERATOR, 'process-value');
+    assert.equal(process.env.GEV_TEST_QUOTED, 'hello world');
+  } finally {
+    if (previous === undefined) delete process.env.GEV_TEST_OPERATOR;
+    else process.env.GEV_TEST_OPERATOR = previous;
+    delete process.env.GEV_TEST_QUOTED;
     await rm(root, { recursive: true, force: true });
   }
 });
