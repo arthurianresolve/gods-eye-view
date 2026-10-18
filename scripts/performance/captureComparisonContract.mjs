@@ -238,6 +238,11 @@ export function createObservedDenseComparisonContract({
         sample.settings?.after?.nativeSharpnessProfile,
         `capture ${index + 1} sharpness profile changed during measurement`,
       );
+      assert.deepEqual(
+        sample.settings.before.nativeSharpnessProfile,
+        environment.nativeSharpnessProfile,
+        `capture ${index + 1} sharpness profile differs from report environment`,
+      );
     }
     assert.deepEqual(
       enabledPopulations(sample.layers, `capture ${index + 1}`),

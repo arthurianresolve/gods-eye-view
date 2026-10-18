@@ -6,8 +6,9 @@ S61 merges frozen upstream evidence and adds the declared sharpness-preserving
 comparison profile. S62 covers deterministic Cesium content digests, compressed
 builds and immutable hashed caches. S63 adds the production Node HTTP host and
 security boundaries. S64 bounds diagnostics and Auto continuous-demand
-eligibility without changing Manual quality. S65 preserves continuous CCTV
-demand and late-result cleanup for event/scheduled use. S66 suppresses hidden
+eligibility without changing Manual quality. S65 removes unchanged still CCTV
+demand while retaining continuous video/fades and late-result cleanup for
+event/scheduled use. S66 suppresses hidden
 HUD work while preserving cadence. S67 prepares locale catalogs asynchronously
 before the UI and makes later translation reads synchronous with explicit
 failure/retry. S68 lazy-loads the heavy voice adapter while keeping the shared
@@ -28,6 +29,12 @@ recorded as missed (-7.1%/-6.7%), and the narrow Ampfing VM105 soak at
 DPR, SSE1, MSAA/effects/populations, storage, evidence and camera identity stay
 in force; unavailable physical Mac/discrete-GPU and human-accessibility evidence
 remain explicitly unverified.
+
+S61 status is separated as follows: implementation is present in the harness and
+documentation; automatic focused checks pass; full dependency-backed automatic
+gates and the primary Windows comparison remain pending until the local runtime
+has sufficient disk for its isolated dependency install. No stable publication,
+human review, or performance-objective achievement is inferred from this slice.
 
 ## Matrix execution update - 16 October 2026
 

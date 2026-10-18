@@ -167,6 +167,12 @@ const url = option('--url', 'http://localhost:4173');
 const seconds = Math.max(1, Number(option('--seconds', '60')) || 60);
 const warmupMs = Math.max(0, Number(option('--warmup-ms', '30000')) || 0);
 const runs = Math.max(1, Math.min(10, Number(option('--runs', '5')) || 5));
+// Zero delegates device scale to the native browser/OS configuration; the
+// observer records the resulting window.devicePixelRatio for each document.
+const declaredDeviceScaleFactor = Math.max(
+  0,
+  Number(option('--device-scale-factor', '0')) || 0,
+);
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
@@ -1353,7 +1359,11 @@ const browser = await puppeteer.launch({
   protocolTimeout: protocolTimeoutMs,
   executablePath:
     process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
-  defaultViewport: { width: 1440, height: 900, deviceScaleFactor: 1 },
+  defaultViewport: {
+    width: 1440,
+    height: 900,
+    deviceScaleFactor: declaredDeviceScaleFactor,
+  },
   args: [
     '--window-size=1440,900',
     '--disable-backgrounding-occluded-windows',
@@ -2611,7 +2621,7 @@ try {
     await auditPage.setViewport({
       width: 1440,
       height: 900,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: declaredDeviceScaleFactor,
     });
     await auditPage.setCacheEnabled(false);
     await auditPage.setBypassServiceWorker(true);
@@ -2696,7 +2706,7 @@ try {
     await startupPage.setViewport({
       width: 1440,
       height: 900,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: declaredDeviceScaleFactor,
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
@@ -3844,6 +3854,7 @@ try {
   }
 
   if (mapStreamingWorkloadSelected) {
+    await page.evaluate(applyNativeSharpnessProfile);
     failureProgress.phase = 'austin-map-streaming-route';
     failureProgress.workload.mapStreamingCapture = {
       status: 'running',

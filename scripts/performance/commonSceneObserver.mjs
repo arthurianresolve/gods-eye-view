@@ -123,12 +123,20 @@ export function observeCommonScene({
           useBrowserRecommendedResolution:
             viewer.useBrowserRecommendedResolution,
           resolutionScale: viewer.resolutionScale,
-          maximumScreenSpaceError: viewer.globe?.maximumScreenSpaceError,
+          maximumScreenSpaceError: viewer.scene?.globe?.maximumScreenSpaceError,
           viewport: {
             width: windowObject.innerWidth,
             height: windowObject.innerHeight,
             dpr: windowObject.devicePixelRatio,
           },
+          drawingBuffer: { width: canvas.width, height: canvas.height },
+          maxViewportDimensions: (() => {
+            const gl = scene.context?._originalGLContext;
+            const dims = gl?.getParameter?.(gl.MAX_VIEWPORT_DIMS);
+            return dims
+              ? { width: dims[0], height: dims[1] }
+              : null;
+          })(),
         }
       : null;
   if (nativeSharpnessProfile) {

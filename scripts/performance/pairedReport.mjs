@@ -1674,6 +1674,12 @@ export function validatePairedPerformanceReports({
       candidate.environment.drawingBuffer,
       'Map drawing buffer dimensions differ',
     );
+    if (baseline.environment.nativeSharpnessProfile || candidate.environment.nativeSharpnessProfile)
+      equal(
+        baseline.environment.nativeSharpnessProfile,
+        candidate.environment.nativeSharpnessProfile,
+        'Map native sharpness profile differs',
+      );
     assert.equal(baseTiming?.metric, 'transition-readiness-p95-ms');
     assert.equal(candidateTiming?.metric, baseTiming.metric);
     const baseRuns = baseTiming.runs;
@@ -1821,6 +1827,12 @@ export function validatePairedPerformanceReports({
     candidate.environment.drawingBuffer,
     'Drawing buffer dimensions differ',
   );
+  if (baseline.environment.nativeSharpnessProfile || candidate.environment.nativeSharpnessProfile)
+    equal(
+      baseline.environment.nativeSharpnessProfile,
+      candidate.environment.nativeSharpnessProfile,
+      'Native sharpness profile differs',
+    );
 
   // Application revision is the sole condition that may vary. Run metrics are
   // deliberately omitted because they are the measured outputs of this pair.

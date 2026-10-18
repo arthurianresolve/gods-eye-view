@@ -1624,6 +1624,30 @@ export async function runNativeMapStreamingJourneyInPage({
       tilesetCacheBytes: tileset?.cacheBytes ?? null,
       tilesetMaximumCacheOverflowBytes:
         tileset?.maximumCacheOverflowBytes ?? null,
+      nativeSharpnessProfile:
+        viewer.__gevNativeSharpnessProfile === 'native-sharpness-v1'
+          ? {
+              id: 'native-sharpness-v1',
+              useBrowserRecommendedResolution:
+                viewer.useBrowserRecommendedResolution,
+              resolutionScale: viewer.resolutionScale,
+              maximumScreenSpaceError: globe.maximumScreenSpaceError,
+              viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                dpr: window.devicePixelRatio,
+              },
+              drawingBuffer: {
+                width: scene.canvas.width,
+                height: scene.canvas.height,
+              },
+              maxViewportDimensions: (() => {
+                const gl = scene.context?._originalGLContext;
+                const dims = gl?.getParameter?.(gl.MAX_VIEWPORT_DIMS);
+                return dims ? { width: dims[0], height: dims[1] } : null;
+              })(),
+            }
+          : null,
     };
   };
 
@@ -4815,6 +4839,34 @@ export function validateMapStreamingCaptureReport(
   assert.match(profile?.configurationSha256 || '', SHA256);
   for (const journey of journeys)
     validateMapStreamingJourneyEvidence(journey, fixture);
+  const profiles = journeys.flatMap((journey) => [
+    journey.settingsBefore?.nativeSharpnessProfile,
+    journey.settingsAfter?.nativeSharpnessProfile,
+  ]);
+  if (profiles.some(Boolean)) {
+    for (const [index, profileValue] of profiles.entries()) {
+      assert.ok(profileValue, `Map journey ${index + 1} is missing native sharpness profile.`);
+      assert.equal(profileValue.id, 'native-sharpness-v1');
+      assert.equal(profileValue.useBrowserRecommendedResolution, false);
+      assert.equal(profileValue.resolutionScale, 1);
+      assert.equal(profileValue.maximumScreenSpaceError, 1);
+      assert.ok(Number.isInteger(profileValue.viewport?.width));
+      assert.ok(Number.isInteger(profileValue.viewport?.height));
+      assert.ok(Number.isFinite(profileValue.viewport?.dpr));
+      assert.ok(Number.isInteger(profileValue.drawingBuffer?.width));
+      assert.ok(Number.isInteger(profileValue.drawingBuffer?.height));
+      if (profileValue.maxViewportDimensions) {
+        assert.ok(profileValue.drawingBuffer.width <= profileValue.maxViewportDimensions.width);
+        assert.ok(profileValue.drawingBuffer.height <= profileValue.maxViewportDimensions.height);
+      }
+    }
+    for (const journey of journeys)
+      assert.deepEqual(
+        journey.settingsBefore.nativeSharpnessProfile,
+        journey.settingsAfter.nativeSharpnessProfile,
+        `Map journey ${journey.run} changed native sharpness profile during capture`,
+      );
+  }
   const manifestAssets = new Map(
     fixture.manifest.assets.map((asset) => [asset.path, asset]),
   );

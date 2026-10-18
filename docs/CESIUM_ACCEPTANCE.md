@@ -8,6 +8,11 @@ the native sharpness profile; it does not close candidate qualification or the
 performance objectives. The final follow-up denominator is 10, with one shared
 matrix and one physical Windows soak.
 
+For S61, implementation and focused automatic validation are recorded
+separately from full automatic gates and primary Windows evidence. The latter
+remain pending dependency installation and the final shared matrix; no stable
+publication or human-review result is implied.
+
 This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows
