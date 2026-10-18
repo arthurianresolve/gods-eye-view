@@ -23,7 +23,6 @@ function testFilesOnDisk(root) {
   const skip = new Set([
     'node_modules',
     'dist',
-    'build',
     'public',
     // Generated evidence can contain copied source trees and rejected test
     // variants; none of those files are active repository suites.

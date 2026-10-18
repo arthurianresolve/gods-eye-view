@@ -101,13 +101,14 @@ test('root config retains existing named exports and standalone provider order',
     'standalone dev config must expose a real checkout commit when available',
   );
   assert.deepEqual(
-    config.plugins.slice(4, -4).map((plugin) => plugin.name),
+    config.plugins.slice(4, -5).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-5).name, 'gev-key-setup');
+  assert.equal(config.plugins.at(-6).name, 'gev-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-4).name, 'local-mcp');
-  assert.equal(config.plugins.at(-3).name, 'api-not-found');
+  assert.equal(config.plugins.at(-5).name, 'local-mcp');
+  assert.equal(config.plugins.at(-4).name, 'api-not-found');
+  assert.equal(config.plugins.at(-3).name, 'gev-unwatched-runtime-dirs');
   assert.equal(config.plugins.at(-2).name, 'embed-framing');
   assert.equal(config.plugins.at(-1).name, 'panel-build');
 });
