@@ -15,7 +15,7 @@ test('presentation observer counts real changes, retains cycles and releases its
   const scope = {
     window: {
       __godsEyeView: {
-        styleManager: { hud: { _summaryTypingInterval: null } },
+        styleManager: { hud: { _summaryTypingInterval: null, visible: true } },
       },
     },
     document: {
@@ -24,7 +24,11 @@ test('presentation observer counts real changes, retains cycles and releases its
       getElementById: (id) =>
         ({ 'intel-hud': root, 'hud-rec-dot': dot, 'hud-summary': summary })[id],
     },
-    getComputedStyle: () => ({ display: 'block', visibility: 'visible' }),
+    getComputedStyle: () => ({
+      display: 'block',
+      visibility: 'visible',
+      opacity: '1',
+    }),
     MutationObserver: class {
       constructor(callback) {
         notify = callback;
@@ -70,7 +74,12 @@ test('capture eligibility rejects focus loss and a still-typing summary', () => 
     summary: 'fixture',
     documentVisible: true,
     documentFocused: true,
+    hudVisible: true,
+    hudDisplay: 'block',
+    hudVisibility: 'visible',
+    hudOpacity: 1,
   };
+  assert.equal(presentationStayedSettled(proof, proof), true);
   assert.equal(
     presentationStayedSettled(proof, { ...proof, documentFocused: false }),
     false,
@@ -80,6 +89,41 @@ test('capture eligibility rejects focus loss and a still-typing summary', () => 
       ...proof,
       summaryTypingComplete: false,
     }),
+    false,
+  );
+});
+
+test('presentation must reach the requested rendered HUD state', () => {
+  const visible = {
+    revision: 1,
+    recordingVisible: true,
+    summaryTypingComplete: true,
+    summary: 'fixture',
+    documentVisible: true,
+    documentFocused: true,
+    hudVisible: true,
+    hudDisplay: 'block',
+    hudVisibility: 'visible',
+    hudOpacity: 1,
+  };
+  assert.equal(
+    presentationStayedSettled(visible, { ...visible, hudOpacity: 0.5 }),
+    false,
+  );
+  const hidden = {
+    ...visible,
+    hudVisible: false,
+    hudVisibility: 'hidden',
+    hudOpacity: 0,
+  };
+  assert.equal(presentationStayedSettled(hidden, hidden, false), true);
+  assert.equal(presentationStayedSettled(hidden, hidden, true), false);
+  assert.equal(
+    presentationStayedSettled(
+      hidden,
+      { ...hidden, hudVisibility: 'visible' },
+      false,
+    ),
     false,
   );
 });
