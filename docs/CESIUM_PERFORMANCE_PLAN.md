@@ -12,8 +12,9 @@ event/scheduled use. S66 suppresses hidden
 HUD work while preserving cadence. S67 prepares locale catalogs asynchronously
 before the UI and makes later translation reads synchronous with explicit
 failure/retry. S68 evaluates lazy loading the heavy voice adapter while keeping
-the shared runner eager and gesture/cancel/permission behavior correct; the
-decision remains pending bundle and correctness evidence. S69 runs the exact
+the shared runner eager and gesture/cancel/permission behavior correct. The
+connection-only experiment was rejected after saving less than 1 KiB compressed
+startup transfer; production voice behavior stays unchanged. S69 runs the exact
 candidate Node 24/26 CI and existing eight-row Windows matrix with artifact
 attestation and `publish_stable=false`. S70 stages the exact artifact privately
 on VM105, verifies HTTPS/workspace/API behavior, runs the final 60-minute
@@ -50,9 +51,9 @@ human review or performance-objective achievement is inferred from a build pass.
 | S63 | Production Node HTTP host and release packaging | implemented; host corrections `9db16e2f` | 26 focused checks; unpacked production-only install and HTTP smoke pass | pending deployment verification |
 | S64 | Bounded diagnostics and Auto sample eligibility | implemented; availability corrections `3aaeb656` | 17 diagnostics/policy checks pass | pending shared matrix |
 | S65 | Owned still-camera refresh, final frame, video/fade preservation | implemented; lifecycle correction `7aacac04` | 116 CCTV/profile checks pass on VM Node 26 | pending shared matrix |
-| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | focused phase tests authored; full CI pending | pending shared matrix |
+| S66 | Unchanged/hidden HUD writes and preserved phase | implemented | 24 HUD/build tests pass; full CI pending | pending shared matrix |
 | S67 | Async locale preparation, races and retry | implemented | 19 locale checks pass; VM build passes | pending startup/browser checks |
-| S68 | Measure and evaluate voice adapter splitting | decision pending; bundle audit implemented | audit unit checks pass; actual bundle analysis in progress | pending comparison/decision |
+| S68 | Measure and evaluate voice adapter splitting | narrow split evaluated and rejected; audit implemented | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved | runtime unchanged; no latency benefit claimed |
 | S69 | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | in progress | draft PR checks in progress | pending Windows matrix |
 | S70 | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | pending candidate | isolated VM storage and production package smoke verified | pending deployment and final soak |
 

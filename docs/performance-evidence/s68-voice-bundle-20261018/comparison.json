@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-18T12:50:30.110Z",
+  "sourceCommit": "3ae5825955f95ff86764aaf04db15067dc869eb6",
+  "execution": "VM105 Ubuntu, Node 26.11.0; isolated diagnostic builds with env/config discovery disabled",
+  "sourceIdentity": {
+    "checked": 1226,
+    "differences": []
+  },
+  "connectionSourceSha256": "0a53d92d665af58276b2091631f597d289a8981def36876e43b3d0e19ee434d7",
+  "baseline": {
+    "bytes": 3471395,
+    "gzipBytes": 1076099,
+    "brotliBytes": 834508,
+    "chunks": [
+      {
+        "file": "assets/index-Dz_s2ku0.js",
+        "bytes": 3471395
+      }
+    ]
+  },
+  "experiment": {
+    "bytes": 3468195,
+    "gzipBytes": 1075159,
+    "brotliBytes": 833898,
+    "chunks": [
+      {
+        "file": "assets/index-C3EdgMra.js",
+        "bytes": 3468195
+      }
+    ]
+  },
+  "savedInitialBytes": {
+    "raw": 3200,
+    "gzip": 940,
+    "brotli": 610
+  },
+  "transportChunk": [
+    {
+      "file": "assets/realtimeTransportExperiment-CpDC_ajB.js",
+      "bytes": 3872
+    }
+  ],
+  "restored": true,
+  "decision": "Reject connection-only split: less than 1 KiB compressed initial transfer saving does not justify a new first-use module request and async lifecycle boundary.",
+  "scope": "Build-size experiment only. No voice latency, microphone permission, gesture, runtime correctness or hardware-performance acceptance is claimed.",
+  "fullArtifact": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/source/qa-artifacts/s68-transport-experiment-20261018/comparison.json",
+    "sha256": "1e128d855c27337799105495ac784ea99be2e26df8fdeb8816bcb6c5b7303f63"
+  }
+}
