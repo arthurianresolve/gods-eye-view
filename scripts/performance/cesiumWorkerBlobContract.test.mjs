@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  resolveCesiumBundlePath,
   classifyLateWorkerAuditObservations,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_TOTAL_BYTES,
@@ -18,17 +19,37 @@ import {
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const BASE = 'http://127.0.0.1:4173/';
+test('resolves legacy and digest Cesium receipt paths without guessing', () => {
+  assert.equal(
+    resolveCesiumBundlePath([{ path: 'cesium/Cesium.js' }]),
+    'cesium/Cesium.js',
+  );
+  const digestPath = `cesium/${'a'.repeat(64)}/Cesium.js`;
+  assert.equal(resolveCesiumBundlePath([{ path: digestPath }]), digestPath);
+  assert.throws(
+    () => resolveCesiumBundlePath([{ path: 'cesium/not-a-digest/Cesium.js' }]),
+    /malformed digest/,
+  );
+  assert.throws(
+    () =>
+      resolveCesiumBundlePath([
+        { path: 'cesium/Cesium.js' },
+        { path: digestPath },
+      ]),
+    /absent or ambiguous/,
+  );
+  assert.throws(
+    () => resolveCesiumBundlePath([{ path: 'assets/index.js' }]),
+    /absent or ambiguous/,
+  );
+});
 
 test('frozen audit boundary reports late worker targets without retaining URLs', () => {
   const result = summarizeWorkerAuditBoundary({
     workerTargetsAtBoundary: ['blob:worker-a'],
     blobRequestsAtBoundary: ['blob:worker-a', 'blob:payload-a'],
     workerTargetsAfter: ['blob:worker-a', 'blob:worker-b'],
-    blobRequestsAfter: [
-      'blob:worker-a',
-      'blob:payload-a',
-      'blob:late-request',
-    ],
+    blobRequestsAfter: ['blob:worker-a', 'blob:payload-a', 'blob:late-request'],
   });
   assert.deepEqual(result, {
     workerTargetCountAtBoundary: 1,
@@ -818,15 +839,15 @@ test('legacy diagnostic metadata-read-body-read-restore sequence exposes mixed-t
     'URL.createObjectURL(new Blob("initial worker"))',
     context,
   );
-  const metadata = await page.evaluate(
-    () => window.__gevCesiumWorkerBlobAuditV1.metadata(),
+  const metadata = await page.evaluate(() =>
+    window.__gevCesiumWorkerBlobAuditV1.metadata(),
   );
   const bodies = await page.evaluate(
     (urls) => window.__gevCesiumWorkerBlobAuditV1.readWorkerBodies(urls),
     [originalUrl],
   );
-  const restoration = await page.evaluate(
-    () => window.__gevCesiumWorkerBlobAuditV1.restore(),
+  const restoration = await page.evaluate(() =>
+    window.__gevCesiumWorkerBlobAuditV1.restore(),
   );
 
   assert.equal(metadata.createdBlobCount, 1);

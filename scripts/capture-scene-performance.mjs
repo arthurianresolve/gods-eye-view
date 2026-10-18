@@ -78,6 +78,7 @@ import {
 } from './performance/trackingRoute.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  resolveCesiumBundlePath,
   classifyLateWorkerAuditObservations,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_RECORDS,
@@ -559,9 +560,7 @@ if (buildProvenanceEnabled) {
     captureUrl: url,
     expectedBuildProfile,
   });
-  const bundlePath = 'cesium/Cesium.js';
-  if (!buildReceipt.assets.some((asset) => asset.path === bundlePath))
-    throw new Error('Verified build receipt is missing the Cesium bundle.');
+  const bundlePath = resolveCesiumBundlePath(buildReceipt.assets);
   captureWorkerContract = deriveCesiumEmbeddedWorkerContract({
     bundlePath,
     bundleBytes: await fs.readFile(
@@ -5738,6 +5737,7 @@ try {
         receiptSha256: captureProvenance.source.receiptSha256,
         expectedDocuments: captureDocumentTopology.workerAudits,
         expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+        bundlePath: captureWorkerContract.bundlePath,
         bundleSha256: captureWorkerContract.bundleSha256,
         workerSourceSha256: captureWorkerContract.workerSourceSha256,
         allowedModuleCount: captureWorkerContract.allowedModuleCount,
@@ -6214,6 +6214,7 @@ try {
             pageAssetAudit: source.buildProvenance.pageAssetAudit,
             expectedDocuments: captureDocumentTopology.workerAudits,
             expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+            bundlePath: captureWorkerContract.bundlePath,
             bundleSha256: captureWorkerContract.bundleSha256,
             workerSourceSha256: captureWorkerContract.workerSourceSha256,
             allowedModuleCount: captureWorkerContract.allowedModuleCount,
