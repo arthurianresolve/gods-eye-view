@@ -28,6 +28,8 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/captureComparisonContract.test.mjs',
   'scripts/performance/buildProvenance.test.mjs',
   'scripts/performance/buildSmokeContract.test.mjs',
+  'build/assetDistribution.test.mjs',
+  'scripts/performance/nativeSharpnessProfile.test.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',
   'scripts/print-qa-evidence.test.mjs',
   'scripts/performance/captureBuildProvenance.test.mjs',
@@ -141,7 +143,12 @@ export function assertNode24AllocationRuntime(version = process.versions.node) {
  * outside dependencies, build output and dot-directories, so adding a tree
  * without adding it here fails.
  */
-export const UNIT_TEST_ROOTS = Object.freeze(['src', 'server', 'scripts', 'build']);
+export const UNIT_TEST_ROOTS = Object.freeze([
+  'src',
+  'server',
+  'scripts',
+  'build',
+]);
 
 /** Discover repository unit tests in stable path order. */
 export function discoverUnitTestFiles(root = process.cwd()) {
