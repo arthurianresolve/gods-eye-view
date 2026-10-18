@@ -124,6 +124,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/runFinalVisualQualification.test.mjs',
   'scripts/performance/visualPresentationBoundary.test.mjs',
   'scripts/performance/debuggerPausedCapture.test.mjs',
+  'scripts/performance/captureBrowserTrace.test.mjs',
   'scripts/captureNoUndefConfig.test.mjs',
 ]);
 

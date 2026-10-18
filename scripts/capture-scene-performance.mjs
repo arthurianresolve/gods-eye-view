@@ -103,6 +103,7 @@ import {
 } from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
+import { startBrowserTrace } from './performance/captureBrowserTrace.mjs';
 import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
 import {
   createProviderSampleCpuProfileWindow,
@@ -376,6 +377,31 @@ if (
 if (frameTraceOut && out && path.resolve(frameTraceOut) === path.resolve(out))
   throw new Error('--frame-trace-out must differ from --out.');
 const frameTraceEnabled = Boolean(frameTraceOut);
+const browserTraceOut = option('--browser-trace-out', null);
+if (
+  args.includes('--browser-trace-out') &&
+  (!browserTraceOut || browserTraceOut.startsWith('--'))
+)
+  throw new Error(
+    '--browser-trace-out requires a separate diagnostic output path.',
+  );
+if (
+  browserTraceOut &&
+  out &&
+  path.resolve(browserTraceOut) === path.resolve(out)
+)
+  throw new Error('--browser-trace-out must differ from --out.');
+if (
+  browserTraceOut &&
+  frameTraceOut &&
+  path.resolve(browserTraceOut) === path.resolve(frameTraceOut)
+)
+  throw new Error('--browser-trace-out must differ from --frame-trace-out.');
+const browserTraceEnabled = Boolean(browserTraceOut);
+if (browserTraceEnabled && !frameTraceEnabled)
+  throw new Error(
+    '--browser-trace-out requires --frame-trace-out so the diagnostic trace is paired with frame evidence.',
+  );
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
@@ -4768,7 +4794,15 @@ try {
       failureProgress.phase = 'measure-scene';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
-      const rawSamplePromise = page.evaluate(
+      const browserTraceThisSample =
+        browserTraceEnabled && scenario === 'scripted-motion' && run === 1;
+      let browserTraceController = null;
+      if (browserTraceThisSample)
+        browserTraceController = await startBrowserTrace({
+          page,
+          outputPath: path.resolve(browserTraceOut),
+        });
+      const sampleArguments = [
         async ({
           durationMs,
           scenarioName,
@@ -5248,6 +5282,9 @@ try {
           expectedRunOrdinal: phaseRunOrdinal,
           frameTraceEnabled,
         },
+      ];
+      const rawSamplePromise = Promise.resolve().then(() =>
+        page.evaluate(...sampleArguments),
       );
       const samplePromise = runSceneMeasurementWithHostDeadline({
         evaluate: () => rawSamplePromise,
@@ -5268,6 +5305,13 @@ try {
             });
         }
         sample = await samplePromise;
+        if (browserTraceController) {
+          sample = {
+            ...sample,
+            browserTrace: await browserTraceController.stop(),
+          };
+          browserTraceController = null;
+        }
       } catch (error) {
         if (
           weatherEffectsWorkload &&
@@ -5277,6 +5321,17 @@ try {
             .evaluate(() => window.__gevWeatherMeasurementAbort?.())
             .catch(() => {});
           await samplePromise.catch(() => {});
+        }
+        if (browserTraceController) {
+          try {
+            await browserTraceController.stop();
+          } catch (traceError) {
+            error.browserTraceCleanupError = {
+              name: String(traceError?.name || 'Error').slice(0, 80),
+              message: String(traceError?.message || traceError).slice(0, 240),
+            };
+          }
+          browserTraceController = null;
         }
         throw error;
       }
@@ -6488,6 +6543,10 @@ try {
     comparisonReadinessReasons.push(
       'shader-program-attribution-instrumentation-is-enabled',
     );
+  if (browserTraceEnabled)
+    comparisonReadinessReasons.push(
+      'diagnostic-browser-trace-instrumentation-is-ineligible-for-comparison',
+    );
   if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
@@ -6573,6 +6632,24 @@ try {
     graphics,
     integrity,
     workload,
+    ...(browserTraceEnabled
+      ? {
+          browserTraceDiagnostics: {
+            schema: 'gev-browser-trace/v1',
+            diagnosticOnly: true,
+            outputPath: path.resolve(browserTraceOut),
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            status:
+              captures.find(
+                (sample) =>
+                  sample.scenario === 'scripted-motion' && sample.run === 1,
+              )?.browserTrace?.status || 'incomplete',
+            recordMode: 'recordUntilFull',
+            maxBytes: 64 * 1024 * 1024,
+          },
+        }
+      : {}),
     motionBudget: {
       ...motionBudget,
       note: 'Idle rendering is intentionally sparse and is excluded from motion frame budgets.',
