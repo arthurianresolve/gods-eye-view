@@ -295,6 +295,9 @@ export function createApplicationViewer({
   let cameraAnglesCompat;
   try {
     viewer.targetFrameRate = 60;
+    // Request one screen pixel of globe detail so close, top-down imagery does
+    // not stop at a visibly softer parent tile. Cesium's default is two.
+    viewer.scene.globe.maximumScreenSpaceError = 1;
     // Before any tile builds a draw command: Cesium's per-vertex model
     // atmosphere fails to LINK on Apple's Metal backend and kills the
     // render loop. See app/atmosphereCompat.js.

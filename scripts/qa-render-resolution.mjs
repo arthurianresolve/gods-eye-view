@@ -86,6 +86,7 @@ try {
       resolutionScale: viewer.resolutionScale,
       useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
       devicePixelRatio: window.devicePixelRatio,
+      globeMaximumScreenSpaceError: viewer.scene.globe.maximumScreenSpaceError,
     };
   });
   assert.equal(first.textureLimit, 2048);
@@ -94,6 +95,7 @@ try {
   assert.ok(first.height <= first.renderbufferLimit, JSON.stringify(first));
   assert.equal(first.useBrowserRecommendedResolution, false);
   assert.equal(first.devicePixelRatio, 2);
+  assert.equal(first.globeMaximumScreenSpaceError, 1);
   assert.ok(first.resolutionScale < 0.4, JSON.stringify(first));
 
   await page.evaluate(() => {
@@ -112,6 +114,10 @@ try {
     height: 360,
     deviceScaleFactor: 2,
   });
+  // Some headless Windows runs apply the CDP viewport without delivering a
+  // window resize event. Drive the same public event that a real resize emits
+  // so this check measures the guard instead of Puppeteer's delivery race.
+  await page.evaluate(() => window.dispatchEvent(new Event('resize')));
   await page.waitForFunction(
     () => window.__godsEyeView.viewer.resolutionScale >= 1.49,
     // Headless/background pages do not always advance requestAnimationFrame
@@ -146,6 +152,7 @@ try {
       scale: viewer.resolutionScale,
       useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
       devicePixelRatio: window.devicePixelRatio,
+      globeMaximumScreenSpaceError: viewer.scene.globe.maximumScreenSpaceError,
     };
   });
   assert.ok(resized.width <= 2048, JSON.stringify(resized));
@@ -153,6 +160,7 @@ try {
   assert.equal(resized.scale, 1.5);
   assert.equal(resized.useBrowserRecommendedResolution, false);
   assert.equal(resized.devicePixelRatio, 2);
+  assert.equal(resized.globeMaximumScreenSpaceError, 1);
   assert.equal(resized.width, resized.clientWidth * 3);
   assert.equal(resized.height, resized.clientHeight * 3);
   const recovery = await page.evaluate(() => {
