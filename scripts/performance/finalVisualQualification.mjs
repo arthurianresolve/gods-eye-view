@@ -122,6 +122,9 @@ export async function validateFinalVisualQualification(
     ['visual producer', report.harness?.visualHarnessCommit],
   ])
     assert.match(value || '', /^[a-f0-9]{40}$/, `${label} SHA`);
+  assert.equal(report.harness?.buildHarnessCommit, report.harness?.baselineSha, 'build harness identity differs');
+  assert.equal(report.harness?.buildHarnessCommit, report.harness?.candidateSha, 'baseline/candidate build harness differs');
+  assert.notEqual(report.application?.baselineSha, report.application?.candidateSha, 'application revisions must differ');
   assert.match(report.receipts?.baselineSha256 || '', /^[a-f0-9]{64}$/);
   assert.match(report.receipts?.candidateSha256 || '', /^[a-f0-9]{64}$/);
   assert.equal(report.environment?.platform, 'win32');
