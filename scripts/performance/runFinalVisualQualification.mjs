@@ -231,6 +231,8 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
 export async function produceFinalVisualQualification(options) {
   if (process.platform !== 'win32') throw new Error('Final visual qualification requires Windows hardware.');
   const out = path.resolve(options.out);
+  const visualHarnessRoot = path.resolve(options['visual-harness-root']);
+  if (visualHarnessRoot !== ROOT) throw new Error('Visual producer must execute from its declared clean checkout.');
   await fs.mkdir(out, { recursive: true });
   const actualHarnessSha = execFileSync('git', ['-C', options['harness-root'], 'rev-parse', 'HEAD'], { encoding: 'utf8', windowsHide: true }).trim();
   if (actualHarnessSha !== options['harness-sha']) throw new Error('Build harness SHA does not match its checkout.');
