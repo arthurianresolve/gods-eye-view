@@ -3,6 +3,7 @@
 import { build } from 'vite';
 import { createBrowserViteConfig } from '../build/vite.js';
 import { auditBundle } from './audit-bundle-chunks.mjs';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
@@ -36,12 +37,27 @@ export function diagnosticChunkMetadataPlugin() {
 
 export async function buildAndAudit({ root, outDir }) {
   const outputRoot = path.resolve(root, outDir);
+  const absoluteRoot = path.resolve(root);
+  const qaRoot = path.resolve(absoluteRoot, 'qa-artifacts');
+  if (outputRoot !== qaRoot && !outputRoot.startsWith(`${qaRoot}${path.sep}`))
+    throw new Error('audit output must remain under qa-artifacts');
+  try {
+    if ((await readdir(outputRoot)).length)
+      throw new Error(
+        `audit output must be a fresh empty directory: ${outputRoot}`,
+      );
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
   const config = createBrowserViteConfig({
-    root: path.resolve(root),
+    root: absoluteRoot,
     command: 'build',
   });
   await build({
     ...config,
+    root: absoluteRoot,
+    configFile: false,
+    envFile: false,
     plugins: [...(config.plugins || []), diagnosticChunkMetadataPlugin()],
     build: {
       ...config.build,
