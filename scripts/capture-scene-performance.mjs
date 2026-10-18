@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import puppeteer, { CDPSessionEvent } from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
-import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
+import { assertCaptureIntegrity, deriveNativeSharpnessProfile } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import {
   beginCaptureBuildProvenance,
@@ -4704,8 +4704,6 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
-      if (nativeSharpnessProfile)
-        sceneBefore.environment.nativeSharpnessProfile = nativeSharpnessProfile;
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneBefore,
@@ -5410,8 +5408,6 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
-      if (nativeSharpnessProfile)
-        sceneAfter.environment.nativeSharpnessProfile = nativeSharpnessProfile;
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneAfter,
@@ -5891,6 +5887,8 @@ try {
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
+  if (comparisonProfile === 'native-sharpness-v1')
+    environment.nativeSharpnessProfile = deriveNativeSharpnessProfile(captures);
   const integrity = assertCaptureIntegrity(captures, {
     expectedCommit: source.appCommit,
     qualityMode,
