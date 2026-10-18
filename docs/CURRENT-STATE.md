@@ -1,34 +1,39 @@
 # God's Eye View Current State
 
-## Current S61–S70 checkpoint — October 18, 2026, 18:48 UTC
+## Current S61–S70 checkpoint — October 18, 2026
 
 The application remains frozen at `19065997`; subsequent changes affect QA and
-documentation only. Its exact CI, tracking, signed artifact and VM105 package
-verification pass. The revised visual producer `e2cdaac6` passes all seven
-[CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039264)
-and [candidate verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39153039281).
-The production service still runs the verified `e7a878e` release.
+documentation. Exact CI, tracking, signed artifact and VM105 package verification
+pass. The production service continues to run verified release `e7a878e`.
+[QA CI at `6c0db98b`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39157995268)
+also passes all seven selected jobs, with optional diagnostic modes explicitly
+skipped rather than counted as hardware evidence.
 
-The Windows UHD 620 operating-view pair is complete and comparable at native
-DPR 2, Manual/DENSE/75% and unchanged populations. Median motion p95 is 456.4 ms
-baseline versus 454.0 ms candidate; no material motion speedup is claimed.
-The remaining seven rows are running with reviewed reporting producer
-`d372aaa6`, keeping the original operating pair and application/build revisions
-unchanged. The dense candidate has completed all 15 timed samples; its baseline
-is still running. Short preflights remain diagnostic evidence only.
+The Windows UHD 620 operating and Dense pairs are complete and comparable at
+native DPR 2, Manual/DENSE/75% and unchanged populations. Operating motion p95
+is 456.4 ms baseline versus 454.0 ms candidate. Dense motion/tracking changes are
++2.9%/+0.3%; the proposed 20% objectives are missed, with no material speedup claimed.
 
-The exact signed release is prepared on VM105, with all 2,126 packaged files
-verified in its final release directory. Service configuration and rollback
-copies still match. Deployment, the final CCTV/HUD screenshot comparison and
-the Ampfing retention soak remain pending. The visual check briefly pauses
-JavaScript delivery for settled snapshots and verifies the observed scanline
-phase; unpaused captures remain the source of performance and behavior evidence.
-The final soak's native-resolution option is reviewed at `d0df3908`; all 38
-focused tests pass on VM105 with both Node 24 and 26. It observes native DPR
-before viewport emulation and rejects missing, reduced or changed resolution
-at equivalent checkpoints. Physical execution remains pending. See
-[the current ledger](CESIUM_PERFORMANCE_PLAN.md)
-for implementation, automatic-validation and primary-machine evidence separately.
+The parked Austin +80.8% inter-render interval is separately resolved by a
+hash-bound diagnostic disposition at `7aa89243`. Wind is intentionally invisible
+at 12,000 m on both builds, satellites still move, and wind resumes with matching
+geometry and advancing phase at 60,000 m. The raw regression flag remains true;
+this disposition clears no other metric. The remaining matrix has resumed with
+all five complete raw reports preserved unchanged.
+
+The corrected CCTV visual fixture waits for the globe before activation and
+pauses captures at a task boundary. Three states match exactly; the fourth has
+seven varying rounded-border pixels independently reproduced within both builds.
+Consumer `f174cbf2` validates complete same-build control images and strict bounds,
+without masks or pixel edits. All 137 focused Windows checks pass. All 118 paired,
+manifest, matrix and disposition checks pass on VM105 under Node 24 and 26.
+
+The signed candidate release is prepared on VM105 with all 2,126 packaged files
+verified. Qualified deployment, HTTPS/workspace verification, final visual
+evidence packaging and the 60-minute native-resolution Ampfing soak remain pending.
+Builds, dependencies and Linux validation use VM storage; a nested LXC would
+inherit its CPU limits and is not needed. See [the current ledger](CESIUM_PERFORMANCE_PLAN.md)
+for engineering, automatic validation and hardware qualification separately.
 
 ## Earlier S61–S70 checkpoint at `9721b202` — October 18, 2026
 

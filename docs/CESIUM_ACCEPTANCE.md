@@ -1,14 +1,32 @@
 # Cesium completion and acceptance criteria
 
-Policy: `gev-cesium-acceptance/2026-10-15`.
+Policy: `gev-cesium-acceptance/2026-10-18`.
 
-A parked camera does not establish a static scene. The operating fixture keeps
-wind and satellite animation enabled, so its idle frame-interval regression
-remains subject to investigation. The broad idle exemption at `4a24624b` through
-`089e86d3` is reverted. Qualification is interrupted after the candidate's
-operating idle p95 increased 80.8%; fewer delivered frames cannot be credited as
-an efficiency gain without proving preserved visible animation. The working
-VM105 deployment remains unchanged while this is diagnosed.
+A parked camera does not establish a static scene. The broad idle exemption at
+`4a24624b` through `089e86d3` remains reverted. The Austin investigation now
+establishes that wind is intentionally invisible at its 12,000 m parked view,
+satellite positions continue updating, and wind advances normally after moving
+to 60,000 m. Candidate scheduling replaces the baseline's unnecessary continuous
+still-CCTV hold. The raw idle p95 increase of 80.8% remains recorded.
+
+The 18 October amendment permits a separately recorded, hash-bound disposition
+for that exact application pair, fixture and interval metric. The validator
+checks actual raw reports, native settings at every boundary, renderer identity,
+each diagnostic demand state, moving satellite witnesses, wind re-entry and
+cleanup. It resolves only `idle`; motion, other workloads, visual equivalence
+and retention retain their gates. Missing or contradictory proof fails. It
+does not provide a generic exemption for animated parked views.
+
+The narrow CCTV/HUD visual control also permits
+`matched-visible-control-variance-v1`, documented in the
+[visual qualification method](../scripts/performance/FINAL_VISUAL_QUALIFICATION.md).
+Three states must match exactly across builds. An initial still may differ only
+when it equals one complete same-build visible control, both controls agree
+across builds, and their variation is at most ten pixels with RGB deltas at most
+10/255 and unchanged alpha. Seven corner pixels exhibited this variation in
+both unchanged builds. No masks or image edits are allowed. Earlier strict
+comparison failures remain failed records with the subsequent consumer review
+identified separately. The default validator remains bit-exact.
 
 The approved S61–S70 follow-up is recorded in the performance plan. S61 is
 engineering work for the frozen upstream merge, historical evidence ledger and
