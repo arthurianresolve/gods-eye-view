@@ -90,7 +90,7 @@ function fakePage(session) {
 test('writes bounded trace stream and detaches owned session', async (t) => {
   const session = new FakeSession({
     chunk: '{"traceEvents":[{"name":"Paint"}]}',
-    categories: ['cc', 'gpu', 'unrelated'],
+    categories: ['viz', 'toplevel', 'unrelated'],
   });
   const outputPath = await tempOutput(t);
   const controller = await startBrowserTrace({
@@ -112,14 +112,13 @@ test('writes bounded trace stream and detaches owned session', async (t) => {
   assert.equal(start?.[1]?.traceConfig?.recordMode, 'recordUntilFull');
   assert.equal(start?.[1]?.traceConfig?.traceBufferSizeInKb, 32 * 1024);
   assert.equal(start?.[1]?.traceConfig?.enableArgumentFilter, true);
-  assert.ok(start?.[1]?.traceConfig?.includedCategories.includes('cc'));
-  assert.ok(start?.[1]?.traceConfig?.includedCategories.includes('viz'));
-  assert.ok(start?.[1]?.traceConfig?.includedCategories.includes('gpu'));
-  assert.ok(
-    start?.[1]?.traceConfig?.includedCategories.includes('renderer.scheduler'),
-  );
+  assert.deepEqual(start?.[1]?.traceConfig?.includedCategories, [
+    'devtools.timeline',
+    'toplevel',
+    'viz',
+  ]);
   assert.ok(start?.[1]?.traceConfig?.excludedCategories.includes('netlog'));
-  assert.deepEqual(result.supportedCategories, ['cc', 'gpu']);
+  assert.deepEqual(result.supportedCategories, ['toplevel', 'viz']);
   assert.deepEqual(
     session.commands.map(([command]) => command),
     [

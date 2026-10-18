@@ -4,18 +4,10 @@ import path from 'node:path';
 export const BROWSER_TRACE_SCHEMA = 'gev-browser-trace/v1';
 export const MAX_BROWSER_TRACE_BYTES = 64 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 15_000;
-const REQUESTED_CATEGORIES = [
-  'devtools.timeline',
-  'disabled-by-default-devtools.timeline',
-  'toplevel',
-  'cc',
-  'viz',
-  'gpu',
-  'renderer.scheduler',
-  'disabled-by-default-cc.debug',
-  'disabled-by-default-gpu.service',
-  'disabled-by-default-renderer.scheduler',
-];
+const REQUESTED_CATEGORIES = ['devtools.timeline', 'toplevel', 'viz'];
+// Keep renderer callbacks, thread task spans and presentation. Broad gpu/cc
+// command-flow diagnostics exhausted the bounded buffer after 32 seconds on
+// the native Windows fixture; their per-command events are not needed here.
 
 function timeoutMs(value, label) {
   const result = value ?? DEFAULT_TIMEOUT_MS;
