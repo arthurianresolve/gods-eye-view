@@ -60,7 +60,11 @@ export function assertNativeResolutionEvidence(
   label,
   expectedGeometry = null,
 ) {
-  if (typeof expectedDpr !== 'number' || !Number.isFinite(expectedDpr) || expectedDpr <= 0)
+  if (
+    typeof expectedDpr !== 'number' ||
+    !Number.isFinite(expectedDpr) ||
+    expectedDpr <= 0
+  )
     throw new TypeError('Native device pixel ratio is invalid.');
   if (
     typeof evidence?.devicePixelRatio !== 'number' ||
@@ -75,16 +79,17 @@ export function assertNativeResolutionEvidence(
     !Number.isFinite(evidence?.maximumScreenSpaceError)
   )
     throw new Error(`${label} native sharpness settings are unavailable.`);
-  const expectedSettings = expectedGeometry?.settings || {
+  const expectedSettings = expectedGeometry || {
     useBrowserRecommendedResolution: false,
     resolutionScale: 1,
     maximumScreenSpaceError: 1,
   };
   if (
-    (evidence.useBrowserRecommendedResolution !==
+    evidence.useBrowserRecommendedResolution !==
       expectedSettings.useBrowserRecommendedResolution ||
-      evidence.resolutionScale !== expectedSettings.resolutionScale ||
-      evidence.maximumScreenSpaceError !== expectedSettings.maximumScreenSpaceError)
+    evidence.resolutionScale !== expectedSettings.resolutionScale ||
+    evidence.maximumScreenSpaceError !==
+      expectedSettings.maximumScreenSpaceError
   )
     throw new Error(`${label} native sharpness settings changed.`);
   const canvas = evidence?.canvas;
@@ -228,10 +233,7 @@ export async function createRenderedSoakDriver(
     const nativeDpr = nativePage
       ? await nativePage.evaluate(() => window.devicePixelRatio)
       : null;
-    if (
-      nativeResolution &&
-      (!Number.isFinite(nativeDpr) || nativeDpr <= 0)
-    )
+    if (nativeResolution && (!Number.isFinite(nativeDpr) || nativeDpr <= 0))
       throw new Error('Native device pixel ratio could not be observed.');
     const { page, errors, verifyNetwork } = await prepareFixturePage(
       browser,

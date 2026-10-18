@@ -13,6 +13,7 @@ import {
   isRecoverableApplicationPrewarmFailure,
   resolveRenderedSoakLocation,
   assertNativeResolutionEvidence,
+  readNativeResolutionEvidenceInPage,
   resolveNativeSoakViewport,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
@@ -99,22 +100,40 @@ test('native soak viewport is opt-in and validates the observed DPR/buffer', () 
     useBrowserRecommendedResolution: false,
     maximumScreenSpaceError: 1,
   };
-  assert.deepEqual(assertNativeResolutionEvidence(evidence, 2, 'test'), evidence);
+  assert.deepEqual(
+    assertNativeResolutionEvidence(evidence, 2, 'test'),
+    evidence,
+  );
   assert.throws(
-    () => assertNativeResolutionEvidence({ ...evidence, canvas: { ...evidence.canvas, width: 1440 } }, 2, 'test'),
+    () =>
+      assertNativeResolutionEvidence(
+        { ...evidence, canvas: { ...evidence.canvas, width: 1440 } },
+        2,
+        'test',
+      ),
     /drawing buffer/,
   );
   assert.throws(
     () => assertNativeResolutionEvidence(evidence, 1, 'test'),
     /device pixel ratio/,
   );
-  for (const value of [undefined, Number.NaN, '2'])
+  for (const value of [undefined, Number.NaN, Infinity, 0, -1, '2'])
     assert.throws(
-      () => assertNativeResolutionEvidence({ ...evidence, devicePixelRatio: value }, 2, 'test'),
+      () =>
+        assertNativeResolutionEvidence(
+          { ...evidence, devicePixelRatio: value },
+          2,
+          'test',
+        ),
       /device pixel ratio/,
     );
   assert.throws(
-    () => assertNativeResolutionEvidence({ ...evidence, resolutionScale: 0.5 }, 2, 'test'),
+    () =>
+      assertNativeResolutionEvidence(
+        { ...evidence, resolutionScale: 0.5 },
+        2,
+        'test',
+      ),
     /sharpness settings changed/,
   );
   assert.throws(
@@ -125,6 +144,72 @@ test('native soak viewport is opt-in and validates the observed DPR/buffer', () 
         'test',
       ),
     /drawing buffer/,
+  );
+  for (const change of [
+    { useBrowserRecommendedResolution: true },
+    { maximumScreenSpaceError: 2 },
+    { resolutionScale: Number.NaN },
+    { sceneDrawingBuffer: undefined },
+    { sceneDrawingBuffer: { width: 1440, height: 1000 } },
+    {
+      canvas: {
+        clientWidth: 1200,
+        clientHeight: 800,
+        width: 2400,
+        height: 1600,
+      },
+      sceneDrawingBuffer: { width: 2400, height: 1600 },
+    },
+  ]) {
+    assert.throws(() =>
+      assertNativeResolutionEvidence({ ...evidence, ...change }, 2, 'initial'),
+    );
+    assert.throws(() =>
+      assertNativeResolutionEvidence(
+        { ...evidence, ...change },
+        2,
+        'checkpoint',
+        evidence,
+      ),
+    );
+  }
+});
+
+test('native page evidence records the actual scene buffer and effective settings', () => {
+  const canvas = {
+    clientWidth: 1440,
+    clientHeight: 1000,
+    width: 2880,
+    height: 2000,
+  };
+  const observed = vm.runInNewContext(
+    `(${readNativeResolutionEvidenceInPage.toString()})()`,
+    {
+      window: {
+        devicePixelRatio: 2,
+        __godsEyeView: {
+          viewer: {
+            resolutionScale: 1,
+            useBrowserRecommendedResolution: false,
+            scene: {
+              canvas,
+              drawingBufferWidth: 2880,
+              drawingBufferHeight: 2000,
+              globe: { maximumScreenSpaceError: 1 },
+            },
+          },
+        },
+      },
+    },
+  );
+  assert.equal(assertNativeResolutionEvidence(observed, 2, 'page'), observed);
+  assert.throws(
+    () =>
+      vm.runInNewContext(
+        `(${readNativeResolutionEvidenceInPage.toString()})()`,
+        { window: {} },
+      ),
+    /active viewer/,
   );
 });
 
@@ -986,16 +1071,21 @@ test('soak reports completed driver operations and labels short runs as smoke', 
 
 test('soak report preserves native resolution at initial and retained checkpoints', async () => {
   let now = 0;
+  let retainedCalls = 0;
   const initial = { observedDpr: 2, initial: { devicePixelRatio: 2 } };
   const report = await runMixedUseSoak({
     durationMs: 100,
     intervalMs: 0,
+    checkpointIntervalMs: 50,
     now: () => now,
     driver: {
       nativeResolution: initial,
-      retainedMetrics: async () => ({ nativeResolution: { devicePixelRatio: 2 } }),
+      warmupIterations: 1,
+      retainedMetrics: async () => ({
+        nativeResolution: { devicePixelRatio: 2, checkpoint: ++retainedCalls },
+      }),
       runCycle: async () => {
-        now += 100;
+        now += 50;
         return {
           sourceToggles: 1,
           replaySeeks: 1,
@@ -1008,8 +1098,80 @@ test('soak report preserves native resolution at initial and retained checkpoint
     },
   });
   assert.deepEqual(report.nativeResolution, initial);
-  assert.equal(report.firstRetainedMetrics.nativeResolution.devicePixelRatio, 2);
+  assert.equal(
+    report.firstRetainedMetrics.nativeResolution.devicePixelRatio,
+    2,
+  );
   assert.equal(report.lastRetainedMetrics.nativeResolution.devicePixelRatio, 2);
+  assert.equal(report.warmupIterations, 1);
+  assert.equal(report.iterations, 2);
+  assert.equal(retainedCalls, 4);
+  assert.deepEqual(
+    report.checkpoints.map(
+      (point) => point.metrics.nativeResolution.checkpoint,
+    ),
+    [1, 2, 3, 4],
+  );
+});
+
+test('native drawing-buffer drift fails the soak and retains its failure report', async () => {
+  let now = 0;
+  let reads = 0;
+  const evidence = {
+    devicePixelRatio: 2,
+    canvas: {
+      clientWidth: 1440,
+      clientHeight: 1000,
+      width: 2880,
+      height: 2000,
+    },
+    sceneDrawingBuffer: { width: 2880, height: 2000 },
+    resolutionScale: 1,
+    useBrowserRecommendedResolution: false,
+    maximumScreenSpaceError: 1,
+  };
+  await assert.rejects(
+    runMixedUseSoak({
+      durationMs: 100,
+      intervalMs: 0,
+      checkpointIntervalMs: 50,
+      now: () => now,
+      driver: {
+        nativeResolution: { observedDpr: 2, initial: evidence },
+        retainedMetrics: async () => ({
+          nativeResolution: assertNativeResolutionEvidence(
+            ++reads === 1
+              ? evidence
+              : {
+                  ...evidence,
+                  sceneDrawingBuffer: { width: 1440, height: 1000 },
+                },
+            2,
+            'checkpoint',
+            evidence,
+          ),
+        }),
+        runCycle: async () => {
+          now += 50;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    }),
+    (error) => {
+      assert.match(error.message, /drawing buffer/);
+      assert.equal(error.soakReport.operationStatus, 'failed');
+      assert.equal(error.soakReport.iterations, 1);
+      assert.equal(error.soakReport.checkpoints.length, 1);
+      return true;
+    },
+  );
 });
 
 test('requested soak recording output is portable and reported without embedding it in the soak report', async () => {
