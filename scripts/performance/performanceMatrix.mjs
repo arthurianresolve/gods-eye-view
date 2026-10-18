@@ -140,6 +140,24 @@ function validateRevision(revision, role) {
   });
 }
 
+function validateHarness(identity, label) {
+  requireObject(identity, `${label} is required`);
+  assert.match(identity.commit || '', SHA1, `${label}.commit`);
+  return Object.freeze({
+    commit: identity.commit,
+    checkout: requireAbsolutePath(identity.checkout, `${label}.checkout`),
+  });
+}
+
+export function matrixCaptureHarness(plan, row) {
+  return (
+    row.captureHarness ?? {
+      commit: plan.harnessCommit,
+      checkout: plan.harnessCheckout,
+    }
+  );
+}
+
 export function validatePerformanceMatrixPlan(plan) {
   requireObject(plan, 'Matrix plan is required');
   assert.equal(plan.schema, PERFORMANCE_MATRIX_PLAN_SCHEMA);
@@ -149,6 +167,14 @@ export function validatePerformanceMatrixPlan(plan) {
   const harnessCheckout = requireAbsolutePath(
     plan.harnessCheckout,
     'harnessCheckout',
+  );
+  const defaultHarness = {
+    commit: plan.harnessCommit,
+    checkout: harnessCheckout,
+  };
+  const buildHarness = validateHarness(
+    plan.buildHarness ?? defaultHarness,
+    'buildHarness',
   );
   const outputRoot = requireAbsolutePath(plan.outputRoot, 'outputRoot');
   const baseline = validateRevision(plan.baseline, 'baseline');
@@ -165,7 +191,13 @@ export function validatePerformanceMatrixPlan(plan) {
     const expected = PERFORMANCE_MATRIX_ROWS[index];
     assert.equal(row.id, expected.id, `rows[${index}].id`);
     assert.deepEqual(row.order, expected.order, `${row.id}.order`);
-    return expected;
+    return Object.freeze({
+      ...expected,
+      captureHarness: validateHarness(
+        row.captureHarness ?? defaultHarness,
+        `${row.id}.captureHarness`,
+      ),
+    });
   });
   assert.equal(
     rows.filter((row) => row.order[0] === 'baseline').length,
@@ -183,6 +215,7 @@ export function validatePerformanceMatrixPlan(plan) {
     fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     harnessCommit: plan.harnessCommit,
     harnessCheckout,
+    buildHarness,
     outputRoot,
     baseline,
     candidate,
@@ -210,11 +243,12 @@ export function matrixReportPath(plan, row, role) {
 }
 
 export function createMatrixCaptureInvocation(plan, row, role) {
+  const captureHarness = matrixCaptureHarness(plan, row);
   const revision = plan[role];
   const build = revision.builds[row.buildProfile];
   const reportPath = matrixReportPath(plan, row, role);
   const script = path.resolve(
-    plan.harnessCheckout,
+    captureHarness.checkout,
     'scripts',
     'capture-scene-performance.mjs',
   );
@@ -248,22 +282,33 @@ export function createMatrixCaptureInvocation(plan, row, role) {
     '--app-checkout',
     revision.appCheckout,
     '--harness-checkout',
-    plan.harnessCheckout,
+    captureHarness.checkout,
     '--build-root',
     build.root,
     '--expected-app-sha',
     revision.appCommit,
     '--expected-harness-sha',
-    plan.harnessCommit,
+    captureHarness.commit,
     '--served-base-url',
     build.baseUrl,
   ];
+  if (
+    plan.buildHarness.commit !== captureHarness.commit ||
+    plan.buildHarness.checkout !== captureHarness.checkout
+  )
+    args.push(
+      '--build-harness-checkout',
+      plan.buildHarness.checkout,
+      '--expected-build-harness-sha',
+      plan.buildHarness.commit,
+    );
   args.push('--comparison-profile', plan.comparisonProfile ?? 'legacy');
   if (row.mixedLayers) args.push('--mixed-layers');
   if (row.buildProfile !== 'standard')
     args.push('--build-profile', row.buildProfile);
   return Object.freeze({
     command: process.execPath,
+    cwd: captureHarness.checkout,
     args: Object.freeze(args),
     reportPath,
     env: Object.freeze({
@@ -376,7 +421,16 @@ export function readReusableMatrixReport(plan, row, role) {
   assert.equal(report.comparisonEligible, true);
   assert.equal(report.comparisonReadiness?.status, 'ready');
   assert.equal(report.source?.appCommit, revision.appCommit);
-  assert.equal(report.source?.harnessCommit, plan.harnessCommit);
+  assert.equal(
+    report.source?.harnessCommit,
+    matrixCaptureHarness(plan, row).commit,
+    'Capture producer differs from the workload plan',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.harnessCommit,
+    plan.buildHarness.commit,
+    'Build harness differs from the matrix plan',
+  );
   assert.equal(report.workload?.providerFixture, row.providerFixture);
   assert.equal(report.workload?.warmupMs, 30_000);
   assert.equal(report.workload?.durationPerSampleMs, 60_000);
@@ -422,10 +476,12 @@ export function validateMatrixPair(plan, row) {
   return {
     ...result,
     comparisonProfileEvidence: {
-      baseline:
-        baseline.comparisonProfileEvidence || { status: 'declared-in-report' },
-      candidate:
-        candidate.comparisonProfileEvidence || { status: 'declared-in-report' },
+      baseline: baseline.comparisonProfileEvidence || {
+        status: 'declared-in-report',
+      },
+      candidate: candidate.comparisonProfileEvidence || {
+        status: 'declared-in-report',
+      },
     },
   };
 }
@@ -443,6 +499,13 @@ export function createMatrixResult(plan, completedRows, startedAt) {
       baselineAppCommit: plan.baseline.appCommit,
       candidateAppCommit: plan.candidate.appCommit,
       harnessCommit: plan.harnessCommit,
+      buildHarnessCommit: plan.buildHarness.commit,
+      captureHarnessByWorkload: Object.fromEntries(
+        plan.rows.map((row) => [
+          row.id,
+          matrixCaptureHarness(plan, row).commit,
+        ]),
+      ),
     },
     environmentId: 'windows-uhd620',
     rows: completedRows,

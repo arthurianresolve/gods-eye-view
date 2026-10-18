@@ -7,6 +7,7 @@ import {
   createMatrixCaptureInvocation,
   createMatrixResult,
   matrixReportPath,
+  matrixCaptureHarness,
   PERFORMANCE_MATRIX_RESULT_SCHEMA,
   readReusableMatrixReport,
   sha256File,
@@ -40,7 +41,7 @@ if (fs.existsSync(resolvedResultPath) && !resume)
 function runCapture(invocation) {
   return new Promise((resolve, reject) => {
     const child = spawn(invocation.command, invocation.args, {
-      cwd: plan.harnessCheckout,
+      cwd: invocation.cwd,
       env: { ...process.env, ...invocation.env },
       stdio: 'inherit',
       windowsHide: true,
@@ -113,6 +114,10 @@ for (const row of plan.rows) {
       }),
     ),
     comparison,
+    source: {
+      captureHarnessCommit: matrixCaptureHarness(plan, row).commit,
+      buildHarnessCommit: plan.buildHarness.commit,
+    },
   });
 }
 

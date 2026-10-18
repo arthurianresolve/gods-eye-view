@@ -14,14 +14,26 @@ const canonical = (value) => {
 
 /** Derive the report-level profile only from independently observed boundaries. */
 export function deriveNativeSharpnessProfile(captures) {
-  assert.ok(Array.isArray(captures) && captures.length, 'No captures for native profile');
+  assert.ok(
+    Array.isArray(captures) && captures.length,
+    'No captures for native profile',
+  );
   let profile = null;
   for (const sample of captures) {
     for (const point of [sample.conditions?.before, sample.conditions?.after]) {
       const observed = point?.environment?.nativeSharpnessProfile;
-      assert.equal(observed?.id, 'native-sharpness-v1', 'Native sharpness profile is missing from a capture boundary');
+      assert.equal(
+        observed?.id,
+        'native-sharpness-v1',
+        'Native sharpness profile is missing from a capture boundary',
+      );
       if (profile === null) profile = structuredClone(observed);
-      else assert.deepEqual(observed, profile, 'Native sharpness profile differs across capture boundaries');
+      else
+        assert.deepEqual(
+          observed,
+          profile,
+          'Native sharpness profile differs across capture boundaries',
+        );
     }
   }
   return profile;
@@ -122,8 +134,18 @@ export function assertCaptureIntegrity(
       );
       assert.ok(environment.renderer, `${label}: renderer is unavailable`);
       if (requireNativeSharpnessProfile) {
-        assert.equal(environment.nativeSharpnessProfile?.id, 'native-sharpness-v1', `${label}: native sharpness profile is unavailable`);
-        assert.deepEqual(environment.nativeSharpnessProfile, point === sample.conditions.before ? sample.conditions.after.environment.nativeSharpnessProfile : sample.conditions.before.environment.nativeSharpnessProfile, `${label}: native sharpness profile differs between boundaries`);
+        assert.equal(
+          environment.nativeSharpnessProfile?.id,
+          'native-sharpness-v1',
+          `${label}: native sharpness profile is unavailable`,
+        );
+        assert.deepEqual(
+          environment.nativeSharpnessProfile,
+          point === sample.conditions.before
+            ? sample.conditions.after.environment.nativeSharpnessProfile
+            : sample.conditions.before.environment.nativeSharpnessProfile,
+          `${label}: native sharpness profile differs between boundaries`,
+        );
       }
       assert.ok(
         environment.viewport?.dpr > 0,
