@@ -13,7 +13,8 @@ bounded PNG. The report must include the exact
 application and harness SHAs, build receipt hashes, native-sharpness-v1
 environment/profile, Intel UHD 620 renderer identity, fixed camera/populations,
 foreground and completed-render evidence, and both PNG records for every state.
-Masks are forbidden. Validation requires decoded RGBA pixel equality, matching
+Masks are forbidden. Validation requires decoded RGBA pixel equality (with the
+explicit, bounded repeated-control rule below), matching
 dimensions, containment under the report evidence root, and confirmed browser
 teardown for both revisions:
 
@@ -23,6 +24,21 @@ node scripts/performance/finalVisualQualification.mjs path\to\report.json
 
 Missing or contradictory evidence fails validation; it is not converted to a
 pass or an inconclusive visual claim.
+
+The default validator remains bit-exact. The producer explicitly records
+`matched-visible-control-variance-v1` for one narrowly observed browser effect:
+seven rounded source-badge corner pixels varied by at most 9/255 in RGB, both
+between and within the unchanged revisions. All other pixels matched. Under
+this policy, the visible and restored controls must each match exactly across
+builds. Each initial still must equal one **entire** control image from its own
+build, and those controls must retain identical settings, populations, camera,
+timestamp and HUD summary. Their within-build variation is bounded to ten pixels,
+at most 10/255 per RGB channel, with no alpha changes. Hidden HUD still requires
+exact equality. A new pixel change, even inside the small varying area, fails
+unless the whole image independently occurred in that build's control. No
+coordinates are masked, no pixels are modified, and the accepted variance is
+reported with all pixel values. Earlier bit-exact failures stay in the ledger;
+offline consumer revalidation records its own revision separately from capture.
 
 `runFinalVisualQualification.mjs` owns the two sequential headed Chrome runs.
 It executes from its declared clean checkout, records its own producer commit

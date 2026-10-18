@@ -43,6 +43,7 @@ import {
   readVisualSnapshotPhaseInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
+import { VISIBLE_CONTROL_VARIANCE_POLICY } from './visibleControlVariance.mjs';
 import {
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
@@ -890,6 +891,7 @@ async function produceFinalVisualQualificationInternal(options, progress) {
         ),
     },
     masks: [],
+    rasterPolicy: VISIBLE_CONTROL_VARIANCE_POLICY,
     states: STATES.map((id, index) => ({
       id,
       completedRender: {

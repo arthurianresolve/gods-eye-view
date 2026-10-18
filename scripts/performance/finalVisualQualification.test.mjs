@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import sharp from 'sharp';
+import { VISIBLE_CONTROL_VARIANCE_POLICY } from './visibleControlVariance.mjs';
 import {
   FINAL_VISUAL_QUALIFICATION_SCHEMA,
   FINAL_VISUAL_STATES,
@@ -228,6 +229,41 @@ test('accepts complete matched hardware observations and decoded PNGs', async (t
   assert.deepEqual(
     await validateFinalVisualQualification(report, { evidenceRoot: root }),
     { schema: report.schema, status: 'passed', states: 4 },
+  );
+});
+
+test('explicit control policy requires independent full-image witnesses on both builds', async (t) => {
+  const { root, report } = await fixture(t);
+  const pixels = await sharp(await createPng())
+    .ensureAlpha()
+    .raw()
+    .toBuffer();
+  pixels[40] += 9;
+  const changed = await sharp(pixels, { raw: { ...dimensions, channels: 4 } })
+    .png()
+    .toBuffer();
+  for (const [id, side] of [
+    ['still-settled', 'candidate'],
+    ['hud-restored', 'baseline'],
+    ['hud-restored', 'candidate'],
+  ]) {
+    const state = report.states.find((value) => value.id === id);
+    await fs.writeFile(path.join(root, state[side].path), changed);
+    state[side].sha256 = digest(changed);
+  }
+  await assert.rejects(
+    validateFinalVisualQualification(report, { evidenceRoot: root }),
+    /decoded rendered pixels changed/,
+  );
+  report.rasterPolicy = VISIBLE_CONTROL_VARIANCE_POLICY;
+  const accepted = await validateFinalVisualQualification(report, {
+    evidenceRoot: root,
+  });
+  assert.equal(accepted.rasterVariance.variedPixels, 1);
+  assert.equal(accepted.rasterVariance.maximumChannelDelta, 9);
+  report.states[3].settings.baseline.densityPct = 50;
+  await assert.rejects(
+    validateFinalVisualQualification(report, { evidenceRoot: root }),
   );
 });
 

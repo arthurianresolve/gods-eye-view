@@ -5,6 +5,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { presentationStayedSettled } from './visualPresentationBoundary.mjs';
+import {
+  VISIBLE_CONTROL_VARIANCE_POLICY,
+  validateVisibleControlVariance,
+} from './visibleControlVariance.mjs';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -334,6 +338,12 @@ export async function validateFinalVisualQualification(
   assert.equal(report.teardown?.baseline?.browserClosed, true);
   assert.equal(report.teardown?.candidate?.browserClosed, true);
   const root = path.resolve(evidenceRoot || report.outputRoot || '.');
+  assert.ok(
+    report.rasterPolicy == null ||
+      report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY,
+    'Unsupported visual raster policy',
+  );
+  const decoded = new Map();
   for (const state of report.states) {
     for (const side of ['baseline', 'candidate']) {
       const proof = state.foreground?.[side];
@@ -569,21 +579,55 @@ export async function validateFinalVisualQualification(
       },
       `${state.id} candidate image dimensions`,
     );
-    assert.equal(
-      sha256(candidate.pixels),
-      sha256(baseline.pixels),
-      `${state.id} decoded rendered pixels changed`,
-    );
+    decoded.set(state.id, {
+      baseline: baseline.pixels,
+      candidate: candidate.pixels,
+    });
+    if (state.id !== 'still-settled' || report.rasterPolicy == null)
+      assert.equal(
+        sha256(candidate.pixels),
+        sha256(baseline.pixels),
+        `${state.id} decoded rendered pixels changed`,
+      );
     assert.deepEqual(
       candidate.pixelInfo,
       baseline.pixelInfo,
       `${state.id} decoded pixel dimensions changed`,
     );
   }
+  let rasterVariance = null;
+  if (report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY) {
+    const still = report.states[0];
+    for (const id of ['hud-visible', 'hud-restored']) {
+      const control = report.states.find((state) => state.id === id);
+      assert.deepEqual(
+        control.settings,
+        still.settings,
+        `${id} control settings differ`,
+      );
+      assert.deepEqual(
+        control.populations,
+        still.populations,
+        `${id} control populations differ`,
+      );
+      for (const side of ['baseline', 'candidate'])
+        assert.equal(
+          control.presentation[side].before.summary,
+          still.presentation[side].before.summary,
+          `${id} control summary differs`,
+        );
+    }
+    rasterVariance = validateVisibleControlVariance({
+      still: decoded.get('still-settled'),
+      visible: decoded.get('hud-visible'),
+      restored: decoded.get('hud-restored'),
+    });
+  }
   return {
     schema: report.schema,
     status: 'passed',
     states: report.states.length,
+    ...(rasterVariance ? { rasterVariance } : {}),
   };
 }
 
