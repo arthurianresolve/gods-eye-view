@@ -19,7 +19,7 @@ test('visual state page callback serializes without Node or outer bindings', () 
             getDetectionMode: () => 'DENSE',
           },
           _adaptiveQuality: { getMode: () => 'manual' },
-          getVisualState: () => ({ hudVisible: true }),
+          getVisualState: () => ({ hud: { visible: true } }),
           hud: { getMode: () => 'on', visible: true, getVariant: () => 'tactical' },
         },
         viewer: {

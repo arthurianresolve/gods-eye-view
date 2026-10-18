@@ -28,7 +28,7 @@ export function readQualificationStateInPage({ checkpointValue, profileValue }) 
       camera: checkpointValue.cameraPose,
       hud: {
         mode: hud?.getMode?.() || null,
-        visible: hud?.visible === true,
+        visible: visual?.hud?.visible === true,
         variant: hud?.getVariant?.() || null,
         ariaHidden: hudElement?.getAttribute('aria-hidden') || null,
         display: hudElement ? getComputedStyle(hudElement).display : null,

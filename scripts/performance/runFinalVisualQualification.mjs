@@ -19,9 +19,7 @@ import {
   cleanupFixturePageDiagnostics,
   prepareFixturePage,
 } from '../../scripts/qa-application-fixtures.mjs';
-import {
-  captureCctvFixtureResponse,
-} from '../../scripts/qa-cctv-lifecycle.mjs';
+import { captureCctvFixtureResponse as captureFixtureResponse } from './cctvFixtureResponse.mjs';
 import {
   configureCctvLifecycleSceneInPage,
   createCctvLifecycleFixture,
@@ -91,7 +89,7 @@ async function verifyReceipt({ receipt, checkout, build, harnessRoot, harnessSha
   });
 }
 
-async function observedState(page, profile) {
+async function observedState(page, profile, appSha) {
   const checkpoint = await page.evaluate(readCctvLifecycleCheckpointInPage, {
     includeRenderer: true,
     fixtureView: {
@@ -105,14 +103,19 @@ async function observedState(page, profile) {
   });
   if (!state.checkpoint?.cameraPose || !state.checkpoint?.cameraView?.containsFixture)
     throw new Error('CCTV checkpoint does not prove the declared camera pose.');
+  if (state.checkpoint.appCommit !== appSha)
+    throw new Error('CCTV checkpoint application commit differs from the requested side.');
   if (!Number.isInteger(state.populations.cctv) || state.populations.cctv < 1)
     throw new Error('CCTV population is empty.');
   if (state.settings.qualityMode !== 'manual' || state.settings.densityPct !== 75)
     throw new Error('Manual quality or 75% density is not observed.');
   if (state.hud.mode === null || typeof state.hud.visible !== 'boolean')
     throw new Error('HUD accessibility/visibility state is unavailable.');
-  if (!state.visualState || state.visualState.hudVisible !== state.hud.visible)
+  if (!state.visualState || state.visualState.hud?.visible !== state.hud.visible)
     throw new Error('HUD visual state is not synchronized with its accessible state.');
+  const camera = state.checkpoint.cameras.find((item) => item.id === state.checkpoint.activeCameraId);
+  if (camera?.decodeStatus !== 'ok' || !Number.isFinite(camera.decodeLastSuccessAt))
+    throw new Error('CCTV still image decode is not observed for the active camera.');
   if (!Number.isSafeInteger(state.timestampMs) || state.timestampMs < FIXED_TIME_MS)
     throw new Error('Fixed qualification timestamp is unavailable.');
   return state;
@@ -162,7 +165,8 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
     prepared = await prepareFixturePage(browser, new URL(url).origin, {
       page,
       viewport: VIEWPORT,
-      respond: (requestUrl) => captureCctvFixtureResponse(fixture, requestUrl, new URL(url).origin),
+      deviceScaleFactor: 0,
+      respond: (requestUrl) => captureFixtureResponse(fixture, requestUrl, new URL(url).origin),
     });
     await bootFixturePage(page, new URL(url).origin, {
       hash: cctvLifecycleShareHash(fixture.view),
@@ -174,9 +178,8 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       const manager = window.__godsEyeView?.dataManager;
       const style = window.__godsEyeView?.styleManager;
       if (!manager?.restoreEnabledLayerIds) throw new Error('Layer lifecycle API unavailable.');
-      style?._adaptiveQuality?.setMode?.('manual', { persist: false });
-      style?.services?.setDetectionModeByLabel?.('DENSE');
-      style?.services?.setDetectionTuning?.({ densityPct: 75 });
+      style?._adaptiveQuality?.rememberManualDensity?.(75);
+      style?.setDetection?.({ enabled: true, mode: 'DENSE', densityPct: 75 });
       await manager.restoreEnabledLayerIds([], { origin: 'qa-final-visual' });
       const result = await manager.setEnabled('cctv', true, { origin: 'qa-final-visual' });
       if (result === false || !manager.isEnabled('cctv')) throw new Error('CCTV could not be enabled.');
@@ -210,7 +213,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       const completedRender = await page.evaluate(waitForCctvLifecycleRenderInPage, 15_000);
       const profile = await readNativeProfile(page);
       observedProfile = profile;
-      const observed = await observedState(page, profile);
+      const observed = await observedState(page, profile, appSha);
       if (observed.checkpoint.activeCameraId !== fixture.cameraId || observed.cctvParams?.selectedCameraId !== fixture.cameraId || observed.cctvParams?.showProjection !== true || (observed.cctvDiagnostics?.entities || 0) < 1)
         throw new Error('Completed render lacks a selected, materialized CCTV still projection.');
       const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));

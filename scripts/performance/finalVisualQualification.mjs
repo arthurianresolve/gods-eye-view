@@ -13,6 +13,7 @@ export const FINAL_VISUAL_STATES = Object.freeze([
   'hud-hidden',
   'hud-restored',
 ]);
+export const FINAL_VISUAL_TIME_MS = Date.parse('2026-10-08T12:00:00.000Z');
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -171,6 +172,11 @@ export async function validateFinalVisualQualification(
       state.settings?.candidate,
       `${state.id} per-revision settings differ`,
     );
+    assert.ok(state.settings?.baseline && state.settings?.candidate, `${state.id} settings missing`);
+    assert.ok(state.populations?.baseline && state.populations?.candidate, `${state.id} populations missing`);
+    assertProfile(state.nativeSharpnessProfileByRevision?.baseline, `${state.id} baseline profile`);
+    assertProfile(state.nativeSharpnessProfileByRevision?.candidate, `${state.id} candidate profile`);
+    assert.ok(Number(state.populations.baseline.cctv) > 0 && Number(state.populations.candidate.cctv) > 0, `${state.id} CCTV population is empty`);
     assert.deepEqual(
       state.populations?.baseline,
       state.populations?.candidate,
@@ -186,11 +192,17 @@ export async function validateFinalVisualQualification(
       state.hud?.candidate,
       `${state.id} per-revision HUD accessibility state differs`,
     );
+    assert.ok(state.hud?.baseline && state.hud?.candidate, `${state.id} HUD state missing`);
+    const expectedHudVisible = state.id !== 'hud-hidden';
+    assert.equal(state.hud.baseline.visible, expectedHudVisible, `${state.id} baseline HUD visibility`);
+    assert.equal(state.hud.candidate.visible, expectedHudVisible, `${state.id} candidate HUD visibility`);
     assert.ok(
       Number.isSafeInteger(state.timestampMs?.baseline) &&
         Number.isSafeInteger(state.timestampMs?.candidate),
       `${state.id} timestamps are missing`,
     );
+    assert.equal(state.timestampMs.baseline, FINAL_VISUAL_TIME_MS, `${state.id} baseline timestamp`);
+    assert.equal(state.timestampMs.candidate, FINAL_VISUAL_TIME_MS, `${state.id} candidate timestamp`);
     assert.deepEqual(
       state.camera,
       report.environment.camera,
@@ -211,6 +223,14 @@ export async function validateFinalVisualQualification(
       root,
       `${state.id} candidate`,
     );
+    assert.deepEqual(baseline.pixelInfo.width && { width: baseline.pixelInfo.width, height: baseline.pixelInfo.height }, {
+      width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
+      height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
+    }, `${state.id} baseline image dimensions`);
+    assert.deepEqual(candidate.pixelInfo.width && { width: candidate.pixelInfo.width, height: candidate.pixelInfo.height }, {
+      width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
+      height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
+    }, `${state.id} candidate image dimensions`);
     assert.deepEqual(candidate.pixels, baseline.pixels, `${state.id} decoded rendered pixels changed`);
     assert.deepEqual(candidate.pixelInfo, baseline.pixelInfo, `${state.id} decoded pixel dimensions changed`);
   }
