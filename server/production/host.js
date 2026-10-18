@@ -85,7 +85,11 @@ function security(res, requestUrl = '') {
   for (const [key, value] of Object.entries(BROWSER_HEADERS)) res.setHeader(key, value);
   const ancestors = process.env.GEV_EMBED_FRAME_ANCESTORS;
   if (ancestors && isEmbedDocumentRequest(requestUrl)) {
-    res.setHeader('Content-Security-Policy', BROWSER_HEADERS['Content-Security-Policy'].replace('frame-ancestors \'none\'', `frame-ancestors ${ancestors}`));
+    const policy = BROWSER_HEADERS['Content-Security-Policy'];
+    const nextPolicy = ancestors.trim() === '*'
+      ? policy.split(';').filter((directive) => !/^\s*frame-ancestors\b/i.test(directive)).join(';').trim()
+      : policy.replace('frame-ancestors \'none\'', `frame-ancestors ${ancestors}`);
+    res.setHeader('Content-Security-Policy', nextPolicy);
     res.removeHeader('X-Frame-Options');
   }
 }
@@ -136,7 +140,12 @@ async function readManifest(root, { required = false } = {}) {
   }
 }
 
-async function regularFile(file) {
+async function regularFile(file, root = null) {
+  if (root) {
+    const realRoot = await fs.realpath(root).catch(() => null);
+    const realFile = await fs.realpath(file).catch(() => null);
+    if (!realRoot || !realFile || (realFile !== realRoot && !realFile.startsWith(`${realRoot}${path.sep}`))) return null;
+  }
   const info = await fs.lstat(file).catch(() => null);
   return info?.isFile() && !info.isSymbolicLink() ? info : null;
 }
@@ -145,7 +154,8 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
   const currentRoot = path.resolve(root);
   const previous = previousRoots.map((item) => path.resolve(item));
   const manifestPromise = readManifest(currentRoot);
-  const previousManifests = new Map(previous.map((candidate) => [candidate, readManifest(candidate)]));
+  const manifestIndexPromise = manifestPromise.then((value) => new Map((value?.assets || []).map((entry) => [entry.path, entry])));
+  const previousManifests = new Map(previous.map((candidate) => [candidate, readManifest(candidate).then((value) => new Map((value?.assets || []).map((entry) => [entry.path, entry])))]));
   const handler = async (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     const url = new URL(req.url || '/', 'http://localhost');
@@ -156,15 +166,17 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
     let relative = path.relative(currentRoot, target).replaceAll(path.sep, '/');
     if (!relative) relative = 'index.html';
     target = path.join(currentRoot, relative);
-    let manifest = await manifestPromise;
+    const manifest = await manifestPromise;
+    let servingRoot = currentRoot;
     const records = new Map((manifest?.assets || []).map((entry) => [entry.path, entry]));
-    let record = records.get(relative);
+    let record = (await manifestIndexPromise).get(relative);
     if (!record) {
       for (const candidate of previous) {
-        const candidateManifest = await previousManifests.get(candidate);
-        const candidateRecord = candidateManifest?.assets?.find((entry) => entry.path === relative && entry.cache === 'immutable');
-        if (candidateRecord && await regularFile(path.join(candidate, relative))) {
+        const candidateIndex = await previousManifests.get(candidate);
+        const candidateRecord = candidateIndex?.get(relative);
+        if (candidateRecord?.cache === 'immutable' && await regularFile(path.join(candidate, relative), candidate)) {
           record = candidateRecord;
+          servingRoot = candidate;
           target = path.join(candidate, relative);
           break;
         }
@@ -177,15 +189,15 @@ export function createStaticHandler({ root, previousRoots = [] } = {}) {
         record = records.get(relative);
       }
     }
-    if (!record || !(await regularFile(target))) return next();
+    if (!record || !(await regularFile(target, servingRoot))) return next();
     const available = [];
     for (const encoding of ['br', 'gzip'])
-      if (await regularFile(`${target}.${encoding === 'br' ? 'br' : 'gz'}`)) available.push(encoding);
+      if (await regularFile(`${target}.${encoding === 'br' ? 'br' : 'gz'}`, servingRoot)) available.push(encoding);
     const encoding = chooseEncoding(req.headers['accept-encoding'], available);
     if (!encoding) { security(res, req.url); res.writeHead(406); return res.end(); }
     const source = encoding === 'br' ? `${target}.br` : encoding === 'gzip' ? `${target}.gz` : target;
-    const etagValue = record.sha256 || createHash('sha256').update(await fs.readFile(target)).digest('hex');
-    const etag = `"${etagValue}${encoding === 'identity' ? '' : `-${encoding}`}"`;
+    const etagValue = encoding === 'br' ? record.brotliSha256 : encoding === 'gzip' ? record.gzipSha256 : record.sha256;
+    const etag = `"${etagValue || createHash('sha256').update(await fs.readFile(source)).digest('hex')}"`;
     security(res, req.url);
     res.setHeader('Content-Type', MIME[path.extname(relative).toLowerCase()] || 'application/octet-stream');
     res.setHeader('ETag', etag);

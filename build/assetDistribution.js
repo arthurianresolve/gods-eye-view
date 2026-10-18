@@ -243,6 +243,7 @@ export async function writeAssetArtifacts(
       const target = path.join(absoluteRoot, `${entry.path}.gz`);
       const compressed = gzipSync(bytes, { level: 9, mtime: 0 });
       entry.gzip = compressed.length;
+      entry.gzipSha256 = createHash('sha256').update(compressed).digest('hex');
       await fs.writeFile(target, compressed);
       sidecars.push(`${entry.path}.gz`);
     }
@@ -252,6 +253,7 @@ export async function writeAssetArtifacts(
         params: { [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality },
       });
       entry.brotli = compressed.length;
+      entry.brotliSha256 = createHash('sha256').update(compressed).digest('hex');
       await fs.writeFile(target, compressed);
       sidecars.push(`${entry.path}.br`);
     }
@@ -279,6 +281,7 @@ export function assetDistributionPlugin({ cesiumDigest = null } = {}) {
     },
     closeBundle: {
       order: 'post',
+      sequential: true,
       async handler() {
       if (!outDir) throw new Error('Asset distribution output directory was not resolved.');
       await writeAssetArtifacts(outDir, { cesiumDigest, immutablePaths });

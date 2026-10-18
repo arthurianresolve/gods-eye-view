@@ -39,6 +39,17 @@ test('production static handler serves encoded assets and revalidates HTML', asy
     assert.equal(suffix.body.toString(), 'h1>');
     const notAcceptable = await request(server, { 'accept-encoding': 'identity;q=0' });
     assert.equal(notAcceptable.status, 406);
+    const previousAncestors = process.env.GEV_EMBED_FRAME_ANCESTORS;
+    process.env.GEV_EMBED_FRAME_ANCESTORS = 'https://embed.example';
+    const embedded = await request(server, {}, { path: '/?embed=1' });
+    assert.equal(embedded.headers['x-frame-options'], undefined);
+    assert.match(embedded.headers['content-security-policy'], /frame-ancestors https:\/\/embed\.example/);
+    process.env.GEV_EMBED_FRAME_ANCESTORS = '*';
+    const anywhere = await request(server, {}, { path: '/?embed=1' });
+    assert.equal(anywhere.headers['x-frame-options'], undefined);
+    assert.doesNotMatch(anywhere.headers['content-security-policy'], /frame-ancestors/);
+    if (previousAncestors === undefined) delete process.env.GEV_EMBED_FRAME_ANCESTORS;
+    else process.env.GEV_EMBED_FRAME_ANCESTORS = previousAncestors;
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await rm(root, { recursive: true, force: true });
