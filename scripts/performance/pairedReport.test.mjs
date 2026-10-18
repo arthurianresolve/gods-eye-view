@@ -64,6 +64,22 @@ test('valid paired reports calculate scenario medians, objective and regressions
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
 });
 
+test('native comparison cannot bypass profile evidence by stripping fields', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  baseline.comparisonProfile = 'native-sharpness-v1';
+  candidate.comparisonProfile = 'native-sharpness-v1';
+  assert.throws(
+    () => validatePairedPerformanceReports({
+      baseline,
+      candidate,
+      expectedAppCommits: { baseline: baselineCommit, candidate: candidateCommit },
+      expectedComparisonProfile: 'native-sharpness-v1',
+    }),
+    /missing native sharpness profile/,
+  );
+});
+
 test('paired renderer evidence ignores only one-time query duration', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);

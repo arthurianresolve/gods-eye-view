@@ -28,6 +28,7 @@ import {
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
+import { assertNativeSharpnessProfile, NATIVE_SHARPNESS_PROFILE_ID } from './nativeSharpnessProfile.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -1602,6 +1603,18 @@ export function validatePairedPerformanceReports({
   if (expectedComparisonProfile) {
     assert.equal(baseline.comparisonProfile, expectedComparisonProfile);
     assert.equal(candidate.comparisonProfile, expectedComparisonProfile);
+    if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID) {
+      for (const [label, report] of [['baseline', baseline], ['candidate', candidate]]) {
+        assertNativeSharpnessProfile(report, `${label} environment`);
+        for (const [index, capture] of (report.captures || []).entries()) {
+          for (const phase of ['before', 'after']) {
+            const boundary = capture.conditions?.[phase];
+            assert.ok(boundary?.environment, `${label} capture ${index} ${phase} environment missing`);
+            assertNativeSharpnessProfile({ environment: boundary.environment }, `${label} capture ${index} ${phase}`);
+          }
+        }
+      }
+    }
   }
   assert.notEqual(
     expectedAppCommits.baseline,
@@ -1679,7 +1692,7 @@ export function validatePairedPerformanceReports({
       candidate.environment.drawingBuffer,
       'Map drawing buffer dimensions differ',
     );
-    if (baseline.environment.nativeSharpnessProfile || candidate.environment.nativeSharpnessProfile)
+    if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID)
       equal(
         baseline.environment.nativeSharpnessProfile,
         candidate.environment.nativeSharpnessProfile,
@@ -1832,7 +1845,7 @@ export function validatePairedPerformanceReports({
     candidate.environment.drawingBuffer,
     'Drawing buffer dimensions differ',
   );
-  if (baseline.environment.nativeSharpnessProfile || candidate.environment.nativeSharpnessProfile)
+  if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID)
     equal(
       baseline.environment.nativeSharpnessProfile,
       candidate.environment.nativeSharpnessProfile,

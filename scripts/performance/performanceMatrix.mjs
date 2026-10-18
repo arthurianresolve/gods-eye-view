@@ -257,7 +257,7 @@ export function createMatrixCaptureInvocation(plan, row, role) {
     '--served-base-url',
     build.baseUrl,
   ];
-  if (plan.comparisonProfile)
+  if (plan.comparisonProfile && plan.comparisonProfile !== 'legacy')
     args.push('--comparison-profile', plan.comparisonProfile);
   if (row.mixedLayers) args.push('--mixed-layers');
   if (row.buildProfile !== 'standard')
@@ -286,9 +286,9 @@ export function readReusableMatrixReport(plan, row, role) {
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
   const revision = plan[role];
   assert.equal(report.schema, 'gev-performance-capture/v1');
-  if (plan.comparisonProfile)
+  if (plan.comparisonProfile && plan.comparisonProfile !== 'legacy')
     assert.equal(
-      report.comparisonProfile,
+      report.comparisonProfile ?? 'legacy',
       plan.comparisonProfile,
       'Reusable report comparison profile differs from matrix plan',
     );
