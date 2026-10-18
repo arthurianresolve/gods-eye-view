@@ -23,17 +23,21 @@ function parseEvidence(value) {
 function runnerDiagnostic(cause, evidence, category) {
   const timedOut =
     cause?.code === 'ETIMEDOUT' || cause?.name === 'TimeoutError';
-  const runnerExited =
-    !timedOut &&
-    (Boolean(evidence) ||
-      typeof cause?.stdout === 'string' ||
-      Number.isInteger(cause?.status) ||
-      typeof cause?.code === 'number');
+  const runnerTimedOut = timedOut || cause?.gevTimeout === true;
+  const runnerExited = runnerTimedOut
+    ? false
+    : evidence ||
+        Number.isInteger(cause?.status) ||
+        typeof cause?.code === 'number'
+      ? true
+      : cause?.code === 'ENOENT' || cause?.code === 'EACCES'
+        ? false
+        : null;
   const diagnostic = {
     schema: FOREGROUND_DIAGNOSTIC_SCHEMA,
     category,
     runnerExited,
-    runnerTimedOut: timedOut,
+    runnerTimedOut,
     runnerKilled: cause?.killed === true,
   };
   const exitCode = Number.isInteger(cause?.status)
@@ -173,16 +177,29 @@ if (-not $confirmed) { exit 2 }
 `;
 
 async function runPowerShell(browserPid, timeoutMs) {
-  return execFileAsync(
-    'powershell.exe',
-    ['-NoProfile', '-NonInteractive', '-Command', POWERSHELL_SCRIPT],
-    {
-      env: { ...process.env, GEV_OWNED_BROWSER_PID: String(browserPid) },
-      timeout: timeoutMs,
-      windowsHide: true,
-      maxBuffer: 64 * 1024,
-    },
-  );
+  try {
+    return await execFileAsync(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command', POWERSHELL_SCRIPT],
+      {
+        env: { ...process.env, GEV_OWNED_BROWSER_PID: String(browserPid) },
+        timeout: timeoutMs,
+        windowsHide: true,
+        maxBuffer: 64 * 1024,
+      },
+    );
+  } catch (error) {
+    // Node reports execFile's timeout as killed + SIGTERM with no code. Mark
+    // this runner-owned timeout explicitly so other process failures are not
+    // misclassified as timeouts.
+    if (
+      error?.killed === true &&
+      error?.signal === 'SIGTERM' &&
+      error?.code == null
+    )
+      error.gevTimeout = true;
+    throw error;
+  }
 }
 
 export async function focusOwnedWindowsBrowserWindow({
@@ -234,7 +251,9 @@ export async function focusOwnedWindowsBrowserWindow({
         null,
         rawEvidence
           ? 'malformed-evidence'
-          : cause?.code === 'ETIMEDOUT' || cause?.name === 'TimeoutError'
+          : cause?.gevTimeout === true ||
+              cause?.code === 'ETIMEDOUT' ||
+              cause?.name === 'TimeoutError'
             ? 'timeout'
             : 'process-failure',
       );

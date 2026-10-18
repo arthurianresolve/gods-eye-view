@@ -111,7 +111,8 @@ export function sanitizeForegroundActivationDiagnostic(value) {
   for (const key of FOREGROUND_DIAGNOSTIC_KEYS) {
     if (!Object.hasOwn(value, key)) continue;
     const entry = value[key];
-    if (typeof entry === 'boolean') output[key] = entry;
+    if (entry === null) output[key] = null;
+    else if (typeof entry === 'boolean') output[key] = entry;
     else if (Number.isSafeInteger(entry)) output[key] = entry;
     else if (typeof entry === 'string' && entry.length <= 128)
       output[key] = safeText(entry, 128);

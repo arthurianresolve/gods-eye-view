@@ -128,9 +128,11 @@ test('Windows activation retains bounded pre-evidence process diagnostics', asyn
       platform: 'win32',
       runner: async () => {
         const error = new Error('timed out with private stdout');
-        error.code = 'ETIMEDOUT';
+        // This is the shape produced by Node execFile's timeout option.
+        error.code = null;
         error.killed = true;
         error.signal = 'SIGTERM';
+        error.gevTimeout = true;
         error.stdout = '';
         error.stderr = 'secret command output';
         throw error;
@@ -142,7 +144,7 @@ test('Windows activation retains bounded pre-evidence process diagnostics', asyn
       assert.equal(error.foregroundActivation.runnerTimedOut, true);
       assert.equal(error.foregroundActivation.runnerKilled, true);
       assert.equal(error.foregroundActivation.runnerSignal, 'SIGTERM');
-      assert.equal(error.foregroundActivation.runnerErrorCode, 'ETIMEDOUT');
+      assert.equal('runnerErrorCode' in error.foregroundActivation, false);
       assert.equal('stderr' in error.foregroundActivation, false);
       assert.equal('stdout' in error.foregroundActivation, false);
       return true;
@@ -180,7 +182,7 @@ test('Windows activation marks malformed failure evidence without retaining raw 
     }),
     (error) => {
       assert.equal(error.foregroundActivation.category, 'malformed-evidence');
-      assert.equal(error.foregroundActivation.runnerExited, true);
+      assert.equal(error.foregroundActivation.runnerExited, null);
       assert.equal('stdout' in error.foregroundActivation, false);
       assert.equal('private' in error.foregroundActivation, false);
       return true;
