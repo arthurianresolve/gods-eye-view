@@ -57,13 +57,13 @@ slices. Fully qualified requires engineering closure, applicable automatic gates
 and the relevant final Windows evidence. Also report how many slices are partial.
 Do not invent a percentage of code written or weight commits/tests as progress.
 The packet-by-packet audits and frozen-candidate run have closed S47-S60
-engineering: **14/14 closed, 0/14 partial, and 13/14 automatically and
-primary-machine qualified**. S60 has the complete matched workload matrix,
-physical-Windows soak, exact-commit release artifact and attestation. Its final
-delivery row remains pending until VM105 is reconciled. Human accessibility and
-first-use evidence remains explicitly pending outside the completed engineering
-count. S50 closure includes the reviewed rendered
-retention comparison and real-layer workspace restore integration. S56 closes
+engineering: **14/14 closed, 0/14 partial, and 14/14 fully qualified on the
+available primary environments**. S60 has the complete matched workload matrix,
+physical-Windows soak, exact-commit release artifact and attestation, plus a
+verified VM105 deployment of that exact commit through the existing HTTPS
+origin. Human accessibility and first-use evidence remains explicitly pending
+outside the completed engineering count. S50 closure includes the reviewed
+rendered retention comparison and real-layer workspace restore integration. S56 closes
 the real caller cleanup gaps and explicitly retains framebuffer preservation.
 S57 includes strict native production map/fault journeys and map ownership.
 The physical Windows retention gate and every required timed-workload row now

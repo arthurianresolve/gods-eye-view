@@ -47,6 +47,30 @@ passed. Its downloaded archive has SHA-256
 and GitHub attestation verification bound it to the repository and candidate
 commit.
 
+## VM105 deployment
+
+VM105 now serves the exact candidate from
+`/opt/gods-eye-view-releases/1b92b573b70d565e139c9c8c7b887157f98696f9`.
+The service is active, its tracked checkout is clean, the VM-local production
+page and Cesium worker smoke checks pass, and the public origin returns 200 with
+valid TLS, HSTS and a 301 HTTP-to-HTTPS redirect. A real Chrome session rendered
+the application with title `God's Eye View` and loaded the candidate's
+`/assets/index-BBRFU2-k.js` bundle.
+
+The 502 root cause was an Nginx upstream pinned to VM105's former DHCP address
+`192.168.178.78`. Container 104 now resolves `gods-eye-view.fritz.box` through
+the local router with a 30-second validity period and reaches the VM through the
+existing source-restricted firewall rule. Nginx syntax validation and reload
+passed. The previous application commit `2e0fb80c` and its built runtime,
+cache/log state and service definition are retained in a checksummed rollback
+packet at `/opt/gods-eye-view-rollbacks/20261018T-pre-1b92`.
+
+The deployment did not weaken the application's reverse-proxy request gate.
+The UI and static assets work through HTTPS; proxied gated POST APIs continue to
+return 403 by design, while the VM-local archive route is installed and returns
+its expected POST-required response to GET. Details and exact rollback hashes
+are in `vm105-deployment.json`.
+
 ## Files
 
 | File                       | SHA-256                                                            |
@@ -55,6 +79,8 @@ commit.
 | `evidence-index.json`      | `B7F9F1127D544B6C8C3216445E321ABC743CAA0A963EBDFEED769AFC14BC10D9` |
 | `validation-manifest.json` | `DFADAC6DEEF2F54D7A1865B59C52063D1D3AE21F38BA854E6E4D2A5B5710EDD8` |
 | `windows-soak.json`        | `58F3D36024E0A10D9C023CF0C67DC93EEBA0FCFC61893771791C18DD30135B6C` |
+| `vm105-deployment.json`    | `0C37D387D6D118328A25481D6E8689F7C0BD62D73A3B3991BBA7C6BADA15FE1B` |
+| `vm105-live.png`           | `890E30106FDCD48D7EBD142F533DB48350F63DD0716C374BC9221B444216C7F8` |
 
 ## Upstream boundary
 

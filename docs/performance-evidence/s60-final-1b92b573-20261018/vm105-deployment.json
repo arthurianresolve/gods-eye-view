@@ -1,0 +1,72 @@
+{
+  "schema": "gev-vm105-deployment/v1",
+  "recordedAt": "2026-10-18T04:28:05.752Z",
+  "candidateCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "remoteDevCommit": "1b92b573b70d565e139c9c8c7b887157f98696f9",
+  "previousCommit": "2e0fb80cb696aa6b621e8b93d8effd299ffa4b14",
+  "vm": {
+    "id": 105,
+    "name": "gods-eye-view",
+    "addressAtValidation": "192.168.178.35",
+    "addressSource": "DHCP4 via 192.168.178.1",
+    "releaseDirectory": "/opt/gods-eye-view-releases/1b92b573b70d565e139c9c8c7b887157f98696f9",
+    "service": "gods-eye-view.service",
+    "serviceState": "active",
+    "serviceWorkingDirectory": "/opt/gods-eye-view-releases/1b92b573b70d565e139c9c8c7b887157f98696f9",
+    "trackedTreeClean": true,
+    "nodeVersion": "v26.11.0",
+    "npmVersion": "11.20.0"
+  },
+  "build": {
+    "npmCi": "passed",
+    "productionBuild": "passed",
+    "localSmoke": "passed",
+    "indexBytesOnVm": 88015,
+    "representativeCesiumWorker": "/cesium/Workers/createEllipsoidOutlineGeometry.js",
+    "mainAsset": "/assets/index-BBRFU2-k.js",
+    "mainAssetBytesOverHttps": 3902851
+  },
+  "proxy": {
+    "containerId": 104,
+    "containerName": "management-proxy",
+    "publicOrigin": "https://vision.macarthur.systems",
+    "nginxConfig": "/etc/nginx/sites-available/vision.macarthur.systems.conf",
+    "nginxConfigBackup": "/etc/nginx/sites-available/vision.macarthur.systems.conf.bak-20261018-dynamic",
+    "upstreamHostname": "gods-eye-view.fritz.box",
+    "upstreamPort": 4173,
+    "resolver": "192.168.178.1",
+    "resolverValiditySeconds": 30,
+    "nginxSyntax": "passed",
+    "firewallSourceRestriction": "VM105 accepts port 4173 from 192.168.178.75"
+  },
+  "https": {
+    "status": 200,
+    "tlsVerificationResult": 0,
+    "httpRedirectStatus": 301,
+    "hsts": "max-age=31536000",
+    "browserTitle": "God's Eye View",
+    "realChromeRender": "passed",
+    "screenshot": "vm105-live.png",
+    "screenshotSha256": "890E30106FDCD48D7EBD142F533DB48350F63DD0716C374BC9221B444216C7F8"
+  },
+  "apiAndSecurity": {
+    "localArchiveRouteGet": {
+      "status": 405,
+      "result": "method-not-allowed",
+      "meaning": "The VM-local route is installed and requires POST."
+    },
+    "proxiedArchivePost": {
+      "status": 403,
+      "result": "Proxied requests are not accepted",
+      "meaning": "The existing reverse-proxy request gate remains enforced; it was not weakened for deployment."
+    }
+  },
+  "rollback": {
+    "directory": "/opt/gods-eye-view-rollbacks/20261018T-pre-1b92",
+    "previousSourceFile": "source-commit.txt",
+    "runtimeArchive": "runtime.tgz",
+    "runtimeArchiveSha256": "e4fd3a25634fa45170ab71cd79e0db72d0d31f6d78ca7003a155fc1951ed4390",
+    "serviceBackup": "gods-eye-view.service",
+    "serviceBackupSha256": "3dffa413d04125ed55bdf4f6e7e2578ddbb242bfed9339b298dacaff03a204cd"
+  }
+}

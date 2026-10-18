@@ -17,6 +17,15 @@ proposed 20% dense-motion and tracking objectives were missed; measured
 regressions are 7.12% and 6.73%, below the policy's 10% blocking threshold.
 See the [final evidence packet](performance-evidence/s60-final-1b92b573-20261018/README.md).
 
+VM105 now runs the exact frozen commit from an isolated release directory. Its
+production build, local smoke, service cutover, public HTTPS route, TLS/HSTS,
+main asset and a real Chrome render all pass. The previous release remains in
+place with a checksummed runtime/service rollback packet. The management proxy
+now resolves `gods-eye-view.fritz.box` every 30 seconds instead of pinning the
+VM's former DHCP address, which removes the cause of the post-restart 502. The
+existing reverse-proxy API gate remains enforced. This closes S60's deployment
+row and raises available-environment qualification to 14/14 slices.
+
 Upstream `main` advanced to `93ea088f` after the freeze. Its 45 new commits are
 assigned to the next candidate because merging them would invalidate the exact
 application revision bound to this matrix, soak, release artifact and
