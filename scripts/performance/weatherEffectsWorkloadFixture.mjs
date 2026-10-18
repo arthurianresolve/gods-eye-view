@@ -34,12 +34,6 @@ export const WEATHER_EFFECTS_MEDIA_PREFERENCES = Object.freeze({
   'prefers-reduced-motion': 'no-preference',
 });
 
-/** Preserve the semantic fixture label while accepting the app's numeric API. */
-export function normalizeFilteredInfrared(value) {
-  if (value === 'filtered' || value === 100) return 'filtered';
-  throw new TypeError('Weather satellite infrared value is not filtered.');
-}
-
 /** Pin the ephemeral benchmark document to the condition that keeps weather history advancing. */
 export async function configureWeatherEffectsMotionPreference(page) {
   assert.equal(typeof page?.emulateMediaFeatures, 'function');
@@ -1269,7 +1263,7 @@ export async function prepareWeatherEffectsTimelineInPage({
   const radarParams = productLayers[0]?.getParams?.();
   const lightningParams = productLayers[2]?.getParams?.();
   // This callback is serialized into the page; keep the compatibility adapter
-  // self-contained instead of closing over its Node-side export.
+  // self-contained, and leave the runtime parameters unchanged.
   const satelliteInfrared =
     satelliteParams?.infrared === 'filtered' ||
     satelliteParams?.infrared === 100
@@ -1305,10 +1299,10 @@ export async function prepareWeatherEffectsTimelineInPage({
           typeof satelliteParams?.product === 'string'
             ? satelliteParams.product.slice(0, 32)
             : null,
-        infrared:
-          Number.isFinite(satelliteParams?.infrared) ||
-          typeof satelliteParams?.infrared === 'string'
-            ? satelliteParams.infrared
+        infrared: Number.isFinite(satelliteParams?.infrared)
+          ? satelliteParams.infrared
+          : typeof satelliteParams?.infrared === 'string'
+            ? satelliteParams.infrared.slice(0, 32)
             : null,
       },
       radarOpacity:
@@ -1320,7 +1314,9 @@ export async function prepareWeatherEffectsTimelineInPage({
           ? lightningParams.opacity.slice(0, 16)
           : null,
       productObservations,
-      expectedTimeline: timeline.map((time) => String(time).slice(0, 64)),
+      expectedTimeline: timeline
+        .slice(0, 12)
+        .map((time) => String(time).slice(0, 64)),
     };
     throw new Error(
       `Weather history or wind playback state did not match the fixture: ${JSON.stringify(observed)}.`,

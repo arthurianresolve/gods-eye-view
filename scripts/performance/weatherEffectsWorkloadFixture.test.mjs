@@ -39,18 +39,10 @@ import {
   observeWeatherEffectsMotionPreference,
   recordWeatherMotionPreferencePreflight,
   assertWeatherEffectsMotionPreference,
-  normalizeFilteredInfrared,
 } from './weatherEffectsWorkloadFixture.mjs';
 
 const BASE = 'http://127.0.0.1:4173/';
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-
-test('weather fixture normalizes only the documented filtered infrared aliases', () => {
-  assert.equal(normalizeFilteredInfrared('filtered'), 'filtered');
-  assert.equal(normalizeFilteredInfrared(100), 'filtered');
-  assert.throws(() => normalizeFilteredInfrared(0), /not filtered/);
-  assert.throws(() => normalizeFilteredInfrared('full'), /not filtered/);
-});
 
 test('capture producer resolves weather fixture operations from its lazy module namespace', () => {
   const captureSource = readFileSync(
@@ -502,6 +494,11 @@ test('serialized weather phase driver selects every source through the real cloc
       fixture,
     });
     assert.equal(startupPreflight.schema, 'gev-weather-history-preflight/v1');
+    assert.equal(
+      startupPreflight.playback.visualState.satelliteInfrared,
+      'filtered',
+    );
+    assert.equal(modules.get('weather-satellite').getParams().infrared, 100);
     assert.deepEqual(
       Array.from(startupPreflight.phases, ({ timelineIndex, sourceTime }) => ({
         timelineIndex,
@@ -542,7 +539,11 @@ test('serialized weather phase driver selects every source through the real cloc
       aliasPreflight.playback.visualState.satelliteInfrared,
       'filtered',
     );
-    for (const invalid of [0, 99, '100', null, 'full', 'x'.repeat(500)]) {
+    assert.equal(
+      modules.get('weather-satellite').getParams().infrared,
+      'filtered',
+    );
+    for (const invalid of [0, 99, '100', null, 'full', 'x'.repeat(10000)]) {
       infraredValue = invalid;
       await assert.rejects(
         prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
