@@ -212,6 +212,111 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
   }
 });
 
+test('native resume reconciles the frozen missing top-level label only from every observed boundary', async () => {
+  const root = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'gev-matrix-native-reuse-'),
+  );
+  try {
+    const planInput = makePlan(root);
+    planInput.comparisonProfile = 'native-sharpness-v1';
+    const plan = validatePerformanceMatrixPlan(planInput);
+    await fs.promises.mkdir(plan.outputRoot, { recursive: true });
+    const row = plan.rows.find((entry) => entry.id === 'dense-investigation');
+    const profile = {
+      id: 'native-sharpness-v1',
+      useBrowserRecommendedResolution: false,
+      resolutionScale: 1,
+      maximumScreenSpaceError: 1,
+      viewport: { width: 1440, height: 900, dpr: 1 },
+      drawingBuffer: { width: 1440, height: 900 },
+    };
+    for (const [role, commit] of [
+      ['baseline', baselineCommit],
+      ['candidate', candidateCommit],
+    ]) {
+      const report = makeReport(commit);
+      report.source.harnessCommit = plan.harnessCommit;
+      report.source.buildProvenance.harnessCommit = plan.harnessCommit;
+      report.comparisonReadiness = { status: 'ready', reasons: [] };
+      report.workload.providerFixture = row.providerFixture;
+      report.environment.hardwareEligible = true;
+      for (const capture of report.captures)
+        for (const phase of ['before', 'after'])
+          {
+          capture.settings ||= {};
+          capture.settings[phase] ||= {};
+          capture.settings[phase].nativeSharpnessProfile = profile;
+          capture.conditions[phase].settings.nativeSharpnessProfile = profile;
+          capture.conditions[phase].environment = {
+            nativeSharpnessProfile: profile,
+            viewport: profile.viewport,
+            drawingBuffer: profile.drawingBuffer,
+          };
+          }
+      await fs.promises.writeFile(
+        matrixReportPath(plan, row, role),
+        JSON.stringify(report),
+      );
+      const rawBefore = await fs.promises.readFile(
+        matrixReportPath(plan, row, role),
+        'utf8',
+      );
+      assert.equal(
+        readReusableMatrixReport(plan, row, role).comparisonProfile,
+        'native-sharpness-v1',
+      );
+      assert.equal(
+        await fs.promises.readFile(matrixReportPath(plan, row, role), 'utf8'),
+        rawBefore,
+      );
+    }
+    const candidatePath = matrixReportPath(plan, row, 'candidate');
+    const candidate = JSON.parse(await fs.promises.readFile(candidatePath));
+    delete candidate.captures[0].conditions.before.settings.nativeSharpnessProfile;
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /missing native sharpness profile/,
+    );
+    for (const location of [
+      ['settings', 'before'],
+      ['conditions.settings', 'before'],
+      ['conditions.environment', 'before'],
+    ]) {
+      const candidateAgain = JSON.parse(
+        await fs.promises.readFile(candidatePath),
+      );
+      if (location[0] === 'settings')
+        delete candidateAgain.captures[0].settings[location[1]].nativeSharpnessProfile;
+      else if (location[0] === 'conditions.settings')
+        delete candidateAgain.captures[0].conditions[location[1]].settings.nativeSharpnessProfile;
+      else
+        delete candidateAgain.captures[0].conditions[location[1]].environment.nativeSharpnessProfile;
+      await fs.promises.writeFile(candidatePath, JSON.stringify(candidateAgain));
+      assert.throws(() => readReusableMatrixReport(plan, row, 'candidate'), /missing native sharpness profile/);
+    }
+    candidate.captures[0].conditions.before.settings.nativeSharpnessProfile = profile;
+    candidate.captures[0].conditions.before.environment.nativeSharpnessProfile = profile;
+    candidate.captures[0].settings.before.nativeSharpnessProfile = profile;
+    candidate.environment.nativeSharpnessProfile = { ...profile, maximumScreenSpaceError: 2 };
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(() => readReusableMatrixReport(plan, row, 'candidate'), /globe SSE differs|explicit environment native profile differs/);
+    candidate.environment.nativeSharpnessProfile = profile;
+    candidate.captures[0].conditions.before.environment.viewport = { ...profile.viewport, dpr: 1.5 };
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(() => readReusableMatrixReport(plan, row, 'candidate'), /boundary viewport differs/);
+    candidate.captures[0].conditions.before.environment.viewport = profile.viewport;
+    candidate.comparisonProfile = 'legacy';
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /comparison profile differs/,
+    );
+  } finally {
+    await fs.promises.rm(root, { recursive: true, force: true });
+  }
+});
+
 test('resume accepts the bounded legacy map mode only from exact sample settings', async () => {
   const root = await fs.promises.mkdtemp(
     path.join(os.tmpdir(), 'gev-matrix-map-mode-'),
