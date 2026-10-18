@@ -2579,7 +2579,7 @@ try {
         documentRole,
         documentId,
         appCommit: captureProvenance.source.appCommit,
-        harnessCommit: captureProvenance.source.harnessCommit,
+        harnessCommit: source.harnessCommit,
         receiptSha256: captureProvenance.source.receiptSha256,
         embeddedWorkerContract: captureWorkerContract,
         liveWorkers: includeLiveWorkers ? auditPage.workers() : [],
@@ -5753,7 +5753,7 @@ try {
         status: 'all-document-receipt-paths-validated',
         workerAuditMode,
         appCommit: captureProvenance.source.appCommit,
-        harnessCommit: captureProvenance.source.harnessCommit,
+        harnessCommit: source.harnessCommit,
         receiptSha256: captureProvenance.source.receiptSha256,
         liveBlobBodyAttestation: 'unavailable-by-design',
         pageInstrumentation: {
@@ -5774,7 +5774,7 @@ try {
       const receiptOnlyValid = validateReceiptOnlyWorkerAuditEnvelope({
         pageAssetAudit: source.buildProvenance.pageAssetAudit,
         appCommit: captureProvenance.source.appCommit,
-        harnessCommit: captureProvenance.source.harnessCommit,
+        harnessCommit: source.harnessCommit,
         receiptSha256: captureProvenance.source.receiptSha256,
         expectedDocuments: captureDocumentTopology.workerAudits,
         expectedAssetPaths: captureProvenance.source.expectedAssetPaths,

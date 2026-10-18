@@ -78,7 +78,7 @@ test('capture provenance separates producer checkout from build harness receipt'
       return result;
     },
   });
-  assert.equal(capture.source.harnessCommit, producerSha);
+  assert.equal(capture.source.harnessCommit, harnessSha);
   assert.equal(capture.source.captureProducerCommit, producerSha);
   assert.equal(capture.source.buildHarnessCommit, harnessSha);
   assert.deepEqual(calls, [harnessSha]);

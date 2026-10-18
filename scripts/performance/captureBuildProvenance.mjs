@@ -71,6 +71,11 @@ export async function beginCaptureBuildProvenance({
     'Expected full application SHA is required',
   );
   assert.match(
+    expectedHarnessCommit || '',
+    SHA1,
+    'Expected full capture producer SHA is required',
+  );
+  assert.match(
     expectedBuildHarnessCommit || '',
     SHA1,
     'Expected full build harness SHA is required',
@@ -95,6 +100,8 @@ export async function beginCaptureBuildProvenance({
     expectedBuildHarnessCommit,
     'Receipt build harness SHA mismatch',
   );
+  assert.equal(captureProducerCommit, expectedHarnessCommit, 'Capture producer SHA mismatch');
+  assert.match(captureProducerCommit || '', SHA1, 'Capture producer SHA is malformed');
   const expectedProfile = resolveMapFixtureBuildProfile(expectedBuildProfile);
   if (expectedProfile)
     assert.deepEqual(
@@ -163,7 +170,7 @@ export async function beginCaptureBuildProvenance({
         'unsigned local build and served-byte checks; browser response bytes are not independently attested',
       receiptSha256: receipt.receiptSha256,
       appCommit: receipt.source.commit,
-      harnessCommit: captureProducerCommit,
+      harnessCommit: receipt.harness.commit,
       captureProducerCommit,
       buildHarnessCommit: receipt.harness.commit,
       entryPaths,

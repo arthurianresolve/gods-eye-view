@@ -967,15 +967,16 @@ function validateBuildProvenance(source, side) {
     source.appCommit,
     `${side}: receipt app SHA mismatch`,
   );
-  assert.equal(
-    provenance.harnessCommit,
-    source.harnessCommit,
-    `${side}: receipt harness SHA mismatch`,
-  );
-  assert.match(provenance.captureProducerCommit || provenance.harnessCommit, SHA1, `${side}: capture producer SHA missing`);
-  assert.equal(provenance.captureProducerCommit || provenance.harnessCommit, source.harnessCommit, `${side}: capture producer SHA mismatch`);
-  if (provenance.buildHarnessCommit)
-    assert.match(provenance.buildHarnessCommit, SHA1, `${side}: build harness SHA malformed`);
+  assert.match(provenance.harnessCommit || '', SHA1, `${side}: receipt harness SHA missing`);
+  const producerCommit = Object.hasOwn(provenance, 'captureProducerCommit')
+    ? provenance.captureProducerCommit
+    : provenance.harnessCommit;
+  assert.match(producerCommit || '', SHA1, `${side}: capture producer SHA missing`);
+  assert.equal(producerCommit, source.harnessCommit, `${side}: capture producer SHA mismatch`);
+  if (Object.hasOwn(provenance, 'buildHarnessCommit')) {
+    assert.match(provenance.buildHarnessCommit || '', SHA1, `${side}: build harness SHA malformed`);
+    assert.equal(provenance.buildHarnessCommit, provenance.harnessCommit, `${side}: build harness SHA mismatch`);
+  }
   assert.match(
     provenance.scope || '',
     /browser response bytes are not independently attested/,
