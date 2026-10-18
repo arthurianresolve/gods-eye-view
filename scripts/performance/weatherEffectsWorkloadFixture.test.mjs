@@ -375,6 +375,7 @@ test('serialized weather phase driver selects every source through the real cloc
   const modules = new Map();
   const productEvidence = new Map();
   const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
+  let infraredValue = 100;
   const unregister = ids.map((id) => {
     let shown = null;
     const product = {
@@ -408,7 +409,7 @@ test('serialized weather phase driver selects every source through the real cloc
       },
       getParams: () =>
         id === 'weather-satellite'
-          ? { product: 'clouds-regional', infrared: 100 }
+          ? { product: 'clouds-regional', infrared: infraredValue }
           : { opacity: 'strong' },
     });
     return remove;
@@ -531,6 +532,29 @@ test('serialized weather phase driver selects every source through the real cloc
       Array.from(startupPreflight.reset.sourceObservationTimes),
       Array(3).fill(fixture.timeline.at(-1)),
     );
+
+    infraredValue = 'filtered';
+    const aliasPreflight = await prepareWeatherEffectsTimeline({
+      page,
+      fixture,
+    });
+    assert.equal(
+      aliasPreflight.playback.visualState.satelliteInfrared,
+      'filtered',
+    );
+    for (const invalid of [0, 99, '100', null, 'full', 'x'.repeat(500)]) {
+      infraredValue = invalid;
+      await assert.rejects(
+        prepareWeatherEffectsTimeline({ page, fixture, timeoutMs: 100 }),
+        (error) =>
+          typeof error?.message === 'string' &&
+          error.message.startsWith(
+            'Weather history or wind playback state did not match the fixture:',
+          ) &&
+          error.message.length < 2_000,
+      );
+    }
+    infraredValue = 100;
 
     productEvidence.get('weather-lightning').historyFrames = 2;
     await assert.rejects(
