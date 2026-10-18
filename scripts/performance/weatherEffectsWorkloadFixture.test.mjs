@@ -39,10 +39,18 @@ import {
   observeWeatherEffectsMotionPreference,
   recordWeatherMotionPreferencePreflight,
   assertWeatherEffectsMotionPreference,
+  normalizeFilteredInfrared,
 } from './weatherEffectsWorkloadFixture.mjs';
 
 const BASE = 'http://127.0.0.1:4173/';
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+test('weather fixture normalizes only the documented filtered infrared aliases', () => {
+  assert.equal(normalizeFilteredInfrared('filtered'), 'filtered');
+  assert.equal(normalizeFilteredInfrared(100), 'filtered');
+  assert.throws(() => normalizeFilteredInfrared(0), /not filtered/);
+  assert.throws(() => normalizeFilteredInfrared('full'), /not filtered/);
+});
 
 test('capture producer resolves weather fixture operations from its lazy module namespace', () => {
   const captureSource = readFileSync(
@@ -400,7 +408,7 @@ test('serialized weather phase driver selects every source through the real cloc
       },
       getParams: () =>
         id === 'weather-satellite'
-          ? { product: 'clouds-regional', infrared: 'filtered' }
+          ? { product: 'clouds-regional', infrared: 100 }
           : { opacity: 'strong' },
     });
     return remove;
@@ -1081,7 +1089,7 @@ test('weather failure snapshot is page-serializable and exposes only bounded sel
         }),
         getParams: () =>
           row.id === 'weather-satellite'
-            ? { product: 'clouds-regional', infrared: 'filtered' }
+            ? { product: 'clouds-regional', infrared: 100 }
             : row.id === 'wind'
               ? { model: 'gfs', overlay: 'speed', paused: false }
               : {},

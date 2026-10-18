@@ -34,6 +34,12 @@ export const WEATHER_EFFECTS_MEDIA_PREFERENCES = Object.freeze({
   'prefers-reduced-motion': 'no-preference',
 });
 
+/** Preserve the semantic fixture label while accepting the app's numeric API. */
+export function normalizeFilteredInfrared(value) {
+  if (value === 'filtered' || value === 100) return 'filtered';
+  throw new TypeError('Weather satellite infrared value is not filtered.');
+}
+
 /** Pin the ephemeral benchmark document to the condition that keeps weather history advancing. */
 export async function configureWeatherEffectsMotionPreference(page) {
   assert.equal(typeof page?.emulateMediaFeatures, 'function');
@@ -1262,21 +1268,64 @@ export async function prepareWeatherEffectsTimelineInPage({
   const satelliteParams = productLayers[1]?.getParams?.();
   const radarParams = productLayers[0]?.getParams?.();
   const lightningParams = productLayers[2]?.getParams?.();
-  if (
+  // This callback is serialized into the page; keep the compatibility adapter
+  // self-contained instead of closing over its Node-side export.
+  const satelliteInfrared =
+    satelliteParams?.infrared === 'filtered' ||
+    satelliteParams?.infrared === 100
+      ? 'filtered'
+      : null;
+  const productObservations = productStats.map((stats) => ({
+    observedAt:
+      typeof stats?.observedAt === 'string'
+        ? stats.observedAt.slice(0, 64)
+        : null,
+  }));
+  const mismatch =
     !wind ||
     typeof wind.model !== 'string' ||
     wind.model.toLowerCase() !== 'gfs' ||
     wind.overlay !== 'speed' ||
     wind.paused !== false ||
     satelliteParams?.product !== 'clouds-regional' ||
-    satelliteParams?.infrared !== 'filtered' ||
+    satelliteInfrared !== 'filtered' ||
     radarParams?.opacity !== 'strong' ||
     lightningParams?.opacity !== 'strong' ||
-    productStats.some((stats) => !timeline.includes(stats?.observedAt))
-  )
+    productStats.some((stats) => !timeline.includes(stats?.observedAt));
+  if (mismatch) {
+    const observed = {
+      wind: {
+        model: typeof wind?.model === 'string' ? wind.model.slice(0, 16) : null,
+        overlay:
+          typeof wind?.overlay === 'string' ? wind.overlay.slice(0, 16) : null,
+        paused: typeof wind?.paused === 'boolean' ? wind.paused : null,
+      },
+      satellite: {
+        product:
+          typeof satelliteParams?.product === 'string'
+            ? satelliteParams.product.slice(0, 32)
+            : null,
+        infrared:
+          Number.isFinite(satelliteParams?.infrared) ||
+          typeof satelliteParams?.infrared === 'string'
+            ? satelliteParams.infrared
+            : null,
+      },
+      radarOpacity:
+        typeof radarParams?.opacity === 'string'
+          ? radarParams.opacity.slice(0, 16)
+          : null,
+      lightningOpacity:
+        typeof lightningParams?.opacity === 'string'
+          ? lightningParams.opacity.slice(0, 16)
+          : null,
+      productObservations,
+      expectedTimeline: timeline.map((time) => String(time).slice(0, 64)),
+    };
     throw new Error(
-      'Weather history or wind playback state did not match the fixture.',
+      `Weather history or wind playback state did not match the fixture: ${JSON.stringify(observed)}.`,
     );
+  }
   return {
     schema: 'gev-weather-history-preflight/v1',
     fixtureSha256,
@@ -1303,7 +1352,7 @@ export async function prepareWeatherEffectsTimelineInPage({
       displayedAtStart: reset.times,
       visualState: {
         satelliteProduct: satelliteParams.product,
-        satelliteInfrared: satelliteParams.infrared,
+        satelliteInfrared,
         radarOpacity: radarParams.opacity,
         lightningOpacity: lightningParams.opacity,
         windModel: wind.model.toLowerCase(),
