@@ -49,6 +49,16 @@ accessible state remain active through established paths. S65 projection demand
 contracts have focused cadence, media-edge and disposal checks; full CCTV
 browser behavior remains a VM gate.
 
+## S67 asynchronous locale preparation — October 18, 2026
+
+Locale preparation now exposes coalesced asynchronous loading and explicit
+retry APIs while preserving synchronous `t`, plural and formatter behavior for
+existing callers. Standalone startup prepares the requested locale before UI
+construction, keeps English as the visible failure fallback, and applies the
+resolved preference without blank untranslated startup. Locale preparation
+tests cover Spanish/Russian success and coalesced retry compatibility; browser
+startup and dynamic import failure injection remain VM gates.
+
 ## S62 distribution assets — October 18, 2026
 
 The build now derives a deterministic SHA-256 digest from the patched Cesium

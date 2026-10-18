@@ -16,16 +16,53 @@ import {
   normalizeLocale,
   writeStoredLocale,
 } from './locale.js';
+// Keep synchronous catalog compatibility for existing callers. prepareLocale
+// still coalesces asynchronous import/retry requests at boot and on demand.
 import es from './locales/es.json' with { type: 'json' };
 import ru from './locales/ru.json' with { type: 'json' };
-
-const CATALOGS = Object.freeze({ es, ru });
+const CATALOGS = { en: null, es, ru };
+const LOADERS = Object.freeze({
+  es: () => import('./locales/es.json', { with: { type: 'json' } }),
+  ru: () => import('./locales/ru.json', { with: { type: 'json' } }),
+});
+const pendingLoads = new Map();
+let preparationGeneration = 0;
 
 let currentLocale = DEFAULT_LOCALE;
 
 /** The catalog for a locale; null for English and unknown codes. */
 export function getCatalog(locale) {
   return CATALOGS[normalizeLocale(locale)] ?? null;
+}
+
+/** Prepare a locale catalog before constructing UI. Concurrent requests coalesce. */
+export function prepareLocale(locale) {
+  const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
+  if (normalized === DEFAULT_LOCALE || CATALOGS[normalized]) {
+    setLocale(normalized);
+    return Promise.resolve(normalized);
+  }
+  if (pendingLoads.has(normalized)) return pendingLoads.get(normalized);
+  const generation = ++preparationGeneration;
+  const load = LOADERS[normalized]();
+  const pending = load.then((module) => {
+    CATALOGS[normalized] = module.default;
+    if (generation === preparationGeneration && currentLocale === normalized)
+      formatterCache.clear();
+    return normalized;
+  }).catch((error) => {
+    if (generation === preparationGeneration && currentLocale === normalized) {
+      setLocale(DEFAULT_LOCALE);
+    }
+    throw error;
+  }).finally(() => pendingLoads.delete(normalized));
+  pendingLoads.set(normalized, pending);
+  return pending;
+}
+
+/** Retry a failed or superseded locale preparation explicitly. */
+export function retryLocalePreparation(locale = currentLocale) {
+  return prepareLocale(locale);
 }
 
 /** Active locale. */

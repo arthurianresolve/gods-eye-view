@@ -6,6 +6,8 @@ import {
   formatDate,
   formatNumber,
   msg,
+  prepareLocale,
+  retryLocalePreparation,
   persistLocaleAndReload,
   setLocale,
   t,
@@ -20,6 +22,15 @@ import {
 } from './locale.js';
 
 afterEach(() => setLocale('en'));
+
+test('locale preparation preserves synchronous translation compatibility and coalesces retries', async () => {
+  const [es, ru] = await Promise.all([prepareLocale('es'), prepareLocale('ru')]);
+  assert.equal(es, 'es');
+  assert.equal(ru, 'ru');
+  setLocale('ru');
+  assert.equal(t('POWERED UP'), 'ЗАПУЩЕНО');
+  assert.equal(await retryLocalePreparation('ru'), 'ru');
+});
 
 function memoryStorage(initial = {}) {
   const data = new Map(Object.entries(initial));
