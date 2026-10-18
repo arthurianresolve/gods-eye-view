@@ -109,7 +109,7 @@ test('capture provenance rejects wrong SHAs and changes between the two served c
       captureUrl: 'http://127.0.0.1:4173/',
       verifyImpl: async () => result,
     }),
-    /Receipt harness SHA mismatch/,
+    /Receipt build harness SHA mismatch/,
   );
 
   let verifies = 0;
