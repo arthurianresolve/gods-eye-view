@@ -417,6 +417,43 @@ test('release retains and checksums the dependency postinstall support files', a
   await assert.rejects(verifyReleaseDirectory(staged), /checksum mismatch/);
 });
 
+test('production releases include provider support imports and omit source tests', async (t) => {
+  const root = await fixture(t);
+  const pkgPath = path.join(root, 'package.json');
+  const pkg = JSON.parse(await readFile(pkgPath));
+  pkg.scripts.start = 'node server/production/host.js';
+  await writeFile(pkgPath, JSON.stringify(pkg));
+  const runtimeFiles = [
+    'server/production/host.js',
+    'src/providerData.json',
+    'build/securityHeaders.js',
+    'build/allowedHosts.js',
+    'build/embed-framing.js',
+    'scripts/pinokio-environment.mjs',
+    'scripts/google-server-key.mjs',
+  ];
+  for (const file of [...runtimeFiles, 'src/not-runtime.test.mjs']) {
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    await writeFile(path.join(root, file), '{}');
+  }
+  const manifest = await stageRelease({ root, out: 'production' });
+  for (const file of runtimeFiles)
+    assert.ok(
+      manifest.artifactFiles.some((entry) => entry.path === file),
+      file,
+    );
+  assert.equal(
+    manifest.artifactFiles.some((entry) => entry.path.endsWith('.test.mjs')),
+    false,
+  );
+  await verifyReleaseDirectory(path.join(root, 'production'));
+  await rm(path.join(root, 'scripts', 'google-server-key.mjs'));
+  await assert.rejects(
+    stageRelease({ root, out: 'incomplete-production' }),
+    /ENOENT/,
+  );
+});
+
 test('historical packages without dependency hooks remain stageable for recovery', async (t) => {
   const root = await fixture(t);
   const pkgPath = path.join(root, 'package.json');

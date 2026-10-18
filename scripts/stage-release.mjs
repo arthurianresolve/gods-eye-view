@@ -121,6 +121,31 @@ export async function stageRelease({
     (await readFile(applierPath, 'utf8')).includes(
       path.posix.basename(collisionPatch),
     );
+  // Historical recovery fixtures did not ship the standalone production host.
+  // Current packages must include its complete runtime import closure, including
+  // helpers imported by the provider registry even when their dev routes are off.
+  const productionHost =
+    pkg.scripts?.start === 'node server/production/host.js';
+  const runtimeFiles = [];
+  if (productionHost) {
+    for (const directory of ['server', 'src'])
+      runtimeFiles.push(
+        ...(await listFiles(path.join(source, directory)))
+          .filter((entry) => !/\.(?:test|spec)\.[cm]?js$/.test(entry.relative))
+          .map((entry) => ({
+            ...entry,
+            relative: path.posix.join(directory, entry.relative),
+          })),
+      );
+    for (const relative of [
+      'build/securityHeaders.js',
+      'build/allowedHosts.js',
+      'build/embed-framing.js',
+      'scripts/pinokio-environment.mjs',
+      'scripts/google-server-key.mjs',
+    ])
+      runtimeFiles.push({ absolute: path.join(source, relative), relative });
+  }
   const filesToCopy = [
     ...(await listFiles(dist)).map((entry) => ({
       ...entry,
@@ -145,18 +170,7 @@ export async function stageRelease({
       absolute: path.join(source, relative),
       relative,
     })),
-    ...(await listFiles(path.join(source, 'server'))).map((entry) => ({
-      ...entry,
-      relative: path.posix.join('server', entry.relative),
-    })),
-    ...(await listFiles(path.join(source, 'src'))).map((entry) => ({
-      ...entry,
-      relative: path.posix.join('src', entry.relative),
-    })),
-    ...['build/securityHeaders.js', 'build/allowedHosts.js', 'build/embed-framing.js'].map((relative) => ({
-      absolute: path.join(source, relative),
-      relative,
-    })),
+    ...runtimeFiles,
   ];
   for (const entry of filesToCopy) {
     const info = await lstat(entry.absolute);

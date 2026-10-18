@@ -5983,3 +5983,15 @@ datacenters, dams and the Nepal locator retain that shared credit while displaye
 
 Military fragments stitch by source identity. Different mapped parcels merge only
 when their footprints touch or contain one another, never across a seam tolerance gap.
+## S63 review corrections — 18 October 2026
+
+Production hosting now validates its asset manifests before opening a socket,
+uses indexed current and retained asset records, applies the existing embed
+framing policy, and gates API requests with the shared Host allowlist. Static
+responses support byte-identified gzip/Brotli, conditional GET/HEAD and bounded
+ranges. Shutdown drains connections with a deadline and fires provider cleanup.
+
+The release packager includes the provider registry's runtime helpers and keeps
+historical recovery packages readable. The focused Windows Node 24 host/staging
+suite passes 26 checks. VM105 clean unpacked production installation and the
+full dependency-backed integration gates remain separate validation steps.
