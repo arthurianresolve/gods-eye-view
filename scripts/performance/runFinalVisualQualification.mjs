@@ -495,8 +495,18 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             readCallback: readVisualSnapshotPhaseInPage,
             readCallbackArgs: { expectedHudVisible },
             screenshot: (readBefore) => {
-              if (readBefore?.phase !== 0)
-                throw new Error('Visual scanline phase is not eligible.');
+              const settled = presentationStayedSettled(
+                readBefore?.hud,
+                readBefore?.hud,
+                expectedHudVisible,
+              );
+              if (readBefore?.phase !== 0 || !settled) {
+                const error = new Error(
+                  readBefore?.reason || 'Visual snapshot is not eligible.',
+                );
+                error.code = 'VISUAL_SNAPSHOT_INELIGIBLE';
+                throw error;
+              }
               pngCount++;
               return captureQualificationPng(
                 page,
@@ -505,6 +515,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             },
           });
         } catch (error) {
+          if (error?.code !== 'VISUAL_SNAPSHOT_INELIGIBLE') throw error;
           attempts.push({
             attempt,
             accepted: false,
@@ -526,7 +537,14 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           after,
           phaseBefore: beforePhase,
           phaseAfter: afterPhase,
-          phaseDimensions: pausedCapture.readBefore?.dimensions,
+          phaseDimensions: {
+            before: pausedCapture.readBefore?.dimensions,
+            after: pausedCapture.readAfter?.dimensions,
+          },
+          alphaRows: {
+            before: pausedCapture.readBefore?.alphaRows,
+            after: pausedCapture.readAfter?.alphaRows,
+          },
           cleanup: pausedCapture.cleanup,
           accepted: unchanged,
           image: pausedCapture.screenshot,
@@ -541,7 +559,14 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           phase: {
             before: beforePhase,
             after: afterPhase,
-            dimensions: pausedCapture.readBefore?.dimensions,
+            dimensions: {
+              before: pausedCapture.readBefore?.dimensions,
+              after: pausedCapture.readAfter?.dimensions,
+            },
+            alphaRows: {
+              before: pausedCapture.readBefore?.alphaRows,
+              after: pausedCapture.readAfter?.alphaRows,
+            },
           },
           ...observed,
           presentation: { before, after, attempts },

@@ -61,6 +61,48 @@ function assertProfile(profile, label) {
   );
 }
 
+function deriveScanlinePhase(rows, label) {
+  assert.ok(Array.isArray(rows) && rows.length === 8, `${label} alpha rows`);
+  rows.forEach((row, index) => {
+    assert.equal(row?.cssRow, index, `${label} CSS row`);
+    assert.ok(Number.isInteger(row?.pixelRow) && row.pixelRow >= 0, `${label} pixel row`);
+    assert.ok(Number.isInteger(row?.leftAlpha) && row.leftAlpha >= 0 && row.leftAlpha <= 255, `${label} left alpha`);
+    assert.ok(Number.isInteger(row?.rightAlpha) && row.rightAlpha >= 0 && row.rightAlpha <= 255, `${label} right alpha`);
+  });
+  const left = rows.filter((row) => row.leftAlpha > 0).map((row) => row.cssRow);
+  const right = rows.filter((row) => row.rightAlpha > 0).map((row) => row.cssRow);
+  assert.deepEqual(left, right, `${label} edge alpha rows differ`);
+  assert.ok(left.join(',') === '0,4' || left.join(',') === '2,6', `${label} phase rows`);
+  return left[0] === 0 ? 0 : 2;
+}
+
+function assertPhaseEvidence(phase, profile, label) {
+  assert.ok(phase && phase.dimensions, `${label} phase evidence`);
+  const expected = profile?.drawingBuffer;
+  for (const edge of ['before', 'after']) {
+    const dimensions = phase.dimensions[edge];
+    assert.deepEqual(
+      { width: dimensions?.width, height: dimensions?.height },
+      expected,
+      `${label} ${edge} dimensions`,
+    );
+    const derived = deriveScanlinePhase(phase.alphaRows?.[edge], `${label} ${edge}`);
+    assert.equal(phase[edge], derived, `${label} ${edge} phase claim`);
+  }
+  assert.equal(phase.before, 0, `${label} before phase`);
+  assert.equal(phase.after, 0, `${label} after phase`);
+  assert.deepEqual(
+    phase.dimensions.before,
+    phase.dimensions.after,
+    `${label} dimensions changed while paused`,
+  );
+  assert.deepEqual(
+    phase.alphaRows.before,
+    phase.alphaRows.after,
+    `${label} alpha rows changed while paused`,
+  );
+}
+
 function assertContained(file, root, label) {
   const absolute = path.resolve(root, file);
   const relative = path.relative(path.resolve(root), absolute);
@@ -332,22 +374,10 @@ export async function validateFinalVisualQualification(
         { resumed: true, disabled: true, detached: true },
         `${state.id} ${side} paused cleanup`,
       );
-      assert.equal(
-        state.phase?.[side]?.before,
-        0,
-        `${state.id} ${side} phase before`,
-      );
-      assert.equal(
-        state.phase?.[side]?.after,
-        0,
-        `${state.id} ${side} phase after`,
-      );
-      assert.ok(
-        Number.isInteger(state.phase?.[side]?.dimensions?.width) &&
-          Number.isInteger(state.phase?.[side]?.dimensions?.height) &&
-          state.phase[side].dimensions.width > 0 &&
-          state.phase[side].dimensions.height > 0,
-        `${state.id} ${side} phase dimensions`,
+      assertPhaseEvidence(
+        state.phase?.[side],
+        state.nativeSharpnessProfileByRevision?.[side],
+        `${state.id} ${side}`,
       );
       assert.ok(
         presentationStayedSettled(

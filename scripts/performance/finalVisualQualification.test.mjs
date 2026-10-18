@@ -87,6 +87,18 @@ async function fixture(t) {
       documentFocused: true,
     };
   };
+  const alphaRows = Array.from({ length: 8 }, (_, cssRow) => ({
+    cssRow,
+    pixelRow: cssRow,
+    leftAlpha: cssRow === 0 || cssRow === 4 ? 255 : 0,
+    rightAlpha: cssRow === 0 || cssRow === 4 ? 255 : 0,
+  }));
+  const phaseEvidence = {
+    before: 0,
+    after: 0,
+    dimensions: { before: dimensions, after: dimensions },
+    alphaRows: { before: alphaRows, after: alphaRows },
+  };
   const teardown = {
     browserClosed: true,
     pageClose: { closeCompleted: true, openPageCount: 0 },
@@ -171,16 +183,8 @@ async function fixture(t) {
         candidate: 'debugger-paused-snapshot',
       },
       phase: {
-        baseline: {
-          before: 0,
-          after: 0,
-          dimensions: { width: 1440, height: 900 },
-        },
-        candidate: {
-          before: 0,
-          after: 0,
-          dimensions: { width: 1440, height: 900 },
-        },
+        baseline: phaseEvidence,
+        candidate: phaseEvidence,
       },
       pauseCleanup: {
         baseline: { resumed: true, disabled: true, detached: true },
@@ -350,6 +354,27 @@ test('rejects contradictory or missing evidence at the relevant observation', as
         r.states[0].presentation.candidate.after.revision++;
       },
       /presentation changed/,
+    ],
+    [
+      'phase rows missing',
+      (r) => {
+        r.states[0].phase.candidate.alphaRows.after.pop();
+      },
+      /alpha rows/,
+    ],
+    [
+      'phase claim contradictory',
+      (r) => {
+        r.states[0].phase.candidate.before = 2;
+      },
+      /phase claim/,
+    ],
+    [
+      'phase cleanup missing',
+      (r) => {
+        r.states[0].pauseCleanup.candidate.detached = false;
+      },
+      /paused cleanup/,
     ],
     [
       'HUD transition incomplete',

@@ -68,6 +68,11 @@ test('pauses, evaluates a serializable read and cleans up the owned session', as
   assert.deepEqual(result.readBefore, { readOnly: true });
   assert.deepEqual(result.readAfter, { readOnly: true });
   assert.deepEqual(result.screenshot, Buffer.from('png'));
+  assert.deepEqual(result.cleanup, {
+    resumed: true,
+    disabled: true,
+    detached: true,
+  });
   assert.deepEqual(
     fake.calls.map(({ method }) => method),
     [
@@ -80,6 +85,22 @@ test('pauses, evaluates a serializable read and cleans up the owned session', as
       'detach',
     ],
   );
+});
+
+test('serializes bounded callback arguments into the paused evaluation', async () => {
+  const fake = fakePage();
+  await captureWithDebuggerPause({
+    page: fake.page,
+    readCallback: ({ phase }) => phase,
+    readCallbackArgs: { phase: 2 },
+    screenshot: fake.screenshot,
+  });
+  const evaluations = fake.calls.filter(
+    ({ method }) => method === 'Debugger.evaluateOnCallFrame',
+  );
+  assert.equal(evaluations.length, 2);
+  assert.match(evaluations[0].params.expression, /phase/);
+  assert.match(evaluations[0].params.expression, /2/);
 });
 
 test('rejects a pause without a top call frame and still disables/detaches', async () => {

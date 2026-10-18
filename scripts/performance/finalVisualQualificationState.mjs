@@ -53,7 +53,7 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const boundary = window.__gevVisualPresentationBoundary?.read?.();
   const canvas = document.getElementById('world-overlay-detection-surface');
   const rect = canvas?.getBoundingClientRect?.();
-  const context = canvas?.getContext?.('2d', { willReadFrequently: true });
+  const context = canvas?.getContext?.('2d');
   if (!boundary || !canvas || !rect || !context)
     throw new Error('Visual snapshot phase surfaces are unavailable.');
   const dprX = canvas.width / rect.width;
@@ -95,14 +95,16 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
     JSON.stringify(leftRows) === JSON.stringify(rightRows) &&
     (leftRows.join(',') === '0,4' || leftRows.join(',') === '2,6');
   const phase = sameEdges ? (leftRows[0] === 0 ? 0 : 2) : null;
-  if (
-    expectedHudVisible !== undefined &&
-    boundary.hudVisible !== expectedHudVisible
-  )
-    throw new Error('Visual snapshot HUD state differs from requested state.');
+  const hudSettled =
+    expectedHudVisible === undefined || boundary.hudVisible === expectedHudVisible;
   return {
     hud: boundary,
     phase,
+    reason: !hudSettled
+      ? 'hud-state-unsettled'
+      : phase === null
+        ? 'scanline-phase-unavailable'
+        : null,
     alphaRows: rows,
     dimensions: {
       cssWidth: rect.width,
