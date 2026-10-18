@@ -655,6 +655,30 @@ test('achieved objective percentages remain visible from validated measurements'
   );
 });
 
+test('unverified idle dispositions fail instead of hiding the original comparison', async () => {
+  const setup = await setupManifest();
+  const row = await createComparison(setup);
+  row.idleCadenceDisposition = await setup.writeArtifact(
+    'unverified-disposition',
+    {
+      schema: 'gev-idle-cadence-disposition/v1',
+      resolvedScenarios: ['idle', 'scripted-motion'],
+      diagnostic: { path: 'absent.json', sha256: 'a'.repeat(64) },
+    },
+  );
+  const result = evaluateManifestPerformanceEvidence(
+    { comparisons: [row] },
+    {
+      manifestPath: setup.manifestPath,
+      candidateCommit,
+    },
+  );
+  assert.equal(result.comparison.status, 'failed');
+  assert.equal(result.comparisons[0].validation.status, 'comparable');
+  assert.equal(result.comparisons[0].regressionDisposition, null);
+  assert.match(result.comparisons[0].error, /ENOENT/);
+});
+
 test('missing dense and tracking measurements stay pending and do not imply coverage', async () => {
   const setup = await setupManifest();
   for (const workloadId of [
@@ -722,7 +746,7 @@ test('infrastructure evaluator coverage rejects a tampered producer asset identi
 test('lifecycle stress is a retention mode and cannot fill timed workload coverage', async () => {
   assert.equal(
     PERFORMANCE_ACCEPTANCE_POLICY_ID,
-    'gev-cesium-acceptance/2026-10-15',
+    'gev-cesium-acceptance/2026-10-18',
   );
   assert.equal(
     PERFORMANCE_WORKLOAD_VALIDATION_MODES['lifecycle-stress'],

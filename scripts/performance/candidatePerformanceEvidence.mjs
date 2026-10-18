@@ -6,6 +6,7 @@ import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
+import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -27,7 +28,7 @@ export const PERFORMANCE_WORKLOAD_VALIDATION_MODES = Object.freeze({
 });
 
 export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
-  'gev-cesium-acceptance/2026-10-15';
+  'gev-cesium-acceptance/2026-10-18';
 
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
@@ -68,7 +69,7 @@ function readBoundArtifact(manifestPath, reference, label) {
   } catch (error) {
     throw new TypeError(`${label} is not valid JSON: ${error.message}`);
   }
-  return { value, digest: actualHash, path: relativePath };
+  return { value, bytes, digest: actualHash, path: relativePath };
 }
 
 export function classifyRecordedRenderer(report) {
@@ -240,6 +241,7 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
     let error = null;
     let renderer = null;
     let environmentIdentity = null;
+    let regressionDisposition = null;
     try {
       renderer = requireEnvironmentMatch(
         baselineArtifact.value,
@@ -263,6 +265,35 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
           candidate: candidateCommit,
         },
       });
+      if (row.idleCadenceDisposition != null) {
+        const dispositionArtifact = readBoundArtifact(
+          manifestPath,
+          row.idleCadenceDisposition,
+          `${environmentId} idle cadence disposition`,
+        );
+        const diagnosticArtifact = readBoundArtifact(
+          manifestPath,
+          dispositionArtifact.value.diagnostic,
+          `${environmentId} idle cadence diagnostic`,
+        );
+        const reviewed = validateIdleCadenceDisposition({
+          disposition: dispositionArtifact.value,
+          diagnostic: diagnosticArtifact,
+          baseline: baselineArtifact,
+          candidate: candidateArtifact,
+        });
+        regressionDisposition = {
+          ...reviewed,
+          artifact: {
+            path: dispositionArtifact.path,
+            sha256: dispositionArtifact.digest,
+          },
+          diagnostic: {
+            path: diagnosticArtifact.path,
+            sha256: diagnosticArtifact.digest,
+          },
+        };
+      }
     } catch (caught) {
       error = String(caught?.message || caught).slice(0, 500);
     }
@@ -288,6 +319,7 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
       renderer,
       environmentIdentity,
       validation: result || null,
+      regressionDisposition,
       error,
     };
   });
@@ -658,9 +690,15 @@ function comparisonOutcome(rows) {
     ) {
       continue;
     }
-    if (validation.regressionsOver10Pct.length)
+    // Preserve every raw regression. A verified, hash-bound investigation can
+    // resolve only its named metric; motion and other failures remain gates.
+    const unresolved = validation.regressionsOver10Pct.filter(
+      (scenario) =>
+        !row.regressionDisposition?.resolvedScenarios.includes(scenario),
+    );
+    if (unresolved.length)
       failures.push(
-        `${row.environmentId}/${row.workloadId}: regression over 10% in ${validation.regressionsOver10Pct.join(', ')}.`,
+        `${row.environmentId}/${row.workloadId}: regression over 10% in ${unresolved.join(', ')}.`,
       );
   }
   for (const objective of performanceObjectives) {
@@ -706,6 +744,7 @@ function comparisonOutcome(rows) {
             ? 'measured'
             : 'failed',
       renderer: row.renderer,
+      regressionDisposition: row.regressionDisposition,
       reason:
         row.error ||
         (row.environmentId !== primaryEnvironmentId ||
