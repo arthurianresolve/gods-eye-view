@@ -43,6 +43,49 @@ test('Windows composition control requires paired diagnostics and headed hardwar
   }
 });
 
+test('framebuffer preservation diagnostic is isolated and requires paired hardware traces', () => {
+  const diagnostic = '--framebuffer-preservation-diagnostic';
+  for (const args of [
+    [diagnostic],
+    [diagnostic, '--hardware-required'],
+    [
+      diagnostic,
+      '--hardware-required',
+      '--frame-trace-out',
+      'frames.json',
+      '--browser-trace-out',
+      'browser.json',
+      '--headless',
+    ],
+    [
+      diagnostic,
+      '--hardware-required',
+      '--frame-trace-out',
+      'frames.json',
+      '--browser-trace-out',
+      'browser.json',
+      '--native-rendering-diagnostic',
+    ],
+  ]) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(
+          new URL('../capture-scene-performance.mjs', import.meta.url),
+        ),
+        ...args,
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      /--framebuffer-preservation-diagnostic requires a headed hardware capture with frame and browser traces|cannot be combined with another renderer diagnostic/,
+    );
+  }
+});
+
 test('capture CLI rejects either half of an explicit build-harness identity before launching a browser', () => {
   for (const args of [
     ['--build-harness-checkout', 'unused-builder-root'],

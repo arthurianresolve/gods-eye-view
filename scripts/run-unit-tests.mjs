@@ -38,6 +38,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/print-qa-evidence.test.mjs',
   'scripts/performance/captureBuildProvenance.test.mjs',
   'scripts/performance/captureProducerCli.test.mjs',
+  'scripts/performance/framebufferPreservationDiagnostic.test.mjs',
   'scripts/performance/commonSceneObserver.test.mjs',
   'scripts/performance/startupDiagnostics.test.mjs',
   'scripts/performance/profileRecoveryPageOwnership.test.mjs',

@@ -104,6 +104,12 @@ import {
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 import { startBrowserTrace } from './performance/captureBrowserTrace.mjs';
+import {
+  assertFramebufferPreservationDiagnostic,
+  assertFramebufferPreservationUnchanged,
+  installFramebufferPreservationDiagnostic,
+  readFramebufferPreservationDiagnostic,
+} from './performance/framebufferPreservationDiagnostic.mjs';
 import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
 import {
   createProviderSampleCpuProfileWindow,
@@ -428,6 +434,23 @@ if (windowsCompositionDiagnostic && process.platform !== 'win32')
 const nativeRenderingDiagnostic = args.includes(
   '--native-rendering-diagnostic',
 );
+const framebufferPreservationDiagnostic = args.includes(
+  '--framebuffer-preservation-diagnostic',
+);
+if (
+  framebufferPreservationDiagnostic &&
+  (!hardwareRequired ||
+    !frameTraceEnabled ||
+    !browserTraceEnabled ||
+    softwareRendering ||
+    windowsCompositionDiagnostic ||
+    nativeRenderingDiagnostic ||
+    hostedFixture ||
+    args.includes('--headless'))
+)
+  throw new Error(
+    '--framebuffer-preservation-diagnostic requires a headed hardware capture with frame and browser traces and cannot be combined with another renderer diagnostic.',
+  );
 if (nativeRenderingDiagnostic) validateNativeRendererDiagnosticHost();
 if (hardwareRequired && softwareRendering)
   throw new Error(
@@ -2733,6 +2756,8 @@ try {
     deliveryObserver = null,
     { documentRole = 'unclassified', documentId = null } = {},
   ) {
+    if (framebufferPreservationDiagnostic)
+      await installFramebufferPreservationDiagnostic(auditPage);
     if (weatherEffectsWorkload)
       await weatherEffectsModule.configureWeatherEffectsMotionPreference(
         auditPage,
@@ -2818,6 +2843,8 @@ try {
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
     const context = await browser.createBrowserContext();
     const startupPage = await context.newPage();
+    if (framebufferPreservationDiagnostic)
+      await installFramebufferPreservationDiagnostic(startupPage);
     if (weatherEffectsWorkload)
       await weatherEffectsModule.configureWeatherEffectsMotionPreference(
         startupPage,
@@ -3037,9 +3064,14 @@ try {
       );
   }
   failureProgress.mainForegroundActivation = await activateCapturePage(page);
+  let framebufferPreservationEvidence = null;
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
+  if (framebufferPreservationDiagnostic)
+    framebufferPreservationEvidence = assertFramebufferPreservationDiagnostic(
+      await readFramebufferPreservationDiagnostic(page),
+    );
   if (nativeRenderingDiagnostic) {
     const earlyRenderer = await page.evaluate(() => ({
       renderer: window.__gevRecoveryEarlyRendererProbe?.renderer ?? null,
@@ -4789,6 +4821,11 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      let framebufferSampleBefore = null;
+      if (framebufferPreservationDiagnostic)
+        framebufferSampleBefore = assertFramebufferPreservationDiagnostic(
+          await readFramebufferPreservationDiagnostic(page),
+        );
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneBefore,
@@ -5694,6 +5731,12 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      let framebufferSampleAfter = null;
+      if (framebufferPreservationDiagnostic)
+        framebufferSampleAfter = assertFramebufferPreservationUnchanged(
+          framebufferSampleBefore,
+          await readFramebufferPreservationDiagnostic(page),
+        );
       if (comparisonProfile === 'native-sharpness-v1')
         assertNativeSharpnessProfile(
           sceneAfter,
@@ -5959,6 +6002,11 @@ try {
         );
       sample.documentRole = activeDocumentRole;
       sample.documentId = activeDocumentId;
+      if (framebufferPreservationDiagnostic)
+        sample.framebufferPreservation = {
+          before: framebufferSampleBefore,
+          after: framebufferSampleAfter,
+        };
       sample.captureOrdinal = captures.length;
       if (collectProviderSampleCpuProfile)
         sample.providerSampleCpuProfile =
@@ -6583,6 +6631,10 @@ try {
     comparisonReadinessReasons.push(
       'diagnostic-frame-trace-instrumentation-is-ineligible-for-comparison',
     );
+  if (framebufferPreservationDiagnostic)
+    comparisonReadinessReasons.push(
+      'framebuffer-preservation-diagnostic-is-ineligible-for-comparison',
+    );
   const comparisonEligible = comparisonReadinessReasons.length === 0;
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
@@ -6683,6 +6735,18 @@ try {
               )?.browserTrace?.status || 'incomplete',
             recordMode: 'recordUntilFull',
             maxBytes: 64 * 1024 * 1024,
+          },
+        }
+      : {}),
+    ...(framebufferPreservationDiagnostic
+      ? {
+          framebufferPreservationDiagnostic: {
+            schema: 'gev-framebuffer-preservation-diagnostic/v1',
+            diagnosticOnly: true,
+            requestedPreserveDrawingBuffer: false,
+            observation: framebufferPreservationEvidence,
+            scope:
+              'pre-document WebGL context option override for this owned headed browser only; app/build bytes and production defaults are unchanged',
           },
         }
       : {}),
