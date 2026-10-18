@@ -2,6 +2,12 @@
 
 Policy: `gev-cesium-acceptance/2026-10-15`.
 
+The approved S61–S70 follow-up is recorded in the performance plan. S61 is
+engineering work for the frozen upstream merge, historical evidence ledger and
+the native sharpness profile; it does not close candidate qualification or the
+performance objectives. The final follow-up denominator is 10, with one shared
+matrix and one physical Windows soak.
+
 This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows

@@ -1,5 +1,14 @@
 # Performance baseline
 
+The S61–S70 follow-up keeps the accepted S47–S60 evidence denominator of 14
+separate from its new denominator of 10. The existing eight-row matrix remains
+the historical primary report; dense and tracking objectives are recorded as
+missed at -7.1% and -6.7%. The Ampfing VM105 soak is narrow stability evidence
+only (60m44s, 54 cycles, Windows UHD 620, 1.95% heap growth). Comparison runs
+must declare native DPR and viewport, `useBrowserRecommendedResolution=false`,
+`resolutionScale=1`, and globe `maximumScreenSpaceError=1` before warmup and
+verify those values after measurement.
+
 Current physical-Windows checkpoint (15 October 2026): the merged `dev`
 candidate `786583e0ee8a36a670fe81cd244e8923bf84014b` passes the 60-minute
 mixed-use retention gate on Intel UHD 620 / ANGLE D3D11 / WebGL 2. The run

@@ -1,5 +1,34 @@
 # Cesium performance plan
 
+## Approved follow-up roadmap — S61–S70 (18 October 2026)
+
+S61 merges frozen upstream evidence and adds the declared sharpness-preserving
+comparison profile. S62 covers deterministic Cesium content digests, compressed
+builds and immutable hashed caches. S63 adds the production Node HTTP host and
+security boundaries. S64 bounds diagnostics and Auto continuous-demand
+eligibility without changing Manual quality. S65 preserves continuous CCTV
+demand and late-result cleanup for event/scheduled use. S66 suppresses hidden
+HUD work while preserving cadence. S67 prepares locale catalogs asynchronously
+before the UI and makes later translation reads synchronous with explicit
+failure/retry. S68 lazy-loads the heavy voice adapter while keeping the shared
+runner eager and gesture/cancel/permission behavior correct. S69 runs the exact
+candidate Node 24/26 CI and existing eight-row Windows matrix with artifact
+attestation and `publish_stable=false`. S70 stages the exact artifact privately
+on VM105, verifies HTTPS/workspace/API behavior, runs the final 60-minute
+Ampfing Windows GPU soak and rolls back on failure.
+
+These slices share one final matrix and soak. Engineering, automatic validation,
+primary Windows qualification and performance-objective outcomes remain separate
+states. S47–S60 retain denominator 14; the S61–S70 follow-up uses denominator
+10. Historical evidence includes the accepted eight-row report at
+`1b92b573b70d565e139c9c8c7b887157f98696f9`, with dense/tracking objectives
+recorded as missed (-7.1%/-6.7%), and the narrow Ampfing VM105 soak at
+`qa-artifacts/ampfing-vm105-hardware-soak-20261018-082710.json` (60m44s,
+54 cycles, Windows UHD 620, 1.95% heap growth, passed). Manual/DENSE/75%, native
+DPR, SSE1, MSAA/effects/populations, storage, evidence and camera identity stay
+in force; unavailable physical Mac/discrete-GPU and human-accessibility evidence
+remain explicitly unverified.
+
 ## Matrix execution update - 16 October 2026
 
 The final S60 matrix now has one executable, fail-closed schedule. The

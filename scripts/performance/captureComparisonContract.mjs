@@ -17,6 +17,7 @@ import {
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
+import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import {
   MAP_STREAMING_WORKLOAD_ID,
   MAP_STREAMING_CAPTURE_SCHEMA,
@@ -219,6 +220,25 @@ export function createObservedDenseComparisonContract({
     'capture and environment populations differ',
   );
   for (const [index, sample] of captures.entries()) {
+    if (environment.nativeSharpnessProfile || sample.settings?.before?.nativeSharpnessProfile) {
+      assert.ok(
+        sample.settings?.before?.nativeSharpnessProfile,
+        `capture ${index + 1} is missing its before sharpness profile`,
+      );
+      assert.ok(
+        sample.settings?.after?.nativeSharpnessProfile,
+        `capture ${index + 1} is missing its after sharpness profile`,
+      );
+      assertNativeSharpnessProfile(
+        { environment: { nativeSharpnessProfile: environment.nativeSharpnessProfile ?? sample.settings.before.nativeSharpnessProfile } },
+        `capture ${index + 1} environment`,
+      );
+      assert.deepEqual(
+        sample.settings?.before?.nativeSharpnessProfile,
+        sample.settings?.after?.nativeSharpnessProfile,
+        `capture ${index + 1} sharpness profile changed during measurement`,
+      );
+    }
     assert.deepEqual(
       enabledPopulations(sample.layers, `capture ${index + 1}`),
       populations,

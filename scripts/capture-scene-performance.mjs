@@ -51,6 +51,10 @@ import {
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
 import {
+  applyNativeSharpnessProfile,
+  assertNativeSharpnessProfile,
+} from './performance/nativeSharpnessProfile.mjs';
+import {
   readBrowserGraphicsInfo,
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
@@ -4426,6 +4430,10 @@ try {
           `Austin phased clock did not start its declared run: ${JSON.stringify(clockStart)}`,
         );
       failureProgress.current.clockStart = clockStart;
+      const nativeSharpnessProfile = await page.evaluate(
+        applyNativeSharpnessProfile,
+      );
+      failureProgress.current.nativeSharpnessProfile = nativeSharpnessProfile;
       // Each workload/run receives the declared warmup, including tracking.
       failureProgress.phase = 'warmup';
       failureProgress.current.phase = failureProgress.phase;
@@ -4646,6 +4654,7 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      assertNativeSharpnessProfile(sceneBefore, `${scenario} run ${run} before`);
       const austinStateBefore = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
@@ -5345,6 +5354,7 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      assertNativeSharpnessProfile(sceneAfter, `${scenario} run ${run} after`);
       const austinStateAfter = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
