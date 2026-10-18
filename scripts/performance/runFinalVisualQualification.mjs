@@ -162,6 +162,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   let stage = 'launch';
   let states = [];
   let browserClosed = false;
+  let result = null;
   let observedProfile = null;
   try {
     const context = await browser.createBrowserContext();
@@ -229,7 +230,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));
       states.push({ id, completedRender, foreground, ...observed, [label]: png });
     }
-    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version(), browserClosed };
+    result = { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version() };
   } catch (error) {
     failure = error;
     throw error;
@@ -261,6 +262,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       } else throw new Error('Visual qualification teardown was not confirmed.', { cause: teardownError });
     }
   }
+  return { ...result, browserClosed };
 }
 
 async function produceFinalVisualQualificationInternal(options) {
