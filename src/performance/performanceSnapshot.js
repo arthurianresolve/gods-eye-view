@@ -231,6 +231,7 @@ export function createPerformanceMonitor({
     if (observeLongTasks && typeof PerformanceObserver === 'function') {
       try {
         longTaskObserver = new PerformanceObserver((list) => {
+          if (!active || destroyed) return;
           for (const entry of list.getEntries()) snapshot.record('longTask', entry.duration, { startTime: entry.startTime });
         });
         longTaskObserver.observe({ type: 'longtask', buffered: false });
@@ -377,4 +378,9 @@ export function readPerformanceEnvironment({
       count: finite(layer.stats?.count),
     })),
   };
+}
+
+/** Invalidate cached renderer identity after an explicit WebGL context restore. */
+export function invalidatePerformanceEnvironmentCache(gl) {
+  if (gl && typeof gl === 'object') RENDERER_CACHE.delete(gl);
 }

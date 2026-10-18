@@ -72,6 +72,7 @@ function controllerFixture(initialDensity = 50) {
   let frame;
   const viewer = {
     scene: {
+      requestRenderMode: false,
       postRender: {
         addEventListener(listener) {
           frame = listener;
@@ -108,6 +109,7 @@ function controllerFixture(initialDensity = 50) {
       frame?.();
     },
     listeners,
+    scene: viewer.scene,
   };
 }
 
@@ -161,15 +163,18 @@ test('hidden tabs suspend Auto samples and reset elapsed frame timing', () => {
   f.controller.destroy();
 });
 
-test('Auto ignores intentional periodic gaps and resets consecutive eligibility', () => {
+test('Auto keeps slow continuous frames but ignores request-render gaps', () => {
   const f = controllerFixture(50);
   f.controller.setMode('auto', { persist: false });
   f.frame(0);
-  for (let time = 30; time <= 90; time += 30) f.frame(time);
-  f.frame(220); // 130 ms periodic demand gap must not enter the policy window.
-  assert.equal(f.controller.policy.samples.length, 0);
-  for (let time = 250; time <= 2_950; time += 30) f.frame(time);
+  for (let time = 150; time <= 14_850; time += 150) f.frame(time);
   assert.equal(f.density, 25);
+  f.controller.setMode('manual', { persist: false });
+  f.controller.setMode('auto', { persist: false });
+  f.scene.requestRenderMode = true;
+  f.frame(3_000);
+  f.frame(3_150);
+  assert.equal(f.controller.policy.samples.length, 0);
   f.controller.destroy();
 });
 
