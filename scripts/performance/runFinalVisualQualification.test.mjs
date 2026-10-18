@@ -2,9 +2,86 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import test from 'node:test';
 import {
+  activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
 } from './finalVisualQualificationState.mjs';
+
+function activationFixture(tilesLoaded) {
+  const calls = [];
+  let params = {};
+  const module = {
+    setParams: (value) => {
+      calls.push('select');
+      params = value;
+    },
+    getParams: () => params,
+  };
+  const app = {
+    viewer: { scene: { globe: { tilesLoaded } } },
+    dataManager: {
+      setEnabled: async () => {
+        calls.push('enable');
+        return true;
+      },
+      isEnabled: () => true,
+      layers: new Map([['cctv', { module }]]),
+    },
+    styleManager: {
+      _adaptiveQuality: { getMode: () => 'manual' },
+      services: {
+        getDetectionMode: () => 'DENSE',
+        getDetectionTuning: () => ({ densityPct: 75 }),
+      },
+    },
+  };
+  const activate = vm.runInNewContext(
+    `(${activateQualificationCctvInPage.toString()})`,
+    { window: { __godsEyeView: app } },
+  );
+  return { activate, calls, app, module };
+}
+
+test('CCTV activation never samples an unfinished or unknown globe surface', async () => {
+  for (const ready of [false, undefined, null, 1]) {
+    const fixture = activationFixture(ready);
+    await assert.rejects(
+      fixture.activate('fixture-camera'),
+      /before CCTV activation/,
+    );
+    assert.deepEqual(fixture.calls, []);
+  }
+});
+
+test('serialized activation uses the production selection after surface readiness', async () => {
+  const fixture = activationFixture(true);
+  const result = await fixture.activate('fixture-camera');
+  assert.deepEqual(fixture.calls, ['enable', 'select']);
+  assert.equal(result.tilesLoadedBeforeActivation, true);
+  assert.equal(result.cameraId, 'fixture-camera');
+  assert.equal(fixture.module.getParams().selectedCameraId, 'fixture-camera');
+  assert.equal(fixture.module.getParams().showProjection, true);
+  assert.equal(fixture.module.getParams().autoHop, false);
+});
+
+test('ready surface does not hide enable, selection, or visual setting failures', async () => {
+  const disabled = activationFixture(true);
+  disabled.app.dataManager.setEnabled = async () => false;
+  await assert.rejects(
+    disabled.activate('fixture-camera'),
+    /could not be enabled/,
+  );
+  assert.deepEqual(disabled.calls, []);
+  const ignored = activationFixture(true);
+  ignored.module.setParams = () => {};
+  await assert.rejects(
+    ignored.activate('fixture-camera'),
+    /did not settle selected/,
+  );
+  const quality = activationFixture(true);
+  quality.app.styleManager._adaptiveQuality.getMode = () => 'auto';
+  await assert.rejects(quality.activate('fixture-camera'), /Manual DENSE/);
+});
 
 test('visual state page callback serializes without Node or outer bindings', () => {
   const checkpoint = {

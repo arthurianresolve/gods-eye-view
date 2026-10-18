@@ -38,6 +38,7 @@ import { verifyServedBuildAssets } from './buildProvenance.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFrozenWallClock } from './productionFlightFixture.mjs';
 import {
+  activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
 } from './finalVisualQualificationState.mjs';
@@ -302,6 +303,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
   const frameDelivery = { count: 0, sha256: null, matchesFixture: false };
   let result = null;
   let observedProfile = null;
+  let activation = null;
   try {
     browser = await puppeteer.launch({
       headless: false,
@@ -360,36 +362,23 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       style?._adaptiveQuality?.rememberManualDensity?.(75);
       style?.setDetection?.({ enabled: true, mode: 'DENSE', densityPct: 75 });
       await manager.restoreEnabledLayerIds([], { origin: 'qa-final-visual' });
-      const result = await manager.setEnabled('cctv', true, {
-        origin: 'qa-final-visual',
-      });
-      if (result === false || !manager.isEnabled('cctv'))
-        throw new Error('CCTV could not be enabled.');
-      const module = manager.layers.get('cctv')?.module;
-      if (!module?.setParams)
-        throw new Error(
-          'CCTV fixture camera/projection selection API is unavailable.',
-        );
-      module.setParams({
-        selectedCameraId: 'qa-cctv-lifecycle-camera-001',
-        showProjection: true,
-        autoHop: false,
-      });
-      const params = module.getParams?.();
-      if (
-        params?.selectedCameraId !== 'qa-cctv-lifecycle-camera-001' ||
-        params.showProjection !== true
-      )
-        throw new Error(
-          'CCTV fixture still projection did not settle selected.',
-        );
-      if (
-        style?._adaptiveQuality?.getMode?.() !== 'manual' ||
-        style?.services?.getDetectionMode?.() !== 'DENSE' ||
-        style?.services?.getDetectionTuning?.()?.densityPct !== 75
-      )
-        throw new Error('Manual DENSE 75% settings did not settle.');
     });
+    stage = 'surface-before-activation';
+    await page.waitForFunction(
+      () => window.__godsEyeView?.viewer?.scene?.globe?.tilesLoaded === true,
+      { timeout: 15_000, polling: 100 },
+    );
+    const completedSurfaceRender = await page.evaluate(
+      waitForCctvLifecycleRenderInPage,
+      15_000,
+    );
+    activation = {
+      completedSurfaceRender,
+      ...(await page.evaluate(
+        activateQualificationCctvInPage,
+        fixture.cameraId,
+      )),
+    };
     stage = 'capture-states';
     await page.waitForFunction(
       () => {
@@ -594,6 +583,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       applicationSha: appSha,
       receiptSha256: receipt.receiptSha256,
       profile: observedProfile,
+      activation,
       states,
       browserPid,
       browserVersion: await browser.version(),
@@ -673,6 +663,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       label,
       stage,
       applicationSha: appSha,
+      activation,
       completedStates: states,
       teardown,
     };

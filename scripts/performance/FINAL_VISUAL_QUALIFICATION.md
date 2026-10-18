@@ -39,6 +39,15 @@ active while the scene settles and between snapshots. The viewport is 1440 by
 900 CSS pixels at the actual device pixel ratio;
 Manual/DENSE/75%, native scale, SSE 1 and MSAA 4 remain unchanged.
 
+Before activating CCTV, the producer waits for `globe.tilesLoaded`, observes
+a completed render, and rechecks readiness in the activation task. This is
+essential because the production camera performs one obstruction probe at
+activation. A probe against unfinished surface geometry latched different
+projection distances on repeated runs of the unchanged baseline. Waiting only
+before the screenshot was too late. The report retains the pre-activation
+render and readiness proof; the real obstruction query and resulting geometry
+remain unchanged. A missing surface or failed activation fails qualification.
+
 A read-only observer waits for the real summary typewriter to finish and the
 REC indicator's visible phase. An owned CDP session dispatches a separate
 `debugger;` evaluation task, then pauses JavaScript delivery and samples the

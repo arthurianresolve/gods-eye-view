@@ -1,3 +1,39 @@
+/** Select only after the real globe surface is ready for the activation ray. */
+export async function activateQualificationCctvInPage(cameraId) {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  const style = app?.styleManager;
+  // The production activation samples obstruction geometry once. Waiting after
+  // activation cannot correct a range latched from an unfinished terrain tile.
+  if (app?.viewer?.scene?.globe?.tilesLoaded !== true)
+    throw new Error('Globe surface must be loaded before CCTV activation.');
+  const result = await manager?.setEnabled?.('cctv', true, {
+    origin: 'qa-final-visual',
+  });
+  if (result === false || !manager?.isEnabled?.('cctv'))
+    throw new Error('CCTV could not be enabled.');
+  const module = manager.layers.get('cctv')?.module;
+  if (!module?.setParams)
+    throw new Error(
+      'CCTV fixture camera/projection selection API is unavailable.',
+    );
+  module.setParams({
+    selectedCameraId: cameraId,
+    showProjection: true,
+    autoHop: false,
+  });
+  const params = module.getParams?.();
+  if (params?.selectedCameraId !== cameraId || params.showProjection !== true)
+    throw new Error('CCTV fixture still projection did not settle selected.');
+  if (
+    style?._adaptiveQuality?.getMode?.() !== 'manual' ||
+    style?.services?.getDetectionMode?.() !== 'DENSE' ||
+    style?.services?.getDetectionTuning?.()?.densityPct !== 75
+  )
+    throw new Error('Manual DENSE 75% settings did not settle.');
+  return { tilesLoadedBeforeActivation: true, cameraId };
+}
+
 export function readQualificationStateInPage({
   checkpointValue,
   profileValue,
