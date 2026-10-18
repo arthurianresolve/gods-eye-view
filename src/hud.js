@@ -212,6 +212,14 @@ export class IntelHUD {
     this._destroyed = false;
     this._lastSummarySignature = '';
     this._summaryRevision = 0;
+    this._onVisibilityChange = () => {
+      if (document.hidden) return;
+      const timestamp = document.getElementById('hud-timestamp');
+      this._setHudText(timestamp, this._formatUTC());
+      const dot = document.getElementById('hud-rec-dot');
+      if (dot) dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
+      if (this._visible) this._updateCameraData();
+    };
     // One-shot guards so the very first summary lands immediately instead of
     // waiting for the 15s interval tick: B) swap the "Awaiting telemetry..."
     // placeholder for the deterministic line as soon as metrics exist, then
@@ -258,6 +266,7 @@ export class IntelHUD {
 
     this._buildDOM();
     this.viewer.camera.moveEnd.addEventListener(this._onCameraMoveEnd);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
     this._startTimers();
   }
 
@@ -351,8 +360,8 @@ export class IntelHUD {
 
     // REC blink — every 800ms
     this._recBlinkInterval = setInterval(() => {
-      if (document.hidden) return;
       this._recBlinkState = !this._recBlinkState;
+      if (document.hidden) return;
       const dot = document.getElementById('hud-rec-dot');
       if (dot)
         dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
@@ -1071,6 +1080,7 @@ export class IntelHUD {
     clearInterval(this._summaryInterval);
     clearInterval(this._summaryTypingInterval);
     this.viewer.camera.moveEnd.removeEventListener(this._onCameraMoveEnd);
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
     this._dataManagerUnsubscribe?.();
     this._summaryRequest?.abort();
   }

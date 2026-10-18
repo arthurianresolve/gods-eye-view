@@ -65,13 +65,13 @@ preference, and an explicit retry can install the recovered catalog.
 
 ## S68 heavy voice adapter experiment — October 18, 2026
 
-The lazy realtime-adapter experiment is intentionally rejected. The existing
+The lazy realtime-adapter experiment remains decision pending. The existing
 voice session constructs its adapter synchronously and binds push-to-talk from
-the trusted gesture path; deferring construction would move microphone
-permission work past that gesture or duplicate the shared control lifecycle.
-The shared action runner, controls, cancellation, radio/cost state and
-permission handling remain eager and unchanged. No bundle split is claimed for
-this rejected experiment.
+the trusted gesture path. A decision requires VM bundle-dependency and
+correctness evidence; no bundle split or measured no-benefit rejection is
+claimed yet. The shared action runner, controls, cancellation, radio/cost
+state and permission handling remain eager and unchanged while that evidence
+is collected.
 
 ## S62 distribution assets — October 18, 2026
 

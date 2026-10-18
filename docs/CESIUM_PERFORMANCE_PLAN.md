@@ -11,8 +11,9 @@ demand while retaining continuous video/fades and late-result cleanup for
 event/scheduled use. S66 suppresses hidden
 HUD work while preserving cadence. S67 prepares locale catalogs asynchronously
 before the UI and makes later translation reads synchronous with explicit
-failure/retry. S68 lazy-loads the heavy voice adapter while keeping the shared
-runner eager and gesture/cancel/permission behavior correct. S69 runs the exact
+failure/retry. S68 evaluates lazy loading the heavy voice adapter while keeping
+the shared runner eager and gesture/cancel/permission behavior correct; the
+decision remains pending bundle and correctness evidence. S69 runs the exact
 candidate Node 24/26 CI and existing eight-row Windows matrix with artifact
 attestation and `publish_stable=false`. S70 stages the exact artifact privately
 on VM105, verifies HTTPS/workspace/API behavior, runs the final 60-minute
