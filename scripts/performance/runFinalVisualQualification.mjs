@@ -36,6 +36,7 @@ import { verifyServedBuildAssets } from './buildProvenance.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFrozenWallClock } from './productionFlightFixture.mjs';
 import { readQualificationStateInPage } from './finalVisualQualificationState.mjs';
+import { closeRecoveryBrowser } from './profileRecoveryPageOwnership.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const VIEWPORT = Object.freeze({ width: 1440, height: 900 });
@@ -160,6 +161,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   let failure = null;
   let stage = 'launch';
   let states = [];
+  let browserClosed = false;
   let observedProfile = null;
   try {
     const context = await browser.createBrowserContext();
@@ -227,7 +229,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));
       states.push({ id, completedRender, foreground, ...observed, [label]: png });
     }
-    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version(), browserClosed: false };
+    return { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version(), browserClosed };
   } catch (error) {
     failure = error;
     throw error;
@@ -244,18 +246,24 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
       teardownError ||= error;
     }
     try {
-      await browser.close();
+      const closeResult = await closeRecoveryBrowser(browser, { timeoutMs: 5_000 });
+      browserClosed = closeResult.closeCompleted === true && closeResult.observation?.processExit != null;
+      if (!browserClosed) teardownError ||= new Error('Owned browser shutdown was not confirmed.');
     } catch (error) {
       teardownError ||= error;
     }
     if (failure) {
-      await fs.writeFile(path.join(out, `final-visual-${label}-partial.json`), JSON.stringify({ schema: 'gev-final-visual-qualification/partial-v1', label, stage, error: { name: failure.name, message: String(failure.message).slice(0, 500) }, completedStates: states, teardown: { browserClosed: true, error: teardownError ? String(teardownError.message).slice(0, 500) : null } }, null, 2));
+      try { await fs.writeFile(path.join(out, `final-visual-${label}-partial.json`), JSON.stringify({ schema: 'gev-final-visual-qualification/partial-v1', label, stage, error: { name: failure.name, message: String(failure.message).slice(0, 500) }, completedStates: states, teardown: { browserClosed, error: teardownError ? String(teardownError.message).slice(0, 500) : null } }, null, 2)); } catch {}
     }
-    if (teardownError) throw new Error('Visual qualification teardown was not confirmed.', { cause: teardownError });
+    if (teardownError) {
+      if (failure) {
+        failure.teardownError = String(teardownError.message || teardownError).slice(0, 300);
+      } else throw new Error('Visual qualification teardown was not confirmed.', { cause: teardownError });
+    }
   }
 }
 
-export async function produceFinalVisualQualification(options) {
+async function produceFinalVisualQualificationInternal(options) {
   if (process.platform !== 'win32') throw new Error('Final visual qualification requires Windows hardware.');
   const out = path.resolve(options.out);
   const visualHarnessRoot = path.resolve(options['visual-harness-root']);
@@ -274,7 +282,9 @@ export async function produceFinalVisualQualification(options) {
   await verifyReceipt({ receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['baseline-app-sha'], baseUrl: options['baseline-url'] });
   await verifyReceipt({ receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['candidate-app-sha'], baseUrl: options['candidate-url'] });
   const baseline = await captureRevision({ label: 'baseline', url: options['baseline-url'], appSha: options['baseline-app-sha'], receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harness: options['harness-root'], out });
+  options.__baseline = baseline;
   const candidate = await captureRevision({ label: 'candidate', url: options['candidate-url'], appSha: options['candidate-app-sha'], receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harness: options['harness-root'], out });
+  options.__candidate = candidate;
   await verifyReceipt({ receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['baseline-app-sha'], baseUrl: options['baseline-url'] });
   await verifyReceipt({ receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['candidate-app-sha'], baseUrl: options['candidate-url'] });
   const fixture = createCctvLifecycleFixture();
@@ -314,8 +324,8 @@ export async function produceFinalVisualQualification(options) {
     masks: [],
     states: STATES.map((id, index) => ({
       id,
-      completedRender: { baseline: true, candidate: true, baselineFrame: baseline.states[index].completedRender.frameNumber, candidateFrame: candidate.states[index].completedRender.frameNumber },
-      foreground: { baseline: true, candidate: true },
+      completedRender: { baseline: baseline.states[index].completedRender, candidate: candidate.states[index].completedRender },
+      foreground: { baseline: baseline.states[index].foreground, candidate: candidate.states[index].foreground },
       camera: { id: fixture.cameraId, ...baseline.states[index].camera },
       cameraByRevision: { baseline: baseline.states[index].camera, candidate: candidate.states[index].camera },
       nativeSharpnessProfile: baseline.states[index].profile,
@@ -332,6 +342,24 @@ export async function produceFinalVisualQualification(options) {
   };
   await fs.writeFile(path.join(out, 'final-visual-qualification.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
   return report;
+}
+
+export async function produceFinalVisualQualification(options) {
+  try {
+    return await produceFinalVisualQualificationInternal(options);
+  } catch (error) {
+    try {
+      const out = path.resolve(options.out);
+      await fs.mkdir(out, { recursive: true });
+      await fs.writeFile(path.join(out, 'final-visual-qualification-partial.json'), JSON.stringify({
+        schema: 'gev-final-visual-qualification/partial-v1',
+        error: { name: error.name, message: String(error.message || error).slice(0, 500), teardownError: error.teardownError || null },
+        baseline: options.__baseline || null,
+        candidate: options.__candidate || null,
+      }, null, 2));
+    } catch {}
+    throw error;
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))

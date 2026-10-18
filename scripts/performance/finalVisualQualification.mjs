@@ -150,23 +150,15 @@ export async function validateFinalVisualQualification(
     evidenceRoot || path.dirname(report.outputRoot || '.'),
   );
   for (const state of report.states) {
+    assert.ok(Number.isSafeInteger(state.completedRender?.baseline?.frameNumber), `${state.id} baseline render`);
+    assert.ok(Number.isSafeInteger(state.completedRender?.candidate?.frameNumber), `${state.id} candidate render`);
     assert.equal(
-      state.completedRender?.baseline,
-      true,
-      `${state.id} baseline render`,
-    );
-    assert.equal(
-      state.completedRender?.candidate,
-      true,
-      `${state.id} candidate render`,
-    );
-    assert.equal(
-      state.foreground?.baseline,
+      state.foreground?.baseline?.foregroundConfirmed,
       true,
       `${state.id} baseline foreground`,
     );
     assert.equal(
-      state.foreground?.candidate,
+      state.foreground?.candidate?.foregroundConfirmed,
       true,
       `${state.id} candidate foreground`,
     );
