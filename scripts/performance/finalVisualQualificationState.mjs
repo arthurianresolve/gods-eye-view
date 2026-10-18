@@ -38,5 +38,4 @@ export function readQualificationStateInPage({ checkpointValue, profileValue }) 
       profile: profileValue,
     };
 }
-`n
 
