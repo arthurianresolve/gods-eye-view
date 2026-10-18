@@ -11,6 +11,7 @@ export const PERFORMANCE_MATRIX_PLAN_SCHEMA = 'gev-performance-matrix-plan/v1';
 export const PERFORMANCE_MATRIX_RESULT_SCHEMA =
   'gev-performance-matrix-result/v1';
 export const PERFORMANCE_MATRIX_FIXED_TIME = '2026-10-08T12:00:00.000Z';
+export const PERFORMANCE_COMPARISON_PROFILE = 'native-sharpness-v1';
 
 export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
@@ -185,6 +186,7 @@ export function validatePerformanceMatrixPlan(plan) {
     baseline,
     candidate,
     rows: Object.freeze(rows),
+    comparisonProfile: plan.comparisonProfile ?? 'legacy',
     ...(plan.chromeExecutable
       ? {
           chromeExecutable: requireAbsolutePath(
@@ -255,6 +257,8 @@ export function createMatrixCaptureInvocation(plan, row, role) {
     '--served-base-url',
     build.baseUrl,
   ];
+  if (plan.comparisonProfile)
+    args.push('--comparison-profile', plan.comparisonProfile);
   if (row.mixedLayers) args.push('--mixed-layers');
   if (row.buildProfile !== 'standard')
     args.push('--build-profile', row.buildProfile);
@@ -282,6 +286,12 @@ export function readReusableMatrixReport(plan, row, role) {
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
   const revision = plan[role];
   assert.equal(report.schema, 'gev-performance-capture/v1');
+  if (plan.comparisonProfile)
+    assert.equal(
+      report.comparisonProfile,
+      plan.comparisonProfile,
+      'Reusable report comparison profile differs from matrix plan',
+    );
   assert.equal(report.comparisonEligible, true);
   assert.equal(report.comparisonReadiness?.status, 'ready');
   assert.equal(report.source?.appCommit, revision.appCommit);
@@ -325,6 +335,8 @@ export function validateMatrixPair(plan, row) {
       baseline: plan.baseline.appCommit,
       candidate: plan.candidate.appCommit,
     },
+    expectedComparisonProfile:
+      plan.comparisonProfile === 'legacy' ? null : plan.comparisonProfile,
   });
 }
 

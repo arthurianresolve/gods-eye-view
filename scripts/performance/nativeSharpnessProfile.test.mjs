@@ -15,7 +15,7 @@ test('native profile fixes Cesium resolution and records actual viewport inputs'
         resolutionScale: 0.5,
         scene: {
           globe: { maximumScreenSpaceError: 16 },
-          canvas: { width: 1600, height: 1200 },
+          canvas: { width: 1800, height: 1125, clientWidth: 1440, clientHeight: 900 },
             context: { _originalGLContext: null },
         },
       },
@@ -56,26 +56,27 @@ test('page evaluate serialization does not depend on module bindings', () => {
     innerHeight: 600,
     devicePixelRatio: 2,
     __godsEyeView: {
-      viewer: { scene: { globe: {}, canvas: { width: 1600, height: 1200 } } },
+      viewer: { scene: { globe: {}, canvas: { width: 1600, height: 1200, clientWidth: 800, clientHeight: 600 } } },
     },
   };
   assert.equal(serialized(windowObject).id, 'native-sharpness-v1');
 });
 
-test('native profile rejects a drawing buffer beyond the WebGL limit', () => {
-  const gl = { MAX_VIEWPORT_DIMS: 1, getParameter: () => [100, 100] };
+test('native profile rejects a drawing-buffer dimension mismatch', () => {
   assert.throws(
     () =>
-      applyNativeSharpnessProfile({
-        innerWidth: 100,
-        innerHeight: 100,
-        devicePixelRatio: 1,
-        __godsEyeView: {
-          viewer: {
-            scene: { globe: {}, canvas: { width: 101, height: 100 }, context: { _originalGLContext: gl } },
+      assertNativeSharpnessProfile({
+        environment: {
+          nativeSharpnessProfile: {
+            id: 'native-sharpness-v1',
+            useBrowserRecommendedResolution: false,
+            resolutionScale: 1,
+            maximumScreenSpaceError: 1,
+            viewport: { width: 100, height: 100, dpr: 2 },
+            drawingBuffer: { width: 100, height: 200 },
           },
         },
       }),
-    /exceeds WebGL viewport limit/,
+    /drawing-buffer width differs/,
   );
 });

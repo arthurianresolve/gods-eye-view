@@ -173,6 +173,12 @@ const declaredDeviceScaleFactor = Math.max(
   0,
   Number(option('--device-scale-factor', '0')) || 0,
 );
+const comparisonProfile = option(
+  '--comparison-profile',
+  'native-sharpness-v1',
+);
+if (!['native-sharpness-v1', 'legacy'].includes(comparisonProfile))
+  throw new Error('--comparison-profile must be native-sharpness-v1 or legacy.');
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
@@ -4441,10 +4447,12 @@ try {
           `Austin phased clock did not start its declared run: ${JSON.stringify(clockStart)}`,
         );
       failureProgress.current.clockStart = clockStart;
-      const nativeSharpnessProfile = await page.evaluate(
-        applyNativeSharpnessProfile,
-      );
-      failureProgress.current.nativeSharpnessProfile = nativeSharpnessProfile;
+      if (comparisonProfile === 'native-sharpness-v1') {
+        const nativeSharpnessProfile = await page.evaluate(
+          applyNativeSharpnessProfile,
+        );
+        failureProgress.current.nativeSharpnessProfile = nativeSharpnessProfile;
+      }
       // Each workload/run receives the declared warmup, including tracking.
       failureProgress.phase = 'warmup';
       failureProgress.current.phase = failureProgress.phase;
@@ -4665,7 +4673,8 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
-      assertNativeSharpnessProfile(sceneBefore, `${scenario} run ${run} before`);
+      if (comparisonProfile === 'native-sharpness-v1')
+        assertNativeSharpnessProfile(sceneBefore, `${scenario} run ${run} before`);
       const austinStateBefore = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
@@ -5365,7 +5374,8 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
-      assertNativeSharpnessProfile(sceneAfter, `${scenario} run ${run} after`);
+      if (comparisonProfile === 'native-sharpness-v1')
+        assertNativeSharpnessProfile(sceneAfter, `${scenario} run ${run} after`);
       const austinStateAfter = austinOperatingWorkload
         ? await page.evaluate(
             observeAustinOperatingRuntimeState,
@@ -6183,6 +6193,7 @@ try {
     contract: comparisonContract,
     fixture: comparisonFixture,
     fixtureDelivery,
+    comparisonProfile,
     source,
     environment,
     workload,

@@ -36,6 +36,19 @@ gates and the primary Windows comparison remain pending until the local runtime
 has sufficient disk for its isolated dependency install. No stable publication,
 human review, or performance-objective achievement is inferred from this slice.
 
+| Slice | Deliverable and primary files/gates | Engineering | Automatic | Primary evidence |
+| --- | --- | --- | --- | --- |
+| S61 | Frozen upstream merge, evidence ledger, native profile; capture/common observer, paired report, matrix | implemented | focused pass; dependency suites pending | pending shared matrix |
+| S62 | Deterministic Cesium paths, gzip/br, immutable caches | pending | pending | pending |
+| S63 | Production Node HTTP host and security behavior | pending | pending | pending |
+| S64 | Bounded diagnostics and Auto eligibility | pending | pending | pending |
+| S65 | Remove unchanged still CCTV demand; retain continuous video/fades and cleanup | pending | pending | pending |
+| S66 | Hidden HUD work suppression with cadence preservation | pending | pending | pending |
+| S67 | Async locale preparation and explicit catalog retry | pending | pending | pending |
+| S68 | Lazy heavy voice adapter with shared runner correctness | pending | pending | pending |
+| S69 | Exact Node 24/26 CI, eight-row Windows matrix, attestation | pending | pending | pending |
+| S70 | Private VM105 staging, HTTPS/API verification, final soak and rollback | pending | pending | pending |
+
 ## Matrix execution update - 16 October 2026
 
 The final S60 matrix now has one executable, fail-closed schedule. The

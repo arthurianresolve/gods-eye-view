@@ -1335,6 +1335,17 @@ export async function runNativeMapStreamingJourneyInPage({
   command = 'run',
   operationId = null,
 }) {
+  if (command === 'start') {
+    const viewer = window.__godsEyeView?.viewer;
+    const scene = viewer?.scene;
+    const globe = scene?.globe;
+    if (!viewer || !scene?.canvas || !globe)
+      throw new Error('Map journey native sharpness profile needs Cesium viewer surfaces.');
+    viewer.useBrowserRecommendedResolution = false;
+    viewer.resolutionScale = 1;
+    globe.maximumScreenSpaceError = 1;
+    viewer.__gevNativeSharpnessProfile = 'native-sharpness-v1';
+  }
   const cancelDrainTimeoutMs = 5_000;
   const terrainAncestryLimit = 24;
   const operationKey = '__gevMapStreamingJourneyV1';
@@ -1633,19 +1644,14 @@ export async function runNativeMapStreamingJourneyInPage({
               resolutionScale: viewer.resolutionScale,
               maximumScreenSpaceError: globe.maximumScreenSpaceError,
               viewport: {
-                width: window.innerWidth,
-                height: window.innerHeight,
+                width: scene.canvas.clientWidth || window.innerWidth,
+                height: scene.canvas.clientHeight || window.innerHeight,
                 dpr: window.devicePixelRatio,
               },
               drawingBuffer: {
                 width: scene.canvas.width,
                 height: scene.canvas.height,
               },
-              maxViewportDimensions: (() => {
-                const gl = scene.context?._originalGLContext;
-                const dims = gl?.getParameter?.(gl.MAX_VIEWPORT_DIMS);
-                return dims ? { width: dims[0], height: dims[1] } : null;
-              })(),
             }
           : null,
     };
@@ -4855,10 +4861,6 @@ export function validateMapStreamingCaptureReport(
       assert.ok(Number.isFinite(profileValue.viewport?.dpr));
       assert.ok(Number.isInteger(profileValue.drawingBuffer?.width));
       assert.ok(Number.isInteger(profileValue.drawingBuffer?.height));
-      if (profileValue.maxViewportDimensions) {
-        assert.ok(profileValue.drawingBuffer.width <= profileValue.maxViewportDimensions.width);
-        assert.ok(profileValue.drawingBuffer.height <= profileValue.maxViewportDimensions.height);
-      }
     }
     for (const journey of journeys)
       assert.deepEqual(

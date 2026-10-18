@@ -1583,6 +1583,7 @@ export function validatePairedPerformanceReports({
   baseline,
   candidate,
   expectedAppCommits,
+  expectedComparisonProfile = null,
 } = {}) {
   assert.ok(
     expectedAppCommits,
@@ -1598,6 +1599,10 @@ export function validatePairedPerformanceReports({
     SHA1,
     'Explicit full candidate application SHA is required',
   );
+  if (expectedComparisonProfile) {
+    assert.equal(baseline.comparisonProfile, expectedComparisonProfile);
+    assert.equal(candidate.comparisonProfile, expectedComparisonProfile);
+  }
   assert.notEqual(
     expectedAppCommits.baseline,
     expectedAppCommits.candidate,

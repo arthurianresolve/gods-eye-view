@@ -8,15 +8,6 @@ export function applyNativeSharpnessProfile(windowObject = globalThis.window) {
   const globe = viewer?.scene?.globe;
   if (!viewer || !globe) throw new Error('Native sharpness profile needs viewer.globe.');
   const canvas = viewer.scene.canvas;
-  const gl = viewer.scene.context?._originalGLContext;
-  const maxViewport = gl?.getParameter?.(gl.MAX_VIEWPORT_DIMS);
-  if (
-    maxViewport &&
-    (canvas.width > maxViewport[0] || canvas.height > maxViewport[1])
-  )
-    throw new Error(
-      `Native sharpness profile exceeds WebGL viewport limit ${maxViewport[0]}x${maxViewport[1]}.`,
-    );
   viewer.useBrowserRecommendedResolution = false;
   viewer.resolutionScale = 1;
   globe.maximumScreenSpaceError = 1;
@@ -26,14 +17,15 @@ export function applyNativeSharpnessProfile(windowObject = globalThis.window) {
     useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
     resolutionScale: viewer.resolutionScale,
     maximumScreenSpaceError: globe.maximumScreenSpaceError,
-    viewport: { width: windowObject.innerWidth, height: windowObject.innerHeight, dpr: windowObject.devicePixelRatio },
+    viewport: {
+      width: canvas.clientWidth || windowObject.innerWidth,
+      height: canvas.clientHeight || windowObject.innerHeight,
+      dpr: windowObject.devicePixelRatio,
+    },
     drawingBuffer: {
       width: canvas?.width,
       height: canvas?.height,
     },
-    maxViewportDimensions: maxViewport
-      ? { width: maxViewport[0], height: maxViewport[1] }
-      : null,
   };
 }
 
@@ -50,9 +42,13 @@ export function assertNativeSharpnessProfile(observed, label = 'scene') {
   assert.ok(Number.isFinite(profile.viewport?.dpr) && profile.viewport.dpr > 0);
   assert.ok(Number.isInteger(profile.drawingBuffer?.width) && profile.drawingBuffer.width > 0);
   assert.ok(Number.isInteger(profile.drawingBuffer?.height) && profile.drawingBuffer.height > 0);
-  if (profile.maxViewportDimensions) {
-    assert.ok(profile.drawingBuffer.width <= profile.maxViewportDimensions.width);
-    assert.ok(profile.drawingBuffer.height <= profile.maxViewportDimensions.height);
-  }
+  const expectedWidth = Math.round(
+    profile.viewport.width * profile.viewport.dpr * profile.resolutionScale,
+  );
+  const expectedHeight = Math.round(
+    profile.viewport.height * profile.viewport.dpr * profile.resolutionScale,
+  );
+  assert.equal(profile.drawingBuffer.width, expectedWidth, `${label} drawing-buffer width differs from CSS viewport and DPR`);
+  assert.equal(profile.drawingBuffer.height, expectedHeight, `${label} drawing-buffer height differs from CSS viewport and DPR`);
   return true;
 }
