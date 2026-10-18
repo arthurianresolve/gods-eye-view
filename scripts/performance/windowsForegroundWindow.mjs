@@ -25,15 +25,18 @@ function runnerDiagnostic(cause, evidence, category) {
   const timedOut =
     cause?.code === 'ETIMEDOUT' || cause?.name === 'TimeoutError';
   const runnerTimedOut = timedOut || cause?.gevTimeout === true;
-  const runnerExited = runnerTimedOut
-    ? false
-    : evidence ||
-        Number.isInteger(cause?.status) ||
-        typeof cause?.code === 'number'
-      ? true
-      : cause?.code === 'ENOENT' || cause?.code === 'EACCES'
+  const runnerExited =
+    cause?.gevPersistentHelper === true
+      ? (cause.runnerExited ?? null)
+      : runnerTimedOut
         ? false
-        : null;
+        : evidence ||
+            Number.isInteger(cause?.status) ||
+            typeof cause?.code === 'number'
+          ? true
+          : cause?.code === 'ENOENT' || cause?.code === 'EACCES'
+            ? false
+            : null;
   const diagnostic = {
     schema: FOREGROUND_DIAGNOSTIC_SCHEMA,
     category,
@@ -60,6 +63,7 @@ function runnerDiagnostic(cause, evidence, category) {
       'windowHandleSource',
       'handlePollAttempts',
       'inputAttached',
+      'mutationSkipped',
       'showWindowAccepted',
       'bringWindowToTopAccepted',
       'setForegroundAccepted',
@@ -96,7 +100,6 @@ public static class GevOwnedBrowserWindow {
   [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-  [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
   public static IntPtr FindOwnedBrowserWindow(uint browserPid) {
     IntPtr visible = IntPtr.Zero;
     IntPtr hidden = IntPtr.Zero;
@@ -146,7 +149,7 @@ Start-Sleep -Milliseconds 100
 $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
 $foregroundPid = [uint32]0
 [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
-$confirmed = $foreground -eq $handle
+$confirmed = ($foreground -eq $handle) -and ($foregroundPid -eq $browserPid)
 $foregroundProcessName = if ($foregroundPid -gt 0) {
   (Get-Process -Id $foregroundPid -ErrorAction SilentlyContinue).ProcessName
 } else { $null }
@@ -200,6 +203,17 @@ async function runPowerShell(browserPid, timeoutMs) {
 function persistentPowerShellScript() {
   const addTypeStart = POWERSHELL_SCRIPT.indexOf("Add-Type -TypeDefinition @'");
   const addTypeEnd = POWERSHELL_SCRIPT.indexOf("'@\n$browser =", addTypeStart);
+  if (addTypeStart < 0 || addTypeEnd < addTypeStart)
+    throw new Error('Foreground helper declaration boundaries are invalid.');
+  for (const marker of [
+    `schema = '${WINDOWS_FOREGROUND_SCHEMA}'`,
+    '} | ConvertTo-Json -Compress',
+    '[pscustomobject]@{',
+    'if (-not $confirmed) { exit 2 }',
+  ]) {
+    if (POWERSHELL_SCRIPT.split(marker).length !== 2)
+      throw new Error('Foreground helper protocol template is ambiguous.');
+  }
   const addType = POWERSHELL_SCRIPT.slice(addTypeStart, addTypeEnd + 2);
   const body = POWERSHELL_SCRIPT.slice(addTypeEnd + 3)
     .replace(/\nif \(-not \$confirmed\) \{ exit 2 \}\s*$/, '\n')
@@ -270,6 +284,10 @@ export function createWindowsForegroundActivationSession({
   let unusable = false;
   let disposePromise = null;
   let childFailure = null;
+  let childExit = null;
+  let childClose = null;
+  let childClosed = false;
+  let unreportedFailure = null;
   const MAX_BUFFER_BYTES = 64 * 1024;
   const takeLine = () => {
     const index = buffer.indexOf('\n');
@@ -281,22 +299,27 @@ export function createWindowsForegroundActivationSession({
   const settle = (operation, method, value) => {
     if (!operation) return;
     if (operation.timer) clearTimeout(operation.timer);
-    if (operation.stdinError)
-      child?.stdin?.removeListener?.('error', operation.stdinError);
     operation[method](value);
   };
   const fail = (error) => {
     if (unusable) return;
+    error.gevPersistentHelper = true;
+    error.runnerExited ??= childClosed;
     unusable = true;
     initialized = false;
     const currentReady = ready;
     const currentPending = pending;
+    if (!currentReady && !currentPending) unreportedFailure = error;
     ready = null;
     pending = null;
+    buffer = '';
     settle(currentReady, 'reject', error);
     settle(currentPending, 'reject', error);
     try {
-      child?.kill();
+      if (child?.kill() === true) {
+        error.killed = true;
+        error.signal ??= 'SIGTERM';
+      }
     } catch {}
   };
   const onData = (chunk) => {
@@ -306,50 +329,63 @@ export function createWindowsForegroundActivationSession({
       fail(new Error('Foreground helper output exceeded its bounded limit.'));
       return;
     }
-    let line;
-    while ((line = takeLine()) !== null) {
+    const line = takeLine();
+    if (line === null) return;
+    // There is only one outstanding operation. Another line or trailing bytes
+    // cannot be a reply to a request we have not sent yet. Validate the entire
+    // chunk before resolving, including the final request of a capture.
+    if (buffer.length) {
+      fail(new Error('Unexpected foreground helper protocol output.'));
+      return;
+    }
+    try {
+      const parsed = JSON.parse(line);
       if (ready) {
+        if (
+          parsed?.schema !== FOREGROUND_DIAGNOSTIC_SCHEMA ||
+          parsed?.status !== 'ready'
+        )
+          throw new Error('Helper startup failed.');
         const current = ready;
         ready = null;
-        try {
-          const parsed = JSON.parse(line);
-          if (
-            parsed?.schema !== FOREGROUND_DIAGNOSTIC_SCHEMA ||
-            parsed?.status !== 'ready'
-          )
-            throw new Error('Helper startup failed.');
-          initialized = true;
-          settle(current, 'resolve');
-        } catch (error) {
-          settle(current, 'reject', error);
-          fail(error);
-        }
+        initialized = true;
+        settle(current, 'resolve');
       } else if (pending) {
+        if (
+          parsed?.schema !== WINDOWS_FOREGROUND_SCHEMA ||
+          parsed?.requestId !== pending.requestId ||
+          parsed?.browserPid !== browserPid
+        )
+          throw new Error('Foreground helper response sequence mismatch.');
+        if (
+          parsed.status !== 'foreground-confirmed' ||
+          parsed.foregroundConfirmed !== true ||
+          parsed.foregroundPid !== browserPid ||
+          parsed.desktopState === 'locked'
+        ) {
+          const error = new Error(
+            'Foreground helper returned unconfirmed evidence.',
+          );
+          error.stdout = line;
+          error.foregroundCategory =
+            parsed.desktopState === 'locked' ? 'locked' : 'unconfirmed';
+          throw error;
+        }
         const current = pending;
         pending = null;
-        try {
-          const parsed = JSON.parse(line);
-          if (
-            parsed?.schema !== WINDOWS_FOREGROUND_SCHEMA ||
-            parsed?.requestId !== current.requestId ||
-            parsed?.browserPid !== browserPid
-          )
-            throw new Error('Foreground helper response sequence mismatch.');
-          settle(current, 'resolve', { stdout: line });
-          if (
-            parsed.status !== 'foreground-confirmed' ||
-            parsed.foregroundConfirmed !== true ||
-            parsed.foregroundPid !== browserPid
-          )
-            fail(new Error('Foreground helper returned unconfirmed evidence.'));
-        } catch (error) {
-          settle(current, 'reject', error);
-          fail(error);
-        }
-      } else {
-        fail(new Error('Unexpected foreground helper output.'));
-      }
+        settle(current, 'resolve', { stdout: line });
+      } else throw new Error('Unexpected foreground helper output.');
+    } catch (error) {
+      fail(error);
     }
+  };
+  const removeChildListeners = (ownedChild) => {
+    ownedChild.stdout?.removeListener?.('data', onData);
+    ownedChild.stdout?.removeListener?.('error', childFailure);
+    ownedChild.removeListener?.('error', childFailure);
+    ownedChild.stdin?.removeListener?.('error', childFailure);
+    ownedChild.removeListener?.('exit', childExit);
+    ownedChild.removeListener?.('close', childClose);
   };
   const start = async ({ timeoutMs = 15_000 } = {}) => {
     if (disposed || unusable)
@@ -372,6 +408,7 @@ export function createWindowsForegroundActivationSession({
         );
       } catch (error) {
         fail(error);
+        unreportedFailure = null;
         throw error;
       }
       child.stdout.on('data', onData);
@@ -382,17 +419,28 @@ export function createWindowsForegroundActivationSession({
             : new Error('Foreground helper exited.'),
         );
       childFailure = failure;
-      child.once('error', failure);
-      child.stdin?.once?.('error', failure);
-      child.once('exit', (code, signal) => {
+      child.on('error', failure);
+      child.stdin?.on?.('error', failure);
+      child.stdout.on('error', failure);
+      childExit = (code, signal) => {
         if (!disposed && !unusable)
           failure(
             Object.assign(new Error('Foreground helper exited.'), {
               code,
               signal,
+              runnerExited: true,
             }),
           );
-      });
+      };
+      const ownedChild = child;
+      childClose = () => {
+        childClosed = true;
+        if (!disposed && !unusable)
+          failure(new Error('Foreground helper closed unexpectedly.'));
+        removeChildListeners(ownedChild);
+      };
+      child.once('exit', childExit);
+      child.once('close', childClose);
       await new Promise((resolve, reject) => {
         const operation = { resolve, reject, timer: null };
         ready = operation;
@@ -403,7 +451,6 @@ export function createWindowsForegroundActivationSession({
             fail(error);
           }
         }, timeoutMs);
-        operation.timer.unref?.();
       });
       return true;
     })();
@@ -418,21 +465,15 @@ export function createWindowsForegroundActivationSession({
       throw new Error('Foreground helper PID mismatch.');
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
       throw new TypeError('Foreground helper timeout must be positive.');
-    if (!child || !initialized || disposed || unusable)
+    if (!child || !initialized || disposed || unusable) {
+      unreportedFailure = null;
       throw new Error('Foreground helper is unavailable.');
+    }
     if (pending) throw new Error('Foreground helper request already pending.');
     const requestId = nextRequestId++;
     const response = new Promise((resolve, reject) => {
       const operation = { resolve, reject, requestId, timer: null };
       pending = operation;
-      operation.stdinError = (error) => {
-        if (pending === operation) {
-          pending = null;
-          settle(operation, 'reject', error);
-          fail(error);
-        }
-      };
-      child.stdin.once?.('error', operation.stdinError);
       operation.timer = setTimeout(() => {
         if (pending === operation) {
           const error = new Error('Foreground helper request timed out.');
@@ -440,7 +481,6 @@ export function createWindowsForegroundActivationSession({
           fail(error);
         }
       }, timeoutMs);
-      operation.timer.unref?.();
     });
     try {
       child.stdin.write(`${requestId}:${requestedPid}\n`);
@@ -470,40 +510,39 @@ export function createWindowsForegroundActivationSession({
       let finished = false;
       let closeTimer;
       let killTimer;
+      const onDisposeClose = () => finish();
       const finish = (error) => {
         if (finished) return;
         finished = true;
         if (closeTimer) clearTimeout(closeTimer);
         if (killTimer) clearTimeout(killTimer);
-        ownedChild.removeListener?.('exit', finish);
-        ownedChild.removeListener?.('close', finish);
+        ownedChild.removeListener?.('close', onDisposeClose);
         ownedChild.stdout?.removeListener?.('data', onData);
-        ownedChild.removeListener?.('error', childFailure);
-        ownedChild.stdin?.removeListener?.('error', childFailure);
+        // Keep error consumers until the streams actually close if termination
+        // could not be confirmed. A late EPIPE must not crash the harness.
+        if (childClosed) removeChildListeners(ownedChild);
         buffer = '';
-        error ? reject(error) : resolve();
+        const failure = error || unreportedFailure;
+        failure ? reject(failure) : resolve();
       };
-      ownedChild.once?.('close', finish);
-      if (
-        (ownedChild.exitCode !== null && ownedChild.exitCode !== undefined) ||
-        ownedChild.signalCode
-      ) {
+      ownedChild.once?.('close', onDisposeClose);
+      if (childClosed) {
         finish();
         return;
       }
       try {
         ownedChild.stdin.end();
       } catch {}
+      if (finished) return;
       killTimer = setTimeout(() => {
         try {
           ownedChild.kill();
         } catch {}
+        if (finished) return;
         closeTimer = setTimeout(() => {
           finish(new Error('Foreground helper did not confirm process exit.'));
         }, 1000);
-        closeTimer.unref?.();
       }, 1000);
-      killTimer.unref?.();
     });
     return disposePromise;
   };
@@ -547,7 +586,9 @@ export async function focusOwnedWindowsBrowserWindow({
         error,
         cause,
         parsedEvidence,
-        parsedEvidence.desktopState === 'locked' ? 'locked' : 'process-exited',
+        parsedEvidence.desktopState === 'locked'
+          ? 'locked'
+          : cause?.foregroundCategory || 'process-exited',
       );
       if (error.evidence?.desktopState === 'locked')
         error.message =
@@ -584,7 +625,9 @@ export async function focusOwnedWindowsBrowserWindow({
     evidence?.schema !== WINDOWS_FOREGROUND_SCHEMA ||
     evidence.status !== 'foreground-confirmed' ||
     evidence.browserPid !== browserPid ||
-    evidence.foregroundConfirmed !== true
+    evidence.foregroundConfirmed !== true ||
+    evidence.foregroundPid !== browserPid ||
+    evidence.desktopState === 'locked'
   ) {
     const error = new Error(
       'Windows foreground activation did not confirm the owned browser window.',
