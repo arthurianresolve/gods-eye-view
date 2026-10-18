@@ -1,13 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import {
   classifyAsset,
   computeContentDigest,
   createAssetManifest,
   createAssetArtifacts,
+  computeCesiumDistributionDigest,
+  computeCesiumDistributionDigestSync,
+  writeAssetArtifacts,
   isCompressibleAsset,
   listAssetFiles,
 } from './assetDistribution.js';
@@ -47,7 +51,12 @@ test('manifest emits deterministic compression metadata and cache classes', asyn
     first.assets.find((entry) => entry.path === 'photo.png').contentType,
     'image/png',
   );
-  assert.equal(classifyAsset('assets/app-deadbeef.js'), 'immutable');
+  assert.equal(
+    classifyAsset('assets/app-deadbeef.js', {
+      immutablePaths: new Set(['assets/app-deadbeef.js']),
+    }),
+    'immutable',
+  );
 });
 
 test('asset paths reject traversal and absolute names', async () => {
@@ -63,4 +72,44 @@ test('artifact output includes compressed bytes only for eligible types', async 
   assert.ok(Buffer.isBuffer(artifacts.get('index.html').brotli));
   assert.equal(artifacts.get('photo.png').gzip, null);
   assert.equal(artifacts.get('photo.png').brotli, null);
+});
+
+test('sync and async Cesium digests agree and emitted sidecars round-trip', async () => {
+  const root = await fixture();
+  const sync = computeCesiumDistributionDigestSync({
+    root,
+    distributionRoot: path.join('cesium', '0123456789abcdef'),
+  });
+  const asyncDigest = await computeCesiumDistributionDigest({
+    root,
+    distributionRoot: path.join('cesium', '0123456789abcdef'),
+  });
+  assert.deepEqual(sync, asyncDigest);
+  const output = await writeAssetArtifacts(root, {
+    cesiumDigest: '0123456789abcdef',
+    immutablePaths: new Set(['assets/app-deadbeef.js']),
+    brotliQuality: 4,
+  });
+  const manifest = JSON.parse(await readFile(path.join(root, 'asset-manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.sidecars, output.sidecars);
+  const raw = await readFile(path.join(root, 'index.html'));
+  assert.deepEqual(gunzipSync(await readFile(path.join(root, 'index.html.gz'))), raw);
+  assert.deepEqual(brotliDecompressSync(await readFile(path.join(root, 'index.html.br'))), raw);
+  assert.ok(output.sidecars.includes('index.html.br'));
+  await rm(root, { recursive: true, force: true });
+});
+
+test('missing Cesium distribution and symlinked assets fail clearly', async () => {
+  const root = await fixture();
+  await assert.rejects(
+    () => computeCesiumDistributionDigest({ root, distributionRoot: 'missing' }),
+  );
+  const link = path.join(root, 'link.js');
+  try {
+    const { symlink } = await import('node:fs/promises');
+    await symlink(path.join(root, 'index.html'), link);
+    await assert.rejects(() => listAssetFiles(root), /Symlinked asset/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

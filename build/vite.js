@@ -4,7 +4,10 @@ import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
 import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
-import { computeCesiumDistributionDigestSync } from './assetDistribution.js';
+import {
+  assetDistributionPlugin,
+  computeCesiumDistributionDigestSync,
+} from './assetDistribution.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -64,11 +67,16 @@ export function createBrowserViteConfig({
   root = process.cwd(),
 } = {}) {
   let cesiumBaseUrl = '/cesium/';
+  let cesiumDigest = null;
   if (command === 'build') {
     try {
-      cesiumBaseUrl = `/${computeCesiumDistributionDigestSync({ root }).path}/`;
-    } catch {
-      // Dependency identity validation reports the actionable missing-package error.
+      cesiumDigest = computeCesiumDistributionDigestSync({ root });
+      cesiumBaseUrl = `/${cesiumDigest.path}/`;
+    } catch (error) {
+      throw new Error(
+        'Cannot digest the patched Cesium distribution before build. Run npm ci and apply the pinned Cesium patches in this checkout.',
+        { cause: error },
+      );
     }
   }
   return {
@@ -81,6 +89,9 @@ export function createBrowserViteConfig({
       ...plugins,
       embedFramingPlugin(),
       panelBuildPlugin(),
+      ...(command === 'build'
+        ? [assetDistributionPlugin({ cesiumDigest: cesiumDigest.digest })]
+        : []),
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
     // A production build must not clean the dependency cache a running dev

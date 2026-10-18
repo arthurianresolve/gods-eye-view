@@ -6,6 +6,9 @@ The build now derives a deterministic SHA-256 digest from the patched Cesium
 distribution bytes in path order and supplies the digest path through
 `vite-plugin-cesium`'s supported `cesiumBaseUrl` option. The reusable Node-only
 asset helper emits deterministic raw, gzip and Brotli artifact metadata and
+the production Vite build writes `asset-manifest.json` plus bounded `.gz` and
+`.br` sidecars after the Cesium copy hook completes. Rollup bundle ownership
+drives immutable application classification rather than filename guessing, while
 classifies only content-addressed application assets and the Cesium digest path
 as immutable; HTML, webmanifest and build metadata remain revalidation assets.
 Traversal and symlinked asset paths are rejected. The helper does not alter API
