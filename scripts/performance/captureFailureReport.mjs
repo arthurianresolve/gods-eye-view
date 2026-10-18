@@ -80,6 +80,45 @@ function boundedValue(value, depth = 0, seen = new WeakSet(), state = null) {
   return output;
 }
 
+const FOREGROUND_DIAGNOSTIC_KEYS = [
+  'schema',
+  'category',
+  'runnerExited',
+  'runnerTimedOut',
+  'runnerKilled',
+  'runnerExitCode',
+  'runnerSignal',
+  'runnerErrorCode',
+  'browserPid',
+  'windowHandleAvailable',
+  'windowHandleSource',
+  'handlePollAttempts',
+  'inputAttached',
+  'showWindowAccepted',
+  'bringWindowToTopAccepted',
+  'setForegroundAccepted',
+  'foregroundConfirmed',
+  'foregroundPid',
+  'foregroundProcessName',
+  'desktopState',
+  'status',
+];
+
+/** Preserve only the bounded, non-secret foreground activation contract. */
+export function sanitizeForegroundActivationDiagnostic(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const output = {};
+  for (const key of FOREGROUND_DIAGNOSTIC_KEYS) {
+    if (!Object.hasOwn(value, key)) continue;
+    const entry = value[key];
+    if (typeof entry === 'boolean') output[key] = entry;
+    else if (Number.isSafeInteger(entry)) output[key] = entry;
+    else if (typeof entry === 'string' && entry.length <= 128)
+      output[key] = safeText(entry, 128);
+  }
+  return Object.keys(output).length ? output : null;
+}
+
 /** Return the same redacted, depth- and collection-bounded projection used by
  * failure artifacts. Callers still enforce their serialized byte cap. */
 export function boundCaptureReportEvidence(value) {
@@ -225,6 +264,13 @@ export function createCaptureFailureReport({
       run: Number.isInteger(run) ? run : null,
       message: safeText(error?.message || error || 'Capture failed.', 512),
       operator: errorOperator ? safeText(errorOperator, 32) : null,
+      ...(sanitizeForegroundActivationDiagnostic(error?.foregroundActivation)
+        ? {
+            foregroundActivation: sanitizeForegroundActivationDiagnostic(
+              error.foregroundActivation,
+            ),
+          }
+        : {}),
       actual: boundedValue(errorActual, 0, new WeakSet(), boundedState),
       expected: boundedValue(errorExpected, 0, new WeakSet(), boundedState),
     },

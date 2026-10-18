@@ -112,6 +112,77 @@ test('Windows activation retains structured locked-desktop evidence', async () =
       assert.equal(error.name, 'HostWindowActivationError');
       assert.match(error.message, /desktop is locked/);
       assert.deepEqual(error.evidence, evidence);
+      assert.equal(error.foregroundActivation.category, 'locked');
+      assert.equal(error.foregroundActivation.desktopState, 'locked');
+      assert.equal(error.foregroundActivation.runnerExited, true);
+      assert.equal(error.foregroundActivation.runnerKilled, false);
+      return true;
+    },
+  );
+});
+
+test('Windows activation retains bounded pre-evidence process diagnostics', async () => {
+  await assert.rejects(
+    focusOwnedWindowsBrowserWindow({
+      browserPid: 77,
+      platform: 'win32',
+      runner: async () => {
+        const error = new Error('timed out with private stdout');
+        error.code = 'ETIMEDOUT';
+        error.killed = true;
+        error.signal = 'SIGTERM';
+        error.stdout = '';
+        error.stderr = 'secret command output';
+        throw error;
+      },
+    }),
+    (error) => {
+      assert.equal(error.foregroundActivation.category, 'timeout');
+      assert.equal(error.foregroundActivation.runnerExited, false);
+      assert.equal(error.foregroundActivation.runnerTimedOut, true);
+      assert.equal(error.foregroundActivation.runnerKilled, true);
+      assert.equal(error.foregroundActivation.runnerSignal, 'SIGTERM');
+      assert.equal(error.foregroundActivation.runnerErrorCode, 'ETIMEDOUT');
+      assert.equal('stderr' in error.foregroundActivation, false);
+      assert.equal('stdout' in error.foregroundActivation, false);
+      return true;
+    },
+  );
+  await assert.rejects(
+    focusOwnedWindowsBrowserWindow({
+      browserPid: 77,
+      platform: 'win32',
+      runner: async () => {
+        const error = new Error('spawn failed');
+        error.code = 'ENOENT';
+        throw error;
+      },
+    }),
+    (error) => {
+      assert.equal(error.foregroundActivation.category, 'process-failure');
+      assert.equal(error.foregroundActivation.runnerExited, false);
+      assert.equal(error.foregroundActivation.runnerErrorCode, 'ENOENT');
+      return true;
+    },
+  );
+});
+
+test('Windows activation marks malformed failure evidence without retaining raw output', async () => {
+  await assert.rejects(
+    focusOwnedWindowsBrowserWindow({
+      browserPid: 77,
+      platform: 'win32',
+      runner: async () => {
+        const error = new Error('exit 2');
+        error.stdout = '{"schema":"bad","private":"secret"';
+        throw error;
+      },
+    }),
+    (error) => {
+      assert.equal(error.foregroundActivation.category, 'malformed-evidence');
+      assert.equal(error.foregroundActivation.runnerExited, true);
+      assert.equal('stdout' in error.foregroundActivation, false);
+      assert.equal('private' in error.foregroundActivation, false);
       return true;
     },
   );

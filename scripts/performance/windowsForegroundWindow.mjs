@@ -6,6 +6,75 @@ const execFileAsync = promisify(execFile);
 const WINDOWS_FOREGROUND_SCHEMA =
   'gev-windows-owned-browser-foreground-activation/v1';
 
+const FOREGROUND_DIAGNOSTIC_SCHEMA =
+  'gev-windows-owned-browser-foreground-diagnostic/v1';
+
+function parseEvidence(value) {
+  try {
+    const parsed = JSON.parse(String(value || '').trim());
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function runnerDiagnostic(cause, evidence, category) {
+  const timedOut =
+    cause?.code === 'ETIMEDOUT' || cause?.name === 'TimeoutError';
+  const runnerExited =
+    !timedOut &&
+    (Boolean(evidence) ||
+      typeof cause?.stdout === 'string' ||
+      Number.isInteger(cause?.status) ||
+      typeof cause?.code === 'number');
+  const diagnostic = {
+    schema: FOREGROUND_DIAGNOSTIC_SCHEMA,
+    category,
+    runnerExited,
+    runnerTimedOut: timedOut,
+    runnerKilled: cause?.killed === true,
+  };
+  const exitCode = Number.isInteger(cause?.status)
+    ? cause.status
+    : Number.isInteger(cause?.exitCode)
+      ? cause.exitCode
+      : typeof cause?.code === 'number'
+        ? cause.code
+        : null;
+  if (exitCode !== null) diagnostic.runnerExitCode = exitCode;
+  if (typeof cause?.signal === 'string' && /^[A-Z0-9_]+$/.test(cause.signal))
+    diagnostic.runnerSignal = cause.signal.slice(0, 32);
+  if (typeof cause?.code === 'string' && /^[A-Z0-9_]+$/.test(cause.code))
+    diagnostic.runnerErrorCode = cause.code.slice(0, 32);
+  if (evidence) {
+    for (const key of [
+      'browserPid',
+      'windowHandleAvailable',
+      'windowHandleSource',
+      'handlePollAttempts',
+      'inputAttached',
+      'showWindowAccepted',
+      'bringWindowToTopAccepted',
+      'setForegroundAccepted',
+      'foregroundConfirmed',
+      'foregroundPid',
+      'foregroundProcessName',
+      'desktopState',
+      'status',
+    ]) {
+      if (Object.hasOwn(evidence, key)) diagnostic[key] = evidence[key];
+    }
+  }
+  return diagnostic;
+}
+
+function attachDiagnostic(error, cause, evidence, category) {
+  error.foregroundActivation = runnerDiagnostic(cause, evidence, category);
+  return error;
+}
+
 const POWERSHELL_SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'
 $browserPid = [int]$env:GEV_OWNED_BROWSER_PID
@@ -145,13 +214,30 @@ export async function focusOwnedWindowsBrowserWindow({
       { cause },
     );
     error.name = 'HostWindowActivationError';
-    try {
-      error.evidence = JSON.parse(String(cause?.stdout || '').trim());
+    const rawEvidence = String(cause?.stdout || '').trim();
+    const parsedEvidence = parseEvidence(rawEvidence);
+    if (parsedEvidence) {
+      error.evidence = parsedEvidence;
+      attachDiagnostic(
+        error,
+        cause,
+        parsedEvidence,
+        parsedEvidence.desktopState === 'locked' ? 'locked' : 'process-exited',
+      );
       if (error.evidence?.desktopState === 'locked')
         error.message =
           'Windows desktop is locked; foreground hardware capture cannot start.';
-    } catch {
-      // A pre-evidence PowerShell failure is preserved through the cause.
+    } else {
+      attachDiagnostic(
+        error,
+        cause,
+        null,
+        rawEvidence
+          ? 'malformed-evidence'
+          : cause?.code === 'ETIMEDOUT' || cause?.name === 'TimeoutError'
+            ? 'timeout'
+            : 'process-failure',
+      );
     }
     throw error;
   }
@@ -164,6 +250,7 @@ export async function focusOwnedWindowsBrowserWindow({
       { cause },
     );
     error.name = 'HostWindowActivationError';
+    attachDiagnostic(error, cause, null, 'malformed-evidence');
     throw error;
   }
   if (
@@ -177,9 +264,10 @@ export async function focusOwnedWindowsBrowserWindow({
     );
     error.name = 'HostWindowActivationError';
     error.evidence = evidence;
+    attachDiagnostic(error, null, evidence, 'unconfirmed');
     throw error;
   }
   return evidence;
 }
 
-export { WINDOWS_FOREGROUND_SCHEMA };
+export { WINDOWS_FOREGROUND_SCHEMA, FOREGROUND_DIAGNOSTIC_SCHEMA };
