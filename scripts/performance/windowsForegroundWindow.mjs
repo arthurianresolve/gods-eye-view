@@ -1,4 +1,5 @@
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import { Buffer } from 'node:buffer';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -92,11 +93,9 @@ public static class GevOwnedBrowserWindow {
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder value, int maxCount);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-  [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
-  [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
   [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
   public static IntPtr FindOwnedBrowserWindow(uint browserPid) {
     IntPtr visible = IntPtr.Zero;
@@ -132,27 +131,22 @@ do {
 } while ($attempts -lt 40)
 if ($handle -eq [IntPtr]::Zero) { throw 'Owned browser window handle is unavailable.' }
 $previous = [GevOwnedBrowserWindow]::GetForegroundWindow()
-$previousPid = [uint32]0
-$previousThread = [GevOwnedBrowserWindow]::GetWindowThreadProcessId($previous, [ref]$previousPid)
-$currentThread = [GevOwnedBrowserWindow]::GetCurrentThreadId()
+$alreadyForeground = $previous -eq $handle
 $attached = $false
-if ($previousThread -ne 0 -and $previousThread -ne $currentThread) {
-  $attached = [GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $previousThread, $true)
-}
-try {
-  $shown = [GevOwnedBrowserWindow]::ShowWindow($handle, 9)
-  $broughtToTop = [GevOwnedBrowserWindow]::BringWindowToTop($handle)
+if ($alreadyForeground) {
+  $shown = $true
+  $broughtToTop = $true
+  $setForeground = $true
+} else {
+  $shown = [GevOwnedBrowserWindow]::ShowWindowAsync($handle, 9)
+  $broughtToTop = $null
   $setForeground = [GevOwnedBrowserWindow]::SetForegroundWindow($handle)
-  Start-Sleep -Milliseconds 100
-  $foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
-  $foregroundPid = [uint32]0
-  [void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
-  $confirmed = $foreground -eq $handle
-} finally {
-  if ($attached) {
-    [void][GevOwnedBrowserWindow]::AttachThreadInput($currentThread, $previousThread, $false)
-  }
 }
+Start-Sleep -Milliseconds 100
+$foreground = [GevOwnedBrowserWindow]::GetForegroundWindow()
+$foregroundPid = [uint32]0
+[void][GevOwnedBrowserWindow]::GetWindowThreadProcessId($foreground, [ref]$foregroundPid)
+$confirmed = $foreground -eq $handle
 $foregroundProcessName = if ($foregroundPid -gt 0) {
   (Get-Process -Id $foregroundPid -ErrorAction SilentlyContinue).ProcessName
 } else { $null }
@@ -165,9 +159,10 @@ $desktopState = if ($foregroundProcessName -eq 'LockApp') { 'locked' } else { 'i
   windowHandleSource = $handleSource
   handlePollAttempts = $attempts
   inputAttached = $attached
-  showWindowAccepted = $shown
-  bringWindowToTopAccepted = $broughtToTop
-  setForegroundAccepted = $setForeground
+  mutationSkipped = $alreadyForeground
+  showWindowAccepted = $(if ($alreadyForeground) { $null } else { $shown })
+  bringWindowToTopAccepted = $(if ($alreadyForeground) { $null } else { $broughtToTop })
+  setForegroundAccepted = $(if ($alreadyForeground) { $null } else { $setForeground })
   foregroundConfirmed = $confirmed
   foregroundPid = $foregroundPid
   foregroundProcessName = $foregroundProcessName
@@ -200,6 +195,258 @@ async function runPowerShell(browserPid, timeoutMs) {
       error.gevTimeout = true;
     throw error;
   }
+}
+
+function persistentPowerShellScript() {
+  const addTypeStart = POWERSHELL_SCRIPT.indexOf("Add-Type -TypeDefinition @'");
+  const addTypeEnd = POWERSHELL_SCRIPT.indexOf("'@\n$browser =", addTypeStart);
+  const addType = POWERSHELL_SCRIPT.slice(addTypeStart, addTypeEnd + 2);
+  const body = POWERSHELL_SCRIPT.slice(addTypeEnd + 3)
+    .replace(/\nif \(-not \$confirmed\) \{ exit 2 \}\s*$/, '\n')
+    .replace(/^\$browserPid = .*\n/, '')
+    .replace(
+      "schema = '${WINDOWS_FOREGROUND_SCHEMA}'",
+      "requestId = $requestId\n  schema = '${WINDOWS_FOREGROUND_SCHEMA}'",
+    )
+    .replace(
+      '} | ConvertTo-Json -Compress',
+      '} | ConvertTo-Json -Compress\n[Console]::Out.WriteLine($response)',
+    )
+    .replace('[pscustomobject]@{', '$response = [pscustomobject]@{');
+  return String.raw`$ErrorActionPreference = 'Stop'
+if (-not ('GevOwnedBrowserWindow' -as [type])) {
+${addType}
+}
+[Console]::Out.WriteLine('{"schema":"${FOREGROUND_DIAGNOSTIC_SCHEMA}","status":"ready"}')
+[Console]::Out.Flush()
+while (($request = [Console]::In.ReadLine()) -ne $null) {
+  try {
+    $requestParts = $request -split ':'
+    $requestId = [int]$requestParts[0]
+    $browserPid = [int]$requestParts[1]
+${body}
+  } catch {
+    $response = [pscustomobject]@{
+      requestId = $requestId
+      schema = '${WINDOWS_FOREGROUND_SCHEMA}'
+      status = 'runner-error'
+      browserPid = $browserPid
+      foregroundConfirmed = $false
+    }
+    [Console]::Out.WriteLine($response | ConvertTo-Json -Compress)
+  }
+  [Console]::Out.Flush()
+}
+`;
+}
+
+export function createWindowsForegroundActivationSession({
+  browserPid,
+  platform = process.platform,
+  spawnImpl = spawn,
+} = {}) {
+  if (platform !== 'win32')
+    return {
+      start: async () => {},
+      request: async () => ({ stdout: '' }),
+      dispose: async () => {},
+    };
+  if (!Number.isSafeInteger(browserPid) || browserPid < 1)
+    throw new TypeError('Owned browser PID must be a positive integer.');
+  let child = null;
+  let buffer = '';
+  let ready = null;
+  let pending = null;
+  let nextRequestId = 1;
+  let disposed = false;
+  let unusable = false;
+  let disposePromise = null;
+  const MAX_BUFFER_BYTES = 64 * 1024;
+  const takeLine = () => {
+    const index = buffer.indexOf('\n');
+    if (index < 0) return null;
+    const line = buffer.slice(0, index).replace(/\r$/, '');
+    buffer = buffer.slice(index + 1);
+    return line;
+  };
+  const settle = (operation, method, value) => {
+    if (!operation) return;
+    if (operation.timer) clearTimeout(operation.timer);
+    if (operation.stdinError)
+      child?.stdin?.removeListener?.('error', operation.stdinError);
+    operation[method](value);
+  };
+  const fail = (error) => {
+    if (unusable) return;
+    unusable = true;
+    const currentReady = ready;
+    const currentPending = pending;
+    ready = null;
+    pending = null;
+    settle(currentReady, 'reject', error);
+    settle(currentPending, 'reject', error);
+    try {
+      child?.kill();
+    } catch {}
+  };
+  const onData = (chunk) => {
+    buffer += String(chunk);
+    if (Buffer.byteLength(buffer, 'utf8') > MAX_BUFFER_BYTES) {
+      fail(new Error('Foreground helper output exceeded its bounded limit.'));
+      return;
+    }
+    let line;
+    while ((line = takeLine()) !== null) {
+      if (ready) {
+        const current = ready;
+        ready = null;
+        try {
+          const parsed = JSON.parse(line);
+          if (
+            parsed?.schema !== FOREGROUND_DIAGNOSTIC_SCHEMA ||
+            parsed?.status !== 'ready'
+          )
+            throw new Error('Helper startup failed.');
+          settle(current, 'resolve');
+        } catch (error) {
+          settle(current, 'reject', error);
+          fail(error);
+        }
+      } else if (pending) {
+        const current = pending;
+        pending = null;
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed?.requestId !== current.requestId)
+            throw new Error('Foreground helper response sequence mismatch.');
+          settle(current, 'resolve', { stdout: line });
+        } catch (error) {
+          settle(current, 'reject', error);
+          fail(error);
+        }
+      } else {
+        fail(new Error('Unexpected foreground helper output.'));
+      }
+    }
+  };
+  const start = async ({ timeoutMs = 15_000 } = {}) => {
+    if (disposed || unusable)
+      throw new Error('Foreground helper is unavailable.');
+    if (child) return;
+    try {
+      child = spawnImpl(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          persistentPowerShellScript(),
+        ],
+        { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] },
+      );
+    } catch (error) {
+      fail(error);
+      throw error;
+    }
+    child.stdout.on('data', onData);
+    const failure = (error) =>
+      fail(
+        error instanceof Error ? error : new Error('Foreground helper exited.'),
+      );
+    child.once('error', failure);
+    child.once('exit', (code, signal) => {
+      if (!disposed && !unusable)
+        failure(
+          Object.assign(new Error('Foreground helper exited.'), {
+            code,
+            signal,
+          }),
+        );
+    });
+    await new Promise((resolve, reject) => {
+      const operation = { resolve, reject, timer: null };
+      ready = operation;
+      operation.timer = setTimeout(() => {
+        if (ready) {
+          const error = new Error('Foreground helper startup timed out.');
+          error.gevTimeout = true;
+          fail(error);
+        }
+      }, timeoutMs);
+      operation.timer.unref?.();
+    });
+  };
+  const request = async (requestedPid, timeoutMs) => {
+    if (requestedPid !== browserPid)
+      throw new Error('Foreground helper PID mismatch.');
+    if (!child || disposed || unusable)
+      throw new Error('Foreground helper is unavailable.');
+    if (pending) throw new Error('Foreground helper request already pending.');
+    const requestId = nextRequestId++;
+    const response = new Promise((resolve, reject) => {
+      const operation = { resolve, reject, requestId, timer: null };
+      pending = operation;
+      operation.stdinError = (error) => {
+        if (pending === operation) {
+          pending = null;
+          settle(operation, 'reject', error);
+          fail(error);
+        }
+      };
+      child.stdin.once?.('error', operation.stdinError);
+      operation.timer = setTimeout(() => {
+        if (pending) {
+          const error = new Error('Foreground helper request timed out.');
+          error.gevTimeout = true;
+          fail(error);
+        }
+      }, timeoutMs);
+      operation.timer.unref?.();
+    });
+    try {
+      child.stdin.write(`${requestId}:${requestedPid}\n`);
+    } catch (error) {
+      fail(error);
+      throw error;
+    }
+    return response;
+  };
+  const dispose = async () => {
+    if (disposePromise) return disposePromise;
+    disposed = true;
+    const currentReady = ready;
+    const currentPending = pending;
+    ready = null;
+    pending = null;
+    settle(currentReady, 'reject', new Error('Foreground helper disposed.'));
+    settle(currentPending, 'reject', new Error('Foreground helper disposed.'));
+    const ownedChild = child;
+    child = null;
+    if (!ownedChild) return;
+    disposePromise = new Promise((resolve) => {
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        ownedChild.removeListener?.('exit', finish);
+        ownedChild.removeListener?.('close', finish);
+        resolve();
+      };
+      ownedChild.once?.('exit', finish);
+      ownedChild.once?.('close', finish);
+      try {
+        ownedChild.stdin.end();
+      } catch {}
+      setTimeout(() => {
+        try {
+          ownedChild.kill();
+        } catch {}
+        finish();
+      }, 1000).unref?.();
+    });
+    return disposePromise;
+  };
+  return { start, request, dispose };
 }
 
 export async function focusOwnedWindowsBrowserWindow({

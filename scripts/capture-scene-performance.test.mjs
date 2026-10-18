@@ -55,6 +55,17 @@ test('startup and main documents are foregrounded before viewer readiness', asyn
       mainActivation > mainNavigation &&
       mainReadiness > mainActivation,
   );
+  const sessionStart = source.indexOf(
+    'await foregroundActivationSession.start({ timeoutMs: 15_000 })',
+  );
+  const startupLoop = source.indexOf(
+    "failureProgress.phase = 'startup-navigation'",
+  );
+  assert.ok(sessionStart >= 0 && sessionStart < startupLoop);
+  assert.ok(
+    source.indexOf('await foregroundActivationSession?.dispose();') >= 0,
+    'persistent foreground helper is disposed during capture cleanup',
+  );
 });
 
 test('timed samples reacquire foreground after warmup and before measurement', async () => {

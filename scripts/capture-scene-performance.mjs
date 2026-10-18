@@ -154,7 +154,10 @@ import {
   waitForPostMeasurementSourceDrain,
 } from './performance/postMeasurementSourceDrain.mjs';
 import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
-import { focusOwnedWindowsBrowserWindow } from './performance/windowsForegroundWindow.mjs';
+import {
+  createWindowsForegroundActivationSession,
+  focusOwnedWindowsBrowserWindow,
+} from './performance/windowsForegroundWindow.mjs';
 import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
 
 const args = process.argv.slice(2);
@@ -1384,10 +1387,12 @@ const browser = await puppeteer.launch({
   ],
 });
 const ownedBrowserPid = browser.process?.()?.pid;
+let foregroundActivationSession = null;
 async function activateCapturePage(targetPage) {
   const hostWindowActivation = await focusOwnedWindowsBrowserWindow({
     browserPid: ownedBrowserPid,
     enabled: !args.includes('--headless'),
+    runner: foregroundActivationSession?.request,
   });
   return {
     ...(await activateForegroundPage(targetPage)),
@@ -2159,6 +2164,14 @@ async function releaseFlightFixtureSession(session) {
 }
 
 try {
+  if (!args.includes('--headless')) {
+    if (!Number.isInteger(ownedBrowserPid) || ownedBrowserPid < 1)
+      throw new Error('Owned browser process ID is unavailable.');
+    foregroundActivationSession = createWindowsForegroundActivationSession({
+      browserPid: ownedBrowserPid,
+    });
+    await foregroundActivationSession.start({ timeoutMs: 15_000 });
+  }
   failureProgress.phase = 'startup-navigation';
   const startupUrl = new URL(url);
   startupUrl.searchParams.set('welcome', '0');
@@ -6457,6 +6470,8 @@ try {
     }
   }
   weatherEffectsFixtureDelivery?.dispose();
+  await foregroundActivationSession?.dispose();
+  foregroundActivationSession = null;
   for (const [
     responsePage,
     responseListener,
