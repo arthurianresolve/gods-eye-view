@@ -30,9 +30,11 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/buildProvenance.test.mjs',
   'scripts/performance/buildSmokeContract.test.mjs',
   'scripts/performance/nativeSharpnessProfile.test.mjs',
+  'scripts/performance/finalVisualQualification.test.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',
   'scripts/print-qa-evidence.test.mjs',
   'scripts/performance/captureBuildProvenance.test.mjs',
+  'scripts/performance/captureProducerCli.test.mjs',
   'scripts/performance/commonSceneObserver.test.mjs',
   'scripts/performance/startupDiagnostics.test.mjs',
   'scripts/performance/profileRecoveryPageOwnership.test.mjs',
@@ -52,6 +54,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/prewarmWorkerAuditBoundary.test.mjs',
   'scripts/performance/receiptOnlyWorkerAudit.test.mjs',
   'scripts/performance/receiptOnlyPageClose.test.mjs',
+  'scripts/performance/rawReceiptAssetMiddleware.test.mjs',
   'scripts/performance/missionRenderDemand.test.mjs',
   'scripts/performance/trafficRenderDemand.test.mjs',
   'scripts/fixtures/traffic-surface-readiness.test.mjs',
@@ -115,6 +118,8 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
   'scripts/performance/providerDocumentRetirement.test.mjs',
   'scripts/performance/windowsForegroundWindow.test.mjs',
+  'scripts/performance/runFinalVisualQualification.test.mjs',
+  'scripts/performance/visualPresentationBoundary.test.mjs',
   'scripts/captureNoUndefConfig.test.mjs',
 ]);
 
