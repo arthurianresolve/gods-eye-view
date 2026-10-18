@@ -45,6 +45,14 @@ const STATES = Object.freeze(['still-settled', 'hud-visible', 'hud-hidden', 'hud
 const SHA1 = /^[a-f0-9]{40}$/i;
 const SHA256 = /^[a-f0-9]{64}$/i;
 
+function installQualificationRandom(seed = 0x51a7e) {
+  let state = seed >>> 0;
+  Math.random = () => {
+    state = Math.imul(1664525, state) + 1013904223;
+    return (state >>> 0) / 0x100000000;
+  };
+}
+
 function usage() {
   throw new Error(
     'Usage: node runFinalVisualQualification.mjs --baseline-url URL --candidate-url URL --baseline-app-sha SHA --candidate-app-sha SHA --harness-sha SHA --visual-harness-root DIR --visual-harness-sha SHA --baseline-receipt FILE --candidate-receipt FILE --baseline-checkout DIR --candidate-checkout DIR --harness-root DIR --baseline-build DIR --candidate-build DIR --out DIR',
@@ -167,7 +175,7 @@ async function captureRevision({ label, url, appSha, receipt, checkout, build, h
   try {
     const context = await browser.createBrowserContext();
     page = await context.newPage();
-    await page.evaluateOnNewDocument(installFrozenWallClock, FIXED_TIME_MS);
+    await page.evaluateOnNewDocument(installFrozenWallClock, FIXED_TIME_MS);`n    await page.evaluateOnNewDocument(installQualificationRandom, 0x51a7e);
     prepared = await prepareFixturePage(browser, new URL(url).origin, {
       page,
       viewport: VIEWPORT,
@@ -366,3 +374,4 @@ export async function produceFinalVisualQualification(options) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   await produceFinalVisualQualification(args(process.argv));
+

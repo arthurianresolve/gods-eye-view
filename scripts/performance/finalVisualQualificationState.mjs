@@ -38,27 +38,4 @@ export function readQualificationStateInPage({ checkpointValue, profileValue }) 
       profile: profileValue,
     };
 }
-
-async function readNativeProfile(page) {
-  const profile = await page.evaluate(() => {
-    const viewer = window.__godsEyeView?.viewer;
-    const globe = viewer?.scene?.globe;
-    const canvas = viewer?.scene?.canvas;
-    const rect = canvas?.getBoundingClientRect?.();
-    if (!viewer || !globe || !canvas || !rect)
-      throw new Error('Native profile surfaces are unavailable after render.');
-    return {
-      id: viewer.__gevNativeSharpnessProfile || null,
-      useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
-      resolutionScale: viewer.resolutionScale,
-      maximumScreenSpaceError: globe.maximumScreenSpaceError,
-      viewport: {
-        width: Math.floor(rect.width), height: Math.floor(rect.height),
-        dpr: window.devicePixelRatio,
-      },
-      drawingBuffer: { width: canvas.width, height: canvas.height },
-    };
-  });
-  assertNativeSharpnessProfile({ environment: { nativeSharpnessProfile: profile } }, 'visual capture');
-  return profile;
-}
+`n
