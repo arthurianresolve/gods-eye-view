@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { presentationStayedSettled } from './visualPresentationBoundary.mjs';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -84,13 +85,27 @@ async function assertPng(record, root, label) {
     info.isFile() && !info.isSymbolicLink(),
     `${label} PNG must be a regular file`,
   );
-  assert.ok(info.size > 24 && info.size <= 16 * 1024 * 1024, `${label} PNG size is outside the bounded limit`);
+  assert.ok(
+    info.size > 24 && info.size <= 16 * 1024 * 1024,
+    `${label} PNG size is outside the bounded limit`,
+  );
   const bytes = await fs.readFile(file);
   const dimensions = pngDimensions(bytes);
-  const decoded = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  assert.equal(decoded.info.format, 'raw', `${label} PNG did not decode to pixels`);
+  const decoded = await sharp(bytes)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  assert.equal(
+    decoded.info.format,
+    'raw',
+    `${label} PNG did not decode to pixels`,
+  );
   assert.equal(decoded.info.width, dimensions.width, `${label} decoded width`);
-  assert.equal(decoded.info.height, dimensions.height, `${label} decoded height`);
+  assert.equal(
+    decoded.info.height,
+    dimensions.height,
+    `${label} decoded height`,
+  );
   assert.equal(record.sha256, sha256(bytes), `${label} PNG digest`);
   assert.deepEqual(record.dimensions, dimensions, `${label} PNG dimensions`);
   return { bytes, pixels: decoded.data, pixelInfo: decoded.info };
@@ -122,21 +137,104 @@ export async function validateFinalVisualQualification(
     ['visual producer', report.harness?.visualHarnessCommit],
   ])
     assert.match(value || '', /^[a-f0-9]{40}$/, `${label} SHA`);
-  assert.equal(report.harness?.buildHarnessCommit, report.harness?.baselineSha, 'build harness identity differs');
-  assert.equal(report.harness?.buildHarnessCommit, report.harness?.candidateSha, 'baseline/candidate build harness differs');
-  assert.notEqual(report.application?.baselineSha, report.application?.candidateSha, 'application revisions must differ');
+  assert.equal(
+    report.harness?.buildHarnessCommit,
+    report.harness?.baselineSha,
+    'build harness identity differs',
+  );
+  assert.equal(
+    report.harness?.buildHarnessCommit,
+    report.harness?.candidateSha,
+    'baseline/candidate build harness differs',
+  );
+  assert.notEqual(
+    report.application?.baselineSha,
+    report.application?.candidateSha,
+    'application revisions must differ',
+  );
   assert.match(report.receipts?.baselineSha256 || '', /^[a-f0-9]{64}$/);
   assert.match(report.receipts?.candidateSha256 || '', /^[a-f0-9]{64}$/);
   assert.equal(report.environment?.platform, 'win32');
   assert.equal(report.environment?.foregroundConfirmed, true);
-  assert.ok(typeof report.environment?.renderer?.vendor === 'string' && report.environment.renderer.vendor);
-  assert.match(report.environment?.renderer?.device || '', /UHD\s*620/i);
-  assert.match(`${report.environment.renderer.vendor} ${report.environment.renderer.device}`, /ANGLE/i);
-  assert.match(`${report.environment.renderer.vendor} ${report.environment.renderer.device}`, /Direct3D\s*11|D3D11/i);
-  assert.ok(typeof report.environment.renderer.browserVersion === 'string' && report.environment.renderer.browserVersion);
+  assert.ok(
+    typeof report.environment?.renderer?.vendor === 'string' &&
+      report.environment.renderer.vendor,
+  );
+  assert.match(
+    report.environment?.renderer?.device || '',
+    /UHD\s+(?:Graphics\s+)?620\b/i,
+  );
+  assert.match(
+    `${report.environment.renderer.vendor} ${report.environment.renderer.device}`,
+    /ANGLE/i,
+  );
+  assert.match(
+    `${report.environment.renderer.vendor} ${report.environment.renderer.device}`,
+    /Direct3D\s*11|D3D11/i,
+  );
+  assert.ok(
+    typeof report.environment.renderer.browserVersion === 'string' &&
+      report.environment.renderer.browserVersion,
+  );
+  for (const side of ['baseline', 'candidate']) {
+    assert.deepEqual(
+      report.environment.rendererByRevision?.[side],
+      report.environment.renderer,
+      `${side} renderer/browser identity differs`,
+    );
+    assert.ok(
+      Number.isSafeInteger(report.environment.browserPid?.[side]) &&
+        report.environment.browserPid[side] > 0,
+      `${side} owned browser PID missing`,
+    );
+    const teardown = report.teardown?.[side];
+    assert.equal(teardown?.browserClosed, true, `${side} browser cleanup`);
+    assert.equal(
+      teardown.pageClose?.closeCompleted,
+      true,
+      `${side} page cleanup`,
+    );
+    assert.equal(
+      teardown.pageClose?.openPageCount,
+      0,
+      `${side} remaining pages`,
+    );
+    assert.equal(
+      teardown.browserClose?.closeCompleted,
+      true,
+      `${side} graceful shutdown`,
+    );
+    assert.equal(
+      teardown.browserClose?.forcedProcessTermination,
+      false,
+      `${side} forced shutdown`,
+    );
+    assert.ok(
+      teardown.browserClose?.observation?.processExit &&
+        (teardown.browserClose.observation.processExit.code != null ||
+          teardown.browserClose.observation.processExit.signal != null),
+      `${side} browser exit proof missing`,
+    );
+    assert.deepEqual(teardown.errors, [], `${side} cleanup errors`);
+  }
   assertProfile(report.environment?.nativeSharpnessProfile, 'environment');
+  assert.equal(
+    report.environment.nativeSharpnessProfile.viewport.width,
+    1440,
+    'qualification viewport width',
+  );
+  assert.equal(
+    report.environment.nativeSharpnessProfile.viewport.height,
+    900,
+    'qualification viewport height',
+  );
   assert.ok(Array.isArray(report.environment?.populations));
   assert.ok(report.environment?.camera?.id);
+  assert.match(
+    report.fixture?.frameSha256 || '',
+    /^[a-f0-9]{64}$/,
+    'fixture frame identity',
+  );
   assert.deepEqual(
     report.masks,
     [],
@@ -149,12 +247,100 @@ export async function validateFinalVisualQualification(
   );
   assert.equal(report.teardown?.baseline?.browserClosed, true);
   assert.equal(report.teardown?.candidate?.browserClosed, true);
-  const root = path.resolve(
-    evidenceRoot || path.dirname(report.outputRoot || '.'),
-  );
+  const root = path.resolve(evidenceRoot || report.outputRoot || '.');
   for (const state of report.states) {
-    assert.ok(Number.isSafeInteger(state.completedRender?.baseline?.frameNumber), `${state.id} baseline render`);
-    assert.ok(Number.isSafeInteger(state.completedRender?.candidate?.frameNumber), `${state.id} candidate render`);
+    for (const side of ['baseline', 'candidate']) {
+      const proof = state.foreground?.[side];
+      assert.equal(
+        proof?.status,
+        'foreground-confirmed',
+        `${state.id} ${side} foreground status`,
+      );
+      assert.equal(
+        proof?.foregroundPid,
+        report.environment.browserPid[side],
+        `${state.id} ${side} foreground PID`,
+      );
+      const frame = state.completedRender?.[side];
+      assert.ok(
+        Number.isSafeInteger(frame?.frameNumber) &&
+          frame.frameNumber >= 0 &&
+          Number.isFinite(frame.elapsedMs) &&
+          frame.elapsedMs >= 0,
+        `${state.id} ${side} render proof`,
+      );
+      const settings = state.settings?.[side];
+      assert.equal(
+        settings?.qualityMode,
+        'manual',
+        `${state.id} ${side} quality mode`,
+      );
+      assert.equal(settings?.densityPct, 75, `${state.id} ${side} density`);
+      assert.equal(
+        settings?.detectionMode,
+        'DENSE',
+        `${state.id} ${side} detection mode`,
+      );
+      assert.equal(
+        settings?.resolutionScale,
+        1,
+        `${state.id} ${side} resolution scale`,
+      );
+      assert.equal(settings?.msaaSamples, 4, `${state.id} ${side} MSAA`);
+      assert.equal(
+        typeof settings?.antialias,
+        'boolean',
+        `${state.id} ${side} antialias unavailable`,
+      );
+      assert.equal(
+        typeof settings?.fxaa,
+        'boolean',
+        `${state.id} ${side} FXAA unavailable`,
+      );
+      assert.deepEqual(
+        state.nativeSharpnessProfileByRevision?.[side],
+        report.environment.nativeSharpnessProfile,
+        `${state.id} ${side} native profile differs`,
+      );
+      assert.deepEqual(
+        { id: report.environment.camera.id, ...state.cameraByRevision?.[side] },
+        report.environment.camera,
+        `${state.id} ${side} observed camera differs`,
+      );
+      const presentation = state.presentation?.[side];
+      assert.ok(
+        presentationStayedSettled(presentation?.before, presentation?.after),
+        `${state.id} ${side} presentation changed during capture`,
+      );
+      assert.ok(
+        Number.isSafeInteger(state.frameDelivery?.[side]?.count) &&
+          state.frameDelivery[side].count > 0,
+        `${state.id} ${side} frame delivery missing`,
+      );
+      assert.equal(
+        state.frameDelivery[side].matchesFixture,
+        true,
+        `${state.id} ${side} frame delivery mismatch`,
+      );
+      assert.equal(
+        state.frameDelivery[side].sha256,
+        report.fixture.frameSha256,
+        `${state.id} ${side} frame digest differs`,
+      );
+    }
+    assert.equal(
+      state.presentation.baseline.after.summary,
+      state.presentation.candidate.after.summary,
+      `${state.id} HUD summary differs`,
+    );
+    assert.ok(
+      Number.isSafeInteger(state.completedRender?.baseline?.frameNumber),
+      `${state.id} baseline render`,
+    );
+    assert.ok(
+      Number.isSafeInteger(state.completedRender?.candidate?.frameNumber),
+      `${state.id} candidate render`,
+    );
     assert.equal(
       state.foreground?.baseline?.foregroundConfirmed,
       true,
@@ -170,11 +356,27 @@ export async function validateFinalVisualQualification(
       state.settings?.candidate,
       `${state.id} per-revision settings differ`,
     );
-    assert.ok(state.settings?.baseline && state.settings?.candidate, `${state.id} settings missing`);
-    assert.ok(state.populations?.baseline && state.populations?.candidate, `${state.id} populations missing`);
-    assertProfile(state.nativeSharpnessProfileByRevision?.baseline, `${state.id} baseline profile`);
-    assertProfile(state.nativeSharpnessProfileByRevision?.candidate, `${state.id} candidate profile`);
-    assert.ok(Number(state.populations.baseline.cctv) > 0 && Number(state.populations.candidate.cctv) > 0, `${state.id} CCTV population is empty`);
+    assert.ok(
+      state.settings?.baseline && state.settings?.candidate,
+      `${state.id} settings missing`,
+    );
+    assert.ok(
+      state.populations?.baseline && state.populations?.candidate,
+      `${state.id} populations missing`,
+    );
+    assertProfile(
+      state.nativeSharpnessProfileByRevision?.baseline,
+      `${state.id} baseline profile`,
+    );
+    assertProfile(
+      state.nativeSharpnessProfileByRevision?.candidate,
+      `${state.id} candidate profile`,
+    );
+    assert.ok(
+      Number(state.populations.baseline.cctv) > 0 &&
+        Number(state.populations.candidate.cctv) > 0,
+      `${state.id} CCTV population is empty`,
+    );
     assert.deepEqual(
       state.populations?.baseline,
       state.populations?.candidate,
@@ -190,17 +392,36 @@ export async function validateFinalVisualQualification(
       state.hud?.candidate,
       `${state.id} per-revision HUD accessibility state differs`,
     );
-    assert.ok(state.hud?.baseline && state.hud?.candidate, `${state.id} HUD state missing`);
+    assert.ok(
+      state.hud?.baseline && state.hud?.candidate,
+      `${state.id} HUD state missing`,
+    );
     const expectedHudVisible = state.id !== 'hud-hidden';
-    assert.equal(state.hud.baseline.visible, expectedHudVisible, `${state.id} baseline HUD visibility`);
-    assert.equal(state.hud.candidate.visible, expectedHudVisible, `${state.id} candidate HUD visibility`);
+    assert.equal(
+      state.hud.baseline.visible,
+      expectedHudVisible,
+      `${state.id} baseline HUD visibility`,
+    );
+    assert.equal(
+      state.hud.candidate.visible,
+      expectedHudVisible,
+      `${state.id} candidate HUD visibility`,
+    );
     assert.ok(
       Number.isSafeInteger(state.timestampMs?.baseline) &&
         Number.isSafeInteger(state.timestampMs?.candidate),
       `${state.id} timestamps are missing`,
     );
-    assert.equal(state.timestampMs.baseline, FINAL_VISUAL_TIME_MS, `${state.id} baseline timestamp`);
-    assert.equal(state.timestampMs.candidate, FINAL_VISUAL_TIME_MS, `${state.id} candidate timestamp`);
+    assert.equal(
+      state.timestampMs.baseline,
+      FINAL_VISUAL_TIME_MS,
+      `${state.id} baseline timestamp`,
+    );
+    assert.equal(
+      state.timestampMs.candidate,
+      FINAL_VISUAL_TIME_MS,
+      `${state.id} candidate timestamp`,
+    );
     assert.deepEqual(
       state.camera,
       report.environment.camera,
@@ -221,16 +442,38 @@ export async function validateFinalVisualQualification(
       root,
       `${state.id} candidate`,
     );
-    assert.deepEqual(baseline.pixelInfo.width && { width: baseline.pixelInfo.width, height: baseline.pixelInfo.height }, {
-      width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
-      height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
-    }, `${state.id} baseline image dimensions`);
-    assert.deepEqual(candidate.pixelInfo.width && { width: candidate.pixelInfo.width, height: candidate.pixelInfo.height }, {
-      width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
-      height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
-    }, `${state.id} candidate image dimensions`);
-    assert.deepEqual(candidate.pixels, baseline.pixels, `${state.id} decoded rendered pixels changed`);
-    assert.deepEqual(candidate.pixelInfo, baseline.pixelInfo, `${state.id} decoded pixel dimensions changed`);
+    assert.deepEqual(
+      baseline.pixelInfo.width && {
+        width: baseline.pixelInfo.width,
+        height: baseline.pixelInfo.height,
+      },
+      {
+        width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
+        height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
+      },
+      `${state.id} baseline image dimensions`,
+    );
+    assert.deepEqual(
+      candidate.pixelInfo.width && {
+        width: candidate.pixelInfo.width,
+        height: candidate.pixelInfo.height,
+      },
+      {
+        width: report.environment.nativeSharpnessProfile.drawingBuffer.width,
+        height: report.environment.nativeSharpnessProfile.drawingBuffer.height,
+      },
+      `${state.id} candidate image dimensions`,
+    );
+    assert.equal(
+      sha256(candidate.pixels),
+      sha256(baseline.pixels),
+      `${state.id} decoded rendered pixels changed`,
+    );
+    assert.deepEqual(
+      candidate.pixelInfo,
+      baseline.pixelInfo,
+      `${state.id} decoded pixel dimensions changed`,
+    );
   }
   return {
     schema: report.schema,

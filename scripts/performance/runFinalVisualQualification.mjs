@@ -9,6 +9,7 @@
  * finalVisualQualification.mjs.
  */
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -30,18 +31,50 @@ import {
 import { applyNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import {
   captureQualificationPng,
+  validateFinalVisualQualification,
 } from './finalVisualQualification.mjs';
 import { createWindowsForegroundActivationSession } from './windowsForegroundWindow.mjs';
 import { verifyServedBuildAssets } from './buildProvenance.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import { installFrozenWallClock } from './productionFlightFixture.mjs';
 import { readQualificationStateInPage } from './finalVisualQualificationState.mjs';
-import { closeRecoveryBrowser } from './profileRecoveryPageOwnership.mjs';
+import {
+  closeOwnedRecoveryPage,
+  closeRecoveryBrowser,
+  stopOwnedRecoveryProcessTree,
+} from './profileRecoveryPageOwnership.mjs';
+import {
+  installVisualPresentationBoundaryInPage,
+  readVisualPresentationBoundaryInPage,
+  disposeVisualPresentationBoundaryInPage,
+  presentationStayedSettled,
+} from './visualPresentationBoundary.mjs';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const VIEWPORT = Object.freeze({ width: 1440, height: 900 });
+const ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../..',
+);
+const VIEWPORT = Object.freeze({
+  width: 1440,
+  height: 900,
+  deviceScaleFactor: 0,
+});
+const QUALIFICATION_VIEW = Object.freeze({
+  longitude: -97.7431,
+  latitude: 30.2672,
+  heightM: 2000,
+  headingRadians: 0,
+  pitchRadians: -Math.PI / 2,
+  rollRadians: 0,
+  autoHop: false,
+});
 const FIXED_TIME_MS = Date.parse('2026-10-08T12:00:00.000Z');
-const STATES = Object.freeze(['still-settled', 'hud-visible', 'hud-hidden', 'hud-restored']);
+const STATES = Object.freeze([
+  'still-settled',
+  'hud-visible',
+  'hud-hidden',
+  'hud-restored',
+]);
 const SHA1 = /^[a-f0-9]{40}$/i;
 const SHA256 = /^[a-f0-9]{64}$/i;
 
@@ -67,26 +100,61 @@ function args(argv) {
     result[key.slice(2)] = argv[++i];
   }
   for (const key of [
-    'baseline-url', 'candidate-url', 'baseline-app-sha', 'candidate-app-sha',
-    'harness-sha', 'baseline-receipt', 'candidate-receipt', 'baseline-checkout',
-    'candidate-checkout', 'harness-root', 'visual-harness-root', 'baseline-build', 'candidate-build', 'out',
-  ]) if (!result[key]) usage();
-  for (const key of ['baseline-app-sha', 'candidate-app-sha', 'harness-sha', 'visual-harness-sha'])
-    if (!SHA1.test(result[key])) throw new Error(`${key} must be a full Git SHA.`);
-  if (!SHA1.test(result['visual-harness-sha'])) throw new Error('visual-harness-sha must be a full Git SHA.');
-  if (result['baseline-app-sha'].toLowerCase() === result['candidate-app-sha'].toLowerCase())
-    throw new Error('Baseline and candidate application revisions must differ.');
+    'baseline-url',
+    'candidate-url',
+    'baseline-app-sha',
+    'candidate-app-sha',
+    'harness-sha',
+    'visual-harness-sha',
+    'baseline-receipt',
+    'candidate-receipt',
+    'baseline-checkout',
+    'candidate-checkout',
+    'harness-root',
+    'visual-harness-root',
+    'baseline-build',
+    'candidate-build',
+    'out',
+  ])
+    if (!result[key]) usage();
+  for (const key of [
+    'baseline-app-sha',
+    'candidate-app-sha',
+    'harness-sha',
+    'visual-harness-sha',
+  ])
+    if (!SHA1.test(result[key]))
+      throw new Error(`${key} must be a full Git SHA.`);
+  if (
+    result['baseline-app-sha'].toLowerCase() ===
+    result['candidate-app-sha'].toLowerCase()
+  )
+    throw new Error(
+      'Baseline and candidate application revisions must differ.',
+    );
   return result;
 }
 
 async function readReceipt(filename) {
   const receipt = JSON.parse(await fs.readFile(filename, 'utf8'));
-  if (!SHA256.test(receipt?.receiptSha256 || '') || !Array.isArray(receipt.assets) || !receipt.assets.length)
+  if (
+    !SHA256.test(receipt?.receiptSha256 || '') ||
+    !Array.isArray(receipt.assets) ||
+    !receipt.assets.length
+  )
     throw new Error(`Receipt is incomplete: ${filename}`);
   return receipt;
 }
 
-async function verifyReceipt({ receipt, checkout, build, harnessRoot, harnessSha, appSha, baseUrl }) {
+async function verifyReceipt({
+  receipt,
+  checkout,
+  build,
+  harnessRoot,
+  harnessSha,
+  appSha,
+  baseUrl,
+}) {
   return verifyServedBuildAssets({
     receipt,
     checkoutRoot: checkout,
@@ -101,31 +169,48 @@ async function verifyReceipt({ receipt, checkout, build, harnessRoot, harnessSha
 async function observedState(page, profile, appSha) {
   const checkpoint = await page.evaluate(readCctvLifecycleCheckpointInPage, {
     includeRenderer: true,
-    fixtureView: {
-      longitude: -97.7431, latitude: 30.2672, heightM: 25000,
-      headingRadians: 0, pitchRadians: -1.2, rollRadians: 0,
-    },
+    fixtureView: QUALIFICATION_VIEW,
   });
   const state = await page.evaluate(readQualificationStateInPage, {
     checkpointValue: checkpoint,
     profileValue: profile,
   });
-  if (!state.checkpoint?.cameraPose || !state.checkpoint?.cameraView?.containsFixture)
+  if (
+    !state.checkpoint?.cameraPose ||
+    !state.checkpoint?.cameraView?.containsFixture
+  )
     throw new Error('CCTV checkpoint does not prove the declared camera pose.');
   if (state.checkpoint.appCommit !== appSha)
-    throw new Error('CCTV checkpoint application commit differs from the requested side.');
+    throw new Error(
+      'CCTV checkpoint application commit differs from the requested side.',
+    );
   if (!Number.isInteger(state.populations.cctv) || state.populations.cctv < 1)
     throw new Error('CCTV population is empty.');
-  if (state.settings.qualityMode !== 'manual' || state.settings.densityPct !== 75)
+  if (
+    state.settings.qualityMode !== 'manual' ||
+    state.settings.densityPct !== 75
+  )
     throw new Error('Manual quality or 75% density is not observed.');
   if (state.hud.mode === null || typeof state.hud.visible !== 'boolean')
     throw new Error('HUD accessibility/visibility state is unavailable.');
-  if (!state.visualState || state.visualState.hud?.visible !== state.hud.visible)
-    throw new Error('HUD visual state is not synchronized with its accessible state.');
-  const camera = state.checkpoint.cameras.find((item) => item.id === state.checkpoint.activeCameraId);
-  if (camera?.decodeStatus !== 'ok' || !Number.isFinite(camera.decodeLastSuccessAt))
-    throw new Error('CCTV still image decode is not observed for the active camera.');
-  if (!Number.isSafeInteger(state.timestampMs) || state.timestampMs < FIXED_TIME_MS)
+  if (
+    !state.visualState ||
+    state.visualState.hud?.visible !== state.hud.visible
+  )
+    throw new Error(
+      'HUD visual state is not synchronized with its accessible state.',
+    );
+  const camera = state.checkpoint.cameras.find(
+    (item) => item.id === state.checkpoint.activeCameraId,
+  );
+  if (
+    camera?.decodeStatus !== 'ok' ||
+    !Number.isFinite(camera.decodeLastSuccessAt)
+  )
+    throw new Error(
+      'CCTV still image decode is not observed for the active camera.',
+    );
+  if (state.timestampMs !== FIXED_TIME_MS)
     throw new Error('Fixed qualification timestamp is unavailable.');
   return state;
 }
@@ -144,169 +229,532 @@ async function readNativeProfile(page) {
       resolutionScale: viewer.resolutionScale,
       maximumScreenSpaceError: globe.maximumScreenSpaceError,
       viewport: {
-        width: Math.floor(rect.width), height: Math.floor(rect.height),
+        width: Math.floor(rect.width),
+        height: Math.floor(rect.height),
         dpr: window.devicePixelRatio,
       },
       drawingBuffer: { width: canvas.width, height: canvas.height },
     };
   });
-  assertNativeSharpnessProfile({ environment: { nativeSharpnessProfile: profile } }, 'visual capture');
+  assertNativeSharpnessProfile(
+    { environment: { nativeSharpnessProfile: profile } },
+    'visual capture',
+  );
   return profile;
 }
-/** Serializable page callback; it intentionally has no Node or outer closure. */
+function boundedError(error) {
+  return {
+    name: String(error?.name || 'Error').slice(0, 80),
+    message: String(error?.message || error)
+      .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+      .slice(0, 500),
+  };
+}
 
-async function captureRevision({ label, url, appSha, receipt, checkout, build, harness, out }) {
+async function deadline(operation, label, timeoutMs = 5000) {
+  let timer;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(operation),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} deadline exceeded.`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function savePartial(out, name, report, primaryError) {
+  try {
+    await fs.writeFile(
+      path.join(out, name),
+      `${JSON.stringify(report, null, 2)}\n`,
+      { flag: 'wx' },
+    );
+  } catch (error) {
+    (primaryError.reportErrors ||= []).push(boundedError(error));
+  }
+}
+
+async function captureRevision({ label, url, appSha, receipt, out }) {
   const fixture = createCctvLifecycleFixture();
-  const browser = await puppeteer.launch({
-    headless: false,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
-    args: ['--no-sandbox', '--disable-dev-shm-usage'],
-    defaultViewport: null,
-  });
+  let browser;
+  let context;
   let page;
   let prepared;
   let foregroundSession;
   let failure = null;
   let stage = 'launch';
   let states = [];
-  let browserClosed = false;
+  const teardown = {
+    browserClosed: false,
+    pageClose: null,
+    browserClose: null,
+    errors: [],
+  };
+  const frameDelivery = { count: 0, sha256: null, matchesFixture: false };
   let result = null;
   let observedProfile = null;
   try {
-    const context = await browser.createBrowserContext();
+    browser = await puppeteer.launch({
+      headless: false,
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      defaultViewport: null,
+    });
+    const browserPid = browser.process()?.pid;
+    if (!Number.isSafeInteger(browserPid))
+      throw new Error('Browser PID unavailable for foreground proof.');
+    foregroundSession = createWindowsForegroundActivationSession({
+      browserPid,
+    });
+    await foregroundSession.start({ timeoutMs: 15_000 });
+    context = await browser.createBrowserContext();
     page = await context.newPage();
+    await page.bringToFront();
+    await foregroundSession.request(browserPid, 15_000);
+    stage = 'fixture-boot';
     await page.evaluateOnNewDocument(installFrozenWallClock, FIXED_TIME_MS);
     await page.evaluateOnNewDocument(installQualificationRandom, 0x51a7e);
     prepared = await prepareFixturePage(browser, new URL(url).origin, {
       page,
       viewport: VIEWPORT,
-      deviceScaleFactor: 0,
-      respond: (requestUrl) => captureFixtureResponse(fixture, requestUrl, new URL(url).origin),
+      respond: (requestUrl) =>
+        captureFixtureResponse(fixture, requestUrl, new URL(url).origin),
+      onFulfilled({ url: requestUrl, status, bodyBase64 }) {
+        const delivered = new URL(requestUrl);
+        if (
+          delivered.origin !== new URL(url).origin ||
+          delivered.pathname !== `/api/cctv/frame/${fixture.cameraId}`
+        )
+          return;
+        const digest = createHash('sha256')
+          .update(Buffer.from(bodyBase64, 'base64'))
+          .digest('hex');
+        frameDelivery.count++;
+        frameDelivery.sha256 = digest;
+        frameDelivery.matchesFixture =
+          status === 200 && digest === fixture.frameSha256;
+      },
     });
     await bootFixturePage(page, new URL(url).origin, {
-      hash: cctvLifecycleShareHash(fixture.view),
+      hash: cctvLifecycleShareHash(QUALIFICATION_VIEW),
       applicationReadyTimeoutMs: 180_000,
     });
     await page.evaluate(applyNativeSharpnessProfile);
-    await page.evaluate(configureCctvLifecycleSceneInPage, fixture.view);
+    stage = 'fixture-configuration';
+    await page.evaluate(configureCctvLifecycleSceneInPage, QUALIFICATION_VIEW);
     await page.evaluate(async () => {
       const manager = window.__godsEyeView?.dataManager;
       const style = window.__godsEyeView?.styleManager;
-      if (!manager?.restoreEnabledLayerIds) throw new Error('Layer lifecycle API unavailable.');
+      if (!manager?.restoreEnabledLayerIds)
+        throw new Error('Layer lifecycle API unavailable.');
       style?._adaptiveQuality?.rememberManualDensity?.(75);
       style?.setDetection?.({ enabled: true, mode: 'DENSE', densityPct: 75 });
       await manager.restoreEnabledLayerIds([], { origin: 'qa-final-visual' });
-      const result = await manager.setEnabled('cctv', true, { origin: 'qa-final-visual' });
-      if (result === false || !manager.isEnabled('cctv')) throw new Error('CCTV could not be enabled.');
+      const result = await manager.setEnabled('cctv', true, {
+        origin: 'qa-final-visual',
+      });
+      if (result === false || !manager.isEnabled('cctv'))
+        throw new Error('CCTV could not be enabled.');
       const module = manager.layers.get('cctv')?.module;
       if (!module?.setParams)
-        throw new Error('CCTV fixture camera/projection selection API is unavailable.');
-      module.setParams({ selectedCameraId: 'qa-cctv-lifecycle-camera-001', showProjection: true, autoHop: false });
+        throw new Error(
+          'CCTV fixture camera/projection selection API is unavailable.',
+        );
+      module.setParams({
+        selectedCameraId: 'qa-cctv-lifecycle-camera-001',
+        showProjection: true,
+        autoHop: false,
+      });
       const params = module.getParams?.();
-      if (params?.selectedCameraId !== 'qa-cctv-lifecycle-camera-001' || params.showProjection !== true)
-        throw new Error('CCTV fixture still projection did not settle selected.');
-      if (style?._adaptiveQuality?.getMode?.() !== 'manual' || style?.services?.getDetectionMode?.() !== 'DENSE' || style?.services?.getDetectionTuning?.()?.densityPct !== 75)
+      if (
+        params?.selectedCameraId !== 'qa-cctv-lifecycle-camera-001' ||
+        params.showProjection !== true
+      )
+        throw new Error(
+          'CCTV fixture still projection did not settle selected.',
+        );
+      if (
+        style?._adaptiveQuality?.getMode?.() !== 'manual' ||
+        style?.services?.getDetectionMode?.() !== 'DENSE' ||
+        style?.services?.getDetectionTuning?.()?.densityPct !== 75
+      )
         throw new Error('Manual DENSE 75% settings did not settle.');
     });
-    const browserPid = browser.process()?.pid;
-    if (!Number.isSafeInteger(browserPid)) throw new Error('Browser PID unavailable for foreground proof.');
-    foregroundSession = createWindowsForegroundActivationSession({ browserPid });
-    await foregroundSession.start({ timeoutMs: 15_000 });
     stage = 'capture-states';
-    await page.waitForFunction(() => {
-      const module = window.__godsEyeView?.dataManager?.layers?.get('cctv')?.module;
-      const camera = module?.getUIState?.()?.cameras?.find((item) => item.active);
-      return camera?.id === 'qa-cctv-lifecycle-camera-001' && camera.decodeStatus === 'ok' && Number.isFinite(camera.decodeLastSuccessAt);
-    }, { timeout: 15_000, polling: 100 });
+    await page.waitForFunction(
+      () => {
+        const module =
+          window.__godsEyeView?.dataManager?.layers?.get('cctv')?.module;
+        const camera = module
+          ?.getUIState?.()
+          ?.cameras?.find((item) => item.active);
+        return (
+          camera?.id === 'qa-cctv-lifecycle-camera-001' &&
+          camera.decodeStatus === 'ok' &&
+          Number.isFinite(camera.decodeLastSuccessAt)
+        );
+      },
+      { timeout: 15_000, polling: 100 },
+    );
+    if (!frameDelivery.matchesFixture)
+      throw new Error('Decoded camera has no verified fixture-frame delivery.');
+    await page.evaluate(installVisualPresentationBoundaryInPage);
     for (const id of STATES) {
-      if (id === 'hud-visible' || id === 'hud-restored') {
-        const result = await page.evaluate(() => window.__godsEyeView?.styleManager?.setHudVisible?.('on'));
-        if (!result?.ok || result.visible !== true) throw new Error(`HUD visible state failed: ${id}`);
+      stage = id;
+      if (id !== 'hud-hidden') {
+        const result = await page.evaluate(() =>
+          window.__godsEyeView?.styleManager?.setHudVisible?.('on'),
+        );
+        if (!result?.ok || result.visible !== true)
+          throw new Error(`HUD visible state failed: ${id}`);
       } else if (id === 'hud-hidden') {
-        const result = await page.evaluate(() => window.__godsEyeView?.styleManager?.setHudVisible?.('off'));
-        if (!result?.ok || result.visible !== false) throw new Error('HUD hidden state failed.');
+        const result = await page.evaluate(() =>
+          window.__godsEyeView?.styleManager?.setHudVisible?.('off'),
+        );
+        if (!result?.ok || result.visible !== false)
+          throw new Error('HUD hidden state failed.');
       }
-      const foregroundReply = await foregroundSession.request(browserPid, 15_000);
+      const foregroundReply = await foregroundSession.request(
+        browserPid,
+        15_000,
+      );
       let foreground;
-      try { foreground = JSON.parse(foregroundReply.stdout); } catch (error) { throw new Error(`Foreground proof was not valid JSON for ${id}.`, { cause: error }); }
-      if (foreground.foregroundConfirmed !== true || foreground.foregroundPid !== browserPid || foreground.status !== 'foreground-confirmed') throw new Error(`Foreground proof failed for ${id}.`);
-      const completedRender = await page.evaluate(waitForCctvLifecycleRenderInPage, 15_000);
-      const profile = await readNativeProfile(page);
-      observedProfile = profile;
-      const observed = await observedState(page, profile, appSha);
-      if (observed.checkpoint.activeCameraId !== fixture.cameraId || observed.cctvParams?.selectedCameraId !== fixture.cameraId || observed.cctvParams?.showProjection !== true || (observed.cctvDiagnostics?.entities || 0) < 1)
-        throw new Error('Completed render lacks a selected, materialized CCTV still projection.');
-      const png = await captureQualificationPng(page, path.join(out, `${id}-${label}.png`));
-      states.push({ id, completedRender, foreground, ...observed, [label]: png });
+      try {
+        foreground = JSON.parse(foregroundReply.stdout);
+      } catch (error) {
+        throw new Error(`Foreground proof was not valid JSON for ${id}.`, {
+          cause: error,
+        });
+      }
+      if (
+        foreground.foregroundConfirmed !== true ||
+        foreground.foregroundPid !== browserPid ||
+        foreground.status !== 'foreground-confirmed'
+      )
+        throw new Error(`Foreground proof failed for ${id}.`);
+      const attempts = [];
+      let accepted = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        await page.waitForFunction(
+          () => {
+            const proof = window.__gevVisualPresentationBoundary?.read();
+            return (
+              proof?.recordingVisible === true &&
+              proof.summaryTypingComplete &&
+              proof.summary.length > 0 &&
+              proof.documentVisible &&
+              proof.documentFocused &&
+              document.fonts.status === 'loaded' &&
+              window.__godsEyeView?.viewer?.scene?.globe?.tilesLoaded === true
+            );
+          },
+          { polling: 25, timeout: 15_000 },
+        );
+        const completedRender = await page.evaluate(
+          waitForCctvLifecycleRenderInPage,
+          15_000,
+        );
+        const profile = await readNativeProfile(page);
+        observedProfile = profile;
+        const observed = await observedState(page, profile, appSha);
+        if (
+          observed.checkpoint.activeCameraId !== fixture.cameraId ||
+          observed.cctvParams?.selectedCameraId !== fixture.cameraId ||
+          observed.cctvParams?.showProjection !== true ||
+          (observed.cctvDiagnostics?.entities || 0) < 1
+        )
+          throw new Error(
+            'Completed render lacks a selected, materialized CCTV still projection.',
+          );
+        const before = await page.evaluate(
+          readVisualPresentationBoundaryInPage,
+        );
+        const png = await captureQualificationPng(
+          page,
+          path.join(out, `${id}-${label}-attempt-${attempt}.png`),
+        );
+        const after = await page.evaluate(readVisualPresentationBoundaryInPage);
+        const unchanged = presentationStayedSettled(before, after);
+        attempts.push({
+          attempt,
+          before,
+          after,
+          accepted: unchanged,
+          image: png,
+        });
+        if (!unchanged) continue;
+        accepted = {
+          id,
+          completedRender,
+          foreground,
+          ...observed,
+          presentation: { before, after, attempts },
+          frameDelivery: { ...frameDelivery },
+          [label]: png,
+        };
+        break;
+      }
+      if (!accepted) {
+        states.push({ id, captureFailed: true, presentation: { attempts } });
+        throw new Error(
+          `HUD changed during all bounded capture attempts for ${id}.`,
+        );
+      }
+      states.push(accepted);
     }
-    result = { applicationSha: appSha, receiptSha256: receipt.receiptSha256, profile: observedProfile, states, browserVersion: await browser.version() };
+    stage = 'fixture-network-verification';
+    const network = await prepared.verifyNetwork();
+    assert.deepEqual(
+      prepared.errors,
+      [],
+      'Visual fixture reported application errors.',
+    );
+    result = {
+      applicationSha: appSha,
+      receiptSha256: receipt.receiptSha256,
+      profile: observedProfile,
+      states,
+      browserPid,
+      browserVersion: await browser.version(),
+      network,
+    };
   } catch (error) {
     failure = error;
-    throw error;
   } finally {
-    let teardownError = null;
-    try {
-      if (page) await cleanupFixturePageDiagnostics(page);
-    } catch (error) {
-      teardownError = error;
+    const clean = async (name, operation) => {
+      try {
+        await deadline(operation, name);
+      } catch (error) {
+        teardown.errors.push({ stage: name, ...boundedError(error) });
+      }
+    };
+    if (page && !page.isClosed())
+      await clean('presentation-observer', () =>
+        page.evaluate(disposeVisualPresentationBoundaryInPage),
+      );
+    if (page)
+      await clean('page-diagnostics', () =>
+        cleanupFixturePageDiagnostics(page),
+      );
+    if (prepared?.interception)
+      await clean('fixture-interception-drain', async () => {
+        teardown.interceptionDrain = await prepared.interception.stopAndDrain();
+        if (!teardown.interceptionDrain.confirmed)
+          throw new Error('Fixture interception did not drain.');
+      });
+    if (page && context)
+      await clean('owned-page', async () => {
+        teardown.pageClose = await closeOwnedRecoveryPage(page, context, 2000);
+        if (
+          !teardown.pageClose.closeCompleted ||
+          teardown.pageClose.openPageCount !== 0
+        )
+          throw new Error('Owned visual page did not close.');
+      });
+    if (context) await clean('owned-context', () => context.close());
+    if (prepared?.interception)
+      await clean('fixture-interception-release', async () => {
+        teardown.interceptionRelease =
+          await prepared.interception.releaseSession({
+            targetClosed: page?.isClosed() === true,
+          });
+        if (!teardown.interceptionRelease.confirmed)
+          throw new Error('Fixture interception release was not confirmed.');
+      });
+    if (foregroundSession)
+      await clean('foreground-helper', () => foregroundSession.dispose());
+    if (browser) {
+      try {
+        teardown.browserClose = await closeRecoveryBrowser(browser, {
+          timeoutMs: 5000,
+          forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+        });
+        teardown.browserClosed =
+          teardown.browserClose.closeCompleted === true &&
+          teardown.browserClose.observation?.processExit != null &&
+          teardown.browserClose.forcedProcessTermination === false;
+        if (!teardown.browserClosed)
+          throw new Error('Owned browser shutdown was not confirmed.');
+      } catch (error) {
+        teardown.errors.push({
+          stage: 'owned-browser',
+          ...boundedError(error),
+        });
+      }
     }
-    try {
-      await foregroundSession?.dispose();
-    } catch (error) {
-      teardownError ||= error;
-    }
-    try {
-      const closeResult = await closeRecoveryBrowser(browser, { timeoutMs: 5_000 });
-      browserClosed = closeResult.closeCompleted === true && closeResult.observation?.processExit != null;
-      if (!browserClosed) teardownError ||= new Error('Owned browser shutdown was not confirmed.');
-    } catch (error) {
-      teardownError ||= error;
-    }
-    if (failure) {
-      try { await fs.writeFile(path.join(out, `final-visual-${label}-partial.json`), JSON.stringify({ schema: 'gev-final-visual-qualification/partial-v1', label, stage, error: { name: failure.name, message: String(failure.message).slice(0, 500) }, completedStates: states, teardown: { browserClosed, error: teardownError ? String(teardownError.message).slice(0, 500) : null } }, null, 2)); } catch {}
-    }
-    if (teardownError) {
-      if (failure) {
-        failure.teardownError = String(teardownError.message || teardownError).slice(0, 300);
-      } else throw new Error('Visual qualification teardown was not confirmed.', { cause: teardownError });
+    if (teardown.errors.length) {
+      failure ||= new Error('Visual qualification teardown was not confirmed.');
+      failure.cleanupErrors = teardown.errors;
     }
   }
-  return { ...result, browserClosed };
+  if (failure) {
+    failure.capture = {
+      label,
+      stage,
+      applicationSha: appSha,
+      completedStates: states,
+      teardown,
+    };
+    await savePartial(
+      out,
+      `final-visual-${label}-partial.json`,
+      {
+        schema: 'gev-final-visual-qualification/partial-v1',
+        ...failure.capture,
+        error: boundedError(failure),
+      },
+      failure,
+    );
+    throw failure;
+  }
+  return { ...result, teardown };
 }
 
-async function produceFinalVisualQualificationInternal(options) {
-  if (process.platform !== 'win32') throw new Error('Final visual qualification requires Windows hardware.');
+async function produceFinalVisualQualificationInternal(options, progress) {
+  if (process.platform !== 'win32')
+    throw new Error('Final visual qualification requires Windows hardware.');
   const out = path.resolve(options.out);
   const visualHarnessRoot = path.resolve(options['visual-harness-root']);
-  if (visualHarnessRoot !== ROOT) throw new Error('Visual producer must execute from its declared clean checkout.');
+  if (visualHarnessRoot !== ROOT)
+    throw new Error(
+      'Visual producer must execute from its declared clean checkout.',
+    );
   await fs.mkdir(out, { recursive: true });
-  const actualHarnessSha = execFileSync('git', ['-C', options['harness-root'], 'rev-parse', 'HEAD'], { encoding: 'utf8', windowsHide: true }).trim();
-  if (actualHarnessSha !== options['harness-sha']) throw new Error('Build harness SHA does not match its checkout.');
-  if (execFileSync('git', ['-C', options['harness-root'], 'status', '--porcelain'], { encoding: 'utf8', windowsHide: true }).trim())
+  if ((await fs.readdir(out)).length)
+    throw new Error(
+      'Visual evidence output must be empty; existing evidence is never overwritten.',
+    );
+  progress.stage = 'source-provenance';
+  const actualHarnessSha = execFileSync(
+    'git',
+    ['-C', options['harness-root'], 'rev-parse', 'HEAD'],
+    { encoding: 'utf8', windowsHide: true },
+  ).trim();
+  if (actualHarnessSha !== options['harness-sha'])
+    throw new Error('Build harness SHA does not match its checkout.');
+  if (
+    execFileSync(
+      'git',
+      ['-C', options['harness-root'], 'status', '--porcelain'],
+      { encoding: 'utf8', windowsHide: true },
+    ).trim()
+  )
     throw new Error('Build harness checkout must be clean.');
-  const actualVisualHarnessSha = execFileSync('git', ['-C', options['visual-harness-root'], 'rev-parse', 'HEAD'], { encoding: 'utf8', windowsHide: true }).trim();
-  if (actualVisualHarnessSha !== options['visual-harness-sha']) throw new Error('Visual producer SHA does not match its checkout.');
-  if (execFileSync('git', ['-C', options['visual-harness-root'], 'status', '--porcelain'], { encoding: 'utf8', windowsHide: true }).trim())
+  const actualVisualHarnessSha = execFileSync(
+    'git',
+    ['-C', options['visual-harness-root'], 'rev-parse', 'HEAD'],
+    { encoding: 'utf8', windowsHide: true },
+  ).trim();
+  if (actualVisualHarnessSha !== options['visual-harness-sha'])
+    throw new Error('Visual producer SHA does not match its checkout.');
+  if (
+    execFileSync(
+      'git',
+      ['-C', options['visual-harness-root'], 'status', '--porcelain'],
+      { encoding: 'utf8', windowsHide: true },
+    ).trim()
+  )
     throw new Error('Visual producer checkout must be clean.');
   const baselineReceipt = await readReceipt(options['baseline-receipt']);
   const candidateReceipt = await readReceipt(options['candidate-receipt']);
-  await verifyReceipt({ receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['baseline-app-sha'], baseUrl: options['baseline-url'] });
-  await verifyReceipt({ receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['candidate-app-sha'], baseUrl: options['candidate-url'] });
-  const baseline = await captureRevision({ label: 'baseline', url: options['baseline-url'], appSha: options['baseline-app-sha'], receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harness: options['harness-root'], out });
-  options.__baseline = baseline;
-  const candidate = await captureRevision({ label: 'candidate', url: options['candidate-url'], appSha: options['candidate-app-sha'], receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harness: options['harness-root'], out });
-  options.__candidate = candidate;
-  await verifyReceipt({ receipt: baselineReceipt, checkout: options['baseline-checkout'], build: options['baseline-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['baseline-app-sha'], baseUrl: options['baseline-url'] });
-  await verifyReceipt({ receipt: candidateReceipt, checkout: options['candidate-checkout'], build: options['candidate-build'], harnessRoot: options['harness-root'], harnessSha: options['harness-sha'], appSha: options['candidate-app-sha'], baseUrl: options['candidate-url'] });
+  progress.stage = 'served-byte-preflight';
+  await verifyReceipt({
+    receipt: baselineReceipt,
+    checkout: options['baseline-checkout'],
+    build: options['baseline-build'],
+    harnessRoot: options['harness-root'],
+    harnessSha: options['harness-sha'],
+    appSha: options['baseline-app-sha'],
+    baseUrl: options['baseline-url'],
+  });
+  await verifyReceipt({
+    receipt: candidateReceipt,
+    checkout: options['candidate-checkout'],
+    build: options['candidate-build'],
+    harnessRoot: options['harness-root'],
+    harnessSha: options['harness-sha'],
+    appSha: options['candidate-app-sha'],
+    baseUrl: options['candidate-url'],
+  });
+  progress.stage = 'baseline-capture';
+  const baseline = await captureRevision({
+    label: 'baseline',
+    url: options['baseline-url'],
+    appSha: options['baseline-app-sha'],
+    receipt: baselineReceipt,
+    out,
+  });
+  progress.baseline = baseline;
+  await fs.writeFile(
+    path.join(out, 'baseline-observations.json'),
+    `${JSON.stringify(baseline, null, 2)}\n`,
+    { flag: 'wx' },
+  );
+  progress.stage = 'candidate-capture';
+  const candidate = await captureRevision({
+    label: 'candidate',
+    url: options['candidate-url'],
+    appSha: options['candidate-app-sha'],
+    receipt: candidateReceipt,
+    out,
+  });
+  progress.candidate = candidate;
+  await fs.writeFile(
+    path.join(out, 'candidate-observations.json'),
+    `${JSON.stringify(candidate, null, 2)}\n`,
+    { flag: 'wx' },
+  );
+  progress.stage = 'served-byte-postflight';
+  await verifyReceipt({
+    receipt: baselineReceipt,
+    checkout: options['baseline-checkout'],
+    build: options['baseline-build'],
+    harnessRoot: options['harness-root'],
+    harnessSha: options['harness-sha'],
+    appSha: options['baseline-app-sha'],
+    baseUrl: options['baseline-url'],
+  });
+  await verifyReceipt({
+    receipt: candidateReceipt,
+    checkout: options['candidate-checkout'],
+    build: options['candidate-build'],
+    harnessRoot: options['harness-root'],
+    harnessSha: options['harness-sha'],
+    appSha: options['candidate-app-sha'],
+    baseUrl: options['candidate-url'],
+  });
   const fixture = createCctvLifecycleFixture();
+  if (
+    execFileSync('git', ['-C', visualHarnessRoot, 'rev-parse', 'HEAD'], {
+      encoding: 'utf8',
+      windowsHide: true,
+    }).trim() !== actualVisualHarnessSha ||
+    execFileSync('git', ['-C', visualHarnessRoot, 'status', '--porcelain'], {
+      encoding: 'utf8',
+      windowsHide: true,
+    }).trim()
+  )
+    throw new Error('Visual producer checkout changed during qualification.');
+  progress.stage = 'paired-observations';
   for (let index = 0; index < STATES.length; index++) {
     const left = baseline.states[index];
     const right = candidate.states[index];
-    if (JSON.stringify(left.camera) !== JSON.stringify(right.camera) ||
-        JSON.stringify(left.populations) !== JSON.stringify(right.populations) ||
-        JSON.stringify(left.profile) !== JSON.stringify(right.profile) ||
-        JSON.stringify(left.settings) !== JSON.stringify(right.settings))
-      throw new Error(`Baseline/candidate observed state differs for ${STATES[index]}.`);
+    if (
+      JSON.stringify(left.camera) !== JSON.stringify(right.camera) ||
+      JSON.stringify(left.populations) !== JSON.stringify(right.populations) ||
+      JSON.stringify(left.profile) !== JSON.stringify(right.profile) ||
+      JSON.stringify(left.settings) !== JSON.stringify(right.settings)
+    )
+      throw new Error(
+        `Baseline/candidate observed state differs for ${STATES[index]}.`,
+      );
   }
   const environment = baseline.states[0];
   if (baseline.browserVersion !== candidate.browserVersion)
@@ -317,9 +765,29 @@ async function produceFinalVisualQualificationInternal(options) {
     throw new Error('Baseline/candidate renderer identities differ.');
   const report = {
     schema: 'gev-final-visual-qualification/v1',
-    harness: { baselineSha: options['harness-sha'], candidateSha: options['harness-sha'], buildHarnessCommit: options['harness-sha'], visualHarnessCommit: options['visual-harness-sha'] },
-    application: { baselineSha: baseline.applicationSha, candidateSha: candidate.applicationSha },
-    receipts: { baselineSha256: baseline.receiptSha256, candidateSha256: candidate.receiptSha256 },
+    fixture: {
+      id: 'qa-cctv-still-hud-v1',
+      sourceFixtureSha256: fixture.sha256,
+      frameSha256: fixture.frameSha256,
+      cameraId: fixture.cameraId,
+      view: QUALIFICATION_VIEW,
+      fixedTimeMs: FIXED_TIME_MS,
+      randomSeed: 0x51a7e,
+    },
+    harness: {
+      baselineSha: options['harness-sha'],
+      candidateSha: options['harness-sha'],
+      buildHarnessCommit: options['harness-sha'],
+      visualHarnessCommit: options['visual-harness-sha'],
+    },
+    application: {
+      baselineSha: baseline.applicationSha,
+      candidateSha: candidate.applicationSha,
+    },
+    receipts: {
+      baselineSha256: baseline.receiptSha256,
+      candidateSha256: candidate.receiptSha256,
+    },
     environment: {
       platform: process.platform,
       renderer: {
@@ -327,53 +795,133 @@ async function produceFinalVisualQualificationInternal(options) {
         device: environment.checkpoint.renderer?.name,
         browserVersion: baseline.browserVersion,
       },
+      rendererByRevision: {
+        baseline: {
+          vendor: baselineRenderer.vendor,
+          device: baselineRenderer.name,
+          browserVersion: baseline.browserVersion,
+        },
+        candidate: {
+          vendor: candidateRenderer.vendor,
+          device: candidateRenderer.name,
+          browserVersion: candidate.browserVersion,
+        },
+      },
+      browserPid: {
+        baseline: baseline.browserPid,
+        candidate: candidate.browserPid,
+      },
       nativeSharpnessProfile: environment.profile,
-      populations: [{ id: 'cctv', enabled: true, count: environment.populations.cctv }],
+      populations: [
+        { id: 'cctv', enabled: true, count: environment.populations.cctv },
+      ],
       camera: { id: fixture.cameraId, ...environment.camera },
-      foregroundConfirmed: baseline.states.every((state) => state.foreground.foregroundConfirmed === true) && candidate.states.every((state) => state.foreground.foregroundConfirmed === true),
+      foregroundConfirmed:
+        baseline.states.every(
+          (state) => state.foreground.foregroundConfirmed === true,
+        ) &&
+        candidate.states.every(
+          (state) => state.foreground.foregroundConfirmed === true,
+        ),
     },
     masks: [],
     states: STATES.map((id, index) => ({
       id,
-      completedRender: { baseline: baseline.states[index].completedRender, candidate: candidate.states[index].completedRender },
-      foreground: { baseline: baseline.states[index].foreground, candidate: candidate.states[index].foreground },
+      completedRender: {
+        baseline: baseline.states[index].completedRender,
+        candidate: candidate.states[index].completedRender,
+      },
+      foreground: {
+        baseline: baseline.states[index].foreground,
+        candidate: candidate.states[index].foreground,
+      },
       camera: { id: fixture.cameraId, ...baseline.states[index].camera },
-      cameraByRevision: { baseline: baseline.states[index].camera, candidate: candidate.states[index].camera },
+      cameraByRevision: {
+        baseline: baseline.states[index].camera,
+        candidate: candidate.states[index].camera,
+      },
       nativeSharpnessProfile: baseline.states[index].profile,
-      nativeSharpnessProfileByRevision: { baseline: baseline.states[index].profile, candidate: candidate.states[index].profile },
-      settings: { baseline: baseline.states[index].settings, candidate: candidate.states[index].settings },
-      populations: { baseline: baseline.states[index].populations, candidate: candidate.states[index].populations },
-      hud: { baseline: baseline.states[index].hud, candidate: candidate.states[index].hud },
-      timestampMs: { baseline: baseline.states[index].timestampMs, candidate: candidate.states[index].timestampMs },
+      nativeSharpnessProfileByRevision: {
+        baseline: baseline.states[index].profile,
+        candidate: candidate.states[index].profile,
+      },
+      settings: {
+        baseline: baseline.states[index].settings,
+        candidate: candidate.states[index].settings,
+      },
+      populations: {
+        baseline: baseline.states[index].populations,
+        candidate: candidate.states[index].populations,
+      },
+      hud: {
+        baseline: baseline.states[index].hud,
+        candidate: candidate.states[index].hud,
+      },
+      presentation: {
+        baseline: baseline.states[index].presentation,
+        candidate: candidate.states[index].presentation,
+      },
+      frameDelivery: {
+        baseline: baseline.states[index].frameDelivery,
+        candidate: candidate.states[index].frameDelivery,
+      },
+      timestampMs: {
+        baseline: baseline.states[index].timestampMs,
+        candidate: candidate.states[index].timestampMs,
+      },
       baseline: baseline.states[index].baseline,
       candidate: candidate.states[index].candidate,
     })),
-    teardown: { baseline: { browserClosed: true }, candidate: { browserClosed: true } },
+    teardown: { baseline: baseline.teardown, candidate: candidate.teardown },
     outputRoot: out,
   };
-  await fs.writeFile(path.join(out, 'final-visual-qualification.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+  await fs.writeFile(
+    path.join(out, 'final-visual-qualification.json'),
+    `${JSON.stringify(report, null, 2)}\n`,
+    { flag: 'wx' },
+  );
+  progress.stage = 'pixel-validation';
+  const validation = await validateFinalVisualQualification(report, {
+    evidenceRoot: out,
+  });
+  await fs.writeFile(
+    path.join(out, 'validation.json'),
+    `${JSON.stringify(validation, null, 2)}\n`,
+    { flag: 'wx' },
+  );
+  progress.stage = 'complete';
   return report;
 }
 
 export async function produceFinalVisualQualification(options) {
+  const progress = { stage: 'initialization', baseline: null, candidate: null };
   try {
-    return await produceFinalVisualQualificationInternal(options);
+    return await produceFinalVisualQualificationInternal(options, progress);
   } catch (error) {
     try {
       const out = path.resolve(options.out);
       await fs.mkdir(out, { recursive: true });
-      await fs.writeFile(path.join(out, 'final-visual-qualification-partial.json'), JSON.stringify({
-        schema: 'gev-final-visual-qualification/partial-v1',
-        error: { name: error.name, message: String(error.message || error).slice(0, 500), teardownError: error.teardownError || null },
-        baseline: options.__baseline || null,
-        candidate: options.__candidate || null,
-      }, null, 2));
-    } catch {}
+      await savePartial(
+        out,
+        'final-visual-qualification-partial.json',
+        {
+          schema: 'gev-final-visual-qualification/partial-v1',
+          ...progress,
+          error: boundedError(error),
+          failedCapture: error.capture || null,
+          cleanupErrors: error.cleanupErrors || [],
+        },
+        error,
+      );
+    } catch (reportError) {
+      (error.reportErrors ||= []).push(boundedError(reportError));
+    }
     throw error;
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+)
   await produceFinalVisualQualification(args(process.argv));
-
-
