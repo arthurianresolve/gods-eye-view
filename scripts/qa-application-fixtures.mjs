@@ -558,11 +558,16 @@ export async function importFixtureGeometry(
   await runWorkspaceFixturePhase(
     page,
     'import-control-wait',
-    () =>
-      page.waitForSelector('.workspace-library [data-geo-file]', {
-        visible: true,
-        timeout: timeoutMs,
-      }),
+    async () => {
+      const control = await page.waitForSelector(
+        '.workspace-library [data-geo-file]',
+        {
+          visible: true,
+          timeout: timeoutMs,
+        },
+      );
+      await control?.dispose();
+    },
     phaseOptions,
   );
   await runWorkspaceFixturePhase(
