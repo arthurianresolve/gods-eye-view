@@ -1,0 +1,51 @@
+{
+  "schema": "gev-weather-idle-lifecycle-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T22:10:11.746Z",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-weather-idle-lifecycle-20261020",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 317218,
+      "sha256": "30be1d7374f6fb6d4bad80727b5ae9cc81b0748feaf5a7d973b42978e3b2c6a3",
+      "previousSha256": "6944e69adb49a57f3d81c9bab878a7f255cdddd55ae13830d905b34136523b63"
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+      "bytes": 57798,
+      "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd",
+      "previousSha256": "5a93b713172cc549fc5df516b15c53bd409b4010ee3ece4cc91545bd08e7113b"
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+      "bytes": 55394,
+      "sha256": "b72918f0ccee01eddf884db379101edb20e93a798277d8f5781c6b3f5fecf126",
+      "previousSha256": "cee67f4f194ce5482e006f12446afe313cc7903d52d0a647ecf63f5d0738f02c"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "b4c50c8d0feeb8e5319447733480e45244503a9afab800984d0da3cddf80b095",
+      "summary": " query and method, then audits tile bytes (14.590801ms)\n✔ real fixture interception accepts accessor methods, ignores unrelated API fallback and diagnoses owned malformed routes (15.682786ms)\n✔ weather route-error wait is cancellable and rejects on disposal (13.642141ms)\n✔ weather readiness aborts polling on owned route failure and disposes late handles (8.962966ms)\n✔ weather failure snapshot is page-serializable and exposes only bounded selected-layer state (1.283335ms)\n✔ weather delivery fails closed on missing source, wrong bytes or population drift (29.923862ms)\n✔ delivery summary requires and hashes each distinct weather history frame (19.751344ms)\n✔ pending fixture delivery wait is canceled and releases its timer on disposal (12.585192ms)\n✔ aborted fixture delivery wait preserves cancellation and removes its waiter (12.557227ms)\n✔ weather clock assertion checks exact wall and Cesium epoch on both boundaries (13.291174ms)\n✔ weather idle diagnostic is exact-duration and explicitly ineligible (1.413226ms)\n✔ phase observer timestamps request and settlement without replacing page methods (0.498832ms)\n✔ idle summary binds long gaps to sampled render demand and preserves phase clocks (1.351166ms)\n✔ diagnostic sanitizes request labels and caps retained frame records (2.510602ms)\nℹ tests 28\nℹ suites 0\nℹ pass 28\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3415.705775\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "050604e3d7584a37aaeff7420d49b8db2bed73955e3917a4c7ca88d94d84af0b",
+      "summary": " query and method, then audits tile bytes (14.353903ms)\n✔ real fixture interception accepts accessor methods, ignores unrelated API fallback and diagnoses owned malformed routes (14.928732ms)\n✔ weather route-error wait is cancellable and rejects on disposal (12.832469ms)\n✔ weather readiness aborts polling on owned route failure and disposes late handles (4.955648ms)\n✔ weather failure snapshot is page-serializable and exposes only bounded selected-layer state (1.099691ms)\n✔ weather delivery fails closed on missing source, wrong bytes or population drift (30.761758ms)\n✔ delivery summary requires and hashes each distinct weather history frame (18.912996ms)\n✔ pending fixture delivery wait is canceled and releases its timer on disposal (12.819363ms)\n✔ aborted fixture delivery wait preserves cancellation and removes its waiter (12.514436ms)\n✔ weather clock assertion checks exact wall and Cesium epoch on both boundaries (12.980304ms)\n✔ weather idle diagnostic is exact-duration and explicitly ineligible (1.452612ms)\n✔ phase observer timestamps request and settlement without replacing page methods (0.503491ms)\n✔ idle summary binds long gaps to sampled render demand and preserves phase clocks (0.896769ms)\n✔ diagnostic sanitizes request labels and caps retained frame records (1.855288ms)\nℹ tests 28\nℹ suites 0\nℹ pass 28\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3025.024151\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "completedAt": "2026-10-19T22:10:20.556Z"
+}

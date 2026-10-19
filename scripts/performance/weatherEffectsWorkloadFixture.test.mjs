@@ -27,6 +27,7 @@ import {
   assertWeatherEffectsClock,
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsWorkloadFixture,
+  createWeatherEffectsFixtureLifecycle,
   runWeatherEffectsPhaseSchedule,
   resetWeatherEffectsToLatest,
   prepareWeatherEffectsTimeline,
@@ -360,6 +361,84 @@ test('weather phase observations bind every scheduled source, elapsed time and p
   assert.throws(() =>
     assertWeatherPhaseRunSet(evidence, fixture, { durationMs: 30_000 }),
   );
+});
+
+test('idle weather diagnostics validate one complete phase run without weakening comparison coverage', () => {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const evidence = {
+    schema: 'gev-weather-phase-observations/v1',
+    durationMs: 60_000,
+    fixtureSha256: fixture.sha256,
+    phases: fixture.phaseSchedule.phases.map((phase) => ({
+      id: phase.id,
+      fixtureSha256: fixture.sha256,
+      expectedSourceTime: phase.sourceTime,
+      scheduledAtMs: phase.offsetMs,
+      observedAtElapsedMs: phase.offsetMs + 150,
+      sourceObservationTimes: Array(3).fill(phase.sourceTime),
+      clock: { mode: 'history', playing: false },
+    })),
+  };
+  const input = {
+    fixture,
+    cameraObservation: fixture.camera,
+    timelinePreflight: {
+      selectedTimes: [
+        fixture.timeline.at(-1),
+        ...fixture.timeline,
+        fixture.timeline.at(-1),
+      ].map((time) => Array(3).fill(time)),
+      sourceObservationTimes: Array(3).fill(fixture.timeline.at(-1)),
+      playback: { playing: false },
+    },
+    workload: {
+      warmupMs: 30_000,
+      durationPerSampleMs: 60_000,
+      runsPerScenario: 1,
+    },
+    phaseObservationsBySample: [evidence],
+  };
+  assert.throws(
+    () => createWeatherEffectsFixtureLifecycle(input),
+    /phase runs are incomplete/,
+  );
+  const diagnostic = createWeatherEffectsFixtureLifecycle({
+    ...input,
+    diagnosticIdleOnly: true,
+  });
+  assert.equal(diagnostic.diagnosticOnly, true);
+  assert.equal(diagnostic.performanceAcceptanceEligible, false);
+  assert.deepEqual(diagnostic.measuredScenarios, ['idle']);
+  assert.equal(diagnostic.phaseObservationsBySample.length, 1);
+  assert.doesNotThrow(() =>
+    createWeatherEffectsFixtureLifecycle({
+      ...input,
+      phaseObservationsBySample: [evidence, structuredClone(evidence)],
+    }),
+  );
+  for (const mutate of [
+    (value) => value.phaseObservationsBySample[0].phases.pop(),
+    (value) => {
+      value.phaseObservationsBySample[0].phases[1].observedAtElapsedMs = 26_000;
+    },
+    (value) => {
+      value.phaseObservationsBySample[0].phases[1].sourceObservationTimes[0] =
+        fixture.timeline[0];
+    },
+    (value) => {
+      value.workload.runsPerScenario = 2;
+    },
+    (value) => {
+      value.workload.warmupMs = 0;
+    },
+    (value) => {
+      value.diagnosticIdleOnly = 'true';
+    },
+  ]) {
+    const invalid = structuredClone({ ...input, diagnosticIdleOnly: true });
+    mutate(invalid);
+    assert.throws(() => createWeatherEffectsFixtureLifecycle(invalid));
+  }
 });
 
 test('serialized weather phase driver selects every source through the real clock-backed timeline slider', async () => {

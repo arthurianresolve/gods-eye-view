@@ -947,6 +947,7 @@ export function createWeatherEffectsFixtureLifecycle({
   timelinePreflight,
   workload,
   phaseObservationsBySample,
+  diagnosticIdleOnly = false,
 }) {
   if (fixture?.schema !== 'gev-weather-effects-fixture/v2')
     throw new TypeError('A registered weather-effects fixture is required.');
@@ -963,9 +964,16 @@ export function createWeatherEffectsFixtureLifecycle({
     ),
     'Weather startup, ordered history, and latest reset must match the fixture timeline.',
   );
+  assert.equal(typeof diagnosticIdleOnly, 'boolean');
+  if (diagnosticIdleOnly) {
+    assert.equal(workload?.warmupMs, 30_000);
+    assert.equal(workload?.durationPerSampleMs, 60_000);
+    assert.equal(workload?.runsPerScenario, 1);
+  }
   assert.ok(
     Array.isArray(phaseObservationsBySample) &&
-      phaseObservationsBySample.length === workload?.runsPerScenario * 2,
+      phaseObservationsBySample.length ===
+        workload?.runsPerScenario * (diagnosticIdleOnly ? 1 : 2),
     'Observed weather phase runs are incomplete.',
   );
   for (const observations of phaseObservationsBySample)
@@ -973,6 +981,13 @@ export function createWeatherEffectsFixtureLifecycle({
       durationMs: workload?.durationPerSampleMs,
     });
   return {
+    ...(diagnosticIdleOnly
+      ? {
+          diagnosticOnly: true,
+          performanceAcceptanceEligible: false,
+          measuredScenarios: ['idle'],
+        }
+      : {}),
     scope:
       'one measured app document; bundled deterministic manifests, time-indexed imagery tiles and GFS grid are fulfilled only for exact same-origin GET routes; every 60-second capture selects the three pinned source phases through application timeline controls at fixed measurement-relative offsets',
     fixedHarnessClock:

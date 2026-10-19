@@ -7351,6 +7351,7 @@ try {
                   weatherEffectsFixtureLifecycle:
                     weatherEffectsModule.createWeatherEffectsFixtureLifecycle({
                       fixture: weatherEffectsWorkload,
+                      diagnosticIdleOnly: weatherIdleDiagnosticEnabled,
                       cameraObservation: weatherCameraObservation,
                       timelinePreflight: weatherTimelinePreflight,
                       workload: {

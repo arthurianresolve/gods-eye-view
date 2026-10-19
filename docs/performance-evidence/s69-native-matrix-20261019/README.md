@@ -13,6 +13,21 @@ transferred to this revision.
 
 ### Workspace settings and camera setup failures
 
+The corrected runtime candidate is now `190c5ab6`; its exact-commit release
+workflow [39332092277](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39332092277)
+passes build, downloaded-archive checks and GitHub attestation verification.
+It remains a candidate artifact, with hardware acceptance and activation pending.
+
+The first idle-only weather diagnostic using producer `190c5ab6` failed during
+final report construction: the shared lifecycle validator still expected both
+idle and motion samples. The failed report is retained under
+`weather-idle-diagnostic-b3c49b19-190c5ab6` and is not acceptance evidence.
+Its bounded failure envelope omitted the completed sample, so it cannot explain
+the weather frame gaps. The corrected validator explicitly labels the one-sample
+diagnostic as ineligible while retaining both samples for comparisons and all
+three source-phase timing checks. The [focused VM checks](weather-idle-lifecycle-validation-20261020.json)
+pass 28/28 on both Node versions; capture no-undef checks also pass.
+
 The [corrected interaction/heap comparison](qualification-metrics-b3c49b19-1ef5973e.json)
 failed and remains archived. The `3141ffe3` control completed twenty local
 controls, twenty replay seeks, two warmup heap cycles and six measured cycles,
