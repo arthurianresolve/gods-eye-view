@@ -34,6 +34,30 @@ also produced 299.0 ms. This does not establish the guard as the cause; its
 temporary removal is not retained. No runtime fix or acceptance waiver follows
 from these traces alone.
 
+Full 60-second cable browser traces at `7f793116` further localize the extra
+tail to Chrome presentation: overlay scheduling wall-time p95 is 3.3 ms on the
+baseline and 260.7 ms on the candidate, while thread CPU p95 stays below 1 ms
+on both. Candidate animation callbacks are faster in this diagnostic. A temporary
+Windows composition control at `c9c61d01` tests this boundary without changing
+the application or persistent browser settings. That control completed with
+candidate and baseline motion p95 of 351.5 and 357.7 ms; overlay-scheduling
+events disappear from both traces. This supports a presentation interaction
+but is insufficient to clear the default-browser regression. All 45 focused
+tests pass under Node 24/26; the earlier CI test-discovery failure is fixed at
+`6c32dba4`.
+Neither this evidence nor the control constitutes performance acceptance.
+
+All seven selected CI jobs and release verification pass at `c9c61d01`.
+The opt-in framebuffer diagnostic at `9dbec028` passes 49 focused
+tests on each supported Node runtime and records actual context attributes at
+both sample boundaries. It changes no application default and cannot produce
+acceptance evidence. Three of four planned hardware arms completed: preservation
+enabled measured 324.2 ms motion p95; disabled measured 570.6 and 552.5 ms.
+Windows refused foreground activation for the final enabled arm. This incomplete
+control demonstrates no benefit from disabling preservation, so the default
+remains enabled. The original dam/cable failures are still unresolved. Raw traces
+remain safely on Windows pending verified transfer to VM105.
+
 Weather QA revision `fb8a6c33` retains bounded expected/observed phase timestamps
 when the existing transition check fails; its predicates and deadline remain
 unchanged. All 30 focused checks pass under Node 24 and 26 on VM105. One short
@@ -44,6 +68,15 @@ passes all seven selected jobs, including Node 24/26, platform recovery and
 browser journeys. Its
 [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39172161051)
 also passes. Optional diagnostic job skips are not hardware passes.
+
+The subsequent full baseline weather replay completed all ten samples but failed
+its final settings comparison. Both application versions map `filtered` to
+numeric infrared strength `100`; the final validator lacked that existing alias.
+The correction at `73ac762b` preserves raw values and rejects other strengths. All 93 related
+weather, capture and diagnostic tests pass on VM105 under Node 24/26. The failed
+replay remains failed: its bounded report retains only four samples, so a full
+corrected pair is still required. The earlier timeline-transition failure remains
+separate and is not explained by this representation mismatch.
 
 The corrected CCTV visual fixture waits for the globe before activation and
 pauses captures at a task boundary. Three states match exactly; the fourth has

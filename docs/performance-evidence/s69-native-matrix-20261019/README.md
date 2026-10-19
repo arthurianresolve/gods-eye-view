@@ -72,7 +72,7 @@ A one-change HUD control removes the unchanged-text equality guard at diagnostic
 commit `de3c3a654790913dbf97c5b3288fe9a5876a23fe`, retaining all other candidate
 behavior. Its first setup attempt stopped before Chrome because npm 11.20.0 did
 not match the original build recipe's 11.13.0. A fresh VM build with Node 24.16.0
-and npm 11.13.0 produces the same 886 asset bytes and a matching recipe. The
+and npm 11.13.0 reproduces the matching build recipe. The
 failed setup remains recorded. The control returned a motion p95 of 295.3 ms,
 but the immediately following unchanged candidate also returned 299.0 ms. The
 [control review](hud-control-review.json) binds both reports and traces. This
@@ -80,6 +80,94 @@ does not establish the equality guard as the cause. The experimental removal
 is not retained; the earlier failures remain unresolved. Raw evidence is on
 VM105 under
 `/opt/gods-eye-view-validation/s61-s70-20261018/hud-write-control-fb8a6c33-20261018T225029Z`.
+
+## Browser presentation diagnosis
+
+Producer `7f793116` adds a bounded, opt-in browser trace alongside the frame
+trace. One matched cable capture per frozen application preserves the same
+2,629 objects, Manual/DENSE/75%, native 2880 × 1800 buffer and other visual
+settings. Both traces cover the full 60-second motion sample without data loss.
+The [browser review](cable-browser-review.json) binds the reports, raw traces,
+protocol and analysis scripts by hash. Raw traces stay in the private VM105
+archive `cable-browser-diagnostic-7f793116-20261018T231433Z`.
+
+| Metric from this diagnostic             | Baseline | Candidate |
+| --------------------------------------- | -------: | --------: |
+| Rendered frame interval p95             | 328.5 ms |  555.0 ms |
+| Rendered frames in the motion window    |      209 |       206 |
+| Animation callback wall-time p95        |  25.1 ms |   21.8 ms |
+| Chrome overlay scheduling wall-time p95 |   3.3 ms |  260.7 ms |
+| Overlay scheduling thread CPU p95       |  0.94 ms |   0.84 ms |
+
+The candidate has a larger frame-delivery tail despite similar throughput and
+lower animation callback cost. The trace localizes substantial waiting within
+Chrome's submission/presentation path. Thread CPU durations are measured
+separately from event wall time; neither measures GPU execution time. Inclusive
+event durations overlap and must not be added. This does not establish an
+application or driver defect, and it does not clear either original regression.
+
+The first trace attempt at `1988fc94` exhausted its buffer after approximately
+32 seconds. Its [capacity failure](browser-trace-capacity-review.json) remains
+preserved. The corrected trace selects renderer callbacks, thread tasks and
+presentation events, retaining the same 32 MiB trace buffer and 64 MiB export
+limit. It does not increase application performance or change visual quality.
+
+The tracing refactor also broke an existing test's AST callback discovery.
+`6c32dba4` resolves the actual callback argument array and keeps the behavioral
+assertions. The subsequent Windows-only composition control at `c9c61d01`
+requires a headed hardware run and both diagnostic traces. It always excludes
+its reports from performance acceptance and changes only its owned Chrome
+process. All 45 focused capture, tracing, CLI and deadline checks pass under
+Node 24.16.0 and 26.11.0 on VM105. Full CI for this revision is separate evidence.
+
+The [exact-revision CI review](c9c61d01-ci.json) records all seven selected
+jobs and release verification passing at `c9c61d01`. Optional diagnostics remain
+skipped and do not count as hardware qualification.
+
+The composition control completed in the predefined reverse order, candidate then baseline.
+Motion p95 was 351.5 and 357.7 ms respectively, with 209 and 196 rendered frames.
+Both retain the Intel UHD 620 D3D11 renderer and matching visual settings.
+The previously observed `ScheduleOverlays` events disappear from both complete
+traces, corroborating that the requested browser switch affected presentation.
+The [composition review](cable-composition-control-review.json) binds its evidence;
+the private archive is `cable-composition-control-c9c61d01-20261018T233734Z` on
+VM105. This supports a presentation-path interaction, but one instrumented pair
+does not establish its application trigger, a driver defect, or a stable fix.
+No persistent browser setting or application default changed. It is not a new
+qualification profile or a waiver for the default-browser regressions.
+
+## Framebuffer preservation control
+
+The opt-in diagnostic at `9dbec028` changes only WebGL buffer preservation in
+its owned browser. It verifies the real context before and after each sample,
+rejects missing/lost contexts and changed attributes, and remains ineligible
+for acceptance. All 49 focused checks pass on VM105 under both Node versions.
+
+The fixed four-arm sequence uses the same candidate application at `19065997`,
+first with preservation enabled, twice disabled, then enabled again. Three arms
+completed; Windows refused to activate the fourth owned Chrome window before
+measurement began. The [framebuffer review](cable-framebuffer-control-review.json)
+binds the completed reports, traces and failed fourth attempt by hash.
+
+| Arm         | Actual buffer preservation |  Motion p95 | Rendered frames |
+| ----------- | -------------------------- | ----------: | --------------: |
+| preserved-a | enabled                    |    324.2 ms |             221 |
+| released-a  | disabled                   |    570.6 ms |             208 |
+| released-b  | disabled                   |    552.5 ms |             214 |
+| preserved-b | no measurement             | unavailable |     unavailable |
+
+The completed arms retain native resolution, antialiasing, effects and 2,629
+cable objects. Their traces are complete, and foreground ownership holds
+throughout their samples. This incomplete, instrumented control demonstrates
+no benefit from disabling preservation. The application default remains enabled;
+no capture-correctness or visual-equivalence acceptance is claimed for a changed
+default. Both original infrastructure regressions remain unresolved.
+
+Raw evidence remains in the private Windows directory
+`cable-framebuffer-control-1792367992163`. VM transfer is pending because the
+temporary SSH credential expired and input to established terminal sessions is
+unavailable. The completed evidence is retained locally until transfer can be
+verified; no raw report is discarded.
 
 ## Weather failure and diagnostic correction
 
@@ -107,6 +195,32 @@ a one-second warmup and one repetition. The
 and raw hashes. Its VM archive is
 `/opt/gods-eye-view-validation/s61-s70-20261018/weather-phase-diagnostic-fb8a6c33-20261018T223553Z`.
 The full weather pair and map-streaming pair remain outstanding.
+
+A full weather replay at `c9c61d01` completed five idle and five motion samples
+on the baseline, then failed the final settings check: the contract expected
+`satelliteInfrared: "filtered"`, while the application reported numeric `100`.
+Both frozen application versions explicitly map the `filtered` setter alias to
+`100` and the `full` alias to `0`. The preflight already handles this alias;
+the final comparison did not. This is distinct from the earlier, unreproduced
+`early-history` transition failure.
+
+The narrow comparison correction at `73ac762b` recognizes only the documented `100` alias,
+keeps raw observations unchanged, and rejects `0`, `99`, `"100"`, null and
+missing values. Failure diagnostics also retain valid numeric infrared values.
+The complete related test group passes 93/93 on Node 24.16.0 and 26.11.0 on
+VM105 after synchronizing the validation overlay's stale failure-report helper
+to its exact parent source. The unchanged parent passes its 44 weather and
+failure-report tests on both runtimes. Original failed test logs are retained.
+Windows Node 24 also passes the same 93 checks. Its initial invocation could not
+load the incomplete local ESLint installation; the 21 affected checks pass using
+the existing dependency installation with the exact lockfile ESLint version.
+
+The full replay's raw evidence is preserved at
+`/opt/gods-eye-view-validation/s61-s70-20261018/weather-full-observation-c9c61d01-20261018T235514Z`.
+Its bounded failure report retains only four of ten completed samples and is
+explicitly truncated. It cannot be reconstructed into a qualifying full report;
+a corrected full pair remains necessary. No application setting or deadline
+was relaxed.
 
 ## Completion conditions
 
