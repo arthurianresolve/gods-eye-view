@@ -55,6 +55,7 @@ export async function captureWithDebuggerPause({
   readCallback = null,
   readCallbackArgs,
   pauseWhen = null,
+  describeGuardFailure = null,
   screenshot,
   pauseTimeoutMs,
   operationTimeoutMs,
@@ -81,6 +82,15 @@ export async function captureWithDebuggerPause({
     throw new TypeError(
       'An atomic pause guard requires a bounded predicate and a read callback.',
     );
+  if (
+    describeGuardFailure !== null &&
+    (pauseWhen === null ||
+      typeof describeGuardFailure !== 'function' ||
+      describeGuardFailure.toString().length > 4096)
+  )
+    throw new TypeError(
+      'Guard diagnostics require a bounded synchronous callback and a pause guard.',
+    );
   // The predicate and debugger statement execute in the same browser task.
   // Host-side readiness followed by a separate pause can cross an animation
   // boundary. Polling here never takes or selects a screenshot: it only waits
@@ -89,9 +99,22 @@ export async function captureWithDebuggerPause({
     pauseWhen === null
       ? null
       : `(() => {
-    const ready = (${pauseWhen.toString()})(${expression});
+    const snapshot = ${expression};
+    const ready = (${pauseWhen.toString()})(snapshot);
     if (typeof ready !== 'boolean') throw new TypeError('Pause guard must return a boolean.');
     if (ready) debugger;
+    ${
+      describeGuardFailure === null
+        ? ''
+        : `if (!ready) {
+      const detail = (${describeGuardFailure.toString()})(snapshot);
+      if (detail?.then) throw new TypeError('Guard diagnostics must be synchronous.');
+      const serialized = JSON.stringify(detail);
+      if (typeof serialized !== 'string' || serialized.length > 4096)
+        throw new TypeError('Guard diagnostics must be bounded JSON.');
+      return { ready: false, detail: JSON.parse(serialized) };
+    }`
+    }
     return ready;
   })()\n//# sourceURL=gev-qualification-guarded-pause.js`;
   const session = await page.createCDPSession();
@@ -105,6 +128,8 @@ export async function captureWithDebuggerPause({
   let pauseTimer;
   let guardPollTimer;
   let guardChecks = 0;
+  const guardSamples = [];
+  let guardSamplesOmitted = 0;
   const pausePromise = new Promise((resolve, reject) => {
     pauseResolve = resolve;
     pauseReject = reject;
@@ -164,7 +189,16 @@ export async function captureWithDebuggerPause({
           outcome.result?.result?.subtype === 'error'
         )
           throw new Error('Atomic pause guard failed.');
-        if (outcome.result?.result?.value !== false)
+        const value = outcome.result?.result?.value;
+        if (describeGuardFailure !== null && value?.ready === false) {
+          if (guardSamples.length < 128)
+            guardSamples.push({
+              check: guardChecks,
+              elapsedMs: performance.now() - (pauseDeadline - pauseLimit),
+              detail: value.detail,
+            });
+          else guardSamplesOmitted++;
+        } else if (value !== false)
           throw new Error('Guarded pause task completed without pausing.');
         await Promise.race([
           pausePromise,
@@ -289,6 +323,14 @@ export async function captureWithDebuggerPause({
     }
   }
   if (primaryError) {
+    primaryError.pauseDiagnostics = {
+      guardChecks,
+      guardSamples,
+      guardSamplesOmitted,
+      pauseTimeoutMs: pauseLimit,
+      pauseObserved: pausedEvent !== null,
+    };
+    primaryError.pauseCleanup = cleanup;
     if (cleanupErrors.length) primaryError.cleanupErrors = cleanupErrors;
     throw primaryError;
   }

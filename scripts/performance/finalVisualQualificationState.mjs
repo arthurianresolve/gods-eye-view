@@ -107,6 +107,32 @@ export function isVisualSnapshotReadyToPause(snapshot) {
   );
 }
 
+/** Bounded diagnostics from the same read used by the atomic pause guard. */
+export function describeVisualPauseReadiness(snapshot) {
+  const hud = snapshot?.hud;
+  return {
+    phase: snapshot?.phase ?? null,
+    reason:
+      typeof snapshot?.reason === 'string'
+        ? snapshot.reason.slice(0, 120)
+        : null,
+    recordingVisible: hud?.recordingVisible === true,
+    summaryTypingComplete: hud?.summaryTypingComplete === true,
+    summaryPresent: typeof hud?.summary === 'string' && hud.summary.length > 0,
+    documentVisible: hud?.documentVisible === true,
+    documentFocused: hud?.documentFocused === true,
+    gazeReady: hud?.gaze?.status === 'ready',
+    hudVisible: typeof hud?.hudVisible === 'boolean' ? hud.hudVisible : null,
+    hudVisibility:
+      typeof hud?.hudVisibility === 'string'
+        ? hud.hudVisibility.slice(0, 20)
+        : null,
+    hudDisplay:
+      typeof hud?.hudDisplay === 'string' ? hud.hudDisplay.slice(0, 20) : null,
+    hudOpacity: Number.isFinite(hud?.hudOpacity) ? hud.hudOpacity : null,
+  };
+}
+
 /** Read-only paused-frame evidence for the detection scanline phase. */
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const boundary = window.__gevVisualPresentationBoundary?.read?.();

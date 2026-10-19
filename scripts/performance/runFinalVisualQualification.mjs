@@ -43,6 +43,7 @@ import {
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
   isVisualSnapshotReadyToPause,
+  describeVisualPauseReadiness,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
@@ -260,6 +261,12 @@ function boundedError(error) {
     message: String(error?.message || error)
       .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
       .slice(0, 500),
+    ...(error?.pauseDiagnostics
+      ? {
+          pauseDiagnostics: error.pauseDiagnostics,
+          pauseCleanup: error.pauseCleanup,
+        }
+      : {}),
   };
 }
 
@@ -540,6 +547,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             readCallback: readVisualSnapshotPhaseInPage,
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
+            describeGuardFailure: describeVisualPauseReadiness,
             screenshot: (readBefore) => {
               const settled = presentationStayedSettled(
                 readBefore?.hud,

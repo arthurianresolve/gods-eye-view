@@ -43,7 +43,8 @@ function fakePage({
         } catch (error) {
           return { exceptionDetails: { text: error.message } };
         }
-        if (!ready) return { result: { type: 'boolean', value: false } };
+        if (!ready || ready?.ready === false)
+          return { result: { value: ready } };
       }
       if (method === 'Runtime.evaluate' && pauseOnEnable) {
         queueMicrotask(() =>
@@ -234,6 +235,67 @@ test('atomic guards require a bounded synchronous read/predicate contract', asyn
       /atomic pause guard requires/,
     );
     assert.equal(fake.calls.length, 0);
+  }
+});
+
+test('unmet guard retains bounded same-read diagnostics and cleanup without capturing', async () => {
+  const fake = fakePage();
+  let screenshots = 0;
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      readCallback: () => ({ phase: 2, focused: true }),
+      pauseWhen: (snapshot) => snapshot.phase === 0,
+      describeGuardFailure: (snapshot) => ({
+        phase: snapshot.phase,
+        focused: snapshot.focused,
+      }),
+      screenshot: () => screenshots++,
+      pauseTimeoutMs: 20,
+    }),
+    (error) => {
+      assert.match(error.message, /deadline exceeded/);
+      assert.equal(error.pauseDiagnostics.guardChecks, 1);
+      assert.deepEqual(
+        JSON.parse(
+          JSON.stringify(error.pauseDiagnostics.guardSamples[0].detail),
+        ),
+        { phase: 2, focused: true },
+      );
+      assert.equal(error.pauseDiagnostics.guardSamplesOmitted, 0);
+      assert.equal(error.pauseDiagnostics.pauseObserved, false);
+      assert.deepEqual(error.pauseCleanup, {
+        resumed: false,
+        disabled: true,
+        detached: true,
+      });
+      return true;
+    },
+  );
+  assert.equal(screenshots, 0);
+});
+
+test('guard diagnostics reject asynchronous or oversized results and clean up', async () => {
+  for (const describeGuardFailure of [
+    async () => ({}),
+    () => 'x'.repeat(4097),
+  ]) {
+    const fake = fakePage();
+    await assert.rejects(
+      captureWithDebuggerPause({
+        page: fake.page,
+        readCallback: () => ({ phase: 2 }),
+        pauseWhen: () => false,
+        describeGuardFailure,
+        screenshot: () => {
+          throw new Error('must not capture');
+        },
+        pauseTimeoutMs: 100,
+      }),
+      /Atomic pause guard failed/,
+    );
+    assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+    assert.equal(fake.calls.at(-1).method, 'detach');
   }
 });
 

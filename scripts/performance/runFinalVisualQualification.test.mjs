@@ -6,8 +6,32 @@ import {
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
   isVisualSnapshotReadyToPause,
+  describeVisualPauseReadiness,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
+
+test('guard failure projection is self-contained, bounded, and omits page content', () => {
+  const describe = vm.runInNewContext(
+    `(${describeVisualPauseReadiness.toString()})`,
+  );
+  const detail = describe({
+    phase: 2,
+    reason: null,
+    hud: {
+      summary: 'private page content',
+      summaryTypingComplete: true,
+      documentFocused: false,
+      documentVisible: true,
+    },
+  });
+  assert.equal(detail.phase, 2);
+  assert.equal(detail.summaryPresent, true);
+  assert.equal(detail.documentFocused, false);
+  assert.equal(detail.documentVisible, true);
+  assert.equal(JSON.stringify(detail).includes('private page content'), false);
+  assert.ok(JSON.stringify(detail).length < 4096);
+  assert.equal(describe(null).phase, null);
+});
 
 test('atomic visual eligibility rejects advancing phases and incomplete presentation', () => {
   const ready = {
