@@ -1758,12 +1758,48 @@ function compareFrameCaptures(base, next, scenarioNames) {
 }
 
 /** Validate paired five-run evidence and report measured p95 deltas without making a hardware acceptance claim. */
-export function validatePairedPerformanceReports({
-  baseline,
-  candidate,
-  expectedAppCommits,
-  expectedComparisonProfile = null,
-} = {}) {
+export function validatePairedPerformanceReports(options = {}) {
+  return validatePairedReports(options);
+}
+
+/**
+ * Native map request inventories vary with frame delivery and tile prefetch.
+ * Permit that variation only after independently rebuilding the pinned corpus
+ * and validating every journey, delivery, readiness and cleanup observation.
+ * Dynamic imports preserve the lightweight synchronous CLI rejection path.
+ */
+export async function validatePairedMapPerformanceReports(options = {}) {
+  const [
+    { createDeterministicMapStreamingFixture },
+    { validateMapStreamingCaptureReport },
+  ] = await Promise.all([
+    import('./mapStreamingFixture.mjs'),
+    import('./mapStreamingCapture.mjs'),
+  ]);
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const report of [options.baseline, options.candidate]) {
+    assert.equal(
+      report?.comparisonContract?.workloadId,
+      MAP_STREAMING_WORKLOAD_ID,
+    );
+    const capture = report.workload?.mapStreamingCapture;
+    validateMapStreamingCaptureReport(capture, {
+      fixture,
+      profile: capture?.buildProfile,
+    });
+  }
+  return validatePairedReports(options, true);
+}
+
+function validatePairedReports(
+  {
+    baseline,
+    candidate,
+    expectedAppCommits,
+    expectedComparisonProfile = null,
+  } = {},
+  mapManifestValidated = false,
+) {
   assert.ok(
     expectedAppCommits,
     'Explicit baseline and candidate application SHAs are required',
@@ -1869,6 +1905,18 @@ export function validatePairedPerformanceReports({
     const { timing: baseTiming, ...baseStaticContract } = base.contract;
     const { timing: candidateTiming, ...candidateStaticContract } =
       next.contract;
+    if (mapManifestValidated) {
+      // Only request-dependent inventory is excluded from cross-build equality.
+      // Each original inventory has already passed full native validation; keep
+      // the raw reports and expose the difference as delivery diagnostics.
+      const signature = ({ assets, ...delivery }) => delivery;
+      baseStaticContract.fixtureDelivery = signature(
+        baseStaticContract.fixtureDelivery,
+      );
+      candidateStaticContract.fixtureDelivery = signature(
+        candidateStaticContract.fixtureDelivery,
+      );
+    }
     equal(
       baseStaticContract,
       candidateStaticContract,
@@ -1976,12 +2024,33 @@ export function validatePairedPerformanceReports({
           : 'not-collected',
       },
       fixtureDeliveryDiagnostics: {
+        assetInventoryComparison: mapManifestValidated
+          ? 'independently-validated-pinned-manifest'
+          : 'identical-requested-inventories',
         baseline: {
+          requestedAssetCount: baseline.fixtureDelivery.assets.length,
+          assetsOnlyInThisCapture: baseline.fixtureDelivery.assets
+            .filter(
+              ({ path }) =>
+                !candidate.fixtureDelivery.assets.some(
+                  (asset) => asset.path === path,
+                ),
+            )
+            .map(({ path }) => path),
           fulfilledResponseCount:
             baseline.fixtureDelivery?.fulfilledAckCount ?? null,
           perSample: null,
         },
         candidate: {
+          requestedAssetCount: candidate.fixtureDelivery.assets.length,
+          assetsOnlyInThisCapture: candidate.fixtureDelivery.assets
+            .filter(
+              ({ path }) =>
+                !baseline.fixtureDelivery.assets.some(
+                  (asset) => asset.path === path,
+                ),
+            )
+            .map(({ path }) => path),
           fulfilledResponseCount:
             candidate.fixtureDelivery?.fulfilledAckCount ?? null,
           perSample: null,

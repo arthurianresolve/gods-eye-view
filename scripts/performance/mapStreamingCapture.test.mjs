@@ -30,6 +30,16 @@ import {
 } from '../qa-performance-build-smoke.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
+import { createObservedMapStreamingComparisonContract } from './captureComparisonContract.mjs';
+import {
+  validatePairedMapPerformanceReports,
+  validatePairedPerformanceReports,
+} from './pairedReport.mjs';
+import {
+  makeMapReport,
+  baselineCommit,
+  candidateCommit,
+} from './pairedReportTestFixtures.mjs';
 import {
   getMapFixtureBuildProfileGoogleApiKey,
   MAP_FIXTURE_BUILD_PROFILE_ID,
@@ -3213,6 +3223,115 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     timedFinalized.mapStreamingCapture.journeys.map(({ run }) => run),
     [1, 2, 3, 4, 5],
   );
+
+  // Exercise the real independent fixture validator before allowing different
+  // request inventories. No test-only bypass or caller-provided pass flag.
+  const extra = fixture.manifest.assets.find(
+    (asset) =>
+      asset.kind === 'webmercator-imagery-png' &&
+      !row.delivery.assets.some((delivered) => delivered.path === asset.path),
+  );
+  assert.ok(extra);
+  const extraOwner = structuredClone(row);
+  extraOwner.delivery.assets.push({
+    path: extra.path,
+    sha256: extra.sha256,
+    byteLength: extra.byteLength,
+    requests: 1,
+    fulfilledAckCount: 1,
+    cancelledCount: 0,
+  });
+  extraOwner.delivery.requestedCount++;
+  extraOwner.delivery.fulfilledAckCount++;
+  const extraFinalized = createFinalizedMapStreamingCaptureEvidence({
+    fixture,
+    journey,
+    journeys: timedFinalized.mapStreamingCapture.journeys,
+    profile,
+    documentDeliveries: [extraOwner],
+  });
+  const pairedReport = (commit, evidence) => {
+    const value = makeMapReport(commit);
+    value.workload.fixture = { id: fixture.id, sha256: fixture.manifestSha256 };
+    value.workload.mapStreamingCapture = structuredClone(
+      evidence.mapStreamingCapture,
+    );
+    for (const capturedJourney of value.workload.mapStreamingCapture.journeys)
+      for (const transition of capturedJourney.transitions.slice(1))
+        transition.settledAtMs = transition.actualStartMs + 20;
+    value.fixtureDelivery = value.workload.mapStreamingCapture.fixtureDelivery;
+    value.comparisonContract = createObservedMapStreamingComparisonContract({
+      fixture,
+      mapStreamingCapture: value.workload.mapStreamingCapture,
+      environment: value.environment,
+      workload: value.workload,
+    });
+    return value;
+  };
+  const paired = {
+    baseline: pairedReport(baselineCommit, timedFinalized),
+    candidate: pairedReport(candidateCommit, extraFinalized),
+    expectedAppCommits: {
+      baseline: baselineCommit,
+      candidate: candidateCommit,
+    },
+  };
+  const beforeComparison = JSON.stringify(paired);
+  assert.throws(
+    () => validatePairedPerformanceReports(paired),
+    /map comparison contracts differ/,
+  );
+  const accepted = await validatePairedMapPerformanceReports(paired);
+  assert.equal(accepted.status, 'comparable');
+  assert.equal(
+    accepted.fixtureDeliveryDiagnostics.assetInventoryComparison,
+    'independently-validated-pinned-manifest',
+  );
+  assert.deepEqual(
+    accepted.fixtureDeliveryDiagnostics.candidate.assetsOnlyInThisCapture,
+    [extra.path],
+  );
+  assert.equal(
+    JSON.stringify(paired),
+    beforeComparison,
+    'Raw evidence is never rewritten.',
+  );
+  for (const mutate of [
+    (value) => {
+      value.fixtureDelivery.assets[0].sha256 = '0'.repeat(64);
+    },
+    (value) => {
+      value.fixtureDelivery.assets[0].path = 'imagery/unknown.png';
+    },
+    (value) => {
+      value.fixtureDelivery.pendingCount = 1;
+    },
+    (value) => {
+      value.fixtureDelivery.errorObservationCount = 1;
+    },
+    (value) => {
+      value.manifestSha256 = '0'.repeat(64);
+    },
+    (value) => {
+      value.documentDeliveries[0].release.confirmed = false;
+    },
+    (value) => {
+      value.fixtureDelivery.assets.splice(0, 1);
+    },
+    (value) => {
+      value.journeys[0].initialState.photorealSelectedTiles = 0;
+    },
+    (value) => {
+      value.journeys[0].route.start.longitude = 0;
+    },
+    (value) => {
+      value.journeys[0].transitions[1].state.settings.resolutionScale = 0.5;
+    },
+  ]) {
+    const malformed = structuredClone(paired);
+    mutate(malformed.candidate.workload.mapStreamingCapture);
+    await assert.rejects(validatePairedMapPerformanceReports(malformed));
+  }
 
   const zeroCacheSettings = structuredClone(report);
   const settingsSnapshots = [
