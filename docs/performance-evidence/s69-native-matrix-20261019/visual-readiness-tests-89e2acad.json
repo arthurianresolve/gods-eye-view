@@ -1,0 +1,64 @@
+{
+  "schema": "gev-visual-readiness-unit-review/v1",
+  "reviewedAt": "2026-10-19T16:10:53.266Z",
+  "candidateCommit": "89e2acada829e92139fec5f2fd8d2c4d08afa390",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "status": "passed",
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "files": [
+        "scripts/performance/runFinalVisualQualification.test.mjs",
+        "scripts/performance/visualPresentationBoundary.test.mjs"
+      ],
+      "code": 0,
+      "signal": null,
+      "summary": [
+        "ℹ tests 17",
+        "ℹ pass 17",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 115.025546"
+      ],
+      "logSha256": "d969b0041f31ce730e4e15e808ea6493f4fa22b510b87b04477421619dc99f2e"
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "files": [
+        "scripts/performance/runFinalVisualQualification.test.mjs",
+        "scripts/performance/visualPresentationBoundary.test.mjs"
+      ],
+      "code": 0,
+      "signal": null,
+      "summary": [
+        "ℹ tests 17",
+        "ℹ pass 17",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 119.02469"
+      ],
+      "logSha256": "715f503ab7b46fe5c08cd35bb3d83d9868f292f644c5cf39a44fccbc9e491ba1"
+    }
+  ],
+  "files": [
+    {
+      "name": "validation.json",
+      "bytes": 1291,
+      "sha256": "f1fa12371e459807b9a749b58b8983c048c2aee3abb5dbdfc5ca650061478e68"
+    },
+    {
+      "name": "node24.log",
+      "bytes": 1598,
+      "sha256": "d969b0041f31ce730e4e15e808ea6493f4fa22b510b87b04477421619dc99f2e"
+    },
+    {
+      "name": "node26.log",
+      "bytes": 1596,
+      "sha256": "715f503ab7b46fe5c08cd35bb3d83d9868f292f644c5cf39a44fccbc9e491ba1"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-readiness-89e2acad-validation",
+  "scope": "Presentation readiness and lifecycle unit tests on Linux. PNG tests use the Windows/hosted environments because this VM CPU does not support the native Sharp binary; no hardware acceptance is inferred."
+}

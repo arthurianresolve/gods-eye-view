@@ -1,0 +1,91 @@
+{
+  "schema": "gev-recorded-pose-runtime-validation-review/v1",
+  "reviewedAt": "2026-10-19T15:48:42.753Z",
+  "status": "passed",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "negativeControlCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "automaticValidation": [
+    {
+      "version": "24",
+      "code": 0,
+      "summary": [
+        "# tests 158",
+        "# suites 0",
+        "# pass 158",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 7986.883834"
+      ],
+      "log": "node24.log",
+      "sha256": "4acd81c78885d2f1bc38b3cc984724897f6de41ee03965028c7e0c849b01055f"
+    },
+    {
+      "version": "26",
+      "code": 0,
+      "summary": [
+        "# tests 158",
+        "# suites 0",
+        "# pass 158",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 7445.853945"
+      ],
+      "log": "node26.log",
+      "sha256": "35ac8d9ff96c6ab68999aebafecfff95fe333c898bc797c065aef4e8cd95aa92"
+    },
+    {
+      "version": "26",
+      "code": 1,
+      "summary": [
+        "# tests 14",
+        "# suites 0",
+        "# pass 9",
+        "# fail 5",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 2843.875419"
+      ],
+      "log": "negative-original-runtime.log",
+      "sha256": "afd9ba972b493994906b0ba2ca4bc47c04ee1f9c4bc860b9155688d69e28eca7"
+    }
+  ],
+  "negativeControl": {
+    "method": "Run the new regression tests against the original immutable runtime modules, with all their relative imports resolving in the original checkout.",
+    "loaderSha256": "283f17a82352630e7f7f6e3028ac07d48d3717f5d6f41760ae706d23341a50c1",
+    "redirected": ["motion.js", "records.js", "snapshotRenderer.js"]
+  },
+  "files": [
+    {
+      "name": "validation.json",
+      "bytes": 6012,
+      "sha256": "963b09e6583a01d386d227553a510c7057aca20b924a81f7e92b7c138d316c8a"
+    },
+    {
+      "name": "node24.log",
+      "bytes": 34760,
+      "sha256": "4acd81c78885d2f1bc38b3cc984724897f6de41ee03965028c7e0c849b01055f"
+    },
+    {
+      "name": "node26.log",
+      "bytes": 34757,
+      "sha256": "35ac8d9ff96c6ab68999aebafecfff95fe333c898bc797c065aef4e8cd95aa92"
+    },
+    {
+      "name": "negative-original-runtime.log",
+      "bytes": 8673,
+      "sha256": "afd9ba972b493994906b0ba2ca4bc47c04ee1f9c4bc860b9155688d69e28eca7"
+    },
+    {
+      "name": "negative-control-loader.mjs",
+      "bytes": 659,
+      "sha256": "283f17a82352630e7f7f6e3028ac07d48d3717f5d6f41760ae706d23341a50c1"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/replay-candidate-b3c49b19-validation",
+  "scope": "Focused recorded aircraft, tracking, source transition and qualification consumer tests. Original runtime fails five assertions from the new regression tests. This is not hardware qualification or a complete CI suite."
+}

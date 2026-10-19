@@ -1,6 +1,29 @@
 # Cesium performance plan
 
-The latest measured candidate is `d8ef9002`, which corrects cancelled CCTV thumbnail
+The current application candidate is `b3c49b19`. It fixes recorded-aircraft
+position ownership: paused and backward seeks use the selected observation,
+without live-clock extrapolation or unrelated live history. All 158 focused
+regressions pass on each of Node 24 and 26 on VM105; the original runtime fails
+five of the new assertions. Eight fleet and eight tracked-position observations
+also pass on the physical Windows UHD 620, with foreground and normal browser
+cleanup verified. These are correctness results, not latency or stability passes.
+The [runtime](performance-evidence/s69-native-matrix-20261019/replay-runtime-tests-b3c49b19.json)
+and [hardware](performance-evidence/s69-native-matrix-20261019/replay-hardware-b3c49b19.json)
+receipts preserve the exact revisions and failed diagnostic attempts.
+
+QA-only producer `89e2acad` now requires two consecutive completed render/layout
+boundaries with stable scroll geometry, focus and pointer position before a
+visual capture. It retains rejected attempts and uses the unchanged pixel
+policy. Its 17 presentation-readiness tests pass on both VM Node versions;
+hardware validation is pending. Exact-candidate dam/cable measurements are in
+progress. The remaining matrix, visual comparison, local-control/replay latency,
+sampled peak heap, signed-package preflight and final Ampfing soak must qualify
+`b3c49b19` before deployment. The separately labeled `3141ffe3` comparison control
+contains only the baseline's weather and recorded-position correctness fixes;
+it will be used for replay latency and sampled heap, not relabeled as the
+original baseline. Production remains at `e7a878e`.
+
+The previous measured candidate, `d8ef9002`, corrects cancelled CCTV thumbnail
 ownership without changing image quality or refresh cadence. The native
 reproduction, full-app intervention and bounded ownership census confirm the
 cleanup behavior. A separate allocation-cohort diagnostic shows previous
@@ -58,8 +81,9 @@ The stronger replay witness has exposed a correctness blocker in both the
 original `e7a878e` baseline and `d8ef9002`: source and analyst coordinates match
 the selected recording, but the displayed aircraft continues along its live
 trajectory. All eight observations per build reproduce the failure on the
-physical UHD 620. A recorded-position ownership correction is being reviewed.
-It requires a new application candidate and its own applicable validation;
+physical UHD 620. A recorded-position ownership correction is implemented in
+`b3c49b19` and passes the focused automatic and physical correctness checks above.
+It requires its own applicable performance and stability validation;
 the passing `d8ef9002` soak and comparisons cannot be relabeled for that commit.
 Twenty actual local controls, twenty loaded moving-recording seeks, paired
 sampled peak heap, and the remaining four workload pairs are still required.

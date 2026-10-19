@@ -1,6 +1,35 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
-The current candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
+The current application candidate is `b3c49b19`. Its
+[recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes
+158/158 on each of VM105 Node 24.16.0 and 26.11.0, with five failing assertions
+against the original runtime. The [physical Windows check](replay-hardware-b3c49b19.json)
+verifies all eight fleet and eight tracked observations at the selected recorded
+position, including paused forward/backward seeks. It records the pinned Cesium
+visualization-bounds witness, native UHD 620 rendering, foreground confirmation
+and normal cleanup. Failed helper attempts remain archived. This establishes
+correctness only; the previous candidate's performance and soak evidence is not
+transferred to this revision.
+
+Visual producer `89e2acad` adds stable scroll geometry, active-element and pointer
+observations. A capture requires two consecutive completed render/layout
+boundaries with unchanged inputs, followed by unchanged capture boundaries.
+All rejected attempts remain in the report. The
+[17 readiness/lifecycle tests](visual-readiness-tests-89e2acad.json) pass on each
+VM Node version; the VM's unsupported native Sharp tests remain assigned to
+Windows/hosted validation. Hardware validation of the new producer is pending.
+No mask, pixel threshold, fixture population or visual setting changed.
+
+Dam/cable captures for `b3c49b19` are in progress. Further required evidence is
+the remaining matrix and visual comparison, twenty local-control changes,
+twenty loaded replay seeks, sampled peak heap, an exact signed-package preflight,
+and a new final Ampfing soak. Replay/heap comparison control `3141ffe3` contains
+the original baseline plus the same weather and recorded-pose correctness fixes,
+without the candidate's performance optimizations. It is explicitly distinct
+from the original baseline and has not yet supplied measured comparison results.
+Production still serves `e7a878e`.
+
+The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
 a native DOM ownership leak reproduced on Chrome 155; the
 [intervention and engine census](image-cleanup-census-review.json) and
 [allocation-cohort review](allocation-cohort-review-d8ef.json) record the
@@ -86,8 +115,9 @@ Home/End seeks. Longitude error reaches about 0.06 degrees. The diagnostic ran
 on the physical UHD 620 with foreground and normal cleanup confirmed; original
 reports, source and synthetic recordings are hash-verified on VM105. The flight
 renderer still applies its live delay and forward-only history to recorded
-observations. A recorded-source ownership fix and new validation are required;
-this failure is not converted into a successful replay-latency measurement.
+observations. The correction in `b3c49b19` now passes the focused automatic and
+hardware checks above; this historical failure is not converted into a
+successful replay-latency measurement.
 
 Single weather startup shards can be read only as individual observations after
 their balanced parent envelope is validated. Their comparison-ineligible flags
