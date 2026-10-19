@@ -134,6 +134,10 @@ import {
   PAGE_OBSERVED_STARTUP_SEMANTICS,
 } from './performance/startupObservationMethod.mjs';
 import {
+  assertStartupCpuAttributionMode,
+  beginStartupCpuAttribution,
+} from './performance/startupCpuAttribution.mjs';
+import {
   createDepthPickAttributionIdentity,
   depthPickRetirementConfirmed,
   disposeDepthPickAttributionForPage as disposeDepthPickPageOwner,
@@ -222,6 +226,14 @@ const startupPageObservedEnabled = assertStartupObservationMode({
   enabled: args.includes('--startup-page-observed-v1'),
   startupOnlyShard,
   startupAttributionEnabled,
+});
+const startupCpuProfileEnabled = assertStartupCpuAttributionMode({
+  enabled: args.includes('--startup-cpu-profile'),
+  startupOnlyShard,
+  startupAttributionEnabled,
+  startupPageObservedEnabled,
+  firstMotionCpuProfileEnabled: args.includes('--first-motion-cpu-profile'),
+  artifactDirectory: option('--cpu-profile-artifact-directory', null),
 });
 const startupShardId = option('--startup-shard-id', null);
 const startupShardRole = option('--startup-role', null);
@@ -730,13 +742,20 @@ if (shaderProgramAttributionEnabled && !productionFlightFixture)
   throw new Error(
     '--shader-program-attribution requires --provider-fixture dense-investigation.',
   );
-if (firstMotionCpuProfileEnabled && !cpuProfileArtifactDirectory)
+if (
+  (firstMotionCpuProfileEnabled || startupCpuProfileEnabled) &&
+  !cpuProfileArtifactDirectory
+)
   throw new Error(
-    '--first-motion-cpu-profile requires --cpu-profile-artifact-directory.',
+    'A CPU profile mode requires --cpu-profile-artifact-directory.',
   );
-if (!firstMotionCpuProfileEnabled && cpuProfileArtifactDirectory)
+if (
+  !firstMotionCpuProfileEnabled &&
+  !startupCpuProfileEnabled &&
+  cpuProfileArtifactDirectory
+)
   throw new Error(
-    '--cpu-profile-artifact-directory requires --first-motion-cpu-profile.',
+    '--cpu-profile-artifact-directory requires a CPU profile mode.',
   );
 if (
   hostedFixture &&
@@ -1042,6 +1061,16 @@ const failureProgress = {
             createAustinOperatingReadinessHistoryEnvelope(),
         }
       : {}),
+    ...(startupCpuProfileEnabled
+      ? {
+          startupCpuProfile: {
+            schema: 'gev-startup-cpu-attribution-diagnostic/v1',
+            diagnosticOnly: true,
+            performanceAcceptanceEligible: false,
+            status: 'pending',
+          },
+        }
+      : {}),
     ...(firstMotionCpuProfileEnabled
       ? {
           providerSampleCpuProfiles: {
@@ -1126,6 +1155,7 @@ let failureReportWritten = false;
 let activePage = null;
 let startupOnlySamples = null;
 let startupOnlyGraphics = null;
+let activeStartupCpuProfileWindow = null;
 let finalizeReceiptOnlyDocumentAudit = null;
 let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
 let activeDocumentId = mainCaptureDocumentIdentity.documentId;
@@ -1168,6 +1198,25 @@ function providerSampleCpuProfileEnvelope() {
         : 'incomplete',
     profiles: providerSampleCpuProfiles,
   };
+}
+
+async function finishStartupCpuProfileWindow({
+  outcome,
+  viewerBoundary = null,
+  loadingHiddenBoundary = null,
+} = {}) {
+  const active = activeStartupCpuProfileWindow;
+  if (!active) return null;
+  activeStartupCpuProfileWindow = null;
+  const record = await active.finish({
+    outcome,
+    viewerBoundary,
+    loadingHiddenBoundary,
+  });
+  failureProgress.workload.startupCpuProfile = record;
+  if (failureProgress.current)
+    failureProgress.current.startupCpuProfile = record;
+  return record;
 }
 
 function shouldProfileProviderSample(scenario, run) {
@@ -3132,6 +3181,17 @@ try {
         ...startupForegroundActivation,
       };
     }
+    let startupCpuProfileRecord = null;
+    if (startupCpuProfileEnabled) {
+      activeStartupCpuProfileWindow = await beginStartupCpuAttribution({
+        page: startupPage,
+        artifactDirectory: cpuProfileArtifactDirectory,
+        fileName: `startup-${startupShardId
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')}-cpu-profile.json`,
+      });
+      await activeStartupCpuProfileWindow.started;
+    }
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
     const navigationCompletedAtMs =
@@ -3279,6 +3339,17 @@ try {
       loaderHiddenObservedAtMs = startupAttributionEnabled
         ? loaderHiddenHostObservedAtMs
         : null;
+    }
+    if (startupCpuProfileEnabled) {
+      startupCpuProfileRecord = await finishStartupCpuProfileWindow({
+        outcome: 'ready',
+        viewerBoundary: {
+          hostObservedElapsedMs: viewerObservedAtMs - startedAt,
+        },
+        loadingHiddenBoundary: {
+          hostObservedElapsedMs: loaderHiddenHostObservedAtMs - startedAt,
+        },
+      });
     }
     if (
       captureProvenance &&
@@ -3440,6 +3511,9 @@ try {
       initialSettleMs,
       ...(startupTimingEvidence ? { startupTimingEvidence } : {}),
       ...(startupAttribution ? { startupAttribution } : {}),
+      ...(startupCpuProfileRecord
+        ? { startupCpuProfile: startupCpuProfileRecord }
+        : {}),
       ...(startupScene
         ? {
             settings: startupScene.settings,
@@ -7854,6 +7928,20 @@ try {
   }
 } catch (error) {
   captureFailure = error;
+  if (activeStartupCpuProfileWindow) {
+    try {
+      await finishStartupCpuProfileWindow({ outcome: 'failed' });
+    } catch {
+      failureProgress.workload.startupCpuProfile = {
+        schema: 'gev-startup-cpu-attribution-diagnostic/v1',
+        diagnosticOnly: true,
+        performanceAcceptanceEligible: false,
+        status: 'incomplete',
+        outcome: 'failed',
+        cleanupError: true,
+      };
+    }
+  }
   if (mapStreamingWorkloadSelected && mapStreamingModule) {
     try {
       if (error?.mapStreamingJourneyFailure) {
@@ -7898,6 +7986,14 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  if (activeStartupCpuProfileWindow) {
+    try {
+      await finishStartupCpuProfileWindow({ outcome: 'failed' });
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
   weatherEffectsFixtureAbortController?.abort(
     new Error('Weather fixture capture ended.'),
   );
@@ -8137,6 +8233,9 @@ if (startupOnlyShard && !captureFailure) {
       },
       ...(startupAttributionEnabled
         ? { startupAttribution: sample.startupAttribution }
+        : {}),
+      ...(startupCpuProfileEnabled
+        ? { startupCpuProfile: sample.startupCpuProfile || null }
         : {}),
       browserClose: {
         closeApiCompleted: browserCloseApiCompleted,

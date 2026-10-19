@@ -458,6 +458,45 @@ test('CPU profile URL allowlist treats relative and local absolute paths equally
   );
 });
 
+test('CPU profile allows only fixed local Cesium bundle paths and redacts URL variants', () => {
+  const hash = 'a'.repeat(64);
+  const profileData = profile();
+  const urls = [
+    '/cesium/Cesium.js',
+    `/cesium/${hash}/Cesium.js`,
+    `http://127.0.0.1:4173/cesium/${hash}/Cesium.js`,
+    `http://localhost:4173/cesium/${hash}/Cesium.js?token=secret`,
+    `https://cdn.example/cesium/${hash}/Cesium.js`,
+    'http://127.0.0.1:4173/cesium/other/Workers/create.js',
+  ];
+  profileData.nodes = urls.map((url, index) => ({
+    id: index + 1,
+    callFrame: {
+      functionName: `work${index}`,
+      scriptId: '7',
+      url,
+      lineNumber: 1,
+      columnNumber: 1,
+    },
+  }));
+  profileData.samples = urls.map((_, index) => index + 1);
+  profileData.timeDeltas = urls.map(() => 100);
+  const normalized = normalizeCpuProfile(profileData);
+  assert.deepEqual(
+    normalized.profile.nodes.map((node) => node.callFrame.url),
+    [
+      '/cesium/Cesium.js',
+      `/cesium/${hash}/Cesium.js`,
+      `/cesium/${hash}/Cesium.js`,
+      '[non-fixture source]',
+      '[non-fixture source]',
+      '[non-fixture source]',
+    ],
+  );
+  assert.equal(JSON.stringify(normalized).includes('secret'), false);
+  assert.equal(JSON.stringify(normalized).includes('cdn.example'), false);
+});
+
 test('profiler command timeouts are bounded while the render operation still runs', async () => {
   const artifactDirectory = await mkdtemp(
     path.join(os.tmpdir(), 'gev-boundary-profile-'),
