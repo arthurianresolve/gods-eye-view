@@ -84,6 +84,29 @@ export function readQualificationStateInPage({
   };
 }
 
+/** Self-contained predicate, evaluated immediately before the debugger statement. */
+export function isVisualSnapshotReadyToPause(snapshot) {
+  const hud = snapshot?.hud;
+  return Boolean(
+    snapshot?.phase === 0 &&
+    snapshot.reason === null &&
+    hud?.recordingVisible === true &&
+    hud.summaryTypingComplete === true &&
+    typeof hud.summary === 'string' &&
+    hud.summary.length > 0 &&
+    hud.documentVisible === true &&
+    hud.documentFocused === true &&
+    hud.gaze?.status === 'ready' &&
+    hud.hudDisplay !== 'none' &&
+    Number.isFinite(hud.hudOpacity) &&
+    (hud.hudVisible === true
+      ? hud.hudVisibility === 'visible' && hud.hudOpacity >= 0.999
+      : hud.hudVisible === false &&
+        hud.hudVisibility === 'hidden' &&
+        hud.hudOpacity <= 0.001),
+  );
+}
+
 /** Read-only paused-frame evidence for the detection scanline phase. */
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const boundary = window.__gevVisualPresentationBoundary?.read?.();

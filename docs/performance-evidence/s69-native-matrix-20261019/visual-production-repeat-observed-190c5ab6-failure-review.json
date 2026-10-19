@@ -1,0 +1,58 @@
+{
+  "schema": "gev-failed-visual-diagnostic-review/v1",
+  "reviewedAt": "2026-10-19T23:00:23.504Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "producerCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "applicationCommits": {
+    "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "error": {
+    "name": "AssertionError",
+    "message": "hud-visible paused initial phase\n\n2 !== 0\n"
+  },
+  "groups": [
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-visible",
+      "status": "failed",
+      "count": 0,
+      "identicalEncodedPngs": false,
+      "presentationStateRetained": true,
+      "error": {
+        "name": "AssertionError",
+        "message": "hud-visible paused initial phase\n\n2 !== 0\n"
+      }
+    }
+  ],
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-production-repeat-observed-190c5ab6-aa400",
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 34496,
+      "sha256": "17828c6e5aa8e25057fe6912deede1f0519131c80e1328879073c8df69e2f45b"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-production-repeat-observed-190c5ab6-aa400.mjs",
+      "bytes": 30343,
+      "sha256": "c0d90d7d3e50d66d6713af4b9234fdd8922576d533a26519525ef912453c58c5"
+    }
+  ],
+  "scope": "Incomplete ABBA diagnostic, rejected before its first screenshot. The baseline readiness proof had the recording indicator visible, while the subsequent paused read had it hidden and scanline phase 2. The full readiness and paused-read states are retained. This demonstrates that host readiness and the later debugger pause are not one atomic observation. All normal browser and interception cleanup is retained; no visual-equivalence acceptance is granted."
+}

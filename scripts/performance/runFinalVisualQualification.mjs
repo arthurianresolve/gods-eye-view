@@ -42,6 +42,7 @@ import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
+  isVisualSnapshotReadyToPause,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
@@ -538,6 +539,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             page,
             readCallback: readVisualSnapshotPhaseInPage,
             readCallbackArgs: { expectedHudVisible },
+            pauseWhen: isVisualSnapshotReadyToPause,
             screenshot: (readBefore) => {
               const settled = presentationStayedSettled(
                 readBefore?.hud,

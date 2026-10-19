@@ -54,6 +54,7 @@ export async function captureWithDebuggerPause({
   page,
   readCallback = null,
   readCallbackArgs,
+  pauseWhen = null,
   screenshot,
   pauseTimeoutMs,
   operationTimeoutMs,
@@ -71,6 +72,28 @@ export async function captureWithDebuggerPause({
     'operationTimeoutMs',
   );
   const expression = callbackExpression(readCallback, readCallbackArgs);
+  if (
+    pauseWhen !== null &&
+    (typeof pauseWhen !== 'function' ||
+      !expression ||
+      pauseWhen.toString().length > 4096)
+  )
+    throw new TypeError(
+      'An atomic pause guard requires a bounded predicate and a read callback.',
+    );
+  // The predicate and debugger statement execute in the same browser task.
+  // Host-side readiness followed by a separate pause can cross an animation
+  // boundary. Polling here never takes or selects a screenshot: it only waits
+  // for the declared phase, without changing any application input or clock.
+  const guardedExpression =
+    pauseWhen === null
+      ? null
+      : `(() => {
+    const ready = (${pauseWhen.toString()})(${expression});
+    if (typeof ready !== 'boolean') throw new TypeError('Pause guard must return a boolean.');
+    if (ready) debugger;
+    return ready;
+  })()\n//# sourceURL=gev-qualification-guarded-pause.js`;
   const session = await page.createCDPSession();
   if (!session?.send || !session?.on || !session?.detach)
     throw new TypeError('The owned CDP session is incomplete.');
@@ -80,6 +103,8 @@ export async function captureWithDebuggerPause({
   let pauseResolve;
   let pauseReject;
   let pauseTimer;
+  let guardPollTimer;
+  let guardChecks = 0;
   const pausePromise = new Promise((resolve, reject) => {
     pauseResolve = resolve;
     pauseReject = reject;
@@ -119,20 +144,54 @@ export async function captureWithDebuggerPause({
     // Interrupting Cesium while it is submitting a frame can leave the
     // compositor waiting for that stack to unwind, blocking a paused capture.
     // This command completes only after resume; awaiting it here would deadlock.
-    void session
-      .send('Runtime.evaluate', {
-        expression: 'debugger;\n//# sourceURL=gev-qualification-pause.js',
-        silent: true,
-      })
-      .then(
-        () => {
-          if (!pausedEvent && !closed)
-            pauseReject(new Error('Pause task completed without pausing.'));
-        },
-        (error) => {
-          if (!closed) pauseReject(error);
-        },
-      );
+    if (guardedExpression) {
+      while (!pausedEvent) {
+        pauseRemaining('Atomic pause guard');
+        guardChecks++;
+        const outcome = await Promise.race([
+          pausePromise.then((event) => ({ kind: 'paused', event })),
+          session
+            .send('Runtime.evaluate', {
+              expression: guardedExpression,
+              returnByValue: true,
+              silent: true,
+            })
+            .then((result) => ({ kind: 'evaluated', result })),
+        ]);
+        if (outcome.kind === 'paused') break;
+        if (
+          outcome.result?.exceptionDetails ||
+          outcome.result?.result?.subtype === 'error'
+        )
+          throw new Error('Atomic pause guard failed.');
+        if (outcome.result?.result?.value !== false)
+          throw new Error('Guarded pause task completed without pausing.');
+        await Promise.race([
+          pausePromise,
+          new Promise((resolve) => {
+            guardPollTimer = setTimeout(
+              resolve,
+              Math.min(50, pauseRemaining('Atomic pause guard')),
+            );
+          }),
+        ]);
+        clearTimeout(guardPollTimer);
+      }
+    } else
+      void session
+        .send('Runtime.evaluate', {
+          expression: 'debugger;\n//# sourceURL=gev-qualification-pause.js',
+          silent: true,
+        })
+        .then(
+          () => {
+            if (!pausedEvent && !closed)
+              pauseReject(new Error('Pause task completed without pausing.'));
+          },
+          (error) => {
+            if (!closed) pauseReject(error);
+          },
+        );
     const event = await pausePromise;
     const callFrameId = event?.callFrames?.[0]?.callFrameId;
     if (!callFrameId) throw new Error('Debugger pause has no top call frame.');
@@ -176,6 +235,15 @@ export async function captureWithDebuggerPause({
     result = {
       pause: {
         boundary: 'runtime-task',
+        ...(guardedExpression
+          ? {
+              guard: {
+                method: 'atomic-read-then-debugger/v1',
+                checks: guardChecks,
+                pollIntervalMs: 50,
+              },
+            }
+          : {}),
         reason:
           typeof event?.reason === 'string' ? event.reason.slice(0, 80) : null,
       },
@@ -188,6 +256,7 @@ export async function captureWithDebuggerPause({
   } finally {
     closed = true;
     clearTimeout(pauseTimer);
+    clearTimeout(guardPollTimer);
     session.off?.('Debugger.paused', onPaused);
     if (!session.off) session.removeListener?.('Debugger.paused', onPaused);
     if (pausedEvent) {

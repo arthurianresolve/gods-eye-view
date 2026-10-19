@@ -5,8 +5,67 @@ import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
+  isVisualSnapshotReadyToPause,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
+
+test('atomic visual eligibility rejects advancing phases and incomplete presentation', () => {
+  const ready = {
+    phase: 0,
+    reason: null,
+    hud: {
+      recordingVisible: true,
+      summaryTypingComplete: true,
+      summary: 'ready',
+      documentVisible: true,
+      documentFocused: true,
+      gaze: { status: 'ready' },
+      hudDisplay: 'block',
+      hudOpacity: 1,
+      hudVisible: true,
+      hudVisibility: 'visible',
+    },
+  };
+  // Execute the exact self-contained function used in the browser task.
+  const eligible = vm.runInNewContext(
+    `(${isVisualSnapshotReadyToPause.toString()})`,
+  );
+  assert.equal(eligible(ready), true);
+  for (const patch of [
+    { phase: 2 },
+    { phase: null },
+    { reason: 'hud-state-unsettled' },
+  ])
+    assert.equal(eligible({ ...ready, ...patch }), false);
+  for (const patch of [
+    { recordingVisible: false },
+    { summaryTypingComplete: false },
+    { summary: '' },
+    { documentVisible: false },
+    { documentFocused: false },
+    { gaze: { status: 'pending' } },
+    { hudOpacity: 0.5 },
+    { hudDisplay: 'none' },
+    { hudVisibility: 'hidden' },
+  ])
+    assert.equal(
+      eligible({ ...ready, hud: { ...ready.hud, ...patch } }),
+      false,
+    );
+  assert.equal(
+    eligible({
+      ...ready,
+      hud: {
+        ...ready.hud,
+        hudVisible: false,
+        hudOpacity: 0,
+        hudVisibility: 'hidden',
+      },
+    }),
+    true,
+  );
+  assert.equal(eligible(null), false);
+});
 
 function activationFixture(tilesLoaded) {
   const calls = [];

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
 
 function fakePage({
@@ -15,6 +16,7 @@ function fakePage({
   taskCompletesWithoutPause = false,
   enableGate = null,
   detachError = false,
+  guardContext = {},
 } = {}) {
   const events = new EventEmitter();
   const calls = [];
@@ -31,6 +33,18 @@ function fakePage({
       if (method === 'Runtime.evaluate' && pauseError)
         throw new Error('pause failed');
       if (method === 'Runtime.evaluate' && taskCompletesWithoutPause) return {};
+      if (
+        method === 'Runtime.evaluate' &&
+        params.expression.includes('gev-qualification-guarded-pause.js')
+      ) {
+        let ready;
+        try {
+          ready = runInNewContext(params.expression, guardContext);
+        } catch (error) {
+          return { exceptionDetails: { text: error.message } };
+        }
+        if (!ready) return { result: { type: 'boolean', value: false } };
+      }
       if (method === 'Runtime.evaluate' && pauseOnEnable) {
         queueMicrotask(() =>
           events.emit('Debugger.paused', {
@@ -115,6 +129,112 @@ test('serializes bounded callback arguments into the paused evaluation', async (
   assert.equal(evaluations.length, 2);
   assert.match(evaluations[0].params.expression, /phase/);
   assert.match(evaluations[0].params.expression, /2/);
+});
+
+test('atomic guard waits for the declared phase without taking rejected screenshots', async () => {
+  const context = { samples: [{ phase: 2 }, { phase: 2 }, { phase: 0 }] };
+  const fake = fakePage({ guardContext: context });
+  let screenshots = 0;
+  const result = await captureWithDebuggerPause({
+    page: fake.page,
+    readCallback: () => globalThis.samples.shift(),
+    pauseWhen: (snapshot) => snapshot.phase === 0,
+    screenshot: async () => {
+      screenshots++;
+      return Buffer.from('png');
+    },
+    pauseTimeoutMs: 1000,
+  });
+  assert.equal(screenshots, 1);
+  assert.deepEqual(result.pause.guard, {
+    method: 'atomic-read-then-debugger/v1',
+    checks: 3,
+    pollIntervalMs: 50,
+  });
+  assert.equal(context.samples.length, 0);
+  assert.equal(
+    fake.calls.filter((c) => c.method === 'Runtime.evaluate').length,
+    3,
+  );
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+  assert.deepEqual(result.cleanup, {
+    resumed: true,
+    disabled: true,
+    detached: true,
+  });
+});
+
+test('atomic guard rejects thrown, asynchronous, and nonboolean predicates before capture', async () => {
+  for (const pauseWhen of [
+    () => {
+      throw new Error('bad guard');
+    },
+    async () => true,
+    () => 'true',
+  ]) {
+    const fake = fakePage();
+    let screenshots = 0;
+    await assert.rejects(
+      captureWithDebuggerPause({
+        page: fake.page,
+        readCallback: () => ({}),
+        pauseWhen,
+        screenshot: () => screenshots++,
+        pauseTimeoutMs: 100,
+      }),
+      /Atomic pause guard failed/,
+    );
+    assert.equal(screenshots, 0);
+    assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+    assert.equal(
+      fake.calls.some((c) => c.method === 'Debugger.resume'),
+      false,
+    );
+    assert.equal(fake.calls.at(-1).method, 'detach');
+  }
+});
+
+test('an unmet atomic guard times out without leaving a polling timer or late evaluation', async () => {
+  const fake = fakePage();
+  let screenshots = 0;
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      readCallback: () => ({ phase: 2 }),
+      pauseWhen: (snapshot) => snapshot.phase === 0,
+      screenshot: () => screenshots++,
+      pauseTimeoutMs: 20,
+    }),
+    /deadline exceeded/,
+  );
+  const count = fake.calls.length;
+  await new Promise((resolve) => setTimeout(resolve, 70));
+  assert.equal(fake.calls.length, count);
+  assert.equal(screenshots, 0);
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+  assert.equal(
+    fake.calls.some((c) => c.method === 'Debugger.resume'),
+    false,
+  );
+  assert.equal(fake.calls.at(-1).method, 'detach');
+});
+
+test('atomic guards require a bounded synchronous read/predicate contract', async () => {
+  for (const options of [
+    { pauseWhen: () => true },
+    { pauseWhen: 1, readCallback: () => ({}) },
+  ]) {
+    const fake = fakePage();
+    await assert.rejects(
+      captureWithDebuggerPause({
+        page: fake.page,
+        screenshot: fake.screenshot,
+        ...options,
+      }),
+      /atomic pause guard requires/,
+    );
+    assert.equal(fake.calls.length, 0);
+  }
 });
 
 test('rejects a pause without a top call frame and still disables/detaches', async () => {
