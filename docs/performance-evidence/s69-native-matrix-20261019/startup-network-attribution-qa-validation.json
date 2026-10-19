@@ -1,0 +1,62 @@
+{
+  "schema": "gev-startup-network-attribution-qa-validation/v1",
+  "startedAt": "2026-10-19T20:17:43.599Z",
+  "baseCommit": "4911f52f0cc77d63dda7ecfe17f119a4ff613809",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/performance/startupAttribution.mjs",
+      "sha256": "b2c4d0f035704c0712dda1ed546a3fb0a5c13afa4df49e290bb4b477a6d86ae7"
+    },
+    {
+      "name": "scripts/performance/startupAttribution.test.mjs",
+      "sha256": "1403411b3778d3e0834140eea59d91a83d0b3a074d06f500a4edfa80ca49a97a"
+    }
+  ],
+  "tests": [
+    "scripts/performance/startupAttribution.test.mjs"
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "9beae4b9d46417ae66c1ec2f19a006c26d520124c3d269c0d5c2dff5581a811b",
+      "summary": [
+        "ℹ tests 8",
+        "ℹ pass 8",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 70.80948"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "31d97593d8678bf66f4735bba562a46797b716032ead70f0333871d3bbc7430e",
+      "summary": [
+        "ℹ tests 8",
+        "ℹ pass 8",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 72.043029"
+      ]
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "logSha256": "d33efad59e5a2fb0c4ad88435d730c3cba8b25622e3b09b37619170953631239",
+      "summary": "Capture harness no-undef: 73 files passed."
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-network-attribution-review-20261019",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "priorValidationPreservedAt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-attribution-review-20261019",
+  "scope": "QA-only bounded redacted Resource Timing attribution. Observations are collected after the existing settled point; no request interception or runtime change. Existing readiness metrics and acceptance thresholds stay unchanged. Diagnostic reports cannot be used as performance acceptance.",
+  "completedAt": "2026-10-19T20:17:46.137Z"
+}

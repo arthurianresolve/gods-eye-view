@@ -101,9 +101,145 @@ test('startup attribution bounds locale, language, layer and timing fields', () 
     'responseStart',
     'startTime',
   ]);
+  const projected = attribution({
+    resourceTimingSummary: {
+      entryCount: 300,
+      summarizedEntryCount: 256,
+      omittedEntryCount: 44,
+      truncated: true,
+      originCounts: { sameOrigin: 200, crossOrigin: 56, unavailable: 0 },
+      initiatorCounts: { script: 80, privateType: 220 },
+      duration: { availableCount: 256, maxMs: 320 },
+      transferSize: {
+        availableCount: 2,
+        knownPositiveBytes: 2048,
+        zeroOrUnavailableCount: 254,
+      },
+      encodedBodySize: {
+        availableCount: 1,
+        knownPositiveBytes: 1024,
+        zeroOrUnavailableCount: 255,
+      },
+      providerClasses: {
+        tokenApi: {
+          count: 3,
+          durationAvailableCount: 3,
+          maxDurationMs: 51,
+          latestResponseEndMs: 60,
+        },
+      },
+      leakedUrl: 'https://private.example/path?token=secret',
+    },
+    mapIdentity: {
+      activeId: 'esri-imagery',
+      status: 'ready',
+      switchOrigin: 'automatic',
+      globeShown: true,
+      terrainProviderKind: 'cesium-terrain',
+      url: 'https://private.example/?token=secret',
+    },
+  });
+  assert.equal(projected.pageState.resourceTimingSummary.limit, 256);
+  assert.equal(
+    projected.pageState.resourceTimingSummary.coverage,
+    'bounded-retained-resource-entries-only',
+  );
+  assert.equal(projected.pageState.resourceTimingSummary.entryCount, 300);
+  assert.equal(projected.pageState.resourceTimingSummary.omittedEntryCount, 44);
+  assert.equal(
+    projected.pageState.resourceTimingSummary.initiatorCounts.other,
+    null,
+  );
+  assert.equal(projected.pageState.resourceTimingSummary.bufferCapacity, null);
+  assert.equal(
+    projected.pageState.resourceTimingSummary.droppedEntryCount,
+    null,
+  );
+  assert.equal(
+    projected.pageState.resourceTimingSummary.providerClasses.tokenApi.count,
+    3,
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(projected.pageState.mapIdentity)),
+    {
+      activeStackId: 'esri-imagery',
+      status: 'ready',
+      switchOrigin: 'automatic',
+      globeShown: true,
+      terrainProviderKind: 'cesium-terrain',
+    },
+  );
+  assert.equal(JSON.stringify(projected).includes('private.example'), false);
+  assert.equal(JSON.stringify(projected).includes('secret'), false);
 });
 
 test('serialized page-state observer reports real locale, enabled layers and navigation timing', () => {
+  const resourceEntries = [
+    {
+      name: 'https://app.example/api/google/tiles-token?token=secret',
+      initiatorType: 'fetch',
+      duration: 12,
+      responseEnd: 15,
+      transferSize: 100,
+      encodedBodySize: 90,
+    },
+    {
+      name: 'https://tile.googleapis.com/v1/3dtiles/root.json?key=secret',
+      initiatorType: 'img',
+      duration: 44,
+      responseEnd: 50,
+      transferSize: 0,
+      encodedBodySize: 0,
+    },
+    {
+      name: 'http://[invalid',
+      initiatorType: 'private initiator',
+      duration: 5,
+      responseEnd: 10,
+      transferSize: 20,
+      encodedBodySize: 10,
+    },
+    {
+      name: 'https://api.cesium.com/v1/assets/secret/endpoint?access_token=secret',
+      initiatorType: 'xmlhttprequest',
+      duration: 22,
+      responseEnd: 23,
+      transferSize: 30,
+      encodedBodySize: 20,
+    },
+    {
+      name: 'https://services.arcgisonline.com/ArcGIS/rest?token=secret',
+      initiatorType: 'img',
+      duration: 31,
+      responseEnd: 32,
+      transferSize: 0,
+      encodedBodySize: 0,
+    },
+    {
+      name: 'https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json',
+      initiatorType: 'fetch',
+      duration: 16,
+      responseEnd: 17,
+      transferSize: 0,
+      encodedBodySize: 0,
+    },
+    {
+      name: 'https://tile.openstreetmap.org/0/0/0.png',
+      initiatorType: 'img',
+      duration: 17,
+      responseEnd: 18,
+      transferSize: 0,
+      encodedBodySize: 0,
+    },
+    ...Array.from({ length: 251 }, (_, index) => ({
+      name: `https://app.example/assets/resource-${index}.js?token=secret`,
+      initiatorType: 'fetch',
+      duration: 1,
+      responseEnd: 2,
+      transferSize: 0,
+      encodedBodySize: 0,
+    })),
+  ];
   const readState = runInNewContext(
     `(${readStartupAttributionPageState.toString()})`,
     {
@@ -115,16 +251,39 @@ test('serialized page-state observer reports real locale, enabled layers and nav
               { id: 'cctv', enabled: false },
             ],
           },
+          mapStackController: {
+            getState: () => ({
+              activeId: 'esri-imagery',
+              status: 'ready',
+              switchOrigin: 'manual',
+              activeStack: {
+                url: 'https://private.example/with?token=secret',
+              },
+            }),
+          },
+          viewer: {
+            scene: { globe: { show: true } },
+            terrainProvider: {
+              constructor: { name: 'CesiumTerrainProvider' },
+            },
+          },
         },
       },
       performance: {
         getEntriesByType: (kind) =>
           kind === 'navigation'
             ? [{ startTime: 0, duration: 500, loadEventEnd: 500 }]
-            : [],
+            : kind === 'resource'
+              ? resourceEntries
+              : [],
       },
       document: { documentElement: { lang: 'de' } },
       navigator: { languages: ['de-DE', 'en-US'] },
+      location: {
+        href: 'https://app.example/start?credential=secret',
+        origin: 'https://app.example',
+      },
+      URL,
     },
   );
   const state = readState();
@@ -135,6 +294,125 @@ test('serialized page-state observer reports real locale, enabled layers and nav
   assert.equal(state.navigationTiming.duration, 500);
   assert.equal(state.navigationTiming.loadEventEnd, 500);
   assert.equal(state.navigationTiming.responseStart, undefined);
+  assert.equal(state.resourceTimingSummary.entryCount, 258);
+  assert.equal(state.resourceTimingSummary.summarizedEntryCount, 256);
+  assert.equal(state.resourceTimingSummary.omittedEntryCount, 2);
+  assert.equal(state.resourceTimingSummary.truncated, true);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(state.resourceTimingSummary.originCounts)),
+    {
+      sameOrigin: 250,
+      crossOrigin: 5,
+      unavailable: 1,
+    },
+  );
+  assert.equal(state.resourceTimingSummary.initiatorCounts.script, 0);
+  assert.equal(state.resourceTimingSummary.initiatorCounts.img, 3);
+  assert.equal(state.resourceTimingSummary.initiatorCounts.fetch, 251);
+  assert.equal(state.resourceTimingSummary.initiatorCounts.xmlhttprequest, 1);
+  assert.equal(state.resourceTimingSummary.initiatorCounts.other, 1);
+  assert.equal(state.resourceTimingSummary.duration.maxMs, 44);
+  assert.equal(state.resourceTimingSummary.transferSize.availableCount, 3);
+  assert.equal(
+    state.resourceTimingSummary.transferSize.zeroOrUnavailableCount,
+    253,
+  );
+  assert.equal(state.resourceTimingSummary.providerClasses.tokenApi.count, 1);
+  assert.equal(state.resourceTimingSummary.providerClasses.google.count, 1);
+  assert.equal(
+    state.resourceTimingSummary.providerClasses.sameOriginAssets.count,
+    249,
+  );
+  assert.equal(state.resourceTimingSummary.providerClasses.unknown.count, 1);
+  assert.equal(state.resourceTimingSummary.providerClasses.cesium.count, 1);
+  assert.equal(state.resourceTimingSummary.providerClasses.esri.count, 1);
+  assert.equal(state.resourceTimingSummary.providerClasses.reearth.count, 1);
+  assert.equal(state.resourceTimingSummary.providerClasses.osm.count, 1);
+  assert.equal(
+    state.resourceTimingSummary.providerClasses.google.maxDurationMs,
+    44,
+  );
+  assert.equal(
+    state.resourceTimingSummary.providerClasses.google.latestResponseEndMs,
+    50,
+  );
+  assert.deepEqual(JSON.parse(JSON.stringify(state.mapIdentity)), {
+    activeId: 'esri-imagery',
+    status: 'ready',
+    switchOrigin: 'manual',
+    globeShown: true,
+    terrainProviderKind: 'cesium-terrain',
+  });
+  const serialized = JSON.stringify(state);
+  for (const secret of [
+    'app.example',
+    'tiles.example',
+    'private.example',
+    'secret',
+  ])
+    assert.equal(serialized.includes(secret), false);
+});
+
+test('resource and map state are explicitly unavailable when browser APIs fail', () => {
+  const state = runInNewContext(
+    `(${readStartupAttributionPageState.toString()})()`,
+    {
+      window: {
+        __godsEyeView: {
+          mapStackController: {
+            getState: () => {
+              throw new Error('unavailable');
+            },
+          },
+        },
+      },
+      performance: {
+        getEntriesByType: (kind) => {
+          if (kind === 'resource') throw new Error('unsupported');
+          return [];
+        },
+      },
+      document: { documentElement: {} },
+      navigator: {},
+      location: { href: 'https://app.example/', origin: 'https://app.example' },
+      URL,
+    },
+  );
+  assert.equal(state.resourceTimingSummary, null);
+  assert.equal(state.mapIdentity, null);
+});
+
+test('resource classes do not treat missing names or local APIs as assets', () => {
+  const state = runInNewContext(
+    `(${readStartupAttributionPageState.toString()})()`,
+    {
+      window: {},
+      performance: {
+        getEntriesByType: (kind) =>
+          kind === 'resource'
+            ? [
+                { name: undefined },
+                { name: '   ' },
+                { name: 'data:text/plain,secret' },
+                { name: 'https://app.example/api/private?token=secret' },
+                { name: 'https://app.example/cesium-ab123/Workers/job.js' },
+              ]
+            : [],
+      },
+      document: { documentElement: {} },
+      navigator: {},
+      location: { href: 'https://app.example/', origin: 'https://app.example' },
+      URL,
+    },
+  );
+  const summary = state.resourceTimingSummary;
+  assert.equal(summary.providerClasses.unknown.count, 3);
+  assert.equal(summary.providerClasses.otherSameOrigin.count, 1);
+  assert.equal(summary.providerClasses.sameOriginAssets.count, 1);
+  assert.equal(summary.duration.maxMs, null);
+  assert.equal(summary.duration.availableCount, 0);
+  assert.equal(summary.originCounts.unavailable, 3);
+  assert.equal(JSON.stringify(state).includes('secret'), false);
 });
 
 test('dense startup fixture identity is the registered 2500-record production fixture', () => {

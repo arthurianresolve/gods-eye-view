@@ -80,6 +80,18 @@ checks pass on each VM Node version, and the 73-file capture lint check passes.
 The [dense result](performance-evidence/s69-native-matrix-20261019/dense-investigation-b3c49b19-result.json)
 and [diagnostic validation](performance-evidence/s69-native-matrix-20261019/startup-attribution-qa-validation.json)
 retain the separate findings. No failed startup result has been cleared.
+The [datacenter pair](performance-evidence/s69-native-matrix-20261019/infrastructure-datacenters-b3c49b19-result.json)
+records motion p95 of 288.1 versus 276.8 ms (-3.92%) and zero rendered frames
+in all ten settled-idle samples. Startup fails at +37.62% app-ready and
++26.64% loading-screen-hidden. A [measurement-conditions note](performance-evidence/s69-native-matrix-20261019/measurement-conditions-20261019.json)
+records overlapping local test activity with unknown sample overlap; the motion
+result is an observation, not proof of a repeatable improvement. Startup's
+default basemap can still contact live providers. The optional attribution
+diagnostic now reads bounded, redacted Resource Timing and map identity once
+after settling, without adding request hooks. All eight focused checks pass on
+each VM Node version, with formatting and the 73-file capture lint check also
+passing. Its [validation receipt](performance-evidence/s69-native-matrix-20261019/startup-network-attribution-qa-validation.json)
+does not clear any failed startup comparison.
 Production remains at `e7a878e`.
 
 The QA-only `f97b9b98` PR run separately failed hosted Windows recovery while
@@ -92,6 +104,10 @@ Windows recovery and the mixed-use browser smoke, and its release packaging
 also passes. The [CI receipt](performance-evidence/s69-native-matrix-20261019/qa-ci-1ef5973e.json)
 preserves both run identities. This does not replace or rewrite the original
 failure or the exact application's earlier passing CI receipt.
+The later startup-attribution producer `4911f52f` also passes all seven required
+jobs and release packaging; its [separate CI receipt](performance-evidence/s69-native-matrix-20261019/qa-ci-4911f52f.json)
+is hash-verified on VM105. The newer Resource Timing extension has focused VM
+validation; it is not relabeled as covered by that earlier CI run.
 
 All seven exact `b3c49b19` standard CI jobs, tracking and signed-package workflows
 have passed. Its
