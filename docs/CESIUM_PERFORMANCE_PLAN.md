@@ -1,5 +1,12 @@
 # Cesium performance plan
 
+Engineering completion across S47–S70 is **21/24 slices (87.5%)**: S47–S59
+are closed (**13/14, 92.9%** of the original plan), and S61–S68 are implemented
+or have a completed experimental disposition (**8/10, 80%** of the follow-up).
+S68's measured rejection is a completed evaluation, not a shipped optimization.
+S60, S69 and S70 remain in progress for final qualification and delivery. These
+counts do not mean that the current candidate has passed all acceptance gates.
+
 The current application candidate is `b3c49b19`. It fixes recorded-aircraft
 position ownership: paused and backward seeks use the selected observation,
 without live-clock extrapolation or unrelated live history. All 158 focused
@@ -15,13 +22,28 @@ QA-only producer `89e2acad` now requires two consecutive completed render/layout
 boundaries with stable scroll geometry, focus and pointer position before a
 visual capture. It retains rejected attempts and uses the unchanged pixel
 policy. Its 17 presentation-readiness tests pass on both VM Node versions;
-hardware validation is pending. Exact-candidate dam/cable measurements are in
-progress. The remaining matrix, visual comparison, local-control/replay latency,
+hardware validation is pending. The exact-candidate dam motion comparison is
+within the regression limit at 299.7 versus 304.6 ms (+1.63%), but its app-ready
+startup median increases from 3,884 to 4,289 ms (+10.43%), failing the unchanged
+10% startup gate. Loading-screen disappearance increases 8.44%. The failed
+startup result is retained; a prospective balanced confirmation is being
+prepared without changing its threshold. Cable measurements are in progress.
+The remaining matrix, visual comparison, local-control/replay latency,
 sampled peak heap, signed-package preflight and final Ampfing soak must qualify
 `b3c49b19` before deployment. The separately labeled `3141ffe3` comparison control
 contains only the baseline's weather and recorded-position correctness fixes;
 it will be used for replay latency and sampled heap, not relabeled as the
 original baseline. Production remains at `e7a878e`.
+
+The exact `b3c49b19` tracking and signed-package workflows have passed. Its
+downloaded archive, GitHub attestation, all 2,126 packaged files and 16 private
+HTTP checks are independently verified. The package is prepared in an isolated
+VM105 preview; standard exact-commit CI, browser workspace verification and
+production activation remain separate gates. The current
+[dam result](performance-evidence/s69-native-matrix-20261019/infrastructure-dams-b3c49b19-result.json),
+[package verification](performance-evidence/s69-native-matrix-20261019/staged-release-b3c49b19.json)
+and [private HTTP checks](performance-evidence/s69-native-matrix-20261019/production-host-smoke-b3c49b19.json)
+preserve their tested revisions.
 
 The previous measured candidate, `d8ef9002`, corrects cancelled CCTV thumbnail
 ownership without changing image quality or refresh cadence. The native

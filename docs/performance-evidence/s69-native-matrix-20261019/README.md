@@ -20,9 +20,28 @@ VM Node version; the VM's unsupported native Sharp tests remain assigned to
 Windows/hosted validation. Hardware validation of the new producer is pending.
 No mask, pixel threshold, fixture population or visual setting changed.
 
-Dam/cable captures for `b3c49b19` are in progress. Further required evidence is
+The [new dam comparison](infrastructure-dams-b3c49b19-result.json) has motion
+p95 of 299.7 versus 304.6 ms (+1.63%), within the unchanged regression limit.
+Its app-ready startup median is 3,884 versus 4,289 ms (+10.43%), which fails
+the 10% startup gate. The loading-screen-hidden median rises 8.44%. The original
+five startup observations per build are preserved. A separately predeclared,
+balanced startup confirmation is being prepared; no limit is changed and this
+failure is not converted to a pass. Cable captures remain in progress.
+
+The exact `b3c49b19`
+[tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280015189)
+and [signed candidate packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280010153)
+workflows pass. The independently downloaded archive has SHA-256
+`1f4b358ab24655305469573c060ad9a9ca9cef4b909f04a9d173e189ef549924`.
+VM105 reverified its GitHub-hosted attestation and
+[all 2,126 packaged files](staged-release-b3c49b19.json), and
+[all 16 private HTTP checks](production-host-smoke-b3c49b19.json) pass. The
+[prepared package](prepared-release-b3c49b19.json) serves only a private
+loopback preview. Exact-commit standard CI is still pending.
+
+Further required evidence is
 the remaining matrix and visual comparison, twenty local-control changes,
-twenty loaded replay seeks, sampled peak heap, an exact signed-package preflight,
+twenty loaded replay seeks, sampled peak heap, a browser workspace preflight,
 and a new final Ampfing soak. Replay/heap comparison control `3141ffe3` contains
 the original baseline plus the same weather and recorded-pose correctness fixes,
 without the candidate's performance optimizations. It is explicitly distinct

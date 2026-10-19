@@ -1,0 +1,15 @@
+{
+  "schema": "gev-prepared-production-release/v1",
+  "status": "prepared-not-activated",
+  "preparedAt": "2026-10-19T16:23:16.105Z",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/candidate-artifact-b3c49b19/unpacked",
+  "destination": "/opt/gods-eye-view-releases/b3c49b19fea88ca82d801f7a86c62a9f827da874-verified",
+  "artifactArchiveSha256": "1f4b358ab24655305469573c060ad9a9ca9cef4b909f04a9d173e189ef549924",
+  "releaseManifestSha256": "9d2f968498cffd51abde6c6cd787309df7ff3f994b1c3dbb519032f1658074e9",
+  "verifiedManifestFiles": 2126,
+  "productionOnlyDependencies": "Moved intact from the verified npm ci --omit=dev installation",
+  "preparationMethod": "same-filesystem rename of inactive staging; no second package copy",
+  "previousWorkingDirectory": "/opt/gods-eye-view-releases/e7a878e168bc97ffedddc27e13bf3e69b7ee6256-verified",
+  "productionChanged": false
+}
