@@ -23,8 +23,12 @@ phase changed before capture; the candidate was not captured. Scroll geometry,
 pointer and focus remained stable. Producer `8efcea04` reads scene structure
 before waiting for the required phase, removing extra browser round trips from
 that short interval. Its [17 tests](visual-read-order-tests.json) pass on each
-VM Node version; hardware acceptance remains pending. No mask, pixel threshold,
-fixture population or visual setting changed.
+VM Node version. The subsequent `d7bb1b97` producer captured all four states on
+both builds. [Independent VM decoding](final-visual-b3c49b19-d7-failure.json)
+found identical settled-scene pixels, but rejected the HUD-visible, hidden and
+restored states. The differences include eight CCTV frame-corner pixels and
+the animated logo; presentation-state diagnosis remains open. No mask, pixel
+threshold, fixture population or visual setting changed.
 
 The [new dam comparison](infrastructure-dams-b3c49b19-result.json) has motion
 p95 of 299.7 versus 304.6 ms (+1.63%), within the unchanged regression limit.
@@ -57,7 +61,14 @@ twenty loaded replay seeks, sampled peak heap, a browser workspace preflight,
 and a new final Ampfing soak. Replay/heap comparison control `3141ffe3` contains
 the original baseline plus the same weather and recorded-pose correctness fixes,
 without the candidate's performance optimizations. It is explicitly distinct
-from the original baseline and has not yet supplied measured comparison results.
+from the original baseline. The [first metrics attempt](qualification-metrics-b3c49b19.json)
+failed on both builds because the harness expected four stored rows from four
+snapshot timestamps. The recorder correctly retains a fifth row containing an
+altitude correction. The corrected harness and consumer preserve this meaning,
+validate the recording identity and 3,000 ms coverage, and reject a four-row
+report. [All 19 focused tests](replay-fixture-contract-validation.json) pass on
+both VM Node versions, including the real recorder-to-replay contract. The
+failed measurements are retained; new hardware measurements are still required.
 Production still serves `e7a878e`.
 
 The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes

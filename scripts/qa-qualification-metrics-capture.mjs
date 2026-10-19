@@ -112,6 +112,13 @@ function getCaptureIdentity(report, role) {
   return identity;
 }
 
+export const QUALIFICATION_REPLAY_FIXTURE_CONTRACT = Object.freeze({
+  recordingId: 'recording-rendered-soak',
+  snapshotCount: 4,
+  expectedRecordCount: 5,
+  expectedCoverageDurationMs: 3000,
+});
+
 function fixtureIdentity() {
   const frames = createSyntheticAircraftFrames({
     startAt: 0,
@@ -122,7 +129,19 @@ function fixtureIdentity() {
     fixtureId: 'rendered-soak-four-snapshot-recording-v1',
     fixtureSha256: sha256(JSON.stringify(frames)),
     routeId: 'rendered-soak-local-control-and-recording-seek-v1',
+    ...QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
   };
+}
+
+export function assertQualificationReplayFixtureState(state, fixture) {
+  assert.equal(state?.recordingId, fixture.recordingId);
+  assert.equal(state?.recordCount, fixture.expectedRecordCount);
+  assert.ok(Number.isFinite(state?.coverage?.from));
+  assert.ok(Number.isFinite(state?.coverage?.to));
+  assert.equal(
+    state.coverage.to - state.coverage.from,
+    fixture.expectedCoverageDurationMs,
+  );
 }
 
 async function readCapture(path, role) {
@@ -334,7 +353,7 @@ function readForegroundActivation(reply, browserPid) {
   return evidence;
 }
 
-export function installInteractionObserverInPage() {
+export function installInteractionObserverInPage(fixtureContract) {
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
   if (
@@ -464,8 +483,8 @@ export function installInteractionObserverInPage() {
         );
         matched =
           state?.mode === 'recorded' &&
-          state?.recordingId === 'recording-rendered-soak' &&
-          state?.recordCount === 4 &&
+          state?.recordingId === fixtureContract.recordingId &&
+          state?.recordCount === fixtureContract.expectedRecordCount &&
           Boolean(text) &&
           Number.isFinite(Number(slider?.value)) &&
           Number(slider.value) !== sample.previousSliderValue &&
@@ -717,8 +736,8 @@ async function setUnmeasuredCameraPose(page, location, routeId) {
   };
 }
 
-async function installInteractionObserver(page) {
-  await page.evaluate(installInteractionObserverInPage);
+async function installInteractionObserver(page, fixture) {
+  await page.evaluate(installInteractionObserverInPage, fixture);
 }
 
 async function collectInteraction(
@@ -957,7 +976,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
         );
       });
       await page.evaluate(installRenderedFlightWitnessReaderInPage);
-      await installInteractionObserver(page);
+      await installInteractionObserver(page, fixture);
       for (let index = 0; index < 20; index++) {
         const desired = index % 2 === 0;
         const enabled = await page.evaluate(() =>
@@ -990,11 +1009,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
       const initialReplayState = await page.evaluate(() =>
         window.__godsEyeView.aircraftSource.getState(),
       );
-      assert.equal(initialReplayState.recordingId, 'recording-rendered-soak');
-      assert.equal(initialReplayState.recordCount, 4);
-      assert.ok(
-        initialReplayState.coverage?.from < initialReplayState.coverage?.to,
-      );
+      assertQualificationReplayFixtureState(initialReplayState, fixture);
       for (let index = 0; index < 20; index++) {
         const previous = await page.evaluate(async (selector) => {
           const records =

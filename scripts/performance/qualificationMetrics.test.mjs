@@ -1,5 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { webcrypto } from 'node:crypto';
+import { createWorkspaceStorage } from '../../src/storage/index.js';
+import {
+  createAircraftRecordingService,
+  createRecordedAircraftSource,
+  createSyntheticAircraftFrames,
+} from '../../src/recording/index.js';
 import {
   evaluateQualificationMetrics,
   QUALIFICATION_METRIC_THRESHOLDS,
@@ -7,8 +14,10 @@ import {
 } from './qualificationMetrics.mjs';
 import {
   buildQualificationIdentity,
+  assertQualificationReplayFixtureState,
   disposeQualificationObserver,
   installInteractionObserverInPage,
+  QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
 } from '../qa-qualification-metrics-capture.mjs';
@@ -304,7 +313,7 @@ function interactionEvidence(overrides = {}) {
           ...sample,
           selectedSourceMode: 'recorded',
           recordingId: 'recording-rendered-soak',
-          fixtureRecordCount: 4,
+          fixtureRecordCount: 5,
           fixtureAircraftId: 'SYNTH-001',
           coverageFromMs: 1000,
           coverageToMs: 4000,
@@ -370,7 +379,7 @@ function interactionEvidence(overrides = {}) {
           ...sample,
           selectedSourceMode: 'recorded',
           recordingId: 'recording-rendered-soak',
-          fixtureRecordCount: 4,
+          fixtureRecordCount: 5,
           fixtureAircraftId: 'SYNTH-001',
           coverageFromMs: 1000,
           coverageToMs: 4000,
@@ -588,6 +597,9 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
     },
     (e) => {
       e.builds.candidate.loadedReplaySeek[0].renderedRecordLongitude = 120;
+    },
+    (e) => {
+      e.builds.candidate.loadedReplaySeek[0].fixtureRecordCount = 4;
     },
     (e) =>
       delete e.builds.candidate.loadedReplaySeek[0].renderedBillboardLatitude,
@@ -1012,7 +1024,7 @@ test('settled interaction requests and measures a fresh post-state render', asyn
     clearInterval() {},
   });
   try {
-    installInteractionObserverInPage();
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
     const observer = globalWindow.__qualificationMetricsObserver;
     await observer.pollState();
     assert.equal(observer.pending, null);
@@ -1069,7 +1081,7 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
   };
   globalThis.document = { querySelector: () => node };
   try {
-    installInteractionObserverInPage();
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
     const observer = globalThis.window.__qualificationMetricsObserver;
     const selectedRecord = {
       id: 'SYNTH-001',
@@ -1192,7 +1204,7 @@ test('a replay snapshot resolving after observer disposal cannot revive a sample
         getState: () => ({
           mode: 'recorded',
           recordingId: 'recording-rendered-soak',
-          recordCount: 4,
+          recordCount: 5,
           targetMs: 4000,
           coverage: { from: 1000, to: 4000 },
         }),
@@ -1210,7 +1222,7 @@ test('a replay snapshot resolving after observer disposal cannot revive a sample
     clearInterval() {},
   });
   try {
-    installInteractionObserverInPage();
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
     const observer = globalWindow.__qualificationMetricsObserver;
     observer.arm(
       'loadedReplaySeek',
@@ -1439,4 +1451,99 @@ test('cold startup keeps app-ready and loading-hidden checks separate and fails 
     true,
   );
   assert.equal(result.metrics.coldStartup.status, 'failed');
+});
+
+test('qualification replay fixture contract matches persisted correction rows and coverage', async (t) => {
+  let now = 0;
+  const baseStorage = createWorkspaceStorage({
+    indexedDB: null,
+    crypto: webcrypto,
+  });
+  const storage = { ...baseStorage };
+  Object.defineProperty(storage, 'savedByBrowser', { get: () => true });
+  const recording = createAircraftRecordingService({
+    storage,
+    now: () => now,
+    setInterval: () => 1,
+    clearInterval: () => {},
+  });
+  t.after(() => {
+    recording.destroy();
+    baseStorage.destroy();
+  });
+
+  await recording.start({
+    id: QUALIFICATION_REPLAY_FIXTURE_CONTRACT.recordingId,
+    sourceId: 'synthetic-fixture',
+    region: { center: { latitude: 0, longitude: 179.7 }, radiusKm: 25 },
+  });
+  const frames = createSyntheticAircraftFrames({
+    startAt: 0,
+    sampleCount: QUALIFICATION_REPLAY_FIXTURE_CONTRACT.snapshotCount,
+    intervalMs: 1000,
+  });
+  for (const frame of frames) {
+    now = frame.receivedAt;
+    await recording.ingest(frame);
+  }
+  await recording.stop('fixture-ready');
+
+  const replay = createRecordedAircraftSource({ storage });
+  const selected = await replay.selectRecording(
+    QUALIFICATION_REPLAY_FIXTURE_CONTRACT.recordingId,
+  );
+  assert.equal(selected.status, 'selected');
+  const state = replay.getState();
+  assertQualificationReplayFixtureState(
+    state,
+    QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+  );
+  assert.equal(state.recordCount, 5);
+  assert.equal(
+    state.coverage.to - state.coverage.from,
+    (frames.length - 1) * 1000,
+  );
+  const firstReplaySnapshot = await replay.getSnapshot();
+  assert.equal(firstReplaySnapshot.records.length, 1);
+  assert.equal(
+    firstReplaySnapshot.records[0].positionTimeMs,
+    state.coverage.from,
+  );
+
+  const exported = await recording.exportRecording(
+    QUALIFICATION_REPLAY_FIXTURE_CONTRACT.recordingId,
+  );
+  const persistedRows = Object.entries(exported.chunks)
+    .filter(([name]) => name.startsWith('observations-'))
+    .flatMap(([, rows]) => rows);
+  assert.equal(persistedRows.length, 5);
+  assert.equal(persistedRows.filter((row) => row.correctionOf).length, 1);
+
+  assert.throws(
+    () =>
+      assertQualificationReplayFixtureState(
+        { ...state, recordCount: 4 },
+        QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+      ),
+    { actual: 4, expected: 5 },
+  );
+  assert.throws(
+    () =>
+      assertQualificationReplayFixtureState(
+        { ...state, recordingId: 'other-recording' },
+        QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+      ),
+    { actual: 'other-recording', expected: 'recording-rendered-soak' },
+  );
+  assert.throws(
+    () =>
+      assertQualificationReplayFixtureState(
+        {
+          ...state,
+          coverage: { ...state.coverage, to: state.coverage.to + 1000 },
+        },
+        QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+      ),
+    { actual: 4000, expected: 3000 },
+  );
 });

@@ -583,7 +583,7 @@ function validateInteractionSide(side, label) {
     if (label.startsWith('loadedReplaySeek')) {
       assert.equal(sample.selectedSourceMode, 'recorded');
       assert.equal(sample.recordingId, 'recording-rendered-soak');
-      assert.equal(sample.fixtureRecordCount, 4);
+      assert.equal(sample.fixtureRecordCount, 5);
       assert.equal(sample.fixtureAircraftId, 'SYNTH-001');
       assert.ok(Number.isFinite(sample.coverageFromMs));
       assert.ok(sample.coverageToMs > sample.coverageFromMs);
