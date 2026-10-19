@@ -18,6 +18,25 @@ workflow [39332092277](https://github.com/arthurianresolve/gods-eye-view/actions
 passes build, downloaded-archive checks and GitHub attestation verification.
 It remains a candidate artifact, with hardware acceptance and activation pending.
 
+All seven required [CI jobs at that exact commit](ci-190c5ab6.json) pass.
+VM105 independently verifies the signed archive and all 2,128 packaged files;
+its [private production-host smoke test](production-host-smoke-190c5ab6.json)
+passes all sixteen checks. The [prepared release](prepared-release-190c5ab6.json)
+is available only through a private preview. Public production is unchanged.
+
+The corrected `0dc5cdb1` idle diagnostic completes both observations: 79 control
+and 78 candidate rendered frames in sixty seconds. Every observed gap above
+one second has no registered continuous demand. This alone does not establish
+that a visible animation is updating, because wind calls `scene.requestRender`
+directly. Source inspection also finds that the 12,000 m fixture camera is below
+the existing 15,000 m wind fade threshold on both builds. The next bounded
+diagnostic therefore records the public wind renderer mode, fade, visible-cell
+counts and observation times; missing observations remain unknown. Its
+[focused checks](weather-wind-visibility-validation-20261020.json) pass 31/31
+on each VM Node version and all 75 capture no-undef checks. Diagnostic reports
+remain ineligible for performance acceptance. Visible wind coverage, the full
+visual gate and final corrected-candidate soak are still required.
+
 The first idle-only weather diagnostic using producer `190c5ab6` failed during
 final report construction: the shared lifecycle validator still expected both
 idle and motion samples. The failed report is retained under

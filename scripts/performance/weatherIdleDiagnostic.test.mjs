@@ -195,3 +195,202 @@ test('diagnostic sanitizes request labels and caps retained frame records', () =
   );
   assert.ok(!JSON.stringify(report).includes('private?token'));
 });
+
+test('idle gaps retain bounded public wind state and distinguish GPU fade from unknown canvas visibility', () => {
+  const gpuState = (heightFade, visibleCells) => ({
+    renderMode: 'gpu-streamlines',
+    paused: false,
+    reducedMotion: false,
+    hidden: false,
+    framePending: true,
+    gpu: {
+      ready: true,
+      heightFade,
+      visibleCells,
+      visibleVertexCount: visibleCells * 12,
+      pathCount: 64,
+      displayHeightMeters: 12_000,
+    },
+  });
+  const report = summarizeWeatherIdleDiagnostic({
+    raw: {
+      frameEvents: [
+        {
+          atMs: 0,
+          diagnosticsObservedAtMs: 2,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: gpuState(0, 0),
+        },
+        {
+          atMs: 1_500,
+          diagnosticsObservedAtMs: 1_502,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: gpuState(0, 0),
+        },
+        {
+          atMs: 3_000,
+          diagnosticsObservedAtMs: 3_002,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: gpuState(0.5, 4),
+        },
+        {
+          atMs: 4_500,
+          diagnosticsObservedAtMs: 4_502,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: {
+            renderMode: 'canvas-fallback',
+            paused: false,
+            reducedMotion: false,
+            hidden: false,
+            framePending: true,
+            gpu: null,
+          },
+        },
+        {
+          atMs: 6_000,
+          diagnosticsObservedAtMs: 6_002,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: {
+            renderMode: 'canvas-fallback',
+            paused: false,
+            reducedMotion: false,
+            hidden: false,
+            framePending: true,
+            gpu: null,
+          },
+        },
+      ],
+      governorSamples: [
+        {
+          atMs: 750,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: gpuState(0, 0),
+        },
+        {
+          atMs: 2_250,
+          governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+          windRenderer: gpuState(0.5, 4),
+        },
+      ],
+    },
+    phaseObservations: { phases: [] },
+  });
+
+  assert.equal(report.frameEvents[0].diagnosticsObservedAtMs, 2);
+  assert.equal(
+    report.frameEvents[0].windRenderer.gpu.displayHeightMeters,
+    12_000,
+  );
+  assert.equal(
+    report.governorSamples[0].windRenderer.renderMode,
+    'gpu-streamlines',
+  );
+  assert.deepEqual(
+    report.gapsOverOneSecond.map((gap) => gap.windRenderingAssessment),
+    [
+      'gpu-streamlines-fully-faded',
+      'gpu-cells-eligible',
+      'mixed-render-modes',
+      'canvas-visibility-unknown',
+    ],
+  );
+  assert.equal(
+    report.requestAttribution.directWindSceneRequestRenderCaptured,
+    false,
+  );
+  assert.match(report.requestAttribution.note, /scene\.requestRender directly/);
+});
+
+test('wind renderer diagnostics null invalid values, omit payload fields, and bound per-gap samples', () => {
+  const frames = [
+    {
+      atMs: 0,
+      governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+      windRenderer: {
+        renderMode: 'unexpected-mode',
+        paused: 'false',
+        reducedMotion: false,
+        hidden: false,
+        framePending: true,
+        gpu: {
+          ready: true,
+          heightFade: 10,
+          visibleCells: -1,
+          visibleVertexCount: 2_000_000,
+          pathCount: 4,
+          displayHeightMeters: Number.POSITIVE_INFINITY,
+        },
+        url: 'https://example.invalid/?token=secret',
+      },
+    },
+    {
+      atMs: 2_000,
+      governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+      windRenderer: null,
+    },
+  ];
+  const samples = Array.from({ length: 10 }, (_, index) => ({
+    atMs: 100 + index * 100,
+    governor: { mode: 'idle', holds: [], scheduledUpdates: [] },
+    windRenderer: {
+      renderMode: `unknown-${index}`,
+      paused: false,
+      reducedMotion: false,
+      hidden: false,
+      framePending: true,
+      gpu: {
+        ready: true,
+        heightFade: 0.1,
+        visibleCells: index + 1,
+        visibleVertexCount: 12,
+        pathCount: 8,
+        displayHeightMeters: 12_000,
+      },
+    },
+  }));
+  const report = summarizeWeatherIdleDiagnostic({
+    raw: { frameEvents: frames, governorSamples: samples },
+    phaseObservations: { phases: [] },
+  });
+
+  assert.equal(report.frameEvents[0].windRenderer.renderMode, null);
+  assert.equal(report.frameEvents[0].windRenderer.paused, null);
+  assert.equal(report.frameEvents[0].windRenderer.gpu.heightFade, null);
+  assert.equal(report.frameEvents[0].windRenderer.gpu.visibleCells, null);
+  assert.equal(report.frameEvents[0].windRenderer.gpu.visibleVertexCount, null);
+  assert.equal(report.frameEvents[1].windRenderer, null);
+  assert.equal(report.gapsOverOneSecond[0].windRendererObservations.length, 8);
+  assert.equal(report.gapsOverOneSecond[0].windRendererObservationsOmitted, 3);
+  assert.equal(report.gapsOverOneSecond[0].windRenderingAssessment, 'unknown');
+  assert.ok(!JSON.stringify(report).includes('example.invalid'));
+  assert.ok(!JSON.stringify(report).includes('secret'));
+});
+
+test('missing or malformed wind observations cannot certify a fully faded interval', () => {
+  const faded = {
+    renderMode: 'gpu-streamlines',
+    gpu: { heightFade: 0, visibleCells: 0 },
+  };
+  for (const incomplete of [
+    null,
+    { renderMode: null, gpu: faded.gpu },
+    { renderMode: 'gpu-streamlines', gpu: null },
+    { renderMode: 'gpu-streamlines', gpu: {} },
+    { renderMode: 'gpu-streamlines', gpu: { heightFade: 0 } },
+    { renderMode: 'gpu-streamlines', gpu: { visibleCells: 0 } },
+  ]) {
+    const report = summarizeWeatherIdleDiagnostic({
+      raw: {
+        frameEvents: [
+          { atMs: 0, windRenderer: faded },
+          { atMs: 2_000, windRenderer: faded },
+        ],
+        governorSamples: [{ atMs: 500, windRenderer: incomplete }],
+      },
+    });
+    assert.equal(
+      report.gapsOverOneSecond[0].windRenderingAssessment,
+      'gpu-visibility-incomplete',
+    );
+  }
+});

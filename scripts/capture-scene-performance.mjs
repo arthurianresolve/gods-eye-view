@@ -5487,9 +5487,18 @@ try {
               if (!weatherIdleTrace || startedAt == null) return null;
               const startedReadAt = performance.now();
               let raw = null;
+              let windRaw = null;
               try {
                 raw =
                   window.__godsEyeView.getRenderGovernorDiagnostics?.() ?? null;
+              } catch {
+                weatherIdleTrace.snapshotReadFailureCount += 1;
+              }
+              try {
+                windRaw =
+                  window.__godsEyeView?.dataManager?.layers
+                    ?.get?.('wind')
+                    ?.module?.getDiagnostics?.() ?? null;
               } catch {
                 weatherIdleTrace.snapshotReadFailureCount += 1;
               }
@@ -5498,6 +5507,65 @@ try {
                 /^[A-Za-z0-9:_./-]{1,96}$/.test(value)
                   ? value
                   : '[redacted]';
+              const finiteCount = (value) =>
+                Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+                  ? value
+                  : null;
+              const finiteUnit = (value) =>
+                Number.isFinite(value) && value >= 0 && value <= 1
+                  ? value
+                  : null;
+              const finiteHeight = (value) =>
+                Number.isFinite(value) && value >= 0 && value <= 10_000_000
+                  ? value
+                  : null;
+              const windRenderer =
+                windRaw && typeof windRaw === 'object'
+                  ? {
+                      renderMode: [
+                        'gpu-streamlines',
+                        'canvas-fallback',
+                      ].includes(windRaw.renderMode)
+                        ? windRaw.renderMode
+                        : null,
+                      paused:
+                        typeof windRaw.paused === 'boolean'
+                          ? windRaw.paused
+                          : null,
+                      reducedMotion:
+                        typeof windRaw.reducedMotion === 'boolean'
+                          ? windRaw.reducedMotion
+                          : null,
+                      hidden:
+                        typeof windRaw.hidden === 'boolean'
+                          ? windRaw.hidden
+                          : null,
+                      framePending:
+                        typeof windRaw.framePending === 'boolean'
+                          ? windRaw.framePending
+                          : null,
+                      gpu:
+                        windRaw.gpu && typeof windRaw.gpu === 'object'
+                          ? {
+                              ready:
+                                typeof windRaw.gpu.ready === 'boolean'
+                                  ? windRaw.gpu.ready
+                                  : null,
+                              heightFade: finiteUnit(windRaw.gpu.heightFade),
+                              visibleCells: finiteCount(
+                                windRaw.gpu.visibleCells,
+                              ),
+                              visibleVertexCount: finiteCount(
+                                windRaw.gpu.visibleVertexCount,
+                              ),
+                              pathCount: finiteCount(windRaw.gpu.pathCount),
+                              displayHeightMeters: finiteHeight(
+                                windRaw.gpu.displayHeightMeters,
+                              ),
+                            }
+                          : null,
+                    }
+                  : null;
               const governor = {
                 mode:
                   raw?.mode === 'idle' || raw?.mode === 'continuous'
@@ -5527,6 +5595,7 @@ try {
               return {
                 atMs: Math.max(0, readFinishedAt - startedAt),
                 governor,
+                windRenderer,
               };
             };
             const recordWeatherIdleGovernorSample = () => {
@@ -5573,6 +5642,7 @@ try {
                 if (weatherIdleTrace.frameEvents.length < 512)
                   weatherIdleTrace.frameEvents.push({
                     atMs: Math.max(0, now - startedAt),
+                    diagnosticsObservedAtMs: frameGovernor?.atMs ?? null,
                     intervalMs:
                       weatherIdleTrace.frameEvents.length > 0
                         ? Math.max(
@@ -5583,6 +5653,7 @@ try {
                           )
                         : null,
                     governor: frameGovernor?.governor ?? null,
+                    windRenderer: frameGovernor?.windRenderer ?? null,
                   });
                 else weatherIdleTrace.frameEventsOmitted += 1;
               }

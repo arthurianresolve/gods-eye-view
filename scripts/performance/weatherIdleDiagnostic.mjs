@@ -154,6 +154,86 @@ function hasContinuousDemand(state) {
   return state.mode === 'continuous' || state.holds.length > 0;
 }
 
+function normalizeWindRenderer(state) {
+  if (!state || typeof state !== 'object') return null;
+  const count = (value) =>
+    Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+      ? value
+      : null;
+  const boolean = (value) => (typeof value === 'boolean' ? value : null);
+  const gpu =
+    state.gpu && typeof state.gpu === 'object'
+      ? {
+          ready: boolean(state.gpu.ready),
+          heightFade:
+            Number.isFinite(state.gpu.heightFade) &&
+            state.gpu.heightFade >= 0 &&
+            state.gpu.heightFade <= 1
+              ? state.gpu.heightFade
+              : null,
+          visibleCells: count(state.gpu.visibleCells),
+          visibleVertexCount: count(state.gpu.visibleVertexCount),
+          pathCount: count(state.gpu.pathCount),
+          displayHeightMeters:
+            Number.isFinite(state.gpu.displayHeightMeters) &&
+            state.gpu.displayHeightMeters >= 0 &&
+            state.gpu.displayHeightMeters <= 10_000_000
+              ? state.gpu.displayHeightMeters
+              : null,
+        }
+      : null;
+  return {
+    renderMode: ['gpu-streamlines', 'canvas-fallback'].includes(
+      state.renderMode,
+    )
+      ? state.renderMode
+      : null,
+    paused: boolean(state.paused),
+    reducedMotion: boolean(state.reducedMotion),
+    hidden: boolean(state.hidden),
+    framePending: boolean(state.framePending),
+    gpu,
+  };
+}
+
+function classifyWindRendering(observations) {
+  const states = observations.map((observation) =>
+    normalizeWindRenderer(observation?.windRenderer),
+  );
+  if (!states.length) return 'unknown';
+  const modes = new Set(
+    states
+      .map((state) => state?.renderMode ?? null)
+      .filter((mode) => mode !== null),
+  );
+  if (!modes.size) return 'unknown';
+  if (modes.size > 1) return 'mixed-render-modes';
+  if (modes.has('canvas-fallback')) return 'canvas-visibility-unknown';
+  if (states.some((state) => state?.renderMode !== 'gpu-streamlines'))
+    return 'gpu-visibility-incomplete';
+  const gpu = states.map((state) => state.gpu);
+  if (
+    gpu.some(
+      (state) =>
+        !state || state.heightFade === null || state.visibleCells === null,
+    )
+  )
+    return 'gpu-visibility-incomplete';
+  if (gpu.every((state) => state.heightFade === 0 && state.visibleCells === 0))
+    return 'gpu-streamlines-fully-faded';
+  if (
+    gpu.some(
+      (state) =>
+        Number.isFinite(state.heightFade) &&
+        state.heightFade > 0 &&
+        Number.isInteger(state.visibleCells) &&
+        state.visibleCells > 0,
+    )
+  )
+    return 'gpu-cells-eligible';
+  return 'gpu-streamlines-not-observed-visible';
+}
+
 function stateSignature(state) {
   const normalized = normalizeGovernorState(state);
   return JSON.stringify({
@@ -200,10 +280,14 @@ export function summarizeWeatherIdleDiagnostic({
     const after = validFrames[index];
     const intervalMs = after.atMs - before.atMs;
     if (intervalMs <= 1_000) continue;
-    const states = [before.governor, after.governor];
+    const observations = [
+      { ...before, source: 'frame' },
+      { ...after, source: 'frame' },
+    ];
     for (const sample of validSamples)
       if (sample.atMs >= before.atMs && sample.atMs <= after.atMs)
-        states.push(sample.governor);
+        observations.push({ ...sample, source: 'sample' });
+    const states = observations.map((observation) => observation.governor);
     const demand = states
       .map(hasContinuousDemand)
       .filter((value) => value !== null);
@@ -213,7 +297,24 @@ export function summarizeWeatherIdleDiagnostic({
         : demand.some(Boolean)
           ? 'observed-present'
           : 'observed-absent';
-    if (gapsOverOneSecond.length < WEATHER_IDLE_DIAGNOSTIC_MAX_GAP_REPORTS)
+    if (gapsOverOneSecond.length < WEATHER_IDLE_DIAGNOSTIC_MAX_GAP_REPORTS) {
+      const seenWindStates = new Set();
+      const windRendererObservations = [];
+      let windRendererObservationsOmitted = 0;
+      for (const observation of observations) {
+        const windRenderer = normalizeWindRenderer(observation.windRenderer);
+        if (!windRenderer) continue;
+        const signature = JSON.stringify(windRenderer);
+        if (seenWindStates.has(signature)) continue;
+        seenWindStates.add(signature);
+        if (windRendererObservations.length < 8)
+          windRendererObservations.push({
+            atMs: Number.isFinite(observation.atMs) ? observation.atMs : null,
+            source: observation.source === 'frame' ? 'frame' : 'sample',
+            state: windRenderer,
+          });
+        else windRendererObservationsOmitted += 1;
+      }
       gapsOverOneSecond.push({
         startAtMs: before.atMs,
         endAtMs: after.atMs,
@@ -234,8 +335,11 @@ export function summarizeWeatherIdleDiagnostic({
             ),
           ),
         ].slice(0, 16),
+        windRenderingAssessment: classifyWindRendering(observations),
+        windRendererObservations,
+        windRendererObservationsOmitted,
       });
-    else omittedGapCount += 1;
+    } else omittedGapCount += 1;
   }
 
   const phases = Array.isArray(phaseObservations?.phases)
@@ -305,6 +409,10 @@ export function summarizeWeatherIdleDiagnostic({
         'host promise-settlement time plus page observation time',
       noCrossClockOrderingClaim: true,
     },
+    requestAttribution: {
+      directWindSceneRequestRenderCaptured: false,
+      note: 'Wind GPU draw and camera paths call scene.requestRender directly; these calls do not appear in the render governor recent-request reason list.',
+    },
     instrumentation: {
       samplePeriodMs: raw.samplePeriodMs ?? 250,
       maximumFrameEvents: WEATHER_IDLE_DIAGNOSTIC_MAX_FRAME_EVENTS,
@@ -346,12 +454,17 @@ export function summarizeWeatherIdleDiagnostic({
     },
     frameEvents: validFrames.map((frame) => ({
       atMs: frame.atMs,
+      diagnosticsObservedAtMs: Number.isFinite(frame.diagnosticsObservedAtMs)
+        ? frame.diagnosticsObservedAtMs
+        : null,
       intervalMs: Number.isFinite(frame.intervalMs) ? frame.intervalMs : null,
       governor: normalizeGovernorState(frame.governor),
+      windRenderer: normalizeWindRenderer(frame.windRenderer),
     })),
     governorSamples: validSamples.map((sample) => ({
       atMs: sample.atMs,
       governor: normalizeGovernorState(sample.governor),
+      windRenderer: normalizeWindRenderer(sample.windRenderer),
     })),
     ownerChanges,
     gapsOverOneSecond,
