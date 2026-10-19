@@ -1,8 +1,25 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
-Candidate deployment is blocked. Six of eight workload pairs completed, with
-dam and cable motion regressions above 10%. The weather baseline failed before
-its candidate ran; map streaming is unrun. Production remains at `e7a878e`.
+Candidate `55639cc7` is not yet approved for deployment. Its complete weather
+functional capture passes, and its new five-run dam comparison is within the
+regression limit: 299.7 ms baseline versus 305.9 ms candidate motion p95 (+2.1%).
+Cables also pass: 332.8 ms baseline versus 336.1 ms candidate (+1.0%). Map
+qualification is running. The corrected weather timing control,
+remaining exact-candidate comparisons, visual checks and final soak remain
+pending. The [current report index](native155-matrix-progress.json) binds completed
+raw reports; the older `19065997` matrix and failures below remain historical.
+Production remains at `e7a878e`.
+
+The new complete Chrome 155 comparisons do not reproduce the large historical
+dam/cable regressions. The separate same-build browser diagnostic does not
+establish that upgrading Chrome alone fixed their cause. No runtime changes to
+dam or cable rendering, visual detail reduction, composition override or
+framebuffer-default change were retained from those diagnostic experiments.
+
+The signed `55639cc7` package is [prepared but inactive](prepared-release556.json).
+Its 2,126 manifest files were reverified before and after moving the inactive
+staging directory into the release directory on the same filesystem. This
+avoids a second package copy on VM105. No service or HTTPS routing changed.
 
 ## Revisions and conditions
 
@@ -358,9 +375,29 @@ The new regression fails against the original source and passes with the fix.
 All 81 weather-rendering/clock tests pass on Node 24.16.0 and 26.11.0 on VM105;
 logs, original source and file hashes are retained at
 `/opt/gods-eye-view-validation/s61-s70-20261018/weather-refresh-check-1792374115607`.
-The fix has not yet been hardware-qualified and does not clear the original
-five-second failures. A new application revision must receive its own build
-identity and validation; results for `19065997` cannot be relabeled.
+Application `55639cc7` subsequently passed its complete native Chrome 155 run:
+five startup observations and five 30/60-second samples each for idle and motion.
+All 30 source transitions met the unchanged five-second deadline; the slowest
+took 3,506.9 ms. Median run-level motion p95 was 282.7 ms. The
+[functional review](weather-native155-review.json) binds the raw report and
+records all phase delays. Nine raw/evidence files, totaling 914,081 bytes, were
+hash-verified on VM105 in `weather-native155-55639cc7-20261019`.
+
+The original `e7a878e` baseline still failed in motion run 2 on Chrome 155: at
+5,044.8 ms all three products displayed 12:00 after selecting 11:50, with pending
+and deferred tile requests. Its failure remains recorded and cannot supply a
+complete timing comparison. Passing candidate observations establish functional
+recovery, not a quantified speed improvement against that failed baseline.
+
+A separately named [weather correctness control](weather-control.json),
+[`d6bb7a29`](https://github.com/arthurianresolve/gods-eye-view/commit/d6bb7a297cfadc863c3b453a3d7c1fc737aab046), has parent `e7a878e` and changes only
+the weather ownership source and its regression test to the exact `55639cc7`
+bytes. It is built with the same Node 24.16.0 builder and passes focused tests
+on Node 24 and 26. Its hardware capture remains pending. This control applies
+only to weather timing: all other workload comparisons retain the original
+baseline. It does not erase the baseline failure or credit the shared
+correctness fix as a measured speed improvement. Results for `19065997` are
+not relabeled.
 
 The first same-build cable control completed at producer `6753d211` with motion
 p95 434.3 ms and 206 rendered frames. Windows refused foreground activation of

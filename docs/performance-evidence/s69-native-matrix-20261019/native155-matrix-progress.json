@@ -1,0 +1,139 @@
+{
+  "schema": "gev-current-matrix-progress/v1",
+  "recordedAt": "2026-10-19T04:09:06.658Z",
+  "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "candidate": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "producer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "builder": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "planSha256": "3b9873ed4aee491667b42f6881b51fa4a9bfcc39c8e76a07ea67f579d4a217d3",
+  "browser": "Chrome/155.0.8059.84",
+  "rows": [
+    {
+      "id": "operating-view",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "dense-investigation",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "infrastructure-datacenters",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "infrastructure-dams",
+      "status": "no-regressions-over-ten-percent",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-dams-baseline.json",
+          "sha256": "8b0bc3dfbd0578a9bbe56265a1b4bd3a58ec60e00057eed77f31c1faa7044c32",
+          "bytes": 370488,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-dams-candidate.json",
+          "sha256": "8cda4aca803de42c9c61040dc93bc6dd45196e0d51df6d68efa04b556f93e4ee",
+          "bytes": 371457,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "idle": {
+          "status": "unavailable",
+          "baselineMedianP95Ms": null,
+          "candidateMedianP95Ms": null,
+          "changePct": null,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 299.7000000011176,
+          "candidateMedianP95Ms": 305.8999999985099,
+          "changePct": 2.0687354011909167,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": []
+    },
+    {
+      "id": "infrastructure-cables",
+      "status": "no-regressions-over-ten-percent",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-cables-baseline.json",
+          "sha256": "f61e8fbae614bd6d83870aca89847c1c981898c9ec8ea831f9f43204c0c06a0d",
+          "bytes": 374875,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-cables-candidate.json",
+          "sha256": "7ac1d8ceefc89195f10f91f4decc772f39a7b23ee6b45c0e5a8c6252f105c6c8",
+          "bytes": 375776,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "idle": {
+          "status": "unavailable",
+          "baselineMedianP95Ms": null,
+          "candidateMedianP95Ms": null,
+          "changePct": null,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 332.80000000074506,
+          "candidateMedianP95Ms": 336.1000000014901,
+          "changePct": 0.9915865386831941,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": []
+    },
+    {
+      "id": "infrastructure",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "weather-effects",
+      "status": "failed-original-pair",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/weather-effects-baseline.json",
+          "sha256": "461503ed917e8a41e9be497cbcbc889def1ac49c61337d5a10e98a66ce8030ac",
+          "bytes": 235409,
+          "failed": true,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": null
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/weather-effects-candidate.json",
+          "sha256": "ac54ddd788b23ae35667c1b1cc8d5f2d956431b5115260f01812ca353ad25701",
+          "bytes": 655975,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      }
+    },
+    {
+      "id": "map-streaming",
+      "status": "pending",
+      "reports": {}
+    }
+  ],
+  "acceptance": "incomplete; comparable pairs alone do not authorize deployment",
+  "productionChanged": false
+}
