@@ -1194,6 +1194,8 @@
   "scripts/fixtures/cctv-calibration-demand.js",
   "src/layers/cctv/calibrationRenderDemand.test.mjs",
   "scripts/performance/browserShutdownControls.mjs",
+  "scripts/performance/browserReadinessGate.mjs",
+  "scripts/performance/browserReadinessGate.test.mjs",
   "scripts/performance/browserShutdownControls.test.mjs",
   "scripts/performance/browserShutdownFixtures.mjs",
   "scripts/performance/profileRecoveryBrowserVersion.mjs",

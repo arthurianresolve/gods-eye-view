@@ -224,6 +224,26 @@ explicitly truncated. It cannot be reconstructed into a qualifying full report;
 a corrected full pair remains necessary. No application setting or deadline
 was relaxed.
 
+## Native map profile correction
+
+Producer `52ca6010` completed all five candidate cold launches, then rejected
+the map journey before its first readiness checkpoint. The serialized driver
+dropped its explicit comparison profile when starting the asynchronous run and
+still required a legacy 1440×900 drawing buffer. Native DPR 2 correctly produces
+2880×1800. The correction passes the profile through and checks CSS dimensions
+times the initial DPR on every observed render, while retaining SSE 1, native
+resolution, effects and the existing legacy contract. Regression cases cover
+DPR 2, fractional DPR, downscaling and changing resolution, DPR, SSE or canvas
+size. The [map profile review](native-map-profile-review.json) binds the failed
+report and all 61 focused map/profile/pairing checks passing on both Node
+24.16.0 and 26.11.0. Hardware qualification remains pending the corrected pair.
+
+The full Node suites at `52ca6010` exposed a separate test-ledger omission for
+the newly added readiness test. Node 26 recorded 9,625 passes, one ledger
+failure and seven platform skips. The ledger and formatting scope now include
+the new files; all four runner-discovery checks pass locally. These earlier CI
+runs remain failures until a new revision completes its checks.
+
 ## Completion conditions
 
 The first same-build cable control completed at producer `6753d211` with motion

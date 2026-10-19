@@ -1287,6 +1287,79 @@ test('host journey polls a full 60-second page operation through short protocol 
   assert.equal(harness.frames.size, 0);
 });
 
+test('serialized native map journey retains full DPR through its deferred run', async () => {
+  for (const dpr of [2, 1.25]) {
+    const harness = createFakePage({ scheduleAtZero: false });
+    const window = harness.context.window;
+    const scene = window.__godsEyeView.viewer.scene;
+    window.devicePixelRatio = dpr;
+    scene.canvas.width = scene.context.drawingBufferWidth = Math.floor(
+      1440 * dpr,
+    );
+    scene.canvas.height = scene.context.drawingBufferHeight = Math.floor(
+      900 * dpr,
+    );
+    const result = await runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+      comparisonProfile: 'native-sharpness-v1',
+    });
+    assert.equal(
+      result.settingsBefore.nativeSharpnessProfile.viewport.dpr,
+      dpr,
+    );
+    assert.equal(
+      result.settingsBefore.nativeSharpnessProfile.drawingBuffer.width,
+      Math.floor(1440 * dpr),
+    );
+    assert.deepEqual(result.settingsAfter, result.settingsBefore);
+    assert.equal(result.transitions.length, 4);
+    assert.ok(
+      result.transitions.every(
+        ({ state }) =>
+          state.viewport.drawingBufferWidth === Math.floor(1440 * dpr),
+      ),
+    );
+    assert.equal(harness.listeners.size, 0);
+    assert.equal(harness.frames.size, 0);
+  }
+});
+
+test('native map journey rejects downscaled buffers and changing native settings', async () => {
+  for (const fault of ['downscale', 'dpr', 'sse', 'resolution', 'canvas']) {
+    const harness = createFakePage({ scheduleAtZero: false });
+    const window = harness.context.window;
+    const viewer = window.__godsEyeView.viewer;
+    const scene = viewer.scene;
+    window.devicePixelRatio = 2;
+    scene.canvas.width = scene.context.drawingBufferWidth =
+      fault === 'downscale' ? 1440 : 2880;
+    scene.canvas.height = scene.context.drawingBufferHeight =
+      fault === 'downscale' ? 900 : 1800;
+    const render = scene.requestRender;
+    let renders = 0;
+    scene.requestRender = () => {
+      if (++renders === 3) {
+        if (fault === 'dpr') window.devicePixelRatio = 1.25;
+        if (fault === 'sse') scene.globe.maximumScreenSpaceError = 2;
+        if (fault === 'resolution') viewer.resolutionScale = 0.5;
+        if (fault === 'canvas') scene.canvas.width = 1440;
+      }
+      render();
+    };
+    await assert.rejects(
+      runNativeMapStreamingJourney(harness.page, {
+        durationMs: 60_000,
+        route: harness.route,
+        comparisonProfile: 'native-sharpness-v1',
+      }),
+      /drawing buffer changed|native sharpness settings changed/,
+    );
+    assert.equal(harness.listeners.size, 0);
+    assert.equal(harness.frames.size, 0);
+  }
+});
+
 test('camera preparation cancels a pending startup flight before the route pose', async () => {
   const harness = createFakePage({ holdCameraPreparation: true });
   const operationId = 'map-camera-preparation-cancel';

@@ -4050,6 +4050,7 @@ try {
     };
     mapStreamingJourneys = [];
     for (let run = 1; run <= runs; run += 1) {
+      failureProgress.current = { phase: failureProgress.phase, run };
       const journey = await mapStreamingModule.runNativeMapStreamingJourney(
         page,
         {

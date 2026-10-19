@@ -1396,6 +1396,8 @@ export async function runNativeMapStreamingJourneyInPage({
         runNativeMapStreamingJourneyInPage({
           durationMs,
           route,
+          warmupMs,
+          comparisonProfile,
           command: 'run',
           operationId,
         }),
@@ -1525,6 +1527,18 @@ export async function runNativeMapStreamingJourneyInPage({
   const scene = viewer.scene;
   const camera = viewer.camera;
   const globe = scene?.globe;
+  if (!['legacy', 'native-sharpness-v1'].includes(comparisonProfile))
+    throw new Error('Map journey comparison profile is unsupported.');
+  const nativeSharpness = comparisonProfile === 'native-sharpness-v1';
+  const initialDpr = nativeSharpness ? window.devicePixelRatio : 1;
+  if (!Number.isFinite(initialDpr) || initialDpr <= 0)
+    throw new Error('Map journey device pixel ratio is unavailable.');
+  const expectedViewport = {
+    width: 1440,
+    height: 900,
+    drawingBufferWidth: Math.floor(1440 * initialDpr),
+    drawingBufferHeight: Math.floor(900 * initialDpr),
+  };
   if (!scene?.postRender?.addEventListener || !camera?.setView || !globe)
     throw new Error('Native map workload requires a renderable Cesium scene.');
   const Cesium = window.Cesium;
@@ -2027,12 +2041,26 @@ export async function runNativeMapStreamingJourneyInPage({
       drawingBufferHeight: scene.context?.drawingBufferHeight ?? null,
     };
     if (
-      viewport.width !== 1440 ||
-      viewport.height !== 900 ||
-      viewport.drawingBufferWidth !== 1440 ||
-      viewport.drawingBufferHeight !== 900
+      Object.keys(expectedViewport).some(
+        (key) => viewport[key] !== expectedViewport[key],
+      )
     )
-      throw new Error('Map workload viewport or drawing buffer changed.');
+      throw new Error(
+        `Map workload viewport or drawing buffer changed. expected=${JSON.stringify(expectedViewport)} observed=${JSON.stringify(viewport)}`,
+      );
+    if (
+      nativeSharpness &&
+      (window.devicePixelRatio !== initialDpr ||
+        viewer.__gevNativeSharpnessProfile !== 'native-sharpness-v1' ||
+        viewer.useBrowserRecommendedResolution !== false ||
+        viewer.resolutionScale !== 1 ||
+        globe.maximumScreenSpaceError !== 1 ||
+        scene.canvas.width !== expectedViewport.drawingBufferWidth ||
+        scene.canvas.height !== expectedViewport.drawingBufferHeight)
+    )
+      throw new Error(
+        'Map native sharpness settings changed during the journey.',
+      );
     return {
       activeStack: controller.getActiveId(),
       controllerStatus: controllerState?.status ?? null,
