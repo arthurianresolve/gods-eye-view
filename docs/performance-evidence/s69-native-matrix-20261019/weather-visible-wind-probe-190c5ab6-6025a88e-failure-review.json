@@ -1,0 +1,74 @@
+{
+  "schema": "gev-failed-qualification-review/v1",
+  "reviewedAt": "2026-10-19T23:42:00.729Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-visible-wind-probe-190c5ab6-6025a88e",
+  "error": "Capture exited 1 signal null timeout false readiness null",
+  "rawSha256": "2ded8fe7e76dd4d4fadc84c9c05c09a33f820130aafb815ff582696d638a5eac",
+  "groups": [
+    {
+      "role": "control",
+      "status": "failed-before-measurement",
+      "phase": "initialize-foreground-helper",
+      "startupSamples": 0,
+      "completedSamples": 0,
+      "foreground": {
+        "schema": "gev-windows-owned-browser-foreground-diagnostic/v1",
+        "category": "unconfirmed",
+        "runnerExited": false,
+        "runnerTimedOut": false,
+        "runnerKilled": true,
+        "runnerSignal": "SIGTERM",
+        "browserPid": 8644,
+        "windowHandleAvailable": true,
+        "windowHandleSource": "process-main-window",
+        "handlePollAttempts": 1,
+        "inputAttached": false,
+        "showWindowAccepted": true,
+        "bringWindowToTopAccepted": null,
+        "setForegroundAccepted": false,
+        "foregroundConfirmed": false,
+        "foregroundPid": 11208,
+        "foregroundProcessName": "explorer",
+        "desktopState": "interactive",
+        "status": "foreground-not-confirmed"
+      },
+      "browserCloseProof": "not-present-in-failure-report"
+    }
+  ],
+  "comparisons": [],
+  "files": [
+    {
+      "name": "control.json",
+      "bytes": 3550,
+      "sha256": "2c4963644a1deb590522802d3fb89b05361066994d67b5b26a524212827a8c6b"
+    },
+    {
+      "name": "control.json.browser.pid.ready",
+      "bytes": 5,
+      "sha256": "2a7227362d02b6d3328c4d3f8c13d5074e18818384ee15cc52da233daa930a67"
+    },
+    {
+      "name": "control.json.invocation.json",
+      "bytes": 2548,
+      "sha256": "d4a68109f52f60a99c8114436c710d8e5510c3bcafeed1248750fb30a091079f"
+    },
+    {
+      "name": "control.json.log",
+      "bytes": 263,
+      "sha256": "0380a5320672b15f9bb2ce4c12acfaf6228fe7665e37e81b0cb3f7982c8b1950"
+    },
+    {
+      "name": "invocation-plan.json",
+      "bytes": 3014,
+      "sha256": "31a8607a108645c0623dc83cc52a00edc17d8339ff2fadd19c64a3537924a03f"
+    },
+    {
+      "name": "process.json",
+      "bytes": 986,
+      "sha256": "2ded8fe7e76dd4d4fadc84c9c05c09a33f820130aafb815ff582696d638a5eac"
+    }
+  ],
+  "scope": "All available raw files verified on VM105. Incomplete or input-mismatched attempt retained; no acceptance and no masks or threshold changes. Whole-image pixel comparisons, when present, describe only completed groups."
+}

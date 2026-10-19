@@ -1,0 +1,84 @@
+{
+  "schema": "gev-startup-attribution-independent-review/v1",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "reviewedAt": "2026-10-19T23:27:09.734Z",
+  "sourceStatus": "failed",
+  "producerCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "applicationCandidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "planSha256": "44b7ba8bfaa90a7c64845cf39557375287095e863e2b41568d0f5e11bd258360",
+  "files": [
+    {
+      "name": "infrastructure-dams-01.json",
+      "bytes": 6001,
+      "sha256": "8f64d4f4a4701b8b5f8068f804ac45d3aa7cd5c94569fedf48d9311864b1dfcf"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "a7e0d658839d90033e7bea4b97a09f60e2e502d28733e0b1705a13c5958091a3"
+    },
+    {
+      "name": "infrastructure-dams-01.json.invocation.json",
+      "bytes": 2634,
+      "sha256": "51bc1f497c0643d52be70399661544149f4134fc970e6ca54c3016caa8bdf553"
+    },
+    {
+      "name": "infrastructure-dams-01.json.log",
+      "bytes": 437,
+      "sha256": "fdd39977983a096f73ef006ca151c77d8765133853d0593d28d699ee66f0cd01"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 1923,
+      "sha256": "44b7ba8bfaa90a7c64845cf39557375287095e863e2b41568d0f5e11bd258360"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2183,
+      "sha256": "c3049cac6a1baf2f8c366c15b95715a9cfd5dfe8f1b04cfe63b54e0eb8a2380d"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 6715,
+      "sha256": "43c9ff5c4299f6b5051363ebdac8b28e92bd377dade7d9d6af13b00279f941b0"
+    }
+  ],
+  "results": [
+    {
+      "id": "infrastructure-dams-01",
+      "status": "failed",
+      "failure": {
+        "phase": "initialize-foreground-helper",
+        "scenario": null,
+        "run": 1,
+        "message": "Windows could not activate the owned performance browser window.",
+        "operator": null,
+        "foregroundActivation": {
+          "schema": "gev-windows-owned-browser-foreground-diagnostic/v1",
+          "category": "unconfirmed",
+          "runnerExited": false,
+          "runnerTimedOut": false,
+          "runnerKilled": true,
+          "runnerSignal": "SIGTERM",
+          "browserPid": 43816,
+          "windowHandleAvailable": true,
+          "windowHandleSource": "process-main-window",
+          "handlePollAttempts": 1,
+          "inputAttached": false,
+          "showWindowAccepted": true,
+          "bringWindowToTopAccepted": null,
+          "setForegroundAccepted": false,
+          "foregroundConfirmed": false,
+          "foregroundPid": 40228,
+          "foregroundProcessName": "Code",
+          "desktopState": "interactive",
+          "status": "foreground-not-confirmed"
+        }
+      }
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-attribution-dams-190c5ab6-ac50400c",
+  "scope": "Independent source/hash/identity checks and phase projection. Does not substitute for startup acceptance or clear any failed measurement."
+}

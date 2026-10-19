@@ -1,0 +1,725 @@
+{
+  "schema": "gev-idle-demand-independent-review/v1",
+  "reviewedAt": "2026-10-19T23:05:15.159Z",
+  "status": "diagnostic-complete",
+  "performanceAcceptanceEligible": false,
+  "producerCommit": "207f9a482ac598d7373b150675847ccfd2b5ccb7",
+  "roles": [
+    {
+      "role": "control",
+      "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+      "reportSha256": "2310991f3429b8d55a479f80e51c390b626de02ba9e5cf29b0ec5336f61fc8b1",
+      "renderedFrames": 82,
+      "governorSamples": 227,
+      "instrumentation": {
+        "samplePeriodMs": 250,
+        "maximumFrameEvents": 512,
+        "maximumGovernorSamples": 300,
+        "frameEventsObserved": 82,
+        "frameEventsRecorded": 82,
+        "frameEventsOmitted": 0,
+        "governorSamplesObserved": 227,
+        "governorSamplesRecorded": 227,
+        "governorSamplesOmitted": 0,
+        "samplingMaxGapMs": 1683.800000011921,
+        "snapshotReadCount": 309,
+        "snapshotReadFailureCount": 0,
+        "snapshotReadTotalDurationMs": 19.599999874830246,
+        "snapshotReadMaxDurationMs": 0.30000001192092896,
+        "phaseRequestEventsOmitted": 0,
+        "gapsOverOneSecondOmitted": 0
+      },
+      "ownerChanges": [],
+      "phases": [
+        {
+          "id": "early-history",
+          "scheduledTargetElapsedMs": 0,
+          "pageObservedCompletionElapsedMs": 2194.8999999910593,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "middle-history",
+          "scheduledTargetElapsedMs": 20000,
+          "pageObservedCompletionElapsedMs": 22153.19999998808,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "latest-history",
+          "scheduledTargetElapsedMs": 40000,
+          "pageObservedCompletionElapsedMs": 42599.09999999404,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "startAtMs": 4560,
+          "endAtMs": 18497.79999999702,
+          "intervalMs": 13937.79999999702,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 57,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 4560,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 22932.09999999404,
+          "endAtMs": 33405.09999999404,
+          "intervalMs": 10473,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 44,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 22932.09999999404,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 34813.69999998808,
+          "endAtMs": 40026.09999999404,
+          "intervalMs": 5212.4000000059605,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 23,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 34813.69999998808,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 43145.19999998808,
+          "endAtMs": 48485.59999999404,
+          "intervalMs": 5340.4000000059605,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 23,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 43145.19999998808,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        }
+      ],
+      "wind": {
+        "observations": 309,
+        "missing": 0,
+        "renderModes": [
+          "gpu-streamlines"
+        ],
+        "heightFades": [
+          0
+        ],
+        "visibleCells": [
+          0
+        ],
+        "gpuReady": [
+          true
+        ],
+        "pathCounts": [
+          7200
+        ],
+        "paused": [
+          false
+        ]
+      },
+      "requestAttribution": {
+        "directWindSceneRequestRenderCaptured": false,
+        "note": "Wind GPU draw and camera paths call scene.requestRender directly; these calls do not appear in the render governor recent-request reason list."
+      },
+      "visibleWindProbe": {
+        "status": "failed",
+        "failureReasons": [
+          "wind-gpu-not-visible-at-probe-pose",
+          "unpaused-wind-phase-did-not-advance-visibly",
+          "paused-wind-phase-was-not-stable",
+          "resumed-wind-did-not-advance-with-natural-render"
+        ],
+        "cleanup": {
+          "attempted": true,
+          "cameraRestored": true,
+          "pauseRestored": true
+        },
+        "navigationOwnership": {
+          "moveAttempted": true,
+          "moveAccepted": true,
+          "restoreAccepted": true
+        },
+        "unpausedStart": {
+          "diagnostics": {
+            "renderMode": "gpu-streamlines",
+            "paused": false,
+            "reducedMotion": false,
+            "hidden": false,
+            "framePending": true,
+            "gpu": {
+              "ready": true,
+              "heightFade": 0.9999999999996843,
+              "visibleCells": 9,
+              "visibleVertexCount": 110080,
+              "pathCount": 7200,
+              "displayHeightMeters": 12000
+            }
+          },
+          "windMaterial": {
+            "phaseTime": null,
+            "heightFade": null,
+            "matchCount": 72
+          }
+        },
+        "unpausedEnd": {
+          "diagnostics": {
+            "renderMode": "gpu-streamlines",
+            "paused": false,
+            "reducedMotion": false,
+            "hidden": false,
+            "framePending": true,
+            "gpu": {
+              "ready": true,
+              "heightFade": 0.9999999999996843,
+              "visibleCells": 9,
+              "visibleVertexCount": 110080,
+              "pathCount": 7200,
+              "displayHeightMeters": 12000
+            }
+          },
+          "windMaterial": {
+            "phaseTime": null,
+            "heightFade": null,
+            "matchCount": 72
+          }
+        }
+      }
+    },
+    {
+      "role": "candidate",
+      "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "reportSha256": "16f178c907fac093cd7f0eda497d1a8bc979db4934913cb262493538f9032620",
+      "renderedFrames": 85,
+      "governorSamples": 221,
+      "instrumentation": {
+        "samplePeriodMs": 250,
+        "maximumFrameEvents": 512,
+        "maximumGovernorSamples": 300,
+        "frameEventsObserved": 85,
+        "frameEventsRecorded": 85,
+        "frameEventsOmitted": 0,
+        "governorSamplesObserved": 221,
+        "governorSamplesRecorded": 221,
+        "governorSamplesOmitted": 0,
+        "samplingMaxGapMs": 1637,
+        "snapshotReadCount": 306,
+        "snapshotReadFailureCount": 0,
+        "snapshotReadTotalDurationMs": 17.89999993145466,
+        "snapshotReadMaxDurationMs": 0.30000001192092896,
+        "phaseRequestEventsOmitted": 0,
+        "gapsOverOneSecondOmitted": 0
+      },
+      "ownerChanges": [],
+      "phases": [
+        {
+          "id": "early-history",
+          "scheduledTargetElapsedMs": 0,
+          "pageObservedCompletionElapsedMs": 2776.699999988079,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "middle-history",
+          "scheduledTargetElapsedMs": 20000,
+          "pageObservedCompletionElapsedMs": 22626.5,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "latest-history",
+          "scheduledTargetElapsedMs": 40000,
+          "pageObservedCompletionElapsedMs": 42366.89999999106,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "startAtMs": 2767.3999999910593,
+          "endAtMs": 4194.29999999702,
+          "intervalMs": 1426.9000000059605,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 3,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 2767.3999999910593,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 5138.5999999940395,
+          "endAtMs": 17959.59999999404,
+          "intervalMs": 12821,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 53,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 5138.5999999940395,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 23423.69999998808,
+          "endAtMs": 32870.29999999702,
+          "intervalMs": 9446.60000000894,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 40,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 23423.69999998808,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 34316.29999999702,
+          "endAtMs": 40022.89999999106,
+          "intervalMs": 5706.5999999940395,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 25,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 34316.29999999702,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        },
+        {
+          "startAtMs": 42705.79999999702,
+          "endAtMs": 47950.39999999106,
+          "intervalMs": 5244.5999999940395,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 23,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ],
+          "windRenderingAssessment": "gpu-streamlines-fully-faded",
+          "windRendererObservations": [
+            {
+              "atMs": 42705.79999999702,
+              "source": "frame",
+              "state": {
+                "renderMode": "gpu-streamlines",
+                "paused": false,
+                "reducedMotion": false,
+                "hidden": false,
+                "framePending": false,
+                "gpu": {
+                  "ready": true,
+                  "heightFade": 0,
+                  "visibleCells": 0,
+                  "visibleVertexCount": 0,
+                  "pathCount": 7200,
+                  "displayHeightMeters": 12000
+                }
+              }
+            }
+          ],
+          "windRendererObservationsOmitted": 0
+        }
+      ],
+      "wind": {
+        "observations": 306,
+        "missing": 0,
+        "renderModes": [
+          "gpu-streamlines"
+        ],
+        "heightFades": [
+          0
+        ],
+        "visibleCells": [
+          0
+        ],
+        "gpuReady": [
+          true
+        ],
+        "pathCounts": [
+          7200
+        ],
+        "paused": [
+          false
+        ]
+      },
+      "requestAttribution": {
+        "directWindSceneRequestRenderCaptured": false,
+        "note": "Wind GPU draw and camera paths call scene.requestRender directly; these calls do not appear in the render governor recent-request reason list."
+      },
+      "visibleWindProbe": {
+        "status": "failed",
+        "failureReasons": [
+          "wind-gpu-not-visible-at-probe-pose",
+          "unpaused-wind-phase-did-not-advance-visibly",
+          "paused-wind-phase-was-not-stable",
+          "resumed-wind-did-not-advance-with-natural-render"
+        ],
+        "cleanup": {
+          "attempted": true,
+          "cameraRestored": true,
+          "pauseRestored": true
+        },
+        "navigationOwnership": {
+          "moveAttempted": true,
+          "moveAccepted": true,
+          "restoreAccepted": true
+        },
+        "unpausedStart": {
+          "diagnostics": {
+            "renderMode": "gpu-streamlines",
+            "paused": false,
+            "reducedMotion": false,
+            "hidden": false,
+            "framePending": true,
+            "gpu": {
+              "ready": true,
+              "heightFade": 0.9999999999996843,
+              "visibleCells": 9,
+              "visibleVertexCount": 110080,
+              "pathCount": 7200,
+              "displayHeightMeters": 12000
+            }
+          },
+          "windMaterial": {
+            "phaseTime": null,
+            "heightFade": null,
+            "matchCount": 72
+          }
+        },
+        "unpausedEnd": {
+          "diagnostics": {
+            "renderMode": "gpu-streamlines",
+            "paused": false,
+            "reducedMotion": false,
+            "hidden": false,
+            "framePending": true,
+            "gpu": {
+              "ready": true,
+              "heightFade": 0.9999999999996843,
+              "visibleCells": 9,
+              "visibleVertexCount": 110080,
+              "pathCount": 7200,
+              "displayHeightMeters": 12000
+            }
+          },
+          "windMaterial": {
+            "phaseTime": null,
+            "heightFade": null,
+            "matchCount": 72
+          }
+        }
+      }
+    }
+  ],
+  "files": [
+    {
+      "name": "candidate.json",
+      "bytes": 548397,
+      "sha256": "16f178c907fac093cd7f0eda497d1a8bc979db4934913cb262493538f9032620"
+    },
+    {
+      "name": "candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "01091ecc9331982e1a1c71ff78d92a03614c43b449a1a2e79fd0f77412986477"
+    },
+    {
+      "name": "candidate.json.invocation.json",
+      "bytes": 2530,
+      "sha256": "7bb4bcd38db3acf9703b4b00de100cc1f0e9c1393c236f9dc032125f9f81ab34"
+    },
+    {
+      "name": "candidate.json.log",
+      "bytes": 311,
+      "sha256": "f463c6bd49a7a99a1d97941c09a9ea7743c8547eca6fe429c869eecac75abfc6"
+    },
+    {
+      "name": "control.json",
+      "bytes": 549712,
+      "sha256": "2310991f3429b8d55a479f80e51c390b626de02ba9e5cf29b0ec5336f61fc8b1"
+    },
+    {
+      "name": "control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "927a57849da153298b210ef4a4efe13d49f5dabad6850f359f82e672e573ac5c"
+    },
+    {
+      "name": "control.json.invocation.json",
+      "bytes": 2548,
+      "sha256": "7f52c4269906a087bcd7aabc052575744efd3625b4e26e6cd2399f03b1c1b9de"
+    },
+    {
+      "name": "control.json.log",
+      "bytes": 309,
+      "sha256": "5ccb1fcc15e35927fd1315ed05fbc66ed9e364546844b620cece0a724ab5c941"
+    },
+    {
+      "name": "invocation-plan.json",
+      "bytes": 3014,
+      "sha256": "629b2d7b63677c332c81555360151a044059079b6cb01d1f88f7c223ec165fda"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1867,
+      "sha256": "ee9ef7926a26f083e71574e9d8f6ccaa4d610fb4f7c76aa0197187458fe1b23a"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 6110,
+      "sha256": "e3e4733fb0defa590aac88406f57bf170ec595c657540eeb8cc7445f2919cd22"
+    }
+  ],
+  "scope": "Hash-verified diagnostic observations only. A completed diagnostic does not imply its functional probe passed. No latency or visual acceptance is inferred. Missing wind observations remain unknown."
+}
