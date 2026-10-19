@@ -167,22 +167,26 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   )
     throw new Error('Visual snapshot phase dimensions are unavailable.');
   const dpr = dprX;
+  // Read each edge once. Sixteen single-pixel reads can each flush a GPU-backed
+  // canvas and make the observation itself miss the short animation phase.
+  // The same eight pixel coordinates and alpha values remain authoritative.
+  const stripHeight = Math.min(canvas.height, Math.floor(7 * dpr) + 1);
+  const leftEdge = context.getImageData(0, 0, 1, stripHeight).data;
+  const rightEdge = context.getImageData(
+    Math.max(0, canvas.width - 1),
+    0,
+    1,
+    stripHeight,
+  ).data;
   const rows = [];
   for (let cssRow = 0; cssRow < 8; cssRow++) {
     const pixelRow = Math.floor(cssRow * dpr);
     if (pixelRow >= canvas.height) break;
-    const left = context.getImageData(0, pixelRow, 1, 1).data;
-    const right = context.getImageData(
-      Math.max(0, canvas.width - 1),
-      pixelRow,
-      1,
-      1,
-    ).data;
     rows.push({
       cssRow,
       pixelRow,
-      leftAlpha: left[3],
-      rightAlpha: right[3],
+      leftAlpha: leftEdge[pixelRow * 4 + 3],
+      rightAlpha: rightEdge[pixelRow * 4 + 3],
     });
   }
   const leftRows = rows

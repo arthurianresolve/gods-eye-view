@@ -270,10 +270,16 @@ function phaseFixture({
       return {
         getImageData: (x, y, width, height) => {
           reads.push({ x, y, width, height });
-          const cssRow = Math.floor(y / dpr);
+          assert.equal(width, 1);
+          assert.ok(height > 0 && y + height <= canvas.height);
           const edgePhase = mismatchedEdges && x > 0 ? (phase + 2) % 4 : phase;
-          const alpha = !empty && cssRow % 4 === edgePhase ? 8 : 0;
-          return { data: new Uint8ClampedArray([0, 0, 0, alpha]) };
+          const paintedRows = [edgePhase, edgePhase + 4].map((row) =>
+            Math.floor(row * dpr),
+          );
+          const data = new Uint8ClampedArray(width * height * 4);
+          for (let row = 0; row < height; row++)
+            data[row * 4 + 3] = !empty && paintedRows.includes(y + row) ? 8 : 0;
+          return { data };
         },
       };
     },
@@ -302,7 +308,7 @@ function phaseFixture({
 }
 
 test('serialized snapshot phase reads actual edge pixels at native DPR', () => {
-  for (const dpr of [1, 2])
+  for (const dpr of [1, 1.25, 1.5, 1.75, 2, 3])
     for (const phase of [0, 2]) {
       const fixture = phaseFixture({ dpr, phase });
       const result = fixture.read();
@@ -316,10 +322,22 @@ test('serialized snapshot phase reads actual edge pixels at native DPR', () => {
       );
       assert.deepEqual(
         result.alphaRows.map((row) => row.pixelRow),
-        Array.from({ length: 8 }, (_, row) => row * dpr),
+        Array.from({ length: 8 }, (_, row) => Math.floor(row * dpr)),
       );
       assert.equal(result.dimensions.dpr, dpr);
-      assert.equal(fixture.reads.length, 16);
+      assert.deepEqual(
+        fixture.reads,
+        [
+          { x: 0, y: 0, width: 1, height: Math.floor(7 * dpr) + 1 },
+          {
+            x: fixture.canvas.width - 1,
+            y: 0,
+            width: 1,
+            height: Math.floor(7 * dpr) + 1,
+          },
+        ],
+        'phase observation performs two bounded readbacks without changing sampled pixels',
+      );
     }
 });
 
