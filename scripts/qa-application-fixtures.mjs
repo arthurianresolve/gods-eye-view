@@ -254,6 +254,16 @@ export function collectWorkspaceImportDiagnostics(input) {
       focused: safeCall(() => scope.document.hasFocus()),
     },
     workspace: {
+      libraryOpen: typeof root?.open === 'boolean' ? root.open : null,
+      scenePanelCollapsed: safeCall(() =>
+        root?.closest('#scene-panel')?.classList.contains('collapsed'),
+      ),
+      importControlPresent: Boolean(root?.querySelector('[data-geo-file]')),
+      importControlHasLayout: safeCall(() =>
+        Boolean(
+          root?.querySelector('[data-geo-file]')?.getClientRects().length,
+        ),
+      ),
       status: text('[data-status]'),
       errorCode:
         root?.querySelector('[data-status]')?.dataset?.errorCode || null,
@@ -591,12 +601,40 @@ export async function openWorkspace(
   );
 }
 
+// A workspace restore may collapse its panel. Open the real disclosures before
+// requiring a visible import control; programmatic save/open clicks alone do
+// not expose controls inside the library's closed <details> element.
+export function showWorkspaceLibraryForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  if (!root) throw new Error('Workspace library is unavailable');
+  const app = scope.__godsEyeView;
+  const panel = root.closest('#scene-panel');
+  if (panel?.classList.contains('collapsed')) {
+    if (typeof app?.styleManager?.setPanelCollapsed !== 'function')
+      throw new Error('Scene panel disclosure API is unavailable');
+    app.styleManager.setPanelCollapsed('scene-panel', false, {
+      skipCapture: true,
+    });
+  }
+  if (!root.open) {
+    if (typeof app?.workspaceLibraryPanel?.openLibrary !== 'function')
+      throw new Error('Workspace library disclosure API is unavailable');
+    app.workspaceLibraryPanel.openLibrary();
+  }
+}
+
 export async function importFixtureGeometry(
   page,
   name = 'Persistent fixture',
   { timeoutMs = 30_000, onProgress = () => {} } = {},
 ) {
   const phaseOptions = { onProgress };
+  await runWorkspaceFixturePhase(
+    page,
+    'import-panel-open',
+    () => page.evaluate(showWorkspaceLibraryForFixtureInPage),
+    phaseOptions,
+  );
   await runWorkspaceFixturePhase(
     page,
     'import-control-wait',

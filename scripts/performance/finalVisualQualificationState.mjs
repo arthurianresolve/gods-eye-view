@@ -299,6 +299,12 @@ export async function waitForVisualReadinessInPage({
       consecutive = 0;
       continue;
     }
+    if (proof?.gaze?.status !== 'ready') {
+      reason = proof?.gaze?.status || 'logo-gaze-not-settled';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
     if (
       proof?.hudVisible !== expectedHudVisible ||
       proof?.hudDisplay === 'none' ||
@@ -331,6 +337,7 @@ export async function waitForVisualReadinessInPage({
       summary: proof.summary,
       scrollContainers: containers,
       pointer: proof.pointer,
+      gaze: proof.gaze,
       activeElement: proof.activeElement,
     });
     if (signature === previousSignature) consecutive++;

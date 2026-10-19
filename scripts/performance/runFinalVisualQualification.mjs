@@ -15,6 +15,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
+import { calculateLogoGaze } from '../../src/logoGaze.js';
 import {
   bootFixturePage,
   cleanupFixturePageDiagnostics,
@@ -53,6 +54,8 @@ import {
 import {
   installVisualPresentationBoundaryInPage,
   disposeVisualPresentationBoundaryInPage,
+  readVisibleLogoGazeTargetsInPage,
+  setExpectedLogoGazeInPage,
   presentationStayedSettled,
   visualReadinessInputsMatch,
 } from './visualPresentationBoundary.mjs';
@@ -417,7 +420,6 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         if (!result?.ok || result.visible !== false)
           throw new Error('HUD hidden state failed.');
       }
-      await page.mouse.move(CAPTURE_POINTER.x, CAPTURE_POINTER.y);
       const foregroundReply = await foregroundSession.request(
         browserPid,
         15_000,
@@ -436,6 +438,30 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         foreground.status !== 'foreground-confirmed'
       )
         throw new Error(`Foreground proof failed for ${id}.`);
+      await page.mouse.move(CAPTURE_POINTER.x + 3, CAPTURE_POINTER.y + 3);
+      await page.mouse.move(CAPTURE_POINTER.x, CAPTURE_POINTER.y);
+      const visibleLogos = await page.evaluate(
+        readVisibleLogoGazeTargetsInPage,
+      );
+      const expectedLogos = visibleLogos.map(({ id, key, rect }) => {
+        const offset = calculateLogoGaze(
+          CAPTURE_POINTER.x,
+          CAPTURE_POINTER.y,
+          rect,
+        );
+        return {
+          id,
+          key,
+          rect,
+          transform: `translate(${offset.x.toFixed(2)} ${offset.y.toFixed(2)})`,
+        };
+      });
+      await page.evaluate(setExpectedLogoGazeInPage, {
+        pointer: CAPTURE_POINTER,
+        logos: expectedLogos,
+      });
+      if (!expectedLogos.length)
+        throw new Error(`No visible gaze logo was observed for ${id}.`);
       const attempts = [];
       let accepted = null;
       let pngCount = 0;
@@ -495,6 +521,16 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           continue;
         }
         const completedRender = readiness.completedRender;
+        if (readiness.proof?.gaze?.status !== 'ready') {
+          attempts.push({
+            attempt,
+            accepted: false,
+            reason: 'logo-gaze-not-settled',
+            gaze: readiness.proof?.gaze || null,
+            readiness,
+          });
+          continue;
+        }
         const expectedHudVisible = id !== 'hud-hidden';
         let pausedCapture;
         try {
@@ -620,6 +656,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             },
           },
           ...observed,
+          observedStatePhase: 'pre-readiness-structural-observation',
           presentation: { before, after, attempts },
           frameDelivery: { ...frameDelivery },
           [label]: pausedCapture.screenshot,
@@ -877,7 +914,9 @@ async function produceFinalVisualQualificationInternal(options, progress) {
       JSON.stringify(left.camera) !== JSON.stringify(right.camera) ||
       JSON.stringify(left.populations) !== JSON.stringify(right.populations) ||
       JSON.stringify(left.profile) !== JSON.stringify(right.profile) ||
-      JSON.stringify(left.settings) !== JSON.stringify(right.settings)
+      JSON.stringify(left.settings) !== JSON.stringify(right.settings) ||
+      left.observedStatePhase !== 'pre-readiness-structural-observation' ||
+      right.observedStatePhase !== 'pre-readiness-structural-observation'
     )
       throw new Error(
         `Baseline/candidate observed state differs for ${STATES[index]}.`,
@@ -955,6 +994,7 @@ async function produceFinalVisualQualificationInternal(options, progress) {
     rasterPolicy: VISIBLE_CONTROL_VARIANCE_POLICY,
     states: STATES.map((id, index) => ({
       id,
+      observedStatePhase: 'pre-readiness-structural-observation',
       completedRender: {
         baseline: baseline.states[index].completedRender,
         candidate: candidate.states[index].completedRender,

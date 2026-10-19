@@ -26,8 +26,11 @@ The original images and rejected results remain preserved. The exact-candidate d
 within the regression limit at 299.7 versus 304.6 ms (+1.63%), but its app-ready
 startup median increases from 3,884 to 4,289 ms (+10.43%), failing the unchanged
 10% startup gate. Loading-screen disappearance increases 8.44%. The failed
-startup result is retained; a prospective ten-shard balanced confirmation is
-running without changing its threshold. Cable qualification passes at -1.14%
+startup result is retained. The predeclared ten-shard balanced confirmation
+completed with app-ready medians of 5,784 versus 4,584 ms (-20.75%) and
+loading-screen-hidden medians of 6,973 versus 5,961 ms (-14.51%); the original
+startup regression did not recur. This startup-only result does not establish
+the motion improvement target. Cable qualification passes at -1.14%
 motion p95, -14.87% app-ready startup and -3.61% loading-screen-hidden startup.
 The remaining matrix, visual comparison, local-control/replay latency,
 sampled peak heap, signed-package preflight and final Ampfing soak must qualify
@@ -36,9 +39,15 @@ contains only the baseline's weather and recorded-position correctness fixes;
 it is used for replay latency and sampled heap, not relabeled as the original
 baseline. The first metrics attempt failed on both builds because four fixture
 timestamps correctly produce five stored rows, including an altitude correction.
-QA correction `dc3a85e5` passes all 19 focused tests on both Node versions and
-requires a new hardware run. It changes no runtime or fixture bytes. Production
-remains at `e7a878e`.
+QA correction `dc3a85e5` passes all 19 focused tests on both Node versions.
+Its hardware run completed twenty controls and twenty replay seeks per build,
+then hit a closed Workspace disclosure before heap sampling. The QA fixture now
+opens that panel through existing application controls, preserving the visible
+file-control requirement. The visual observer also checks settled logo gaze and
+CCTV presentation inputs. All 28 combined browser-free tests pass on each VM
+Node version, and 39 PNG consumer tests pass on Windows. Complete hardware
+metrics and visual runs remain required. These changes affect QA only.
+Production remains at `e7a878e`.
 
 All seven exact `b3c49b19` standard CI jobs, tracking and signed-package workflows
 have passed. Its

@@ -7,6 +7,7 @@ import {
   importFixtureGeometry,
   prepareFixturePage,
   readFixturePageDiagnostics,
+  showWorkspaceLibraryForFixtureInPage,
 } from './qa-application-fixtures.mjs';
 
 class MockPage extends EventEmitter {
@@ -88,8 +89,12 @@ test('import fixture releases the selector ElementHandle it does not retain', as
         },
       };
     },
-    async evaluate() {
-      events.push('import-stage');
+    async evaluate(operation) {
+      events.push(
+        operation === showWorkspaceLibraryForFixtureInPage
+          ? 'panel-open'
+          : 'import-stage',
+      );
     },
     async waitForFunction() {},
   };
@@ -101,12 +106,114 @@ test('import fixture releases the selector ElementHandle it does not retain', as
     },
   });
 
-  assert.deepEqual(events.slice(0, 4), [
+  assert.deepEqual(events.slice(0, 5), [
+    'panel-open',
     'selector-wait',
     'handle-dispose',
     'selector-phase-complete',
     'import-stage',
   ]);
+});
+
+function workspaceDisclosureFixture({ open = false, collapsed = true } = {}) {
+  const calls = [];
+  const panel = {
+    classList: { contains: (name) => name === 'collapsed' && collapsed },
+  };
+  const root = {
+    open,
+    closest: (selector) => (selector === '#scene-panel' ? panel : null),
+  };
+  const scope = {
+    document: { querySelector: () => root },
+    __godsEyeView: {
+      styleManager: {
+        setPanelCollapsed(...args) {
+          calls.push(['panel', ...args]);
+          collapsed = args[1];
+        },
+      },
+      workspaceLibraryPanel: {
+        openLibrary() {
+          calls.push(['library']);
+          root.open = true;
+        },
+      },
+    },
+  };
+  return { scope, root, calls };
+}
+
+test('import setup opens closed workspace disclosures through application controls', () => {
+  const fixture = workspaceDisclosureFixture();
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.deepEqual(fixture.calls, [
+    ['panel', 'scene-panel', false, { skipCapture: true }],
+    ['library'],
+  ]);
+  assert.equal(fixture.root.open, true);
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.equal(
+    fixture.calls.length,
+    2,
+    'Already open disclosures need no additional writes or focus changes',
+  );
+});
+
+test('import setup reopens the panel even when the workspace disclosure stayed open', () => {
+  const fixture = workspaceDisclosureFixture({ open: true });
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.deepEqual(fixture.calls, [
+    ['panel', 'scene-panel', false, { skipCapture: true }],
+  ]);
+});
+
+test('import setup fails explicitly for missing disclosure APIs and unavailable library', () => {
+  const fixture = workspaceDisclosureFixture();
+  delete fixture.scope.__godsEyeView.styleManager.setPanelCollapsed;
+  assert.throws(
+    () => showWorkspaceLibraryForFixtureInPage(fixture.scope),
+    /Scene panel disclosure API/,
+  );
+  assert.equal(fixture.root.open, false);
+  const missingLibrary = workspaceDisclosureFixture({ collapsed: false });
+  delete missingLibrary.scope.__godsEyeView.workspaceLibraryPanel.openLibrary;
+  assert.throws(
+    () => showWorkspaceLibraryForFixtureInPage(missingLibrary.scope),
+    /Workspace library disclosure API/,
+  );
+  assert.throws(
+    () =>
+      showWorkspaceLibraryForFixtureInPage({
+        document: { querySelector: () => null },
+      }),
+    /Workspace library is unavailable/,
+  );
+});
+
+test('opening disclosures never bypasses the visible import-control requirement', async () => {
+  const calls = [];
+  const page = {
+    async evaluate(operation) {
+      calls.push(
+        operation === showWorkspaceLibraryForFixtureInPage
+          ? 'panel-open'
+          : 'diagnostics',
+      );
+      return null;
+    },
+    async waitForSelector(selector, options) {
+      assert.equal(options.visible, true);
+      assert.equal(options.timeout, 123);
+      calls.push('visible-control-wait');
+      throw new Error('Control remained hidden');
+    },
+  };
+  await assert.rejects(
+    importFixtureGeometry(page, 'Fixture', { timeoutMs: 123 }),
+    /Control remained hidden; workspace\/import phase import-control-wait/,
+  );
+  assert.deepEqual(calls.slice(0, 2), ['panel-open', 'visible-control-wait']);
 });
 
 test('fixture console ownership defaults off and diagnostics remain unavailable', async () => {

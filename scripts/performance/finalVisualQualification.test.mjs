@@ -124,6 +124,65 @@ async function fixture(t) {
         scrollContainer('cctv-panel-inner', 360, 1200, 850),
         { id: 'cctv-cyber-panel-body', present: false },
       ],
+      gaze: {
+        status: 'ready',
+        reducedMotion: false,
+        pointerMoveSequence: 2,
+        resetSequence: 1,
+        expected: {
+          pointer: { x: 1, y: 1 },
+          logos: [
+            {
+              id: '',
+              key: 'logo-0',
+              rect: { left: 10, top: 10, width: 40, height: 20 },
+              transform: 'translate(-1.00 -1.00)',
+            },
+          ],
+        },
+        logos: [
+          {
+            id: '',
+            key: 'logo-0',
+            rect: { left: 10, top: 10, width: 40, height: 20 },
+            mode: 'inline-svg',
+            globeTransform: 'translate(-1.00 -1.00)',
+            cageTransform: 'translate(-1.00 -1.00)',
+          },
+        ],
+        activeAnimations: [],
+        animationOverflow: false,
+        cctvEffects: [
+          ...['cctv-panel', 'cctv-panel-inner'].map((id) => ({
+            id,
+            present: true,
+            filter: 'none',
+            backdropFilter: 'none',
+            transitionProperty: 'none',
+            transitionDuration: '0s',
+            transitionDelay: '0s',
+            animationName: 'none',
+            animationDuration: '0s',
+          })),
+          { id: 'cctv-cyber-panel-body', present: false },
+        ],
+        titleStyle: {
+          filter: 'none',
+          transitionProperty: 'none',
+          transitionDuration: '0s',
+          animationName: 'none',
+          animationDuration: '0s',
+        },
+        sourceBadge: {
+          rect: { left: 1, top: 2, right: 3, bottom: 4, width: 2, height: 2 },
+          filter: 'none',
+          backdropFilter: 'none',
+          borderRadius: '4px',
+          transitionProperty: 'none',
+          transitionDuration: '0s',
+          animationName: 'none',
+        },
+      },
     };
   };
   const alphaRows = Array.from({ length: 8 }, (_, cssRow) => ({
@@ -188,6 +247,7 @@ async function fixture(t) {
     masks: [],
     states: FINAL_VISUAL_STATES.map((id) => ({
       id,
+      observedStatePhase: 'pre-readiness-structural-observation',
       completedRender: {
         baseline: { frameNumber: 1, elapsedMs: 1 },
         candidate: { frameNumber: 2, elapsedMs: 1 },
@@ -228,6 +288,20 @@ async function fixture(t) {
         candidate: {
           before: phaseFor(id),
           after: phaseFor(id),
+        },
+      },
+      readiness: {
+        baseline: {
+          status: 'ready',
+          consecutiveStableRenders: 2,
+          completedRenders: 2,
+          proof: phaseFor(id),
+        },
+        candidate: {
+          status: 'ready',
+          consecutiveStableRenders: 2,
+          completedRenders: 2,
+          proof: phaseFor(id),
         },
       },
       captureMethod: {
@@ -335,6 +409,28 @@ test('rejects contradictory or missing evidence at the relevant observation', as
         r.application.candidateSha = r.application.baselineSha;
       },
       /application revisions/,
+    ],
+    [
+      'missing gaze readiness proof',
+      (r) => {
+        r.states[0].readiness.candidate.proof.gaze.expected.logos = [];
+      },
+      /readiness proof/,
+    ],
+    [
+      'readiness did not stabilize across enough renders',
+      (r) => {
+        r.states[0].readiness.candidate.consecutiveStableRenders = 1;
+      },
+      /stable render count/,
+    ],
+    [
+      'gaze transform drift at capture',
+      (r) => {
+        r.states[0].presentation.candidate.after.gaze.logos[0].globeTransform =
+          'translate(0.00 0.00)';
+      },
+      /presentation changed/,
     ],
     [
       'wrong harness',

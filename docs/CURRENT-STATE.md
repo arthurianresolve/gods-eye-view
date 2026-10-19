@@ -10,13 +10,19 @@ Recorded-pose correctness passes the 158-test suite on Node 24/26 and all eight
 fleet/eight tracked native Windows observations.
 
 The current cable comparison passes. Dam motion p95 is within the 10% limit,
-but its original startup result fails at +10.43%; a fixed, prospective balanced
-startup confirmation is running. The complete settled-scene screenshot is
+but its original startup result fails at +10.43%. The predeclared ten-shard
+balanced confirmation completed: app-ready startup is -20.75% and
+loading-screen-hidden startup is -14.51%, with all foreground and cleanup
+checks passing. The original failure is preserved. The complete settled-scene screenshot is
 identical across builds, while later HUD-state captures fail visual comparison.
-Gaze animation readiness is being corrected in the harness. Replay metrics
-also need a fresh run after fixing their incorrect four-row expectation: four
-fixture timestamps include five retained observations because one is a correction.
-The QA fix `dc3a85e5` passes 19/19 focused tests on both supported Node versions.
+Gaze/CCTV readiness checks are corrected in the harness; hardware rerun is
+pending. Replay metrics now validate the five observations retained from four
+fixture timestamps, including an altitude correction. The latest attempt
+completed twenty controls and twenty seeks per build, then failed at a hidden
+import control before heap sampling. The harness now opens Workspace disclosures
+through application controls while retaining the visibility check. All 28
+browser-free QA tests pass on both VM Node versions; 39 PNG consumer tests pass
+on Windows. Map qualification is running; failed attempts remain archived.
 Remaining workload comparisons, interaction/heap evidence, private browser
 workspace verification and the final Ampfing soak must bind the current candidate.
 The [current evidence ledger](performance-evidence/s69-native-matrix-20261019/README.md)

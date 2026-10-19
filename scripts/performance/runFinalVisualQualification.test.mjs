@@ -231,6 +231,66 @@ test('snapshot phase stays unavailable for absent strokes or contradictory edges
 });
 
 function visualReadinessProof(scrollTop = 0) {
+  const gazeRect = { left: 2, top: 3, width: 40, height: 20 };
+  const gaze = {
+    status: 'ready',
+    reducedMotion: false,
+    pointerMoveSequence: 1,
+    resetSequence: 0,
+    expected: {
+      pointer: { x: 1, y: 1 },
+      logos: [
+        {
+          id: '',
+          key: 'logo-0',
+          rect: gazeRect,
+          transform: 'translate(-1.00 -1.00)',
+        },
+      ],
+    },
+    logos: [
+      {
+        id: '',
+        key: 'logo-0',
+        rect: gazeRect,
+        mode: 'inline-svg',
+        globeTransform: 'translate(-1.00 -1.00)',
+        cageTransform: 'translate(-1.00 -1.00)',
+      },
+    ],
+    activeAnimations: [],
+    animationOverflow: false,
+    cctvEffects: [
+      ...['cctv-panel', 'cctv-panel-inner'].map((id) => ({
+        id,
+        present: true,
+        filter: 'none',
+        backdropFilter: 'none',
+        transitionProperty: 'none',
+        transitionDuration: '0s',
+        transitionDelay: '0s',
+        animationName: 'none',
+        animationDuration: '0s',
+      })),
+      { id: 'cctv-cyber-panel-body', present: false },
+    ],
+    titleStyle: {
+      filter: 'none',
+      transitionProperty: 'none',
+      transitionDuration: '0s',
+      animationName: 'none',
+      animationDuration: '0s',
+    },
+    sourceBadge: {
+      rect: { left: 1, top: 2, right: 3, bottom: 4, width: 2, height: 2 },
+      filter: 'none',
+      backdropFilter: 'none',
+      borderRadius: '4px',
+      transitionProperty: 'none',
+      transitionDuration: '0s',
+      animationName: 'none',
+    },
+  };
   return {
     revision: 1,
     recordingVisible: true,
@@ -307,6 +367,7 @@ function visualReadinessProof(scrollTop = 0) {
       },
       { id: 'cctv-cyber-panel-body', present: false },
     ],
+    gaze,
   };
 }
 
@@ -429,6 +490,43 @@ test('visual readiness remains ineligible when scroll geometry never settles', a
   assert.equal(result.status, 'not-ready');
   assert.equal(result.reason, 'scroll-layout-not-stable');
   assert.ok(result.completedRenders >= 1);
+});
+
+test('visual readiness waits until the gaze transform reaches its target', async () => {
+  const transforms = [
+    'translate(-0.80 -0.80)',
+    'translate(-1.00 -1.00)',
+    'translate(-1.00 -1.00)',
+  ];
+  let reads = 0;
+  const page = makeVisualReadinessPage(() => {
+    const proof = visualReadinessProof();
+    const transform = transforms[Math.min(reads++, transforms.length - 1)];
+    proof.gaze.logos[0].globeTransform = transform;
+    proof.gaze.logos[0].cageTransform = transform;
+    return proof;
+  });
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 100 });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.completedRenders, 3);
+  assert.equal(
+    result.proof.gaze.logos[0].globeTransform,
+    'translate(-1.00 -1.00)',
+  );
+});
+
+test('visual readiness rejects a reset pointer until it is freshly positioned', async () => {
+  const page = makeVisualReadinessPage(() => ({
+    ...visualReadinessProof(),
+    gaze: {
+      ...visualReadinessProof().gaze,
+      status: 'pointer-reset-after-positioning',
+      resetSequence: 1,
+    },
+  }));
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 8 });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'pointer-reset-after-positioning');
 });
 
 test('visual readiness cleans listeners and timers if requesting a render throws', async () => {

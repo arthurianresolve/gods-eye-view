@@ -4,7 +4,10 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { presentationStayedSettled } from './visualPresentationBoundary.mjs';
+import {
+  presentationStayedSettled,
+  visualReadinessInputsMatch,
+} from './visualPresentationBoundary.mjs';
 import {
   VISIBLE_CONTROL_VARIANCE_POLICY,
   validateVisibleControlVariance,
@@ -345,6 +348,11 @@ export async function validateFinalVisualQualification(
   );
   const decoded = new Map();
   for (const state of report.states) {
+    assert.equal(
+      state.observedStatePhase,
+      'pre-readiness-structural-observation',
+      `${state.id} structural state is not screenshot-time evidence`,
+    );
     for (const side of ['baseline', 'candidate']) {
       const proof = state.foreground?.[side];
       assert.equal(
@@ -404,6 +412,23 @@ export async function validateFinalVisualQualification(
         `${state.id} ${side} observed camera differs`,
       );
       const presentation = state.presentation?.[side];
+      const readiness = state.readiness?.[side];
+      assert.equal(
+        readiness?.status,
+        'ready',
+        `${state.id} ${side} gaze/layout readiness status`,
+      );
+      assert.ok(
+        Number.isSafeInteger(readiness?.consecutiveStableRenders) &&
+          readiness.consecutiveStableRenders >= 2 &&
+          Number.isSafeInteger(readiness?.completedRenders) &&
+          readiness.completedRenders >= readiness.consecutiveStableRenders,
+        `${state.id} ${side} stable render count`,
+      );
+      assert.ok(
+        visualReadinessInputsMatch(readiness?.proof, presentation?.before),
+        `${state.id} ${side} readiness proof differs from capture proof`,
+      );
       assert.equal(
         state.captureMethod?.[side],
         'debugger-paused-snapshot',

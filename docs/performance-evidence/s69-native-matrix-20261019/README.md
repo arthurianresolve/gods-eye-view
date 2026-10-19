@@ -26,17 +26,28 @@ that short interval. Its [17 tests](visual-read-order-tests.json) pass on each
 VM Node version. The subsequent `d7bb1b97` producer captured all four states on
 both builds. [Independent VM decoding](final-visual-b3c49b19-d7-failure.json)
 found identical settled-scene pixels, but rejected the HUD-visible, hidden and
-restored states. The differences include eight CCTV frame-corner pixels and
-the animated logo; presentation-state diagnosis remains open. No mask, pixel
-threshold, fixture population or visual setting changed.
+restored states. The differences include eight CCTV source-badge corner pixels
+and the animated logo. The revised observer requires a fresh pointer after
+foreground confirmation, exact settled logo transforms, consecutive unchanged
+layout boundaries, and bounded CCTV filter/animation/badge evidence. Structural
+observations are labeled as pre-readiness metadata. The
+[QA validation](readiness-import-validation.json) passes 28/28 on each VM Node
+version; the Windows PNG consumer separately passes 39/39. Hardware visual
+qualification remains pending. No mask, pixel threshold, fixture population or
+visual setting changed.
 
 The [new dam comparison](infrastructure-dams-b3c49b19-result.json) has motion
 p95 of 299.7 versus 304.6 ms (+1.63%), within the unchanged regression limit.
 Its app-ready startup median is 3,884 versus 4,289 ms (+10.43%), which fails
 the 10% startup gate. The loading-screen-hidden median rises 8.44%. The original
 five startup observations per build are preserved. A separately predeclared,
-balanced startup confirmation is being prepared; no limit is changed and this
-failure is not converted to a pass. The [cable comparison](infrastructure-cables-b3c49b19-result.json)
+balanced [startup confirmation](startup-balanced-b3c49b19-review.json) completed
+all ten predeclared shards with verified foreground state and normal cleanup.
+The app-ready median is 5,784 versus 4,584 ms (-20.75%); loading-screen-hidden
+startup is 6,973 versus 5,961 ms (-14.51%). The original regression did not recur
+in this confirmation. Its failed record remains intact; this confirmation is
+startup evidence only and does not establish the motion improvement target.
+The [cable comparison](infrastructure-cables-b3c49b19-result.json)
 passes: motion p95 changes from 332.8 to 329.0 ms (-1.14%), app-ready startup
 changes -14.87%, and loading-screen-hidden startup changes -3.61%. Settled idle
 timing remains unavailable in both builds, rather than being reported as zero.
@@ -68,7 +79,13 @@ altitude correction. The corrected harness and consumer preserve this meaning,
 validate the recording identity and 3,000 ms coverage, and reject a four-row
 report. [All 19 focused tests](replay-fixture-contract-validation.json) pass on
 both VM Node versions, including the real recorder-to-replay contract. The
-failed measurements are retained; new hardware measurements are still required.
+[corrected hardware attempt](qualification-metrics-b3c49b19-dc3a85e5.json)
+completed twenty local-control changes and twenty loaded replay seeks on each
+build, then failed before heap sampling at the visible import-control wait.
+The Workspace disclosure was never opened by this harness. The shared import
+fixture now opens its disclosures through application controls before requiring
+the same visible file chooser. Missing APIs and hidden controls still fail;
+the failed attempts are preserved. A new complete metrics run is required.
 Production still serves `e7a878e`.
 
 The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
