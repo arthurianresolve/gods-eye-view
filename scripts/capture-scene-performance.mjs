@@ -192,6 +192,12 @@ import {
   resolveWeatherCaptureContract,
   WEATHER_INTERLEAVED_INELIGIBLE_REASON,
 } from './performance/weatherInterleavedDiagnosticContract.mjs';
+import {
+  resolveWeatherIdleDiagnosticContract,
+  observeWeatherPhaseRequests,
+  summarizeWeatherIdleDiagnostic,
+  WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+} from './performance/weatherIdleDiagnostic.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -241,6 +247,7 @@ const weatherInterleavedDiagnostic = args.includes(
 const weatherBalancedQualificationShard = args.includes(
   '--weather-balanced-qualification-shard',
 );
+const weatherIdleDiagnosticEnabled = args.includes('--weather-idle-diagnostic');
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 if (
@@ -269,15 +276,28 @@ const providerFixtureTime = option(
   '--provider-fixture-time',
   '2026-10-08T12:00:00.000Z',
 );
-const weatherCaptureContract = resolveWeatherCaptureContract({
+const weatherIdleDiagnosticContract = resolveWeatherIdleDiagnosticContract({
+  enabled: weatherIdleDiagnosticEnabled,
   workloadId: providerFixtureMode,
-  phaseDiagnostic: weatherPhaseDiagnostic,
-  interleavedDiagnostic: weatherInterleavedDiagnostic,
-  balancedQualificationShard: weatherBalancedQualificationShard,
   warmupMs,
   seconds,
   runs,
+  otherWeatherDiagnostic:
+    weatherPhaseDiagnostic ||
+    weatherInterleavedDiagnostic ||
+    weatherBalancedQualificationShard,
 });
+const weatherCaptureContract = weatherIdleDiagnosticContract
+  ? weatherIdleDiagnosticContract
+  : resolveWeatherCaptureContract({
+      workloadId: providerFixtureMode,
+      phaseDiagnostic: weatherPhaseDiagnostic,
+      interleavedDiagnostic: weatherInterleavedDiagnostic,
+      balancedQualificationShard: weatherBalancedQualificationShard,
+      warmupMs,
+      seconds,
+      runs,
+    });
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
 const austinReadinessHistoryEnabled =
@@ -646,6 +666,28 @@ if (
 )
   throw new Error(
     'Comparison fixtures require verified build provenance options.',
+  );
+if (
+  weatherIdleDiagnosticEnabled &&
+  (!buildProvenanceEnabled ||
+    !hardwareRequired ||
+    softwareRendering ||
+    hostedFixture ||
+    comparisonProfile !== 'native-sharpness-v1' ||
+    args.includes('--headless') ||
+    delayMs !== 0 ||
+    frameTraceEnabled ||
+    browserTraceEnabled ||
+    nativeRenderingDiagnostic ||
+    framebufferPreservationDiagnostic ||
+    windowsCompositionDiagnostic ||
+    sceneFrameDiagnosticsEnabled ||
+    firstMotionCpuProfileEnabled ||
+    depthPickAttributionEnabled ||
+    shaderProgramAttributionEnabled)
+)
+  throw new Error(
+    '--weather-idle-diagnostic requires verified, headed native hardware capture without other diagnostic instrumentation or injected delay.',
   );
 if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
@@ -5395,6 +5437,7 @@ try {
             recordFrameWindow,
             expectedRunOrdinal,
             frameTraceEnabled,
+            weatherIdleDiagnosticEnabled,
             motionMetersPerSecond = 320,
           }) => {
             const viewer = window.__godsEyeView.viewer;
@@ -5422,6 +5465,85 @@ try {
             let manualFrameTiming = null;
             let lastManualFrameTraceRecord = null;
             const frameTrace = frameTraceEnabled ? [] : null;
+            const weatherIdleTrace = weatherIdleDiagnosticEnabled
+              ? {
+                  samplePeriodMs: 250,
+                  frameEvents: [],
+                  frameEventsObserved: 0,
+                  frameEventsOmitted: 0,
+                  governorSamples: [],
+                  governorSamplesObserved: 0,
+                  governorSamplesOmitted: 0,
+                  samplingMaxGapMs: 0,
+                  snapshotReadCount: 0,
+                  snapshotReadFailureCount: 0,
+                  snapshotReadTotalDurationMs: 0,
+                  snapshotReadMaxDurationMs: 0,
+                }
+              : null;
+            let weatherIdleSampleTimer = null;
+            let weatherIdleLastSampleAtMs = null;
+            const readWeatherIdleGovernor = () => {
+              if (!weatherIdleTrace || startedAt == null) return null;
+              const startedReadAt = performance.now();
+              let raw = null;
+              try {
+                raw =
+                  window.__godsEyeView.getRenderGovernorDiagnostics?.() ?? null;
+              } catch {
+                weatherIdleTrace.snapshotReadFailureCount += 1;
+              }
+              const label = (value) =>
+                typeof value === 'string' &&
+                /^[A-Za-z0-9:_./-]{1,96}$/.test(value)
+                  ? value
+                  : '[redacted]';
+              const governor = {
+                mode:
+                  raw?.mode === 'idle' || raw?.mode === 'continuous'
+                    ? raw.mode
+                    : null,
+                holds: Array.isArray(raw?.holds)
+                  ? raw.holds.slice(0, 32).map(label)
+                  : null,
+                scheduledUpdates: Array.isArray(raw?.scheduledUpdates)
+                  ? raw.scheduledUpdates.slice(0, 32).map(label)
+                  : null,
+                recentRequests: Array.isArray(raw?.recentRequests)
+                  ? raw.recentRequests.slice(-4).map((request) => ({
+                      reason: label(request?.reason),
+                      at: Number.isFinite(request?.at) ? request.at : null,
+                    }))
+                  : null,
+              };
+              const readFinishedAt = performance.now();
+              const elapsed = Math.max(0, readFinishedAt - startedReadAt);
+              weatherIdleTrace.snapshotReadCount += 1;
+              weatherIdleTrace.snapshotReadTotalDurationMs += elapsed;
+              weatherIdleTrace.snapshotReadMaxDurationMs = Math.max(
+                weatherIdleTrace.snapshotReadMaxDurationMs,
+                elapsed,
+              );
+              return {
+                atMs: Math.max(0, readFinishedAt - startedAt),
+                governor,
+              };
+            };
+            const recordWeatherIdleGovernorSample = () => {
+              if (!weatherIdleTrace || startedAt == null) return;
+              const sample = readWeatherIdleGovernor();
+              if (!sample) return;
+              weatherIdleTrace.governorSamplesObserved += 1;
+              if (weatherIdleLastSampleAtMs != null)
+                weatherIdleTrace.samplingMaxGapMs = Math.max(
+                  weatherIdleTrace.samplingMaxGapMs,
+                  sample.atMs - weatherIdleLastSampleAtMs,
+                );
+              weatherIdleLastSampleAtMs = sample.atMs;
+              if (weatherIdleTrace.governorSamples.length < 300)
+                weatherIdleTrace.governorSamples.push(sample);
+              else weatherIdleTrace.governorSamplesOmitted += 1;
+            };
             const boundedDiagnosticLabel = (value) => {
               if (typeof value === 'string') return value.slice(0, 96);
               if (
@@ -5445,6 +5567,25 @@ try {
               const now = performance.now();
               if (previous != null) intervals.push(now - previous);
               previous = now;
+              if (weatherIdleTrace && startedAt != null) {
+                const frameGovernor = readWeatherIdleGovernor();
+                weatherIdleTrace.frameEventsObserved += 1;
+                if (weatherIdleTrace.frameEvents.length < 512)
+                  weatherIdleTrace.frameEvents.push({
+                    atMs: Math.max(0, now - startedAt),
+                    intervalMs:
+                      weatherIdleTrace.frameEvents.length > 0
+                        ? Math.max(
+                            0,
+                            now -
+                              (startedAt +
+                                weatherIdleTrace.frameEvents.at(-1).atMs),
+                          )
+                        : null,
+                    governor: frameGovernor?.governor ?? null,
+                  });
+                else weatherIdleTrace.frameEventsOmitted += 1;
+              }
               if (frameTrace && frameTrace.length < 4096) {
                 const governor =
                   window.__godsEyeView.getRenderGovernorDiagnostics?.() || null;
@@ -5585,6 +5726,13 @@ try {
               if (longTaskTrace) longTaskTrace.length = 0;
               startedAt = performance.now();
               window.__gevWeatherMeasurementStartedAt = startedAt;
+              if (weatherIdleTrace) {
+                recordWeatherIdleGovernorSample();
+                weatherIdleSampleTimer = setInterval(
+                  recordWeatherIdleGovernorSample,
+                  weatherIdleTrace.samplePeriodMs,
+                );
+              }
               const measurementWait = new Promise((resolve) => {
                 resolveMeasurement = resolve;
                 measurementTimer = setTimeout(() => {
@@ -5743,6 +5891,11 @@ try {
                   };
               const focusedAtEnd = document.hasFocus();
               const visibleAtEnd = !document.hidden;
+              if (weatherIdleSampleTimer != null) {
+                clearInterval(weatherIdleSampleTimer);
+                weatherIdleSampleTimer = null;
+              }
+              recordWeatherIdleGovernorSample();
               window.removeEventListener('blur', onBlur);
               document.removeEventListener('visibilitychange', onVisibility);
               if (window.__gevWeatherMeasurementStartedAt === startedAt) {
@@ -5796,6 +5949,9 @@ try {
                         observedFrames: renderedFrameCount,
                       },
                     }
+                  : {}),
+                ...(weatherIdleTrace
+                  ? { weatherIdleDiagnosticRaw: weatherIdleTrace }
                   : {}),
                 longTasks: {
                   count: longTasks.length,
@@ -5853,6 +6009,10 @@ try {
               clearTimeout(measurementTimer);
               clearInterval(delayTimer);
               clearTimeout(initialDelayTimer);
+              if (weatherIdleSampleTimer != null) {
+                clearInterval(weatherIdleSampleTimer);
+                weatherIdleSampleTimer = null;
+              }
               if (motionFrameRequest != null)
                 cancelAnimationFrame(motionFrameRequest);
               restoreMeasurementRenderDemand();
@@ -5875,6 +6035,7 @@ try {
             recordFrameWindow: collectSceneFrameAttribution,
             expectedRunOrdinal: phaseRunOrdinal,
             frameTraceEnabled,
+            weatherIdleDiagnosticEnabled,
             motionMetersPerSecond: mapStreamingWorkloadSelected
               ? mapStreamingModule.MAP_STREAMING_ROUTE.moveRightMetersPerSecond
               : 320,
@@ -5891,12 +6052,27 @@ try {
           },
         });
         let weatherPhaseObservations = null;
+        let weatherPhaseRequestObserver = null;
         let sample;
         try {
           if (weatherEffectsWorkload) {
+            const phaseSchedulePage = weatherIdleDiagnosticEnabled
+              ? (weatherPhaseRequestObserver = observeWeatherPhaseRequests(
+                  page,
+                  {
+                    onEvent() {
+                      if (failureProgress.current)
+                        failureProgress.current.weatherIdlePhaseRequests =
+                          weatherPhaseRequestObserver.events.map((event) => ({
+                            ...event,
+                          }));
+                    },
+                  },
+                )).page
+              : page;
             weatherPhaseObservations =
               await weatherEffectsModule.runWeatherEffectsPhaseSchedule({
-                page,
+                page: phaseSchedulePage,
                 fixture: weatherEffectsWorkload,
                 samplePromise,
               });
@@ -5940,6 +6116,14 @@ try {
         sample.foregroundThroughout = foregroundContinuity.foregroundThroughout;
         if (weatherEffectsWorkload)
           sample.weatherPhaseObservations = weatherPhaseObservations;
+        if (weatherIdleDiagnosticEnabled) {
+          sample.weatherIdleDiagnostic = summarizeWeatherIdleDiagnostic({
+            raw: sample.weatherIdleDiagnosticRaw,
+            phaseObservations: weatherPhaseObservations,
+            phaseRequestEvents: weatherPhaseRequestObserver?.events ?? [],
+          });
+          delete sample.weatherIdleDiagnosticRaw;
+        }
         failureProgress.current.measurement = sample;
         if (boundaryProgressBindingRecord)
           sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
@@ -7089,15 +7273,46 @@ try {
               ? 'balanced-qualification-shard'
               : weatherInterleavedDiagnostic
                 ? 'interleaved-motion-diagnostic'
-                : weatherEffectsComparisonRun
-                  ? 'comparison'
-                  : 'phase-producer-diagnostic',
-            performanceAcceptanceEligible: Boolean(weatherEffectsComparisonRun),
+                : weatherIdleDiagnosticEnabled
+                  ? 'idle-render-demand-diagnostic'
+                  : weatherEffectsComparisonRun
+                    ? 'comparison'
+                    : 'phase-producer-diagnostic',
+            performanceAcceptanceEligible:
+              Boolean(weatherEffectsComparisonRun) &&
+              !weatherIdleDiagnosticEnabled,
             ...(weatherBalancedQualificationShard
               ? {
                   diagnosticOnly: false,
                   qualificationShard: true,
                   ineligibleReason: WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+                }
+              : {}),
+            ...(weatherIdleDiagnosticEnabled
+              ? {
+                  diagnosticOnly: true,
+                  ineligibleReason: WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+                  weatherIdleDiagnosticProtocol: {
+                    schema: 'gev-weather-idle-render-demand-diagnostic/v1',
+                    scope:
+                      'one native 30s warmup and 60s idle weather sample with the existing three scheduled source phases; bounded 250ms render-governor observations and completed-frame timestamps are diagnostic instrumentation only',
+                    cadenceEvidence:
+                      'postRender event timestamps are recorded up to512; render-governor owner state is sampled every250ms up to300 records and at completed frames; actual sampling gaps, overflow and read overhead are retained',
+                    phaseTiming:
+                      'host request and promise-settlement performance clocks are separate from page elapsed observation time; all three clock observations are retained without cross-clock ordering claims',
+                    fixtureSha256: weatherEffectsWorkload.sha256,
+                    phaseSchedule: structuredClone(
+                      weatherEffectsWorkload.phaseSchedule,
+                    ),
+                    phaseObservationsBySample: captures.map(
+                      (sample) => sample.weatherIdleDiagnostic?.phases ?? [],
+                    ),
+                    phaseRequestsBySample: captures.map(
+                      (sample) =>
+                        sample.weatherIdleDiagnostic?.phaseRequests ?? [],
+                    ),
+                    performanceAcceptanceEligible: false,
+                  },
                 }
               : {}),
             ...(weatherInterleavedDiagnostic
@@ -7249,14 +7464,19 @@ try {
       comparisonReadinessReasons.push(
         'windows-composition-control-is-ineligible-for-comparison',
       );
-    if (weatherBalancedQualificationShard)
+    if (weatherIdleDiagnosticEnabled)
+      comparisonReadinessReasons.push(
+        WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+      );
+    else if (weatherBalancedQualificationShard)
       comparisonReadinessReasons.push(WEATHER_BALANCED_SHARD_INELIGIBLE_REASON);
     else if (weatherInterleavedDiagnostic)
       comparisonReadinessReasons.push(WEATHER_INTERLEAVED_INELIGIBLE_REASON);
     else if (
       weatherEffectsWorkload &&
       !weatherEffectsComparisonRun &&
-      !weatherBalancedQualificationShard
+      !weatherBalancedQualificationShard &&
+      !weatherIdleDiagnosticEnabled
     )
       comparisonReadinessReasons.push(
         'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
