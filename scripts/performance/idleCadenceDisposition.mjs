@@ -4,6 +4,10 @@ const SHA256 = /^[a-f0-9]{64}$/i;
 const SHA1 = /^[a-f0-9]{40}$/i;
 const BASELINE_SHA = 'e7a878e168bc97ffedddc27e13bf3e69b7ee6256';
 const CANDIDATE_SHA = '19065997a3f6360d68cb9ed5b389c4754856b596';
+const CURRENT_CANDIDATE_SHA = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a';
+// Each candidate needs its own complete diagnostic and original raw pair.
+// Admitting the current revision never reuses or relabels the historical one.
+const DIAGNOSTIC_CANDIDATES = new Set([CANDIDATE_SHA, CURRENT_CANDIDATE_SHA]);
 const ROUTE_ID = 'austin-operating-city-route-v1';
 const MAX_DIAGNOSTIC_BYTES = 4 * 1024 * 1024;
 // Full five-run raw reports retain per-frame evidence and are intentionally
@@ -221,7 +225,7 @@ function assertElevated(side, label) {
 }
 
 /**
- * Validate the one known Austin idle-cadence investigation disposition.
+ * Validate the frozen Austin idle-cadence investigation contract.
  * This only resolves the inter-render interval metric; it is not a visual or
  * motion acceptance result. All hashes are recomputed from supplied bytes.
  */
@@ -248,9 +252,10 @@ export function validateIdleCadenceDisposition({
     !SHA1.test(disposition.baselineAppSha || '') ||
     !SHA1.test(disposition.candidateAppSha || '') ||
     disposition.baselineAppSha !== BASELINE_SHA ||
-    disposition.candidateAppSha !== CANDIDATE_SHA
+    !DIAGNOSTIC_CANDIDATES.has(disposition.candidateAppSha)
   )
     fail('application identities are not the frozen Austin pair.');
+  const candidateSha = disposition.candidateAppSha;
   if (
     !SHA256.test(disposition.baselineRawSha256 || '') ||
     disposition.baselineRawSha256 !== b.sha256 ||
@@ -269,7 +274,7 @@ export function validateIdleCadenceDisposition({
     fail('diagnostic schema/status is invalid.');
   if (
     report.identities?.baselineCommit !== BASELINE_SHA ||
-    report.identities?.candidateCommit !== CANDIDATE_SHA
+    report.identities?.candidateCommit !== candidateSha
   )
     fail('diagnostic identities are invalid.');
   if (
@@ -290,7 +295,7 @@ export function validateIdleCadenceDisposition({
     fail('both diagnostic sides are required.');
   if (
     sides.baseline.appSha !== BASELINE_SHA ||
-    sides.candidate.appSha !== CANDIDATE_SHA
+    sides.candidate.appSha !== candidateSha
   )
     fail('diagnostic side identities are invalid.');
   equal(report.fixture?.route?.id, ROUTE_ID, 'fixture route differs.');
@@ -371,7 +376,18 @@ export function validateIdleCadenceDisposition({
   const rbRaw = b.value;
   const rcRaw = c.value;
   const rb = assertRaw(rbRaw, 'baseline', BASELINE_SHA);
-  const rc = assertRaw(rcRaw, 'candidate', CANDIDATE_SHA);
+  const rc = assertRaw(rcRaw, 'candidate', candidateSha);
+  if (candidateSha === CURRENT_CANDIDATE_SHA) {
+    const browserVersion = rbRaw.graphics?.browserVersion;
+    if (!/^Chrome\/\d+\.\d+\.\d+\.\d+$/.test(browserVersion || ''))
+      fail('current raw full browser version is missing.');
+    if (
+      rcRaw.graphics?.browserVersion !== browserVersion ||
+      sides.baseline.graphics?.browserVersion !== browserVersion ||
+      sides.candidate.graphics?.browserVersion !== browserVersion
+    )
+      fail('current diagnostic and raw full browser versions differ.');
+  }
   equal(rb, rc, 'renderer/browser/native dimensions differ.');
   equal(
     captureProfile(rbRaw),

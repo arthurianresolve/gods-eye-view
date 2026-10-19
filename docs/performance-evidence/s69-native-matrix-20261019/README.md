@@ -58,6 +58,26 @@ complete: motion p95 changes from 332.8 to 321.1 ms (-3.52%), with no measured
 regression above 10%. Its settled idle timing is unavailable in both builds.
 Four other workload pairs still need current-candidate results.
 
+The additional qualification-metrics producer records twenty real datacenter
+control changes and twenty loaded replay seeks per build. A replay witness
+requires the selected source timestamp and coordinates in the enabled aircraft
+layer, its billboard on the canvas, and a later completed rendered frame. It
+reports state latency separately from the conservative requested-frame latency;
+the limits remain 100 ms and 250 ms. A separate one-second heap series covers
+six measured mixed-use cycles after two warmups without forced GC. It is a
+sampled peak, not a continuous peak or a replacement for retained-memory evidence.
+The consumer verifies exact build, Chrome, hardware renderer, native dimensions,
+Manual/DENSE 75% settings, foreground evidence and normal browser disposal.
+Thirty-nine focused consumer and idle-cadence tests pass locally. VM tests and
+the actual hardware captures remain pending; added tooling is not a pass.
+
+Single weather startup shards can be read only as individual observations after
+their balanced parent envelope is validated. Their comparison-ineligible flags
+remain unchanged. Current-candidate idle-cadence review likewise requires its
+own original raw pair and a fresh functional diagnostic, including the exact
+Chrome version. Historical candidate diagnostics cannot clear a current result,
+and an idle-cadence finding cannot waive motion, image or memory failures.
+
 The [current visual review](final-visual-d8ef-failed-review.json) is **failed**.
 Initial still and HUD-hidden captures match byte for byte. HUD-visible and
 HUD-restored differ at eight pixels on the rounded camera-status-badge corners,
@@ -67,6 +87,13 @@ variance. Its cause is unresolved. All original PNGs, observations and process
 receipts are hash-verified on VM105; no mask, image edit or threshold change
 was applied. An earlier runner setup failure, before any browser launched,
 used the dependency loader without `sharp` and is preserved separately.
+
+Independent [PNG decoder controls](portable-png-decoder-controls.json) now pass
+on VM105 under Node 24 and 26. The VM's CPU configuration cannot run the native
+Sharp binary, so an isolated, hash-pinned pure-JavaScript decoder reads the
+original PNGs and applies the unchanged pixel policy. It passes the historical
+positive control and reproduces the current eight-pixel failure exactly. This
+validates the decoder, not the candidate; production and image bytes are unchanged.
 
 A bounded diagnostic has been declared before execution: two independent browser
 captures of each unchanged revision, in baseline/baseline/candidate/candidate

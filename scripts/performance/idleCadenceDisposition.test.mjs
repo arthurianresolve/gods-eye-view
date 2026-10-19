@@ -167,6 +167,69 @@ function valid() {
   return { disposition, diagnostic: diagnosticEvidence, baseline, candidate };
 }
 
+function currentCandidateEvidence() {
+  const input = valid();
+  const current = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a';
+  const graphics = { browserVersion: 'Chrome/155.0.8059.84' };
+  const baseline = JSON.parse(input.baseline.bytes);
+  const candidate = JSON.parse(input.candidate.bytes);
+  const diagnostic = JSON.parse(input.diagnostic.bytes);
+  baseline.graphics = graphics;
+  candidate.graphics = graphics;
+  candidate.appCommit = current;
+  diagnostic.identities.candidateCommit = current;
+  diagnostic.sides[1].appSha = current;
+  for (const side of diagnostic.sides) side.graphics = graphics;
+  input.baseline = pack(baseline);
+  input.candidate = pack(candidate);
+  input.diagnostic = pack(diagnostic);
+  Object.assign(input.disposition, {
+    candidateAppSha: current,
+    baselineRawSha256: digest(input.baseline.bytes),
+    candidateRawSha256: digest(input.candidate.bytes),
+    diagnosticSha256: digest(input.diagnostic.bytes),
+  });
+  return input;
+}
+
+test('current Austin revision needs its own hash-bound raw and diagnostic evidence', () => {
+  const input = currentCandidateEvidence();
+  assert.deepEqual(validateIdleCadenceDisposition(input).resolvedScenarios, [
+    'idle',
+  ]);
+  const oldDiagnostic = valid().diagnostic;
+  input.diagnostic = oldDiagnostic;
+  input.disposition.diagnosticSha256 = digest(oldDiagnostic.bytes);
+  assert.throws(() => validateIdleCadenceDisposition(input), /identities/);
+});
+
+test('current Austin diagnostic cannot substitute another full Chrome version', () => {
+  for (const version of [undefined, 'Chrome/155.0.8059.85']) {
+    const input = currentCandidateEvidence();
+    const diagnostic = JSON.parse(input.diagnostic.bytes);
+    diagnostic.sides[1].graphics.browserVersion = version;
+    input.diagnostic = pack(diagnostic);
+    input.disposition.diagnosticSha256 = digest(input.diagnostic.bytes);
+    assert.throws(() => validateIdleCadenceDisposition(input), /full browser/);
+  }
+});
+
+test('an unreviewed revision is rejected even with rebound raw and diagnostic hashes', () => {
+  const input = currentCandidateEvidence();
+  const unknown = 'a'.repeat(40);
+  const candidate = JSON.parse(input.candidate.bytes);
+  const diagnostic = JSON.parse(input.diagnostic.bytes);
+  candidate.appCommit = unknown;
+  diagnostic.identities.candidateCommit = unknown;
+  diagnostic.sides[1].appSha = unknown;
+  input.candidate = pack(candidate);
+  input.diagnostic = pack(diagnostic);
+  input.disposition.candidateAppSha = unknown;
+  input.disposition.candidateRawSha256 = digest(input.candidate.bytes);
+  input.disposition.diagnosticSha256 = digest(input.diagnostic.bytes);
+  assert.throws(() => validateIdleCadenceDisposition(input), /frozen Austin/);
+});
+
 test('valid Austin evidence resolves only idle cadence', () => {
   assert.deepEqual(validateIdleCadenceDisposition(valid()), {
     resolvedScenarios: ['idle'],
