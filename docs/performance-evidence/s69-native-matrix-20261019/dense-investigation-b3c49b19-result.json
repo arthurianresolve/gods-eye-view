@@ -1,0 +1,298 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T19:33:16.331Z",
+  "row": "dense-investigation",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "assessed",
+      "achieved": false,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": false
+      }
+    },
+    "denseTrackingObjective": {
+      "status": "assessed",
+      "achieved": false,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": false
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 469.20000000298023,
+        "candidateMedianP95Ms": 495.30000000447035,
+        "changePct": 5.562659846829568,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 518.1000000014901,
+        "candidateMedianP95Ms": 510.30000000447035,
+        "changePct": -1.5055008679786401,
+        "regressionOver10Pct": false
+      },
+      "selected-aircraft-tracking": {
+        "status": "measured",
+        "baselineMedianP95Ms": 1122.4000000059605,
+        "candidateMedianP95Ms": 1217.8000000044703,
+        "changePct": 8.499643620634647,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "fulfilledResponseCount": 60,
+        "perSample": [
+          {
+            "scenario": "idle",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          }
+        ]
+      },
+      "candidate": {
+        "fulfilledResponseCount": 60,
+        "perSample": [
+          {
+            "scenario": "idle",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "idle",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "scripted-motion",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 1,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 2,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 3,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 4,
+            "fulfilledResponseCount": 4
+          },
+          {
+            "scenario": "selected-aircraft-tracking",
+            "run": 5,
+            "fulfilledResponseCount": 4
+          }
+        ]
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 30
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 30
+      }
+    }
+  },
+  "startup": {
+    "status": "failed",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3853,
+    "candidateMedianMs": 4398,
+    "baselineInitialSettleMedianMs": 4363,
+    "candidateInitialSettleMedianMs": 4866,
+    "initialSettleChangePct": 11.528764611505844,
+    "initialSettleRegressionOver10Pct": true,
+    "baselineRunsMs": [
+      4948,
+      4087,
+      3188,
+      3416,
+      3853
+    ],
+    "candidateRunsMs": [
+      5436,
+      3654,
+      4398,
+      4415,
+      3830
+    ],
+    "changePct": 14.144822216454711,
+    "regressionOver10Pct": true,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6707,
+      "sha256": "bb6477984503eca6828ebf1a9c645a2430ca17ae79ca945d1c1b7a8dd659d23f"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3938,
+      "sha256": "061fc7f779843e521bc85eaf769877a59011a894a2d3c02d5688da0628f72d08"
+    },
+    {
+      "name": "dense-investigation-baseline.json",
+      "bytes": 701489,
+      "sha256": "df21b5f40665791d48bc7e1dc79d14b1671674e9a00829543118f0d4a8b8f92a"
+    },
+    {
+      "name": "dense-investigation-candidate.json",
+      "bytes": 704453,
+      "sha256": "d56afdea0fbc9815128ed5f236cc30cd3fe4557df2e737e4eed733e179875127"
+    },
+    {
+      "name": "dense-investigation-baseline.json.log",
+      "bytes": 908,
+      "sha256": "103730f04c5edd038dfe61688c9c145b268103b26b1245943ecec67bdd8c73f3"
+    },
+    {
+      "name": "dense-investigation-baseline.json.invocation.json",
+      "bytes": 2469,
+      "sha256": "5a6b9f049900fc45ab3da8651de15ab0d49d1f8e9e46e1378ed4203e803d4b4f"
+    },
+    {
+      "name": "dense-investigation-candidate.json.log",
+      "bytes": 909,
+      "sha256": "9794747c5f1d8be726e8e2b57c2339f16f9dd0d9f52645224474535f2986d99e"
+    },
+    {
+      "name": "dense-investigation-candidate.json.invocation.json",
+      "bytes": 2479,
+      "sha256": "d8183723cc5de900a19fbc6fd63d7cddd009373b542ef6cf87ca320db4630fb5"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/dense-investigation-b3c49b19-native155",
+  "productionChanged": false
+}

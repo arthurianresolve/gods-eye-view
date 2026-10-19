@@ -205,6 +205,11 @@ test('balanced startup confirmation rejects malformed and wrong-revision shards'
   for (const mutate of [
     (shards) => (shards[0].report.schema = 'wrong-schema'),
     (shards) => (shards[0].report.status = 'failed'),
+    (shards) => {
+      shards[0].report.schema = 'gev-startup-attribution-diagnostic/v1';
+      shards[0].report.status = 'diagnostic-only';
+      shards[0].report.diagnosticOnly = true;
+    },
     (shards) => (shards[0].report.source.appCommit = candidateCommit),
     (shards) =>
       (shards[0].report.startup.observations[0].cacheDisabled = false),

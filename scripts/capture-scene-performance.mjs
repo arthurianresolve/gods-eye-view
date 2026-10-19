@@ -121,6 +121,12 @@ import {
 import { retireProviderDocument } from './performance/providerDocumentRetirement.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import {
+  assertStartupAttributionMode,
+  createStartupAttribution,
+  readStartupAttributionPageState,
+  STARTUP_ATTRIBUTION_SCHEMA,
+} from './performance/startupAttribution.mjs';
+import {
   createDepthPickAttributionIdentity,
   depthPickRetirementConfirmed,
   disposeDepthPickAttributionForPage as disposeDepthPickPageOwner,
@@ -192,6 +198,10 @@ const seconds = Math.max(1, Number(option('--seconds', '60')) || 60);
 const warmupMs = Math.max(0, Number(option('--warmup-ms', '30000')) || 0);
 const runs = Math.max(1, Math.min(10, Number(option('--runs', '5')) || 5));
 const startupOnlyShard = args.includes('--startup-only-shard');
+const startupAttributionEnabled = assertStartupAttributionMode({
+  enabled: args.includes('--startup-attribution'),
+  startupOnlyShard,
+});
 const startupShardId = option('--startup-shard-id', null);
 const startupShardRole = option('--startup-role', null);
 // Zero delegates device scale to the native browser/OS configuration; the
@@ -582,7 +592,7 @@ if (startupOnlyShard) {
   if (!out) throw new Error('--startup-only-shard requires --out.');
   if (!isSupportedStartupOnlyFixture(providerFixtureMode))
     throw new Error(
-      '--startup-only-shard requires --provider-fixture infrastructure-dams or austin-operating-v1.',
+      '--startup-only-shard requires --provider-fixture infrastructure-dams, austin-operating-v1 or dense-investigation.',
     );
   if (
     !buildProvenanceEnabled ||
@@ -3046,6 +3056,9 @@ try {
     const startupAuditState = auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
+    const navigationCompletedAtMs = startupAttributionEnabled
+      ? Date.now()
+      : null;
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(startupPage.url());
@@ -3057,25 +3070,41 @@ try {
           'Startup navigation redirected outside the verified application entry point.',
         );
     }
+    const foregroundStartedAtMs = startupAttributionEnabled ? Date.now() : null;
     const startupForegroundActivation = await activateCapturePage(startupPage);
+    const foregroundCompletedAtMs = startupAttributionEnabled
+      ? Date.now()
+      : null;
     failureProgress.startupForegroundActivation = {
       run,
       ...startupForegroundActivation,
     };
+    const viewerWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
+    const viewerObservedAtMs = startupAttributionEnabled ? Date.now() : null;
+    const diagnosticsDisableStartedAtMs = startupAttributionEnabled
+      ? Date.now()
+      : null;
     await disableCaptureDiagnostics(
       startupPage,
       startupDocumentRole,
       startupDocumentId,
     );
+    const diagnosticsDisableCompletedAtMs = startupAttributionEnabled
+      ? Date.now()
+      : null;
     const appReadyMs = Date.now() - startedAt;
+    const loaderWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
     await startupPage.waitForFunction(
       () =>
         document.getElementById('loading-screen')?.classList.contains('hidden'),
       { timeout: 90_000 },
     );
+    const loaderHiddenObservedAtMs = startupAttributionEnabled
+      ? Date.now()
+      : null;
     if (
       captureProvenance &&
       (await startupPage.evaluate(() =>
@@ -3086,6 +3115,25 @@ try {
         'Verified startup page is controlled by a service worker.',
       );
     const initialSettleMs = Date.now() - startedAt;
+    let startupAttribution = null;
+    if (startupAttributionEnabled) {
+      const pageState = await startupPage.evaluate(
+        readStartupAttributionPageState,
+      );
+      startupAttribution = createStartupAttribution({
+        startedAtMs: startedAt,
+        navigationCompletedAtMs,
+        foregroundStartedAtMs,
+        foregroundCompletedAtMs,
+        viewerWaitStartedAtMs,
+        viewerObservedAtMs,
+        diagnosticsDisableStartedAtMs,
+        diagnosticsDisableCompletedAtMs,
+        loaderWaitStartedAtMs,
+        loaderHiddenObservedAtMs,
+        ...pageState,
+      });
+    }
     let startupScene = null;
     let startupNativeSettings = null;
     if (startupOnlyShard) {
@@ -3158,6 +3206,7 @@ try {
       foregroundActivation: startupForegroundActivation,
       appReadyMs,
       initialSettleMs,
+      ...(startupAttribution ? { startupAttribution } : {}),
       ...(startupScene
         ? {
             settings: startupScene.settings,
@@ -7443,10 +7492,13 @@ if (startupOnlyShard && !captureFailure) {
         'Startup shard is missing measured environment or settings.',
       );
     const shard = {
-      schema: 'gev-startup-observation-shard/v1',
-      status: 'completed',
+      schema: startupAttributionEnabled
+        ? STARTUP_ATTRIBUTION_SCHEMA
+        : 'gev-startup-observation-shard/v1',
+      status: startupAttributionEnabled ? 'diagnostic-only' : 'completed',
       comparisonEligible: false,
       motionEligible: false,
+      ...(startupAttributionEnabled ? { diagnosticOnly: true } : {}),
       slotId: startupShardId,
       role: startupShardRole,
       source: {
@@ -7457,6 +7509,7 @@ if (startupOnlyShard && !captureFailure) {
         ...resolveStartupOnlyFixtureIdentity(providerFixtureMode, {
           infrastructureWorkload,
           austinOperatingWorkload,
+          productionFlightFixture,
         }),
       },
       graphics: startupOnlyGraphics,
@@ -7480,6 +7533,9 @@ if (startupOnlyShard && !captureFailure) {
           },
         ],
       },
+      ...(startupAttributionEnabled
+        ? { startupAttribution: sample.startupAttribution }
+        : {}),
       browserClose: {
         closeApiCompleted: browserCloseApiCompleted,
         normalProcessExit: browserCloseConfirmed,

@@ -69,6 +69,17 @@ weather attempt failed foreground initialization before any measurement; a
 fresh plan adds the owned blank-page handoff before the existing native checks.
 These changes affect QA only. Complete hardware metrics, weather, visual and
 soak evidence remain required.
+The exact-candidate dense pair is now archived: motion p95 changes -1.51%
+and tracking p95 +8.50%, within the 10% regression limit but short of the
+20% improvement objective. Its startup medians fail at +14.14% app-ready and
++11.53% loading-screen-hidden. Startup currently measures default empty-layer
+boot plus foreground/observer work, before named workload activation. A separate,
+opt-in diagnostic records those existing wait boundaries, locale and enabled
+layers; diagnostic reports cannot count as acceptance shards. All 39 focused
+checks pass on each VM Node version, and the 73-file capture lint check passes.
+The [dense result](performance-evidence/s69-native-matrix-20261019/dense-investigation-b3c49b19-result.json)
+and [diagnostic validation](performance-evidence/s69-native-matrix-20261019/startup-attribution-qa-validation.json)
+retain the separate findings. No failed startup result has been cleared.
 Production remains at `e7a878e`.
 
 The QA-only `f97b9b98` PR run separately failed hosted Windows recovery while
@@ -76,8 +87,11 @@ closing the prior installation's Chrome 152 browser, before current-candidate
 installation. Settings and workspace checks passed, but natural process exit
 exceeded the unchanged ten-second deadline. The failed evidence is preserved
 in the [current checkpoint](performance-evidence/s69-native-matrix-20261019/README.md);
-the next QA revision requires another Windows recovery run. This does not
-replace or rewrite the exact application's earlier passing CI receipt.
+The later `1ef5973e` QA revision passes all seven required CI jobs, including
+Windows recovery and the mixed-use browser smoke, and its release packaging
+also passes. The [CI receipt](performance-evidence/s69-native-matrix-20261019/qa-ci-1ef5973e.json)
+preserves both run identities. This does not replace or rewrite the original
+failure or the exact application's earlier passing CI receipt.
 
 All seven exact `b3c49b19` standard CI jobs, tracking and signed-package workflows
 have passed. Its

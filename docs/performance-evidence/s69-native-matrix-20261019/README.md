@@ -81,6 +81,31 @@ Operating-view startup also fails: app-ready medians are 3,276 versus 3,937 ms
 The dams-only startup confirmation does not clear this workload. All eight
 original operating-view files are hash-verified on VM105.
 
+The [dense pair](dense-investigation-b3c49b19-result.json) completes five
+observations per scenario on both builds: idle p95 changes +5.56%, motion
+-1.51%, and tracked motion +8.50%. These measured scenarios stay within the
+10% regression limit; the 20% motion/tracking improvement objective is not
+achieved. Startup fails separately: app-ready rises from 3,853 to 4,398 ms
+(+14.14%) and loading-screen-hidden from 4,363 to 4,866 ms (+11.53%).
+
+Code inspection shows these startup observations precede workload activation:
+fresh contexts start with no enabled layers, but have workload-specific provider
+hooks. The existing app-ready metric includes navigation, foreground activation,
+the viewer-existence wait and the diagnostics-disable call. An opt-in
+`--startup-attribution` diagnostic now records those boundaries separately,
+along with Navigation Timing, locale and enabled layers. Its timestamps are
+observations, not application publication marks. The separate diagnostic schema
+is rejected by the acceptance consumer. [Focused VM validation](startup-attribution-qa-validation.json)
+passes 39/39 on each Node version, formatting and the 73-file no-undef check.
+The existing metrics and 10% gates are unchanged; fresh attribution and any
+predeclared confirmation remain outstanding.
+
+The [QA CI receipt](qa-ci-1ef5973e.json) records all seven required jobs passing
+for `1ef5973e`, including Windows recovery and rendered mixed-use smoke. Its
+release packaging also passes. Twelve optional diagnostics were not selected by
+that workflow and are intentionally skipped. The exact application remains
+`b3c49b19`; these CI results do not substitute for its pending hardware evidence.
+
 The [startup and idle contract checks](operating-startup-idle-qa-validation.json)
 pass 142/142 on both Node 24.16.0 and 26.11.0 on VM105. Startup-only captures
 now accept the actual Austin fixture identity and its operating-view row; the

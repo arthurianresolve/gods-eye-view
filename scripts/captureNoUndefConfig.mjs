@@ -57,6 +57,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/infrastructureRuntimeComparison.test.mjs',
   'scripts/performance/mapStreamingWorkloadContract.mjs',
   'scripts/performance/captureComparisonContract.mjs',
+  'scripts/performance/startupAttribution.mjs',
+  'scripts/performance/startupAttribution.test.mjs',
   'scripts/performance/pairedReport.mjs',
   'scripts/performance/pairedReport.test.mjs',
   'scripts/performance/performanceMatrix.mjs',

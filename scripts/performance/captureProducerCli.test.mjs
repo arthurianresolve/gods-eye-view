@@ -110,7 +110,7 @@ test('capture CLI rejects either half of an explicit build-harness identity befo
   }
 });
 
-test('startup-only CLI admits Austin identity through to native-evidence validation', () => {
+test('startup-only CLI admits Austin and dense identities through native validation', () => {
   const common = [
     '--startup-only-shard',
     '--startup-shard-id',
@@ -120,7 +120,7 @@ test('startup-only CLI admits Austin identity through to native-evidence validat
     '--out',
     'unused-startup-shard.json',
   ];
-  const run = (providerFixture) =>
+  const run = (providerFixture, extraArgs = []) =>
     spawnSync(
       process.execPath,
       [
@@ -130,6 +130,7 @@ test('startup-only CLI admits Austin identity through to native-evidence validat
         ...common,
         '--provider-fixture',
         providerFixture,
+        ...extraArgs,
       ],
       { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
     );
@@ -142,12 +143,40 @@ test('startup-only CLI admits Austin identity through to native-evidence validat
     /requires verified, headed native hardware capture/,
   );
 
+  const dense = run('dense-investigation', [
+    '--mixed-layers',
+    '--startup-attribution',
+  ]);
+  assert.equal(dense.error, undefined);
+  assert.equal(dense.status, 1);
+  assert.match(
+    dense.stderr,
+    /requires verified, headed native hardware capture/,
+  );
+
   const unsupported = run('infrastructure-cables');
   assert.equal(unsupported.error, undefined);
   assert.equal(unsupported.status, 1);
   assert.match(
     unsupported.stderr,
-    /requires --provider-fixture infrastructure-dams or austin-operating-v1/,
+    /requires --provider-fixture infrastructure-dams, austin-operating-v1 or dense-investigation/,
+  );
+
+  const attributionWithoutShard = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(
+        new URL('../capture-scene-performance.mjs', import.meta.url),
+      ),
+      '--startup-attribution',
+    ],
+    { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
+  );
+  assert.equal(attributionWithoutShard.error, undefined);
+  assert.equal(attributionWithoutShard.status, 1);
+  assert.match(
+    attributionWithoutShard.stderr,
+    /requires --startup-only-shard and is diagnostic-only/,
   );
 });
 

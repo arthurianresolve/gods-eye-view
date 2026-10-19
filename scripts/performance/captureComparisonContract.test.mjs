@@ -976,12 +976,13 @@ test('infrastructure contract rejects altered source populations and clock', () 
   );
 });
 
-test('startup-only shards accept only dams or Austin with their real row identity', () => {
+test('startup-only shards accept dams, Austin, or dense with their real row identity', () => {
   assert.equal(isSupportedStartupOnlyFixture('infrastructure-dams'), true);
   assert.equal(
     isSupportedStartupOnlyFixture(AUSTIN_OPERATING_WORKLOAD_ID),
     true,
   );
+  assert.equal(isSupportedStartupOnlyFixture('dense-investigation'), true);
   assert.equal(isSupportedStartupOnlyFixture('infrastructure-cables'), false);
   assert.deepEqual(
     resolveStartupOnlyFixtureIdentity('infrastructure-dams', {

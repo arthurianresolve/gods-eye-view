@@ -36,6 +36,11 @@ const STARTUP_ONLY_FIXTURES = Object.freeze({
     workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
     fixtureId: 'austin-operating-composed-v1',
   }),
+  'dense-investigation': Object.freeze({
+    matrixRowId: 'dense-investigation',
+    workloadId: 'dense-investigation',
+    fixtureId: DENSE_FLIGHT_FIXTURE_ID,
+  }),
 });
 
 export function isSupportedStartupOnlyFixture(workloadId) {
@@ -44,23 +49,30 @@ export function isSupportedStartupOnlyFixture(workloadId) {
 
 export function resolveStartupOnlyFixtureIdentity(
   workloadId,
-  { infrastructureWorkload, austinOperatingWorkload } = {},
+  {
+    infrastructureWorkload,
+    austinOperatingWorkload,
+    productionFlightFixture,
+  } = {},
 ) {
   const expected = STARTUP_ONLY_FIXTURES[workloadId];
   assert.ok(expected, `Unsupported startup-only workload: ${workloadId}`);
   const fixture =
     workloadId === AUSTIN_OPERATING_WORKLOAD_ID
       ? austinOperatingWorkload
-      : infrastructureWorkload;
+      : workloadId === 'dense-investigation'
+        ? productionFlightFixture
+        : infrastructureWorkload;
   assert.ok(fixture, `The ${workloadId} startup fixture was not prepared.`);
-  assert.equal(fixture.workloadId, expected.workloadId);
+  if (workloadId !== 'dense-investigation')
+    assert.equal(fixture.workloadId, expected.workloadId);
   assert.equal(fixture.id, expected.fixtureId);
   assert.match(fixture.sha256 || '', SHA256);
   return {
     ...(expected.matrixRowId !== expected.workloadId
       ? { matrixRowId: expected.matrixRowId }
       : {}),
-    workloadId: fixture.workloadId,
+    workloadId: fixture.workloadId ?? expected.workloadId,
     id: fixture.id,
     sha256: fixture.sha256,
   };

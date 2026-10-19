@@ -1,0 +1,98 @@
+{
+  "schema": "gev-startup-attribution-qa-validation/v1",
+  "startedAt": "2026-10-19T20:00:42.040Z",
+  "baseCommit": "1ef5973e10ea7a7fa16c6fa424b0340fdb71bb4a",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "47933853543e95cd72935727cc66a5e5939dce754b9dc642c35e1e6993a3f53b"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "274d54e019fcd9a83e54dd9082253c61d001ab561d21cc516242859a341e93e2"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.test.mjs",
+      "sha256": "c96ea633f97a3ff05bd8ed55e6848188ed6f820aec7cf3a8ec357f00860becb9"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "f014550ca4c9440927b4ca53a9ef68b5b46528e11886885563749e6a36a61cd8"
+    },
+    {
+      "name": "scripts/performance/startupAttribution.mjs",
+      "sha256": "e1977703197fc90373e578f8da05a8640e9b4520a85a93f3c82690e6018e5831"
+    },
+    {
+      "name": "scripts/performance/startupAttribution.test.mjs",
+      "sha256": "fb1c85b8b7b6bfddc81a240b5a962c403080b90c91c42490b488b97316bad978"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "sha256": "de523d0c0647347583583078ce7ee2c791047763026ebb4a9584f6a49803c30b"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.test.mjs",
+      "sha256": "bcd82527fee71031e9b228a2ef88167ac431717bcadd5bbdd9bb4d5ed7d0d9e9"
+    },
+    {
+      "name": "scripts/performance/captureProducerCli.test.mjs",
+      "sha256": "a7b2538118046dc7ab41928b82c8c89696205950b91835ca0175c10dad0a5fb4"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "sha256": "7539465fb483a6d387609e291281c96b296dfb83c37eb042b6d90d5ddb8e8f14"
+    }
+  ],
+  "tests": [
+    "scripts/captureNoUndefConfig.test.mjs",
+    "scripts/performance/startupAttribution.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/captureProducerCli.test.mjs",
+    "scripts/performance/balancedStartupConfirmation.test.mjs"
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "bcc87aa90ba486948be5442bb1f07bd2d8111b192b42028b7a917a9bebea05f9",
+      "summary": [
+        "ℹ tests 39",
+        "ℹ pass 39",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 5071.342428"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "d6bc149ad70cd1e2d5fa116904d7954e7bcbd2aabf78db49782b22b7e2143742",
+      "summary": [
+        "ℹ tests 39",
+        "ℹ pass 39",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 4690.596506"
+      ]
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "logSha256": "d33efad59e5a2fb0c4ad88435d730c3cba8b25622e3b09b37619170953631239",
+      "summary": "Capture harness no-undef: 73 files passed."
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-attribution-review-20261019",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "priorValidationPreservedAt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-soak-camera-preflight-review-20261019",
+  "scope": "QA-only optional startup attribution. Existing elapsed readiness metrics and thresholds stay unchanged. Diagnostic reports are ineligible for performance acceptance; no application runtime or visual settings change.",
+  "completedAt": "2026-10-19T20:00:54.948Z"
+}
