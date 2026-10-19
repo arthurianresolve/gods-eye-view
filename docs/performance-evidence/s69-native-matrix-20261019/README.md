@@ -281,15 +281,25 @@ and timed samples, before further repetitions can conceal them behind cleanup.
 
 Native Windows image tests confirmed the previously missing requests decode and
 existing patterns retain their bytes. The initial full local image suite then
-encountered an outdated overflow-test bound and stalled in its provider-parser
-test; it was explicitly cancelled before the next GPU sample. VM105 cannot run
-its installed native Sharp binary because its virtual CPU lacks x86-64-v2.
-These attempts are not full-suite passes. The corrected six focused image and
-corruption tests pass on Windows. The revised delivery/capture/comparison suite
-passes 121 checks on both VM105 Node versions, with two Windows-only cleanup
-checks explicitly skipped. Logs and hashes are retained in
-`native-map-corpus-check-1792376088073`. A new physical fixture capture and the
-full image-parser suite remain required.
+encountered an outdated overflow-test bound and an apparently stalled parser
+test; it was explicitly cancelled before the next GPU sample. A bounded follow-up
+found slow test-side pixel allocations: the parser body completed after about
+77.5 seconds, after its diagnostic timeout. That cancelled attempt is not a pass.
+An earlier malformed diagnostic wrapper skipped its callback and is explicitly
+invalid; neither diagnostic supplies acceptance evidence.
+
+The corrected diversity assertion stops after finding nine distinct RGB values,
+using numeric values instead of allocating a Buffer and hex string per pixel.
+It still fetches, hash-checks and fully decodes every tile, preserving the original
+requirement of more than eight colors. All nine image/parser tests now pass on
+Windows Node 24.16.0 in 26.8 seconds; the parser case takes 10.9 seconds. The
+[full Windows log](native-map-full-windows.txt) retains all nine outcomes.
+VM105 cannot run its installed
+native Sharp binary because its virtual CPU lacks x86-64-v2; that platform skip
+remains explicit. The revised delivery/capture/comparison suite passes 121 checks
+on both VM105 Node versions, with two Windows-only cleanup checks explicitly
+skipped. Logs and hashes are retained in `native-map-corpus-check-1792376088073`.
+A new physical fixture capture remains required.
 
 Application `55639cc7` now contains the weather ownership correction below.
 Its exact-commit [signed packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39187761110)
@@ -298,11 +308,33 @@ pass. Its [PR integration CI](https://github.com/arthurianresolve/gods-eye-view/
 passes all seven selected jobs. PR merge artifacts are not substituted for the
 exact application artifact. Production still serves the verified `e7a878e`.
 
-The cable presentation diagnostic compares the same `19065997` app in fresh
-Chrome 152, 155, 155 and 152 processes. Actual full runtime versions and executable
-hashes are recorded. This experiment uses default composition and framebuffer
-settings and is ineligible for performance acceptance. No browser upgrade
-benefit or resolution of the dam/cable regressions is established by a partial run.
+The exact `55639cc7` archive was independently downloaded and verified against
+the repository, release workflow, source commit and GitHub-hosted attestation.
+Its SHA-256 is `f2190f1111510d95ab86939e8809c59401423ab721ed9aae06aaf1971c2933f8`.
+The [staging receipt](staged-release556.json) binds all 2,126 packaged files,
+the weather source hash and bundled application identity. An initial helper
+incorrectly expected a standalone `dist/build-info.json`; that attempt stopped
+before dependency installation or service changes. The corrected verification
+checks the actual bundled identity and preserves the earlier failure log.
+Locked production dependencies installed successfully on VM105, and all
+[16 private production-host checks](production-host-smoke556.json) passed.
+These cover current and retained assets, compression, ETags, ranges, host/route
+boundaries and shutdown. The candidate is staged only; deployment still requires
+the performance and visual gates.
+
+The completed cable presentation diagnostic compares the same `19065997` app in
+fresh Chrome 152, 155, 155 and 152 processes. Actual full runtime versions and
+executable hashes are recorded. Motion p95 is respectively 497.7, 312.6, 341.7
+and 345.9 ms. In the first launch, `ScheduleOverlays()` has wall p95 264.301 ms
+but thread CPU p95 1.049 ms; the other launches have wall p95 4.316, 3.819 and
+0.937 ms. These wall durations indicate presentation-path waiting, not GPU
+execution time. The last Chrome 152 run overlaps the Chrome 155 results, so
+upgrading alone is not a proven fix. Default composition and framebuffer settings
+remain unchanged. These four diagnostic captures are ineligible for acceptance;
+the new full matrix uses installed Chrome 155.0.8059.84 for both applications.
+The [version-control review](cable-browser-version-review.json) records hashes,
+trace counts and limitations. All 21 raw files (118,817,425 bytes) were hash-verified
+on VM105 in `cable-browser-version-control-563d9dd4-20261019`.
 
 ### Weather metadata ownership correction
 

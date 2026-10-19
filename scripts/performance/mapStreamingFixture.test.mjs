@@ -1228,8 +1228,19 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         [256, 256, 3],
       );
       const colors = new Set();
-      for (let offset = 0; offset < image.data.length; offset += 3)
-        colors.add(image.data.subarray(offset, offset + 3).toString('hex'));
+      // The assertion needs nine distinct colors. Every tile is still fetched,
+      // hash-checked and fully decoded; avoid allocating a Buffer and hex string
+      // for every pixel after the diversity condition is already established.
+      for (
+        let offset = 0;
+        offset < image.data.length && colors.size <= 8;
+        offset += 3
+      )
+        colors.add(
+          (image.data[offset] << 16) |
+            (image.data[offset + 1] << 8) |
+            image.data[offset + 2],
+        );
       assert.ok(
         colors.size > 8,
         `${row.path} must decode to varied map pixels`,

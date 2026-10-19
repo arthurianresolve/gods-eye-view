@@ -1,0 +1,17 @@
+✔ map streaming fixture generation is stable, bounded, and route-indexed (1963.0512ms)
+✔ v4 adds only actual Cesium OSM skeleton and imagery-parent dependencies (1285.2022ms)
+✔ canonical 3D Tiles corpus is immutable, bounded, and fail-closed (980.4633ms)
+✔ native DPR route requests have level-16 imagery without changing existing patterns (594.1119ms)
+✔ pinned high-LOD PNG templates preserve every route pixel and identity (2717.9159ms)
+✔ map streaming fixture rejects truncated, modified, missing, and unbounded assets (1661.8093ms)
+✔ Cesium terrain and tileset parsers accept the generated local route corpus (10907.8437ms)
+✔ ArcGIS probe proof rejects successful HTTP bytes when image decoding fails (562.9312ms)
+✔ Cesium rejects truncated quantized-mesh and GLB HTTP responses (599.5554ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26846.1862
