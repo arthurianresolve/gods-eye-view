@@ -1012,8 +1012,23 @@ function assertWeatherEffectsRuntimeState(
     state && typeof state === 'object',
     `${label}: runtime state is required`,
   );
+  assert.ok(
+    state.visualState && typeof state.visualState === 'object',
+    `${label}: weather visual state is required`,
+  );
+  // The application stores the filtered satellite mode as numeric 100 in its
+  // live layer parameters. The fixture's historical contract names that same
+  // visual mode "filtered". Canonicalize only this documented representation
+  // at the comparison boundary; retain the raw observation in the report.
+  const observedVisualState = {
+    ...state.visualState,
+    satelliteInfrared:
+      state.visualState.satelliteInfrared === 100
+        ? 'filtered'
+        : state.visualState.satelliteInfrared,
+  };
   assert.deepEqual(
-    state.visualState,
+    observedVisualState,
     visual,
     `${label}: weather settings differ`,
   );

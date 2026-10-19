@@ -755,9 +755,14 @@ export function observeWeatherEffectsLayerState() {
                 ? params.product.slice(0, 32)
                 : null,
             infrared:
-              typeof params?.infrared === 'string'
-                ? params.infrared.slice(0, 24)
-                : null,
+              Number.isFinite(params?.infrared) &&
+              params.infrared >= 0 &&
+              params.infrared <= 100
+                ? params.infrared
+                : typeof params?.infrared === 'string' &&
+                    ['filtered', 'full'].includes(params.infrared)
+                  ? params.infrared
+                  : null,
           }
         : {}),
       ...(id === 'wind'

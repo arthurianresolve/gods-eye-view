@@ -1344,6 +1344,7 @@ test('weather failure snapshot is page-serializable and exposes only bounded sel
   });
   assert.equal(observed.layers[0].error, 'source unavailable at [url]');
   assert.equal(observed.layers[1].product, 'clouds-regional');
+  assert.equal(observed.layers[1].infrared, 100);
   assert.deepEqual(observed.clock, {
     mode: 'history',
     target: fixtureTime,

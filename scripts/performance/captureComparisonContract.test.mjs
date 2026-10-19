@@ -729,6 +729,27 @@ test('weather comparison contract binds phase source, settings, populations and 
     contract.populations,
     observed.fixtureDelivery.populationsBefore,
   );
+  const numericInfrared = structuredClone(observed);
+  for (const sample of numericInfrared.captures) {
+    sample.weatherEffectsClock.weatherStateBefore.visualState.satelliteInfrared = 100;
+    sample.weatherEffectsClock.weatherStateAfter.visualState.satelliteInfrared = 100;
+  }
+  assert.doesNotThrow(() => create(numericInfrared));
+  assert.equal(
+    numericInfrared.captures[0].weatherEffectsClock.weatherStateBefore
+      .visualState.satelliteInfrared,
+    100,
+  );
+  for (const invalidInfrared of [0, 99, '100', null, undefined]) {
+    const invalid = structuredClone(observed);
+    for (const sample of invalid.captures) {
+      sample.weatherEffectsClock.weatherStateBefore.visualState.satelliteInfrared =
+        invalidInfrared;
+      sample.weatherEffectsClock.weatherStateAfter.visualState.satelliteInfrared =
+        invalidInfrared;
+    }
+    assert.throws(() => create(invalid));
+  }
   for (const mutate of [
     (value) => {
       value.fixture.mediaPreferences['prefers-reduced-motion'] = 'reduce';
