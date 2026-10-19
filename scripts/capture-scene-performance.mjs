@@ -127,6 +127,13 @@ import {
   STARTUP_ATTRIBUTION_SCHEMA,
 } from './performance/startupAttribution.mjs';
 import {
+  assertStartupObservationMode,
+  PAGE_OBSERVED_STARTUP_MEASUREMENT,
+  PAGE_OBSERVED_STARTUP_METHOD,
+  PAGE_OBSERVED_STARTUP_SCHEMA,
+  PAGE_OBSERVED_STARTUP_SEMANTICS,
+} from './performance/startupObservationMethod.mjs';
+import {
   createDepthPickAttributionIdentity,
   depthPickRetirementConfirmed,
   disposeDepthPickAttributionForPage as disposeDepthPickPageOwner,
@@ -201,6 +208,11 @@ const startupOnlyShard = args.includes('--startup-only-shard');
 const startupAttributionEnabled = assertStartupAttributionMode({
   enabled: args.includes('--startup-attribution'),
   startupOnlyShard,
+});
+const startupPageObservedEnabled = assertStartupObservationMode({
+  enabled: args.includes('--startup-page-observed-v1'),
+  startupOnlyShard,
+  startupAttributionEnabled,
 });
 const startupShardId = option('--startup-shard-id', null);
 const startupShardRole = option('--startup-role', null);
@@ -592,7 +604,7 @@ if (startupOnlyShard) {
   if (!out) throw new Error('--startup-only-shard requires --out.');
   if (!isSupportedStartupOnlyFixture(providerFixtureMode))
     throw new Error(
-      '--startup-only-shard requires --provider-fixture infrastructure-dams, austin-operating-v1 or dense-investigation.',
+      '--startup-only-shard requires --provider-fixture infrastructure-datacenters, infrastructure-dams, austin-operating-v1 or dense-investigation.',
     );
   if (
     !buildProvenanceEnabled ||
@@ -3054,11 +3066,29 @@ try {
     if (captureProvenance && workerAuditMode !== 'receipt-only')
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     const startupAuditState = auditPageCodeRequests(startupPage);
+    let startupForegroundActivation = null;
+    let preNavigationForeground = null;
+    if (startupPageObservedEnabled) {
+      const foregroundStartedAtMs = Date.now();
+      startupForegroundActivation = await activateCapturePage(startupPage);
+      const foregroundCompletedAtMs = Date.now();
+      preNavigationForeground = {
+        startedAtMs: foregroundStartedAtMs,
+        completedAtMs: foregroundCompletedAtMs,
+        elapsedMs: foregroundCompletedAtMs - foregroundStartedAtMs,
+        activation: startupForegroundActivation,
+      };
+      failureProgress.startupForegroundActivation = {
+        run,
+        ...startupForegroundActivation,
+      };
+    }
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
-    const navigationCompletedAtMs = startupAttributionEnabled
-      ? Date.now()
-      : null;
+    const navigationCompletedAtMs =
+      startupAttributionEnabled || startupPageObservedEnabled
+        ? Date.now()
+        : null;
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(startupPage.url());
@@ -3071,40 +3101,136 @@ try {
         );
     }
     const foregroundStartedAtMs = startupAttributionEnabled ? Date.now() : null;
-    const startupForegroundActivation = await activateCapturePage(startupPage);
+    if (!startupPageObservedEnabled) {
+      startupForegroundActivation = await activateCapturePage(startupPage);
+      failureProgress.startupForegroundActivation = {
+        run,
+        ...startupForegroundActivation,
+      };
+    }
     const foregroundCompletedAtMs = startupAttributionEnabled
       ? Date.now()
       : null;
-    failureProgress.startupForegroundActivation = {
-      run,
-      ...startupForegroundActivation,
-    };
-    const viewerWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
-    await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
-      timeout: 90_000,
-    });
-    const viewerObservedAtMs = startupAttributionEnabled ? Date.now() : null;
-    const diagnosticsDisableStartedAtMs = startupAttributionEnabled
-      ? Date.now()
-      : null;
+    let viewerObservedAtMs = null;
+    let pageObservedViewerMs = null;
+    let loaderWaitStartedAtMs = null;
+    let loaderHiddenObservedAtMs = null;
+    let loaderHiddenHostObservedAtMs = null;
+    let pageObservedLoaderHiddenMs = null;
+    let viewerWaitStartedAtMs = null;
+    let viewerPageObservation = null;
+    let loaderPageObservation = null;
+    if (startupPageObservedEnabled) {
+      const observePageTiming = async (predicate) => {
+        const handle = await startupPage.waitForFunction(predicate, {
+          timeout: 90_000,
+        });
+        const hostObservedAtMs = Date.now();
+        try {
+          return {
+            pageObservation: await handle.jsonValue(),
+            hostObservedAtMs,
+          };
+        } finally {
+          await handle.dispose();
+        }
+      };
+      viewerWaitStartedAtMs = Date.now();
+      loaderWaitStartedAtMs = Date.now();
+      const [viewerResult, loaderResult] = await Promise.allSettled([
+        observePageTiming(() => {
+          const navigation = performance.getEntriesByType('navigation')[0];
+          if (!window.__godsEyeView?.viewer || !navigation) return false;
+          return {
+            observedMsFromNavigationStart:
+              performance.now() - navigation.startTime,
+            visible: document.visibilityState === 'visible',
+            focused: document.hasFocus(),
+            visibilityState: document.visibilityState,
+          };
+        }),
+        observePageTiming(() => {
+          const navigation = performance.getEntriesByType('navigation')[0];
+          if (
+            !document
+              .getElementById('loading-screen')
+              ?.classList.contains('hidden') ||
+            !navigation
+          )
+            return false;
+          return {
+            observedMsFromNavigationStart:
+              performance.now() - navigation.startTime,
+            visible: document.visibilityState === 'visible',
+            focused: document.hasFocus(),
+            visibilityState: document.visibilityState,
+          };
+        }),
+      ]);
+      const failedWait = [viewerResult, loaderResult].find(
+        (result) => result.status === 'rejected',
+      );
+      if (failedWait) throw failedWait.reason;
+      viewerPageObservation = viewerResult.value.pageObservation;
+      loaderPageObservation = loaderResult.value.pageObservation;
+      pageObservedViewerMs =
+        viewerPageObservation.observedMsFromNavigationStart;
+      viewerObservedAtMs = viewerResult.value.hostObservedAtMs;
+      pageObservedLoaderHiddenMs =
+        loaderPageObservation.observedMsFromNavigationStart;
+      loaderHiddenObservedAtMs = loaderResult.value.hostObservedAtMs;
+      loaderHiddenHostObservedAtMs = loaderHiddenObservedAtMs;
+      if (
+        viewerPageObservation.visible !== true ||
+        viewerPageObservation.focused !== true ||
+        viewerPageObservation.visibilityState !== 'visible' ||
+        loaderPageObservation.visible !== true ||
+        loaderPageObservation.focused !== true ||
+        loaderPageObservation.visibilityState !== 'visible'
+      )
+        throw new Error(
+          'Page-observed startup state became hidden or unfocused during readiness timing.',
+        );
+    } else {
+      viewerWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
+      await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
+        timeout: 90_000,
+      });
+      viewerObservedAtMs = startupAttributionEnabled ? Date.now() : null;
+    }
+    const diagnosticsDisableStartedAtMs =
+      startupAttributionEnabled || startupPageObservedEnabled
+        ? Date.now()
+        : null;
     await disableCaptureDiagnostics(
       startupPage,
       startupDocumentRole,
       startupDocumentId,
     );
-    const diagnosticsDisableCompletedAtMs = startupAttributionEnabled
-      ? Date.now()
-      : null;
-    const appReadyMs = Date.now() - startedAt;
-    const loaderWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
-    await startupPage.waitForFunction(
-      () =>
-        document.getElementById('loading-screen')?.classList.contains('hidden'),
-      { timeout: 90_000 },
-    );
-    const loaderHiddenObservedAtMs = startupAttributionEnabled
-      ? Date.now()
-      : null;
+    const diagnosticsDisableCompletedAtMs =
+      startupAttributionEnabled || startupPageObservedEnabled
+        ? Date.now()
+        : null;
+    const appReadyHostObservedAtMs = startupPageObservedEnabled
+      ? viewerObservedAtMs
+      : Date.now();
+    const appReadyMs = startupPageObservedEnabled
+      ? pageObservedViewerMs
+      : appReadyHostObservedAtMs - startedAt;
+    if (!startupPageObservedEnabled) {
+      loaderWaitStartedAtMs = startupAttributionEnabled ? Date.now() : null;
+      await startupPage.waitForFunction(
+        () =>
+          document
+            .getElementById('loading-screen')
+            ?.classList.contains('hidden'),
+        { timeout: 90_000 },
+      );
+      loaderHiddenHostObservedAtMs = Date.now();
+      loaderHiddenObservedAtMs = startupAttributionEnabled
+        ? loaderHiddenHostObservedAtMs
+        : null;
+    }
     if (
       captureProvenance &&
       (await startupPage.evaluate(() =>
@@ -3114,7 +3240,51 @@ try {
       throw new Error(
         'Verified startup page is controlled by a service worker.',
       );
-    const initialSettleMs = Date.now() - startedAt;
+    const initialSettleMs = startupPageObservedEnabled
+      ? pageObservedLoaderHiddenMs
+      : Date.now() - startedAt;
+    const startupTimingEvidence = startupPageObservedEnabled
+      ? {
+          schema: PAGE_OBSERVED_STARTUP_SCHEMA,
+          semantics: PAGE_OBSERVED_STARTUP_SEMANTICS,
+          preNavigationForeground,
+          hostBoundaries: {
+            navigationStartedAtMs: startedAt,
+            navigationCompletedAtMs,
+            viewerWaitStartedAtMs,
+            viewerObservedAtMs,
+            diagnosticsDisableStartedAtMs,
+            diagnosticsDisableCompletedAtMs,
+            loaderWaitStartedAtMs,
+            loaderHiddenObservedAtMs,
+          },
+          pageObserved: {
+            viewerExistenceMsFromNavigationStart: pageObservedViewerMs,
+            loadingScreenHiddenMsFromNavigationStart:
+              pageObservedLoaderHiddenMs,
+            viewerForeground: viewerPageObservation,
+            loaderHiddenForeground: loaderPageObservation,
+          },
+          hostObserved: {
+            viewerExistenceMsFromNavigationStart:
+              viewerObservedAtMs - startedAt,
+            loadingScreenHiddenMsFromNavigationStart:
+              loaderHiddenObservedAtMs - startedAt,
+          },
+        }
+      : null;
+    if (
+      startupPageObservedEnabled &&
+      [
+        pageObservedViewerMs,
+        pageObservedLoaderHiddenMs,
+        viewerObservedAtMs,
+        loaderHiddenObservedAtMs,
+      ].some((value) => !Number.isFinite(value) || value <= 0)
+    )
+      throw new Error(
+        'Page-observed startup timing is missing a finite positive page or host timestamp.',
+      );
     let startupAttribution = null;
     if (startupAttributionEnabled) {
       const pageState = await startupPage.evaluate(
@@ -3192,6 +3362,14 @@ try {
       throw new Error(
         'Startup document render loop retirement at its final details observation was not confirmed.',
       );
+    if (
+      startupPageObservedEnabled &&
+      (terminalStartupObservation.observation.visible !== true ||
+        terminalStartupObservation.observation.focused !== true)
+    )
+      throw new Error(
+        'Startup page was not visible and focused at its final observation.',
+      );
     details.renderer = earlyRenderer.renderer;
     details.vendor = earlyRenderer.vendor;
     details.rendererEvidence = {
@@ -3200,12 +3378,18 @@ try {
       queryDurationMs: earlyRenderer.queryDurationMs,
       parameterQueryCount: earlyRenderer.parameterQueryCount,
     };
+    if (startupPageObservedEnabled)
+      startupTimingEvidence.finalPageState = {
+        visible: details.visible,
+        focused: details.focused,
+      };
     startupSamples.push({
       run,
       cacheDisabled: true,
       foregroundActivation: startupForegroundActivation,
       appReadyMs,
       initialSettleMs,
+      ...(startupTimingEvidence ? { startupTimingEvidence } : {}),
       ...(startupAttribution ? { startupAttribution } : {}),
       ...(startupScene
         ? {
@@ -7517,16 +7701,30 @@ if (startupOnlyShard && !captureFailure) {
       settings,
       startup: {
         runCount: 1,
-        measurement: 'navigation-to-viewer-existence-and-loading-screen-hidden',
+        ...(startupPageObservedEnabled
+          ? {
+              method: PAGE_OBSERVED_STARTUP_METHOD,
+              timingEvidence: sample.startupTimingEvidence,
+            }
+          : {}),
+        measurement: startupPageObservedEnabled
+          ? PAGE_OBSERVED_STARTUP_MEASUREMENT
+          : 'navigation-to-viewer-existence-and-loading-screen-hidden',
         observations: [
           {
             run: 1,
-            measurement:
-              'navigation-to-viewer-existence-and-loading-screen-hidden',
+            measurement: startupPageObservedEnabled
+              ? PAGE_OBSERVED_STARTUP_MEASUREMENT
+              : 'navigation-to-viewer-existence-and-loading-screen-hidden',
             appReadyMs: sample.appReadyMs,
             initialSettleMs: sample.initialSettleMs,
             cacheDisabled: sample.cacheDisabled,
             foregroundActivation: sample.foregroundActivation,
+            ...(startupPageObservedEnabled
+              ? {
+                  finalPageState: sample.startupTimingEvidence.finalPageState,
+                }
+              : {}),
             renderer: sample.renderer,
             viewport: sample.viewport,
             drawingBuffer: sample.drawingBuffer,

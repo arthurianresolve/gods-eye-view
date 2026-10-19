@@ -73,9 +73,11 @@ interval p95 at 265.4 versus 1,015.0 ms (+282.44%). The baseline uses continuous
 rendering and records 323–340 frames per minute; the candidate uses request-render
 mode and records 101–103. Long-task counts are respectively 207–304 and 18–30.
 Satellite positions advance with matching sampled epochs at both boundaries.
-Those observations motivate the existing idle-cadence diagnostic, but do not
-replace its required current-build visibility, animation and ownership proof.
-The raw flag remains unresolved until that separate check completes.
+The separate [current-build idle-cadence diagnostic](idle-cadence-b3c49b19-review.json)
+now passes independent VM review of visibility, animation, ownership and original
+pair hashes. It classifies this idle flag as an intentional demand-cadence
+change. The original report remains unchanged; this disposition assesses
+neither visual equivalence nor motion performance.
 Operating-view startup also fails: app-ready medians are 3,276 versus 3,937 ms
 (+20.18%), and loading-screen-hidden medians are 3,954 versus 4,642 ms (+17.40%).
 The dams-only startup confirmation does not clear this workload. All eight
@@ -98,6 +100,14 @@ exact phase overlap is unavailable. The original reports remain intact and
 must not be described as an otherwise-idle-host comparison or proof of a
 repeatable speedup. Remaining focused checks and image decoding run on VM105.
 
+The [combined infrastructure pair](infrastructure-b3c49b19-result.json) completes
+all five samples per scenario on both builds. Motion p95 is 320.9 versus
+328.7 ms (+2.43%), within the 10% regression limit. App-ready startup is 5,231
+versus 3,952 ms (-24.45%); loading-screen-hidden startup improves 17.67%.
+Settled idle frame intervals remain unavailable. All eight raw and invocation
+files are independently hash-verified on VM105. This result does not clear the
+separate operating, dense or datacenter startup failures.
+
 Code inspection shows these startup observations precede workload activation:
 fresh contexts start with no enabled layers, but have workload-specific provider
 hooks. The existing app-ready metric includes navigation, foreground activation,
@@ -107,8 +117,8 @@ along with Navigation Timing, locale and enabled layers. Its timestamps are
 observations, not application publication marks. The separate diagnostic schema
 is rejected by the acceptance consumer. [Focused VM validation](startup-attribution-qa-validation.json)
 passes 39/39 on each Node version, formatting and the 73-file no-undef check.
-The existing metrics and 10% gates are unchanged; fresh attribution and any
-predeclared confirmation remain outstanding.
+The existing metrics and 10% gates are unchanged; any predeclared confirmation
+remains separate from diagnostic attribution.
 
 The default boot can also await live token, basemap and terrain setup, depending
 on provider availability. The diagnostic now reads retained Resource Timing
@@ -119,7 +129,50 @@ coverage remains unavailable, and zero byte fields may reflect cache or
 Timing-Allow-Origin restrictions. This is attribution evidence only, not a new
 startup acceptance metric. The [eight focused checks](startup-network-attribution-qa-validation.json)
 pass on each VM Node version; syntax, formatting and all 73 capture no-undef
-files also pass. Fresh hardware attribution is still required.
+files also pass.
+
+The [eight predeclared hardware observations](startup-attribution-ac50400c-review.json)
+now complete at producer `ac50400c`, with independent VM hash, source, slot,
+role, fixture and normal-cleanup checks. Both fixtures use English, no enabled
+layers and the same automatically selected OSM stack. Foreground activation
+takes 1,635–2,349 ms and is included in the legacy app-ready stopwatch. The
+first control spends 2,164 ms in that step, followed by a 17 ms viewer wait
+and 2 ms diagnostics-disable call. The retained resource entries do not show
+a long external-provider response; incomplete buffer/TAO coverage still limits
+that conclusion. These observations expose host setup inside the old startup
+measurement. They do not establish the exact viewer publication or first
+visible frame time, do not permit subtracting overhead from old samples, and
+do not clear any failed startup gate. A distinct, predeclared confirmation
+method now activates before navigation and records page-side observation times
+separately from host setup. The opt-in `--startup-page-observed-v1` method is
+restricted to startup-only shards and cannot be combined with attribution mode.
+Viewer and loader predicates run concurrently; each records visible/focused
+state and a page-clock upper bound on availability. These are not exact
+publication or first-render marks. Host-clock boundaries remain separately
+bound to their own durations. Mixed methods are rejected, and legacy reports
+retain their existing meaning. The [focused validation](startup-page-observed-qa-validation.json)
+passes 33/33 on both VM Node versions, syntax/format checks and the 75-file
+capture no-undef check. New predeclared hardware confirmations remain required
+for operating, dense and datacenter startup; no old result is recomputed.
+
+The [presentation-fence diagnostic](visual-presentation-cross-build-diagnostic.json)
+compares unpaused, debugger-paused and naturally advanced captures on each build.
+DOM/SVG geometry, transforms and relevant computed paint inputs match. The paused
+and naturally advanced cross-build logo regions differ at four pixels by one
+channel unit, rather than reproducing the earlier maximum delta of 103. Other
+HUD regions still vary, and the candidate's first capture also has broad
+low-amplitude color variation. This diagnostic does not pass the full four-state
+visual gate or explain every old difference. Its regions only localize changes;
+they are not acceptance masks. All original PNGs and failed results are retained.
+
+The upstream range `93ea088f..2f171c7d` was reviewed separately during the
+frozen comparison. It does not change the logo source, its relevant styles or
+the default scene boot, and supplies no demonstrated fix for the current logo
+or startup findings. CCTV still-aspect and marker-color changes need fresh
+visual evidence if integrated later. Terrain endpoint changes could affect
+startup only if that endpoint is actually called; the default boot inspection
+did not establish such a call. No upstream runtime change was added to the
+frozen `b3c49b19` qualification. The fork's `main` remains at `1df2a272`.
 
 The [QA CI receipt](qa-ci-1ef5973e.json) records all seven required jobs passing
 for `1ef5973e`, including Windows recovery and rendered mixed-use smoke. Its
@@ -129,16 +182,19 @@ that workflow and are intentionally skipped. The exact application remains
 The [later `4911f52f` CI receipt](qa-ci-4911f52f.json) likewise records seven
 required jobs and release packaging passing, with twelve intentionally unselected
 diagnostics. All four archived receipt files are hash-verified on VM105. The
-subsequent Resource Timing extension is separately covered by its focused VM
-checks; the `4911f52f` CI result is not attributed to newer source.
+subsequent Resource Timing producer `ac50400c` also has a [passing CI and release
+receipt](qa-ci-ac50400c.json). Its [first macOS attempt](qa-ci-ac50400c-attempt1-infra-failure.json)
+never acquired a hosted runner and ran no steps; only that job was retried, and
+the retry passed. The capacity failure remains archived. These results do not
+cover the newer page-observed startup implementation.
 
 The [startup and idle contract checks](operating-startup-idle-qa-validation.json)
 pass 142/142 on both Node 24.16.0 and 26.11.0 on VM105. Startup-only captures
 now accept the actual Austin fixture identity and its operating-view row; the
 dams contract is unchanged. Idle disposition requires the current candidate's
 own raw pair, diagnostic hashes and full Chrome version. Historical evidence
-cannot clear the current flag. These are QA changes; the fresh diagnostic and
-balanced operating-view startup confirmation remain outstanding.
+cannot clear the current flag. The fresh idle diagnostic is now reviewed above;
+the distinct startup confirmations remain outstanding.
 
 The [first current balanced weather attempt](weather-b3c49b19-foreground-failure.json)
 failed native foreground initialization before recording any sample. Its six

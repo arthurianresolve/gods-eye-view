@@ -5,6 +5,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/review-balanced-startup-confirmation.mjs',
   'scripts/performance/balancedStartupConfirmation.mjs',
   'scripts/performance/balancedStartupConfirmation.test.mjs',
+  'scripts/performance/startupObservationMethod.mjs',
+  'scripts/performance/startupObservationMethod.test.mjs',
   'scripts/capture-performance-matrix.mjs',
   'scripts/qa-performance-build-smoke.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',

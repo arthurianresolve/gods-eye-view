@@ -135,7 +135,7 @@ test('startup-only CLI admits Austin and dense identities through native validat
       { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
     );
 
-  const austin = run('austin-operating-v1');
+  const austin = run('austin-operating-v1', ['--startup-page-observed-v1']);
   assert.equal(austin.error, undefined);
   assert.equal(austin.status, 1);
   assert.match(
@@ -145,7 +145,7 @@ test('startup-only CLI admits Austin and dense identities through native validat
 
   const dense = run('dense-investigation', [
     '--mixed-layers',
-    '--startup-attribution',
+    '--startup-page-observed-v1',
   ]);
   assert.equal(dense.error, undefined);
   assert.equal(dense.status, 1);
@@ -154,12 +154,22 @@ test('startup-only CLI admits Austin and dense identities through native validat
     /requires verified, headed native hardware capture/,
   );
 
+  const datacenters = run('infrastructure-datacenters', [
+    '--startup-page-observed-v1',
+  ]);
+  assert.equal(datacenters.error, undefined);
+  assert.equal(datacenters.status, 1);
+  assert.match(
+    datacenters.stderr,
+    /requires verified, headed native hardware capture/,
+  );
+
   const unsupported = run('infrastructure-cables');
   assert.equal(unsupported.error, undefined);
   assert.equal(unsupported.status, 1);
   assert.match(
     unsupported.stderr,
-    /requires --provider-fixture infrastructure-dams, austin-operating-v1 or dense-investigation/,
+    /requires --provider-fixture infrastructure-datacenters, infrastructure-dams, austin-operating-v1 or dense-investigation/,
   );
 
   const attributionWithoutShard = spawnSync(
@@ -177,6 +187,42 @@ test('startup-only CLI admits Austin and dense identities through native validat
   assert.match(
     attributionWithoutShard.stderr,
     /requires --startup-only-shard and is diagnostic-only/,
+  );
+
+  const pageObservedWithoutShard = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(
+        new URL('../capture-scene-performance.mjs', import.meta.url),
+      ),
+      '--startup-page-observed-v1',
+    ],
+    { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
+  );
+  assert.equal(pageObservedWithoutShard.error, undefined);
+  assert.equal(pageObservedWithoutShard.status, 1);
+  assert.match(
+    pageObservedWithoutShard.stderr,
+    /requires --startup-only-shard/,
+  );
+
+  const pageObservedWithAttribution = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(
+        new URL('../capture-scene-performance.mjs', import.meta.url),
+      ),
+      '--startup-only-shard',
+      '--startup-page-observed-v1',
+      '--startup-attribution',
+    ],
+    { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
+  );
+  assert.equal(pageObservedWithAttribution.error, undefined);
+  assert.equal(pageObservedWithAttribution.status, 1);
+  assert.match(
+    pageObservedWithAttribution.stderr,
+    /cannot be combined with --startup-attribution/,
   );
 });
 

@@ -1,0 +1,47 @@
+{
+  "schema": "gev-idle-cadence-independent-review/v1",
+  "reviewedAt": "2026-10-19T20:50:57.455Z",
+  "status": "passed",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "1ef5973e10ea7a7fa16c6fa424b0340fdb71bb4a",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/idle-cadence-b3c49b19-native155",
+  "files": [
+    {
+      "name": "diagnostic.json",
+      "bytes": 1338189,
+      "sha256": "0b70cfa7355c8549ee754506d3bea0357f5acb2da1b293d16d26c06c9b811989"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1603,
+      "sha256": "1013072ca9f25ea896230f2a5101bff9faf25721884e9a619b1bec7b27942259"
+    },
+    {
+      "name": "diagnostic.log",
+      "bytes": 259,
+      "sha256": "3b00f8af2714ba702b48ec5a2f631de89ed8a6b7288c72dfec6fea34bba6bd90"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 3607,
+      "sha256": "169796f43be11f22171d7a5d5a08a03440b21e571c81947aee97cb215b8e4c78"
+    }
+  ],
+  "evaluation": {
+    "resolvedScenarios": [
+      "idle"
+    ],
+    "metric": "frame-interval-p95-ms",
+    "classification": "intentional-demand-cadence-change",
+    "visualAcceptance": "not-assessed",
+    "motionAcceptance": "not-assessed"
+  },
+  "failure": null,
+  "rawPair": {
+    "directory": "/opt/gods-eye-view-validation/s61-s70-20261018/operating-view-b3c49b19-native155",
+    "baselineSha256": "b793812c40a64c76927e97c513baf0ee998b00b50be61a7d6b18de14dcb859c9",
+    "candidateSha256": "8672d9f3d9adfa3f35c6c6885936d879b31f8fb0b8ee93100b090782a2fdff3c"
+  },
+  "scope": "Idle rendered-interval semantics only. Original numeric comparison remains unchanged. No motion or visual-equivalence acceptance.",
+  "productionChanged": false
+}

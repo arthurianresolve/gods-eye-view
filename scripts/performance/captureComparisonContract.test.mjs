@@ -976,7 +976,11 @@ test('infrastructure contract rejects altered source populations and clock', () 
   );
 });
 
-test('startup-only shards accept dams, Austin, or dense with their real row identity', () => {
+test('startup-only shards accept datacenters, dams, Austin, or dense with their real row identity', () => {
+  assert.equal(
+    isSupportedStartupOnlyFixture('infrastructure-datacenters'),
+    true,
+  );
   assert.equal(isSupportedStartupOnlyFixture('infrastructure-dams'), true);
   assert.equal(
     isSupportedStartupOnlyFixture(AUSTIN_OPERATING_WORKLOAD_ID),
@@ -984,6 +988,20 @@ test('startup-only shards accept dams, Austin, or dense with their real row iden
   );
   assert.equal(isSupportedStartupOnlyFixture('dense-investigation'), true);
   assert.equal(isSupportedStartupOnlyFixture('infrastructure-cables'), false);
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity('infrastructure-datacenters', {
+      infrastructureWorkload: {
+        workloadId: 'infrastructure-datacenters',
+        id: 'bundled-datacenters-static-v1',
+        sha256: '9'.repeat(64),
+      },
+    }),
+    {
+      workloadId: 'infrastructure-datacenters',
+      id: 'bundled-datacenters-static-v1',
+      sha256: '9'.repeat(64),
+    },
+  );
   assert.deepEqual(
     resolveStartupOnlyFixtureIdentity('infrastructure-dams', {
       infrastructureWorkload: {

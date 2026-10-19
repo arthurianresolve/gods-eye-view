@@ -11,6 +11,13 @@ import {
   evaluateBalancedStartupConfirmation,
   STARTUP_MEASUREMENT,
 } from './balancedStartupConfirmation.mjs';
+import {
+  LEGACY_STARTUP_METHOD,
+  PAGE_OBSERVED_STARTUP_MEASUREMENT,
+  PAGE_OBSERVED_STARTUP_METHOD,
+  PAGE_OBSERVED_STARTUP_SCHEMA,
+  PAGE_OBSERVED_STARTUP_SEMANTICS,
+} from './startupObservationMethod.mjs';
 
 const controlCommit = 'a'.repeat(40);
 const candidateCommit = 'b'.repeat(40);
@@ -99,7 +106,7 @@ function makePlan() {
 function makeReport(plan, slot, index, values = {}) {
   const appCommit = plan.applicationCommits[slot.role];
   const receiptSha256 = plan.buildReceiptSha256[slot.role];
-  const startedAtMs = 1_000_000 + index * 1_000;
+  const startedAtMs = 1_000_000 + index * 10_000;
   const foregroundActivation = {
     visible: true,
     focused: true,
@@ -111,6 +118,84 @@ function makeReport(plan, slot, index, values = {}) {
       foregroundPid: 100 + index,
     },
   };
+  const appReadyMs =
+    values.appReadyMs ?? (slot.role === 'control' ? 4000 : 4100);
+  const initialSettleMs =
+    values.initialSettleMs ?? (slot.role === 'control' ? 5000 : 5050);
+  const startupMethod = plan.startupMethod || LEGACY_STARTUP_METHOD;
+  const startup = {
+    runCount: 1,
+    measurement: plan.measurement,
+    observations: [
+      {
+        run: 1,
+        measurement: plan.measurement,
+        appReadyMs,
+        initialSettleMs,
+        cacheDisabled: true,
+        foregroundActivation,
+        renderer: environment.renderer,
+        viewport: structuredClone(environment.viewport),
+        drawingBuffer: structuredClone(environment.drawingBuffer),
+      },
+    ],
+  };
+  if (startupMethod === PAGE_OBSERVED_STARTUP_METHOD) {
+    const navigationStartedAtMs = startedAtMs + 10;
+    const navigationCompletedAtMs =
+      navigationStartedAtMs + Math.max(1, appReadyMs - 100);
+    startup.method = startupMethod;
+    startup.timingEvidence = {
+      schema: PAGE_OBSERVED_STARTUP_SCHEMA,
+      semantics: PAGE_OBSERVED_STARTUP_SEMANTICS,
+      preNavigationForeground: {
+        startedAtMs: startedAtMs + 1,
+        completedAtMs: startedAtMs + 5,
+        elapsedMs: 4,
+        activation: foregroundActivation,
+      },
+      hostBoundaries: {
+        navigationStartedAtMs,
+        navigationCompletedAtMs,
+        viewerWaitStartedAtMs: navigationCompletedAtMs,
+        loaderWaitStartedAtMs: navigationCompletedAtMs,
+        viewerObservedAtMs: navigationStartedAtMs + appReadyMs + 25,
+        loaderHiddenObservedAtMs: navigationStartedAtMs + initialSettleMs + 110,
+        diagnosticsDisableStartedAtMs:
+          navigationStartedAtMs +
+          Math.max(appReadyMs + 25, initialSettleMs + 110) +
+          1,
+        diagnosticsDisableCompletedAtMs:
+          navigationStartedAtMs +
+          Math.max(appReadyMs + 25, initialSettleMs + 110) +
+          11,
+      },
+      pageObserved: {
+        viewerExistenceMsFromNavigationStart: appReadyMs,
+        loadingScreenHiddenMsFromNavigationStart: initialSettleMs,
+        viewerForeground: {
+          observedMsFromNavigationStart: appReadyMs,
+          visible: true,
+          focused: true,
+          visibilityState: 'visible',
+        },
+        loaderHiddenForeground: {
+          observedMsFromNavigationStart: initialSettleMs,
+          visible: true,
+          focused: true,
+          visibilityState: 'visible',
+        },
+      },
+      hostObserved: {
+        viewerExistenceMsFromNavigationStart: appReadyMs + 25,
+        loadingScreenHiddenMsFromNavigationStart: initialSettleMs + 110,
+      },
+      finalPageState: { visible: true, focused: true },
+    };
+    startup.observations[0].finalPageState = {
+      ...startup.timingEvidence.finalPageState,
+    };
+  }
   return {
     schema: 'gev-startup-observation-shard/v1',
     status: 'completed',
@@ -129,25 +214,7 @@ function makeReport(plan, slot, index, values = {}) {
     graphics: { browserVersion: environment.browserVersion },
     environment: structuredClone(environment),
     settings: structuredClone(settings),
-    startup: {
-      runCount: 1,
-      measurement: STARTUP_MEASUREMENT,
-      observations: [
-        {
-          run: 1,
-          measurement: STARTUP_MEASUREMENT,
-          appReadyMs:
-            values.appReadyMs ?? (slot.role === 'control' ? 4000 : 4100),
-          initialSettleMs:
-            values.initialSettleMs ?? (slot.role === 'control' ? 5000 : 5050),
-          cacheDisabled: true,
-          foregroundActivation,
-          renderer: environment.renderer,
-          viewport: structuredClone(environment.viewport),
-          drawingBuffer: structuredClone(environment.drawingBuffer),
-        },
-      ],
-    },
+    startup,
     browserClose: {
       closeApiCompleted: true,
       normalProcessExit: true,
@@ -155,7 +222,7 @@ function makeReport(plan, slot, index, values = {}) {
       processExitSignal: null,
       forcedTerminationAttempted: false,
     },
-    processSpan: { startedAtMs, completedAtMs: startedAtMs + 500 },
+    processSpan: { startedAtMs, completedAtMs: startedAtMs + 6000 },
   };
 }
 
@@ -180,6 +247,8 @@ test('balanced startup confirmation preserves the predeclared order and gates bo
   assert.equal(result.confirmationOnly, true);
   assert.equal(result.motionEligible, false);
   assert.deepEqual(result.order, BALANCED_STARTUP_ORDER);
+  assert.equal(result.startupMethod, undefined);
+  assert.equal(result.appReady.semantic, 'navigation-to-viewer-existence');
   assert.equal(result.appReady.changePct, 2.5);
   assert.equal(result.loadingHidden.changePct, 1);
 });
@@ -198,6 +267,107 @@ test('balanced startup confirmation fails either over-ten-percent median regress
         .regressionOver10Pct,
       true,
     );
+  }
+});
+
+test('page-observed confirmation accepts matching page upper bounds and preserves host timings separately', () => {
+  const input = makeInput({
+    mutatePlan(plan) {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+    },
+  });
+  const result = evaluateBalancedStartupConfirmation(input);
+  assert.equal(result.status, 'passed');
+  assert.equal(result.startupMethod, PAGE_OBSERVED_STARTUP_METHOD);
+  assert.equal(result.appReady.semantic, PAGE_OBSERVED_STARTUP_SEMANTICS);
+});
+
+test('page and host elapsed startup clocks are validated independently', () => {
+  const input = makeInput({
+    mutatePlan(plan) {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+    },
+    mutateReports(shards) {
+      const evidence = shards[0].report.startup.timingEvidence;
+      const pageViewerMs =
+        evidence.hostObserved.viewerExistenceMsFromNavigationStart + 100;
+      evidence.pageObserved.viewerExistenceMsFromNavigationStart = pageViewerMs;
+      evidence.pageObserved.viewerForeground.observedMsFromNavigationStart =
+        pageViewerMs;
+      shards[0].report.startup.observations[0].appReadyMs = pageViewerMs;
+    },
+  });
+  assert.doesNotThrow(() => evaluateBalancedStartupConfirmation(input));
+});
+
+test('page-observed confirmation rejects mixed methods, inconsistent identities, malformed timestamps, and reversed boundaries', () => {
+  const badCases = [
+    (plan) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = STARTUP_MEASUREMENT;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.method = LEGACY_STARTUP_METHOD;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.pageObserved.viewerExistenceMsFromNavigationStart =
+        Number.NaN;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.hostBoundaries.viewerObservedAtMs =
+        shards[0].report.startup.timingEvidence.hostBoundaries
+          .navigationCompletedAtMs - 1;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.preNavigationForeground.completedAtMs =
+        shards[0].report.startup.timingEvidence.hostBoundaries
+          .navigationStartedAtMs + 1;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.pageObserved.viewerForeground.focused = false;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.finalPageState.visible = false;
+      shards[0].report.startup.observations[0].finalPageState.visible = false;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.hostObserved.viewerExistenceMsFromNavigationStart =
+        shards[0].report.startup.timingEvidence.hostObserved
+          .viewerExistenceMsFromNavigationStart + 1;
+    },
+    (plan, shards) => {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      shards[0].report.startup.timingEvidence.hostObserved.loadingScreenHiddenMsFromNavigationStart += 1;
+    },
+  ];
+  for (const mutate of badCases) {
+    const input = makeInput({
+      mutatePlan(plan) {
+        plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+        plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      },
+      mutateReports(shards, plan) {
+        mutate(plan, shards);
+      },
+    });
+    assert.throws(() => evaluateBalancedStartupConfirmation(input));
   }
 });
 

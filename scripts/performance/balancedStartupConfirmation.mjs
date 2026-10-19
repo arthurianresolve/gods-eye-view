@@ -1,4 +1,13 @@
 import assert from 'node:assert/strict';
+import {
+  effectiveStartupMethod,
+  LEGACY_STARTUP_MEASUREMENT,
+  LEGACY_STARTUP_METHOD,
+  PAGE_OBSERVED_STARTUP_MEASUREMENT,
+  PAGE_OBSERVED_STARTUP_METHOD,
+  PAGE_OBSERVED_STARTUP_SEMANTICS,
+  validatePageObservedStartupTiming,
+} from './startupObservationMethod.mjs';
 
 export const BALANCED_STARTUP_ORDER = Object.freeze([
   'control',
@@ -13,8 +22,7 @@ export const BALANCED_STARTUP_ORDER = Object.freeze([
   'candidate',
 ]);
 
-export const STARTUP_MEASUREMENT =
-  'navigation-to-viewer-existence-and-loading-screen-hidden';
+export const STARTUP_MEASUREMENT = LEGACY_STARTUP_MEASUREMENT;
 export const STARTUP_REGRESSION_THRESHOLD_PCT = 10;
 
 const SHA1 = /^[a-f0-9]{40}$/;
@@ -48,7 +56,24 @@ export function assertBalancedStartupPlan(plan) {
   assert.ok(plan?.fixture?.workloadId);
   assert.ok(plan?.fixture?.id);
   assert.match(plan?.fixture?.sha256 || '', SHA256);
-  assert.equal(plan?.measurement, STARTUP_MEASUREMENT);
+  const method = effectiveStartupMethod(plan);
+  assert.ok(
+    [LEGACY_STARTUP_METHOD, PAGE_OBSERVED_STARTUP_METHOD].includes(method),
+    'Startup method is unsupported',
+  );
+  assert.equal(
+    plan?.measurement,
+    method === PAGE_OBSERVED_STARTUP_METHOD
+      ? PAGE_OBSERVED_STARTUP_MEASUREMENT
+      : STARTUP_MEASUREMENT,
+    'Startup method and measurement identity differ',
+  );
+  if (plan.startupMethod != null)
+    assert.equal(
+      plan.startupMethod,
+      method,
+      'Startup method identity is malformed',
+    );
   assert.equal(plan?.thresholdPct, STARTUP_REGRESSION_THRESHOLD_PCT);
   assert.ok(plan?.expectedEnvironment);
   assert.ok(plan?.expectedSettings);
@@ -196,6 +221,11 @@ function assertShard(shard, slot, plan) {
   assert.deepEqual(shard?.fixture, plan.fixture);
   assert.equal(shard?.startup?.runCount, 1);
   assert.equal(shard?.startup?.measurement, plan.measurement);
+  assert.equal(
+    shard?.startup?.method || LEGACY_STARTUP_METHOD,
+    effectiveStartupMethod(plan),
+    'Startup shard method differs from the predeclared plan',
+  );
   assert.equal(shard?.startup?.observations?.length, 1);
   assert.deepEqual(shard.environment, plan.expectedEnvironment);
   assert.deepEqual(shard.settings, plan.expectedSettings);
@@ -238,6 +268,19 @@ function assertShard(shard, slot, plan) {
     observation?.drawingBuffer,
     plan.expectedEnvironment.drawingBuffer,
   );
+  if (effectiveStartupMethod(plan) === PAGE_OBSERVED_STARTUP_METHOD) {
+    validatePageObservedStartupTiming(shard.startup, observation);
+    assert.ok(
+      shard.startup.timingEvidence.preNavigationForeground.startedAtMs >=
+        span.startedAtMs,
+      'Pre-navigation foreground preparation must be inside the startup process span',
+    );
+    assert.ok(
+      shard.startup.timingEvidence.hostBoundaries.loaderHiddenObservedAtMs <=
+        span.completedAtMs,
+      'Startup page observations must finish before process cleanup completes',
+    );
+  }
   return observation;
 }
 
@@ -298,9 +341,21 @@ export function evaluateBalancedStartupConfirmation({ plan, shards }) {
     motionEligible: false,
     thresholdPct: STARTUP_REGRESSION_THRESHOLD_PCT,
     order: BALANCED_STARTUP_ORDER,
-    appReady: { semantic: 'navigation-to-viewer-existence', ...appReady },
+    ...(effectiveStartupMethod(plan) === PAGE_OBSERVED_STARTUP_METHOD
+      ? { startupMethod: effectiveStartupMethod(plan) }
+      : {}),
+    appReady: {
+      semantic:
+        effectiveStartupMethod(plan) === PAGE_OBSERVED_STARTUP_METHOD
+          ? PAGE_OBSERVED_STARTUP_SEMANTICS
+          : 'navigation-to-viewer-existence',
+      ...appReady,
+    },
     loadingHidden: {
-      semantic: 'navigation-to-loading-screen-hidden',
+      semantic:
+        effectiveStartupMethod(plan) === PAGE_OBSERVED_STARTUP_METHOD
+          ? PAGE_OBSERVED_STARTUP_SEMANTICS
+          : 'navigation-to-loading-screen-hidden',
       ...loadingHidden,
     },
   };

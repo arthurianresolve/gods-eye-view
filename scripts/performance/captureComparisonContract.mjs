@@ -26,6 +26,11 @@ import {
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const STARTUP_ONLY_FIXTURES = Object.freeze({
+  'infrastructure-datacenters': Object.freeze({
+    matrixRowId: 'infrastructure-datacenters',
+    workloadId: 'infrastructure-datacenters',
+    fixtureId: 'bundled-datacenters-static-v1',
+  }),
   'infrastructure-dams': Object.freeze({
     matrixRowId: 'infrastructure-dams',
     workloadId: 'infrastructure-dams',
