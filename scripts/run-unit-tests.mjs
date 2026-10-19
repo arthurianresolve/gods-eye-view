@@ -114,6 +114,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
   'scripts/performance/weatherInterleavedDiagnosticContract.test.mjs',
   'scripts/performance/weatherBalancedQualification.test.mjs',
+  'scripts/performance/balancedStartupConfirmation.test.mjs',
   'scripts/run-unit-tests.test.mjs',
   'scripts/capture-scene-performance.test.mjs',
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
