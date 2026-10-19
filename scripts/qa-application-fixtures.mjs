@@ -6,6 +6,11 @@ import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_TEXT } from './performance/profileRecoveryFixtureContract.mjs';
 import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 import {
+  cleanupExclusiveConsoleMessageHandleOwner,
+  createExclusiveConsoleMessageHandleOwner,
+  readConsoleMessageHandleOwnership,
+} from './performance/consoleMessageOwnership.mjs';
+import {
   cleanupStartupHeartbeat,
   installStartupHeartbeat,
   parseWebglDiagnosticMarker,
@@ -54,6 +59,7 @@ export async function prepareFixturePage(
     startupDiagnostics = null,
     page: existingPage = null,
     onFulfilled = null,
+    exclusiveConsoleHandleOwnership = false,
   } = {},
 ) {
   const page = existingPage || (await browser.newPage());
@@ -65,24 +71,35 @@ export async function prepareFixturePage(
     startupMessages,
     startupDiagnostics,
     listeners: [],
+    consoleHandleOwner: exclusiveConsoleHandleOwnership
+      ? createExclusiveConsoleMessageHandleOwner(page)
+      : null,
   };
   fixtureDiagnostics.set(page, pageDiagnostics);
-  page.on('console', (message) => {
-    if (startupDiagnostics && message.type() === 'info') {
-      const marker = parseWebglDiagnosticMarker(message.text());
-      if (marker) startupDiagnostics.recordRendererPhase(marker);
-      if (marker) return;
+  const onConsole = (message) => {
+    try {
+      if (startupDiagnostics && message.type() === 'info') {
+        const marker = parseWebglDiagnosticMarker(message.text());
+        if (marker) startupDiagnostics.recordRendererPhase(marker);
+        if (marker) return;
+      }
+      if (!['error', 'warn'].includes(message.type())) return;
+      // Local fixture evidence only: strip URL values and bound diagnostics.
+      startupMessages.push(
+        message
+          .text()
+          .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+          .slice(0, 500),
+      );
+      if (startupMessages.length > 12) startupMessages.shift();
+    } finally {
+      pageDiagnostics.consoleHandleOwner?.disposeMessageArgsIfExclusive(
+        message,
+      );
     }
-    if (!['error', 'warn'].includes(message.type())) return;
-    // Local fixture evidence only: strip URL values and bound diagnostics.
-    startupMessages.push(
-      message
-        .text()
-        .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
-        .slice(0, 500),
-    );
-    if (startupMessages.length > 12) startupMessages.shift();
-  });
+  };
+  pageDiagnostics.consoleListener = onConsole;
+  page.on('console', onConsole);
   page.on('pageerror', (error) => errors.push(error.message));
   if (startupDiagnostics) {
     const onResponse = (response) => {
@@ -146,15 +163,41 @@ export async function prepareFixturePage(
 export async function cleanupFixturePageDiagnostics(page) {
   const diagnostics = fixtureDiagnostics.get(page);
   if (!diagnostics) return;
-  for (const [event, listener] of diagnostics.listeners)
-    page.off(event, listener);
-  if (diagnostics.startupDiagnostics)
-    await cleanupStartupHeartbeat(
-      page,
-      diagnostics.heartbeatScriptIdentifier,
-      1000,
-    );
-  fixtureDiagnostics.delete(page);
+  let cleanupError = null;
+  try {
+    for (const [event, listener] of diagnostics.listeners)
+      page.off(event, listener);
+    if (diagnostics.consoleHandleOwner)
+      await cleanupExclusiveConsoleMessageHandleOwner(
+        page,
+        diagnostics.consoleListener,
+        diagnostics.consoleHandleOwner,
+      );
+    else page.off('console', diagnostics.consoleListener);
+  } catch (error) {
+    cleanupError = error;
+  }
+  try {
+    if (diagnostics.startupDiagnostics)
+      await cleanupStartupHeartbeat(
+        page,
+        diagnostics.heartbeatScriptIdentifier,
+        1000,
+      );
+  } catch (error) {
+    cleanupError ||= error;
+  } finally {
+    fixtureDiagnostics.delete(page);
+  }
+  if (cleanupError) throw cleanupError;
+}
+
+export async function flushFixturePageConsoleOwnership(
+  page,
+  { timeoutMs = 5000 } = {},
+) {
+  const owner = fixtureDiagnostics.get(page)?.consoleHandleOwner;
+  return owner ? owner.drain({ timeoutMs }) : null;
 }
 
 export function readFixturePageDiagnostics(page) {
@@ -165,8 +208,11 @@ export function readFixturePageDiagnostics(page) {
           .slice(-8)
           .map((error) => sanitizeDiagnosticText(error, 240)),
         messages: diagnostics.startupMessages.slice(-12),
+        consoleHandleOwnership: readConsoleMessageHandleOwnership(
+          diagnostics.consoleHandleOwner,
+        ),
       }
-    : { errors: [], messages: [] };
+    : { errors: [], messages: [], consoleHandleOwnership: null };
 }
 
 /** Bounded, URL-free state for a named workspace/import wait failure. */
@@ -394,11 +440,7 @@ export async function runWorkspaceFixturePhase(
 export async function bootFixturePage(
   page,
   base,
-  {
-    onProgress = () => {},
-    hash = '',
-    applicationReadyTimeoutMs = 90_000,
-  } = {},
+  { onProgress = () => {}, hash = '', applicationReadyTimeoutMs = 90_000 } = {},
 ) {
   if (
     !Number.isFinite(applicationReadyTimeoutMs) ||

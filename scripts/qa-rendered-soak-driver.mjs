@@ -11,6 +11,7 @@ import {
   launchFixtureBrowser,
   prepareFixturePage,
   cleanupFixturePageDiagnostics,
+  flushFixturePageConsoleOwnership,
   bootFixturePage,
   clickControl,
   openWorkspace,
@@ -28,6 +29,21 @@ const DEFAULT_SOAK_LOCATION = Object.freeze({
   longitude: -73.9,
   altitude: 1000,
 });
+
+async function assertSoakConsoleOwnership(page) {
+  const ownership = await flushFixturePageConsoleOwnership(page);
+  if (
+    !ownership ||
+    ownership.pending !== 0 ||
+    ownership.skipped !== 0 ||
+    ownership.errors !== 0
+  )
+    throw new Error(
+      'Rendered soak console handle ownership did not drain cleanly: ' +
+        JSON.stringify(ownership),
+    );
+  return ownership;
+}
 
 export function readNativeResolutionEvidenceInPage() {
   const app = window.__godsEyeView;
@@ -207,6 +223,37 @@ export async function createRenderedSoakDriver(
     ...(nativeResolution ? { defaultViewport: null } : {}),
   });
   const closeBrowser = createOwnedSoakCloser(browser);
+  let diagnosticsPage = null;
+  let closePromise = null;
+  const closeSoak = () => {
+    if (closePromise) return closePromise;
+    closePromise = (async () => {
+      let diagnosticsError = null;
+      try {
+        if (diagnosticsPage)
+          await cleanupFixturePageDiagnostics(diagnosticsPage);
+      } catch (error) {
+        diagnosticsError = error;
+      }
+      let browserClose;
+      let browserCloseError = null;
+      try {
+        browserClose = await closeBrowser();
+      } catch (error) {
+        browserCloseError = error;
+        browserClose = error.browserClose || { closeCompleted: false };
+      }
+      if (diagnosticsError) {
+        diagnosticsError.browserClose = browserClose;
+        if (browserCloseError)
+          diagnosticsError.cleanupError = browserCloseError;
+        throw diagnosticsError;
+      }
+      if (browserCloseError) throw browserCloseError;
+      return browserClose;
+    })();
+    return closePromise;
+  };
   let startupPrewarm = null;
   let cameraFailure = true;
   let cameraHealthCalls = 0;
@@ -239,6 +286,7 @@ export async function createRenderedSoakDriver(
       browser,
       base,
       {
+        exclusiveConsoleHandleOwnership: true,
         ...(nativePage
           ? {
               page: nativePage,
@@ -350,6 +398,7 @@ export async function createRenderedSoakDriver(
         },
       },
     );
+    diagnosticsPage = page;
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
     // Save-as uses a native prompt in production. The application normally
     // replaces window.prompt during fixture boot, but keep the soak setup
@@ -980,7 +1029,13 @@ export async function createRenderedSoakDriver(
         ? { observedDpr: nativeDpr, initial: initialNativeResolution }
         : null,
       runCycle: cycle,
-      metrics: () => page.metrics(),
+      async metrics() {
+        const consoleHandleOwnership = await assertSoakConsoleOwnership(page);
+        return {
+          ...(await page.metrics()),
+          consoleHandleOwnership,
+        };
+      },
       /**
        * Export the synthetic recording used by the soak as a portable bundle.
        * The rendered soak runs in an isolated browser context, so a share URL
@@ -1004,6 +1059,7 @@ export async function createRenderedSoakDriver(
         return recording ? createRecordingBundle(recording) : null;
       },
       async retainedMetrics() {
+        const consoleHandleOwnership = await assertSoakConsoleOwnership(page);
         await session.send('HeapProfiler.collectGarbage');
         const application = await page.evaluate(() => {
           const app = window.__godsEyeView;
@@ -1029,6 +1085,7 @@ export async function createRenderedSoakDriver(
           ...(await page.metrics()),
           ...(await session.send('Memory.getDOMCounters')),
           application,
+          consoleHandleOwnership,
           renderedFrames: previousFrames,
           nativeResolution: nativeEvidence,
           garbageCollection: {
@@ -1037,16 +1094,16 @@ export async function createRenderedSoakDriver(
           },
         };
       },
-      close: closeBrowser,
+      close: closeSoak,
     };
   } catch (error) {
     try {
-      error.browserClose = await closeBrowser();
+      error.browserClose = await closeSoak();
     } catch (cleanupError) {
       error.browserClose = cleanupError.browserClose || {
         closeCompleted: false,
       };
-      error.cleanupError = 'Application soak browser did not close normally.';
+      error.cleanupError = cleanupError;
     }
     throw error;
   }
