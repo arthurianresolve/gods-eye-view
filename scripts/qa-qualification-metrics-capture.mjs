@@ -27,6 +27,17 @@ const WORK_PLAN = Object.freeze({
 const SAMPLE_CADENCE_MS = 1000;
 const SAMPLE_MAX_GAP_MS = 5000;
 const INTERACTION_TIMEOUT_MS = 15_000;
+const LOCAL_CONTROL_CAMERA_ROUTE_ID =
+  'rendered-soak-driver-default-location-v1';
+const LOCAL_CONTROL_CAMERA_LOCATION = Object.freeze({
+  latitude: 40.7,
+  longitude: -73.9,
+  altitude: 1000,
+});
+
+function circularAngleDifference(left, right) {
+  return Math.atan2(Math.sin(left - right), Math.cos(left - right));
+}
 
 function cliArgs(argv) {
   const args = {};
@@ -348,6 +359,14 @@ export function installInteractionObserverInPage() {
         renderedRecord &&
         visualWitness?.billboardVisible === true &&
         visualWitness.billboardId === selectedRecord.id &&
+        Number.isFinite(visualWitness.billboardPosition?.latitude) &&
+        Number.isFinite(visualWitness.billboardPosition?.longitude) &&
+        Math.abs(
+          visualWitness.billboardPosition.latitude - selectedRecord.latitude,
+        ) <= 1e-9 &&
+        Math.abs(
+          visualWitness.billboardPosition.longitude - selectedRecord.longitude,
+        ) <= 1e-9 &&
         Number.isFinite(visualWitness.screenPosition?.x) &&
         Number.isFinite(visualWitness.screenPosition?.y) &&
         visualWitness.screenPosition.x >= 0 &&
@@ -486,6 +505,10 @@ export function installInteractionObserverInPage() {
           sample.renderedRecordLatitude = renderedRecord.lat;
           sample.renderedRecordLongitude = renderedRecord.lon;
           sample.renderedBillboardId = fixtureAircraft.id;
+          sample.renderedBillboardLatitude =
+            visualWitness.billboardPosition.latitude;
+          sample.renderedBillboardLongitude =
+            visualWitness.billboardPosition.longitude;
           sample.billboardScreenPosition = visualWitness.screenPosition;
           sample.billboardCanvas = visualWitness.canvas;
           sample.renderedBillboardVisible = visualWitness.billboardVisible;
@@ -616,9 +639,18 @@ export function installRenderedFlightWitnessReaderInPage() {
     if (!match) return null;
     const billboard = match.billboard;
     const screenPosition = billboard.computeScreenSpacePosition(scene);
+    const cartographic = scene.globe.ellipsoid.cartesianToCartographic(
+      billboard.position,
+    );
     return {
       billboardId: billboard.id,
       billboardVisible: billboard.show === true && match.collectionVisible,
+      billboardPosition: cartographic
+        ? {
+            latitude: (cartographic.latitude * 180) / Math.PI,
+            longitude: (cartographic.longitude * 180) / Math.PI,
+          }
+        : null,
       screenPosition: screenPosition
         ? { x: screenPosition.x, y: screenPosition.y }
         : null,
@@ -627,6 +659,61 @@ export function installRenderedFlightWitnessReaderInPage() {
         height: scene.canvas.clientHeight,
       },
     };
+  };
+}
+
+async function setUnmeasuredCameraPose(page, location, routeId) {
+  const frameBefore = await page.evaluate(
+    () => window.__godsEyeView.viewer.scene.frameState.frameNumber,
+  );
+  await page.evaluate((target) => {
+    const viewer = window.__godsEyeView.viewer;
+    const camera = viewer.camera;
+    camera.setView({
+      destination: camera.position.constructor.fromDegrees(
+        target.longitude,
+        target.latitude,
+        target.altitude,
+      ),
+      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+    });
+    viewer.scene.requestRender();
+  }, location);
+  await page.waitForFunction(
+    (previousFrame) =>
+      window.__godsEyeView.viewer.scene.frameState.frameNumber > previousFrame,
+    { timeout: INTERACTION_TIMEOUT_MS },
+    frameBefore,
+  );
+  const pose = await page.evaluate(() => {
+    const viewer = window.__godsEyeView.viewer;
+    const camera = viewer.camera;
+    const position = camera.positionCartographic;
+    return {
+      frameNumber: viewer.scene.frameState.frameNumber,
+      latitude: (position.latitude * 180) / Math.PI,
+      longitude: (position.longitude * 180) / Math.PI,
+      altitude: position.height,
+      heading: camera.heading,
+      pitch: camera.pitch,
+      roll: camera.roll,
+    };
+  });
+  assert.ok(pose.frameNumber > frameBefore, 'Camera setup needs a fresh frame');
+  assert.ok(Math.abs(pose.latitude - location.latitude) <= 1e-6);
+  assert.ok(Math.abs(pose.longitude - location.longitude) <= 1e-6);
+  assert.ok(Math.abs(pose.altitude - location.altitude) <= 1);
+  assert.ok(Math.abs(circularAngleDifference(pose.heading, 0)) <= 1e-6);
+  assert.ok(
+    Math.abs(circularAngleDifference(pose.pitch, -Math.PI / 2)) <= 1e-6,
+  );
+  assert.ok(Math.abs(circularAngleDifference(pose.roll, 0)) <= 1e-6);
+  return {
+    routeId,
+    requestedLocation: location,
+    frameNumberBefore: frameBefore,
+    frameNumberAfter: pose.frameNumber,
+    observedPose: pose,
   };
 }
 
@@ -714,51 +801,54 @@ async function loadReplay(page) {
     },
     { timeout: INTERACTION_TIMEOUT_MS },
   );
-  await page.evaluate(async () => {
-    const app = window.__godsEyeView;
-    const camera = app.viewer.camera;
-    const destination = camera.position.constructor.fromDegrees(
-      179.7,
-      0,
-      500_000,
-    );
-    camera.setView({
-      destination,
-      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
-    });
-    await app.dataManager.setEnabled('flights', true, {
-      origin: 'programmatic',
-    });
-    await app.dataManager.refreshLayer('flights');
-    app.viewer.scene.requestRender();
-  });
-  await page.waitForFunction(
-    async () => {
+  return setUnmeasuredCameraPose(
+    page,
+    { latitude: 0, longitude: 179.7, altitude: 500_000 },
+    'rendered-soak-recording-region-v1',
+  ).then(async (replayCameraSetup) => {
+    await page.evaluate(async () => {
       const app = window.__godsEyeView;
-      const selected = await app.aircraftSource.getSnapshot();
-      const aircraft = selected.records?.find(
-        (record) => record.id === 'SYNTH-001',
-      );
-      const module = app.dataManager.layers.get('flights')?.module;
-      const rendered = module
-        ?.getAnalystRecords?.()
-        ?.find((record) => record.icao24 === aircraft?.id);
-      const visual = window.__qualificationFlightWitnessReader?.(aircraft?.id);
-      return Boolean(
-        aircraft &&
-        rendered?.provenance?.positionObservedAtMs ===
-          aircraft.positionTimeMs &&
-        Math.abs(rendered.lat - aircraft.latitude) <= 1e-9 &&
-        Math.abs(rendered.lon - aircraft.longitude) <= 1e-9 &&
-        visual?.billboardVisible &&
-        visual.screenPosition?.x >= 0 &&
-        visual.screenPosition?.y >= 0 &&
-        visual.screenPosition.x < visual.canvas.width &&
-        visual.screenPosition.y < visual.canvas.height,
-      );
-    },
-    { timeout: INTERACTION_TIMEOUT_MS },
-  );
+      await app.dataManager.setEnabled('flights', true, {
+        origin: 'programmatic',
+      });
+      await app.dataManager.refreshLayer('flights');
+      app.viewer.scene.requestRender();
+    });
+    await page.waitForFunction(
+      async () => {
+        const app = window.__godsEyeView;
+        const selected = await app.aircraftSource.getSnapshot();
+        const aircraft = selected.records?.find(
+          (record) => record.id === 'SYNTH-001',
+        );
+        const module = app.dataManager.layers.get('flights')?.module;
+        const rendered = module
+          ?.getAnalystRecords?.()
+          ?.find((record) => record.icao24 === aircraft?.id);
+        const visual = window.__qualificationFlightWitnessReader?.(
+          aircraft?.id,
+        );
+        return Boolean(
+          aircraft &&
+          rendered?.provenance?.positionObservedAtMs ===
+            aircraft.positionTimeMs &&
+          Math.abs(rendered.lat - aircraft.latitude) <= 1e-9 &&
+          Math.abs(rendered.lon - aircraft.longitude) <= 1e-9 &&
+          visual?.billboardVisible &&
+          Math.abs(visual.billboardPosition?.latitude - aircraft.latitude) <=
+            1e-9 &&
+          Math.abs(visual.billboardPosition?.longitude - aircraft.longitude) <=
+            1e-9 &&
+          visual.screenPosition?.x >= 0 &&
+          visual.screenPosition?.y >= 0 &&
+          visual.screenPosition.x < visual.canvas.width &&
+          visual.screenPosition.y < visual.canvas.height,
+        );
+      },
+      { timeout: INTERACTION_TIMEOUT_MS },
+    );
+    return replayCameraSetup;
+  });
 }
 
 async function collectForBuild({ role, url, expected, fixture }) {
@@ -775,6 +865,8 @@ async function collectForBuild({ role, url, expected, fixture }) {
   const consoleHandleOwnership = [];
   let heapActualDurationMs = null;
   let browserIdentity = null;
+  let localControlCameraSetup = null;
+  let replayCameraSetup = null;
   let foregroundSession = null;
   let browserPid = null;
   let hostActivation = null;
@@ -840,6 +932,12 @@ async function collectForBuild({ role, url, expected, fixture }) {
           { persist: false, syncShare: false },
         );
       });
+      assert.deepEqual(driver.location, LOCAL_CONTROL_CAMERA_LOCATION);
+      localControlCameraSetup = await setUnmeasuredCameraPose(
+        page,
+        driver.location,
+        LOCAL_CONTROL_CAMERA_ROUTE_ID,
+      );
       const layerSelector =
         '[data-layer-id="local-datacenters"] .data-toggle-btn';
       await page.waitForSelector(layerSelector, {
@@ -887,7 +985,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
         });
       }
 
-      await loadReplay(page);
+      replayCameraSetup = await loadReplay(page);
       const slider = '.investigation-timeline-slider-control';
       const initialReplayState = await page.evaluate(() =>
         window.__godsEyeView.aircraftSource.getState(),
@@ -1113,6 +1211,8 @@ async function collectForBuild({ role, url, expected, fixture }) {
     heapStatus,
     failureReason: operationFailure?.message || null,
     identity: browserIdentity,
+    localControlCameraSetup,
+    replayCameraSetup,
     browserClose: closeEvidence,
     foregroundIntegrity: {
       status:
@@ -1175,6 +1275,18 @@ export async function runQualificationMetricsCapture({
       interactionSemantics:
         'input event to observed state and to the first scene.postRender frame explicitly requested after that state was observed; the fresh-frame witness is conservative and includes request/poll overhead',
       renderWitnessType: 'requested-post-state-render',
+      cameraSetup: {
+        localControl: {
+          routeId: LOCAL_CONTROL_CAMERA_ROUTE_ID,
+          location: LOCAL_CONTROL_CAMERA_LOCATION,
+          setupTiming: 'unmeasured-before-local-control-interactions',
+        },
+        loadedReplay: {
+          routeId: 'rendered-soak-recording-region-v1',
+          location: { latitude: 0, longitude: 179.7, altitude: 500_000 },
+          setupTiming: 'unmeasured-before-replay-seek-interactions',
+        },
+      },
       measurementEnvironment: {
         viewport: { width: 1440, height: 1000 },
         browserVersion: baseline.identity.browserVersion,
@@ -1261,6 +1373,9 @@ export async function runQualificationMetricsCapture({
             interactionStatus: report.builds[role]?.interactionStatus,
             browserClose: report.builds[role]?.browserClose,
             foregroundIntegrity: report.builds[role]?.foregroundIntegrity,
+            localControlCameraSetup:
+              report.builds[role]?.localControlCameraSetup,
+            replayCameraSetup: report.builds[role]?.replayCameraSetup,
             localControl: report.builds[role]?.localControl,
             loadedReplaySeek: report.builds[role]?.loadedReplaySeek,
           },

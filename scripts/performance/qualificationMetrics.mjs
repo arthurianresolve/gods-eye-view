@@ -8,7 +8,48 @@ const LOCAL_CONTROL_LIMIT_MS = 100;
 const REPLAY_SEEK_LIMIT_MS = 250;
 const STARTUP_REGRESSION_LIMIT_PCT = 10;
 const REPLAY_COORDINATE_EPSILON_DEG = 1e-9;
+const CAMERA_POSITION_TOLERANCE_DEG = 1e-6;
+const CAMERA_ALTITUDE_TOLERANCE_M = 1;
+const CAMERA_ANGLE_TOLERANCE_RAD = 1e-6;
 const QUALIFICATION_VIEWPORT = Object.freeze({ width: 1440, height: 1000 });
+const LOCAL_CONTROL_CAMERA_ROUTE_ID =
+  'rendered-soak-driver-default-location-v1';
+const LOCAL_CONTROL_CAMERA_LOCATION = Object.freeze({
+  latitude: 40.7,
+  longitude: -73.9,
+  altitude: 1000,
+});
+const REPLAY_CAMERA_ROUTE_ID = 'rendered-soak-recording-region-v1';
+const REPLAY_CAMERA_LOCATION = Object.freeze({
+  latitude: 0,
+  longitude: 179.7,
+  altitude: 500_000,
+});
+
+function circularAngleDifference(left, right) {
+  return Math.atan2(Math.sin(left - right), Math.cos(left - right));
+}
+
+function assertCameraPosesClose(left, right, message) {
+  assert.ok(
+    Math.abs(left.latitude - right.latitude) <= CAMERA_POSITION_TOLERANCE_DEG,
+    `${message}: latitude differs`,
+  );
+  assert.ok(
+    Math.abs(left.longitude - right.longitude) <= CAMERA_POSITION_TOLERANCE_DEG,
+    `${message}: longitude differs`,
+  );
+  assert.ok(
+    Math.abs(left.altitude - right.altitude) <= CAMERA_ALTITUDE_TOLERANCE_M,
+    `${message}: altitude differs`,
+  );
+  for (const axis of ['heading', 'pitch', 'roll'])
+    assert.ok(
+      Math.abs(circularAngleDifference(left[axis], right[axis])) <=
+        CAMERA_ANGLE_TOLERANCE_RAD,
+      `${message}: ${axis} differs`,
+    );
+}
 
 function assertRawCaptureIdentity(report, label) {
   const capture = report?.captures?.[0];
@@ -599,6 +640,20 @@ function validateInteractionSide(side, label) {
         `${label} sample ${index + 1} rendered longitude must match`,
       );
       assert.ok(
+        Number.isFinite(sample.renderedBillboardLatitude) &&
+          Math.abs(
+            sample.renderedBillboardLatitude - sample.fixtureAircraftLatitude,
+          ) <= REPLAY_COORDINATE_EPSILON_DEG,
+        `${label} sample ${index + 1} displayed billboard latitude must match`,
+      );
+      assert.ok(
+        Number.isFinite(sample.renderedBillboardLongitude) &&
+          Math.abs(
+            sample.renderedBillboardLongitude - sample.fixtureAircraftLongitude,
+          ) <= REPLAY_COORDINATE_EPSILON_DEG,
+        `${label} sample ${index + 1} displayed billboard longitude must match`,
+      );
+      assert.ok(
         Number.isFinite(sample.billboardScreenPosition?.x) &&
           Number.isFinite(sample.billboardScreenPosition?.y) &&
           Number.isFinite(sample.billboardCanvas?.width) &&
@@ -662,6 +717,49 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
         `Interaction ${role}`,
       );
     }
+    const setupKey =
+      name === 'localControl' ? 'localControlCameraSetup' : 'replayCameraSetup';
+    const expectedCamera =
+      name === 'localControl'
+        ? {
+            routeId: LOCAL_CONTROL_CAMERA_ROUTE_ID,
+            location: LOCAL_CONTROL_CAMERA_LOCATION,
+          }
+        : { routeId: REPLAY_CAMERA_ROUTE_ID, location: REPLAY_CAMERA_LOCATION };
+    const cameraSetups = ['baseline', 'candidate'].map((role) => {
+      const setup = evidence.builds[role]?.[setupKey];
+      assert.ok(setup, `${role} ${setupKey} is missing`);
+      assert.equal(setup.routeId, expectedCamera.routeId);
+      assert.deepEqual(setup.requestedLocation, expectedCamera.location);
+      assert.ok(Number.isSafeInteger(setup.frameNumberBefore));
+      assert.ok(
+        Number.isSafeInteger(setup.frameNumberAfter) &&
+          setup.frameNumberAfter > setup.frameNumberBefore,
+      );
+      const pose = setup.observedPose;
+      assert.ok(Number.isFinite(pose?.latitude));
+      assert.ok(Number.isFinite(pose?.longitude));
+      assert.ok(Number.isFinite(pose?.altitude));
+      assert.ok(Number.isFinite(pose?.heading));
+      assert.ok(Number.isFinite(pose?.pitch));
+      assert.ok(Number.isFinite(pose?.roll));
+      assertCameraPosesClose(
+        pose,
+        {
+          ...expectedCamera.location,
+          heading: 0,
+          pitch: -Math.PI / 2,
+          roll: 0,
+        },
+        `${role} ${setupKey} observed pose`,
+      );
+      return setup;
+    });
+    assertCameraPosesClose(
+      cameraSetups[0].observedPose,
+      cameraSetups[1].observedPose,
+      `${name} camera setup must match across builds`,
+    );
     assertSharedPairIdentity(
       evidence.builds.baseline,
       evidence.builds.candidate,

@@ -226,6 +226,22 @@ function identity(commit) {
   };
 }
 
+function cameraSetup(routeId, location, frameNumber) {
+  return {
+    routeId,
+    requestedLocation: location,
+    frameNumberBefore: frameNumber,
+    frameNumberAfter: frameNumber + 1,
+    observedPose: {
+      frameNumber: frameNumber + 1,
+      ...location,
+      heading: 0,
+      pitch: -Math.PI / 2,
+      roll: 0,
+    },
+  };
+}
+
 const samples = (stateMs, frameMs, prefix) =>
   Array.from({ length: 20 }, (_, index) => ({
     sampleId: `${prefix}-${index + 1}`,
@@ -265,6 +281,16 @@ function interactionEvidence(overrides = {}) {
         },
         applicationCommit: '1'.repeat(40),
         identity: identity('1'),
+        localControlCameraSetup: cameraSetup(
+          'rendered-soak-driver-default-location-v1',
+          { latitude: 40.7, longitude: -73.9, altitude: 1000 },
+          100,
+        ),
+        replayCameraSetup: cameraSetup(
+          'rendered-soak-recording-region-v1',
+          { latitude: 0, longitude: 179.7, altitude: 500000 },
+          150,
+        ),
         localControl: samples(10, 30, 'b-local').map((sample, index) => ({
           ...sample,
           expectedLayerEnabled: index % 2 === 0,
@@ -296,6 +322,10 @@ function interactionEvidence(overrides = {}) {
           renderedRecordLongitude:
             ((((179.7 + (index % 2 ? 0 : 3) * 0.01 + 180) % 360) + 360) % 360) -
             180,
+          renderedBillboardLatitude: Math.sin((index % 2 ? 0 : 3) / 10) * 0.02,
+          renderedBillboardLongitude:
+            ((((179.7 + (index % 2 ? 0 : 3) * 0.01 + 180) % 360) + 360) % 360) -
+            180,
           billboardScreenPosition: { x: 100, y: 100 },
           billboardCanvas: { width: 1440, height: 1000 },
         })),
@@ -317,6 +347,16 @@ function interactionEvidence(overrides = {}) {
         },
         applicationCommit: '2'.repeat(40),
         identity: identity('2'),
+        localControlCameraSetup: cameraSetup(
+          'rendered-soak-driver-default-location-v1',
+          { latitude: 40.7, longitude: -73.9, altitude: 1000 },
+          200,
+        ),
+        replayCameraSetup: cameraSetup(
+          'rendered-soak-recording-region-v1',
+          { latitude: 0, longitude: 179.7, altitude: 500000 },
+          250,
+        ),
         localControl: samples(10, 30, 'c-local').map((sample, index) => ({
           ...sample,
           expectedLayerEnabled: index % 2 === 0,
@@ -346,6 +386,10 @@ function interactionEvidence(overrides = {}) {
           renderedRecordPositionTimeMs: index % 2 ? 1000 : 4000,
           renderedRecordLatitude: Math.sin((index % 2 ? 0 : 3) / 10) * 0.02,
           renderedRecordLongitude:
+            ((((179.7 + (index % 2 ? 0 : 3) * 0.01 + 180) % 360) + 360) % 360) -
+            180,
+          renderedBillboardLatitude: Math.sin((index % 2 ? 0 : 3) / 10) * 0.02,
+          renderedBillboardLongitude:
             ((((179.7 + (index % 2 ? 0 : 3) * 0.01 + 180) % 360) + 360) % 360) -
             180,
           billboardScreenPosition: { x: 100, y: 100 },
@@ -477,6 +521,24 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
     80,
   );
 
+  const equivalentCameraAngles = interactionEvidence();
+  equivalentCameraAngles.builds.baseline.localControlCameraSetup.observedPose.heading =
+    2 * Math.PI;
+  equivalentCameraAngles.builds.candidate.localControlCameraSetup.observedPose.roll =
+    -2 * Math.PI;
+  equivalentCameraAngles.builds.baseline.replayCameraSetup.observedPose.roll =
+    2 * Math.PI;
+  const equivalentAnglesResult = evaluateQualificationMetrics({
+    baseline: capture(),
+    candidate: capture(undefined, '2'),
+    interactionEvidence: equivalentCameraAngles,
+  });
+  assert.equal(equivalentAnglesResult.metrics.localControl.status, 'measured');
+  assert.equal(
+    equivalentAnglesResult.metrics.loadedReplaySeek.status,
+    'measured',
+  );
+
   const wrongCommit = interactionEvidence();
   wrongCommit.builds.candidate.identity.applicationCommit = '3'.repeat(40);
   const wrongPair = evaluateQualificationMetrics({
@@ -527,9 +589,23 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
     (e) => {
       e.builds.candidate.loadedReplaySeek[0].renderedRecordLongitude = 120;
     },
+    (e) =>
+      delete e.builds.candidate.loadedReplaySeek[0].renderedBillboardLatitude,
+    (e) => {
+      e.builds.candidate.loadedReplaySeek[0].renderedBillboardLongitude = 120;
+    },
     (e) => {
       e.builds.candidate.loadedReplaySeek[0].billboardScreenPosition.x =
         e.builds.candidate.loadedReplaySeek[0].billboardCanvas.width;
+    },
+    (e) => {
+      e.builds.candidate.localControlCameraSetup.routeId = 'wrong-route';
+    },
+    (e) => {
+      e.builds.candidate.localControlCameraSetup.observedPose.latitude = 0;
+    },
+    (e) => {
+      e.builds.candidate.localControlCameraSetup.observedPose.heading = 0.01;
     },
     (e) => {
       e.builds.candidate.localControl[0].inputEventAtMs = -100;
@@ -1010,6 +1086,7 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
     const visualWitness = {
       billboardId: 'SYNTH-001',
       billboardVisible: true,
+      billboardPosition: { latitude: 0, longitude: 179.7 },
       screenPosition: { x: 200, y: 300 },
       canvas: { width: 1440, height: 1000 },
     };
@@ -1025,6 +1102,27 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
       observer.isReplayVisualWitness({ selectedRecord, renderedRecord }),
       false,
       'source records without a visible rendered billboard are rejected',
+    );
+    assert.equal(
+      observer.isReplayVisualWitness({
+        selectedRecord,
+        renderedRecord,
+        visualWitness: { ...visualWitness, billboardPosition: null },
+      }),
+      false,
+      'a visible billboard without a geographic position is rejected',
+    );
+    assert.equal(
+      observer.isReplayVisualWitness({
+        selectedRecord,
+        renderedRecord,
+        visualWitness: {
+          ...visualWitness,
+          billboardPosition: { latitude: 0.001, longitude: 179.7 },
+        },
+      }),
+      false,
+      'billboard position must match the selected source record',
     );
     assert.equal(
       observer.isReplayVisualWitness({
