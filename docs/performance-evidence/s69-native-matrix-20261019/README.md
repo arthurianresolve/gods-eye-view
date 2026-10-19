@@ -3,14 +3,78 @@
 Candidate `55639cc7` is not yet approved for deployment. Its complete weather
 functional capture passes, and its new five-run dam comparison is within the
 regression limit: 299.7 ms baseline versus 305.9 ms candidate motion p95 (+2.1%).
-Cables also pass: 332.8 ms baseline versus 336.1 ms candidate (+1.0%). Map
-switching readiness is within the limit (14,238.8 versus 14,201.6 ms), but its
-separate frame samples started from different camera poses and cannot qualify.
-The corrected weather timing control,
-remaining exact-candidate comparisons, visual checks and final soak remain
-pending. The [current report index](native155-matrix-progress.json) binds completed
+Cables also pass: 332.8 ms baseline versus 336.1 ms candidate (+1.0%). The
+[corrected map comparison](map-native155-reviewed-comparison.json) passes:
+motion p95 is 392.3 versus 398.9 ms (+1.7%); switching readiness is 14,413.9
+versus 11,645.0 ms (-19.2%). These are separate from the original map frame
+samples, which started from different poses and remain invalid.
+The corrected weather control passes all ten functional samples, but its
+[timing comparison](weather-control-timing-review.json) flags candidate motion
+p95 at 282.7 versus 241.6 ms (+17.0%) and idle intervals at 3,235.5 versus
+2,398.6 ms (+34.9%). The
+[reverse-order uninstrumented confirmation](weather-confirmation-review.json)
+passes all 60 source deadlines across the pair, but repeats the motion flag:
+274.2 versus 308.0 ms (+12.3%). Weather performance remains unaccepted. Its idle
+interval result reverses direction, illustrating that these gaps include
+deliberate request-render idle time; no generic waiver is applied. The bounded
+ABBA trace diagnostic remains separate from these full captures.
+The missing top-level native-profile
+label is derived only after checking every observed boundary; original capture
+and wrapper records remain unchanged. Remaining exact-candidate comparisons
+are pending, and the completed final soak failed retention. The
+[four-state visual qualification](final-visual556-review.json) passes on Windows;
+each baseline/candidate PNG pair is byte-identical. VM105 independently verifies
+all archived file hashes, while repeat pixel decoding there is unavailable due
+to its exposed CPU feature set. The [current report index](native155-matrix-progress.json) binds completed
 raw reports; the older `19065997` matrix and failures below remain historical.
 Production remains at `e7a878e`.
+
+The [independent Ampfing soak review](staged-ampfing-soak556-review.json) records
+171 measured cycles over 3,611,609 ms against the exact signed `55639cc7`
+package, using capture producer `a7837467`. Operations, all foreground checks
+and normal browser shutdown passed. There were no blur or hidden intervals.
+Retention failed: post-GC heap grew 6.32% across the final measurement window,
+above the unchanged 5% limit. All 13 checkpoints retained 668 listeners, zero
+pending workers and the same measured application resource counts, excluding
+cumulative cache-reuse counters. DOM nodes increased from 6,346 to 7,254 and
+heap from 252.7 to 290.6 MB across the full run. The source of this growth is
+not yet established; stable owner counts alone do not make retention pass.
+
+The original raw report and first independent review remain archived. A second
+review corrects only the first review's foreground label: the wrapper's
+aggregate failure arose from retention, not foreground activation or process
+cleanup. The [combined candidate review](current-candidate556-review.json)
+consumes all four completed workload pairs and this soak. It reports weather
+and retention failures, with operating view, dense investigation, selected
+tracking, datacenters and combined infrastructure coverage still pending.
+No earlier application result supplies those missing exact-candidate checks.
+
+The [ownership investigation](retention-ownership-summary.json) fixes two QA
+cleanup omissions: an undisposed import-control handle (`9dc2b1cb`) and console
+argument handles shared with the page's exclusive fixture consumer (`89601fcd`).
+Neither short diagnostic establishes that the hour-long retention failure is
+resolved. A separate eight-cycle WeakRef probe demonstrates that Chrome's
+inspector retains 42 logged objects independently of those Puppeteer handles.
+Clearing only the private test browser's inspector entries collects those
+objects and the transient test sentinel; the deliberately retained control
+survives. It recovers 100,288 bytes and zero DOM nodes. This is insufficient to
+explain the full failed soak's heap and DOM growth, which remains unresolved.
+The three failed full-heap capture attempts remain archived as diagnostic
+failures, with all owned browsers closed normally.
+
+The [18702e77 CI receipt](qualification-ci-18702e77.json) records all seven
+selected jobs and release packaging passing. That commit registers three QA
+tests omitted from the discovery ledger and adds a strictly diagnostic weather
+mode. The completed [alternating weather diagnostic](weather-interleaved-motion-review.json)
+contains five control/candidate pairs with 30-second warmup and 60-second motion
+samples. Settings, routes, populations, native drawing buffers and source phases
+match; all source deadlines pass. Recorded power stays on AC with the High
+performance scheme. The control median is 298.0 ms and candidate median 254.3 ms,
+but pair changes range from +32.8% to -19.4%, with two slower and three faster
+candidate samples. This variability does not identify a code cause or clear the
+two full weather qualification flags. The raw 41 files and three supplemental
+review files (1,177,013 bytes) are hash-verified on VM105 under
+`weather-interleaved-motion-diagnostic-1792402126285`.
 
 The [map frame review](map-frame-route-review.json) preserves the raw motion
 medians, 323.7 versus 361.2 ms. Their apparent +11.6% difference is not a valid
@@ -21,20 +85,75 @@ The correction establishes the declared map pose and speed for frame samples,
 validates supplied frame evidence, and compares routes before timing. Historical
 journey-only reports explicitly retain `not-collected` frame coverage. All 135
 focused tests pass on VM105 with Node 24 and 26; the corrected consumer rejects
-the original pair. A new native map pair is required.
+the original pair. The corrected native pair completed with producer `aa1e653f`.
+The [exact-revision CI receipt](qualification-ci-aa1e653f.json) records all seven
+selected jobs and release packaging passing for that correction. Twelve opt-in
+jobs were intentionally not requested; these results do not substitute for the
+physical Windows captures.
+
+The initial consumer rejected the corrected pair because the actual requested
+tile inventories differed. Consumer `37ebd5a9` adds an asynchronous map review
+that rebuilds the pinned fixture and independently validates every delivered
+asset, journey, rendering readiness and document cleanup before comparing the
+fixed corpus. Requested inventories remain in the raw reports and their
+differences remain in the review. Other contracts, settings and frame checks
+remain strict. This path passes 170 focused tests on both Node 24 and 26,
+including malformed assets, missing delivery, pending work, changed routes and
+reduced-resolution rejection. The original wrapper failure is retained.
+Nine raw map files were hash-verified on VM105 before the clean committed
+consumer reviewed them. No runtime or visual-setting change was needed.
+
+The [normal-tool integration receipt](native-map-consumer-integration.json)
+records consumer `b20a5c61`: the matrix CLI and candidate manifest CLI now use
+independent native map validation. All 179 focused tests pass on Node 24 and 26.
+Both entry points accept the actual archived map pair. A manifest containing
+only this pair correctly leaves other workloads and retention pending.
+The [b20a5c61 CI receipt](qualification-ci-b20a5c61.json) records all seven
+selected jobs and release packaging passing. Twelve optional diagnostic jobs
+remain intentionally skipped; the earlier 37ebd5a9 CI was cancelled by the newer
+push and is not counted as a pass.
+
+The [weather ABBA diagnostic](weather-motion-diagnostic-review.json) ran control,
+candidate, candidate, control with one-second diagnostic warmup and 60-second
+samples. Motion p95 was 279.6, 262.7, 304.7 and 322.2 ms, respectively; all source
+deadlines passed. Render-call wall p95 remained around 25–27 ms, with much larger
+and variable gaps before the next callback. These timings are not exclusive GPU
+durations and do not prove a specific system cause. All 28 files, totaling
+232,068,815 bytes, were hash-verified on VM105. Instrumented samples do not replace
+the five-run, 30-second-warmup confirmation or erase the original timing flags.
+
+A second [one-change HUD diagnostic](weather-hud-motion-diagnostic-review.json)
+compares `55639cc7` with control `1ecb4cdd`, whose only runtime difference is
+removing the unchanged-text guard in `src/hud.js`. Candidate/control/control/
+candidate motion p95 values are 237.7, 296.9, 309.0 and 222.6 ms. Every source
+deadline passes. These two instrumented samples per build do not support
+reverting that guard as a remedy; they do not clear the full weather timing
+failure. All 28 files, totaling 235,727,876 bytes, were hash-verified and reviewed
+on VM105. The candidate and production application remain unchanged.
 
 The new complete Chrome 155 comparisons do not reproduce the large historical
 dam/cable regressions. The separate same-build browser diagnostic does not
 establish that upgrading Chrome alone fixed their cause. No runtime changes to
 dam or cable rendering, visual detail reduction, composition override or
 framebuffer-default change were retained from those diagnostic experiments.
+The [independent dam/cable review](native-dams-cables556-review.json) verifies
+all 12 raw reports, invocations and logs on VM105 (1,504,666 bytes), then
+reproduces both comparisons with the clean `b20a5c61` consumer.
 
 The signed `55639cc7` package is [prepared but inactive](prepared-release556.json).
 Its 2,126 manifest files were reverified before and after moving the inactive
 staging directory into the release directory on the same filesystem. This
 avoids a second package copy on VM105. No service or HTTPS routing changed.
+An isolated loopback preview served that exact signed package for the
+completed Ampfing soak. Its served HTML matched the prepared package digest
+before and after the run.
+This is private staging; public HTTPS and operator-workspace deployment checks
+remain separate requirements.
 
-## Revisions and conditions
+## Historical `19065997` revisions and conditions
+
+The following revision list and comparison table describe the earlier matrix.
+They are not passes for the current `55639cc7` application.
 
 - Baseline application: `e7a878e168bc97ffedddc27e13bf3e69b7ee6256`.
 - Candidate application and build harness: `19065997a3f6360d68cb9ed5b389c4754856b596`.
@@ -52,7 +171,7 @@ Builds, dependencies, Linux checks and bulk evidence use VM105. Windows retains
 the files required for actual GPU capture and receipt verification. No nested
 container or production service change was needed.
 
-## Completed comparisons
+## Historical `19065997` comparisons
 
 Values are median run-level scripted-motion p95, rounded for display. Passing
 this individual regression threshold is not full release acceptance.
@@ -406,7 +525,8 @@ A separately named [weather correctness control](weather-control.json),
 [`d6bb7a29`](https://github.com/arthurianresolve/gods-eye-view/commit/d6bb7a297cfadc863c3b453a3d7c1fc737aab046), has parent `e7a878e` and changes only
 the weather ownership source and its regression test to the exact `55639cc7`
 bytes. It is built with the same Node 24.16.0 builder and passes focused tests
-on Node 24 and 26. Its hardware capture remains pending. This control applies
+on Node 24 and 26. Its completed hardware capture passes functional checks but
+flags the timing differences recorded at the top of this report. This control applies
 only to weather timing: all other workload comparisons retain the original
 baseline. It does not erase the baseline failure or credit the shared
 correctness fix as a measured speed improvement. Results for `19065997` are

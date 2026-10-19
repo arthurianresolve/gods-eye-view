@@ -1,0 +1,83 @@
+{
+  "schema": "gev-qualification-ci-receipt/v1",
+  "retrievedAt": "2026-10-19T06:53:24.908Z",
+  "repository": "arthurianresolve/gods-eye-view",
+  "commitLookup": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+  "ci": {
+    "runId": 39210160808,
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39210160808",
+    "conclusion": "success",
+    "selectedJobs": [
+      {
+        "id": 117921958665,
+        "name": "Windows onboarding",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921958805,
+        "name": "Node 24.14.0",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921958871,
+        "name": "Install and update recovery (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921958994,
+        "name": "Street Level browser gate",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921959021,
+        "name": "Node 26.x",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921959041,
+        "name": "Install and update recovery (macos-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117921959108,
+        "name": "Install and update recovery (windows-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "optionalSkippedJobs": [
+      "Isolated mission render-demand correctness",
+      "Native WebGL probe (${{ matrix.os }})",
+      "Aircraft tracking regression",
+      "Isolated CCTV lifecycle",
+      "Baseline-compatible performance build smoke",
+      "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+      "Isolated rendered mixed-use smoke",
+      "Isolated terrain and picking lifecycle",
+      "Free hosted Mac rendering diagnostic",
+      "Free hosted Mac accelerated retention diagnostic",
+      "60-minute rendered application soak",
+      "Isolated import and workspace lifecycle"
+    ]
+  },
+  "release": {
+    "runId": 39210160877,
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39210160877",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 117921526629,
+        "name": "Build and verify release artifact",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "scope": "GitHub run lookup for this branch commit and complete job results. Optional skips are not passes or physical GPU evidence. Candidate package remains separately bound to application 55639cc7 and its signed release run. Earlier 37ebd5a9 CI was cancelled by this push and is not a pass."
+}

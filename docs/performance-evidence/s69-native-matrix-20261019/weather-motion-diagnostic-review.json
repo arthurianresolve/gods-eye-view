@@ -1,0 +1,832 @@
+{
+  "schema": "gev-weather-abba-public-review/v1",
+  "reviewedAt": "2026-10-19T06:27:14.943Z",
+  "diagnosticOnly": true,
+  "status": "earlier timing difference not reproduced consistently; uninstrumented confirmation pending",
+  "consumerScope": "Trace attribution only; no threshold waiver or application speed claim.",
+  "sourceReviewSha256": "6354b9a57d184e548132d8f3b090986a7c2214d5cce8a8f28d83f0de4bb2d0e3",
+  "vmArchive": "weather-motion-diagnostic-1792389953184",
+  "archiveBytes": 232068815,
+  "archiveFiles": 28,
+  "order": ["control", "candidate", "candidate", "control"],
+  "warmupMs": 1000,
+  "measurementMs": 60000,
+  "producer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "files": [
+    {
+      "name": "protocol.json",
+      "sha256": "c51c486bdcbf42b67100d033e91c7ab1589db95adf7b2b6e41c2d84857ca4dd0",
+      "bytes": 6419
+    },
+    {
+      "name": "capture-1-control.json",
+      "sha256": "1e931fcae5c057fc53592565fcf9a8273f1eb9157002edec9a5a28687c240cf1",
+      "bytes": 464208
+    },
+    {
+      "name": "frame-trace-1-control.json",
+      "sha256": "ee717f10da75ed46d392d6bde1ab01061ba6c277a1ffd99c466fb3b56e36795b",
+      "bytes": 306419
+    },
+    {
+      "name": "browser-trace-1-control.json",
+      "sha256": "754294d2b63383feed98c48e86f864b7f20489edb537278a2349fd6855d9c8ba",
+      "bytes": 58677234
+    },
+    {
+      "name": "capture-2-candidate.json",
+      "sha256": "d0c5c10ebfcb317b48f401c76edbc324d346532f6173aaabb01cdd9d43267640",
+      "bytes": 449897
+    },
+    {
+      "name": "frame-trace-2-candidate.json",
+      "sha256": "d147d4c6086790e0b1b284a2b20928f2bb0f339494db19f791040f6137e33ed7",
+      "bytes": 291628
+    },
+    {
+      "name": "browser-trace-2-candidate.json",
+      "sha256": "7fbb8e55e742f0b9c13f2fcc508d64e23064944d534070642a6490e019e513b8",
+      "bytes": 55769511
+    },
+    {
+      "name": "capture-3-candidate.json",
+      "sha256": "8c1047ad47039db7888bba92bcf92b49a7f186f0505af16d1ab914769067c37f",
+      "bytes": 458902
+    },
+    {
+      "name": "frame-trace-3-candidate.json",
+      "sha256": "ba2efd72f05351749220d6edf4869052260608d8d0afa1d8061a240b216f3c8a",
+      "bytes": 300744
+    },
+    {
+      "name": "browser-trace-3-candidate.json",
+      "sha256": "f06b731fd61dde0fce7bfd5784945d2a41854ae186c591b1ac9163174cf4891d",
+      "bytes": 56987520
+    },
+    {
+      "name": "capture-4-control.json",
+      "sha256": "7467e8357cbe34aaf23af5323960bde790a468b01b2f9f14c24f9161a7321891",
+      "bytes": 453810
+    },
+    {
+      "name": "frame-trace-4-control.json",
+      "sha256": "dfed8ff8e89a4b0e2865f3d2bb708c33a0aabc3c513071ae8c3457e5ad0cd5c2",
+      "bytes": 296047
+    },
+    {
+      "name": "browser-trace-4-control.json",
+      "sha256": "3b9a02593227675495850a72730088e1b109e52678c9787f1345af579e8943c2",
+      "bytes": 57567883
+    }
+  ],
+  "captures": [
+    {
+      "stem": "1-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "samples": [
+        {
+          "scenario": "idle",
+          "frames": 78,
+          "frameIntervalMs": {
+            "p50": 175.90000000223517,
+            "p95": 7603.300000000745,
+            "max": 13435.29999999702,
+            "samples": 77,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 2223
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2263.800000000745
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 2369.60000000149
+            }
+          ]
+        },
+        {
+          "scenario": "scripted-motion",
+          "frames": 359,
+          "frameIntervalMs": {
+            "p50": 163.29999999701977,
+            "p95": 279.6000000014901,
+            "max": 530.4000000022352,
+            "samples": 358,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 1918.1000000014901
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2314
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 2977.800000000745
+            }
+          ]
+        }
+      ],
+      "frameTimings": [
+        {
+          "scenario": "idle",
+          "observedFrames": 78,
+          "renderedIntervalMs": {
+            "p50": 175.90000000223517,
+            "p95": 7603.300000000745,
+            "p99": 13435.29999999702,
+            "max": 13435.29999999702,
+            "samples": 77
+          },
+          "sceneRenderWallMs": {
+            "p50": 8.899999998509884,
+            "p95": 16.600000001490116,
+            "p99": 30.100000001490116,
+            "max": 30.100000001490116,
+            "samples": 78
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "viewerRenderTotalMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          }
+        },
+        {
+          "scenario": "scripted-motion",
+          "observedFrames": 359,
+          "renderedIntervalMs": {
+            "p50": 163.29999999701977,
+            "p95": 279.6000000014901,
+            "p99": 478,
+            "max": 530.4000000022352,
+            "samples": 358
+          },
+          "sceneRenderWallMs": {
+            "p50": 14.5,
+            "p95": 20.899999998509884,
+            "p99": 26.300000000745058,
+            "max": 30.900000002235174,
+            "samples": 359
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": 146.30000000074506,
+            "p95": 265.19999999925494,
+            "p99": 462.4000000022352,
+            "max": 512.4000000022352,
+            "samples": 358
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": 0.20000000298023224,
+            "p95": 0.5,
+            "p99": 0.6999999992549419,
+            "max": 0.8000000007450581,
+            "samples": 359
+          },
+          "viewerRenderTotalMs": {
+            "p50": 16.600000001490116,
+            "p95": 25.099999997764826,
+            "p99": 29.5,
+            "max": 35,
+            "samples": 359
+          }
+        }
+      ],
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 371,
+          "inclusiveWallTotalMs": 2132.456,
+          "wallP95Ms": 11.239,
+          "threadCpuSamples": 371,
+          "threadCpuTotalMs": 492.4349999999999,
+          "threadCpuP95Ms": 2.043
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 371,
+          "inclusiveWallTotalMs": 1806.2890000000002,
+          "wallP95Ms": 10.311,
+          "threadCpuSamples": 371,
+          "threadCpuTotalMs": 174.35800000000006,
+          "threadCpuP95Ms": 0.764,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 425,
+          "inclusiveWallTotalMs": 7547.641000000005,
+          "wallP95Ms": 28.853,
+          "threadCpuSamples": 425,
+          "threadCpuTotalMs": 7296.059000000003,
+          "threadCpuP95Ms": 26.752
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 660,
+          "inclusiveWallTotalMs": 1281.4039999999986,
+          "wallP95Ms": 5.091,
+          "threadCpuSamples": 660,
+          "threadCpuTotalMs": 1222.1009999999997,
+          "threadCpuP95Ms": 4.88
+        },
+        {
+          "name": "Layout",
+          "count": 357,
+          "inclusiveWallTotalMs": 542.688,
+          "wallP95Ms": 4.39,
+          "threadCpuSamples": 357,
+          "threadCpuTotalMs": 526.9620000000004,
+          "threadCpuP95Ms": 4.104
+        }
+      ]
+    },
+    {
+      "stem": "2-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "samples": [
+        {
+          "scenario": "idle",
+          "frames": 80,
+          "frameIntervalMs": {
+            "p50": 168.80000000074506,
+            "p95": 3190.800000000745,
+            "max": 12592.39999999851,
+            "samples": 79,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 2267.89999999851
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 3492.39999999851
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 2407.39999999851
+            }
+          ]
+        },
+        {
+          "scenario": "scripted-motion",
+          "frames": 334,
+          "frameIntervalMs": {
+            "p50": 177.89999999850988,
+            "p95": 262.69999999925494,
+            "max": 708.1000000014901,
+            "samples": 333,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 3067.2000000029802
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 3017.60000000149
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 2981.800000000745
+            }
+          ]
+        }
+      ],
+      "frameTimings": [
+        {
+          "scenario": "idle",
+          "observedFrames": 80,
+          "renderedIntervalMs": {
+            "p50": 168.80000000074506,
+            "p95": 3190.800000000745,
+            "p99": 12592.39999999851,
+            "max": 12592.39999999851,
+            "samples": 79
+          },
+          "sceneRenderWallMs": {
+            "p50": 9.399999998509884,
+            "p95": 28.799999997019768,
+            "p99": 1159.3999999985099,
+            "max": 1159.3999999985099,
+            "samples": 80
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "viewerRenderTotalMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          }
+        },
+        {
+          "scenario": "scripted-motion",
+          "observedFrames": 334,
+          "renderedIntervalMs": {
+            "p50": 177.89999999850988,
+            "p95": 262.69999999925494,
+            "p99": 488.9000000022352,
+            "max": 708.1000000014901,
+            "samples": 333
+          },
+          "sceneRenderWallMs": {
+            "p50": 14.699999999254942,
+            "p95": 22.599999997764826,
+            "p99": 29.600000001490116,
+            "max": 35.70000000298023,
+            "samples": 334
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": 158.90000000223517,
+            "p95": 243.5,
+            "p99": 470,
+            "max": 694.2999999970198,
+            "samples": 333
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": 0.30000000074505806,
+            "p95": 0.5,
+            "p99": 0.8000000007450581,
+            "max": 2.900000002235174,
+            "samples": 334
+          },
+          "viewerRenderTotalMs": {
+            "p50": 17.100000001490116,
+            "p95": 26.600000001490116,
+            "p99": 33.399999998509884,
+            "max": 41.099999997764826,
+            "samples": 334
+          }
+        }
+      ],
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 346,
+          "inclusiveWallTotalMs": 2412.5919999999974,
+          "wallP95Ms": 12.199,
+          "threadCpuSamples": 346,
+          "threadCpuTotalMs": 490.2930000000001,
+          "threadCpuP95Ms": 2.123
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 346,
+          "inclusiveWallTotalMs": 2096.3160000000016,
+          "wallP95Ms": 11.383,
+          "threadCpuSamples": 346,
+          "threadCpuTotalMs": 182.27999999999997,
+          "threadCpuP95Ms": 0.768,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 402,
+          "inclusiveWallTotalMs": 7604.510999999992,
+          "wallP95Ms": 31.602,
+          "threadCpuSamples": 402,
+          "threadCpuTotalMs": 7318.907,
+          "threadCpuP95Ms": 29.678
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 660,
+          "inclusiveWallTotalMs": 1309.9670000000006,
+          "wallP95Ms": 5.882,
+          "threadCpuSamples": 660,
+          "threadCpuTotalMs": 1261.2000000000003,
+          "threadCpuP95Ms": 5.105
+        },
+        {
+          "name": "Layout",
+          "count": 361,
+          "inclusiveWallTotalMs": 519.5269999999998,
+          "wallP95Ms": 4.573,
+          "threadCpuSamples": 361,
+          "threadCpuTotalMs": 506.7710000000001,
+          "threadCpuP95Ms": 4.578
+        }
+      ]
+    },
+    {
+      "stem": "3-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "samples": [
+        {
+          "scenario": "idle",
+          "frames": 84,
+          "frameIntervalMs": {
+            "p50": 176.39999999850988,
+            "p95": 4694,
+            "max": 13732.699999999255,
+            "samples": 83,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 2721
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2546.89999999851
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 2136.199999999255
+            }
+          ]
+        },
+        {
+          "scenario": "scripted-motion",
+          "frames": 345,
+          "frameIntervalMs": {
+            "p50": 171.70000000298023,
+            "p95": 304.70000000298023,
+            "max": 521,
+            "samples": 344,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 2247.5
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2365.60000000149
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 3365.300000000745
+            }
+          ]
+        }
+      ],
+      "frameTimings": [
+        {
+          "scenario": "idle",
+          "observedFrames": 84,
+          "renderedIntervalMs": {
+            "p50": 176.39999999850988,
+            "p95": 4694,
+            "p99": 13732.699999999255,
+            "max": 13732.699999999255,
+            "samples": 83
+          },
+          "sceneRenderWallMs": {
+            "p50": 9.100000001490116,
+            "p95": 19.399999998509884,
+            "p99": 22.399999998509884,
+            "max": 22.399999998509884,
+            "samples": 84
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "viewerRenderTotalMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          }
+        },
+        {
+          "scenario": "scripted-motion",
+          "observedFrames": 345,
+          "renderedIntervalMs": {
+            "p50": 171.70000000298023,
+            "p95": 304.70000000298023,
+            "p99": 462.19999999925494,
+            "max": 521,
+            "samples": 344
+          },
+          "sceneRenderWallMs": {
+            "p50": 14.899999998509884,
+            "p95": 21,
+            "p99": 27.099999997764826,
+            "max": 31.600000001490116,
+            "samples": 345
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": 153.80000000074506,
+            "p95": 282.5999999977648,
+            "p99": 435.1000000014901,
+            "max": 503.80000000074506,
+            "samples": 344
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": 0.30000000074505806,
+            "p95": 0.5,
+            "p99": 0.8000000007450581,
+            "max": 1.0999999977648258,
+            "samples": 345
+          },
+          "viewerRenderTotalMs": {
+            "p50": 17,
+            "p95": 25.199999999254942,
+            "p99": 32.19999999925494,
+            "max": 41.100000001490116,
+            "samples": 345
+          }
+        }
+      ],
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 354,
+          "inclusiveWallTotalMs": 2452.263999999999,
+          "wallP95Ms": 12.207,
+          "threadCpuSamples": 354,
+          "threadCpuTotalMs": 475.092,
+          "threadCpuP95Ms": 1.987
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 354,
+          "inclusiveWallTotalMs": 2147.9180000000006,
+          "wallP95Ms": 11.377,
+          "threadCpuSamples": 354,
+          "threadCpuTotalMs": 177.0859999999999,
+          "threadCpuP95Ms": 0.741,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 414,
+          "inclusiveWallTotalMs": 7587.539999999995,
+          "wallP95Ms": 30.068,
+          "threadCpuSamples": 414,
+          "threadCpuTotalMs": 7374.111999999998,
+          "threadCpuP95Ms": 29.403
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 646,
+          "inclusiveWallTotalMs": 1311.2030000000004,
+          "wallP95Ms": 6.412,
+          "threadCpuSamples": 646,
+          "threadCpuTotalMs": 1266.7859999999994,
+          "threadCpuP95Ms": 5.749
+        },
+        {
+          "name": "Layout",
+          "count": 355,
+          "inclusiveWallTotalMs": 481.19199999999995,
+          "wallP95Ms": 4.765,
+          "threadCpuSamples": 355,
+          "threadCpuTotalMs": 471.51,
+          "threadCpuP95Ms": 4.517
+        }
+      ]
+    },
+    {
+      "stem": "4-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "samples": [
+        {
+          "scenario": "idle",
+          "frames": 79,
+          "frameIntervalMs": {
+            "p50": 180.69999999925494,
+            "p95": 3852,
+            "max": 11912.699999999255,
+            "samples": 78,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 2661.5
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2177
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 3611.2999999970198
+            }
+          ]
+        },
+        {
+          "scenario": "scripted-motion",
+          "frames": 341,
+          "frameIntervalMs": {
+            "p50": 170.59999999776483,
+            "p95": 322.19999999925494,
+            "max": 671.2000000029802,
+            "samples": 340,
+            "reason": null
+          },
+          "phases": [
+            {
+              "id": "early-history",
+              "latenessMs": 3091.300000000745
+            },
+            {
+              "id": "middle-history",
+              "latenessMs": 2436.10000000149
+            },
+            {
+              "id": "latest-history",
+              "latenessMs": 3198.10000000149
+            }
+          ]
+        }
+      ],
+      "frameTimings": [
+        {
+          "scenario": "idle",
+          "observedFrames": 79,
+          "renderedIntervalMs": {
+            "p50": 180.69999999925494,
+            "p95": 3852,
+            "p99": 11912.699999999255,
+            "max": 11912.699999999255,
+            "samples": 78
+          },
+          "sceneRenderWallMs": {
+            "p50": 10.099999997764826,
+            "p95": 24.5,
+            "p99": 1081.7999999970198,
+            "max": 1081.7999999970198,
+            "samples": 79
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          },
+          "viewerRenderTotalMs": {
+            "p50": null,
+            "p95": null,
+            "p99": null,
+            "max": null,
+            "samples": 0
+          }
+        },
+        {
+          "scenario": "scripted-motion",
+          "observedFrames": 341,
+          "renderedIntervalMs": {
+            "p50": 170.59999999776483,
+            "p95": 322.19999999925494,
+            "p99": 502.79999999701977,
+            "max": 671.2000000029802,
+            "samples": 340
+          },
+          "sceneRenderWallMs": {
+            "p50": 14.599999997764826,
+            "p95": 22.100000001490116,
+            "p99": 30.699999999254942,
+            "max": 623.9000000022352,
+            "samples": 341
+          },
+          "previousRenderReturnToCurrentCallbackMs": {
+            "p50": 152,
+            "p95": 288.30000000074506,
+            "p99": 475.69999999925494,
+            "max": 567.4000000022352,
+            "samples": 340
+          },
+          "cameraUpdatePhaseMs": {
+            "p50": 0.29999999701976776,
+            "p95": 0.5,
+            "p99": 0.8000000007450581,
+            "max": 1.199999999254942,
+            "samples": 341
+          },
+          "viewerRenderTotalMs": {
+            "p50": 17.100000001490116,
+            "p95": 25.699999999254942,
+            "p99": 36.100000001490116,
+            "max": 630,
+            "samples": 341
+          }
+        }
+      ],
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 358,
+          "inclusiveWallTotalMs": 2155.100000000002,
+          "wallP95Ms": 11.365,
+          "threadCpuSamples": 358,
+          "threadCpuTotalMs": 486.48299999999995,
+          "threadCpuP95Ms": 1.916
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 358,
+          "inclusiveWallTotalMs": 1834.159,
+          "wallP95Ms": 10.526,
+          "threadCpuSamples": 358,
+          "threadCpuTotalMs": 173.407,
+          "threadCpuP95Ms": 0.765,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 406,
+          "inclusiveWallTotalMs": 8121.652000000004,
+          "wallP95Ms": 30.936,
+          "threadCpuSamples": 406,
+          "threadCpuTotalMs": 7337.125,
+          "threadCpuP95Ms": 30.004
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 634,
+          "inclusiveWallTotalMs": 1234.7579999999987,
+          "wallP95Ms": 5.096,
+          "threadCpuSamples": 634,
+          "threadCpuTotalMs": 1182.3910000000003,
+          "threadCpuP95Ms": 4.844
+        },
+        {
+          "name": "Layout",
+          "count": 358,
+          "inclusiveWallTotalMs": 577.2150000000004,
+          "wallP95Ms": 5.043,
+          "threadCpuSamples": 358,
+          "threadCpuTotalMs": 555.3139999999999,
+          "threadCpuP95Ms": 4.701
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "ABBA traces investigate repeatability and ownership; two instrumented samples per build do not satisfy the five-run performance gate.",
+    "The frozen producer explicitly supports one-second warmup for this diagnostic mode. It does not replace the thirty-second warmup used by qualification.",
+    "Rendered-frame intervals include deliberate idle gaps. Frame wall times and Chrome event durations are not exclusive GPU execution times.",
+    "Chrome inclusive event totals overlap and must not be added. Missing thread CPU duration remains unavailable.",
+    "Source phase deadlines and visual settings are independently checked; a diagnostic does not waive an uninstrumented failure."
+  ],
+  "productionChanged": false
+}

@@ -1,0 +1,133 @@
+{
+  "schema": "gev-qualification-ci-review/v1",
+  "reviewedAt": "2026-10-19T05:45:55.879Z",
+  "commit": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+  "scope": "Map capture route and paired-validator correction; automatic checks do not replace native Windows captures.",
+  "optionalSkips": "Twelve opt-in workflow jobs were not requested for this run. Physical hardware evidence is separate.",
+  "runs": [
+    {
+      "id": "39202811302",
+      "headSha": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39202811302",
+      "event": "pull_request",
+      "workflowName": "CI",
+      "rawSha256": "87ec0a132170ff14d754c59545ca00ef4e81c1604dc2eb0ad4d02ce36a9cfb78",
+      "jobs": [
+        {
+          "name": "Windows onboarding",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Street Level browser gate",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install and update recovery (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 26.x",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install and update recovery (macos-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node 24.14.0",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install and update recovery (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Isolated mission render-demand correctness",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Baseline-compatible performance build smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Free hosted Mac accelerated retention diagnostic",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Native WebGL probe (${{ matrix.os }})",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Isolated rendered mixed-use smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Isolated import and workspace lifecycle",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Isolated terrain and picking lifecycle",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Isolated CCTV lifecycle",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "60-minute rendered application soak",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Free hosted Mac rendering diagnostic",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Aircraft tracking regression",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": "39202811359",
+      "headSha": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39202811359",
+      "event": "pull_request",
+      "workflowName": "Versioned release",
+      "rawSha256": "60455e8309a248dcc83be29674ea473b513ebd167504334a6265ba85f972c251",
+      "jobs": [
+        {
+          "name": "Build and verify release artifact",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

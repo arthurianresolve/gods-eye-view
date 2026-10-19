@@ -1,0 +1,433 @@
+{
+  "schema": "gev-weather-hud-ownership-diagnostic-review/v1",
+  "reviewedAt": "2026-10-19T08:22:47.616Z",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "producerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "identities": {
+    "control": "1ecb4cdd02ef55a18dc355a05e2b8bf84070bff3",
+    "candidate": "55639cc7fde03daacf25e643f16f803e001113f9"
+  },
+  "oneChangeControl": {
+    "parent": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "commit": "1ecb4cdd02ef55a18dc355a05e2b8bf84070bff3",
+    "changedFile": "src/hud.js",
+    "patchSha256": "88018303a55f68dcb5c2aea3e22bc6c97e94e5d1790ac25e88dbcb38acd7d9e8",
+    "description": "Revert only unchanged-text guard; identical weather, source populations and visual settings. Diagnostic only."
+  },
+  "order": ["candidate", "control", "control", "candidate"],
+  "warmupMs": 1000,
+  "measurementMs": 60000,
+  "repeatsPerBuild": 2,
+  "archive": {
+    "root": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-hud-motion-diagnostic-1792397078477",
+    "files": 28,
+    "bytes": 235727876,
+    "receiptSha256": "d9ca4a00e560a336c4b30f5aaa192beb18d76d77f0b53d3d24c2ad8323ada9c7",
+    "fullReviewSha256": "02ed9bc6341adb3cc794c4657dd6ff084f81077915a9d23b4e210fc0e6a6e28f"
+  },
+  "rawFiles": [
+    {
+      "name": "protocol.json",
+      "sha256": "4dcc6a591220b7ffc2cd0b681e8f3b8b3fd5352937ad34565af4e26af299f26e",
+      "bytes": 6818
+    },
+    {
+      "name": "capture-1-candidate.json",
+      "sha256": "ec1e624666eb28555fd1dde108dc4f342aa9bacb3c79df8627c14a1e0ca4fb7e",
+      "bytes": 473224
+    },
+    {
+      "name": "frame-trace-1-candidate.json",
+      "sha256": "539389224de61c649d204806dd5a40f3995d8a13b237980b41a48dd30293e71a",
+      "bytes": 315111
+    },
+    {
+      "name": "browser-trace-1-candidate.json",
+      "sha256": "d4e0f9011133eaf53fbd0ddad6d44f5caccbc070c0e61103466ab0d1fb771f93",
+      "bytes": 58563000
+    },
+    {
+      "name": "capture-2-control.json",
+      "sha256": "23dd3145101fcd9d5c39c2985c60fc61d7bc64ee30a23bb137cea689930f96d9",
+      "bytes": 467239
+    },
+    {
+      "name": "frame-trace-2-control.json",
+      "sha256": "0b902e0054f99290001aec69b06aff101374657fbd0257d3a62460e21704e504",
+      "bytes": 309093
+    },
+    {
+      "name": "browser-trace-2-control.json",
+      "sha256": "6848e6c53e7bb898e47b1dce2553dd61c65f6962c3d2d9ca587de89b2a0db0d7",
+      "bytes": 58981844
+    },
+    {
+      "name": "capture-3-control.json",
+      "sha256": "95b79f3af0e1ebb6fb59121806f8970608f9cc723f780c1a20c81fdae52223a0",
+      "bytes": 460765
+    },
+    {
+      "name": "frame-trace-3-control.json",
+      "sha256": "847161647ec551c8c245f40a6e3b6f069d44be51b4e9b6144be3575e9ad4ae8e",
+      "bytes": 302576
+    },
+    {
+      "name": "browser-trace-3-control.json",
+      "sha256": "17a4488aa0853085eddf5c4a19faf865d43fe8393d1c3319fde4c990330de2d9",
+      "bytes": 57547535
+    },
+    {
+      "name": "capture-4-candidate.json",
+      "sha256": "1fc7039de385eb56b0401b70bcada3af5832fb3afd1fc03f93b48e019ebe5e66",
+      "bytes": 461739
+    },
+    {
+      "name": "frame-trace-4-candidate.json",
+      "sha256": "445c14ccd94cb40f9d159e0a02ee7bfa65244f05b4ecaac62f6b3a0b1223764a",
+      "bytes": 303601
+    },
+    {
+      "name": "browser-trace-4-candidate.json",
+      "sha256": "da4697461c82faeed4b4b7ce02ce762a461cb642391bf6148e746e9703140056",
+      "bytes": 57496606
+    }
+  ],
+  "captures": [
+    {
+      "stem": "1-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "motionP95Ms": 237.70000000298023,
+      "frames": 361,
+      "longTasks": {
+        "count": 56,
+        "maxMs": 561
+      },
+      "phaseLatenessMs": [2056.5, 2521.099999997765, 2490],
+      "sceneRenderWallMs": {
+        "p50": 14.899999998509884,
+        "p95": 24.600000001490116,
+        "p99": 44.899999998509884,
+        "max": 514.6000000014901,
+        "samples": 361
+      },
+      "callbackGapMs": {
+        "p50": 144.5,
+        "p95": 226.5,
+        "p99": 423,
+        "max": 483.4000000022352,
+        "samples": 360
+      },
+      "cameraUpdateMs": {
+        "p50": 0.29999999701976776,
+        "p95": 0.6999999992549419,
+        "p99": 1.4000000022351742,
+        "max": 3.199999999254942,
+        "samples": 361
+      },
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 372,
+          "inclusiveWallTotalMs": 2712.097000000001,
+          "wallP95Ms": 10.407,
+          "threadCpuSamples": 372,
+          "threadCpuTotalMs": 502.43299999999954,
+          "threadCpuP95Ms": 2.158
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 372,
+          "inclusiveWallTotalMs": 2386.624999999998,
+          "wallP95Ms": 9.555,
+          "threadCpuSamples": 372,
+          "threadCpuTotalMs": 183.63000000000008,
+          "threadCpuP95Ms": 0.827,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 430,
+          "inclusiveWallTotalMs": 8657.048,
+          "wallP95Ms": 33.681,
+          "threadCpuSamples": 430,
+          "threadCpuTotalMs": 7613.105999999997,
+          "threadCpuP95Ms": 29.646
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 666,
+          "inclusiveWallTotalMs": 1337.5460000000003,
+          "wallP95Ms": 5.994,
+          "threadCpuSamples": 666,
+          "threadCpuTotalMs": 1233.7269999999992,
+          "threadCpuP95Ms": 5.136
+        },
+        {
+          "name": "Layout",
+          "count": 364,
+          "inclusiveWallTotalMs": 482.1269999999998,
+          "wallP95Ms": 4.67,
+          "threadCpuSamples": 364,
+          "threadCpuTotalMs": 460.2390000000004,
+          "threadCpuP95Ms": 4.296
+        }
+      ]
+    },
+    {
+      "stem": "2-control",
+      "role": "control",
+      "appCommit": "1ecb4cdd02ef55a18dc355a05e2b8bf84070bff3",
+      "motionP95Ms": 296.9000000022352,
+      "frames": 357,
+      "longTasks": {
+        "count": 76,
+        "maxMs": 459
+      },
+      "phaseLatenessMs": [2884.099999997765, 2813.300000000745, 2803.5],
+      "sceneRenderWallMs": {
+        "p50": 15.5,
+        "p95": 33.19999999925494,
+        "p99": 47.899999998509884,
+        "max": 81.30000000074506,
+        "samples": 357
+      },
+      "callbackGapMs": {
+        "p50": 146.30000000074506,
+        "p95": 278.5,
+        "p99": 447.1000000014901,
+        "max": 483.4000000022352,
+        "samples": 356
+      },
+      "cameraUpdateMs": {
+        "p50": 0.30000000074505806,
+        "p95": 0.8000000007450581,
+        "p99": 1.5,
+        "max": 2.599999997764826,
+        "samples": 357
+      },
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 369,
+          "inclusiveWallTotalMs": 1846.2760000000005,
+          "wallP95Ms": 9.638,
+          "threadCpuSamples": 369,
+          "threadCpuTotalMs": 514.2370000000001,
+          "threadCpuP95Ms": 2.225
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 369,
+          "inclusiveWallTotalMs": 1505.2179999999996,
+          "wallP95Ms": 8.746,
+          "threadCpuSamples": 369,
+          "threadCpuTotalMs": 182.74499999999998,
+          "threadCpuP95Ms": 0.861,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 442,
+          "inclusiveWallTotalMs": 9255.659000000003,
+          "wallP95Ms": 39.469,
+          "threadCpuSamples": 442,
+          "threadCpuTotalMs": 8416.778000000004,
+          "threadCpuP95Ms": 33.543
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 683,
+          "inclusiveWallTotalMs": 1683.7480000000012,
+          "wallP95Ms": 8.09,
+          "threadCpuSamples": 683,
+          "threadCpuTotalMs": 1485.9519999999998,
+          "threadCpuP95Ms": 7.103
+        },
+        {
+          "name": "Layout",
+          "count": 379,
+          "inclusiveWallTotalMs": 674.718,
+          "wallP95Ms": 5.046,
+          "threadCpuSamples": 379,
+          "threadCpuTotalMs": 629.8170000000002,
+          "threadCpuP95Ms": 4.529
+        }
+      ]
+    },
+    {
+      "stem": "3-control",
+      "role": "control",
+      "appCommit": "1ecb4cdd02ef55a18dc355a05e2b8bf84070bff3",
+      "motionP95Ms": 309,
+      "frames": 344,
+      "longTasks": {
+        "count": 63,
+        "maxMs": 471
+      },
+      "phaseLatenessMs": [2944.7000000029802, 3585, 2971.5],
+      "sceneRenderWallMs": {
+        "p50": 15.799999997019768,
+        "p95": 26.899999998509884,
+        "p99": 40.30000000074506,
+        "max": 103.60000000149012,
+        "samples": 344
+      },
+      "callbackGapMs": {
+        "p50": 151.90000000223517,
+        "p95": 280.29999999701977,
+        "p99": 424.5,
+        "max": 491.69999999925494,
+        "samples": 343
+      },
+      "cameraUpdateMs": {
+        "p50": 0.30000000074505806,
+        "p95": 0.6000000014901161,
+        "p99": 0.9000000022351742,
+        "max": 1.8999999985098839,
+        "samples": 344
+      },
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 360,
+          "inclusiveWallTotalMs": 2428.84,
+          "wallP95Ms": 12.698,
+          "threadCpuSamples": 360,
+          "threadCpuTotalMs": 493.75799999999947,
+          "threadCpuP95Ms": 2.062
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 360,
+          "inclusiveWallTotalMs": 2101.7110000000002,
+          "wallP95Ms": 11.998,
+          "threadCpuSamples": 360,
+          "threadCpuTotalMs": 174.87199999999996,
+          "threadCpuP95Ms": 0.791,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 414,
+          "inclusiveWallTotalMs": 8641.246999999996,
+          "wallP95Ms": 38.122,
+          "threadCpuSamples": 414,
+          "threadCpuTotalMs": 7818.521999999999,
+          "threadCpuP95Ms": 33.879
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 668,
+          "inclusiveWallTotalMs": 1451.5999999999992,
+          "wallP95Ms": 6.657,
+          "threadCpuSamples": 668,
+          "threadCpuTotalMs": 1297.7730000000004,
+          "threadCpuP95Ms": 6.123
+        },
+        {
+          "name": "Layout",
+          "count": 367,
+          "inclusiveWallTotalMs": 716.6299999999999,
+          "wallP95Ms": 6.244,
+          "threadCpuSamples": 367,
+          "threadCpuTotalMs": 623.1210000000008,
+          "threadCpuP95Ms": 5.898
+        }
+      ]
+    },
+    {
+      "stem": "4-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "motionP95Ms": 222.60000000149012,
+      "frames": 353,
+      "longTasks": {
+        "count": 61,
+        "maxMs": 422
+      },
+      "phaseLatenessMs": [
+        2426.10000000149, 2660.699999999255, 2910.10000000149
+      ],
+      "sceneRenderWallMs": {
+        "p50": 15.100000001490116,
+        "p95": 22.199999999254942,
+        "p99": 37.80000000074506,
+        "max": 43.5,
+        "samples": 353
+      },
+      "callbackGapMs": {
+        "p50": 149.60000000149012,
+        "p95": 205,
+        "p99": 454.0999999977648,
+        "max": 468.3999999985099,
+        "samples": 352
+      },
+      "cameraUpdateMs": {
+        "p50": 0.30000000074505806,
+        "p95": 0.5,
+        "p99": 0.6999999992549419,
+        "max": 2.5,
+        "samples": 353
+      },
+      "browserEvents": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 367,
+          "inclusiveWallTotalMs": 2408.062000000001,
+          "wallP95Ms": 13.203,
+          "threadCpuSamples": 367,
+          "threadCpuTotalMs": 505.03299999999973,
+          "threadCpuP95Ms": 2.177
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 367,
+          "inclusiveWallTotalMs": 2083.649000000001,
+          "wallP95Ms": 12.309,
+          "threadCpuSamples": 367,
+          "threadCpuTotalMs": 186.8589999999999,
+          "threadCpuP95Ms": 0.874,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 427,
+          "inclusiveWallTotalMs": 8039.7090000000035,
+          "wallP95Ms": 33.737,
+          "threadCpuSamples": 427,
+          "threadCpuTotalMs": 7754.3819999999905,
+          "threadCpuP95Ms": 31.795
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 674,
+          "inclusiveWallTotalMs": 1374.5050000000008,
+          "wallP95Ms": 6.226,
+          "threadCpuSamples": 674,
+          "threadCpuTotalMs": 1327.9289999999999,
+          "threadCpuP95Ms": 5.688
+        },
+        {
+          "name": "Layout",
+          "count": 365,
+          "inclusiveWallTotalMs": 559.3380000000001,
+          "wallP95Ms": 5.275,
+          "threadCpuSamples": 365,
+          "threadCpuTotalMs": 537.8380000000003,
+          "threadCpuP95Ms": 5.213
+        }
+      ]
+    }
+  ],
+  "conclusion": "Both candidate samples have lower motion p95 than either one-change control sample. This diagnostic does not support reverting the unchanged-text guard as a remedy for the weather regression. No runtime change is accepted from these instrumented two-repeat captures.",
+  "remaining": "The full five-run weather comparison still fails the regression threshold. These traces neither waive that failure nor establish a complete root cause.",
+  "limitations": [
+    "ABBA traces investigate repeatability and ownership; two instrumented samples per build do not satisfy the five-run performance gate.",
+    "The frozen producer explicitly supports one-second warmup for this diagnostic mode. It does not replace the thirty-second warmup used by qualification.",
+    "Rendered-frame intervals include deliberate idle gaps. Frame wall times and Chrome event durations are not exclusive GPU execution times.",
+    "Chrome inclusive event totals overlap and must not be added. Missing thread CPU duration remains unavailable.",
+    "Source phase deadlines and visual settings are independently checked; a diagnostic does not waive an uninstrumented failure."
+  ]
+}
