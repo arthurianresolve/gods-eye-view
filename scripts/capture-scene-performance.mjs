@@ -2295,6 +2295,9 @@ try {
   if (browserReadyFile) {
     failureProgress.phase = 'await-browser-readiness';
     failureProgress.current = { phase: failureProgress.phase };
+    // launch() may leave a headful browser without a native window until a
+    // page exists. Keep this blank page as the later measured-page owner.
+    activePage = await browser.newPage();
     process.stdout.write(
       '[performance] owned browser is waiting for its pre-navigation foreground handoff\n',
     );
@@ -3040,7 +3043,7 @@ try {
   failureProgress.phase = 'main-navigation';
   failureProgress.scenario = null;
   failureProgress.run = null;
-  activePage = await browser.newPage();
+  activePage ||= await browser.newPage();
   let page = activePage;
   let providerContext = null;
   let nativeRendererEvidence = null;
