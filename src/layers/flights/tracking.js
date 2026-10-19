@@ -436,6 +436,10 @@ export function createTracking({
    */
 
   function _startTrail(icao24) {
+    if (flightState._positionSourceMode === 'recorded') {
+      _clearTrail();
+      return;
+    }
     flightState._trailBackfillToken += 1;
     flightState._trailPositions = [];
     const history = flightState._positionHistory.get(icao24) || [];
@@ -547,6 +551,7 @@ export function createTracking({
    */
 
   async function _backfillTrail(icao24, token, oldestFixEpochSec) {
+    if (flightState._positionSourceMode === 'recorded') return;
     let path = null;
     try {
       const track = await flightState.feed._source.getTrack?.(
@@ -564,6 +569,7 @@ export function createTracking({
     }
     if (
       !path ||
+      flightState._positionSourceMode === 'recorded' ||
       token !== flightState._trailBackfillToken ||
       icao24 !== flightState._trackedIcao
     )
@@ -605,6 +611,7 @@ export function createTracking({
     // Re-check the backfill token after the await (same guard as post-fetch):
     // tracking may have moved on while the terrain race was in flight.
     if (
+      flightState._positionSourceMode === 'recorded' ||
       token !== flightState._trailBackfillToken ||
       icao24 !== flightState._trackedIcao
     )

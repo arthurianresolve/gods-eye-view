@@ -35,6 +35,9 @@ export class FlightRecords {
       trackedId,
       floorWarmPoints,
       sourceId = null,
+      positionMode = 'live',
+      recordingId = null,
+      selectedTimeMs = null,
       sourceSnapshotObservedAtMs = null,
       sourceCoverage = null,
       sourceFreshness = null,
@@ -64,6 +67,12 @@ export class FlightRecords {
     // regressing to the ICAO hex / a 0° (north) heading. Bounded by the
     // MISSING_POLL_LIMIT eviction below, which deletes the whole entry.
     const prevMeta = this.data.get(icao24);
+    // A replay row is an exact observation at the selected recording time.
+    // Missing fields must not inherit live or later replay metadata.
+    const stickyPrevMeta =
+      positionMode === 'live' && prevMeta?.positionMode === 'live'
+        ? prevMeta
+        : null;
     // Grounded planes with no baro reading sit at 0 m, not the 10 km
     // airborne default (a parked plane must never float).
     // NOTE (height-datum fix): `alt` stays the AVIATION field — the sticky
@@ -77,7 +86,7 @@ export class FlightRecords {
     // never `alt` directly.
     const alt = stickyNumber(
       baro_alt,
-      prevMeta?.altitude,
+      stickyPrevMeta?.altitude,
       onGround ? 0 : 10000,
     );
 
@@ -109,10 +118,13 @@ export class FlightRecords {
       // the geoid without this (round 2's lesson, at cell granularity).
       if (
         surfaceM == null &&
-        Number.isFinite(prevMeta?.rawLat) &&
-        Number.isFinite(prevMeta?.rawLon)
+        Number.isFinite(stickyPrevMeta?.rawLat) &&
+        Number.isFinite(stickyPrevMeta?.rawLon)
       ) {
-        surfaceM = cachedGroundFloor(prevMeta.rawLat, prevMeta.rawLon);
+        surfaceM = cachedGroundFloor(
+          stickyPrevMeta.rawLat,
+          stickyPrevMeta.rawLon,
+        );
       }
       // Grounded contacts near the viewer feed the floor warm/sampler
       // (the only ones whose exact height is visible; far contacts are
@@ -143,7 +155,7 @@ export class FlightRecords {
         surfaceM = geoidSurfaceLastResortM({
           geoAltM: geo_alt,
           baroAltM: baro_alt,
-          priorRenderM: prevMeta?.renderAltitudeM,
+          priorRenderM: stickyPrevMeta?.renderAltitudeM,
           geoidN,
         });
       }
@@ -171,8 +183,8 @@ export class FlightRecords {
     let renderAltitudeM;
     if (pickedAltM != null) {
       renderAltitudeM = pickedAltM;
-    } else if (Number.isFinite(prevMeta?.renderAltitudeM)) {
-      renderAltitudeM = prevMeta.renderAltitudeM;
+    } else if (Number.isFinite(stickyPrevMeta?.renderAltitudeM)) {
+      renderAltitudeM = stickyPrevMeta.renderAltitudeM;
     } else {
       renderAltitudeM = alt;
     }
@@ -204,10 +216,13 @@ export class FlightRecords {
     }
 
     // Landing/takeoff transition: the on_ground flip restyles IN PLACE.
+    const compatiblePrevious =
+      prevMeta?.positionMode === positionMode &&
+      (positionMode !== 'recorded' || prevMeta.recordingId === recordingId);
     const groundFlipped =
-      !!prevMeta && (prevMeta.onGround === true) !== onGround;
+      !!compatiblePrevious && (prevMeta.onGround === true) !== onGround;
     // Store flight metadata for click-to-track labels
-    const cat = stickyNumber(category, prevMeta?.category, null);
+    const cat = stickyNumber(category, stickyPrevMeta?.category, null);
     const receivedAtMs = Date.now();
     const positionObservedAtMs =
       Number.isFinite(observation.positionTimeMs) &&
@@ -219,6 +234,12 @@ export class FlightRecords {
       observedReceiptMs: receivedAtMs,
       receivedAtMs,
       positionObservedAtMs,
+      positionMode,
+      recordingId: positionMode === 'recorded' ? recordingId : null,
+      selectedTimeMs:
+        positionMode === 'recorded' && Number.isFinite(selectedTimeMs)
+          ? selectedTimeMs
+          : null,
       sourceSnapshotObservedAtMs:
         Number.isFinite(sourceSnapshotObservedAtMs) &&
         sourceSnapshotObservedAtMs > 0
@@ -229,7 +250,7 @@ export class FlightRecords {
       sourceFreshness: sourceFreshness || null,
       sourceComplete:
         typeof sourceComplete === 'boolean' ? sourceComplete : null,
-      callsign: stickyText(callsign, prevMeta?.callsign),
+      callsign: stickyText(callsign, stickyPrevMeta?.callsign) || null,
       altitude: alt,
       // geoAltitudeM/renderAltitudeM are ADDITIVE fields alongside the
       // untouched aviation `altitude` — never rename/replace it (labels,
@@ -240,21 +261,25 @@ export class FlightRecords {
       onGround,
       // Round 7: sticky airborne history — the landed fast-cull only
       // applies to contacts that actually flew this session.
-      wasAirborne: prevMeta?.wasAirborne === true || !onGround,
-      velocity: stickyNumber(velocity, prevMeta?.velocity, 0),
-      true_track: stickyNumber(true_track, prevMeta?.true_track, 0),
+      wasAirborne: stickyPrevMeta?.wasAirborne === true || !onGround,
+      velocity: stickyNumber(velocity, stickyPrevMeta?.velocity, 0),
+      true_track: stickyNumber(true_track, stickyPrevMeta?.true_track, 0),
       category: cat,
       // An adsbdb-enriched type code outranks the coarse OpenSky category.
       klass: classifyAircraft({
-        typeCode: prevMeta?.typeCode ?? null,
+        typeCode: stickyPrevMeta?.typeCode ?? null,
         category: cat,
       }),
-      turnRateDps: prevMeta?.turnRateDps || 0,
-      verticalRate: stickyNumber(vertical_rate, prevMeta?.verticalRate, null),
+      turnRateDps: stickyPrevMeta?.turnRateDps || 0,
+      verticalRate: stickyNumber(
+        vertical_rate,
+        stickyPrevMeta?.verticalRate,
+        null,
+      ),
       // Analyst seam: OpenSky origin_country (state[2]) — additive, sticky
       // like callsign so a transient blank row doesn't blank the field.
       originCountry:
-        stickyText(origin_country, prevMeta?.originCountry) || null,
+        stickyText(origin_country, stickyPrevMeta?.originCountry) || null,
       // Per poll, NOT sticky: an emergency code clears when the crew resets
       // it, so a blank squawk must not hold a stale 7700 on screen.
       squawk: observation.squawk ?? null,
@@ -262,14 +287,14 @@ export class FlightRecords {
       // explicit clear or changed squawk always takes effect immediately.
       emergency:
         observation.emergency === undefined &&
-        observation.squawk === prevMeta?.squawk &&
-        prevMeta?.emergency?.source === 'ads-b' &&
-        (prevMeta?.missingEmergencyPolls ?? 0) < 1
-          ? prevMeta.emergency
+        observation.squawk === stickyPrevMeta?.squawk &&
+        stickyPrevMeta?.emergency?.source === 'ads-b' &&
+        (stickyPrevMeta?.missingEmergencyPolls ?? 0) < 1
+          ? stickyPrevMeta.emergency
           : aircraftEmergency(observation),
       missingEmergencyPolls:
         observation.emergency === undefined
-          ? (prevMeta?.missingEmergencyPolls ?? 0) + 1
+          ? (stickyPrevMeta?.missingEmergencyPolls ?? 0) + 1
           : 0,
       // OpenSky distinguishes the last position epoch from the last
       // transponder message. The fleet coast horizon uses this actual
@@ -277,15 +302,15 @@ export class FlightRecords {
       // while fresh velocity/track messages are still arriving.
       lastContactEpochMs: stickyNumber(
         observation.contactTimeMs,
-        prevMeta?.lastContactEpochMs,
+        stickyPrevMeta?.lastContactEpochMs,
         null,
       ),
       // adsbdb enrichment — written by the enrichment callbacks, carried across polls:
-      typeCode: prevMeta?.typeCode ?? null,
-      typeName: prevMeta?.typeName ?? null,
-      registration: prevMeta?.registration ?? null,
-      airline: prevMeta?.airline ?? null,
-      route: prevMeta?.route ?? null,
+      typeCode: stickyPrevMeta?.typeCode ?? null,
+      typeName: stickyPrevMeta?.typeName ?? null,
+      registration: stickyPrevMeta?.registration ?? null,
+      airline: stickyPrevMeta?.airline ?? null,
+      route: stickyPrevMeta?.route ?? null,
       // The RAW poll fix lat/lon (this tick's OpenSky state-vector
       // coords, pre-dead-reckon) — kept distinct from the continuously
       // dead-reckoned billboard position for any consumer that needs the

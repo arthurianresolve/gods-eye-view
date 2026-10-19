@@ -68,6 +68,100 @@ test('civil rendering can use receipt time without claiming it as a source fix t
   assert.equal(result.fixEpochMs, result.meta.receivedAtMs);
 });
 
+test('records preserve selected replay identity without replacing source time', () => {
+  const store = records();
+  const received = store.receive(observation(), {
+    ...view(),
+    positionMode: 'recorded',
+    recordingId: 'recording-a',
+    selectedTimeMs: 1700000005000,
+    sourceSnapshotObservedAtMs: 1700000005000,
+  });
+  assert.equal(received.meta.positionMode, 'recorded');
+  assert.equal(received.meta.recordingId, 'recording-a');
+  assert.equal(received.meta.selectedTimeMs, 1700000005000);
+  assert.equal(received.meta.positionObservedAtMs, 1700000000000);
+  assert.equal(received.meta.sourceSnapshotObservedAtMs, 1700000005000);
+  const live = store.receive(
+    observation({
+      callsign: '',
+      baroAltitudeM: null,
+      ellipsoidAltitudeM: null,
+      speedMps: null,
+      courseDeg: null,
+      positionTimeMs: 1700000001000,
+    }),
+    {
+      ...view(),
+      positionMode: 'live',
+    },
+  );
+  assert.equal(live.meta.positionMode, 'live');
+  assert.equal(live.meta.recordingId, null);
+  assert.equal(live.meta.selectedTimeMs, null);
+  assert.equal(live.meta.callsign, null);
+  assert.equal(live.meta.altitude, 10000);
+  assert.equal(live.meta.velocity, 0);
+  assert.equal(live.meta.true_track, 0);
+});
+
+test('recorded missing metadata never inherits live or later replay observations', () => {
+  const store = records();
+  store.receive(observation(), view());
+
+  const recordedOptions = {
+    ...view(),
+    positionMode: 'recorded',
+    recordingId: 'recording-a',
+    selectedTimeMs: 1700000005000,
+  };
+  const missing = store.receive(
+    observation({
+      callsign: '',
+      baroAltitudeM: null,
+      ellipsoidAltitudeM: null,
+      speedMps: null,
+      courseDeg: null,
+      positionTimeMs: 1700000000000,
+    }),
+    recordedOptions,
+  );
+  assert.equal(missing.meta.callsign, null);
+  assert.equal(missing.meta.altitude, 10000);
+  assert.equal(missing.meta.renderAltitudeM, 10000);
+  assert.equal(missing.meta.velocity, 0);
+  assert.equal(missing.meta.true_track, 0);
+  assert.equal(missing.meta.typeCode, null);
+
+  store.receive(
+    observation({
+      callsign: 'LATER',
+      baroAltitudeM: 14000,
+      speedMps: 280,
+      courseDeg: 270,
+      positionTimeMs: 1700000009000,
+    }),
+    { ...recordedOptions, selectedTimeMs: 1700000010000 },
+  );
+  const backward = store.receive(
+    observation({
+      callsign: '',
+      baroAltitudeM: null,
+      ellipsoidAltitudeM: null,
+      speedMps: null,
+      courseDeg: null,
+      positionTimeMs: 1700000001000,
+    }),
+    { ...recordedOptions, selectedTimeMs: 1700000002000 },
+  );
+  assert.equal(backward.meta.callsign, null);
+  assert.equal(backward.meta.altitude, 10000);
+  assert.equal(backward.meta.renderAltitudeM, 10000);
+  assert.equal(backward.meta.velocity, 0);
+  assert.equal(backward.meta.true_track, 0);
+  assert.equal(backward.meta.positionObservedAtMs, 1700000001000);
+});
+
 test('civil record owners isolate state and preserve partial, missing-poll and landed retention', () => {
   const store = records();
   const other = records();

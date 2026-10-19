@@ -120,6 +120,14 @@ export function createFlightState({ source, services }) {
 
   flightState._positionHistory = new Map();
 
+  /** Source mode whose accepted snapshot currently owns rendered positions. */
+
+  flightState._positionSourceMode = 'live';
+
+  /** Retained live pose maps need one sweep after replay relinquishes them. */
+
+  flightState._pruneHistoryAfterReplay = false;
+
   // ---------------------------------------------------------------------------
   // Click-to-track state
   // ---------------------------------------------------------------------------

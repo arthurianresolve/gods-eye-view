@@ -125,3 +125,44 @@ test('a live result that resolves after replay takes ownership is discarded', as
   releaseLive({ records: [{ id: 'LIVE-STALE' }], source: 'Live' });
   await assert.rejects(stale, { name: 'AbortError' });
 });
+
+test('a recorded result resolving after return-live is discarded', async () => {
+  let resolveRecorded;
+  const router = createAircraftSourceRouter({
+    live: {
+      label: 'Live fixture',
+      async getSnapshot() {
+        return { records: [], source: 'Live fixture' };
+      },
+    },
+    recorded: {
+      async selectRecording(id) {
+        this.id = id;
+        return { status: 'selected' };
+      },
+      setTime() {},
+      getState() {
+        return { recordingId: this.id || null };
+      },
+      getSnapshot() {
+        return new Promise((resolve) => {
+          resolveRecorded = resolve;
+        });
+      },
+      clear() {
+        this.id = null;
+      },
+    },
+  });
+  await router.selectRecording('recording-stale-replay');
+  const stale = router.getSnapshot();
+  router.returnLive();
+  resolveRecorded({
+    records: [{ id: 'SYNTH-STALE' }],
+    positionMode: 'recorded',
+    recordingId: 'recording-stale-replay',
+  });
+  await assert.rejects(stale, { name: 'AbortError' });
+  assert.equal((await router.getSnapshot()).source, 'Live fixture');
+  router.destroy();
+});
