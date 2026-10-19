@@ -17,8 +17,14 @@ boundaries with unchanged inputs, followed by unchanged capture boundaries.
 All rejected attempts remain in the report. The
 [17 readiness/lifecycle tests](visual-readiness-tests-89e2acad.json) pass on each
 VM Node version; the VM's unsupported native Sharp tests remain assigned to
-Windows/hosted validation. Hardware validation of the new producer is pending.
-No mask, pixel threshold, fixture population or visual setting changed.
+Windows/hosted validation. Its [hardware attempt](visual-readiness-89e2acad-hardware-failure.json)
+rejected the baseline HUD-visible state because the REC indicator or scanline
+phase changed before capture; the candidate was not captured. Scroll geometry,
+pointer and focus remained stable. Producer `8efcea04` reads scene structure
+before waiting for the required phase, removing extra browser round trips from
+that short interval. Its [17 tests](visual-read-order-tests.json) pass on each
+VM Node version; hardware acceptance remains pending. No mask, pixel threshold,
+fixture population or visual setting changed.
 
 The [new dam comparison](infrastructure-dams-b3c49b19-result.json) has motion
 p95 of 299.7 versus 304.6 ms (+1.63%), within the unchanged regression limit.
@@ -26,7 +32,10 @@ Its app-ready startup median is 3,884 versus 4,289 ms (+10.43%), which fails
 the 10% startup gate. The loading-screen-hidden median rises 8.44%. The original
 five startup observations per build are preserved. A separately predeclared,
 balanced startup confirmation is being prepared; no limit is changed and this
-failure is not converted to a pass. Cable captures remain in progress.
+failure is not converted to a pass. The [cable comparison](infrastructure-cables-b3c49b19-result.json)
+passes: motion p95 changes from 332.8 to 329.0 ms (-1.14%), app-ready startup
+changes -14.87%, and loading-screen-hidden startup changes -3.61%. Settled idle
+timing remains unavailable in both builds, rather than being reported as zero.
 
 The exact `b3c49b19`
 [tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280015189)
@@ -37,7 +46,10 @@ VM105 reverified its GitHub-hosted attestation and
 [all 2,126 packaged files](staged-release-b3c49b19.json), and
 [all 16 private HTTP checks](production-host-smoke-b3c49b19.json) pass. The
 [prepared package](prepared-release-b3c49b19.json) serves only a private
-loopback preview. Exact-commit standard CI is still pending.
+loopback preview. The [exact-commit CI receipt](exact-ci-b3c49b19.json) records all
+seven standard jobs, separately selected tracking, and signed packaging passing.
+The raw workflow responses are hash-verified on VM105. Optional diagnostics
+skipped by workflow selection do not replace hardware qualification.
 
 Further required evidence is
 the remaining matrix and visual comparison, twenty local-control changes,
