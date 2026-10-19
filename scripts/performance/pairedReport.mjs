@@ -32,6 +32,7 @@ import {
   assertNativeSharpnessProfile,
   NATIVE_SHARPNESS_PROFILE_ID,
 } from './nativeSharpnessProfile.mjs';
+import { WEATHER_BALANCED_SHARD_INELIGIBLE_REASON } from './weatherInterleavedDiagnosticContract.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -445,10 +446,15 @@ function validateAustinSamplePopulationBindings(report, contract, label) {
   }
 }
 
-function validateFixtureDelivery(report, contract, label) {
+function validateFixtureDelivery(
+  report,
+  contract,
+  label,
+  { weatherQualificationShard = false } = {},
+) {
   assert.equal(
     report.comparisonEligible,
-    true,
+    weatherQualificationShard ? false : true,
     `${label}: capture is not marked comparison-eligible`,
   );
   const delivery = report.fixtureDelivery;
@@ -1206,7 +1212,12 @@ const populationSignature = (populations) =>
     .map((row) => ({ id: row.id, enabled: row.enabled, count: row.count }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-function validateReport(report, side, expectedAppCommit) {
+function validateReport(
+  report,
+  side,
+  expectedAppCommit,
+  { weatherQualificationShard = false } = {},
+) {
   assert.equal(
     report?.schema,
     CAPTURE_SCHEMA,
@@ -1258,7 +1269,9 @@ function validateReport(report, side, expectedAppCommit) {
     );
 
   const contract = validateContract(report, side);
-  validateFixtureDelivery(report, contract, side);
+  validateFixtureDelivery(report, contract, side, {
+    weatherQualificationShard,
+  });
   const { workload, environment, captures } = report;
   const austin = isAustinContract(contract);
   const weatherEffects = isWeatherEffectsContract(contract);
@@ -1300,6 +1313,7 @@ function validateReport(report, side, expectedAppCommit) {
         durationPerSampleMs: workload?.durationPerSampleMs,
         runsPerScenario: workload?.runsPerScenario,
       },
+      balancedQualificationShard: weatherQualificationShard,
     });
     equal(
       rebuilt,
@@ -1337,10 +1351,65 @@ function validateReport(report, side, expectedAppCommit) {
       side,
       expectedAppCommit,
       contract,
-      { austin },
+      { austin, weatherQualificationShard },
     ),
     buildRecipe,
   };
+}
+
+export function validateWeatherBalancedQualificationShard(
+  report,
+  {
+    role,
+    expectedAppCommit,
+    expectedHarnessCommit,
+    expectedBuildHarnessCommit,
+  } = {},
+) {
+  assert.ok(['control', 'candidate'].includes(role), 'Invalid shard role');
+  assert.equal(report?.workload?.weatherBalancedQualificationShard, true);
+  assert.equal(report?.comparisonEligible, false);
+  assert.equal(report?.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(
+    [...(report?.comparisonReadiness?.reasons || [])].sort(),
+    [
+      WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+      'capture-does-not-have-five-runs-per-scenario',
+    ].sort(),
+    'Qualification shard has unexpected ineligibility reasons',
+  );
+  assert.equal(report?.comparisonProfile, NATIVE_SHARPNESS_PROFILE_ID);
+  assertNativeSharpnessProfile(report, `${role} environment`);
+  assert.equal(report.environment?.hardwareEligible, true);
+  for (const [index, capture] of (report.captures || []).entries())
+    for (const boundary of ['before', 'after'])
+      assertNativeSharpnessProfile(
+        { environment: capture.conditions?.[boundary]?.environment },
+        `${role} capture ${index + 1} ${boundary}`,
+      );
+  assert.equal(report.source?.harnessCommit, expectedHarnessCommit);
+  assert.equal(
+    report.source?.buildProvenance?.buildHarnessCommit,
+    expectedBuildHarnessCommit,
+  );
+  const validated = validateReport(report, role, expectedAppCommit, {
+    weatherQualificationShard: true,
+  });
+  assert.equal(
+    report.comparisonContract?.qualificationMode,
+    'balanced-five-pair-shards',
+  );
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  for (const scenario of report.workload.scenarios) {
+    const samples = validated.byScenario.get(scenario);
+    assert.equal(samples.length, 1, `${role} ${scenario}: one sample required`);
+    assert.equal(
+      samples[0].run,
+      1,
+      `${role} ${scenario}: run identity invalid`,
+    );
+  }
+  return validated;
 }
 
 function validateFrameCaptures(
@@ -1348,7 +1417,7 @@ function validateFrameCaptures(
   side,
   expectedAppCommit,
   contract,
-  { austin = false } = {},
+  { austin = false, weatherQualificationShard = false } = {},
 ) {
   const { workload, environment, captures } = report;
   assert.equal(
@@ -1363,8 +1432,10 @@ function validateFrameCaptures(
   );
   assert.equal(
     workload?.runsPerScenario,
-    5,
-    `${side}: exactly five runs are required`,
+    weatherQualificationShard ? 1 : 5,
+    weatherQualificationShard
+      ? `${side}: exactly one run per scenario is required for a qualification shard`
+      : `${side}: exactly five runs are required`,
   );
   assert.equal(
     workload?.qualityMode,
@@ -1539,7 +1610,9 @@ function validateFrameCaptures(
       `${label}: undeclared scenario`,
     );
     assert.ok(
-      Number.isInteger(sample.run) && sample.run >= 1 && sample.run <= 5,
+      Number.isInteger(sample.run) &&
+        sample.run >= 1 &&
+        sample.run <= (weatherQualificationShard ? 1 : 5),
       `${label}: invalid run id`,
     );
     assert.ok(
@@ -1662,19 +1735,23 @@ function validateFrameCaptures(
   for (const [scenario, runs] of byScenario) {
     assert.equal(
       runs.length,
-      5,
-      `${side}: ${scenario} must have exactly five runs`,
+      weatherQualificationShard ? 1 : 5,
+      weatherQualificationShard
+        ? `${side}: ${scenario} must have exactly one shard sample`
+        : `${side}: ${scenario} must have exactly five runs`,
     );
     const ids = runs.map((sample) => sample.run);
     assert.equal(
       new Set(ids).size,
-      5,
+      weatherQualificationShard ? 1 : 5,
       `${side}: ${scenario} has duplicate run ids`,
     );
     equal(
       ids.sort((a, b) => a - b),
-      [1, 2, 3, 4, 5],
-      `${side}: ${scenario} run ids must be 1 through 5`,
+      weatherQualificationShard ? [1] : [1, 2, 3, 4, 5],
+      weatherQualificationShard
+        ? `${side}: ${scenario} shard run id must be 1`
+        : `${side}: ${scenario} run ids must be 1 through 5`,
     );
   }
   return byScenario;

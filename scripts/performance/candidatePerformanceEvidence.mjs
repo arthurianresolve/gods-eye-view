@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -10,6 +11,7 @@ import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
 import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
+import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -223,6 +225,86 @@ function comparisonRows(
       throw new TypeError(
         `${environmentId}: baselineCommit must be a full SHA.`,
       );
+    if (row?.weatherBalancedQualification != null) {
+      assert.equal(row.id, 'weather-balanced-qualification');
+      assert.equal(row.workloadId, 'weather-effects');
+      const key = `${environmentId}\0weather-effects`;
+      if (seen.has(key))
+        throw new Error(
+          `Duplicate comparison role: ${environmentId}/weather-effects.`,
+        );
+      seen.add(key);
+      const artifact = readBoundArtifact(
+        manifestPath,
+        row.weatherBalancedQualification,
+        `${environmentId} balanced weather qualification`,
+      );
+      let result = null;
+      let error = null;
+      let renderer = null;
+      let environmentIdentity = null;
+      let representative = null;
+      try {
+        const review = validateWeatherBalancedEnvelopeArtifact(artifact.value, {
+          root: path.dirname(
+            path.resolve(path.dirname(manifestPath), artifact.path),
+          ),
+        });
+        assert.equal(
+          review.environmentId,
+          environmentId,
+          `${environmentId}: qualification environment identity differs`,
+        );
+        assert.equal(
+          review.controlReport.source.appCommit,
+          row.baselineCommit,
+          `${environmentId}: wrong control application build`,
+        );
+        assert.equal(
+          review.candidateReport.source.appCommit,
+          candidateCommit,
+          `${environmentId}: wrong candidate application build`,
+        );
+        renderer = requireEnvironmentMatch(
+          review.controlReport,
+          review.candidateReport,
+          environmentId,
+        );
+        representative = review.candidateReport;
+        environmentIdentity = recordedEnvironmentIdentity(representative);
+        const priorIdentity = identitiesByEnvironment.get(environmentId);
+        if (priorIdentity != null && priorIdentity !== environmentIdentity)
+          throw new Error(
+            `${environmentId}: recorded host/GPU identity changed across workloads.`,
+          );
+        identitiesByEnvironment.set(environmentId, environmentIdentity);
+        const publicReview = { ...review };
+        delete publicReview.controlReport;
+        delete publicReview.candidateReport;
+        result = publicReview;
+      } catch (caught) {
+        error = String(caught?.message || caught).slice(0, 500);
+      }
+      return {
+        environmentId,
+        workloadId: 'weather-effects',
+        baselineCommit: row.baselineCommit,
+        candidateCommit,
+        platform: representative?.environment?.platform || null,
+        hostPlatform:
+          (representative?.hostEnvironment || representative?.environment)
+            ?.platform || null,
+        qualificationArtifact: {
+          path: artifact.path,
+          sha256: artifact.digest,
+        },
+        renderer,
+        environmentIdentity,
+        validation: result,
+        regressionDisposition: null,
+        error,
+      };
+    }
     const baselineArtifact = readBoundArtifact(
       manifestPath,
       row.baseline,
@@ -842,6 +924,7 @@ export async function evaluateManifestPerformanceEvidenceWithNativeMaps(
   const initial = evaluateManifestPerformanceEvidence(evidence, options);
   const mapReviews = new Map();
   for (const row of evidence?.comparisons ?? []) {
+    if (row.weatherBalancedQualification != null) continue;
     const baseline = readBoundArtifact(
       options.manifestPath,
       row.baseline,

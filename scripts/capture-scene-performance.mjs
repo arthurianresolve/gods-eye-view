@@ -172,6 +172,7 @@ import {
 } from './performance/windowsForegroundWindow.mjs';
 import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
 import {
+  WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
   resolveWeatherCaptureContract,
   WEATHER_INTERLEAVED_INELIGIBLE_REASON,
 } from './performance/weatherInterleavedDiagnosticContract.mjs';
@@ -209,6 +210,9 @@ const weatherPhaseDiagnostic = args.includes('--weather-phase-diagnostic');
 const weatherInterleavedDiagnostic = args.includes(
   '--weather-interleaved-diagnostic',
 );
+const weatherBalancedQualificationShard = args.includes(
+  '--weather-balanced-qualification-shard',
+);
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 if (
@@ -241,6 +245,7 @@ const weatherCaptureContract = resolveWeatherCaptureContract({
   workloadId: providerFixtureMode,
   phaseDiagnostic: weatherPhaseDiagnostic,
   interleavedDiagnostic: weatherInterleavedDiagnostic,
+  balancedQualificationShard: weatherBalancedQualificationShard,
   warmupMs,
   seconds,
   runs,
@@ -6328,6 +6333,8 @@ try {
     warmupMs === 30_000 &&
     seconds === 60 &&
     runs === 5;
+  const weatherEffectsBalancedShard =
+    weatherEffectsWorkload && weatherBalancedQualificationShard;
   let comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
@@ -6349,7 +6356,7 @@ try {
             runsPerScenario: runs,
           },
         })
-      : weatherEffectsComparisonRun
+      : weatherEffectsComparisonRun || weatherEffectsBalancedShard
         ? createObservedWeatherEffectsComparisonContract({
             fixture: weatherEffectsWorkload,
             fixtureDelivery,
@@ -6361,6 +6368,7 @@ try {
               durationPerSampleMs: seconds * 1000,
               runsPerScenario: runs,
             },
+            balancedQualificationShard: weatherEffectsBalancedShard,
           })
         : austinOperatingWorkload
           ? createObservedAustinOperatingComparisonContract({
@@ -6451,6 +6459,9 @@ try {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
+    ...(weatherEffectsBalancedShard
+      ? { weatherBalancedQualificationShard: true }
+      : {}),
     startupRuns: startupSamples.length,
     ...(failureProgress.workload.browserReadiness
       ? { browserReadiness: failureProgress.workload.browserReadiness }
@@ -6566,12 +6577,21 @@ try {
       : {}),
     ...(weatherEffectsWorkload
       ? {
-          weatherEffectsCaptureMode: weatherInterleavedDiagnostic
-            ? 'interleaved-motion-diagnostic'
-            : weatherEffectsComparisonRun
-              ? 'comparison'
-              : 'phase-producer-diagnostic',
+          weatherEffectsCaptureMode: weatherBalancedQualificationShard
+            ? 'balanced-qualification-shard'
+            : weatherInterleavedDiagnostic
+              ? 'interleaved-motion-diagnostic'
+              : weatherEffectsComparisonRun
+                ? 'comparison'
+                : 'phase-producer-diagnostic',
           performanceAcceptanceEligible: Boolean(weatherEffectsComparisonRun),
+          ...(weatherBalancedQualificationShard
+            ? {
+                diagnosticOnly: false,
+                qualificationShard: true,
+                ineligibleReason: WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+              }
+            : {}),
           ...(weatherInterleavedDiagnostic
             ? {
                 diagnosticOnly: true,
@@ -6718,9 +6738,15 @@ try {
     comparisonReadinessReasons.push(
       'windows-composition-control-is-ineligible-for-comparison',
     );
-  if (weatherInterleavedDiagnostic)
+  if (weatherBalancedQualificationShard)
+    comparisonReadinessReasons.push(WEATHER_BALANCED_SHARD_INELIGIBLE_REASON);
+  else if (weatherInterleavedDiagnostic)
     comparisonReadinessReasons.push(WEATHER_INTERLEAVED_INELIGIBLE_REASON);
-  else if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
+  else if (
+    weatherEffectsWorkload &&
+    !weatherEffectsComparisonRun &&
+    !weatherBalancedQualificationShard
+  )
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
     );

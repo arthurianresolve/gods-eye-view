@@ -2,30 +2,40 @@ export const PHASED_WEATHER_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 
 export const WEATHER_INTERLEAVED_INELIGIBLE_REASON =
   'weather-interleaved-motion-diagnostic-is-ineligible-for-comparison';
+export const WEATHER_BALANCED_SHARD_INELIGIBLE_REASON =
+  'weather-balanced-qualification-shard-is-ineligible-standalone';
 
 export function resolveWeatherCaptureContract({
   workloadId,
   phaseDiagnostic = false,
   interleavedDiagnostic = false,
+  balancedQualificationShard = false,
   warmupMs,
   seconds,
   runs,
 }) {
-  if (phaseDiagnostic && interleavedDiagnostic)
+  if (
+    [phaseDiagnostic, interleavedDiagnostic, balancedQualificationShard].filter(
+      Boolean,
+    ).length > 1
+  )
     throw new TypeError(
-      '--weather-phase-diagnostic and --weather-interleaved-diagnostic are mutually exclusive.',
+      'Weather phase diagnostics, interleaved diagnostics and balanced qualification shards are mutually exclusive.',
     );
 
   if (
     !phaseDiagnostic &&
     !interleavedDiagnostic &&
+    !balancedQualificationShard &&
     workloadId !== PHASED_WEATHER_WORKLOAD_ID
   )
     return null;
   if (workloadId !== PHASED_WEATHER_WORKLOAD_ID) {
-    const option = interleavedDiagnostic
-      ? '--weather-interleaved-diagnostic'
-      : '--weather-phase-diagnostic';
+    const option = balancedQualificationShard
+      ? '--weather-balanced-qualification-shard'
+      : interleavedDiagnostic
+        ? '--weather-interleaved-diagnostic'
+        : '--weather-phase-diagnostic';
     throw new TypeError(
       `${option} requires the phased weather/effects fixture.`,
     );
@@ -34,6 +44,22 @@ export function resolveWeatherCaptureContract({
   const comparison = warmupMs === 30_000 && seconds === 60 && runs === 5;
   const phaseProducer = warmupMs === 1_000 && seconds === 60 && runs === 1;
   const interleavedMotion = warmupMs === 30_000 && seconds === 60 && runs === 1;
+  const balancedShard = warmupMs === 30_000 && seconds === 60 && runs === 1;
+
+  if (balancedQualificationShard) {
+    if (!balancedShard)
+      throw new TypeError(
+        '--weather-balanced-qualification-shard requires exactly 30s warmup, 60s measurement and one run.',
+      );
+    return {
+      mode: 'balanced-qualification-shard',
+      scenarios: ['idle', 'scripted-motion'],
+      diagnosticOnly: false,
+      qualificationShard: true,
+      performanceAcceptanceEligible: false,
+      ineligibleReason: WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+    };
+  }
 
   if (interleavedDiagnostic) {
     if (!interleavedMotion)

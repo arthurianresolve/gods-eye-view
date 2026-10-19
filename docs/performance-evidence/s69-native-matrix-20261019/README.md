@@ -76,6 +76,21 @@ two full weather qualification flags. The raw 41 files and three supplemental
 review files (1,177,013 bytes) are hash-verified on VM105 under
 `weather-interleaved-motion-diagnostic-1792402126285`.
 
+The next weather qualification uses a new, predeclared balanced protocol to
+reduce confounding from long consecutive baseline/candidate blocks. It has five
+temporal pairs in the fixed order control/candidate, candidate/control,
+control/candidate, candidate/control, control/candidate. Each fresh process
+records both idle and motion with the original 30-second warmup and 60-second
+measurement. Individual shards remain ineligible on their own. The manifest
+consumer accepts only a complete hash-bound ten-shard envelope with the exact
+plan, application/build/harness identities, browser, native visual conditions,
+source deadlines, foreground checks and original timestamps. Archived Windows
+evidence remains consumable from a different storage directory or Linux host.
+The 10% regression threshold is unchanged, unavailable idle measurements remain
+unavailable, and prior failures and motion-only diagnostics are not promoted.
+This protocol is implemented and covered by 108 focused checks; no new balanced
+qualification result is claimed yet.
+
 The [map frame review](map-frame-route-review.json) preserves the raw motion
 medians, 323.7 versus 361.2 ms. Their apparent +11.6% difference is not a valid
 runtime regression finding: the harness restored a home sampled during startup

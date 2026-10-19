@@ -653,6 +653,7 @@ export function createObservedWeatherEffectsComparisonContract({
   captures,
   scenarios,
   workload,
+  balancedQualificationShard = false,
 } = {}) {
   assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
   assert.equal(fixture?.id, 'weather-effects-austin-phased-v2');
@@ -744,7 +745,7 @@ export function createObservedWeatherEffectsComparisonContract({
   assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
   assert.equal(workload?.warmupMs, 30_000);
   assert.equal(workload?.durationPerSampleMs, 60_000);
-  assert.equal(workload?.runsPerScenario, 5);
+  assert.equal(workload?.runsPerScenario, balancedQualificationShard ? 1 : 5);
   assert.equal(captures?.length, scenarios.length * workload.runsPerScenario);
 
   const expectedPopulations = Object.entries(fixture.expectedLayerCounts)
@@ -997,6 +998,9 @@ export function createObservedWeatherEffectsComparisonContract({
       weatherEffects: weatherVisual,
     },
     objectiveScenarios: [],
+    ...(balancedQualificationShard
+      ? { qualificationMode: 'balanced-five-pair-shards' }
+      : {}),
   };
 }
 

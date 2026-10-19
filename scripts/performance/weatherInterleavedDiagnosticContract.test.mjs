@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   PHASED_WEATHER_WORKLOAD_ID,
+  WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
   WEATHER_INTERLEAVED_INELIGIBLE_REASON,
   resolveWeatherCaptureContract,
 } from './weatherInterleavedDiagnosticContract.mjs';
@@ -84,13 +85,60 @@ test('interleaved option rejects non-weather fixtures and incompatible timing', 
     );
 });
 
-test('old and new weather diagnostic flags cannot be combined', () => {
+test('balanced qualification shard keeps both full scenarios and stays ineligible alone', () => {
+  assert.deepEqual(
+    resolveWeatherCaptureContract({
+      ...exact,
+      runs: 1,
+      balancedQualificationShard: true,
+    }),
+    {
+      mode: 'balanced-qualification-shard',
+      scenarios: ['idle', 'scripted-motion'],
+      diagnosticOnly: false,
+      qualificationShard: true,
+      performanceAcceptanceEligible: false,
+      ineligibleReason: WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+    },
+  );
+  assert.throws(
+    () =>
+      resolveWeatherCaptureContract({
+        ...exact,
+        balancedQualificationShard: true,
+        runs: 5,
+      }),
+    /requires exactly 30s warmup, 60s measurement and one run/,
+  );
+  assert.throws(
+    () =>
+      resolveWeatherCaptureContract({
+        ...exact,
+        workloadId: 'dense-investigation',
+        balancedQualificationShard: true,
+        runs: 1,
+      }),
+    /requires the phased weather\/effects fixture/,
+  );
+});
+
+test('weather diagnostic and qualification shard flags cannot be combined', () => {
   assert.throws(
     () =>
       resolveWeatherCaptureContract({
         ...exact,
         phaseDiagnostic: true,
         interleavedDiagnostic: true,
+      }),
+    /mutually exclusive/,
+  );
+  assert.throws(
+    () =>
+      resolveWeatherCaptureContract({
+        ...exact,
+        interleavedDiagnostic: true,
+        balancedQualificationShard: true,
+        runs: 1,
       }),
     /mutually exclusive/,
   );
