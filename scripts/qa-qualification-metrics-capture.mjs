@@ -941,35 +941,24 @@ export function installRenderedFlightWitnessReaderInPage() {
   };
 }
 
-async function setUnmeasuredCameraPose(page, location, routeId) {
-  const frameBefore = await page.evaluate(
-    () => window.__godsEyeView.viewer.scene.frameState.frameNumber,
-  );
-  await page.evaluate((target) => {
-    const viewer = window.__godsEyeView.viewer;
-    const camera = viewer.camera;
-    camera.setView({
-      destination: camera.position.constructor.fromDegrees(
-        target.longitude,
-        target.latitude,
-        target.altitude,
-      ),
-      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
-    });
-    viewer.scene.requestRender();
-  }, location);
-  await page.waitForFunction(
-    (previousFrame) =>
-      window.__godsEyeView.viewer.scene.frameState.frameNumber > previousFrame,
-    { timeout: INTERACTION_TIMEOUT_MS },
-    frameBefore,
-  );
-  const pose = await page.evaluate(() => {
-    const viewer = window.__godsEyeView.viewer;
-    const camera = viewer.camera;
+export function applyUnmeasuredCameraPoseInPage(target) {
+  const app = window.__godsEyeView;
+  const viewer = app?.viewer;
+  const camera = viewer?.camera;
+  const scene = viewer?.scene;
+  if (
+    !camera ||
+    !scene?.postRender?.addEventListener ||
+    typeof app?.styleManager?.runImmediateLocationNavigation !== 'function'
+  )
+    throw new Error('Camera setup navigation/render ownership is unavailable.');
+
+  const frameBefore = scene.frameState.frameNumber;
+  const poseMatches = () => {
     const position = camera.positionCartographic;
+    if (!position) return null;
     return {
-      frameNumber: viewer.scene.frameState.frameNumber,
+      frameNumber: scene.frameState.frameNumber,
       latitude: (position.latitude * 180) / Math.PI,
       longitude: (position.longitude * 180) / Math.PI,
       altitude: position.height,
@@ -977,8 +966,95 @@ async function setUnmeasuredCameraPose(page, location, routeId) {
       pitch: camera.pitch,
       roll: camera.roll,
     };
+  };
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let matchingFrames = 0;
+    let removePostRender = () => {};
+    const timer = setTimeout(() => {
+      finish(
+        new Error('Camera pose did not settle on completed rendered frames.'),
+      );
+    }, 15_000);
+    const finish = (error, pose = null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      removePostRender();
+      if (error) reject(error);
+      else resolve({ frameNumberBefore: frameBefore, observedPose: pose });
+    };
+    const onPostRender = () => {
+      const pose = poseMatches();
+      if (!pose || pose.frameNumber <= frameBefore) {
+        matchingFrames = 0;
+      } else if (
+        Math.abs(pose.latitude - target.latitude) <= 1e-6 &&
+        Math.abs(pose.longitude - target.longitude) <= 1e-6 &&
+        Math.abs(pose.altitude - target.altitude) <= 1 &&
+        Math.abs(Math.atan2(Math.sin(pose.heading), Math.cos(pose.heading))) <=
+          1e-6 &&
+        Math.abs(
+          Math.atan2(
+            Math.sin(pose.pitch + Math.PI / 2),
+            Math.cos(pose.pitch + Math.PI / 2),
+          ),
+        ) <= 1e-6 &&
+        Math.abs(Math.atan2(Math.sin(pose.roll), Math.cos(pose.roll))) <= 1e-6
+      ) {
+        matchingFrames += 1;
+        if (matchingFrames >= 2) {
+          finish(null, pose);
+          return;
+        }
+      } else {
+        matchingFrames = 0;
+      }
+      // Ask for the next completed render while setup is unmeasured. This is
+      // a render-boundary witness, not a timed wait or an interaction sample.
+      try {
+        scene.requestRender();
+      } catch (error) {
+        finish(error);
+      }
+    };
+    try {
+      removePostRender =
+        scene.postRender.addEventListener(onPostRender) || (() => {});
+      const navigationAccepted =
+        app.styleManager.runImmediateLocationNavigation(() => {
+          camera.setView({
+            destination: camera.position.constructor.fromDegrees(
+              target.longitude,
+              target.latitude,
+              target.altitude,
+            ),
+            orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+          });
+          return true;
+        });
+      if (navigationAccepted !== true) {
+        finish(new Error('Camera setup navigation did not acquire ownership.'));
+        return;
+      }
+      scene.requestRender();
+    } catch (error) {
+      finish(error);
+    }
   });
-  assert.ok(pose.frameNumber > frameBefore, 'Camera setup needs a fresh frame');
+}
+
+async function setUnmeasuredCameraPose(page, location, routeId) {
+  const { frameNumberBefore, observedPose: pose } = await page.evaluate(
+    applyUnmeasuredCameraPoseInPage,
+    location,
+  );
+  const frameNumberAfter = pose.frameNumber;
+  assert.ok(
+    frameNumberAfter > frameNumberBefore,
+    'Camera setup needs a fresh frame',
+  );
   assert.ok(Math.abs(pose.latitude - location.latitude) <= 1e-6);
   assert.ok(Math.abs(pose.longitude - location.longitude) <= 1e-6);
   assert.ok(Math.abs(pose.altitude - location.altitude) <= 1);
@@ -990,8 +1066,8 @@ async function setUnmeasuredCameraPose(page, location, routeId) {
   return {
     routeId,
     requestedLocation: location,
-    frameNumberBefore: frameBefore,
-    frameNumberAfter: pose.frameNumber,
+    frameNumberBefore,
+    frameNumberAfter,
     observedPose: pose,
   };
 }

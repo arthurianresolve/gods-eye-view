@@ -19,6 +19,7 @@ import {
   disposeQualificationObserver,
   installInteractionObserverInPage,
   QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+  applyUnmeasuredCameraPoseInPage,
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
 } from '../qa-qualification-metrics-capture.mjs';
@@ -2107,6 +2108,124 @@ test('serialized interaction observer completes local and replay render witnesse
   } finally {
     observer.dispose();
   }
+});
+
+test('camera setup claims app navigation ownership and waits for two matching completed renders', async () => {
+  const target = { latitude: 40.7, longitude: -73.9, altitude: 1000 };
+  const order = [];
+  const handlers = new Set();
+  const scene = {
+    frameState: { frameNumber: 10 },
+    postRender: {
+      addEventListener(handler) {
+        handlers.add(handler);
+        return () => handlers.delete(handler);
+      },
+    },
+    requestRender() {
+      order.push('request-render');
+    },
+  };
+  const camera = {
+    heading: 0,
+    pitch: -Math.PI / 2,
+    roll: 0,
+    position: {
+      constructor: {
+        fromDegrees(longitude, latitude, altitude) {
+          return { longitude, latitude, altitude };
+        },
+      },
+    },
+    positionCartographic: {
+      latitude: 0,
+      longitude: 0,
+      height: 0,
+    },
+    cancelFlight() {
+      order.push('cancel-flight');
+    },
+    setView({ destination }) {
+      order.push('set-view');
+      this.positionCartographic = {
+        latitude: (destination.latitude * Math.PI) / 180,
+        longitude: (destination.longitude * Math.PI) / 180,
+        height: destination.altitude,
+      };
+    },
+  };
+  const sandbox = {
+    window: {
+      __godsEyeView: {
+        viewer: { camera, scene },
+        styleManager: {
+          runImmediateLocationNavigation(navigate) {
+            order.push('claim-navigation');
+            camera.cancelFlight();
+            return navigate();
+          },
+        },
+      },
+    },
+    setTimeout,
+    clearTimeout,
+  };
+  const setupInPage = runInNewContext(
+    `(${applyUnmeasuredCameraPoseInPage.toString()})`,
+    sandbox,
+  );
+  const pending = setupInPage(target);
+  assert.deepEqual(order.slice(0, 3), [
+    'claim-navigation',
+    'cancel-flight',
+    'set-view',
+  ]);
+  assert.equal(handlers.size, 1, 'owns one completed-render listener');
+
+  const firePostRender = () => {
+    scene.frameState.frameNumber += 1;
+    for (const handler of [...handlers]) handler();
+  };
+  // A single fresh frame is insufficient; pose must still match on the next
+  // completed frame, which catches camera motion that wins after setView.
+  firePostRender();
+  assert.equal(handlers.size, 1);
+  camera.positionCartographic.latitude += 0.001;
+  firePostRender();
+  assert.equal(handlers.size, 1, 'pose drift resets consecutive frame proof');
+  camera.positionCartographic.latitude = (target.latitude * Math.PI) / 180;
+  firePostRender();
+  firePostRender();
+  const result = await pending;
+  assert.equal(result.frameNumberBefore, 10);
+  assert.equal(result.observedPose.frameNumber, 14);
+  assert.ok(Math.abs(result.observedPose.latitude - target.latitude) < 1e-12);
+  assert.ok(Math.abs(result.observedPose.longitude - target.longitude) < 1e-12);
+  assert.equal(result.observedPose.altitude, target.altitude);
+  assert.equal(handlers.size, 0, 'completed setup releases its listener');
+});
+
+test('camera setup fails closed when app navigation ownership is unavailable', async () => {
+  const setupInPage = runInNewContext(
+    `(${applyUnmeasuredCameraPoseInPage.toString()})`,
+    {
+      window: {
+        __godsEyeView: {
+          viewer: {
+            camera: {},
+            scene: {
+              frameState: { frameNumber: 1 },
+              postRender: { addEventListener() {} },
+            },
+          },
+        },
+      },
+    },
+  );
+  assert.throws(
+    () => setupInPage({ latitude: 40, longitude: -70, altitude: 1000 }),
+    /navigation\/render ownership is unavailable/,
+  );
 });
 
 test('sampled peak derives from matched raw timestamped heap series, not old soak summaries', () => {
