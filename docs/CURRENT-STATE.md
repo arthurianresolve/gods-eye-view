@@ -2,6 +2,28 @@
 
 ## Current S61–S70 checkpoint — October 19, 2026
 
+Current application candidate: `b3c49b19`; production: `e7a878e`. Engineering
+closure across S47–S70 remains **21/24 (87.5%)**. S60, S69 and S70 remain open
+for qualification and delivery. Exact-candidate standard CI, tracking, signed
+artifact, all 2,126 packaged files and 16 private VM105 HTTP checks pass.
+Recorded-pose correctness passes the 158-test suite on Node 24/26 and all eight
+fleet/eight tracked native Windows observations.
+
+The current cable comparison passes. Dam motion p95 is within the 10% limit,
+but its original startup result fails at +10.43%; a fixed, prospective balanced
+startup confirmation is running. The complete settled-scene screenshot is
+identical across builds, while later HUD-state captures fail visual comparison.
+Gaze animation readiness is being corrected in the harness. Replay metrics
+also need a fresh run after fixing their incorrect four-row expectation: four
+fixture timestamps include five retained observations because one is a correction.
+The QA fix `dc3a85e5` passes 19/19 focused tests on both supported Node versions.
+Remaining workload comparisons, interaction/heap evidence, private browser
+workspace verification and the final Ampfing soak must bind the current candidate.
+The [current evidence ledger](performance-evidence/s69-native-matrix-20261019/README.md)
+separates these results from the historical reports below.
+
+## Historical qualification sequence — earlier candidates
+
 The application remains frozen at `19065997`; subsequent changes affect QA and
 documentation. Exact CI, tracking, signed artifact and VM105 package verification
 pass. The production service continues to run verified release `e7a878e`.

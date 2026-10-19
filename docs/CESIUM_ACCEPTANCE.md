@@ -100,10 +100,11 @@ reconciliation are not complete. S50 closure includes the reviewed rendered
 retention comparison and real-layer workspace restore integration. S56 closes
 the real caller cleanup gaps and explicitly retains framebuffer preservation.
 S57 includes strict native production map/fault journeys and map ownership.
-The physical Windows retention gate now passes on the exact current candidate;
-it qualifies the applicable S49/S60 retention requirements without filling the
-separate timed-workload rows for S47, S48, S51-S59. The fourteen-slice
-denominator is unchanged.
+The physical Windows retention gate passes on the previous candidate `d8ef9002`;
+that result does not qualify the current `b3c49b19` candidate, which adds a
+recorded-aircraft correctness fix. A fresh current-candidate retention run and
+the separate timed-workload rows remain required. The fourteen-slice denominator
+is unchanged.
 
 ## Requirements that remain mandatory
 
