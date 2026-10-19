@@ -18,6 +18,11 @@ import {
   createSoakDatacenterFixture,
   createSoakDatacenterFixtureReceipt,
   isSoakDatacenterAssetRequest,
+  prepareSoakDatacenterFixtureViewInPage,
+  evaluateSoakDatacenterEnabledState,
+  installSoakDatacenterPostRenderWitnessInPage,
+  startSoakDatacenterPreflightWitnessInPage,
+  stopSoakDatacenterPreflightWitness,
   SOAK_DATACENTER_FEATURE_COUNT,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
@@ -203,6 +208,226 @@ test('rendered soak location accepts Ampfing coordinates and rejects invalid vie
   assert.throws(
     () => resolveRenderedSoakLocation({ altitude: 0 }),
     /location is invalid/,
+  );
+});
+
+test('datacenter preflight positions the camera over the fixture and requests an unmeasured render', () => {
+  const calls = [];
+  class Cartesian3 {
+    static fromDegrees(longitude, latitude, altitude) {
+      calls.push(['fromDegrees', longitude, latitude, altitude]);
+      return { longitude, latitude, altitude };
+    }
+  }
+  const camera = {
+    position: new Cartesian3(),
+    positionCartographic: {
+      latitude: (40.7 * Math.PI) / 180,
+      longitude: (-73.9 * Math.PI) / 180,
+      height: 1000,
+    },
+    heading: 0,
+    pitch: -Math.PI / 2,
+    roll: 0,
+    setView(view) {
+      calls.push(['setView', view]);
+    },
+  };
+  const window = {
+    __godsEyeView: {
+      viewer: {
+        camera,
+        scene: {
+          requestRender() {
+            calls.push(['requestRender']);
+          },
+        },
+      },
+    },
+  };
+  const location = { latitude: 40.7, longitude: -73.9, altitude: 1000 };
+  const result = vm.runInNewContext(
+    `(${prepareSoakDatacenterFixtureViewInPage.toString()})(location)`,
+    { window, location, Math },
+  );
+  assert.deepEqual(
+    calls.map(([name]) => name),
+    ['fromDegrees', 'setView', 'requestRender'],
+  );
+  assert.equal(
+    JSON.stringify(calls[1][1].orientation),
+    JSON.stringify({ heading: 0, pitch: -Math.PI / 2, roll: 0 }),
+  );
+  assert.equal(JSON.stringify(result.requested), JSON.stringify(location));
+  assert.ok(Math.abs(result.observed.latitude - location.latitude) < 1e-12);
+  assert.ok(Math.abs(result.observed.longitude - location.longitude) < 1e-12);
+  assert.equal(result.observed.altitude, location.altitude);
+  assert.equal(result.heading, 0);
+  assert.equal(result.pitch, -Math.PI / 2);
+  assert.equal(result.roll, 0);
+});
+
+test('datacenter postRender witness inspects LOD only during bounded preflight and stops in cleanup', async () => {
+  let lodReads = 0;
+  let enabled = true;
+  const listeners = [];
+  const scene = {
+    frameState: { frameNumber: 10 },
+    postRender: {
+      addEventListener(listener) {
+        listeners.push(listener);
+      },
+    },
+  };
+  const window = {
+    __godsEyeView: {
+      viewer: { scene },
+      dataManager: {
+        isEnabled: () => enabled,
+        layers: {
+          get: () => ({
+            module: {
+              getLodDiagnostics() {
+                lodReads++;
+                return { computed: true, total: 8, active: 2 };
+              },
+            },
+          }),
+        },
+      },
+    },
+  };
+  vm.runInNewContext(
+    `(${installSoakDatacenterPostRenderWitnessInPage.toString()})()`,
+    { window, Number },
+  );
+  assert.equal(listeners.length, 1);
+
+  listeners[0]();
+  assert.equal(window.__soakRenderedFrames, 1);
+  assert.equal(lodReads, 0, 'ordinary soak frames must not inspect LOD');
+  assert.equal(window.__soakDatacenterRenderWitness, null);
+
+  const frameStart = vm.runInNewContext(
+    `(${startSoakDatacenterPreflightWitnessInPage.toString()})()`,
+    { window },
+  );
+  assert.equal(frameStart, 1);
+  scene.frameState.frameNumber = 11;
+  listeners[0]();
+  assert.equal(lodReads, 1);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(window.__soakDatacenterRenderWitness)),
+    {
+      renderedFrames: 2,
+      frameNumber: 11,
+      enabled: true,
+      computed: true,
+      total: 8,
+      active: 2,
+    },
+  );
+
+  const validation = {
+    status: 'validated',
+    failureReason: null,
+    preloadWitnessCollectionStopped: false,
+  };
+  await stopSoakDatacenterPreflightWitness(
+    {
+      evaluate: (fn) => vm.runInNewContext(`(${fn.toString()})()`, { window }),
+    },
+    validation,
+  );
+  enabled = false;
+  listeners[0]();
+  assert.equal(window.__soakRenderedFrames, 3);
+  assert.equal(lodReads, 1, 'cleanup must stop per-frame LOD inspection');
+  assert.equal(window.__soakDatacenterPreflightActive, false);
+  assert.equal(validation.preloadWitnessCollectionStopped, true);
+
+  const cleanupFailure = {
+    status: 'validated',
+    failureReason: null,
+    preloadWitnessCollectionStopped: false,
+  };
+  await assert.rejects(
+    stopSoakDatacenterPreflightWitness(
+      { evaluate: async () => Promise.reject(new Error('page closed')) },
+      cleanupFailure,
+    ),
+    /page closed/,
+  );
+  assert.equal(cleanupFailure.status, 'failed');
+  assert.equal(cleanupFailure.preloadWitnessCollectionStopped, false);
+
+  const existingFailure = {
+    status: 'failed',
+    failureReason: 'preflight timeout',
+    preloadWitnessCollectionStopped: false,
+  };
+  await stopSoakDatacenterPreflightWitness(
+    { evaluate: async () => Promise.reject(new Error('page closed')) },
+    existingFailure,
+  );
+  assert.match(existingFailure.failureReason, /preflight timeout.*page closed/);
+});
+
+test('datacenter enabled preflight distinguishes materialized data from visible renderables', () => {
+  const enabled = evaluateSoakDatacenterEnabledState(
+    {
+      enabled: true,
+      lod: { computed: true, total: 8, active: 3 },
+      renderedFrameObserved: true,
+    },
+    8,
+  );
+  assert.equal(enabled.observed, true);
+  assert.equal(enabled.failureReason, null);
+  assert.equal(enabled.populationObserved, true);
+  assert.equal(enabled.renderableObserved, true);
+
+  const noVisibleFeatures = evaluateSoakDatacenterEnabledState(
+    {
+      enabled: true,
+      lod: { computed: true, total: 8, active: 0 },
+      renderedFrameObserved: true,
+    },
+    8,
+  );
+  assert.equal(noVisibleFeatures.observed, false);
+  assert.equal(
+    noVisibleFeatures.failureReason,
+    'no-renderable-feature-in-view',
+  );
+  assert.equal(noVisibleFeatures.populationObserved, true);
+
+  const noCompletedVisibleFrame = evaluateSoakDatacenterEnabledState(
+    {
+      enabled: true,
+      lod: { computed: true, total: 8, active: 3 },
+      renderedFrameObserved: false,
+    },
+    8,
+  );
+  assert.equal(noCompletedVisibleFrame.observed, false);
+  assert.equal(
+    noCompletedVisibleFrame.failureReason,
+    'no-completed-visible-frame',
+  );
+
+  const wrongPopulation = evaluateSoakDatacenterEnabledState(
+    {
+      enabled: true,
+      lod: { computed: true, total: 4362, active: 8 },
+      renderedFrameObserved: true,
+    },
+    8,
+  );
+  assert.equal(wrongPopulation.observed, false);
+  assert.equal(
+    wrongPopulation.failureReason,
+    'materialized-population-mismatch',
   );
 });
 

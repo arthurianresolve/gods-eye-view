@@ -90,6 +90,135 @@ export function createSoakDatacenterFixture(location) {
   };
 }
 
+/** Put the camera over the synthetic fixture before enabling its layer. */
+export function prepareSoakDatacenterFixtureViewInPage(location) {
+  const app = window.__godsEyeView;
+  const viewer = app?.viewer;
+  const camera = viewer?.camera;
+  if (!camera?.position?.constructor?.fromDegrees || !viewer?.scene)
+    throw new Error('Datacenter fixture camera is unavailable.');
+  const destination = camera.position.constructor.fromDegrees(
+    location.longitude,
+    location.latitude,
+    location.altitude,
+  );
+  camera.setView({
+    destination,
+    orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+  });
+  viewer.scene.requestRender?.();
+  const cartographic = camera.positionCartographic;
+  return {
+    requested: {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      altitude: location.altitude,
+    },
+    observed: cartographic
+      ? {
+          latitude: (cartographic.latitude * 180) / Math.PI,
+          longitude: (cartographic.longitude * 180) / Math.PI,
+          altitude: cartographic.height,
+        }
+      : null,
+    heading: camera.heading,
+    pitch: camera.pitch,
+    roll: camera.roll,
+  };
+}
+
+export function installSoakDatacenterPostRenderWitnessInPage() {
+  const scene = window.__godsEyeView?.viewer?.scene;
+  if (!scene?.postRender?.addEventListener)
+    throw new Error('Datacenter fixture postRender boundary is unavailable.');
+  window.__soakRenderedFrames = 0;
+  window.__soakDatacenterPreflightActive = false;
+  window.__soakDatacenterRenderWitness = null;
+  scene.postRender.addEventListener(() => {
+    window.__soakRenderedFrames++;
+    if (!window.__soakDatacenterPreflightActive) return;
+    const app = window.__godsEyeView;
+    const module = app.dataManager.layers.get('local-datacenters')?.module;
+    const lod = module?.getLodDiagnostics?.();
+    window.__soakDatacenterRenderWitness = {
+      renderedFrames: window.__soakRenderedFrames,
+      frameNumber: scene.frameState?.frameNumber ?? null,
+      enabled: app.dataManager.isEnabled('local-datacenters'),
+      computed: lod?.computed === true,
+      total: Number.isInteger(lod?.total) ? lod.total : null,
+      active: Number.isInteger(lod?.active) ? lod.active : null,
+    };
+  });
+}
+
+export function startSoakDatacenterPreflightWitnessInPage() {
+  window.__soakDatacenterPreflightActive = true;
+  window.__soakDatacenterRenderWitness = null;
+  return window.__soakRenderedFrames ?? null;
+}
+
+export function stopSoakDatacenterPreflightWitnessInPage() {
+  window.__soakDatacenterPreflightActive = false;
+}
+
+export async function stopSoakDatacenterPreflightWitness(page, validation) {
+  try {
+    await page.evaluate(stopSoakDatacenterPreflightWitnessInPage);
+    validation.preloadWitnessCollectionStopped = true;
+  } catch (cleanupError) {
+    validation.preloadWitnessCollectionStopped = false;
+    if (validation.status === 'validated') {
+      validation.status = 'failed';
+      validation.failureReason =
+        cleanupError?.message || 'Datacenter preflight witness cleanup failed.';
+      throw cleanupError;
+    }
+    validation.failureReason +=
+      '; preflight witness cleanup failed: ' +
+      (cleanupError?.message || String(cleanupError));
+  }
+}
+
+export function evaluateSoakDatacenterEnabledState(
+  state,
+  expectedFeatureCount,
+) {
+  const enabled = state?.enabled === true;
+  const lod = state?.lod;
+  const computed = lod?.computed === true;
+  const total = Number.isInteger(lod?.total) ? lod.total : null;
+  const active = Number.isInteger(lod?.active) ? lod.active : null;
+  const populationObserved = total === expectedFeatureCount;
+  const renderableObserved = active !== null && active > 0;
+  const renderedFrameObserved = state?.renderedFrameObserved === true;
+  return {
+    enabled,
+    computed,
+    total,
+    active,
+    populationObserved,
+    renderableObserved,
+    renderedFrameObserved,
+    observed:
+      enabled &&
+      computed &&
+      populationObserved &&
+      renderableObserved &&
+      renderedFrameObserved,
+    failureReason: !enabled
+      ? 'layer-not-enabled'
+      : !computed
+        ? 'lod-not-computed'
+        : !populationObserved
+          ? 'materialized-population-mismatch'
+          : !renderableObserved
+            ? 'no-renderable-feature-in-view'
+            : !renderedFrameObserved
+              ? 'no-completed-visible-frame'
+              : null,
+  };
+}
+
 async function assertSoakConsoleOwnership(page) {
   const ownership = await flushFixturePageConsoleOwnership(page);
   if (
@@ -344,6 +473,13 @@ export async function createRenderedSoakDriver(
     disabledRenderableCount: null,
     setupTiming: 'unmeasured-before-interaction-samples',
     preloadEnabledObserved: false,
+    preloadEnabledState: null,
+    preloadCameraPose: null,
+    preloadRenderedFrameStart: null,
+    preloadRenderedFrameEnd: null,
+    preloadRenderWitness: null,
+    preloadRenderedFrameObserved: false,
+    preloadWitnessCollectionStopped: false,
     preloadDisabledObserved: false,
     failureReason: null,
   };
@@ -644,12 +780,7 @@ export async function createRenderedSoakDriver(
     );
     const ids = [firstId, secondId];
     const session = await page.createCDPSession();
-    await page.evaluate(() => {
-      window.__soakRenderedFrames = 0;
-      window.__godsEyeView.viewer.scene.postRender.addEventListener(
-        () => window.__soakRenderedFrames++,
-      );
-    });
+    await page.evaluate(installSoakDatacenterPostRenderWitnessInPage);
     const renderer = await page.evaluate(() => {
       const canvas = window.__godsEyeView.viewer.scene.canvas;
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
@@ -1155,6 +1286,13 @@ export async function createRenderedSoakDriver(
           datacenterFixtureValidationPromise = (async () => {
             datacenterFixtureValidation.status = 'running';
             try {
+              datacenterFixtureValidation.preloadRenderedFrameStart =
+                await page.evaluate(startSoakDatacenterPreflightWitnessInPage);
+              datacenterFixtureValidation.preloadCameraPose =
+                await page.evaluate(
+                  prepareSoakDatacenterFixtureViewInPage,
+                  soakLocation,
+                );
               await page.evaluate(async () => {
                 const app = window.__godsEyeView;
                 if (app.dataManager.isEnabled('local-datacenters'))
@@ -1165,17 +1303,79 @@ export async function createRenderedSoakDriver(
                   origin: 'programmatic',
                 });
               });
-              await page.waitForFunction(
-                () => {
-                  const diagnostics = window.__godsEyeView.dataManager.layers
-                    .get('local-datacenters')
-                    ?.module?.getLodDiagnostics?.();
-                  return (
-                    diagnostics?.computed === true && diagnostics.total > 0
+              try {
+                await page.waitForFunction(
+                  (frameStart) => {
+                    return (
+                      Number.isFinite(frameStart) &&
+                      window.__soakDatacenterRenderWitness?.renderedFrames >
+                        frameStart &&
+                      window.__soakDatacenterRenderWitness.enabled === true &&
+                      window.__soakDatacenterRenderWitness.computed === true &&
+                      window.__soakDatacenterRenderWitness.total > 0 &&
+                      window.__soakDatacenterRenderWitness.active > 0
+                    );
+                  },
+                  { timeout: 30_000 },
+                  datacenterFixtureValidation.preloadRenderedFrameStart,
+                );
+              } catch (error) {
+                const lastState = await page
+                  .evaluate(() => {
+                    const app = window.__godsEyeView;
+                    const module =
+                      app?.dataManager?.layers?.get(
+                        'local-datacenters',
+                      )?.module;
+                    return {
+                      enabled:
+                        app?.dataManager?.isEnabled?.('local-datacenters'),
+                      lod: module?.getLodDiagnostics?.() || null,
+                      renderedFrames: window.__soakRenderedFrames ?? null,
+                      renderWitness:
+                        window.__soakDatacenterRenderWitness ?? null,
+                    };
+                  })
+                  .catch(() => null);
+                datacenterFixtureValidation.preloadRenderedFrameEnd =
+                  lastState?.renderedFrames ?? null;
+                datacenterFixtureValidation.preloadRenderWitness =
+                  lastState?.renderWitness ?? null;
+                datacenterFixtureValidation.preloadRenderedFrameObserved =
+                  Number.isFinite(
+                    datacenterFixtureValidation.preloadRenderedFrameStart,
+                  ) &&
+                  lastState?.renderWitness?.renderedFrames >
+                    datacenterFixtureValidation.preloadRenderedFrameStart &&
+                  lastState?.renderWitness?.enabled === true &&
+                  lastState?.renderWitness?.computed === true &&
+                  lastState?.renderWitness?.total ===
+                    datacenterFixture.featureCount &&
+                  lastState?.renderWitness?.active > 0;
+                datacenterFixtureValidation.materializedFeatureCount =
+                  lastState?.lod?.total ?? null;
+                datacenterFixtureValidation.preloadEnabledState =
+                  evaluateSoakDatacenterEnabledState(
+                    {
+                      ...lastState,
+                      renderedFrameObserved:
+                        datacenterFixtureValidation.preloadRenderedFrameObserved,
+                    },
+                    datacenterFixture.featureCount,
                   );
-                },
-                { timeout: 30_000 },
-              );
+                error.message +=
+                  '; bounded datacenter preflight state: ' +
+                  JSON.stringify({
+                    cameraPose: datacenterFixtureValidation.preloadCameraPose,
+                    frameStart:
+                      datacenterFixtureValidation.preloadRenderedFrameStart,
+                    frameEnd:
+                      datacenterFixtureValidation.preloadRenderedFrameEnd,
+                    enabledState:
+                      datacenterFixtureValidation.preloadEnabledState,
+                  });
+                throw error;
+              }
               const diagnostics = await page.evaluate(() => {
                 const app = window.__godsEyeView;
                 const module =
@@ -1183,14 +1383,38 @@ export async function createRenderedSoakDriver(
                 return {
                   enabled: app.dataManager.isEnabled('local-datacenters'),
                   lod: module?.getLodDiagnostics?.() || null,
+                  renderedFrames: window.__soakRenderedFrames ?? null,
+                  renderWitness: window.__soakDatacenterRenderWitness ?? null,
                 };
               });
+              datacenterFixtureValidation.preloadRenderedFrameEnd =
+                diagnostics.renderedFrames;
+              datacenterFixtureValidation.preloadRenderWitness =
+                diagnostics.renderWitness;
+              datacenterFixtureValidation.preloadRenderedFrameObserved =
+                Number.isFinite(
+                  datacenterFixtureValidation.preloadRenderedFrameStart,
+                ) &&
+                diagnostics.renderWitness?.renderedFrames >
+                  datacenterFixtureValidation.preloadRenderedFrameStart &&
+                diagnostics.renderWitness?.enabled === true &&
+                diagnostics.renderWitness?.computed === true &&
+                diagnostics.renderWitness?.total ===
+                  datacenterFixture.featureCount &&
+                diagnostics.renderWitness?.active > 0;
               datacenterFixtureValidation.materializedFeatureCount =
                 diagnostics.lod?.total ?? null;
+              datacenterFixtureValidation.preloadEnabledState =
+                evaluateSoakDatacenterEnabledState(
+                  {
+                    ...diagnostics,
+                    renderedFrameObserved:
+                      datacenterFixtureValidation.preloadRenderedFrameObserved,
+                  },
+                  datacenterFixture.featureCount,
+                );
               datacenterFixtureValidation.preloadEnabledObserved =
-                diagnostics.enabled === true &&
-                diagnostics.lod?.computed === true &&
-                diagnostics.lod?.active > 0;
+                datacenterFixtureValidation.preloadEnabledState.observed;
               await page.evaluate(async () => {
                 await window.__godsEyeView.dataManager.setEnabled(
                   'local-datacenters',
@@ -1273,8 +1497,12 @@ export async function createRenderedSoakDriver(
                 'the materialized datacenter population must equal the delivered fixture',
               );
               assert.equal(
-                datacenterFixtureValidation.preloadEnabledObserved &&
-                  datacenterFixtureValidation.preloadDisabledObserved,
+                datacenterFixtureValidation.preloadEnabledObserved,
+                true,
+                'fixture preflight must show at least one materialized feature in the declared camera view',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preloadDisabledObserved,
                 true,
                 'fixture preflight must leave the layer disabled after materialization',
               );
@@ -1284,6 +1512,11 @@ export async function createRenderedSoakDriver(
               datacenterFixtureValidation.failureReason =
                 error?.message || String(error);
               throw error;
+            } finally {
+              await stopSoakDatacenterPreflightWitness(
+                page,
+                datacenterFixtureValidation,
+              );
             }
           })();
         await datacenterFixtureValidationPromise;

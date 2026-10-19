@@ -66,6 +66,29 @@ motion p95 is 392.3 versus 359.2 ms (-8.44%), map-switch readiness is
 3,961 ms (-21.95%). All six original files are independently hash-verified
 on VM105. The pinned map corpus and native profile are unchanged.
 
+The [current operating-view pair](operating-view-b3c49b19-result.json) completes
+all five observations per scenario on both builds. Motion p95 changes from
+299.6 to 284.9 ms (-4.91%). The original consumer flags idle rendered-frame
+interval p95 at 265.4 versus 1,015.0 ms (+282.44%). The baseline uses continuous
+rendering and records 323–340 frames per minute; the candidate uses request-render
+mode and records 101–103. Long-task counts are respectively 207–304 and 18–30.
+Satellite positions advance with matching sampled epochs at both boundaries.
+Those observations motivate the existing idle-cadence diagnostic, but do not
+replace its required current-build visibility, animation and ownership proof.
+The raw flag remains unresolved until that separate check completes.
+Operating-view startup also fails: app-ready medians are 3,276 versus 3,937 ms
+(+20.18%), and loading-screen-hidden medians are 3,954 versus 4,642 ms (+17.40%).
+The dams-only startup confirmation does not clear this workload. All eight
+original operating-view files are hash-verified on VM105.
+
+The [startup and idle contract checks](operating-startup-idle-qa-validation.json)
+pass 142/142 on both Node 24.16.0 and 26.11.0 on VM105. Startup-only captures
+now accept the actual Austin fixture identity and its operating-view row; the
+dams contract is unchanged. Idle disposition requires the current candidate's
+own raw pair, diagnostic hashes and full Chrome version. Historical evidence
+cannot clear the current flag. These are QA changes; the fresh diagnostic and
+balanced operating-view startup confirmation remain outstanding.
+
 The [first current balanced weather attempt](weather-b3c49b19-foreground-failure.json)
 failed native foreground initialization before recording any sample. Its six
 original files are hash-verified on VM105. A fresh, separately declared plan
@@ -85,6 +108,11 @@ loopback preview. The [exact-commit CI receipt](exact-ci-b3c49b19.json) records 
 seven standard jobs, separately selected tracking, and signed packaging passing.
 The raw workflow responses are hash-verified on VM105. Optional diagnostics
 skipped by workflow selection do not replace hardware qualification.
+The [independent provenance consumer](provenance-consumer-b3-validation.json)
+also verifies the downloaded ZIP members, archive/checksum, embedded manifest,
+attestation claims, staging receipts and all sixteen private HTTP checks against
+that exact candidate. It leaves overall qualification unaccepted while the
+remaining gates are incomplete.
 
 Further required evidence is
 the remaining matrix and visual comparison, twenty local-control changes,
@@ -150,6 +178,21 @@ installing the current candidate. Forced cleanup succeeded; the recovery job
 still failed. The underlying browser/runner cause is not established. The
 exact `b3c49b19` application's passing CI receipt remains separate, and the next
 QA revision must repeat Windows recovery without relaxing its deadline.
+
+QA revision `347bf41e` passes Windows recovery, both Node suites, Windows
+onboarding, Linux/macOS recovery and candidate packaging. Its
+[rendered mixed-use smoke failure](qa-347-rendered-smoke-attempt1.json) is
+preserved: the exact eight-feature fixture was delivered and materialized,
+but the startup camera did not show its location. Disabled cleanup passed.
+The corrected unmeasured preflight moves to the declared fixture location and
+requires a completed visible frame before disabling the layer. Witness
+collection stops in `finally`, leaving only the existing lightweight frame
+counter during measurement. Camera evidence distinguishes requested and
+observed positions; visibility and cleanup failures have separate messages.
+The [combined QA validation](soak-camera-preflight-qa-validation.json) passes
+217/217 on each VM Node version, formatting/syntax, and the 71-file no-undef
+gate. Fresh rendered CI and hardware results are required before this fix can
+clear the failure.
 
 The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
 a native DOM ownership leak reproduced on Chrome 155; the

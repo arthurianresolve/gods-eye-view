@@ -1,0 +1,97 @@
+{
+  "schema": "gev-rendered-smoke-failure-observation/v1",
+  "observedAt": "2026-10-19T18:56:58.879Z",
+  "qaHeadCommit": "347bf41ebd50b91397c2b9e7a69a32fcf111eaa3",
+  "pullRequestMergeCommit": "2a4e5b2542521da4fafad949e0ba035d9c414711",
+  "workflowRunId": 39303970743,
+  "jobId": 118236563399,
+  "runAttempt": 1,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39303970743/job/118236563399",
+  "status": "failed",
+  "logSha256": "aab751cde993f8129be757eefbc9b5d70d3aa40a48f2144390eaeb7636d8e35c",
+  "raw": {
+    "operationStatus": "failed",
+    "error": "fixture preflight must leave the layer disabled after materialization\n\nfalse !== true\n",
+    "datacenterFixtureProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+    "fullSoak": false,
+    "hardwareRenderingValidated": false,
+    "stability": {
+      "status": "pending",
+      "pending": ["Run failed before measurement."]
+    },
+    "datacenterFixtureReceipt": {
+      "schema": "gev-soak-datacenter-fixture/v2",
+      "fulfillmentProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+      "status": "failed",
+      "requestCount": 1,
+      "preparedRequestCount": 1,
+      "fulfilledRequestCount": 1,
+      "applicationOrigin": "http://localhost:4174",
+      "assetOrigin": "http://localhost:4174",
+      "assetPath": "/src/data/local_data/datacenters/datacenters.geojsonl",
+      "responseStatus": 200,
+      "expectedBodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "expectedFeatureCount": 8,
+      "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "deliveredFeatureCount": 8,
+      "materializedFeatureCount": 8,
+      "disabledMaterializedFeatureCount": 0,
+      "disabledRenderableCount": 0,
+      "setupTiming": "unmeasured-before-interaction-samples",
+      "preloadEnabledObserved": false,
+      "preloadDisabledObserved": true,
+      "failureReason": "fixture preflight must leave the layer disabled after materialization\n\nfalse !== true\n",
+      "requests": [
+        {
+          "origin": "http://localhost:4174",
+          "pathname": "/src/data/local_data/datacenters/datacenters.geojsonl",
+          "prepared": true,
+          "fulfilled": true,
+          "responseStatus": 200,
+          "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+          "deliveredFeatureCount": 8
+        }
+      ]
+    },
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 37387.797339,
+        "closeSettledHostMs": 37545.774456,
+        "closeElapsedMs": 157.97711700000218,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 130.69973200000095
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "candidateCommit": "2a4e5b2542521da4fafad949e0ba035d9c414711",
+    "harnessCommit": "2a4e5b2542521da4fafad949e0ba035d9c414711",
+    "sourceDirtyAtStart": false,
+    "harnessDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "harnessChangedDuringRun": false
+  },
+  "interpretation": "The exact eight-feature datacenter fixture was fulfilled and materialized. The preflight did not prove its enabled visible state, while disabled cleanup reached zero total and active resources. This is a failed QA preflight before measurement. The original combined assertion obscured which state failed. Camera setup and active LOD readiness require investigation; no result is waived.",
+  "productionChanged": false,
+  "vmArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/ci-347-rendered-smoke-attempt1",
+  "archiveVerified": true
+}
