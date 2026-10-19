@@ -1,0 +1,99 @@
+{
+  "schema": "gev-private-package-workspace-review/v1",
+  "reviewedAt": "2026-10-19T14:24:18.673Z",
+  "status": "passed",
+  "applicationCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "releaseManifestSha256": "70eeb342d621d88dc30ce4d18864f252f14bfe55cfd61c04aeeb8ada8368a59f",
+  "successfulAttempt": "private-preflight-d8ef9002-attempt-20261019T141803808Z-00fce717-82f7-4a7e-8f21-c1c57fcb2d10.json",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "documentSha256": "5df2f9d8252c0cebc47726390741f0c8ca6745a0bf6cdf3b88dafc9c9e48b559",
+  "applicationScriptSha256": "40fd4f43dc4a142fb023dec739e1c25754dc25c5e099f3001d8dc185ad3bf0f5",
+  "workspace": {
+    "workspaceId": "investigation-c5d06751d5f3dba9da13502a25444d9b",
+    "importedWorkspaceId": "investigation-f819777653cb3533e2e57e9dbe3af8e8",
+    "uiExportSha256": "e1acaf18ecd9e181ead94f68addabbb9b0375f2bb2f0b34a454f19a831478ef7",
+    "bundleSha256": "e1acaf18ecd9e181ead94f68addabbb9b0375f2bb2f0b34a454f19a831478ef7",
+    "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "importedAssetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "reopenedAssetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "renderedFeaturesAfterReopen": 1,
+    "reloadAndReopenPassed": true,
+    "userProfileTouched": false
+  },
+  "cleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "status": "passed",
+    "temporaryProfileRemoved": true
+  },
+  "productionChanged": false,
+  "archive": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/private-package-preflight-d8ef-20261019",
+    "status": "verified",
+    "fileCount": 5,
+    "files": [
+      {
+        "name": "private-preflight-d8ef9002-attempt-20261019T141308423Z-77e9409c-e9f4-46a2-b22a-0b6d1cf04836.json",
+        "bytes": 1527,
+        "sha256": "c7271c647472f2c09c57f2eb68702c7308d52358235428854ff881f2ec10c2d8"
+      },
+      {
+        "name": "private-preflight-d8ef9002-attempt-20261019T141407037Z-f56564dc-f610-4b8b-a392-e4a1126a897c.json",
+        "bytes": 4355,
+        "sha256": "a30ac4f388d41704b77d78c07d3b85fd44837bef3b3b7e2f05c67e08d590e2bf"
+      },
+      {
+        "name": "private-preflight-d8ef9002-attempt-20261019T141601274Z-dbdae9d1-8a42-49b4-8ef0-9bea77278ff9.json",
+        "bytes": 4586,
+        "sha256": "9838f7b25730cdb01da651db914bbd911eb9993b9dca50c51494225de196825c"
+      },
+      {
+        "name": "private-preflight-d8ef9002-attempt-20261019T141803808Z-00fce717-82f7-4a7e-8f21-c1c57fcb2d10.json",
+        "bytes": 6929,
+        "sha256": "5e774cd4ceaab419798a190bd611e41486bb96d1ddb93f6504a20f24cd5351ec"
+      },
+      {
+        "name": "observe-activation-d8ef.mjs",
+        "bytes": 35989,
+        "sha256": "ec72856c96eb2ed451598a53a9882b00c7e0c4cf0cdea37510aa65d76fe0d5bd"
+      }
+    ]
+  },
+  "priorAttempts": [
+    {
+      "name": "private-preflight-d8ef9002-attempt-20261019T141308423Z-77e9409c-e9f4-46a2-b22a-0b6d1cf04836.json",
+      "status": "preflight-failed",
+      "stage": null,
+      "reason": [
+        {
+          "check": "read-only-vm-deployment-and-https",
+          "error": "Command failed: ssh -T -i C:/Users/Privat/.ssh/gev-validation-20261018 -o IdentitiesOnly=yes -o UserKnownHostsFile=C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\vm105-known-hosts -o StrictHostKeyChecking=yes -o BatchMode=yes ubuntu@192.168.178.35 /opt/nodejs/current/bin/node --input-type=module -\nnode:internal/modules/run_main:111\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 1\n\n    at file:///"
+        }
+      ]
+    },
+    {
+      "name": "private-preflight-d8ef9002-attempt-20261019T141407037Z-f56564dc-f610-4b8b-a392-e4a1126a897c.json",
+      "status": "preflight-failed",
+      "stage": null,
+      "reason": [
+        {
+          "check": "browser-and-workspace-observation",
+          "error": "Node is either not clickable or not an Element"
+        }
+      ]
+    },
+    {
+      "name": "private-preflight-d8ef9002-attempt-20261019T141601274Z-dbdae9d1-8a42-49b4-8ef0-9bea77278ff9.json",
+      "status": "preflight-failed",
+      "stage": "workspace-ui-export",
+      "reason": [
+        {
+          "check": "browser-and-workspace-observation",
+          "error": "Timed out after waiting 30000ms"
+        }
+      ]
+    }
+  ],
+  "helperScope": "Archived after successful preflight. Earlier helper revisions are not retained; failed attempt receipts remain unchanged.",
+  "scope": "Private loopback preview of the verified signed package. UI save/export/import/reload/reopen preserved the workspace asset bytes in a throwaway profile. This does not prove public HTTPS activation or satisfy performance, visual or retention gates. Loopback secure-context support does not establish public TLS validity."
+}

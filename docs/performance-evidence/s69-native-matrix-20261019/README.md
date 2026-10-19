@@ -18,6 +18,14 @@ Its 2,126 packaged files and GitHub-hosted attestation were reverified on VM105;
 all 16 private production-host checks pass. It is prepared behind a private
 loopback preview. Production still serves `e7a878e`.
 
+The [private package workspace preflight](private-package-preflight-d8ef-review.json)
+passed in Chrome 155 against those exact signed bytes. UI save, export, import,
+reload and reopening preserved the workspace asset hashes in a throwaway profile.
+Normal browser cleanup passed. Three earlier helper failures remain archived;
+they concerned selecting the entry script and opening the collapsed scene panel.
+This private loopback check does not establish public HTTPS activation or clear
+the independent performance and retention gates.
+
 The [balanced full weather review](weather-balanced-d8ef-review.json) validates
 all ten captures against this exact candidate. Median run-level motion p95 is
 272.6 ms for the weather correctness control and 296.1 ms for the candidate
@@ -29,6 +37,54 @@ independent revalidation pass on VM105. The consumer's
 [CI and packaging checks](consumer-ci-16cddc98.json) also pass. All 16 evidence files were hash-verified
 there. The original producer envelope's metadata failure and all raw captures
 are preserved; no acceptance limit or measurement was rewritten.
+
+The [current map comparison](map-streaming-d8ef-result.json) completes five
+matched samples per scenario on Chrome 155 and the physical Windows UHD 620.
+Motion p95 changes from 392.3 to 368.7 ms (-6.02%); map-switch readiness changes
+from 14,413.9 to 14,219.7 ms (-1.35%). No measured map regression exceeds 10%.
+Capture producer `aa1e653f` verifies native fixture delivery and complete frame
+coverage for the current `d8ef9002` application. The predeclared baseline reuse
+keeps its original bytes and hash. The other workload pairs, visual qualification
+and the retention gate remain separate requirements; this result does not
+authorize deployment or stable publication.
+
+The [current dam result](infrastructure-dams-d8ef-result.json) also completes
+its five-run comparison: motion p95 is 299.7 versus 284.4 ms (-5.11%), with no
+measured regression above 10%. Its idle timing remains unavailable for both
+settled fixtures, rather than being represented as zero. This current result
+does not erase the earlier Chrome 152 failure or establish its historical cause.
+The [current cable comparison](infrastructure-cables-d8ef-result.json) is also
+complete: motion p95 changes from 332.8 to 321.1 ms (-3.52%), with no measured
+regression above 10%. Its settled idle timing is unavailable in both builds.
+Four other workload pairs still need current-candidate results.
+
+The [current visual review](final-visual-d8ef-failed-review.json) is **failed**.
+Initial still and HUD-hidden captures match byte for byte. HUD-visible and
+HUD-restored differ at eight pixels on the rounded camera-status-badge corners,
+with a maximum channel difference of 7/255. The existing policy requires the
+visible controls to match across builds, so this is not accepted as raster
+variance. Its cause is unresolved. All original PNGs, observations and process
+receipts are hash-verified on VM105; no mask, image edit or threshold change
+was applied. An earlier runner setup failure, before any browser launched,
+used the dependency loader without `sharp` and is preserved separately.
+
+A bounded diagnostic has been declared before execution: two independent browser
+captures of each unchanged revision, in baseline/baseline/candidate/candidate
+order, retaining all four visual states and the existing capture procedure.
+The unchanged final validator must reject these equal-revision pairs. The
+diagnostic will examine whether the same corner-pixel variation occurs within
+an unchanged build; it cannot itself qualify the candidate. No browser control
+run is allowed alongside the active Ampfing soak.
+
+The final metrics audit also identifies missing interaction and peak-memory
+evidence. `pairedReport.mjs` currently compares scenario frame timings but does
+not gate captured startup times, local-control latency, loaded replay latency,
+or paired peak heap. The existing startup medians are 5,075 versus 5,252 ms for
+maps (+3.49%) and 3,884 versus 4,111 ms for dams (+5.84%). A single heap value at
+the end of a capture cannot establish a peak, and a replay-seek count cannot
+establish p95 latency. These requirements remain pending, with a separate
+passing metrics review required before activation. No gate is waived and no
+historical capture is rewritten.
 
 The first exact-package Ampfing attempt was [interrupted after 37 cycles](staged-ampfing-soak-d8ef-foreground-interruption.json)
 when Windows could not confirm foreground ownership. It cannot satisfy the
@@ -53,7 +109,10 @@ at or beyond minute 30. It never inspects heap values to choose duration,
 shortens the requested run, changes the 5% evaluator, or reinterprets this failure.
 It fails if the required checkpoint/interval cannot fit a bounded 24-minute
 extension. All 104 focused soak and evidence-consumer checks pass on each of
-Node 24 and 26 on VM105, with no skips. New hardware validation remains pending.
+Node 24 and 26 on VM105, with no skips. All seven selected integration jobs and
+packaging also pass at the frozen producer `c38fa694`, as recorded in its
+[exact-commit CI review](harness-ci-c38fa694.json). Application and server code
+are unchanged from `d8ef9002`. New hardware validation remains pending.
 The remaining exact-candidate matrix and visual checks are pending.
 
 An optional heap snapshot was attempted only after the measured failure and
