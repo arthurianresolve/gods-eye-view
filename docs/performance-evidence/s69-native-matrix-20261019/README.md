@@ -83,6 +83,18 @@ VM105 under
 
 ## Browser presentation diagnosis
 
+The installed Windows Chrome executable reports version `155.0.8059.84`;
+the preceding captures use Chrome for Testing `152.0.7977.75`. The next
+diagnostic keeps application `19065997` fixed and compares four independent
+launches in the declared order 152, 155, 155, 152, with the same native visual
+profile and default composition. It is diagnostic only; neither version has
+been qualified by this comparison yet. Graphics evidence now records the full
+runtime version from `Browser.getVersion`, independently of GPU availability.
+Malformed or unsupported versions remain null. All 31 renderer/backend/lifecycle
+checks pass on Node 24.16.0 and 26.11.0 on VM105; 13 version/runner-discovery
+checks pass on Windows. Logs and source hashes are retained in
+`/opt/gods-eye-view-validation/s61-s70-20261018/renderer-version-check-1792374888350`.
+
 Producer `7f793116` adds a bounded, opt-in browser trace alongside the frame
 trace. One matched cable capture per frozen application preserves the same
 2,629 objects, Manual/DENSE/75%, native 2880 × 1800 buffer and other visual

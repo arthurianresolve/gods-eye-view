@@ -54,6 +54,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/profileRecoveryFixtureContract.test.mjs',
   'scripts/performance/importWorkspaceLifecycle.test.mjs',
   'scripts/performance/browserReadinessGate.test.mjs',
+  'scripts/performance/rendererEvidence.test.mjs',
   'scripts/performance/browserShutdownControls.test.mjs',
   'scripts/performance/cesiumWorkerBlobContract.test.mjs',
   'scripts/performance/prewarmWorkerAuditBoundary.test.mjs',

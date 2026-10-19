@@ -44,7 +44,21 @@ export async function readBrowserGraphicsInfo(browser) {
   try {
     session = await browser.target().createCDPSession();
     const { gpu } = await session.send('SystemInfo.getInfo');
+    let browserVersion = null;
+    try {
+      const { product } = await session.send('Browser.getVersion');
+      if (
+        typeof product === 'string' &&
+        /^(?:Headless)?Chrome\/\d{1,4}\.\d{1,4}\.\d{1,6}\.\d{1,6}$/.test(
+          product,
+        )
+      )
+        browserVersion = product;
+    } catch {
+      // Version availability must not erase independently measured GPU status.
+    }
     return {
+      browserVersion,
       featureStatus: Object.fromEntries(
         ['webgl', 'webgl2', 'gpu_compositing', 'opengl'].map((key) => [
           key,

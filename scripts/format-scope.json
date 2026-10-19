@@ -1196,6 +1196,8 @@
   "scripts/performance/browserShutdownControls.mjs",
   "scripts/performance/browserReadinessGate.mjs",
   "scripts/performance/browserReadinessGate.test.mjs",
+  "scripts/performance/rendererEvidence.mjs",
+  "scripts/performance/rendererEvidence.test.mjs",
   "scripts/performance/browserShutdownControls.test.mjs",
   "scripts/performance/browserShutdownFixtures.mjs",
   "scripts/performance/profileRecoveryBrowserVersion.mjs",
