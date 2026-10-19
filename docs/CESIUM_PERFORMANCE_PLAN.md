@@ -1,6 +1,6 @@
 # Cesium performance plan
 
-The current candidate is `d8ef9002`, which corrects cancelled CCTV thumbnail
+The latest measured candidate is `d8ef9002`, which corrects cancelled CCTV thumbnail
 ownership without changing image quality or refresh cadence. The native
 reproduction, full-app intervention and bounded ownership census confirm the
 cleanup behavior. A separate allocation-cohort diagnostic shows previous
@@ -31,8 +31,12 @@ ownership counts stayed stable; DOM nodes changed from 6,339 to 6,345.
 The current scheduler's checkpoint drift extended the final heap
 comparison to 33.84 minutes; a bounded, outcome-independent scheduling
 correction for future runs passes all 104 focused checks on Node 24 and 26.
-Its hardware validation remains pending. The original failure and unchanged
-5% acceptance threshold remain in force. See the
+Its hardware validation now passes: the prospectively anchored run completed
+154 measured cycles in 61m44s with 4.2238% retained-heap growth over the final
+30-minute window. All 13 checkpoints retained 668 listeners and stable measured
+application ownership. Operations, foreground and cleanup passed; independent
+VM105 review verifies the original bytes and unchanged evaluator. The earlier
+failure remains recorded. See the
 [current evidence record](performance-evidence/s69-native-matrix-20261019/README.md).
 The earlier results below remain tied to their original revisions.
 
@@ -47,8 +51,18 @@ the 100 ms control, 250 ms loaded-seek and 10% regression limits are unchanged.
 
 The exact signed private package now passes the browser workspace preflight:
 save, export, import, reload and reopening preserve asset bytes in an isolated
-profile. Public HTTPS activation remains separate. The corrected Ampfing soak
-is running against producer `c38fa694`; its result is not yet available.
+profile. Public HTTPS activation remains separate. The passing corrected Ampfing
+soak uses producer `c38fa694` and qualifies only the measured `d8ef9002` package.
+
+The stronger replay witness has exposed a correctness blocker in both the
+original `e7a878e` baseline and `d8ef9002`: source and analyst coordinates match
+the selected recording, but the displayed aircraft continues along its live
+trajectory. All eight observations per build reproduce the failure on the
+physical UHD 620. A recorded-position ownership correction is being reviewed.
+It requires a new application candidate and its own applicable validation;
+the passing `d8ef9002` soak and comparisons cannot be relabeled for that commit.
+Twenty actual local controls, twenty loaded moving-recording seeks, paired
+sampled peak heap, and the remaining four workload pairs are still required.
 
 The 19 October continuation adds a weather-manifest ownership correction at
 `55639cc7`, with exact-commit tracking and signed packaging passing. All seven
@@ -149,12 +163,12 @@ human review or performance-objective achievement is inferred from a build pass.
 | S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                                   | four clean VM builds; archive and attestation verified at `19065997`                                                                        | pending final candidate qualification                                                                                                                                                           |
 | S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                                      | production-only install and 16 private HTTP checks pass at `19065997`                                                                       | pending deployment verification                                                                                                                                                                 |
 | S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                                              | focused checks and exact CI pass at `19065997`                                                                                              | pending shared matrix                                                                                                                                                                           |
-| S65   | Owned still-camera refresh, final frame, video/fade preservation  | implemented; cancelled-image ownership correction `d8ef9002`                                  | focused cleanup checks and exact candidate CI pass                                                                                          | native image ownership reproduction and full-app intervention pass; final visual, matrix and retention pending                                                                                  |
-| S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                                   | 24 focused checks and exact CI pass at `19065997`                                                                                           | visual control reviewed; final matrix and retention pending                                                                                                                                     |
+| S65   | Owned still-camera refresh, final frame, video/fade preservation  | implemented; cancelled-image ownership correction `d8ef9002`                                  | focused cleanup checks and exact candidate CI pass                                                                                          | native ownership and exact `d8ef9002` retention pass; final visual and matrix pending                                                                                                           |
+| S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                                   | 24 focused checks and exact CI pass at `19065997`                                                                                           | exact `d8ef9002` retention passes; visual variance diagnosis and final matrix remain open                                                                                                       |
 | S67   | Async locale preparation, races and retry                         | implemented                                                                                   | 19 focused checks, builds and browser gates pass at `19065997`                                                                              | pending shared matrix                                                                                                                                                                           |
 | S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                                        | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved                   | runtime unchanged; no latency benefit claimed                                                                                                                                                   |
 | S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | weather ownership, native map v5, image cleanup and evidence consumer corrections implemented | exact `d8ef9002` tracking/packaging and seven selected PR CI jobs pass; consumer `16cddc98` passes 100 focused checks on both Node versions | exact-candidate weather, map, dam and cable comparisons within the 10% gate; four workload pairs and additional metric gates pending; earlier `55639cc7` results and failures remain historical |
-| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `d8ef9002` prepared privately on VM105; production remains at `e7a878e`                 | archive/attestation, all 2,126 packaged files and 16 private host checks verified for `d8ef9002`                                            | complete 158-cycle retry passed operations/foreground/cleanup but failed retention at 5.3421%; final visual and deployment pending; earlier failures preserved                                  |
+| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `d8ef9002` prepared privately on VM105; production remains at `e7a878e`                 | archive/attestation, all 2,126 packaged files and 16 private host checks verified for `d8ef9002`                                            | anchored 154-cycle, 61m44s soak passes at 4.2238% retained growth; final visual, replay correction and deployment pending; earlier failures preserved                                           |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
 records the failed matrix and separate phase-timing runs. Most observed helper

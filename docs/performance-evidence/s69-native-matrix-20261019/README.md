@@ -68,8 +68,26 @@ six measured mixed-use cycles after two warmups without forced GC. It is a
 sampled peak, not a continuous peak or a replacement for retained-memory evidence.
 The consumer verifies exact build, Chrome, hardware renderer, native dimensions,
 Manual/DENSE 75% settings, foreground evidence and normal browser disposal.
-Thirty-nine focused consumer and idle-cadence tests pass locally. VM tests and
-the actual hardware captures remain pending; added tooling is not a pass.
+Thirty-nine focused consumer and idle-cadence tests pass locally. The broader
+[VM consumer checks](qualification-metrics-tests-6d4038e6.json) pass 174/174 on
+each of Node 24 and Node 26 at `6d4038e6`. The subsequent displayed-position
+check at `cb3a7c18` requires the public billboard's geographic coordinates to
+match the selected moving observation, and verifies the local-control and replay
+camera routes before timed input. Equivalent angles modulo a full rotation are
+accepted; genuinely different poses are rejected. Its [VM checks](qualification-metrics-tests-cb3a7c18.json)
+also pass 174/174 on each Node version. The actual hardware captures remain
+pending; added tooling is not a performance pass.
+
+The [moving replay diagnostic](replay-position-d8ef-review.json) now reproduces
+a pre-existing correctness failure in both `e7a878e` and `d8ef9002`. All eight
+observations per build have the correct selected source and analyst position,
+but their visible billboards remain on the live-clock trajectory during paused
+Home/End seeks. Longitude error reaches about 0.06 degrees. The diagnostic ran
+on the physical UHD 620 with foreground and normal cleanup confirmed; original
+reports, source and synthetic recordings are hash-verified on VM105. The flight
+renderer still applies its live delay and forward-only history to recorded
+observations. A recorded-source ownership fix and new validation are required;
+this failure is not converted into a successful replay-latency measurement.
 
 Single weather startup shards can be read only as individual observations after
 their balanced parent envelope is validated. Their comparison-ineligible flags
@@ -95,13 +113,18 @@ original PNGs and applies the unchanged pixel policy. It passes the historical
 positive control and reproduces the current eight-pixel failure exactly. This
 validates the decoder, not the candidate; production and image bytes are unchanged.
 
-A bounded diagnostic has been declared before execution: two independent browser
-captures of each unchanged revision, in baseline/baseline/candidate/candidate
-order, retaining all four visual states and the existing capture procedure.
-The unchanged final validator must reject these equal-revision pairs. The
-diagnostic will examine whether the same corner-pixel variation occurs within
-an unchanged build; it cannot itself qualify the candidate. No browser control
-run is allowed alongside the active Ampfing soak.
+The [predeclared same-build controls](badge-same-build-controls-d8ef-review.json)
+are complete: two fresh browser contexts for each unchanged revision, in
+baseline/baseline/candidate/candidate order, retaining all four visual states.
+The unchanged final validator correctly rejects equal-revision pairs. Independent
+VM decoding reproduces the eight-pixel, 7/255 variation within the unchanged
+baseline, including its hidden and restored states. The candidate's initial
+still differs from its subsequent visible states at 78 pixels with a maximum
+RGB change of 103/255, around the panel scrollbar; its repeated same-state
+captures match. These controls establish additional fixture variability, not
+visual acceptance or a runtime regression. All 27 original files (25,355,613
+bytes) are hash-verified on VM105. No masks, image edits or threshold changes
+were applied, and no GPU job ran alongside the completed Ampfing soak.
 
 The final metrics audit also identifies missing interaction and peak-memory
 evidence. `pairedReport.mjs` currently compares scenario frame timings but does
@@ -139,8 +162,14 @@ extension. All 104 focused soak and evidence-consumer checks pass on each of
 Node 24 and 26 on VM105, with no skips. All seven selected integration jobs and
 packaging also pass at the frozen producer `c38fa694`, as recorded in its
 [exact-commit CI review](harness-ci-c38fa694.json). Application and server code
-are unchanged from `d8ef9002`. New hardware validation remains pending.
-The remaining exact-candidate matrix and visual checks are pending.
+are unchanged from `d8ef9002`. The [anchored hardware run](staged-ampfing-soak-anchored-d8ef-review.json)
+passes independent VM105 verification: 154 measured cycles over 3,703,613 ms,
+with all operations, foreground, native dimensions and normal cleanup passing.
+All 13 retained checkpoints have 668 listeners and stable application ownership.
+Heap growth over the predeclared final interval is 4.2238%, below the unchanged
+5% gate. The earlier 5.3421% failure remains historical evidence. This qualifies
+retention for `d8ef9002`, not a later runtime revision. The remaining matrix,
+visual and replay correctness requirements still block final acceptance.
 
 An optional heap snapshot was attempted only after the measured failure and
 exceeded its predeclared 768 MiB raw-size bound. It provides no valid heap

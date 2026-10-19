@@ -1,0 +1,75 @@
+{
+  "schema": "gev-replay-position-diagnostic-review/v1",
+  "reviewedAt": "2026-10-19T15:25:07.469Z",
+  "status": "pre-existing-replay-rendering-failure-reproduced",
+  "producerCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "protocol": {
+    "roles": ["baseline", "candidate"],
+    "keySequence": ["Home", "End", "Home", "End"],
+    "sampleWaitsMs": [500, 2000],
+    "maximumFrameWaitMs": 10000
+  },
+  "builds": {
+    "baseline": {
+      "applicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "browserVersion": "Chrome/155.0.8059.84",
+      "renderer": {
+        "vendor": "Google Inc. (Intel)",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      },
+      "samples": 8,
+      "mismatchedDisplayedPositions": 8,
+      "maximumLongitudeErrorDeg": 0.059629237281541236,
+      "sourceAndAnalystSelection": "matched",
+      "foreground": "passed",
+      "cleanup": "passed"
+    },
+    "candidate": {
+      "applicationCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+      "browserVersion": "Chrome/155.0.8059.84",
+      "renderer": {
+        "vendor": "Google Inc. (Intel)",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      },
+      "samples": 8,
+      "mismatchedDisplayedPositions": 8,
+      "maximumLongitudeErrorDeg": 0.05665613990728957,
+      "sourceAndAnalystSelection": "matched",
+      "foreground": "passed",
+      "cleanup": "passed"
+    }
+  },
+  "files": [
+    {
+      "name": "baseline-synthetic-recording.json",
+      "bytes": 3686,
+      "sha256": "585b3a94d483a98be9fd9efbb63eec26127262196e2edfa170d4e3640444ed5c"
+    },
+    {
+      "name": "candidate-synthetic-recording.json",
+      "bytes": 3686,
+      "sha256": "ba79f38eb6c19297cc48a95f5e149d5b7232a8a6ffc28040086f51385ea38fd6"
+    },
+    {
+      "name": "protocol.json",
+      "bytes": 830,
+      "sha256": "36be09049baac77f1dbc6bcd4c25c8629d0f6313a4cc49e26932e9ed0ed88ee5"
+    },
+    {
+      "name": "result.json",
+      "bytes": 32328,
+      "sha256": "d9d774ae90e65bc5a9f8e47c21d1d2d69d0427c6aea85932192fc68a88148595"
+    },
+    {
+      "name": "source.mjs",
+      "bytes": 10743,
+      "sha256": "8d6a654c162c39a7b9b8ed84daee7c18878fc001457dc65972070ad3b9f6cbe1"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/replay-position-d8ef9002-diagnostic",
+  "productionChanged": false,
+  "acceptanceEligible": false,
+  "scope": "Moving synthetic aircraft, paused Home/End seeks, geographic billboard observations during completed renders. Both the baseline and candidate retain live-clock motion instead of displaying the selected recorded observation; this is not a timing comparison."
+}
