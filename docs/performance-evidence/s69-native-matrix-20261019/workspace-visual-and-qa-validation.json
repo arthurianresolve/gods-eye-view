@@ -1,0 +1,293 @@
+{
+  "schema": "gev-workspace-visual-and-qa-validation/v1",
+  "baseCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "priorOverlay": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "6944e69adb49a57f3d81c9bab878a7f255cdddd55ae13830d905b34136523b63"
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.mjs",
+      "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21"
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.test.mjs",
+      "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.mjs",
+      "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.test.mjs",
+      "sha256": "c919947c2c2ef33ababe72efe5ee4b93a28868af9c6f4cbdd5351cc3bae55f85"
+    },
+    {
+      "name": "scripts/performance/captureProducerCli.test.mjs",
+      "sha256": "8c5af4808000e2716d0f3eefab17dafdfecd8a5614cd66e6c4f99571939e350a"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "5acb5ac18a9a5046437102078df1ef0c88499d782b47cac250ff6e88cc18f377"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "903514557ef895940c1dfdb3c0998b51d08bbd5701d0a5a2947dc598d2d30b74"
+    },
+    {
+      "name": "src/view/index.js",
+      "sha256": "2ae8ca241deefd045219a388aac8057636aadf236f3831807a57af5c892ccf43"
+    },
+    {
+      "name": "src/view/visual.js",
+      "sha256": "53e8f449f116e0d25ec17af1a7b64a50a88e4381110b127034f3d37523ab409c"
+    },
+    {
+      "name": "src/view/styleParams.js",
+      "sha256": "cb5fae4cf6820f62aaf899d9acfd24abc964e6467e9fc4b88860358c0d93f501"
+    },
+    {
+      "name": "src/sharelink.js",
+      "sha256": "964a92252609980bb05d5a62e18fdab6e3f70b8b1bc137b05d7ed8ade5cab636"
+    },
+    {
+      "name": "src/view/index.test.mjs",
+      "sha256": "a0f32466df4b4ef0d168e7c0315f615544ec7d068c47e028e414725aefcab92c"
+    },
+    {
+      "name": "src/sharelink.celestial.test.mjs",
+      "sha256": "2f6a624cbc863d5141ea4f3cb543907f05fb30ecaebbb2988ece00b34828245c"
+    },
+    {
+      "name": "src/workspaces/document.test.mjs",
+      "sha256": "c51834f3bb2b07fcafa5f26f97f46d8b2a11c7470ea89b4142c793a32c317899"
+    },
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "sha256": "00a334b78b390f6c5af983d4b7cce576fde357481cc00543710c1e753ce7c9a4"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.test.mjs",
+      "sha256": "490e53f44b046549bae29a5ffa55ebbd64565f1dea4a8cd3f3ca8dec8aea5aa3"
+    }
+  ],
+  "priorValidation": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-workspace-visual-and-camera-review-20261019-attempt2",
+  "startedAt": "2026-10-19T22:00:18.551Z",
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-workspace-visual-and-camera-review-20261020-complete",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "files": [
+    {
+      "name": "scripts/package-boundaries.json",
+      "sha256": "4cdfc3588a192c9942c0d2d4a2c2fdde86775c009be81d1c5c18225016305e1b"
+    },
+    {
+      "name": "src/view/index.js",
+      "sha256": "2ae8ca241deefd045219a388aac8057636aadf236f3831807a57af5c892ccf43"
+    },
+    {
+      "name": "src/view/visual.js",
+      "sha256": "53e8f449f116e0d25ec17af1a7b64a50a88e4381110b127034f3d37523ab409c"
+    },
+    {
+      "name": "src/view/styleParams.js",
+      "sha256": "cb5fae4cf6820f62aaf899d9acfd24abc964e6467e9fc4b88860358c0d93f501"
+    },
+    {
+      "name": "src/sharelink.js",
+      "sha256": "964a92252609980bb05d5a62e18fdab6e3f70b8b1bc137b05d7ed8ade5cab636"
+    },
+    {
+      "name": "src/view/index.test.mjs",
+      "sha256": "a0f32466df4b4ef0d168e7c0315f615544ec7d068c47e028e414725aefcab92c"
+    },
+    {
+      "name": "src/sharelink.celestial.test.mjs",
+      "sha256": "2f6a624cbc863d5141ea4f3cb543907f05fb30ecaebbb2988ece00b34828245c"
+    },
+    {
+      "name": "src/workspaces/document.test.mjs",
+      "sha256": "c51834f3bb2b07fcafa5f26f97f46d8b2a11c7470ea89b4142c793a32c317899"
+    },
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "6944e69adb49a57f3d81c9bab878a7f255cdddd55ae13830d905b34136523b63"
+    },
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "903514557ef895940c1dfdb3c0998b51d08bbd5701d0a5a2947dc598d2d30b74"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "sha256": "00a334b78b390f6c5af983d4b7cce576fde357481cc00543710c1e753ce7c9a4"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.test.mjs",
+      "sha256": "490e53f44b046549bae29a5ffa55ebbd64565f1dea4a8cd3f3ca8dec8aea5aa3"
+    }
+  ],
+  "checks": [
+    {
+      "label": "negative-original-runtime",
+      "code": 1,
+      "signal": null,
+      "nodeVersion": "v26.11.0",
+      "logSha256": "9c2ebe1cfdacd45ad886fe7821d1867bbfe560c5236786fd11f91bc42057ea0f",
+      "summary": [
+        "# tests 5",
+        "# pass 0",
+        "# fail 5",
+        "# skipped 0",
+        "# duration_ms 843.479613"
+      ]
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "nodeVersion": "v24.16.0",
+      "logSha256": "ec8c6ab4ca93e2f94dca28669d204f72ddf540160202a84a164c8fded1753c22",
+      "summary": [
+        "# tests 125",
+        "# pass 125",
+        "# fail 0",
+        "# skipped 0",
+        "# duration_ms 6722.296253"
+      ]
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "nodeVersion": "v26.11.0",
+      "logSha256": "d88f8c41a4c84066073c7aea66fc50ab36e8fbc4738076b8d2cf7111e98b7ead",
+      "summary": [
+        "# tests 125",
+        "# pass 125",
+        "# fail 0",
+        "# skipped 0",
+        "# duration_ms 6620.00144"
+      ]
+    },
+    {
+      "label": "check-import-directions",
+      "code": 0,
+      "signal": null,
+      "logSha256": "b638efc87d36d7ff975190ff1850f0b836f00d675e500384ca71fbfb4a43fdb3",
+      "summary": "{\"modules\":1076,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "check-package-boundaries",
+      "code": 0,
+      "signal": null,
+      "logSha256": "04c7d8529c3176dd95113e98774bb86e19e6c7d1669e9dab096be2e3a3733646",
+      "summary": "r: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "check-capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "logSha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "productionChanged": false,
+  "scope": "Backward-compatible workspace visual persistence; navigation-owned completed-frame QA setup; diagnostic-only weather idle instrumentation. No visual fidelity or performance thresholds changed.",
+  "negativeControl": {
+    "commit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+    "loaderSha256": "26bbd77069b6db0cd5eecbe3b69188161aa5b0a354b7b3bddfb87444968a4d60",
+    "method": "New tests import immutable original runtime modules with relative dependency resolution retained."
+  },
+  "restoredTrackedFixture": {
+    "path": "public/events/bhote-koshi-2026/event.json",
+    "sha256": "1b71d1c805ef0072c3cc4b759f2310785e20eb3ae8c539d59dad1e74de3370fe",
+    "sourceCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f"
+  },
+  "tests": [
+    "src/view/index.test.mjs",
+    "src/sharelink.celestial.test.mjs",
+    "src/workspaces/document.test.mjs",
+    "src/sharelink.lang.test.mjs",
+    "src/tools/views.test.mjs",
+    "scripts/performance/qualificationMetrics.test.mjs",
+    "scripts/performance/weatherIdleDiagnostic.test.mjs",
+    "scripts/performance/captureProducerCli.test.mjs",
+    "src/workspaces/history.test.mjs",
+    "src/workspaces/library.test.mjs",
+    "src/workspaces/restore.test.mjs"
+  ],
+  "priorAttempt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-workspace-visual-and-camera-review-20261020",
+  "priorAttemptSha256": "f2f26ae8cd91414586ab5f1f91254aaa5a1b4f3fa90da298c02bd05486407fd0",
+  "restoredBoundarySources": [
+    {
+      "name": "build/allowedHosts.js",
+      "sha256": "16369c96a07bc997d07f52ed5ebd9719af3b0d92bc188d0170f2f392c2a79626",
+      "bytes": 3602
+    },
+    {
+      "name": "build/application-html.js",
+      "sha256": "73c2c0e5808044be11f2fe4ab50c787d33e1a5a0e24426394246aafbfcb99cb5",
+      "bytes": 1040
+    },
+    {
+      "name": "build/assetDistribution.js",
+      "sha256": "37f35762541216876488e520d0763bcee31a90e2befee2f5a1facf9741ff1970",
+      "bytes": 10421
+    },
+    {
+      "name": "build/assetDistribution.test.mjs",
+      "sha256": "fe8bb578310bf1b664ed95ef64cf125f118e9cdce042b00279b87e4a74c9dd97",
+      "bytes": 5740
+    },
+    {
+      "name": "build/cesium-dependencies.js",
+      "sha256": "1b7b2888d5d0806fcd204cd6c3281deec4503d6c3b70551f1f171a8167b24689",
+      "bytes": 1884
+    },
+    {
+      "name": "build/embed-framing.js",
+      "sha256": "1d0c4e52e67c0dabb1eee73863e1a4a770e629951963f4c1a2611ef1b1449422",
+      "bytes": 2806
+    },
+    {
+      "name": "build/panel.js",
+      "sha256": "96183f5605985d300c1baba1b419e0b89aa2ec1e2f8e91a9cc8f06ba534aad8d",
+      "bytes": 5264
+    },
+    {
+      "name": "build/securityHeaders.js",
+      "sha256": "1730980745dd2bee99a1f884641497e388c5b8b7cd899b911b901172c6cda2fb",
+      "bytes": 936
+    },
+    {
+      "name": "build/vite.js",
+      "sha256": "cd75e7cdf786311db2cbf35bdaee8c89849dc8772f78795354addf35b2453fe3",
+      "bytes": 5007
+    }
+  ],
+  "completedAt": "2026-10-19T22:01:32.262Z"
+}

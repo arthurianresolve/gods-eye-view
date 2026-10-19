@@ -7,12 +7,26 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain in progress for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-The frozen application candidate is `b3c49b19`; production remains at
+The most recently measured application is `b3c49b19`; production remains at
 `e7a878e`. Recorded-aircraft position ownership passes 158/158 focused tests
 on each VM105 Node version and all eight fleet/eight tracked physical Windows
 observations. Its exact CI, tracking and signed-package workflows pass. The
 archive, GitHub attestation, 2,126 packaged files and 16 private HTTP checks are
 verified. The package is staged privately and has not been activated.
+
+The corrected interaction/heap run exposed a workspace persistence defect:
+saved canonical views omit visual settings, and reopening them disables
+sharpening and replaces the saved fade, opacity and scope values with defaults.
+The control completed twenty local interactions, twenty replay seeks and eight
+heap cycles, then correctly failed the settings-equality gate. The candidate
+failed earlier because the unclaimed startup fly-in superseded the test camera
+pose. Neither result is a pass. A backward-compatible visual-state fix and a
+navigation-owned completed-frame setup fix now pass 125/125 focused tests on
+each of VM105 Node 24.16.0 and 26.11.0, package/import boundaries and all 75
+capture no-undef checks. Five new regressions fail the original runtime.
+Hardware workspace/interaction verification is still required. The
+final soak and activation must use a newly frozen, corrected application;
+existing `b3c49b19` reports retain their exact tested identity.
 
 Seven non-weather workload pairs now have five samples per scenario on each
 build. Motion p95 changes are: dams +1.63%, cables -1.14%, maps -8.44%, operating
@@ -25,16 +39,20 @@ checks and image decoding run on VM105. The current operating idle diagnostic
 independently resolves the raw interval flag as intentional scheduled rendering;
 it does not certify motion or visual equivalence.
 
-Startup failures in operating, dense and datacenter rows remain open. A separate
+The original startup failures remain recorded. The new operating-view
+confirmation completes all ten fixed slots: app readiness changes +4.90% and
+loading-screen completion +4.27%, within the 10% limit. Dense and datacenter
+confirmations remain open. A separate
 predeclared dam confirmation did not reproduce its earlier startup regression.
 Eight attributed startup observations show that the old timer includes
 1,635–2,349 ms of native foreground setup. The new opt-in page-observed method
 activates before navigation and records independent page/host clock evidence;
 33/33 focused tests pass on both Node versions, with formatting, syntax and all
 75 capture no-undef checks. It requires new, fixed-order confirmations and never
-subtracts overhead from old reports. Producer `ac50400c` passes all seven CI
-jobs and release packaging; its first macOS run acquired no runner, and the
-single-job retry passed. Those CI results do not cover the newer startup method.
+subtracts overhead from old reports. Producer `14201a7f`, including this method,
+passes all seven required CI jobs and release packaging. Raw results are
+archived and hash-verified on VM105. The preceding `ac50400c` run and its macOS
+capacity failure/single-job retry remain separate historical records.
 
 Visual qualification remains open. The old four-state capture has identical
 HUD-hidden pixels but fails the other states at the logo/badge. New presentation
@@ -43,8 +61,11 @@ pixel differences in paused/advanced cross-build images, but other HUD regions
 still vary. This does not clear the old maximum difference of 103 or pass the
 full visual gate. No acceptance mask or threshold has been changed.
 
-The active weather qualification keeps its fixed ten-shard balanced order and
-unchanged sample durations. Remaining gates are that weather result, startup
+The ten-shard balanced weather qualification is complete and independently
+hash-verified on VM105. Motion changes from 260.9 to 263.6 ms p95 (+1.03%), within
+the regression limit. Idle rendered-frame intervals change from 984 to 1,703.2 ms
+(+73.09%); their demand/cadence interpretation remains unresolved, so this is
+not yet a complete weather pass. Remaining gates are that disposition, startup
 confirmations, full visual consistency, twenty local controls, twenty loaded
 replay seeks, sampled peak heap, signed-package workspace preflight and the
 final Ampfing soak on this Windows UHD 620. The replay/heap comparison control

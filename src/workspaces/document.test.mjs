@@ -56,6 +56,28 @@ test('version-one workspace documents retain optional detection settings', () =>
   assert.throws(() => createWorkspaceDocument(input), /detection/);
 });
 
+test('version-one workspaces retain visual settings and reject malformed imported settings', () => {
+  const input = workspace();
+  input.view.visual = {
+    sharpen: true,
+    detectionFadePct: 7,
+    detectionOutsideOpacityPct: 1,
+    scopeFeatherPct: 11,
+  };
+  const saved = createWorkspaceDocument(input);
+  const reopened = parseWorkspaceDocument(JSON.stringify(saved));
+  assert.equal(reopened.schemaVersion, 1);
+  for (const [key, value] of Object.entries(input.view.visual))
+    assert.equal(reopened.view.visual[key], value);
+  assert.equal('visual' in createWorkspaceDocument(workspace()).view, false);
+  const malformed = JSON.parse(JSON.stringify(saved));
+  malformed.view.visual.sharpen = 'true';
+  assert.throws(
+    () => parseWorkspaceDocument(JSON.stringify(malformed)),
+    /visual/,
+  );
+});
+
 test('direct pinned envelopes cannot bypass reference import validation', () => {
   const input = JSON.parse(
     JSON.stringify(createWorkspaceDocument(workspace())),

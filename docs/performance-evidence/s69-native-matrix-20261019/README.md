@@ -1,6 +1,6 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
-The current application candidate is `b3c49b19`. Its
+The most recently measured application is `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes
 158/158 on each of VM105 Node 24.16.0 and 26.11.0, with five failing assertions
 against the original runtime. The [physical Windows check](replay-hardware-b3c49b19.json)
@@ -10,6 +10,39 @@ visualization-bounds witness, native UHD 620 rendering, foreground confirmation
 and normal cleanup. Failed helper attempts remain archived. This establishes
 correctness only; the previous candidate's performance and soak evidence is not
 transferred to this revision.
+
+### Workspace settings and camera setup failures
+
+The [corrected interaction/heap comparison](qualification-metrics-b3c49b19-1ef5973e.json)
+failed and remains archived. The `3141ffe3` control completed twenty local
+controls, twenty replay seeks, two warmup heap cycles and six measured cycles,
+then failed visual equality: sharpening changed from enabled to disabled,
+label fading from 7 to 16, outside opacity from 1 to 5 and scope feathering
+from 11 to 35. This is a real application defect: the canonical view codec
+drops those settings and `ShareLinkManager.applyView` supplies fixed defaults.
+The workspace implementation introduced that behavior at `3d6b30c8`; the
+later detection-mode/density fix did not preserve the remaining visual fields.
+The raw report's final settings field was not assigned after the failed
+assertion and is not proof of the postcondition.
+
+The candidate completed no interaction samples: a latitude assertion failed
+during camera preparation. The harness positioned the camera directly while
+the application's delayed startup flight could still own it. The proposed QA
+correction claims the existing navigation authority and requires the exact
+pose on two completed renders. It changes neither pose tolerances nor timed
+interaction boundaries. Both browsers closed normally.
+
+A bounded optional visual object now carries effects, HUD, label fading,
+scope and allowlisted style parameters through saved views, URL round trips
+and version-one workspace documents. Older documents without this field keep
+their historical restoration behavior. The [VM regression checks](workspace-visual-and-qa-validation.json)
+pass 125/125 on each of Node 24.16.0 and 26.11.0; five new regressions fail
+against the immutable original runtime. Import/package boundaries and all 75
+capture no-undef checks pass. Failed test-fixture and sparse-checkout preparation
+attempts remain archived. Hardware validation is still pending.
+No final soak or production activation should proceed with the
+known persistence defect, and earlier application evidence must not be
+relabelled as testing the correction.
 
 Visual producer `89e2acad` adds stable scroll geometry, active-element and pointer
 observations. A capture requires two consecutive completed render/layout
@@ -82,6 +115,16 @@ Operating-view startup also fails: app-ready medians are 3,276 versus 3,937 ms
 (+20.18%), and loading-screen-hidden medians are 3,954 versus 4,642 ms (+17.40%).
 The dams-only startup confirmation does not clear this workload. All eight
 original operating-view files are hash-verified on VM105.
+
+The [page-observed startup confirmation](operating-view-startup-page-observed-b3c49b19-review.json)
+subsequently completed all ten predeclared, interleaved slots at producer
+`14201a7f`. App-ready medians are 4,352.1 versus 4,565.3 ms (+4.90%);
+loading-screen-hidden medians are 5,506.1 versus 5,741.3 ms (+4.27%). Both
+remain within the unchanged 10% limit. Foreground preparation precedes the
+navigation timer; page observations are upper bounds on readiness, with host
+timing recorded separately. All 43 originals were independently hash-verified
+on VM105. This confirmation assesses startup only; it neither rewrites the
+earlier failed measurements nor certifies a later corrected application.
 
 The [dense pair](dense-investigation-b3c49b19-result.json) completes five
 observations per scenario on both builds: idle p95 changes +5.56%, motion
@@ -185,8 +228,10 @@ diagnostics. All four archived receipt files are hash-verified on VM105. The
 subsequent Resource Timing producer `ac50400c` also has a [passing CI and release
 receipt](qa-ci-ac50400c.json). Its [first macOS attempt](qa-ci-ac50400c-attempt1-infra-failure.json)
 never acquired a hosted runner and ran no steps; only that job was retried, and
-the retry passed. The capacity failure remains archived. These results do not
-cover the newer page-observed startup implementation.
+the retry passed. The capacity failure remains archived. The newer
+[page-observed producer `14201a7f`](qa-ci-14201a7f.json) now also passes all seven
+required jobs and release packaging. Its exact raw CI responses and review are
+hash-verified on VM105; its physical startup confirmations remain pending.
 
 The [startup and idle contract checks](operating-startup-idle-qa-validation.json)
 pass 142/142 on both Node 24.16.0 and 26.11.0 on VM105. Startup-only captures
@@ -201,6 +246,14 @@ failed native foreground initialization before recording any sample. Its six
 original files are hash-verified on VM105. A fresh, separately declared plan
 uses the owned blank-page handoff before the same native foreground checks;
 measurement durations, source deadlines, paired order and limits are unchanged.
+
+The [fresh ten-shard weather result](weather-balanced-b3c49b19-review.json) now
+completes with all 47 original files hash-verified on VM105. Independent consumer
+`16cddc98` verifies comparability. Motion p95 changes from 260.9 to 263.6 ms
+(+1.03%), within the unchanged 10% limit. Idle rendered-frame intervals change
+from 984 to 1,703.2 ms (+73.09%) and remain flagged pending a weather-specific
+demand/cadence review. The operating-view idle disposition does not cover this
+different workload. Successful capture is not a complete weather acceptance.
 
 The exact `b3c49b19`
 [tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280015189)
