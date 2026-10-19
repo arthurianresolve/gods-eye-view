@@ -1063,10 +1063,273 @@ test('soak reports completed driver operations and labels short runs as smoke', 
   assert.equal(report.sourceToggles, 4);
   assert.equal(report.fullSoak, false);
   assert.equal(report.hardwareRenderingValidated, false);
+  assert.deepEqual(report.checkpointSchedule, {
+    requestedDurationMs: 100,
+    actualDurationMs: 100,
+    anchorElapsedMs: null,
+    targetDurationMs: 100,
+    maxExtraRuntimeMs: 0,
+    status: 'not-applicable',
+  });
   assert.deepEqual(report.startupPrewarm, {
     status: 'passed',
     durationMs: 12,
   });
+});
+
+test('full soak anchors its end to the first retained checkpoint at or after 30 minutes', async () => {
+  const run = async (heapAtCheckpoint) => {
+    let now = 0;
+    let reads = 0;
+    const report = await runMixedUseSoak({
+      durationMs: FULL_SOAK_MS,
+      intervalMs: 0,
+      checkpointIntervalMs: 10 * 60_000,
+      now: () => now,
+      driver: {
+        retainedMetrics: async () => metrics(heapAtCheckpoint(reads++)),
+        runCycle: async () => {
+          now += 6 * 60_000;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    });
+    return report;
+  };
+
+  const flatHeap = await run(() => 100);
+  const risingHeap = await run((read) => 100 + read * 10);
+  for (const report of [flatHeap, risingHeap]) {
+    assert.equal(report.checkpointSchedule.anchorElapsedMs, 36 * 60_000);
+    assert.equal(report.checkpointSchedule.targetDurationMs, 66 * 60_000);
+    assert.equal(report.checkpointSchedule.actualDurationMs, 66 * 60_000);
+    assert.equal(report.checkpointSchedule.status, 'completed');
+    assert.ok(report.durationMs >= report.checkpointSchedule.targetDurationMs);
+    assert.ok(report.fullSoak);
+  }
+  assert.equal(
+    flatHeap.checkpointSchedule.targetDurationMs,
+    risingHeap.checkpointSchedule.targetDurationMs,
+    'heap values must not influence the predeclared runtime target',
+  );
+  assert.equal(flatHeap.stability.status, 'passed');
+  assert.equal(risingHeap.stability.status, 'failed');
+});
+
+test('requested full-soak duration remains a floor when it exceeds the anchored target', async () => {
+  let now = 0;
+  const report = await runMixedUseSoak({
+    durationMs: 70 * 60_000,
+    intervalMs: 0,
+    checkpointIntervalMs: 15 * 60_000,
+    now: () => now,
+    driver: {
+      retainedMetrics: async () => metrics(),
+      runCycle: async () => {
+        now += 10 * 60_000;
+        return {
+          sourceToggles: 1,
+          replaySeeks: 1,
+          imports: 1,
+          workspaceReloads: 1,
+          archiveFailures: 1,
+          cameraRecoveries: 1,
+        };
+      },
+    },
+  });
+  assert.equal(report.checkpointSchedule.anchorElapsedMs, 40 * 60_000);
+  assert.equal(report.checkpointSchedule.targetDurationMs, 70 * 60_000);
+  assert.equal(report.checkpointSchedule.actualDurationMs, 70 * 60_000);
+  assert.ok(report.durationMs >= 70 * 60_000);
+  assert.ok(report.fullSoak);
+});
+
+test('full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap', async () => {
+  let now = 0;
+  await assert.rejects(
+    runMixedUseSoak({
+      durationMs: FULL_SOAK_MS,
+      intervalMs: 0,
+      checkpointIntervalMs: 80 * 60_000,
+      now: () => now,
+      driver: {
+        retainedMetrics: async () => metrics(),
+        runCycle: async () => {
+          now += 85 * 60_000;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    }),
+    (error) => {
+      assert.match(error.message, /bounded extension/);
+      assert.equal(error.soakReport.operationStatus, 'failed');
+      assert.equal(
+        error.soakReport.checkpointSchedule.anchorElapsedMs,
+        85 * 60_000,
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.targetDurationMs,
+        115 * 60_000,
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.status,
+        'bounded-failure',
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.maxExtraRuntimeMs,
+        24 * 60_000,
+      );
+      return true;
+    },
+  );
+});
+
+test('full soak fails at the extension bound if no retention anchor was sampled', async () => {
+  let now = 0;
+  await assert.rejects(
+    runMixedUseSoak({
+      durationMs: FULL_SOAK_MS,
+      intervalMs: 0,
+      checkpointIntervalMs: 100 * 60_000,
+      now: () => now,
+      driver: {
+        retainedMetrics: async () => metrics(),
+        runCycle: async () => {
+          now += 85 * 60_000;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    }),
+    (error) => {
+      assert.match(error.message, /No equivalent-state retention anchor/);
+      assert.equal(error.soakReport.checkpointSchedule.anchorElapsedMs, null);
+      assert.equal(
+        error.soakReport.checkpointSchedule.status,
+        'bounded-failure',
+      );
+      return true;
+    },
+  );
+});
+
+test('full soak continues past its requested duration while waiting for a retention anchor', async () => {
+  let now = 0;
+  let cycles = 0;
+  await assert.rejects(
+    runMixedUseSoak({
+      durationMs: FULL_SOAK_MS,
+      intervalMs: 0,
+      checkpointIntervalMs: 100 * 60_000,
+      now: () => now,
+      driver: {
+        retainedMetrics: async () => metrics(),
+        runCycle: async () => {
+          now += 5 * 60_000;
+          cycles++;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    }),
+    (error) => {
+      assert.match(error.message, /No equivalent-state retention anchor/);
+      assert.equal(error.soakReport.checkpointSchedule.anchorElapsedMs, null);
+      assert.equal(
+        error.soakReport.checkpointSchedule.status,
+        'bounded-failure',
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.actualDurationMs,
+        85 * 60_000,
+      );
+      assert.equal(error.soakReport.durationMs, 85 * 60_000);
+      assert.equal(
+        cycles,
+        17,
+        'the run must continue beyond the 60-minute floor',
+      );
+      return true;
+    },
+  );
+});
+
+test('full soak fails if the final retained read exceeds the extension bound', async () => {
+  let now = 0;
+  let reads = 0;
+  await assert.rejects(
+    runMixedUseSoak({
+      durationMs: FULL_SOAK_MS,
+      intervalMs: 0,
+      checkpointIntervalMs: 30 * 60_000,
+      now: () => now,
+      driver: {
+        retainedMetrics: async () => {
+          if (++reads === 4) now += 25 * 60_000;
+          return metrics();
+        },
+        runCycle: async () => {
+          now += 30 * 60_000;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+      },
+    }),
+    (error) => {
+      assert.match(error.message, /Final retained checkpoint exceeded/);
+      assert.equal(error.soakReport.operationStatus, 'failed');
+      assert.equal(
+        error.soakReport.checkpointSchedule.anchorElapsedMs,
+        30 * 60_000,
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.targetDurationMs,
+        FULL_SOAK_MS,
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.actualDurationMs,
+        85 * 60_000,
+      );
+      assert.equal(
+        error.soakReport.checkpointSchedule.status,
+        'bounded-failure',
+      );
+      return true;
+    },
+  );
 });
 
 test('soak report preserves native resolution at initial and retained checkpoints', async () => {

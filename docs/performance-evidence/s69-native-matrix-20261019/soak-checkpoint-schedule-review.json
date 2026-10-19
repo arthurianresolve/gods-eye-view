@@ -1,0 +1,89 @@
+{
+  "schema": "gev-soak-checkpoint-schedule-review/v1",
+  "recordedAt": "2026-10-19T13:13:36.326Z",
+  "originalRun": {
+    "artifact": "staged-final-ampfing-soak-20261019T120433063Z.json",
+    "sha256": "440855b3ac7be2a0f10f3238bff8f226a20837fee4eb70a6e697877a678a7733",
+    "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+    "harnessCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+    "durationMs": 3608651,
+    "status": "failed",
+    "heapGrowthRatio": 0.0534210004038408,
+    "firstWindowCheckpointMs": 1578465,
+    "finalCheckpointMs": 3608651,
+    "actualWindowMs": 2030186,
+    "baselineHeapBytes": 274385352,
+    "finalHeapBytes": 289043292
+  },
+  "correction": {
+    "scope": "Future full-duration producer scheduling only; application and stability evaluator unchanged.",
+    "requestedDurationIsFloor": true,
+    "anchor": "First equivalent-state retained checkpoint at or beyond 30 minutes.",
+    "target": "Maximum of requested duration and anchor time plus 30 minutes.",
+    "maxExtraRuntimeMs": 1440000,
+    "heapDependentScheduling": false,
+    "originalFailurePreserved": true,
+    "hardwareValidation": "pending"
+  },
+  "validation": {
+    "schema": "gev-soak-anchor-patch-validation/v1",
+    "baseCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+    "sourceFiles": [
+      {
+        "name": "scripts/qa-mixed-use-soak.mjs",
+        "bytes": 13855,
+        "sha256": "5c585c789ebca4fc2cc1c7ea11bf61859f16abdd21697a5c09fb1bea1268e830"
+      },
+      {
+        "name": "scripts/qa-mixed-use-soak.test.mjs",
+        "bytes": 45783,
+        "sha256": "172393a6cf74f02761c2330d53213378d557a0c41f732776635c75613fd124cd"
+      }
+    ],
+    "startedAt": "2026-10-19T13:12:38.000Z",
+    "tests": [
+      {
+        "version": "24",
+        "code": 0,
+        "signal": null,
+        "log": "node24.log",
+        "sha256": "17a3b925cd8a3798b28753dcfed83d59e825fe55913bede2176df014bff8fc4f"
+      },
+      {
+        "version": "26",
+        "code": 0,
+        "signal": null,
+        "log": "node26.log",
+        "sha256": "8f2b3148352005d09f34eb531a56e3e7d4d0079c62386c3efe531f349e30df24"
+      }
+    ],
+    "status": "passed",
+    "productionChanged": false,
+    "completedAt": "2026-10-19T13:12:42.793Z",
+    "root": "/opt/gods-eye-view-validation/s61-s70-20261018/soak-anchor-review-20261019",
+    "output": "/opt/gods-eye-view-validation/s61-s70-20261018/soak-anchor-review-20261019-validation",
+    "testFiles": [
+      "scripts/qa-mixed-use-soak.test.mjs",
+      "scripts/review-soak-evidence.test.mjs",
+      "scripts/performance/candidatePerformanceEvidence.test.mjs"
+    ],
+    "logs": [
+      {
+        "version": "24",
+        "sha256": "17a3b925cd8a3798b28753dcfed83d59e825fe55913bede2176df014bff8fc4f",
+        "tests": 104,
+        "passed": 104,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "version": "26",
+        "sha256": "8f2b3148352005d09f34eb531a56e3e7d4d0079c62386c3efe531f349e30df24",
+        "tests": 104,
+        "passed": 104,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  }
+}

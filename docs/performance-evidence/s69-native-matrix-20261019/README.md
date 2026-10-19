@@ -36,10 +36,31 @@ when Windows could not confirm foreground ownership. It cannot satisfy the
 opened it in VS Code, a likely cause consistent with the observed editor window;
 the original wrapper did not retain Windows' failing foreground response, so
 exact attribution is unavailable. The retry explicitly preserves that response
-on failure. It began its measured hour at 12:05 UTC on 19 October against the
-same application and soak producer. Its final retention result, remaining
-exact-candidate matrix and visual checks are pending. Interim checkpoints are
-not a stability pass.
+on failure. The [completed retry](staged-ampfing-soak-d8ef-review.json) ran
+158 measured cycles in 3,608,651 ms against the exact signed `d8ef9002`
+application and the same clean producer. All operations, foreground checks and
+normal cleanup passed. All 13 post-GC checkpoints retained 668 listeners and
+stable application ownership counts; DOM nodes ended at 6,345 versus 6,339 at
+the warmed baseline. Retained heap still failed the unchanged gate: 5.3421%
+growth, with no missing evidence. Production remains unchanged.
+
+The periodic checkpoint scheduler measures each interval from the previous
+completed checkpoint and waits for equivalent-state cycles. Its cadence drift
+placed the final-window baseline at minute 26.31, so this nominal hour
+compared 33.84 minutes. The [future scheduling correction](soak-checkpoint-schedule-review.json)
+declares a complete 30-minute interval after the first equivalent checkpoint
+at or beyond minute 30. It never inspects heap values to choose duration,
+shortens the requested run, changes the 5% evaluator, or reinterprets this failure.
+It fails if the required checkpoint/interval cannot fit a bounded 24-minute
+extension. All 104 focused soak and evidence-consumer checks pass on each of
+Node 24 and 26 on VM105, with no skips. New hardware validation remains pending.
+The remaining exact-candidate matrix and visual checks are pending.
+
+An optional heap snapshot was attempted only after the measured failure and
+exceeded its predeclared 768 MiB raw-size bound. It provides no valid heap
+snapshot or acceptance evidence. The failure receipt and complete original
+soak remain archived; the incomplete transfer was hash-recorded and removed
+to recover VM105 space. The cause of the remaining heap growth is unresolved.
 The reports below retain their original application revisions; earlier
 `55639cc7` passes are not relabeled as `d8ef9002` evidence. The inactive unpacked
 `55639cc7` package was removed only after its manifest and retained signed

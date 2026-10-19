@@ -1,0 +1,1141 @@
+{
+  "schema": "gev-staged-ampfing-independent-review/v2",
+  "reviewedAt": "2026-10-19T13:07:57.202Z",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-final-ampfing-soak-20261019T120433063Z",
+  "files": [
+    {
+      "name": "staged-final-ampfing-soak-20261019T120433063Z.json",
+      "bytes": 239003,
+      "sha256": "440855b3ac7be2a0f10f3238bff8f226a20837fee4eb70a6e697877a678a7733"
+    },
+    {
+      "name": "run-staged-ampfing-soak-d8ef.mjs",
+      "bytes": 13812,
+      "sha256": "e735998bef1a30688ba41c203f920352b2e8521fc19b659743c5294a60f95500"
+    },
+    {
+      "name": "staged-final-ampfing-recording-20261019T120433063Z.json",
+      "bytes": 3686,
+      "sha256": "6f619b4509bd39a50331b8f0ca134d3055e8efb6b7ac4010ec648041e7b5c298"
+    },
+    {
+      "name": "staged-final-ampfing-soak-20261019T120433063Z-post-failure-heap.json",
+      "bytes": 547,
+      "sha256": "4b55b60a6ecef321029f9842aac899ff2875cd5059a9c9ca01a4462208f3e4af"
+    }
+  ],
+  "consumerCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "captureProducerCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "applicationCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "status": "failed",
+  "extraErrors": [],
+  "wrapperAggregateStatus": "failed",
+  "foregroundStatus": "passed",
+  "cleanupStatus": "passed",
+  "retention": {
+    "status": "failed",
+    "failures": [
+      "windows-uhd620-chrome155-native-ampfing: Retained heap exceeded 5% growth over the final 30-minute window."
+    ],
+    "pending": [],
+    "environments": [
+      {
+        "environmentId": "windows-uhd620-chrome155-native-ampfing",
+        "status": "failed",
+        "primaryEligible": true,
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "artifact": {
+          "path": "staged-final-ampfing-soak-20261019T120433063Z.json",
+          "sha256": "440855b3ac7be2a0f10f3238bff8f226a20837fee4eb70a6e697877a678a7733"
+        },
+        "stability": {
+          "status": "failed",
+          "failures": [
+            "Retained heap exceeded 5% growth over the final 30-minute window."
+          ],
+          "pending": [],
+          "heapGrowthRatio": 0.0534210004038408
+        },
+        "errors": [
+          "Retained heap exceeded 5% growth over the final 30-minute window."
+        ],
+        "pending": [],
+        "reason": null
+      }
+    ]
+  },
+  "remainingComparisons": {
+    "acceptancePolicyId": "gev-cesium-acceptance/2026-10-18",
+    "status": "pending",
+    "failures": [],
+    "pending": [
+      "No verified physical Windows comparison environment is recorded.",
+      "The dense-motion 20% performance objective is unassessed; its required measurement is missing.",
+      "The selected-aircraft-tracking 20% performance objective is unassessed; its required measurement is missing.",
+      "Required comparison workloads missing: operating-view, dense-investigation, selected-aircraft-tracking, infrastructure, weather-effects, map-streaming.",
+      "Infrastructure comparison variants missing: infrastructure-datacenters, infrastructure-dams, infrastructure-cables, infrastructure.",
+      "No raw paired comparison reports were supplied."
+    ],
+    "performanceObjectives": [
+      {
+        "id": "dense-motion",
+        "scenario": "scripted-motion",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      },
+      {
+        "id": "selected-aircraft-tracking",
+        "scenario": "selected-aircraft-tracking",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      }
+    ],
+    "missingWorkloads": [
+      "operating-view",
+      "dense-investigation",
+      "selected-aircraft-tracking",
+      "infrastructure",
+      "weather-effects",
+      "map-streaming"
+    ],
+    "workloadIds": [],
+    "workloadValidationModes": {
+      "operating-view": "five-pair-timed",
+      "dense-investigation": "five-pair-timed",
+      "selected-aircraft-tracking": "five-pair-timed",
+      "infrastructure": "five-pair-timed-all-four-variants",
+      "weather-effects": "five-pair-timed",
+      "lifecycle-stress": "full-soak-retention",
+      "map-streaming": "five-pair-timed-contract-required"
+    },
+    "infrastructureVariantCoverage": {
+      "requiredVariants": [
+        "infrastructure-datacenters",
+        "infrastructure-dams",
+        "infrastructure-cables",
+        "infrastructure"
+      ],
+      "observedVariants": [],
+      "missingVariants": [
+        "infrastructure-datacenters",
+        "infrastructure-dams",
+        "infrastructure-cables",
+        "infrastructure"
+      ]
+    },
+    "environments": []
+  },
+  "stability": {
+    "status": "failed",
+    "failures": [
+      "Retained heap exceeded 5% growth over the final 30-minute window."
+    ],
+    "pending": [],
+    "heapGrowthRatio": 0.0534210004038408
+  },
+  "location": {
+    "latitude": 48.2582,
+    "longitude": 12.421,
+    "altitude": 731
+  },
+  "nativeResolution": {
+    "observedDpr": 2,
+    "initial": {
+      "devicePixelRatio": 2,
+      "canvas": {
+        "clientWidth": 1440,
+        "clientHeight": 1000,
+        "width": 2880,
+        "height": 2000
+      },
+      "sceneDrawingBuffer": {
+        "width": 2880,
+        "height": 2000
+      },
+      "resolutionScale": 1,
+      "useBrowserRecommendedResolution": false,
+      "maximumScreenSpaceError": 1
+    }
+  },
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "logicalCpus": 8,
+    "memoryBytes": 16907538432,
+    "hosted": false,
+    "runnerImage": null,
+    "runnerImageVersion": null
+  },
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "browserVersion": "Chrome/155.0.8059.84",
+  "operations": {
+    "durationMs": 3608651,
+    "fullSoak": true,
+    "iterations": 158,
+    "sourceToggles": 1264,
+    "replaySeeks": 158,
+    "imports": 158,
+    "workspaceReloads": 316,
+    "archiveFailures": 158,
+    "cameraRecoveries": 158,
+    "peakHeapBytes": 498642228
+  },
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "heapBytes": 254484244,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6339,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 4,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 307791,
+      "heapBytes": 264562224,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 30,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 619091,
+      "heapBytes": 267296104,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 58,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 940819,
+      "heapBytes": 270024212,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6349,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 84,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1255362,
+      "heapBytes": 272471032,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 110,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1578465,
+      "heapBytes": 274385352,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6349,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 136,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1882891,
+      "heapBytes": 276173996,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6347,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 162,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2184633,
+      "heapBytes": 278909632,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6349,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 190,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2488754,
+      "heapBytes": 281144968,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 218,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2805133,
+      "heapBytes": 282955216,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 246,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3130366,
+      "heapBytes": 285585004,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6349,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 276,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3443680,
+      "heapBytes": 287875820,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6348,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 304,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3608651,
+      "heapBytes": 289043292,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6345,
+      "ownerResources": {
+        "maps": {
+          "listeners": 4,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "cacheEntries": 3,
+          "imageryLayers": 1,
+          "estimatedTileBytes": 0,
+          "providerLoadsStarted": 3,
+          "providerCacheReuses": 320,
+          "providerLoadFailures": 0
+        },
+        "imports": {
+          "pendingJobs": 0,
+          "cacheEntries": 1,
+          "pointRepresentation": "primitive-collection",
+          "pointPrimitiveCount": 1,
+          "pointPrimitiveCountUnit": "instances",
+          "pointPrimitiveCoverage": "owned-import-point-collection"
+        },
+        "satellites": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "primitives": 0,
+          "entities": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "cctv": {
+          "listeners": 5,
+          "timers": 0,
+          "pendingJobs": 0,
+          "primitives": 1,
+          "entities": 12,
+          "dataSources": 0,
+          "cacheEntries": 4
+        },
+        "local-datacenters": {
+          "listeners": 1,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 1
+        },
+        "local-dams": {
+          "listeners": 0,
+          "timers": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        },
+        "telegeography-submarine-cables": {
+          "listeners": 0,
+          "pendingJobs": 0,
+          "dataSources": 0,
+          "cacheEntries": 0
+        }
+      },
+      "pendingWorkers": 0,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    }
+  ],
+  "foreground": {
+    "start": {
+      "startedAt": 9458.20000000298,
+      "blurCount": 0,
+      "hiddenCount": 0,
+      "focusedAtStart": true,
+      "visibleAtStart": true,
+      "elapsedMs": 0.29999999701976776,
+      "focused": true,
+      "visible": true
+    },
+    "end": {
+      "startedAt": 9458.20000000298,
+      "blurCount": 0,
+      "hiddenCount": 0,
+      "focusedAtStart": true,
+      "visibleAtStart": true,
+      "elapsedMs": 3662201.1000000015,
+      "focused": true,
+      "visible": true
+    },
+    "activationChecks": 162
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false
+  },
+  "productionChanged": false,
+  "historicalFailure": "The earlier55639cc7 full soak failed its unchanged5% retention gate. This review does not relabel that evidence.",
+  "scope": "Physical Windows native-GPU retention against the exact signed private VM105 package. Performance matrix, visual equivalence, and deployment checks are separate requirements. Post-failure private heap data is diagnostic only."
+}

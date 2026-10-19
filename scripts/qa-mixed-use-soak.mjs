@@ -9,6 +9,10 @@ import {
   FULL_SOAK_MS,
 } from './performance/soakStability.mjs';
 const DEFAULT_DURATION_MS = FULL_SOAK_MS;
+const RETENTION_ANCHOR_MS = 30 * 60_000;
+// Match the stability gate's bounded checkpoint-gap allowance twice: once for
+// a late first anchor and once for atomic cycle completion after its target.
+const MAX_RETENTION_ANCHORED_EXTENSION_MS = 2 * 12 * 60_000;
 
 export function resolveNativeResolutionFlag(args = process.argv) {
   return args.includes('--native-resolution');
@@ -56,6 +60,7 @@ export async function runMixedUseSoak({
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
     throw new TypeError('Duration must be positive.');
+  const usesRetentionAnchor = durationMs >= FULL_SOAK_MS;
   const ownsDriver = !driver;
   driver ||= await createRenderedSoakDriver(url, {
     browserOptions,
@@ -95,6 +100,16 @@ export async function runMixedUseSoak({
     const firstRetainedMetrics = await driver.retainedMetrics?.();
     const startedAt = now();
     const checkpoints = [{ elapsedMs: 0, metrics: firstRetainedMetrics }];
+    const checkpointSchedule = {
+      requestedDurationMs: durationMs,
+      actualDurationMs: 0,
+      anchorElapsedMs: null,
+      targetDurationMs: durationMs,
+      maxExtraRuntimeMs: usesRetentionAnchor
+        ? MAX_RETENTION_ANCHORED_EXTENSION_MS
+        : 0,
+      status: usesRetentionAnchor ? 'awaiting-anchor' : 'not-applicable',
+    };
     const totals = {
       iterations: 0,
       sourceToggles: 0,
@@ -122,6 +137,7 @@ export async function runMixedUseSoak({
       warmupIterations: driver.warmupIterations || 0,
       firstRetainedMetrics,
       checkpoints,
+      checkpointSchedule,
       hardwareRenderingValidated: Boolean(driver.hardwareRenderingValidated),
       browserVersion: driver.browserVersion || 'test driver',
       operationStatus: 'running',
@@ -129,12 +145,17 @@ export async function runMixedUseSoak({
     const updateReport = () =>
       Object.assign(report, totals, {
         durationMs: now() - startedAt,
+        checkpointSchedule: {
+          ...checkpointSchedule,
+          actualDurationMs: now() - startedAt,
+        },
         fullSoak: now() - startedAt >= DEFAULT_DURATION_MS,
         peakHeapBytes,
         firstMetrics,
         lastMetrics,
       });
     try {
+      let boundedScheduleFailure = null;
       do {
         const result = await driver.runCycle(totals.iterations);
         const fields = Object.keys(totals).filter(
@@ -158,7 +179,20 @@ export async function runMixedUseSoak({
           checkpointIntervalMs
         ) {
           const metrics = await driver.retainedMetrics?.();
-          checkpoints.push({ elapsedMs: now() - startedAt, metrics });
+          const checkpointElapsedMs = now() - startedAt;
+          checkpoints.push({ elapsedMs: checkpointElapsedMs, metrics });
+          if (
+            usesRetentionAnchor &&
+            checkpointSchedule.anchorElapsedMs === null &&
+            checkpointElapsedMs >= RETENTION_ANCHOR_MS
+          ) {
+            checkpointSchedule.anchorElapsedMs = checkpointElapsedMs;
+            checkpointSchedule.targetDurationMs = Math.max(
+              durationMs,
+              checkpointElapsedMs + RETENTION_ANCHOR_MS,
+            );
+            checkpointSchedule.status = 'anchored';
+          }
           // Keep the warmed baseline and a bounded recent history.
           if (checkpoints.length > 128) checkpoints.splice(1, 1);
         }
@@ -168,8 +202,52 @@ export async function runMixedUseSoak({
         }
         if (intervalMs)
           await new Promise((resolve) => setTimeout(resolve, intervalMs));
-      } while (now() - startedAt < durationMs);
+        const elapsedMs = now() - startedAt;
+        const maximumElapsedMs =
+          durationMs + MAX_RETENTION_ANCHORED_EXTENSION_MS;
+        if (
+          usesRetentionAnchor &&
+          elapsedMs >= durationMs &&
+          checkpointSchedule.anchorElapsedMs === null &&
+          elapsedMs >= maximumElapsedMs
+        ) {
+          boundedScheduleFailure =
+            'No equivalent-state retention anchor was observed within the bounded extension.';
+        } else if (
+          usesRetentionAnchor &&
+          elapsedMs >= durationMs &&
+          checkpointSchedule.anchorElapsedMs !== null &&
+          checkpointSchedule.targetDurationMs > maximumElapsedMs
+        ) {
+          boundedScheduleFailure =
+            'The retention-anchored target exceeds the bounded extension.';
+        } else if (usesRetentionAnchor && elapsedMs > maximumElapsedMs) {
+          boundedScheduleFailure =
+            'The soak exceeded its bounded retention extension before reaching the target.';
+        }
+        if (boundedScheduleFailure) {
+          checkpointSchedule.status = 'bounded-failure';
+          throw new Error(boundedScheduleFailure);
+        }
+        if (
+          elapsedMs >= checkpointSchedule.targetDurationMs &&
+          (!usesRetentionAnchor || checkpointSchedule.anchorElapsedMs !== null)
+        )
+          break;
+      } while (true);
       report.lastRetainedMetrics = await driver.retainedMetrics?.();
+      if (
+        usesRetentionAnchor &&
+        now() - startedAt > durationMs + MAX_RETENTION_ANCHORED_EXTENSION_MS
+      ) {
+        checkpointSchedule.status = 'bounded-failure';
+        throw new Error(
+          'Final retained checkpoint exceeded the bounded retention extension.',
+        );
+      }
+      checkpointSchedule.status = usesRetentionAnchor
+        ? 'completed'
+        : 'not-applicable';
       checkpoints.push({
         elapsedMs: now() - startedAt,
         metrics: report.lastRetainedMetrics,
