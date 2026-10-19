@@ -1948,6 +1948,78 @@ test('one row steps every registered observation; missing frames hide and latest
   assert.equal(clock.getState().products.length, 1);
 });
 
+test('unchanged manifests preserve pending shared history stages across products', async (t) => {
+  const clock = createWeatherClock();
+  const radar = layerHarness({ clock });
+  const lightning = layerHarness({
+    clock,
+    id: 'weather-lightning',
+    feed: { getSnapshot: async () => ({ ...snapshot, product: 'lightning' }) },
+  });
+  t.after(() => {
+    radar.layer.destroy();
+    lightning.layer.destroy();
+    clock.destroy();
+  });
+  const initial = [radar.layer.update(), lightning.layer.update()];
+  await flush();
+  radar.stages.at(-1).finish();
+  lightning.stages.at(-1).finish();
+  await Promise.all(initial);
+  const selection = clock.setTarget(times[0]);
+  await flush();
+  const selected = [radar.stages.at(-1), lightning.stages.at(-1)];
+  const refresh = radar.layer.update();
+  await flush();
+  assert.deepEqual(
+    selected.map(({ signal }) => signal.aborted),
+    [false, false],
+    'metadata polling must not cancel either in-flight observation',
+  );
+  assert.deepEqual([radar.stages.length, lightning.stages.length], [2, 2]);
+  selected.forEach((stage) => stage.finish());
+  await Promise.all([selection, refresh]);
+  assert.deepEqual(
+    [radar.layer.getStats().observedAt, lightning.layer.getStats().observedAt],
+    [times[0], times[0]],
+  );
+});
+
+test('history polling retries a failed frame and changed coverage supersedes pending work', async (t) => {
+  const clock = createWeatherClock();
+  let value = snapshot;
+  const h = layerHarness({ clock, feed: { getSnapshot: async () => value } });
+  t.after(() => {
+    h.layer.destroy();
+    clock.destroy();
+  });
+  const initial = h.layer.update();
+  await flush();
+  h.stages.at(-1).finish();
+  await initial;
+  const selection = clock.setTarget(times[0]);
+  await flush();
+  h.stages.at(-1).finish(false);
+  await selection;
+  assert.equal(h.layer.getStats().observedAt, times[2]);
+  const retry = h.layer.update();
+  await flush();
+  const pending = h.stages.at(-1);
+  assert.equal(h.stages.length, 3, 'identical metadata still retries failure');
+  assert.equal(pending.time, times[0]);
+  value = { ...snapshot, bounds: { ...snapshot.bounds, west: -125 } };
+  const changed = h.layer.update();
+  await flush();
+  assert.equal(pending.signal.aborted, true);
+  assert.equal(h.stages.length, 4, 'changed coverage restages the observation');
+  h.stages.at(-1).finish();
+  await Promise.all([retry, changed]);
+  assert.equal(h.layer.getStats().observedAt, times[0]);
+  assert.equal(clock.getState().target, times[0]);
+  await h.layer.update();
+  assert.equal(h.stages.length, 4, 'unchanged displayed history is retained');
+});
+
 test('history manifest expiry hides imagery without jumping to latest; host resume keeps the target', async (t) => {
   const clock = createWeatherClock();
   let value = snapshot;
