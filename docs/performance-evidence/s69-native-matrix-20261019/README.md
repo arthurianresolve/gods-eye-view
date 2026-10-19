@@ -246,6 +246,32 @@ runs remain failures until a new revision completes its checks.
 
 ## Completion conditions
 
+### Weather metadata ownership correction
+
+The instrumented producer `52ca6010` reproduced the baseline failure in idle
+run 3, after two complete samples. The early-history control dispatched at
+7.0 ms and returned at 8.4 ms. At 6,173.2 ms all three layers still displayed
+12:00 UTC while the clock selected 11:50 UTC. Each layer had an incoming
+observation, no pending/deferred tiles, and seven or eight completed tiles.
+The raw report is `weather-corrected-qualification-1792373323643/baseline.json`.
+This identifies a staging delay; it does not by itself prove its cause.
+
+A separate deterministic reproduction establishes redundant cancellation:
+polling an unchanged manifest during a shared history selection aborts both
+the refreshed product and an unrelated product's pending observation. The
+narrow correction preserves an owned pending or displayed history selection
+when product, times, latest time and coverage are unchanged. Changed metadata,
+failed frames, expired history, host changes and explicit selections retain
+their existing refresh/recovery paths. No imagery detail or timeout changes.
+
+The new regression fails against the original source and passes with the fix.
+All 81 weather-rendering/clock tests pass on Node 24.16.0 and 26.11.0 on VM105;
+logs, original source and file hashes are retained at
+`/opt/gods-eye-view-validation/s61-s70-20261018/weather-refresh-check-1792374115607`.
+The fix has not yet been hardware-qualified and does not clear the original
+five-second failures. A new application revision must receive its own build
+identity and validation; results for `19065997` cannot be relabeled.
+
 The first same-build cable control completed at producer `6753d211` with motion
 p95 434.3 ms and 206 rendered frames. Windows refused foreground activation of
 the second fresh browser while Discord held the foreground, before any startup
