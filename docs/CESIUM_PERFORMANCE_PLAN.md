@@ -59,8 +59,10 @@ preflight now proves the fulfilled bytes, hash and exact eight-feature populatio
 before timing. The observer includes trusted input delivery delay and matching
 state/output in the same natural preRender/postRender pair. Review also fixed
 missing request proof in the successful receipt and incorrect disabled-control
-state. All 71 focused tests pass on each VM Node version, along with format,
-syntax and the 71-file capture no-undef check. New hardware measurements are
+state. A subsequent isolated-browser-realm regression caught two witness
+identifiers missing from the serialized observer's scope; both identifiers now
+live inside that function. All 72 focused tests pass on each VM Node version,
+along with format, syntax and the 71-file capture no-undef check. New hardware measurements are
 still required. Original reports remain historical; full-catalog matrix
 workloads and performance limits are unchanged. The first current balanced
 weather attempt failed foreground initialization before any measurement; a
@@ -68,6 +70,14 @@ fresh plan adds the owned blank-page handoff before the existing native checks.
 These changes affect QA only. Complete hardware metrics, weather, visual and
 soak evidence remain required.
 Production remains at `e7a878e`.
+
+The QA-only `f97b9b98` PR run separately failed hosted Windows recovery while
+closing the prior installation's Chrome 152 browser, before current-candidate
+installation. Settings and workspace checks passed, but natural process exit
+exceeded the unchanged ten-second deadline. The failed evidence is preserved
+in the [current checkpoint](performance-evidence/s69-native-matrix-20261019/README.md);
+the next QA revision requires another Windows recovery run. This does not
+replace or rewrite the exact application's earlier passing CI receipt.
 
 All seven exact `b3c49b19` standard CI jobs, tracking and signed-package workflows
 have passed. Its

@@ -358,6 +358,10 @@ function readForegroundActivation(reply, browserPid) {
 }
 
 export function installInteractionObserverInPage(fixtureContract) {
+  // This function is serialized into the page realm by Puppeteer evaluate;
+  // keep its witness identifiers local so it has no module-scope closures.
+  const localRenderWitnessType = 'natural-prerender-postrender-pair-v1';
+  const replayRenderWitnessType = 'natural-replay-prerender-postrender-v1';
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
   if (
@@ -775,8 +779,8 @@ export function installInteractionObserverInPage(fixtureContract) {
         sample.preRenderFrameNumber = preRenderWitness.frameNumber;
         sample.renderWitnessType =
           sample.kind === 'localControl'
-            ? LOCAL_RENDER_WITNESS
-            : REPLAY_RENDER_WITNESS;
+            ? localRenderWitnessType
+            : replayRenderWitnessType;
         sample.renderedFrameAtMs = performance.now();
         sample.frameNumberAtRendered = frameNumber;
         observer.records.push({ ...sample });

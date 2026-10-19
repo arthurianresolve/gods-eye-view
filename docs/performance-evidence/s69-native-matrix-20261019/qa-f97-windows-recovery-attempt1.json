@@ -1,0 +1,230 @@
+{
+  "schema": "gev-windows-recovery-failure-observation/v1",
+  "observedAt": "2026-10-19T18:27:33.781Z",
+  "qaHeadCommit": "f97b9b980acef196238722a9716023c00d28ed24",
+  "pullRequestMergeCommit": "849a691d33f943f887119eff6fbea5e436ebf6a8",
+  "workflowRunId": 39301449508,
+  "jobId": 118227404898,
+  "runAttempt": 1,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39301449508/job/118227404898",
+  "status": "failed",
+  "logSha256": "07315943a6d3c3879a795757a65b2a60844c1f6a823ae6ca397210b4dc7e11d7",
+  "raw": {
+    "scope": "prior-install-browser-profile-recovery",
+    "candidateCommit": "849a691d33f943f887119eff6fbea5e436ebf6a8",
+    "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+    "platform": "win32",
+    "os": "10.0.26100",
+    "node": "v24.14.0",
+    "hostEnvironment": {
+      "cpuModel": "AMD EPYC 7763 64-Core Processor                ",
+      "logicalCpus": 4,
+      "totalMemoryBytes": 17174360064
+    },
+    "requestedRenderingBackend": "swiftshader-webgl-only",
+    "rendererExperiment": null,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "expectedBrowserVersion": null,
+    "browserVersionMatch": null,
+    "viewport": {
+      "width": 960,
+      "height": 640
+    },
+    "hardwareRenderingValidated": false,
+    "timestamp": "2026-10-19T18:24:04.737Z",
+    "sourceDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "checks": [
+      {
+        "id": "prior-install-saves-browser-workspace",
+        "status": "failed",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "timing": {
+          "rendererQueryTiming": "late",
+          "rendererQueryDurationClock": "host-wall-clock",
+          "rendererQueryMeasurement": "host-round-trip",
+          "bootElapsedMs": 7879,
+          "rendererQueryDurationMs": 365,
+          "bootPlusQueryCriticalPathMs": 8245,
+          "rendererCheckpointElapsedMs": 10031
+        },
+        "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+        "renderedFeatures": 1,
+        "settingsMatch": true,
+        "workspaceBundleMatches": true,
+        "pageOwnership": {
+          "initialPageCount": 1,
+          "appPagesBeforeNavigation": 0,
+          "appPagesAfterBoot": 1,
+          "appPagesAfterWorkspace": 1,
+          "unexpectedCreatedPageTargets": 0,
+          "closeCompleted": true,
+          "openPagesBeforeBrowserClose": 0,
+          "browserCloseCompleted": false,
+          "forcedBrowserProcessTermination": true,
+          "browserCloseObservation": {
+            "closeStatus": "timed-out",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 10000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": true,
+            "closeStartHostMs": 152676.5005,
+            "closeSettledHostMs": 162685.398,
+            "closeElapsedMs": 10008.897499999992,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry",
+              "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 1,
+              "signal": null,
+              "elapsedMs": 10682.716799999995
+            },
+            "protocolCloseTrace": {
+              "scope": "owned-browser-close-only",
+              "browserCloseRequestSeen": true,
+              "browserCloseRequestElapsedMs": 0.34249999999883585,
+              "browserCloseAcknowledgementSeen": true,
+              "browserCloseAcknowledgementElapsedMs": 15.187100000010105,
+              "browserCloseAcknowledgementLate": false,
+              "browserCloseAcknowledgementError": false,
+              "browserDisconnected": true,
+              "browserDisconnectedElapsedMs": 25.502899999992223,
+              "malformedCloseMessage": false,
+              "protocolMessageCount": 2,
+              "protocolMessageOverflow": false,
+              "protocolObservationComplete": true
+            },
+            "shutdownDiagnostics": {
+              "targetTypeCounts": {
+                "beforeClose": {
+                  "status": "available",
+                  "source": "browser.targets",
+                  "targetCount": 1,
+                  "counts": {
+                    "background_page": 0,
+                    "browser": 1,
+                    "page": 0,
+                    "service_worker": 0,
+                    "shared_worker": 0,
+                    "webview": 0,
+                    "worker": 0,
+                    "other": 0
+                  },
+                  "malformedTargetCount": 0
+                },
+                "atDisconnect": {
+                  "status": "unavailable",
+                  "reason": "browser-disconnected"
+                },
+                "atTimeout": {
+                  "status": "unavailable",
+                  "reason": "browser-disconnected"
+                }
+              },
+              "browserProcessInfoBeforeClose": {
+                "status": "available",
+                "source": "SystemInfo.getProcessInfo",
+                "processCount": 7,
+                "rows": [
+                  {
+                    "id": 2492,
+                    "role": "renderer"
+                  },
+                  {
+                    "id": 3192,
+                    "role": "other"
+                  },
+                  {
+                    "id": 3292,
+                    "role": "renderer"
+                  },
+                  {
+                    "id": 6124,
+                    "role": "gpu"
+                  },
+                  {
+                    "id": 6552,
+                    "role": "renderer"
+                  },
+                  {
+                    "id": 7900,
+                    "role": "browser"
+                  },
+                  {
+                    "id": 8228,
+                    "role": "other"
+                  }
+                ],
+                "truncated": false,
+                "retainedFields": ["id", "role"]
+              },
+              "preCloseDiagnosticsElapsedMs": 5.509100000024773,
+              "ownedPidPresence": {
+                "atTimeout": {
+                  "status": "present",
+                  "pid": 7900,
+                  "source": "owned-pid-presence-only",
+                  "identityConfirmed": false,
+                  "pidReusePossible": true
+                },
+                "afterForceCheckpoint": {
+                  "status": "exited",
+                  "pid": 7900,
+                  "source": "child-exit-observed"
+                }
+              },
+              "processTreeBeforeForce": {
+                "status": "available",
+                "rootPid": 7900,
+                "rows": [
+                  {
+                    "pid": 7900,
+                    "ppid": 2752,
+                    "image": "chrome.exe",
+                    "category": "browser"
+                  },
+                  {
+                    "pid": 1724,
+                    "ppid": 7900,
+                    "image": "chrome.exe",
+                    "category": "crashpad"
+                  },
+                  {
+                    "pid": 2232,
+                    "ppid": 1724,
+                    "image": "chrome.exe",
+                    "category": "crashpad"
+                  }
+                ],
+                "processCount": 3,
+                "truncated": false
+              }
+            },
+            "forceProcessStatus": "confirmed",
+            "forceProcessAttempted": true,
+            "forceProcessCallbackInvoked": true,
+            "forceProcessElapsedMs": 117.61879999999655,
+            "stderr": []
+          },
+          "cleanupError": "Graceful browser close did not complete."
+        },
+        "step": "owned-page-cleanup",
+        "error": "Graceful browser close did not complete."
+      }
+    ],
+    "status": "failed",
+    "failure": {
+      "check": "prior-install-saves-browser-workspace",
+      "step": "owned-page-cleanup",
+      "error": "Graceful browser close did not complete."
+    }
+  },
+  "interpretation": "The prior-install stage saved matching settings and workspace, closed its owned page, and received Browser.close acknowledgement/disconnection, but the Windows Chrome process remained until forced cleanup. This occurred before installing the current application. It is a real failed shutdown check; the log alone does not establish the underlying Chromium/runner cause. Preserve this attempt if repeating the failed job.",
+  "productionChanged": false,
+  "vmArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/ci-f97-windows-recovery-attempt1",
+  "archiveVerified": true
+}

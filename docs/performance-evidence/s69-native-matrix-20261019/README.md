@@ -131,6 +131,26 @@ A new complete
 metrics run and a new exact-candidate soak are required.
 Production still serves `e7a878e`.
 
+The subsequent browser-realm review found two witness identifiers referenced
+outside the function serialized into Chrome. Node tests that called the
+function directly did not expose those missing closures. The identifiers now
+live inside the serialized function. An isolated-realm regression exercises
+both local-control and replay preRender/postRender completion without module
+bindings. The [serialization validation](interaction-serialization-qa-validation.json)
+passes all 72 focused tests on each VM Node version, format/syntax checks and
+the same 71-file no-undef check. Application bytes and acceptance limits remain
+unchanged; this validates the observer, not hardware latency.
+
+QA revision `f97b9b98` also records a separate
+[hosted Windows recovery failure](qa-f97-windows-recovery-attempt1.json).
+The prior installation saved its settings and workspace correctly, but Chrome
+152 acknowledged browser closure and then left its browser/crashpad processes
+running beyond the existing ten-second shutdown deadline. This occurred before
+installing the current candidate. Forced cleanup succeeded; the recovery job
+still failed. The underlying browser/runner cause is not established. The
+exact `b3c49b19` application's passing CI receipt remains separate, and the next
+QA revision must repeat Windows recovery without relaxing its deadline.
+
 The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
 a native DOM ownership leak reproduced on Chrome 155; the
 [intervention and engine census](image-cleanup-census-review.json) and

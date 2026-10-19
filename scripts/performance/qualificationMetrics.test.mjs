@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
+import { runInNewContext } from 'node:vm';
 import { createWorkspaceStorage } from '../../src/storage/index.js';
 import {
   createAircraftRecordingService,
@@ -1929,6 +1930,182 @@ test('disposed replay frame observers cannot revive a sample', async () => {
   } finally {
     globalWindow.__qualificationMetricsObserver?.dispose();
     restoreGlobals();
+  }
+});
+
+test('serialized interaction observer completes local and replay render witnesses without module closures', async () => {
+  const listeners = new Map();
+  const controls = new Map();
+  const createNode = (selector, { active = false, value = '' } = {}) => {
+    const handlers = new Map();
+    const node = {
+      value,
+      classList: { contains: (name) => name === 'active' && active },
+      contains: (target) => target === node,
+      addEventListener: (name, listener) => handlers.set(name, listener),
+      removeEventListener: (name, listener) => {
+        if (handlers.get(name) === listener) handlers.delete(name);
+      },
+      dispatch: (name, timeStamp = now) => {
+        const listener = handlers.get(name);
+        listener?.({
+          type: name,
+          isTrusted: true,
+          timeStamp,
+          target: node,
+          currentTarget: node,
+        });
+      },
+    };
+    controls.set(selector, node);
+    return node;
+  };
+  let now = 100;
+  const localSelector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
+  const replaySelector = '.investigation-timeline-slider-control';
+  const localNode = createNode(localSelector, { active: true });
+  const replayNode = createNode(replaySelector, { value: '4' });
+  const selectedRecord = {
+    id: 'SYNTH-001',
+    positionTimeMs: 4000,
+    latitude: Math.sin(3 / 10) * 0.02,
+    longitude: 179.73,
+  };
+  const scene = {
+    frameState: { frameNumber: 7 },
+    preRender: {
+      addEventListener: (listener) => {
+        listeners.set('preRender', listener);
+        return () => listeners.delete('preRender');
+      },
+    },
+    postRender: {
+      addEventListener: (listener) => {
+        listeners.set('postRender', listener);
+        return () => listeners.delete('postRender');
+      },
+    },
+  };
+  const app = {
+    viewer: { scene },
+    dataManager: {
+      isEnabled: () => true,
+      layers: new Map([
+        [
+          'local-datacenters',
+          {
+            module: {
+              getLodDiagnostics: () => ({
+                computed: true,
+                total: 8,
+                active: 8,
+              }),
+            },
+          },
+        ],
+        [
+          'flights',
+          {
+            module: {
+              getAnalystRecords: (limit) => {
+                assert.equal(limit, 8);
+                return [
+                  {
+                    icao24: selectedRecord.id,
+                    provenance: {
+                      positionObservedAtMs: selectedRecord.positionTimeMs,
+                    },
+                    lat: selectedRecord.latitude,
+                    lon: selectedRecord.longitude,
+                  },
+                ];
+              },
+            },
+          },
+        ],
+      ]),
+    },
+    aircraftSource: {
+      getState: () => ({
+        mode: 'recorded',
+        recordingId: QUALIFICATION_REPLAY_FIXTURE_CONTRACT.recordingId,
+        recordCount: QUALIFICATION_REPLAY_FIXTURE_CONTRACT.expectedRecordCount,
+        targetMs: 4000,
+        coverage: { from: 1000, to: 4000 },
+      }),
+    },
+  };
+  const sandbox = {
+    window: {
+      __godsEyeView: app,
+      __qualificationFlightWitnessReader: (id) => ({
+        billboardId: id,
+        billboardVisible: true,
+        billboardPosition: {
+          latitude: selectedRecord.latitude,
+          longitude: selectedRecord.longitude,
+        },
+        screenPosition: { x: 20, y: 30 },
+        canvas: { width: 800, height: 600 },
+      }),
+    },
+    document: { querySelector: (selector) => controls.get(selector) || null },
+    performance: { now: () => now },
+    setInterval: () => 1,
+    clearInterval() {},
+    console,
+  };
+  const pageRealmFunction = runInNewContext(
+    `(${installInteractionObserverInPage.toString()})`,
+    sandbox,
+  );
+  pageRealmFunction(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+  const observer = sandbox.window.__qualificationMetricsObserver;
+  try {
+    observer.arm('localControl', true);
+    localNode.dispatch('pointerdown');
+    now += 1;
+    scene.frameState.frameNumber = 8;
+    listeners.get('preRender')();
+    listeners.get('postRender')();
+    const local = observer.take();
+    assert.equal(
+      local.renderWitnessType,
+      'natural-prerender-postrender-pair-v1',
+    );
+    assert.equal(local.preRenderFrameNumber, 8);
+    assert.equal(local.frameNumberAtRendered, 8);
+
+    observer.arm(
+      'loadedReplaySeek',
+      'end',
+      '',
+      '1',
+      0,
+      179.7,
+      1000,
+      1000,
+      4000,
+    );
+    replayNode.dispatch('input');
+    now += 1;
+    scene.frameState.frameNumber = 9;
+    listeners.get('preRender')();
+    listeners.get('postRender')();
+    const replay = observer.take();
+    assert.equal(
+      replay.renderWitnessType,
+      'natural-replay-prerender-postrender-v1',
+    );
+    assert.equal(
+      replay.renderedRecordPositionTimeMs,
+      selectedRecord.positionTimeMs,
+    );
+    assert.equal(replay.renderedBillboardVisible, true);
+    assert.equal(replay.preRenderFrameNumber, 9);
+    assert.equal(replay.frameNumberAtRendered, 9);
+  } finally {
+    observer.dispose();
   }
 });
 
