@@ -5,6 +5,7 @@ import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
 
 const BASELINE = 'e7a878e168bc97ffedddc27e13bf3e69b7ee6256';
 const CANDIDATE = '19065997a3f6360d68cb9ed5b389c4754856b596';
+const B3_CANDIDATE = 'b3c49b19fea88ca82d801f7a86c62a9f827da874';
 const profile = {
   id: 'native-sharpness-v1',
   useBrowserRecommendedResolution: false,
@@ -167,9 +168,10 @@ function valid() {
   return { disposition, diagnostic: diagnosticEvidence, baseline, candidate };
 }
 
-function currentCandidateEvidence() {
+function currentCandidateEvidence(
+  current = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a',
+) {
   const input = valid();
-  const current = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a';
   const graphics = { browserVersion: 'Chrome/155.0.8059.84' };
   const baseline = JSON.parse(input.baseline.bytes);
   const candidate = JSON.parse(input.candidate.bytes);
@@ -191,6 +193,18 @@ function currentCandidateEvidence() {
   });
   return input;
 }
+
+test('b3 Austin disposition requires fresh b3 raw pair and diagnostic hashes', () => {
+  const input = currentCandidateEvidence(B3_CANDIDATE);
+  assert.deepEqual(validateIdleCadenceDisposition(input).resolvedScenarios, [
+    'idle',
+  ]);
+
+  const priorDiagnostic = currentCandidateEvidence().diagnostic;
+  input.diagnostic = priorDiagnostic;
+  input.disposition.diagnosticSha256 = digest(priorDiagnostic.bytes);
+  assert.throws(() => validateIdleCadenceDisposition(input), /identities/);
+});
 
 test('current Austin revision needs its own hash-bound raw and diagnostic evidence', () => {
   const input = currentCandidateEvidence();

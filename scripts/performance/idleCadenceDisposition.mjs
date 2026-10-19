@@ -5,9 +5,14 @@ const SHA1 = /^[a-f0-9]{40}$/i;
 const BASELINE_SHA = 'e7a878e168bc97ffedddc27e13bf3e69b7ee6256';
 const CANDIDATE_SHA = '19065997a3f6360d68cb9ed5b389c4754856b596';
 const CURRENT_CANDIDATE_SHA = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a';
+const B3_CANDIDATE_SHA = 'b3c49b19fea88ca82d801f7a86c62a9f827da874';
 // Each candidate needs its own complete diagnostic and original raw pair.
 // Admitting the current revision never reuses or relabels the historical one.
-const DIAGNOSTIC_CANDIDATES = new Set([CANDIDATE_SHA, CURRENT_CANDIDATE_SHA]);
+const DIAGNOSTIC_CANDIDATES = new Set([
+  CANDIDATE_SHA,
+  CURRENT_CANDIDATE_SHA,
+  B3_CANDIDATE_SHA,
+]);
 const ROUTE_ID = 'austin-operating-city-route-v1';
 const MAX_DIAGNOSTIC_BYTES = 4 * 1024 * 1024;
 // Full five-run raw reports retain per-frame evidence and are intentionally
@@ -377,7 +382,10 @@ export function validateIdleCadenceDisposition({
   const rcRaw = c.value;
   const rb = assertRaw(rbRaw, 'baseline', BASELINE_SHA);
   const rc = assertRaw(rcRaw, 'candidate', candidateSha);
-  if (candidateSha === CURRENT_CANDIDATE_SHA) {
+  if (
+    candidateSha === CURRENT_CANDIDATE_SHA ||
+    candidateSha === B3_CANDIDATE_SHA
+  ) {
     const browserVersion = rbRaw.graphics?.browserVersion;
     if (!/^Chrome\/\d+\.\d+\.\d+\.\d+$/.test(browserVersion || ''))
       fail('current raw full browser version is missing.');

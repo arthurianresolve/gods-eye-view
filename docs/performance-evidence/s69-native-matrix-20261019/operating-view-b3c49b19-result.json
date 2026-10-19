@@ -1,0 +1,122 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T18:37:47.447Z",
+  "row": "operating-view",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 265.3999999985099,
+        "candidateMedianP95Ms": 1015,
+        "changePct": 282.4415975906929,
+        "regressionOver10Pct": true
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 299.6000000014901,
+        "candidateMedianP95Ms": 284.8999999985099,
+        "changePct": -4.9065420570451,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": ["idle"],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "failed",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3276,
+    "candidateMedianMs": 3937,
+    "baselineInitialSettleMedianMs": 3954,
+    "candidateInitialSettleMedianMs": 4642,
+    "initialSettleChangePct": 17.400101163378856,
+    "initialSettleRegressionOver10Pct": true,
+    "baselineRunsMs": [4254, 4192, 3204, 3014, 3276],
+    "candidateRunsMs": [6122, 3438, 3210, 4144, 3937],
+    "changePct": 20.177045177045176,
+    "regressionOver10Pct": true,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6707,
+      "sha256": "bb6477984503eca6828ebf1a9c645a2430ca17ae79ca945d1c1b7a8dd659d23f"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3938,
+      "sha256": "061fc7f779843e521bc85eaf769877a59011a894a2d3c02d5688da0628f72d08"
+    },
+    {
+      "name": "operating-view-baseline.json",
+      "bytes": 13194119,
+      "sha256": "b793812c40a64c76927e97c513baf0ee998b00b50be61a7d6b18de14dcb859c9"
+    },
+    {
+      "name": "operating-view-candidate.json",
+      "bytes": 13358781,
+      "sha256": "8672d9f3d9adfa3f35c6c6885936d879b31f8fb0b8ee93100b090782a2fdff3c"
+    },
+    {
+      "name": "operating-view-baseline.json.log",
+      "bytes": 678,
+      "sha256": "8fad49cdb24bda377468602d1bef26ed44a6eddab80deb475dbf2961a2655191"
+    },
+    {
+      "name": "operating-view-baseline.json.invocation.json",
+      "bytes": 2432,
+      "sha256": "55a5ff2f75d4abb5b89bf6acd015c74028b5e11c801297968cdeb8b9515c14e5"
+    },
+    {
+      "name": "operating-view-candidate.json.log",
+      "bytes": 679,
+      "sha256": "ca194f751ef9b0a6235d448278afb54442e947b5e65c92ebf527cb23a821e4ed"
+    },
+    {
+      "name": "operating-view-candidate.json.invocation.json",
+      "bytes": 2442,
+      "sha256": "ffae1ee0fee9114f3af284d6f5b1ee8c50f38d3b66e4e48350b81376cf78a3f2"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/operating-view-b3c49b19-native155",
+  "productionChanged": false
+}

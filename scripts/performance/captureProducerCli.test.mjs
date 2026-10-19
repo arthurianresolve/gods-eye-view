@@ -110,6 +110,47 @@ test('capture CLI rejects either half of an explicit build-harness identity befo
   }
 });
 
+test('startup-only CLI admits Austin identity through to native-evidence validation', () => {
+  const common = [
+    '--startup-only-shard',
+    '--startup-shard-id',
+    'austin-startup-control-01',
+    '--startup-role',
+    'control',
+    '--out',
+    'unused-startup-shard.json',
+  ];
+  const run = (providerFixture) =>
+    spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(
+          new URL('../capture-scene-performance.mjs', import.meta.url),
+        ),
+        ...common,
+        '--provider-fixture',
+        providerFixture,
+      ],
+      { encoding: 'utf8', windowsHide: true, timeout: 30_000 },
+    );
+
+  const austin = run('austin-operating-v1');
+  assert.equal(austin.error, undefined);
+  assert.equal(austin.status, 1);
+  assert.match(
+    austin.stderr,
+    /requires verified, headed native hardware capture/,
+  );
+
+  const unsupported = run('infrastructure-cables');
+  assert.equal(unsupported.error, undefined);
+  assert.equal(unsupported.status, 1);
+  assert.match(
+    unsupported.stderr,
+    /requires --provider-fixture infrastructure-dams or austin-operating-v1/,
+  );
+});
+
 test('frame trace rejects missing or shared output paths before launching a browser', () => {
   for (const [args, message] of [
     [['--frame-trace-out'], /requires a separate diagnostic output path/],

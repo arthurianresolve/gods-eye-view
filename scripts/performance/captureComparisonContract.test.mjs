@@ -8,10 +8,13 @@ import {
   createObservedWeatherEffectsComparisonContract,
   getCaptureComparisonIneligibilityReasons,
   getCaptureReadinessReasons,
+  isSupportedStartupOnlyFixture,
+  resolveStartupOnlyFixtureIdentity,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
 import { makeInfrastructureReport } from './pairedReportTestFixtures.mjs';
+import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 
 const fixture = createProductionFlightFixture({
   count: 2500,
@@ -970,5 +973,58 @@ test('infrastructure contract rejects altered source populations and clock', () 
   assert.throws(
     () => createObservedInfrastructureComparisonContract(changedRoute),
     /route differs from the pinned camera\/scenario/,
+  );
+});
+
+test('startup-only shards accept only dams or Austin with their real row identity', () => {
+  assert.equal(isSupportedStartupOnlyFixture('infrastructure-dams'), true);
+  assert.equal(
+    isSupportedStartupOnlyFixture(AUSTIN_OPERATING_WORKLOAD_ID),
+    true,
+  );
+  assert.equal(isSupportedStartupOnlyFixture('infrastructure-cables'), false);
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity('infrastructure-dams', {
+      infrastructureWorkload: {
+        workloadId: 'infrastructure-dams',
+        id: 'bundled-dams-static-v1',
+        sha256: 'a'.repeat(64),
+      },
+    }),
+    {
+      workloadId: 'infrastructure-dams',
+      id: 'bundled-dams-static-v1',
+      sha256: 'a'.repeat(64),
+    },
+  );
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity(AUSTIN_OPERATING_WORKLOAD_ID, {
+      austinOperatingWorkload: {
+        workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+        id: 'austin-operating-composed-v1',
+        sha256: 'b'.repeat(64),
+      },
+    }),
+    {
+      matrixRowId: 'operating-view',
+      workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+      id: 'austin-operating-composed-v1',
+      sha256: 'b'.repeat(64),
+    },
+  );
+  assert.throws(
+    () => resolveStartupOnlyFixtureIdentity('infrastructure-cables'),
+    /Unsupported startup-only workload/,
+  );
+  assert.throws(
+    () =>
+      resolveStartupOnlyFixtureIdentity(AUSTIN_OPERATING_WORKLOAD_ID, {
+        austinOperatingWorkload: {
+          workloadId: 'infrastructure-dams',
+          id: 'bundled-dams-static-v1',
+          sha256: 'c'.repeat(64),
+        },
+      }),
+    /Expected values to be strictly equal/,
   );
 });

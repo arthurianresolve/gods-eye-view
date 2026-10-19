@@ -7,6 +7,7 @@ import {
 } from './infrastructureWorkloadContract.mjs';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
+  AUSTIN_OPERATING_WORKLOAD_ID,
   AUSTIN_OPERATING_LAYER_COUNTS,
   AUSTIN_OPERATING_RENDERING_STATE,
   AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
@@ -24,6 +25,46 @@ import {
 } from './mapStreamingWorkloadContract.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const STARTUP_ONLY_FIXTURES = Object.freeze({
+  'infrastructure-dams': Object.freeze({
+    matrixRowId: 'infrastructure-dams',
+    workloadId: 'infrastructure-dams',
+    fixtureId: 'bundled-dams-static-v1',
+  }),
+  [AUSTIN_OPERATING_WORKLOAD_ID]: Object.freeze({
+    matrixRowId: 'operating-view',
+    workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+    fixtureId: 'austin-operating-composed-v1',
+  }),
+});
+
+export function isSupportedStartupOnlyFixture(workloadId) {
+  return Object.hasOwn(STARTUP_ONLY_FIXTURES, workloadId);
+}
+
+export function resolveStartupOnlyFixtureIdentity(
+  workloadId,
+  { infrastructureWorkload, austinOperatingWorkload } = {},
+) {
+  const expected = STARTUP_ONLY_FIXTURES[workloadId];
+  assert.ok(expected, `Unsupported startup-only workload: ${workloadId}`);
+  const fixture =
+    workloadId === AUSTIN_OPERATING_WORKLOAD_ID
+      ? austinOperatingWorkload
+      : infrastructureWorkload;
+  assert.ok(fixture, `The ${workloadId} startup fixture was not prepared.`);
+  assert.equal(fixture.workloadId, expected.workloadId);
+  assert.equal(fixture.id, expected.fixtureId);
+  assert.match(fixture.sha256 || '', SHA256);
+  return {
+    ...(expected.matrixRowId !== expected.workloadId
+      ? { matrixRowId: expected.matrixRowId }
+      : {}),
+    workloadId: fixture.workloadId,
+    id: fixture.id,
+    sha256: fixture.sha256,
+  };
+}
 const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
   '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
 const hashCanonicalIds = (ids) =>

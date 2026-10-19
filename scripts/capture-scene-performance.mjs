@@ -138,6 +138,8 @@ import {
   getMainCaptureDocumentIdentity,
   getCaptureReadinessReasons,
   readSettledRenderBoundaryElapsedMs,
+  isSupportedStartupOnlyFixture,
+  resolveStartupOnlyFixtureIdentity,
 } from './performance/captureComparisonContract.mjs';
 import {
   assertInfrastructureClockObservation,
@@ -366,13 +368,17 @@ const startupRuns = Math.max(
 );
 const startupDocumentTopology = createCaptureDocumentTopology({
   infrastructure: Boolean(
-    infrastructureWorkloadSelected || weatherEffectsWorkload,
+    infrastructureWorkloadSelected ||
+    weatherEffectsWorkload ||
+    (startupOnlyShard && austinOperatingWorkloadSelected),
   ),
   startupRuns,
 });
 const mainCaptureDocumentIdentity = getMainCaptureDocumentIdentity({
   infrastructure: Boolean(
-    infrastructureWorkloadSelected || weatherEffectsWorkload,
+    infrastructureWorkloadSelected ||
+    weatherEffectsWorkload ||
+    (startupOnlyShard && austinOperatingWorkloadSelected),
   ),
   startupRuns,
 });
@@ -574,9 +580,9 @@ if (startupOnlyShard) {
       '--startup-only-shard requires --startup-role control or candidate.',
     );
   if (!out) throw new Error('--startup-only-shard requires --out.');
-  if (providerFixtureMode !== 'infrastructure-dams')
+  if (!isSupportedStartupOnlyFixture(providerFixtureMode))
     throw new Error(
-      '--startup-only-shard requires --provider-fixture infrastructure-dams.',
+      '--startup-only-shard requires --provider-fixture infrastructure-dams or austin-operating-v1.',
     );
   if (
     !buildProvenanceEnabled ||
@@ -7448,9 +7454,10 @@ if (startupOnlyShard && !captureFailure) {
         captureProducerCommit: source.harnessCommit,
       },
       fixture: {
-        workloadId: infrastructureWorkload.workloadId,
-        id: infrastructureWorkload.id,
-        sha256: infrastructureWorkload.sha256,
+        ...resolveStartupOnlyFixtureIdentity(providerFixtureMode, {
+          infrastructureWorkload,
+          austinOperatingWorkload,
+        }),
       },
       graphics: startupOnlyGraphics,
       environment,
