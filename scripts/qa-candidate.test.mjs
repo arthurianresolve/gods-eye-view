@@ -5,10 +5,34 @@ import {
   formatPerformanceObjectiveNotes,
   requiresPerformanceEvidence,
   readValidationManifest,
+  readValidationManifestWithNativeMaps,
 } from './qa-candidate.mjs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+
+test('native manifest reader preserves absent and v1 evidence and rejects a wrong candidate', async () => {
+  assert.equal(await readValidationManifestWithNativeMaps(''), null);
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-native-'));
+  const file = path.join(dir, 'manifest.json');
+  const commit = 'a'.repeat(40);
+  await writeFile(
+    file,
+    JSON.stringify({ schemaVersion: 1, candidateCommit: commit, checks: [] }),
+  );
+  assert.deepEqual(
+    await readValidationManifestWithNativeMaps(file, {
+      candidateCommit: commit,
+    }),
+    readValidationManifest(file, { candidateCommit: commit }),
+  );
+  await assert.rejects(
+    readValidationManifestWithNativeMaps(file, {
+      candidateCommit: 'b'.repeat(40),
+    }),
+    /candidate commit/i,
+  );
+});
 
 test('empty artifacts, wrong per-check commits and conflicting outcomes cannot pass', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-regressions-'));

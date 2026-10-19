@@ -3,7 +3,10 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedMapPerformanceReports,
+} from './pairedReport.mjs';
 import { PERFORMANCE_ACCEPTANCE_POLICY_ID } from './candidatePerformanceEvidence.mjs';
 import { AUSTIN_OPERATING_FIXED_TIME } from './austinOperatingWorkloadContract.mjs';
 import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
@@ -461,9 +464,24 @@ export function readReusableMatrixReport(plan, row, role) {
 }
 
 export function validateMatrixPair(plan, row) {
+  return reviewMatrixPair(plan, row, validatePairedPerformanceReports);
+}
+
+/** Independently verify the native map corpus without changing legacy callers. */
+export async function validateMatrixPairWithNativeEvidence(plan, row) {
+  return reviewMatrixPair(
+    plan,
+    row,
+    row.id === 'map-streaming'
+      ? validatePairedMapPerformanceReports
+      : validatePairedPerformanceReports,
+  );
+}
+
+function reviewMatrixPair(plan, row, validate) {
   const baseline = readReusableMatrixReport(plan, row, 'baseline');
   const candidate = readReusableMatrixReport(plan, row, 'candidate');
-  const result = validatePairedPerformanceReports({
+  const result = validate({
     baseline,
     candidate,
     expectedAppCommits: {
@@ -473,8 +491,8 @@ export function validateMatrixPair(plan, row) {
     expectedComparisonProfile:
       plan.comparisonProfile === 'legacy' ? null : plan.comparisonProfile,
   });
-  return {
-    ...result,
+  const withProfileEvidence = (comparison) => ({
+    ...comparison,
     comparisonProfileEvidence: {
       baseline: baseline.comparisonProfileEvidence || {
         status: 'declared-in-report',
@@ -483,7 +501,10 @@ export function validateMatrixPair(plan, row) {
         status: 'declared-in-report',
       },
     },
-  };
+  });
+  return result instanceof Promise
+    ? result.then(withProfileEvidence)
+    : withProfileEvidence(result);
 }
 
 export function createMatrixResult(plan, completedRows, startedAt) {

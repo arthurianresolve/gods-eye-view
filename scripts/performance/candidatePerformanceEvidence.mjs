@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedMapPerformanceReports,
+} from './pairedReport.mjs';
 import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
@@ -193,7 +196,12 @@ function recordedEnvironmentIdentity(report) {
   });
 }
 
-function comparisonRows(evidence, manifestPath, candidateCommit) {
+function comparisonRows(
+  evidence,
+  manifestPath,
+  candidateCommit,
+  mapReviews = new Map(),
+) {
   if (
     evidence != null &&
     (typeof evidence !== 'object' || Array.isArray(evidence))
@@ -257,14 +265,25 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
           `${environmentId}: recorded host/GPU identity changed across workloads.`,
         );
       identitiesByEnvironment.set(environmentId, environmentIdentity);
-      result = validatePairedPerformanceReports({
-        baseline: baselineArtifact.value,
-        candidate: candidateArtifact.value,
-        expectedAppCommits: {
-          baseline: row.baselineCommit,
-          candidate: candidateCommit,
-        },
-      });
+      const reviewedMap = mapReviews.get(
+        JSON.stringify([
+          baselineArtifact.digest,
+          candidateArtifact.digest,
+          row.baselineCommit,
+          candidateCommit,
+        ]),
+      );
+      if (reviewedMap?.error) throw reviewedMap.error;
+      result =
+        reviewedMap?.result ??
+        validatePairedPerformanceReports({
+          baseline: baselineArtifact.value,
+          candidate: candidateArtifact.value,
+          expectedAppCommits: {
+            baseline: row.baselineCommit,
+            candidate: candidateCommit,
+          },
+        });
       if (row.idleCadenceDisposition != null) {
         const dispositionArtifact = readBoundArtifact(
           manifestPath,
@@ -811,5 +830,65 @@ export function evaluateManifestPerformanceEvidence(
     retention,
     comparison: comparisonOutcome(comparisons),
     retentionOutcome: retentionOutcome(retention),
+  };
+}
+
+/** Revalidate native map artifacts against the local pinned corpus for CLI use. */
+export async function evaluateManifestPerformanceEvidenceWithNativeMaps(
+  evidence,
+  options,
+) {
+  // Preserve existing synchronous validation and malformed-manifest behavior.
+  const initial = evaluateManifestPerformanceEvidence(evidence, options);
+  const mapReviews = new Map();
+  for (const row of evidence?.comparisons ?? []) {
+    const baseline = readBoundArtifact(
+      options.manifestPath,
+      row.baseline,
+      'native map baseline',
+    );
+    if (
+      baseline.value?.comparisonContract?.workloadId !==
+      'austin-map-streaming-v1'
+    )
+      continue;
+    const candidate = readBoundArtifact(
+      options.manifestPath,
+      row.candidate,
+      'native map candidate',
+    );
+    const key = JSON.stringify([
+      baseline.digest,
+      candidate.digest,
+      row.baselineCommit,
+      options.candidateCommit,
+    ]);
+    try {
+      const result = await validatePairedMapPerformanceReports({
+        baseline: baseline.value,
+        candidate: candidate.value,
+        expectedAppCommits: {
+          baseline: row.baselineCommit,
+          candidate: options.candidateCommit,
+        },
+      });
+      mapReviews.set(key, { result });
+    } catch (error) {
+      mapReviews.set(key, { error });
+    }
+  }
+  if (!mapReviews.size) return initial;
+  // Reload each hash-bound artifact before using its reviewed result. All other
+  // environment, retention, workload and regression checks run unchanged.
+  const comparisons = comparisonRows(
+    evidence,
+    options.manifestPath,
+    options.candidateCommit,
+    mapReviews,
+  );
+  return {
+    ...initial,
+    comparisons,
+    comparison: comparisonOutcome(comparisons),
   };
 }

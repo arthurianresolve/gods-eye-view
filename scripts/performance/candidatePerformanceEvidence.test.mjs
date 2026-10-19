@@ -8,6 +8,7 @@ import {
   canonicalPerformanceWorkloadId,
   classifyRecordedRenderer,
   evaluateManifestPerformanceEvidence,
+  evaluateManifestPerformanceEvidenceWithNativeMaps,
   PERFORMANCE_ACCEPTANCE_POLICY_ID,
   PERFORMANCE_WORKLOAD_VALIDATION_MODES,
   REQUIRED_PERFORMANCE_WORKLOADS,
@@ -520,6 +521,46 @@ test('v2 paired evidence is digest-bound, recomputed, and remains pending for un
   assert.ok(evaluated.comparison.missingWorkloads.includes('operating-view'));
   assert.equal(evaluated.comparisons[0].renderer.kind, 'native-gpu');
   assert.equal(evaluated.comparisons[0].renderer.physicalDesktopCoverage, true);
+  assert.deepEqual(
+    await evaluateManifestPerformanceEvidenceWithNativeMaps(setup.evidence, {
+      manifestPath: setup.manifestPath,
+      candidateCommit,
+    }),
+    evaluated,
+  );
+});
+
+test('native manifest review cannot upgrade a declared map contract without full native evidence', async () => {
+  const setup = await setupManifest();
+  setup.evidence.comparisons.push(
+    await createComparison(setup, {
+      workloadId: MAP_STREAMING_WORKLOAD_ID,
+    }),
+  );
+  assert.equal(
+    evaluateManifestPerformanceEvidence(setup.evidence, {
+      manifestPath: setup.manifestPath,
+      candidateCommit,
+    }).comparisons[0].validation.status,
+    'comparable',
+  );
+  const evaluated = await evaluateManifestPerformanceEvidenceWithNativeMaps(
+    setup.evidence,
+    {
+      manifestPath: setup.manifestPath,
+      candidateCommit,
+    },
+  );
+  assert.equal(evaluated.comparison.status, 'failed');
+  assert.ok(evaluated.comparisons[0].error);
+  setup.evidence.comparisons[0].candidate.sha256 = '0'.repeat(64);
+  await assert.rejects(
+    evaluateManifestPerformanceEvidenceWithNativeMaps(setup.evidence, {
+      manifestPath: setup.manifestPath,
+      candidateCommit,
+    }),
+    /SHA-256 does not match/,
+  );
 });
 
 test('digest tampering, missing files, duplicate roles and wrong app commits fail closed', async () => {

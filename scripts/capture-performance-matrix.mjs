@@ -11,7 +11,7 @@ import {
   PERFORMANCE_MATRIX_RESULT_SCHEMA,
   readReusableMatrixReport,
   sha256File,
-  validateMatrixPair,
+  validateMatrixPairWithNativeEvidence,
   validatePerformanceMatrixPlan,
 } from './performance/performanceMatrix.mjs';
 
@@ -92,7 +92,7 @@ for (const row of plan.rows) {
     });
     continue;
   }
-  const comparison = validateMatrixPair(plan, row);
+  const comparison = await validateMatrixPairWithNativeEvidence(plan, row);
   completedRows.push({
     id: row.id,
     providerFixture: row.providerFixture,

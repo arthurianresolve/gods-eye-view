@@ -17,6 +17,7 @@ import {
   PERFORMANCE_MATRIX_ROWS,
   readReusableMatrixReport,
   validateMatrixPair,
+  validateMatrixPairWithNativeEvidence,
   validatePerformanceMatrixPlan,
 } from './performanceMatrix.mjs';
 import { PERFORMANCE_ACCEPTANCE_POLICY_ID } from './candidatePerformanceEvidence.mjs';
@@ -308,6 +309,10 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
       );
     }
     assert.equal(validateMatrixPair(plan, row).status, 'comparable');
+    assert.deepEqual(
+      await validateMatrixPairWithNativeEvidence(plan, row),
+      validateMatrixPair(plan, row),
+    );
 
     const candidatePath = matrixReportPath(plan, row, 'candidate');
     const tampered = JSON.parse(await fs.promises.readFile(candidatePath));
@@ -315,6 +320,10 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
     await fs.promises.writeFile(candidatePath, JSON.stringify(tampered));
     assert.throws(
       () => readReusableMatrixReport(plan, row, 'candidate'),
+      /50 !== 75/,
+    );
+    await assert.rejects(
+      validateMatrixPairWithNativeEvidence(plan, row),
       /50 !== 75/,
     );
   } finally {
