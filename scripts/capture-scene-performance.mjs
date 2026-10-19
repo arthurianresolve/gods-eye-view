@@ -171,6 +171,10 @@ import {
   focusOwnedWindowsBrowserWindow,
 } from './performance/windowsForegroundWindow.mjs';
 import { evaluateForegroundSampleContinuity } from './performance/foregroundSampleContinuity.mjs';
+import {
+  resolveWeatherCaptureContract,
+  WEATHER_INTERLEAVED_INELIGIBLE_REASON,
+} from './performance/weatherInterleavedDiagnosticContract.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -202,6 +206,9 @@ const infrastructureWorkloadSelected =
   INFRASTRUCTURE_WORKLOAD_IDS.includes(providerFixtureMode);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 const weatherPhaseDiagnostic = args.includes('--weather-phase-diagnostic');
+const weatherInterleavedDiagnostic = args.includes(
+  '--weather-interleaved-diagnostic',
+);
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 if (
@@ -230,6 +237,14 @@ const providerFixtureTime = option(
   '--provider-fixture-time',
   '2026-10-08T12:00:00.000Z',
 );
+const weatherCaptureContract = resolveWeatherCaptureContract({
+  workloadId: providerFixtureMode,
+  phaseDiagnostic: weatherPhaseDiagnostic,
+  interleavedDiagnostic: weatherInterleavedDiagnostic,
+  warmupMs,
+  seconds,
+  runs,
+});
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
 const austinReadinessHistoryEnabled =
@@ -258,16 +273,6 @@ if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
     weatherEffectsModule.createWeatherEffectsWorkloadFixture(
       providerFixtureTime,
     );
-  const comparisonRun = warmupMs === 30_000 && seconds === 60 && runs === 5;
-  const diagnosticRun = warmupMs === 1_000 && seconds === 60 && runs === 1;
-  if (weatherPhaseDiagnostic ? !diagnosticRun : !comparisonRun)
-    throw new TypeError(
-      'Phased weather/effects requires either the exact 30s/60s/5-run comparison contract or the explicit 1s/60s/1-run producer diagnostic.',
-    );
-} else if (weatherPhaseDiagnostic) {
-  throw new TypeError(
-    '--weather-phase-diagnostic requires the phased weather/effects fixture.',
-  );
 }
 if (mapStreamingWorkloadSelected) {
   if (warmupMs !== 30_000 || seconds !== 60 || runs !== 5)
@@ -4086,7 +4091,9 @@ try {
     );
   }
 
-  const scenarios = ['idle', 'scripted-motion'];
+  const scenarios = weatherCaptureContract
+    ? [...weatherCaptureContract.scenarios]
+    : ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
   const captureDocumentTopology = createCaptureDocumentTopology({
     infrastructure: Boolean(infrastructureWorkload || weatherEffectsWorkload),
@@ -6559,24 +6566,58 @@ try {
       : {}),
     ...(weatherEffectsWorkload
       ? {
-          weatherEffectsCaptureMode: weatherEffectsComparisonRun
-            ? 'comparison'
-            : 'phase-producer-diagnostic',
+          weatherEffectsCaptureMode: weatherInterleavedDiagnostic
+            ? 'interleaved-motion-diagnostic'
+            : weatherEffectsComparisonRun
+              ? 'comparison'
+              : 'phase-producer-diagnostic',
           performanceAcceptanceEligible: Boolean(weatherEffectsComparisonRun),
-          weatherEffectsFixtureLifecycle:
-            weatherEffectsModule.createWeatherEffectsFixtureLifecycle({
-              fixture: weatherEffectsWorkload,
-              cameraObservation: weatherCameraObservation,
-              timelinePreflight: weatherTimelinePreflight,
-              workload: {
-                warmupMs,
-                durationPerSampleMs: seconds * 1000,
-                runsPerScenario: runs,
-              },
-              phaseObservationsBySample: captures.map(
-                (sample) => sample.weatherEffectsClock?.phaseObservations,
-              ),
-            }),
+          ...(weatherInterleavedDiagnostic
+            ? {
+                diagnosticOnly: true,
+                ineligibleReason: WEATHER_INTERLEAVED_INELIGIBLE_REASON,
+                weatherEffectsFixtureLifecycle: {
+                  scope:
+                    'diagnostic-only one-run scripted-motion sample; exact deterministic weather routes and three scheduled source phases remain active; the idle scenario is omitted in this diagnostic; existing full qualification reports remain authoritative',
+                  fixedHarnessClock:
+                    'Date.now and Cesium currentTime are pinned to the declared UTC fixture epoch; native history playback is paused, source timestamps are selected on the declared measurement-relative schedule, and wind animation remains enabled',
+                  camera: structuredClone(weatherEffectsWorkload.camera),
+                  observedCamera: structuredClone(weatherCameraObservation),
+                  playback: structuredClone(weatherTimelinePreflight.playback),
+                  timeline: structuredClone(
+                    weatherTimelinePreflight.selectedTimes,
+                  ),
+                  sourceObservationTimes: structuredClone(
+                    weatherTimelinePreflight.sourceObservationTimes,
+                  ),
+                  phaseSchedule: structuredClone(
+                    weatherEffectsWorkload.phaseSchedule,
+                  ),
+                  phaseObservationsBySample: captures.map(
+                    (sample) => sample.weatherEffectsClock?.phaseObservations,
+                  ),
+                  freshBrowserContextPerSample: false,
+                  diagnosticOnly: true,
+                  performanceAcceptanceEligible: false,
+                  ineligibleReason: WEATHER_INTERLEAVED_INELIGIBLE_REASON,
+                },
+              }
+            : {
+                weatherEffectsFixtureLifecycle:
+                  weatherEffectsModule.createWeatherEffectsFixtureLifecycle({
+                    fixture: weatherEffectsWorkload,
+                    cameraObservation: weatherCameraObservation,
+                    timelinePreflight: weatherTimelinePreflight,
+                    workload: {
+                      warmupMs,
+                      durationPerSampleMs: seconds * 1000,
+                      runsPerScenario: runs,
+                    },
+                    phaseObservationsBySample: captures.map(
+                      (sample) => sample.weatherEffectsClock?.phaseObservations,
+                    ),
+                  }),
+              }),
         }
       : {}),
     ...(mapStreamingWorkloadSelected
@@ -6677,7 +6718,9 @@ try {
     comparisonReadinessReasons.push(
       'windows-composition-control-is-ineligible-for-comparison',
     );
-  if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
+  if (weatherInterleavedDiagnostic)
+    comparisonReadinessReasons.push(WEATHER_INTERLEAVED_INELIGIBLE_REASON);
+  else if (weatherEffectsWorkload && !weatherEffectsComparisonRun)
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
     );
