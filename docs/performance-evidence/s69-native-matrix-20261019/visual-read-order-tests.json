@@ -1,0 +1,40 @@
+{
+  "schema": "gev-visual-read-order-validation/v1",
+  "checkedAt": "2026-10-19T16:40:47.228Z",
+  "originalSha256": "ea0607fe9e260785f43e16bac1978274a10d4e2110c8a93652c76f2e90bd09c2",
+  "formattedSha256": "ea0607fe9e260785f43e16bac1978274a10d4e2110c8a93652c76f2e90bd09c2",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "checks": [
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "nodeVersion": "v24.16.0",
+      "logSha256": "21259cacb27c338319cde6496c84cfe8063bb223e8c956a35db21321e1c9cef8",
+      "summary": [
+        "ℹ tests 17",
+        "ℹ pass 17",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 114.23542"
+      ]
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "nodeVersion": "v26.11.0",
+      "logSha256": "8fb037b145b36920d1f6f942ff50b176d1e14dabfe466a5332ba3dba2e6634af",
+      "summary": [
+        "ℹ tests 17",
+        "ℹ pass 17",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 127.114241"
+      ]
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-read-order-review-20261019",
+  "status": "passed",
+  "scope": "QA ordering correction; unit and syntax checks do not establish PNG acceptance."
+}

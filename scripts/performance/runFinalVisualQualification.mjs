@@ -440,6 +440,21 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       let accepted = null;
       let pngCount = 0;
       for (let attempt = 1; attempt <= 12 && pngCount < 3; attempt++) {
+        // Finish the structural observations before waiting for the brief HUD
+        // phase. CDP round trips after readiness can outlast the REC indicator's
+        // visible interval; only the guarded pause/capture follows readiness.
+        const profile = await readNativeProfile(page);
+        observedProfile = profile;
+        const observed = await observedState(page, profile, appSha);
+        if (
+          observed.checkpoint.activeCameraId !== fixture.cameraId ||
+          observed.cctvParams?.selectedCameraId !== fixture.cameraId ||
+          observed.cctvParams?.showProjection !== true ||
+          (observed.cctvDiagnostics?.entities || 0) < 1
+        )
+          throw new Error(
+            'Observed scene lacks a selected, materialized CCTV still projection.',
+          );
         await page.waitForFunction(
           (expectedHudVisible) => {
             const proof = window.__gevVisualPresentationBoundary?.read();
@@ -480,18 +495,6 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           continue;
         }
         const completedRender = readiness.completedRender;
-        const profile = await readNativeProfile(page);
-        observedProfile = profile;
-        const observed = await observedState(page, profile, appSha);
-        if (
-          observed.checkpoint.activeCameraId !== fixture.cameraId ||
-          observed.cctvParams?.selectedCameraId !== fixture.cameraId ||
-          observed.cctvParams?.showProjection !== true ||
-          (observed.cctvDiagnostics?.entities || 0) < 1
-        )
-          throw new Error(
-            'Completed render lacks a selected, materialized CCTV still projection.',
-          );
         const expectedHudVisible = id !== 'hud-hidden';
         let pausedCapture;
         try {

@@ -1,0 +1,250 @@
+{
+  "schema": "gev-visual-readiness-hardware-failure/v1",
+  "reviewedAt": "2026-10-19T16:37:03.242Z",
+  "status": "failed",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "testedApplication": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducerCommit": "89e2acada829e92139fec5f2fd8d2c4d08afa390",
+  "stage": "hud-visible",
+  "attempts": [
+    {
+      "attempt": 1,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 88,
+      "captureRevision": 89
+    },
+    {
+      "attempt": 2,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 90,
+      "captureRevision": 91
+    },
+    {
+      "attempt": 3,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 92,
+      "captureRevision": 93
+    },
+    {
+      "attempt": 4,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 94,
+      "captureRevision": 95
+    },
+    {
+      "attempt": 5,
+      "reason": "scanline-phase-not-zero",
+      "accepted": false,
+      "phaseBefore": 2,
+      "phaseAfter": 2,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": true,
+      "readinessRevision": 96,
+      "captureRevision": 96
+    },
+    {
+      "attempt": 6,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 98,
+      "captureRevision": 99
+    },
+    {
+      "attempt": 7,
+      "reason": "scanline-phase-not-zero",
+      "accepted": false,
+      "phaseBefore": 2,
+      "phaseAfter": 2,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": true,
+      "readinessRevision": 100,
+      "captureRevision": 100
+    },
+    {
+      "attempt": 8,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 102,
+      "captureRevision": 103
+    },
+    {
+      "attempt": 9,
+      "reason": "scanline-phase-not-zero",
+      "accepted": false,
+      "phaseBefore": 2,
+      "phaseAfter": 2,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 104,
+      "captureRevision": 105
+    },
+    {
+      "attempt": 10,
+      "reason": "scanline-phase-not-zero",
+      "accepted": false,
+      "phaseBefore": 2,
+      "phaseAfter": 2,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 106,
+      "captureRevision": 107
+    },
+    {
+      "attempt": 11,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 108,
+      "captureRevision": 109
+    },
+    {
+      "attempt": 12,
+      "reason": "presentation-not-settled-before-screenshot",
+      "accepted": false,
+      "phaseBefore": 0,
+      "phaseAfter": 0,
+      "recordingVisibleAtReadiness": true,
+      "recordingVisibleAtPause": false,
+      "readinessRevision": 110,
+      "captureRevision": 111
+    }
+  ],
+  "teardown": {
+    "browserClosed": true,
+    "pageClose": {
+      "closeCompleted": true,
+      "openPageCount": 0
+    },
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 92998.801,
+        "closeSettledHostMs": 93879.2545,
+        "closeElapsedMs": 880.4534999999887,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 816.9227000000101
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "errors": [],
+    "interceptionDrain": {
+      "schema": "gev-fixture-interception-drain/v1",
+      "confirmed": true,
+      "listenerRemovalConfirmed": true,
+      "listenerRemovalVerification": "remove-listener-call-acknowledged",
+      "listenerRemovalErrorKind": null,
+      "pendingAtStop": 0,
+      "pendingPreparationAtStop": 0,
+      "pendingAbortSubscriptionsAtStop": 0,
+      "pendingCommandsAtStop": 0,
+      "pendingCommandsAfterDrain": 0,
+      "pendingPreparationsAfterDrain": 0,
+      "pendingAbortSubscriptionsAfterDrain": 0,
+      "rejectedDrainOperations": 0,
+      "drainCommandFailures": 0,
+      "cancelledPreparationCount": 0,
+      "unexpectedLateRequestCount": 0
+    },
+    "interceptionRelease": {
+      "schema": "gev-fixture-interception-release/v1",
+      "interception": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      },
+      "fetchDisable": "target-closed",
+      "detach": "target-closed",
+      "confirmed": true
+    }
+  },
+  "archive": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-readiness-89e2acad-hardware-failure",
+    "status": "all-files-verified",
+    "files": [
+      {
+        "name": "final-visual-baseline-partial.json",
+        "bytes": 265064,
+        "sha256": "13080e069fc4ed63aababeca2f6eff5abde14047f375c4bf7d269f4746af826c"
+      },
+      {
+        "name": "final-visual-qualification-partial.json",
+        "bytes": 281342,
+        "sha256": "cc3a9d1d6b6b68eb2f865c145e3693f890516d3f701e71a2c1c13664e85a0d56"
+      },
+      {
+        "name": "still-settled-baseline-attempt-1.png",
+        "bytes": 1522583,
+        "sha256": "db02bef896e2cea32998c348d70475c8a27b2db27111f7c5735b05fb8e308200"
+      },
+      {
+        "name": "process.json",
+        "bytes": 2019,
+        "sha256": "6aa7a41fcd700d3b06ed2c81a8de4137a770b2baa2fc7efb7c7eb1e97d69de3c"
+      }
+    ]
+  },
+  "scope": "Baseline readiness failed before the candidate was captured. Original images and partial reports are preserved. The REC phase changed between readiness and paused observation; moving structural CDP observations before readiness is a QA correction requiring its own browser verification. No pixel comparison, candidate performance or visual acceptance is inferred."
+}
