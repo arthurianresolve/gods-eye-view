@@ -142,16 +142,20 @@ function fakePage(options = {}) {
       height: 1800,
     },
     primitives: {
-      length: options.duplicateWindMaterials ? 2 : 1,
+      length:
+        options.sharedWindMaterialReferences ??
+        (options.duplicateWindMaterials ? 2 : 1),
       get: (index) =>
         index === 0
           ? primitive
           : {
               appearance: {
-                material: {
-                  type: 'GevWindStreamline',
-                  uniforms: materialUniforms,
-                },
+                material: options.sharedWindMaterialReferences
+                  ? primitive.appearance.material
+                  : {
+                      type: 'GevWindStreamline',
+                      uniforms: materialUniforms,
+                    },
               },
             },
     },
@@ -338,6 +342,33 @@ test('visible wind probe requires one explicitly identified streamline material'
       report.failureReasons.includes('wind-gpu-not-visible-at-probe-pose'),
     );
   }
+});
+
+test('visible wind probe counts a material shared across spatial cells once', async () => {
+  const fixture = fakePage({ sharedWindMaterialReferences: 72 });
+  const report = await probeWeatherVisibleWind({
+    page: fixture.page,
+    timing: SHORT_TIMING,
+  });
+  assert.equal(report.status, 'observed');
+  const material = report.phases.unpaused.start.windMaterial;
+  assert.equal(material.matchCount, 1);
+  assert.equal(material.materialReferenceCount, 72);
+  assert.equal(material.traversalComplete, true);
+  assert.equal(fixture.handlers.size, 0);
+});
+
+test('visible wind probe never treats a truncated primitive traversal as unique ownership', async () => {
+  const report = await probeWeatherVisibleWind({
+    page: fakePage({ sharedWindMaterialReferences: 2100 }).page,
+    timing: SHORT_TIMING,
+  });
+  assert.equal(report.status, 'failed');
+  assert.equal(
+    report.phases.unpaused.start.windMaterial.traversalComplete,
+    false,
+  );
+  assert.equal(report.phases.unpaused.start.windMaterial.phaseTime, null);
 });
 
 test('visible wind probe rejects phase drift while paused and a stuck resumed phase', async () => {

@@ -285,7 +285,10 @@ export async function runVisibleWindProbeInPage(timing) {
   const readWindMaterial = () => {
     const queue = [{ value: scene.primitives, depth: 0 }];
     const seen = new Set();
+    const seenMaterials = new Set();
     const matches = [];
+    let materialReferenceCount = 0;
+    let traversalComplete = true;
     for (let cursor = 0; cursor < queue.length && cursor < 2048; cursor++) {
       const { value, depth } = queue[cursor];
       if (!value || seen.has(value)) continue;
@@ -293,15 +296,22 @@ export async function runVisibleWindProbeInPage(timing) {
       const material = value.appearance?.material;
       const uniforms = material?.uniforms;
       if (
-        (material?.type === 'GevWindStreamline' ||
-          material?._type === 'GevWindStreamline') &&
-        finite(uniforms?.phaseTime) &&
-        finite(uniforms?.heightFade)
-      )
-        matches.push({
-          phaseTime: uniforms.phaseTime,
-          heightFade: uniforms.heightFade,
-        });
+        material?.type === 'GevWindStreamline' ||
+        material?._type === 'GevWindStreamline'
+      ) {
+        materialReferenceCount++;
+        // Wind's spatial cells share one material. Count ownership objects,
+        // not primitive references; two independent materials stay ambiguous.
+        if (!seenMaterials.has(material)) {
+          seenMaterials.add(material);
+          matches.push({
+            phaseTime: finite(uniforms?.phaseTime) ? uniforms.phaseTime : null,
+            heightFade: finite(uniforms?.heightFade)
+              ? uniforms.heightFade
+              : null,
+          });
+        }
+      }
       if (
         depth < 4 &&
         typeof value.get === 'function' &&
@@ -313,10 +323,22 @@ export async function runVisibleWindProbeInPage(timing) {
           index++
         )
           queue.push({ value: value.get(index), depth: depth + 1 });
+      if (
+        typeof value.get === 'function' &&
+        Number.isInteger(value.length) &&
+        value.length > 0 &&
+        (depth >= 4 || queue.length >= 2048)
+      )
+        traversalComplete = false;
     }
-    return matches.length === 1
-      ? { ...matches[0], matchCount: 1 }
-      : { phaseTime: null, heightFade: null, matchCount: matches.length };
+    return {
+      ...(matches.length === 1 && traversalComplete
+        ? matches[0]
+        : { phaseTime: null, heightFade: null }),
+      matchCount: matches.length,
+      materialReferenceCount,
+      traversalComplete,
+    };
   };
   const readDiagnostics = () => {
     const state = wind.getDiagnostics?.() ?? {};
