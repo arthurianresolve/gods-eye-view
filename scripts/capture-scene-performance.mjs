@@ -197,6 +197,8 @@ import {
   observeWeatherPhaseRequests,
   summarizeWeatherIdleDiagnostic,
   WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+  disposeWeatherGovernorModeTraceInPage,
+  installWeatherGovernorModeTraceInPage,
 } from './performance/weatherIdleDiagnostic.mjs';
 import { probeWeatherVisibleWind } from './performance/weatherVisibleWindProbe.mjs';
 
@@ -5484,6 +5486,7 @@ try {
                   snapshotReadFailureCount: 0,
                   snapshotReadTotalDurationMs: 0,
                   snapshotReadMaxDurationMs: 0,
+                  governorModeTrace: null,
                 }
               : null;
             let weatherIdleSampleTimer = null;
@@ -5494,6 +5497,7 @@ try {
               let raw = null;
               let windRaw = null;
               try {
+                window.__gevWeatherGovernorModeWriteTraceV1?.check?.();
                 raw =
                   window.__godsEyeView.getRenderGovernorDiagnostics?.() ?? null;
               } catch {
@@ -5803,6 +5807,14 @@ try {
               startedAt = performance.now();
               window.__gevWeatherMeasurementStartedAt = startedAt;
               if (weatherIdleTrace) {
+                if (
+                  window.__gevWeatherGovernorModeWriteTraceV1?.start?.(
+                    startedAt,
+                  ) !== true
+                )
+                  throw new Error(
+                    'Weather governor-mode write trace did not start.',
+                  );
                 recordWeatherIdleGovernorSample();
                 weatherIdleSampleTimer = setInterval(
                   recordWeatherIdleGovernorSample,
@@ -5814,12 +5826,18 @@ try {
                 measurementTimer = setTimeout(() => {
                   if (recordFrameWindow)
                     measurementTimerFiredPerformanceNowMs = performance.now();
+                  window.__gevWeatherGovernorModeWriteTraceV1?.stop?.(
+                    performance.now(),
+                  );
                   resolve();
                 }, durationMs);
               });
               window.__gevWeatherMeasurementAbort = () => {
                 active = false;
                 clearTimeout(measurementTimer);
+                window.__gevWeatherGovernorModeWriteTraceV1?.stop?.(
+                  performance.now(),
+                );
                 resolveMeasurement?.();
               };
               let updateMotion = () => {};
@@ -5900,6 +5918,9 @@ try {
                 delayTimer = setInterval(runInjectedDelay, 1000);
               }
               await measurementWait;
+              window.__gevWeatherGovernorModeWriteTraceV1?.stop?.(
+                performance.now(),
+              );
               const clockEnd =
                 stagedClock?.finishMeasurement?.(expectedRunOrdinal) ?? null;
               active = false;
@@ -6092,6 +6113,30 @@ try {
               if (motionFrameRequest != null)
                 cancelAnimationFrame(motionFrameRequest);
               restoreMeasurementRenderDemand();
+              if (weatherIdleTrace) {
+                try {
+                  window.__gevWeatherGovernorModeWriteTraceV1?.stop?.(
+                    performance.now(),
+                  );
+                  weatherIdleTrace.governorModeTrace =
+                    window.__gevWeatherGovernorModeWriteTraceV1?.dispose?.() ??
+                    null;
+                } catch {
+                  weatherIdleTrace.governorModeTrace = {
+                    schema: 'gev-weather-governor-mode-write-trace/v1',
+                    status: 'dispose-threw',
+                    events: [],
+                    eventsObserved: 0,
+                    eventsOmitted: 0,
+                    cleanup: {
+                      attempted: true,
+                      descriptorRestored: false,
+                      descriptorVerified: false,
+                      windowBindingRestored: false,
+                    },
+                  };
+                }
+              }
               observer?.disconnect();
               scene.postRender.removeEventListener(onRender);
               if (frameTrace)
@@ -6117,16 +6162,63 @@ try {
               : 320,
           },
         ];
-        const rawSamplePromise = Promise.resolve().then(() =>
-          page.evaluate(...sampleArguments),
-        );
-        const samplePromise = runSceneMeasurementWithHostDeadline({
-          evaluate: () => rawSamplePromise,
-          measurementMs: seconds * 1000,
-          onProgress(observation) {
-            failureProgress.current.sceneMeasurementObservation = observation;
-          },
-        });
+        let weatherModeTraceInstalled = false;
+        const cleanupWeatherModeTraceAfterFailure = async () => {
+          if (!weatherModeTraceInstalled) return null;
+          try {
+            return await page.evaluate(disposeWeatherGovernorModeTraceInPage);
+          } catch (error) {
+            return {
+              status: 'cleanup-evaluation-failed',
+              errorName: String(error?.name || 'Error').slice(0, 64),
+            };
+          }
+        };
+        if (weatherIdleDiagnosticEnabled) {
+          // Set this before crossing the page boundary: the page may install
+          // successfully even if Puppeteer loses the evaluation response.
+          weatherModeTraceInstalled = true;
+          try {
+            const traceInstallation = await page.evaluate(
+              installWeatherGovernorModeTraceInPage,
+            );
+            if (traceInstallation?.installed !== true)
+              throw new Error(
+                `Weather governor-mode write trace installation failed: ${String(traceInstallation?.status || 'unknown')}.`,
+              );
+          } catch (error) {
+            const cleanup = await cleanupWeatherModeTraceAfterFailure();
+            if (cleanup) {
+              error.weatherGovernorModeTraceCleanup = cleanup;
+              if (failureProgress.current)
+                failureProgress.current.weatherGovernorModeTraceCleanup =
+                  cleanup;
+            }
+            throw error;
+          }
+        }
+        let rawSamplePromise;
+        let samplePromise;
+        try {
+          rawSamplePromise = Promise.resolve().then(() =>
+            page.evaluate(...sampleArguments),
+          );
+          samplePromise = runSceneMeasurementWithHostDeadline({
+            evaluate: () => rawSamplePromise,
+            measurementMs: seconds * 1000,
+            onProgress(observation) {
+              failureProgress.current.sceneMeasurementObservation = observation;
+            },
+          });
+        } catch (error) {
+          const cleanup = await cleanupWeatherModeTraceAfterFailure();
+          if (cleanup) {
+            error.weatherGovernorModeTraceCleanup = cleanup;
+            if (failureProgress.current)
+              failureProgress.current.weatherGovernorModeTraceCleanup = cleanup;
+          }
+          throw error;
+        }
         let weatherPhaseObservations = null;
         let weatherPhaseRequestObserver = null;
         let sample;
@@ -6170,6 +6262,12 @@ try {
               .evaluate(() => window.__gevWeatherMeasurementAbort?.())
               .catch(() => {});
             await samplePromise.catch(() => {});
+          }
+          const cleanup = await cleanupWeatherModeTraceAfterFailure();
+          if (cleanup) {
+            error.weatherGovernorModeTraceCleanup = cleanup;
+            if (failureProgress.current)
+              failureProgress.current.weatherGovernorModeTraceCleanup = cleanup;
           }
           if (browserTraceController) {
             try {
@@ -7381,6 +7479,8 @@ try {
                       'one native 30s warmup and 60s idle weather sample with the existing three scheduled source phases; bounded 250ms render-governor observations and completed-frame timestamps are diagnostic instrumentation only',
                     cadenceEvidence:
                       'postRender event timestamps are recorded up to512; render-governor owner state is sampled every250ms up to300 records and at completed frames; actual sampling gaps, overflow and read overhead are retained',
+                    governorModeWriteTrace:
+                      'event-complete writes to the public requestRenderMode data property are observed across the measurement interval; this synchronously reflects governor-managed continuous holds, but does not observe one-shot scene.requestRender calls or identify frame causes',
                     phaseTiming:
                       'host request and promise-settlement performance clocks are separate from page elapsed observation time; all three clock observations are retained without cross-clock ordering claims',
                     fixtureSha256: weatherEffectsWorkload.sha256,

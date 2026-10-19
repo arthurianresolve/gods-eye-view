@@ -6,6 +6,11 @@ export const WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON =
 export const WEATHER_IDLE_DIAGNOSTIC_MAX_FRAME_EVENTS = 512;
 export const WEATHER_IDLE_DIAGNOSTIC_MAX_GOVERNOR_SAMPLES = 300;
 export const WEATHER_IDLE_DIAGNOSTIC_MAX_GAP_REPORTS = 128;
+export const WEATHER_GOVERNOR_MODE_TRACE_SCHEMA =
+  'gev-weather-governor-mode-write-trace/v1';
+export const WEATHER_GOVERNOR_MODE_TRACE_MAX_EVENTS = 256;
+export const WEATHER_GOVERNOR_MODE_TRACE_WINDOW_NAME =
+  '__gevWeatherGovernorModeWriteTraceV1';
 
 const WEATHER_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 const PHASE_IDS = new Set([
@@ -13,6 +18,265 @@ const PHASE_IDS = new Set([
   'middle-history',
   'latest-history',
 ]);
+
+/**
+ * Serialized by Puppeteer before an idle weather sample. It observes only
+ * writes to Cesium's public requestRenderMode data property; it does not wrap
+ * scene.requestRender or infer GPU/CPU cost.
+ */
+export function installWeatherGovernorModeTraceInPage() {
+  const globalName = '__gevWeatherGovernorModeWriteTraceV1';
+  const schema = 'gev-weather-governor-mode-write-trace/v1';
+  const maxEvents = 256;
+  const target = window.__godsEyeView?.viewer?.scene;
+  const trace = {
+    schema,
+    installed: false,
+    status: 'unavailable',
+    descriptorKind: null,
+    descriptorConfigurable: null,
+    descriptorEnumerable: null,
+    descriptorWritable: null,
+    initialValue: null,
+    finalValue: null,
+    startAtMs: null,
+    endAtMs: null,
+    eventsObserved: 0,
+    events: [],
+    eventsOmitted: 0,
+    nonBooleanWriteObserved: false,
+    ownershipReplaced: false,
+    replacementObservedAtMs: null,
+    cleanup: {
+      attempted: false,
+      descriptorRestored: false,
+      descriptorVerified: false,
+      replacementOwnerPreserved: false,
+      windowBindingRestored: false,
+    },
+  };
+  if (!target || Object.hasOwn(window, globalName)) {
+    trace.status = 'install-rejected';
+    return trace;
+  }
+  const original = Object.getOwnPropertyDescriptor(target, 'requestRenderMode');
+  trace.descriptorKind = original?.get || original?.set ? 'accessor' : 'data';
+  trace.descriptorConfigurable = original?.configurable ?? null;
+  trace.descriptorEnumerable = original?.enumerable ?? null;
+  trace.descriptorWritable = original?.writable ?? null;
+  if (
+    !original ||
+    original.get ||
+    original.set ||
+    typeof original.value !== 'boolean' ||
+    original.configurable !== true ||
+    original.writable !== true
+  ) {
+    trace.status = 'unsupported-descriptor';
+    return trace;
+  }
+  let currentValue = original.value;
+  let active = false;
+  let disposed = false;
+  let getter;
+  let setter;
+  const ownDescriptor = () =>
+    Object.getOwnPropertyDescriptor(target, 'requestRenderMode');
+  const descriptorMatches = (left, right) =>
+    Boolean(
+      left &&
+      right &&
+      left.configurable === right.configurable &&
+      left.enumerable === right.enumerable &&
+      left.writable === right.writable &&
+      left.value === right.value &&
+      left.get === right.get &&
+      left.set === right.set,
+    );
+  const descriptorIsOriginal = () =>
+    descriptorMatches(ownDescriptor(), original);
+  const descriptorIsOurs = () => {
+    const descriptor = ownDescriptor();
+    return descriptor?.get === getter && descriptor?.set === setter;
+  };
+  const observeOwnership = (at = performance.now()) => {
+    if (descriptorIsOurs()) return true;
+    if (!trace.ownershipReplaced) {
+      trace.ownershipReplaced = true;
+      trace.replacementObservedAtMs =
+        trace.startAtMs === null ? null : Math.max(0, at - trace.startAtMs);
+    }
+    return false;
+  };
+  const record = (value, at = performance.now()) => {
+    if (!active) return;
+    trace.eventsObserved += 1;
+    if (typeof value !== 'boolean') trace.nonBooleanWriteObserved = true;
+    if (trace.events.length < maxEvents)
+      trace.events.push({
+        atMs: Math.max(0, at - trace.startAtMs),
+        value: typeof value === 'boolean' ? value : null,
+      });
+    else trace.eventsOmitted += 1;
+  };
+  getter = function () {
+    observeOwnership();
+    return currentValue;
+  };
+  setter = function (value) {
+    observeOwnership();
+    currentValue = value;
+    record(value);
+  };
+  try {
+    Object.defineProperty(target, 'requestRenderMode', {
+      configurable: original.configurable,
+      enumerable: original.enumerable,
+      get: getter,
+      set: setter,
+    });
+    Object.defineProperty(window, globalName, {
+      configurable: true,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+    const controller = {
+      start(startAtMs) {
+        if (disposed || active || !descriptorIsOurs()) return false;
+        trace.startAtMs = Number.isFinite(startAtMs)
+          ? startAtMs
+          : performance.now();
+        trace.initialValue = currentValue;
+        active = true;
+        trace.status = 'recording';
+        return true;
+      },
+      check() {
+        return observeOwnership();
+      },
+      stop(endAtMs) {
+        if (!active) return false;
+        observeOwnership();
+        trace.endAtMs = Number.isFinite(endAtMs) ? endAtMs : performance.now();
+        active = false;
+        trace.status = 'stopped';
+        return true;
+      },
+      dispose() {
+        if (disposed) return trace;
+        disposed = true;
+        trace.cleanup.attempted = true;
+        const stillOwned = observeOwnership();
+        const current = ownDescriptor();
+        if (stillOwned) {
+          const finalValue = currentValue;
+          trace.finalValue = finalValue;
+          try {
+            Object.defineProperty(target, 'requestRenderMode', {
+              ...original,
+              value: finalValue,
+            });
+            trace.cleanup.descriptorRestored = true;
+            const restored = ownDescriptor();
+            trace.cleanup.descriptorVerified = Boolean(
+              restored &&
+              !restored.get &&
+              !restored.set &&
+              restored.configurable === original.configurable &&
+              restored.enumerable === original.enumerable &&
+              restored.writable === original.writable &&
+              restored.value === finalValue,
+            );
+          } catch {
+            trace.cleanup.descriptorRestored = false;
+          }
+        } else {
+          trace.finalValue =
+            current &&
+            !current.get &&
+            !current.set &&
+            typeof current.value === 'boolean'
+              ? current.value
+              : null;
+          trace.cleanup.replacementOwnerPreserved = true;
+        }
+        try {
+          if (window[globalName] === controller) delete window[globalName];
+          trace.cleanup.windowBindingRestored = !Object.hasOwn(
+            window,
+            globalName,
+          );
+        } catch {
+          trace.cleanup.windowBindingRestored = false;
+        }
+        if (trace.endAtMs === null) trace.endAtMs = performance.now();
+        if (trace.status === 'recording' || trace.status === 'installed')
+          trace.status = 'incomplete';
+        else if (trace.status === 'stopped') trace.status = 'completed';
+        return trace;
+      },
+    };
+    Object.defineProperty(window, globalName, {
+      configurable: true,
+      enumerable: false,
+      writable: false,
+      value: controller,
+    });
+    trace.installed = true;
+    trace.status = 'installed';
+  } catch {
+    trace.status = 'install-failed';
+    try {
+      if (Object.hasOwn(window, globalName) && window[globalName] === null)
+        delete window[globalName];
+      trace.cleanup.windowBindingRestored = !Object.hasOwn(window, globalName);
+    } catch {
+      trace.cleanup.windowBindingRestored = false;
+    }
+    try {
+      if (descriptorIsOurs()) {
+        Object.defineProperty(target, 'requestRenderMode', original);
+        trace.cleanup.descriptorRestored = true;
+        trace.cleanup.descriptorVerified = descriptorIsOriginal();
+      } else if (descriptorIsOriginal()) {
+        trace.cleanup.descriptorRestored = true;
+        trace.cleanup.descriptorVerified = true;
+      } else {
+        trace.ownershipReplaced = true;
+        trace.cleanup.replacementOwnerPreserved = true;
+      }
+    } catch {
+      trace.cleanup.descriptorRestored = false;
+    }
+  }
+  return trace;
+}
+
+/** Serialized by Puppeteer when setup fails before the measurement callback owns cleanup. */
+export function disposeWeatherGovernorModeTraceInPage() {
+  const controller = window.__gevWeatherGovernorModeWriteTraceV1;
+  if (!controller) return { status: 'already-disposed' };
+  let stopErrorName = null;
+  try {
+    controller.stop?.(performance.now());
+  } catch (error) {
+    stopErrorName = String(error?.name || 'Error').slice(0, 64);
+  }
+  let trace = null;
+  let disposeErrorName = null;
+  try {
+    trace = controller.dispose?.() ?? null;
+  } catch (error) {
+    disposeErrorName = String(error?.name || 'Error').slice(0, 64);
+  }
+  return {
+    status: trace ? 'disposed' : 'dispose-failed',
+    trace,
+    stopErrorName,
+    disposeErrorName,
+  };
+}
 
 export function resolveWeatherIdleDiagnosticContract({
   enabled = false,
@@ -418,6 +682,8 @@ export function summarizeWeatherIdleDiagnostic({
     requestAttribution: {
       directWindSceneRequestRenderCaptured: false,
       note: 'Wind GPU draw and camera paths call scene.requestRender directly; these calls do not appear in the render governor recent-request reason list.',
+      governorModeTraceSemantics:
+        'The event trace observes writes to the public requestRenderMode field, which the installed governor synchronously derives from continuous holds. It does not observe one-shot scene.requestRender calls or attribute individual frame causes.',
     },
     instrumentation: {
       samplePeriodMs: raw.samplePeriodMs ?? 250,
@@ -457,6 +723,18 @@ export function summarizeWeatherIdleDiagnostic({
         phaseRequestEvents.length - phaseRequests.length,
       ),
       gapsOverOneSecondOmitted: omittedGapCount,
+      governorModeTraceEventsObserved:
+        raw.governorModeTrace?.eventsObserved ?? null,
+      governorModeTraceEventsRecorded: Array.isArray(
+        raw.governorModeTrace?.events,
+      )
+        ? raw.governorModeTrace.events.length
+        : null,
+      governorModeTraceEventsOmitted:
+        raw.governorModeTrace?.eventsOmitted ?? null,
+      governorModeTraceCleanupVerified:
+        raw.governorModeTrace?.cleanup?.descriptorVerified === true &&
+        raw.governorModeTrace?.cleanup?.windowBindingRestored === true,
     },
     frameEvents: validFrames.map((frame) => ({
       atMs: frame.atMs,
@@ -476,5 +754,11 @@ export function summarizeWeatherIdleDiagnostic({
     gapsOverOneSecond,
     phaseRequests,
     phases,
+    governorModeTrace: raw.governorModeTrace ?? null,
+    interpretationLimitations: [
+      'Governor-mode writes are event-traced for the measurement interval; one-shot scene.requestRender calls are not traced.',
+      'Wind/frame state remains sampled. samplingMaxGapMs is reported as observed and has no predeclared maximum-gap acceptance bound.',
+      'A stationary rendered-frame interval describes cadence only; it is not CPU execution time, GPU execution time, or comparative speedup.',
+    ],
   };
 }

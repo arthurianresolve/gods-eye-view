@@ -1,0 +1,87 @@
+{
+  "schema": "gev-weather-idle-disposition-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T23:15:29.612Z",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 325339,
+      "sha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0",
+      "submittedSha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0"
+    },
+    {
+      "name": "scripts/capture-scene-performance.test.mjs",
+      "bytes": 30983,
+      "sha256": "b42e23c77f1e5506bdd9eeec6a28e3268a48c4789c719c6abee7e5802dccdea9",
+      "submittedSha256": "b42e23c77f1e5506bdd9eeec6a28e3268a48c4789c719c6abee7e5802dccdea9"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "bytes": 27022,
+      "sha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf",
+      "submittedSha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.mjs",
+      "bytes": 37571,
+      "sha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976",
+      "submittedSha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.test.mjs",
+      "bytes": 41286,
+      "sha256": "e61ad1f7f1d6b88a946754781e2fb01921f912de6e0c063a16d51a3782cc3a13",
+      "submittedSha256": "e61ad1f7f1d6b88a946754781e2fb01921f912de6e0c063a16d51a3782cc3a13"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "bytes": 12426,
+      "sha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12",
+      "submittedSha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.mjs",
+      "bytes": 31144,
+      "sha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a",
+      "submittedSha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.test.mjs",
+      "bytes": 29503,
+      "sha256": "7497d6263f7943832691b8b11497ca9ed269ecdd78baf97606c5366ee1bf95e0",
+      "submittedSha256": "7497d6263f7943832691b8b11497ca9ed269ecdd78baf97606c5366ee1bf95e0"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "bdaa18bccf250ac06ef6eb44f5c9886413944ad762f7d57cebccc6531be4ff1e",
+      "summary": "scripts/capture-scene-performance.mjs 428ms (unchanged)\nscripts/capture-scene-performance.test.mjs 59ms (unchanged)\nscripts/performance/weatherIdleDiagnostic.mjs 41ms (unchanged)\nscripts/performance/candidatePerformanceEvidence.mjs 53ms (unchanged)\nscripts/performance/candidatePerformanceEvidence.test.mjs 53ms (unchanged)\nscripts/run-unit-tests.mjs 18ms (unchanged)\nscripts/performance/weatherIdleCadenceDisposition.mjs 33ms (unchanged)\nscripts/performance/weatherIdleCadenceDisposition.test.mjs 28ms (unchanged)\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "2096975395c8c49868749c6be3a1725cbe07a2bdf9b88fa5ed9c280194c22712",
+      "summary": "readiness and zero visible geometry (8.245929ms)\n✔ visible wind probe requires normalized settled population counts (1.266913ms)\n✔ visible wind probe requires one explicitly identified streamline material (2.590084ms)\n✔ visible wind probe counts a material shared across spatial cells once (1.860036ms)\n✔ visible wind probe never treats a truncated primitive traversal as unique ownership (14.269803ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (2.88345ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.20313ms)\n✔ camera restoration checks orientation and records refused owned navigation (2.257843ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.333641ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.355846ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.278636ms)\n✔ probe deadline fails closed and still restores owned page state (1.004436ms)\n✔ probe timing and returned diagnostic report fail closed (0.455489ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.085793ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (1.48304ms)\n✔ the runner discovers every test file in the repository (28.479019ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.237238ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.535703ms)\nℹ tests 119\nℹ suites 0\nℹ pass 119\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9737.9091\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "fa1e66aa75dff7e85a0fb321f9571a9d3026fb4b65652b2ae9cf4266a4d78a2b",
+      "summary": "eadiness and zero visible geometry (4.84942ms)\n✔ visible wind probe requires normalized settled population counts (1.360564ms)\n✔ visible wind probe requires one explicitly identified streamline material (2.92559ms)\n✔ visible wind probe counts a material shared across spatial cells once (2.165235ms)\n✔ visible wind probe never treats a truncated primitive traversal as unique ownership (14.887454ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (3.088665ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.217298ms)\n✔ camera restoration checks orientation and records refused owned navigation (2.49483ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.318431ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.340968ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.276593ms)\n✔ probe deadline fails closed and still restores owned page state (0.992263ms)\n✔ probe timing and returned diagnostic report fail closed (0.425319ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.014075ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (2.16805ms)\n✔ the runner discovers every test file in the repository (30.501368ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.260502ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.612531ms)\nℹ tests 119\nℹ suites 0\nℹ pass 119\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9524.691209\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "completedAt": "2026-10-19T23:15:52.031Z"
+}

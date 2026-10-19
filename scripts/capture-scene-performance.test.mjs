@@ -454,7 +454,7 @@ test('timed samples reacquire foreground after warmup and before measurement', a
     measurementActivation,
   );
   const rawMeasurement = source.indexOf(
-    'const rawSamplePromise = Promise.resolve().then(() =>',
+    'rawSamplePromise = Promise.resolve().then(() =>',
     measurementObservation,
   );
   assert.ok(

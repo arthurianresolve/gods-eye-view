@@ -720,6 +720,31 @@ test('unverified idle dispositions fail instead of hiding the original compariso
   assert.match(result.comparisons[0].error, /ENOENT/);
 });
 
+test('weather idle disposition cannot attach to a standalone weather comparison', async () => {
+  const setup = await setupManifest();
+  const row = await createComparison(setup, { workloadId: 'weather-effects' });
+  row.weatherIdleCadenceDisposition = {
+    path: 'unused.json',
+    sha256: 'a'.repeat(64),
+  };
+
+  const result = evaluateManifestPerformanceEvidence(
+    { comparisons: [row] },
+    { manifestPath: setup.manifestPath, candidateCommit },
+  );
+
+  assert.equal(result.comparisons[0].validation.status, 'comparable');
+  assert.equal(result.comparisons[0].regressionDisposition, null);
+  assert.match(
+    result.comparisons[0].dispositionError,
+    /balanced weather qualification row/,
+  );
+  assert.equal(result.comparison.status, 'failed');
+  assert.ok(
+    result.comparison.failures.some((message) => /disposition/.test(message)),
+  );
+});
+
 test('missing dense and tracking measurements stay pending and do not imply coverage', async () => {
   const setup = await setupManifest();
   for (const workloadId of [

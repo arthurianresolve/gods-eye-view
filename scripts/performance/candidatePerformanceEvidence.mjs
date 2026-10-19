@@ -12,6 +12,7 @@ import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mj
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
 import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
 import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
+import { validateWeatherIdleCadenceDisposition } from './weatherIdleCadenceDisposition.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -244,6 +245,8 @@ function comparisonRows(
       let renderer = null;
       let environmentIdentity = null;
       let representative = null;
+      let regressionDisposition = null;
+      let dispositionError = null;
       try {
         const review = validateWeatherBalancedEnvelopeArtifact(artifact.value, {
           root: path.dirname(
@@ -282,6 +285,49 @@ function comparisonRows(
         delete publicReview.controlReport;
         delete publicReview.candidateReport;
         result = publicReview;
+        if (row.weatherIdleCadenceDisposition != null) {
+          try {
+            const dispositionArtifact = readBoundArtifact(
+              manifestPath,
+              row.weatherIdleCadenceDisposition,
+              `${environmentId} weather idle cadence disposition`,
+            );
+            const disposition = dispositionArtifact.value;
+            const controlDiagnostic = readBoundArtifact(
+              manifestPath,
+              disposition.controlDiagnostic,
+              `${environmentId} control weather idle diagnostic`,
+            );
+            const candidateDiagnostic = readBoundArtifact(
+              manifestPath,
+              disposition.candidateDiagnostic,
+              `${environmentId} candidate weather idle diagnostic`,
+            );
+            const validatedDisposition = validateWeatherIdleCadenceDisposition({
+              disposition,
+              baselineDiagnostic: controlDiagnostic,
+              candidateDiagnostic,
+              balancedReview: review,
+            });
+            regressionDisposition = {
+              ...validatedDisposition,
+              artifact: {
+                path: dispositionArtifact.path,
+                sha256: dispositionArtifact.digest,
+              },
+              controlDiagnostic: {
+                path: controlDiagnostic.path,
+                sha256: controlDiagnostic.digest,
+              },
+              candidateDiagnostic: {
+                path: candidateDiagnostic.path,
+                sha256: candidateDiagnostic.digest,
+              },
+            };
+          } catch (caught) {
+            dispositionError = String(caught?.message || caught).slice(0, 500);
+          }
+        }
       } catch (caught) {
         error = String(caught?.message || caught).slice(0, 500);
       }
@@ -301,7 +347,8 @@ function comparisonRows(
         renderer,
         environmentIdentity,
         validation: result,
-        regressionDisposition: null,
+        regressionDisposition,
+        dispositionError,
         error,
       };
     }
@@ -332,6 +379,7 @@ function comparisonRows(
     let renderer = null;
     let environmentIdentity = null;
     let regressionDisposition = null;
+    let dispositionError = null;
     try {
       renderer = requireEnvironmentMatch(
         baselineArtifact.value,
@@ -395,6 +443,12 @@ function comparisonRows(
           },
         };
       }
+      if (
+        workloadId === 'weather-effects' &&
+        row.weatherIdleCadenceDisposition != null
+      )
+        dispositionError =
+          'weather idle cadence disposition requires a validated balanced weather qualification row.';
     } catch (caught) {
       error = String(caught?.message || caught).slice(0, 500);
     }
@@ -421,6 +475,7 @@ function comparisonRows(
       environmentIdentity,
       validation: result || null,
       regressionDisposition,
+      dispositionError,
       error,
     };
   });
@@ -776,6 +831,10 @@ function comparisonOutcome(rows) {
       failures.push(`${row.environmentId}/${row.workloadId}: ${row.error}`);
       continue;
     }
+    if (row.dispositionError)
+      failures.push(
+        `${row.environmentId}/${row.workloadId}: ${row.dispositionError}`,
+      );
     const validation = row.validation;
     if (!validation || validation.status !== 'comparable') {
       failures.push(
@@ -846,6 +905,7 @@ function comparisonOutcome(rows) {
             : 'failed',
       renderer: row.renderer,
       regressionDisposition: row.regressionDisposition,
+      dispositionError: row.dispositionError || null,
       reason:
         row.error ||
         (row.environmentId !== primaryEnvironmentId ||
