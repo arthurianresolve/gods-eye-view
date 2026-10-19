@@ -1405,6 +1405,8 @@ export async function selectWeatherEffectsPhaseInPage({
   const readClock = () =>
     app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
       ?.clock;
+  let dispatchedAtElapsedMs = null;
+  let dispatchCompletedAtElapsedMs = null;
   const boundedWeatherPhaseContext = (observedAtElapsedMs, deadlineAtMs) => {
     const clock = readClock();
     const boundedTime = (value) =>
@@ -1419,6 +1421,12 @@ export async function selectWeatherEffectsPhaseInPage({
         : null;
     const boundedSlider = (value) =>
       typeof value === 'string' && /^\d{1,8}$/.test(value) ? value : null;
+    const boundedCount = (value) =>
+      Number.isSafeInteger(value) && value >= 0 && value <= 10_000_000
+        ? value
+        : null;
+    const boundedBoolean = (value) =>
+      typeof value === 'boolean' ? value : null;
     return JSON.stringify({
       expectedSourceTimes: Array(3).fill(boundedTime(phase.sourceTime)),
       observedSourceTimes: sourceObservationTimes.map(boundedTime),
@@ -1443,6 +1451,32 @@ export async function selectWeatherEffectsPhaseInPage({
       slider: {
         value: boundedSlider(slider.value),
         max: boundedSlider(slider.max),
+      },
+      transition: {
+        dispatchedAtElapsedMs,
+        dispatchCompletedAtElapsedMs,
+        globeTilesLoaded: boundedBoolean(app.viewer?.scene?.globe?.tilesLoaded),
+        layers: ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+          (id) => {
+            const diagnostics = app.dataManager.layers
+              .get(id)
+              ?.module?.getDiagnostics?.();
+            return {
+              id,
+              loading: boundedBoolean(diagnostics?.loading),
+              hidden: boundedBoolean(diagnostics?.hidden),
+              time: boundedTime(diagnostics?.time),
+              pendingTiles: boundedCount(diagnostics?.pendingTiles),
+              deferredTiles: boundedCount(diagnostics?.deferredTiles),
+              loadedTiles: boundedCount(diagnostics?.loadedTiles),
+              imageryCount: boundedCount(diagnostics?.imageryCount),
+              hasError:
+                diagnostics && 'error' in diagnostics
+                  ? Boolean(diagnostics.error)
+                  : null,
+            };
+          },
+        ),
       },
       fixtureSha256:
         typeof fixtureSha256 === 'string' &&
@@ -1475,7 +1509,9 @@ export async function selectWeatherEffectsPhaseInPage({
       )}`,
     );
   slider.value = String(phase.timelineIndex);
+  dispatchedAtElapsedMs = performance.now() - startedAt;
   slider.dispatchEvent(new Event('change', { bubbles: true }));
+  dispatchCompletedAtElapsedMs = performance.now() - startedAt;
   sourceObservationTimes = readTimes();
   while (
     !sourceObservationTimes.every((time) => time === phase.sourceTime) &&

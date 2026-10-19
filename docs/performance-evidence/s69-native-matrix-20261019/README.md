@@ -163,11 +163,13 @@ no benefit from disabling preservation. The application default remains enabled;
 no capture-correctness or visual-equivalence acceptance is claimed for a changed
 default. Both original infrastructure regressions remain unresolved.
 
-Raw evidence remains in the private Windows directory
-`cable-framebuffer-control-1792367992163`. VM transfer is pending because the
-temporary SSH credential expired and input to established terminal sessions is
-unavailable. The completed evidence is retained locally until transfer can be
-verified; no raw report is discarded.
+Raw evidence was retained in the private Windows directory
+`cable-framebuffer-control-1792367992163` while validation access was unavailable.
+After the approved access renewal on 19 October, all 14 files (82,308,738 bytes)
+were copied to VM105 and verified byte-for-byte. The earlier weather transfer's
+four files (226,626 bytes) were also verified without overwriting them. The
+[transfer review](renewed-transfer.json) retains every file hash and archive name;
+the original failed reports remain unchanged.
 
 ## Weather failure and diagnostic correction
 
@@ -223,6 +225,25 @@ a corrected full pair remains necessary. No application setting or deadline
 was relaxed.
 
 ## Completion conditions
+
+The corrected weather replay at producer `6753d211` reproduced a source
+transition failure on baseline `e7a878e` in idle run 4. Three idle samples
+completed. At 25,305.9 ms, the visible timeline and clock selected 11:55 UTC,
+but all three displayed observations still reported 11:50 UTC. The five-second
+transition deadline remains a failure; the candidate arm was not started.
+The [transition review](weather-transition-review.json) binds this original
+failure and the following diagnostic change. It records dispatch timing and
+allowlisted per-product loading, tile and imagery counts only when a phase
+fails. URLs, provider errors and payloads are excluded. All 30 focused checks
+pass on both Node 24.16.0 and Node 26.11.0 on VM105. This adds no runtime
+optimization or acceptance waiver.
+
+The [resumed CI receipt](resumed-ci.json) records all seven selected CI jobs and
+release verification passing for PR head `6753d211`. The tested PR merge commit
+is `55aa2af0aeb0d94ef1cc82f9fd45d36ebe32c573`; both revisions have tree
+`98cb3ec0fa6f673ea5a6b48cbdeb831611953863`. This is equal-tree integration
+evidence, not an exact-head artifact claim. Twelve optional diagnostics remain
+intentionally skipped. No hardware finding is cleared by these CI results.
 
 Identify the cause of the blocking regressions and fix or reject the affected
 optimization, preserving visual detail. Qualify the exact resulting application,

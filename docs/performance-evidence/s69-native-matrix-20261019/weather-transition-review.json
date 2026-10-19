@@ -1,0 +1,73 @@
+{
+  "schema": "gev-weather-transition-review/v1",
+  "recordedAt": "2026-10-19T01:15:29.137Z",
+  "testedFiles": [
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+      "sha256": "5a93b713172cc549fc5df516b15c53bd409b4010ee3ece4cc91545bd08e7113b"
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+      "sha256": "cee67f4f194ce5482e006f12446afe313cc7903d52d0a647ecf63f5d0738f02c"
+    },
+    {
+      "name": "scripts/performance/captureFailureReport.mjs",
+      "sha256": "4554f378468f991f539b17e7cefe94f4ead4d7d829a6f8344f72b36e9bd80eec"
+    }
+  ],
+  "tests": [
+    {
+      "version": "v24.16.0",
+      "exitCode": 0,
+      "tests": 30,
+      "passed": 30
+    },
+    {
+      "version": "v26.11.0",
+      "exitCode": 0,
+      "tests": 30,
+      "passed": 30
+    }
+  ],
+  "testArchive": "weather-transition-check-1792372459078",
+  "failedCapture": {
+    "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "harnessCommit": "6753d21113a86653ae8ac8b4174ac703c2a776d6",
+    "sha256": "1cc3950e9b41dede7033063cd2a5f3b45f0435c6af2fff15f0dc18e9e3f90619",
+    "scenario": "idle",
+    "run": 4,
+    "completedSamples": 3,
+    "context": {
+      "expectedSourceTimes": [
+        "2026-10-08T11:55:00.000Z",
+        "2026-10-08T11:55:00.000Z",
+        "2026-10-08T11:55:00.000Z"
+      ],
+      "observedSourceTimes": [
+        "2026-10-08T11:50:00.000Z",
+        "2026-10-08T11:50:00.000Z",
+        "2026-10-08T11:50:00.000Z"
+      ],
+      "elapsedMs": 25305.899999999907,
+      "phase": {
+        "id": "middle-history",
+        "offsetMs": 20000
+      },
+      "deadline": {
+        "elapsedMs": 25000,
+        "absoluteMs": 365146
+      },
+      "clock": {
+        "mode": "history",
+        "target": "2026-10-08T11:55:00.000Z",
+        "playing": false
+      },
+      "slider": {
+        "value": "1",
+        "max": "2"
+      },
+      "fixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51"
+    }
+  },
+  "changes": "Bounded failure-only tile state and dispatch times. No application change, relaxed deadline or accepted performance result."
+}

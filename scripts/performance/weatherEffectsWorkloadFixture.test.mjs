@@ -708,7 +708,17 @@ test('serialized weather phase selection retains bounded context for every predi
           {
             module: {
               getStats: () => ({ observedAt: sourceTimes[index] }),
-              getDiagnostics: () => ({ clock }),
+              getDiagnostics: () => ({
+                clock,
+                loading: true,
+                hidden: false,
+                time: sourceTimes[index],
+                pendingTiles: index,
+                deferredTiles: 0,
+                loadedTiles: 7,
+                imageryCount: 2,
+                error: null,
+              }),
             },
           },
         ],
@@ -785,6 +795,24 @@ test('serialized weather phase selection retains bounded context for every predi
       assert.equal(context.slider.max, failure.sliderMaximum ?? '2');
       assert.ok(Number.isFinite(context.elapsedMs));
       assert.ok(Number.isFinite(context.deadline.elapsedMs));
+      assert.equal(
+        context.transition.dispatchedAtElapsedMs,
+        failure.sliderMaximum ? null : 0,
+      );
+      assert.equal(
+        context.transition.dispatchCompletedAtElapsedMs,
+        failure.sliderMaximum ? null : 0,
+      );
+      assert.equal(context.transition.globeTilesLoaded, null);
+      assert.deepEqual(
+        context.transition.layers.map((layer) => layer.pendingTiles),
+        [0, 1, 2],
+      );
+      assert.ok(
+        context.transition.layers.every(
+          (layer) => layer.loading && layer.loadedTiles === 7,
+        ),
+      );
       assert.ok(
         context.clock.playing === null ||
           typeof context.clock.playing === 'boolean',
@@ -823,6 +851,61 @@ test('weather phase context survives bounded failure-report projection', () => {
     /^Weather phase early-history was missing, late or wrong\./,
   );
   assert.deepEqual(report.failure.weatherPhaseContext, context);
+  const transition = {
+    dispatchedAtElapsedMs: 20_002,
+    dispatchCompletedAtElapsedMs: 20_004,
+    globeTilesLoaded: false,
+    layers: ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+      (id, index) => ({
+        id,
+        loading: true,
+        hidden: false,
+        time: context.observedSourceTimes[index],
+        pendingTiles: index,
+        deferredTiles: 0,
+        loadedTiles: 7,
+        imageryCount: 2,
+        hasError: false,
+      }),
+    ),
+  };
+  const withTransition = (value) =>
+    createCaptureFailureReport({
+      phase: 'measure-scene',
+      error: new Error(
+        `Weather phase early-history was missing, late or wrong. context=${JSON.stringify({ ...context, transition: value })}`,
+      ),
+    }).failure.weatherPhaseContext;
+  assert.deepEqual(withTransition(transition).transition, transition);
+  const unsafe = withTransition({
+    ...transition,
+    dispatchedAtElapsedMs: 'not-a-number',
+    globeTilesLoaded: 'unknown',
+    layers: transition.layers.map((layer) => ({
+      ...layer,
+      pendingTiles: -1,
+      deferredTiles: 10_000_001,
+      loadedTiles: 1.5,
+      error: 'https://private.example/?token=secret',
+      url: 'https://private.example/',
+    })),
+  });
+  assert.equal(unsafe.transition.dispatchedAtElapsedMs, null);
+  assert.equal(unsafe.transition.globeTilesLoaded, null);
+  assert.ok(
+    unsafe.transition.layers.every(
+      (layer) =>
+        layer.pendingTiles === null &&
+        layer.deferredTiles === null &&
+        layer.loadedTiles === null,
+    ),
+  );
+  assert.doesNotMatch(JSON.stringify(unsafe), /private\.example|token|secret/);
+  assert.ok(
+    withTransition({ layers: 'invalid' }).transition.layers.every(
+      (layer) => layer.loading === null && layer.pendingTiles === null,
+    ),
+  );
   const malformed = createCaptureFailureReport({
     phase: 'measure-scene',
     error: new Error(

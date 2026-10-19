@@ -140,6 +140,45 @@ export function extractBoundedWeatherPhaseContext(message) {
       !result.fixtureSha256
     )
       return null;
+    if (value.transition && typeof value.transition === 'object') {
+      const boundedCount = (entry) =>
+        Number.isSafeInteger(entry) && entry >= 0 && entry <= 10_000_000
+          ? entry
+          : null;
+      const boundedBoolean = (entry) =>
+        typeof entry === 'boolean' ? entry : null;
+      const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
+      result.transition = {
+        dispatchedAtElapsedMs: Number.isFinite(
+          value.transition.dispatchedAtElapsedMs,
+        )
+          ? value.transition.dispatchedAtElapsedMs
+          : null,
+        dispatchCompletedAtElapsedMs: Number.isFinite(
+          value.transition.dispatchCompletedAtElapsedMs,
+        )
+          ? value.transition.dispatchCompletedAtElapsedMs
+          : null,
+        globeTilesLoaded: boundedBoolean(value.transition.globeTilesLoaded),
+        layers: ids.map((id, index) => {
+          const entry = Array.isArray(value.transition.layers)
+            ? value.transition.layers[index]
+            : null;
+          const layer = entry?.id === id ? entry : null;
+          return {
+            id,
+            loading: boundedBoolean(layer?.loading),
+            hidden: boundedBoolean(layer?.hidden),
+            time: boundedTime(layer?.time),
+            pendingTiles: boundedCount(layer?.pendingTiles),
+            deferredTiles: boundedCount(layer?.deferredTiles),
+            loadedTiles: boundedCount(layer?.loadedTiles),
+            imageryCount: boundedCount(layer?.imageryCount),
+            hasError: boundedBoolean(layer?.hasError),
+          };
+        }),
+      };
+    }
     return result;
   } catch {
     return null;

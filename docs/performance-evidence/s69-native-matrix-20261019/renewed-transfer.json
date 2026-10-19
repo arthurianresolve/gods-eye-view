@@ -1,0 +1,110 @@
+{
+  "schema": "gev-private-evidence-archive-review/v1",
+  "host": "VM105",
+  "transfers": [
+    {
+      "status": "all-files-verified",
+      "verifiedAt": "2026-10-19T01:01:53.040Z",
+      "archive": "cable-framebuffer-control-9dbec028-20261019-renewed",
+      "files": [
+        {
+          "name": "browser-trace-1-preserved-a.json",
+          "bytes": 29955760,
+          "sha256": "1b645f53ebab2cb75e55545e958fa651e157db170cc11b81da53d63feeb71f86"
+        },
+        {
+          "name": "browser-trace-2-released-a.json",
+          "bytes": 26046397,
+          "sha256": "ca7e00db2328dd57abb3fce14aa4a53efd7a102c6b57be3775b8866bd7f118e0"
+        },
+        {
+          "name": "browser-trace-3-released-b.json",
+          "bytes": 25090615,
+          "sha256": "eb348951fe7373cf8b8d957c1e3d0cb0516aabc09682df192ef31989d1e5b718"
+        },
+        {
+          "name": "capture-1-preserved-a.json",
+          "bytes": 249648,
+          "sha256": "6b77f86ade4dab9d60df21db6c58d706bd1f6a2b75939537f505d6b9370350dd"
+        },
+        {
+          "name": "capture-2-released-a.json",
+          "bytes": 243744,
+          "sha256": "e53a321ecd924ac8d483f55b23c365c9f658fbb71fcadc602c320011058b63f7"
+        },
+        {
+          "name": "capture-3-released-b.json",
+          "bytes": 247697,
+          "sha256": "90009a5b0abe4ba05276a7920b8ee8488965106b4d4bcd3658a7fad44da193c4"
+        },
+        {
+          "name": "capture-4-preserved-b.json",
+          "bytes": 3367,
+          "sha256": "3c2a0adda5cada8598d9c1b86bd724db0c715106c2199c2725a661a45cba09c5"
+        },
+        {
+          "name": "frame-trace-1-preserved-a.json",
+          "bytes": 156524,
+          "sha256": "88536a14a412c28361d5509a561cf93af6ff50707069f7e913f91fd433d16737"
+        },
+        {
+          "name": "frame-trace-2-released-a.json",
+          "bytes": 147298,
+          "sha256": "48ddbe9ba6f591975bc41d0bfd0a3f6c203272e274a4e0dae785f872c383e15d"
+        },
+        {
+          "name": "frame-trace-3-released-b.json",
+          "bytes": 151246,
+          "sha256": "d587c972eec1ad3a1255d5e707a0ec2ab00cfc6c058d7a829dda9db0f5085d84"
+        },
+        {
+          "name": "invocation-1.json",
+          "bytes": 2863,
+          "sha256": "c7b7a788d77a77c3dc3993654e2cfbcbfbb299b1d2f13cf51f39bd10237efe9c"
+        },
+        {
+          "name": "invocation-2.json",
+          "bytes": 2903,
+          "sha256": "090eb978a1b2e746890f27ea36429f6c88f0d5feba31e4dafb1f7f574ea2b42b"
+        },
+        {
+          "name": "invocation-3.json",
+          "bytes": 2903,
+          "sha256": "264d332ca7b732fb8ce1ca0d906a62d80b36cdefa0f72bf43cc2f46e7595c671"
+        },
+        {
+          "name": "partial-failure.json",
+          "bytes": 7773,
+          "sha256": "b4343fc45b8ccf90762121614734d334ece19d5f40b19fbd57dbf5001157dafd"
+        }
+      ]
+    },
+    {
+      "status": "all-files-verified",
+      "verifiedAt": "2026-10-19T01:01:53.486Z",
+      "archive": "weather-full-observation-c9c61d01-20261018T235514Z",
+      "files": [
+        {
+          "name": "baseline.invocation.json",
+          "bytes": 2074,
+          "sha256": "9038052726201983438327a6b958d470bf7a8ca547eb0374243c9607d8a5e896"
+        },
+        {
+          "name": "baseline.json",
+          "bytes": 220920,
+          "sha256": "a61b200a95b059071adee4074ea57b6360c5629bc86af4bc0ed1672efd0274d7"
+        },
+        {
+          "name": "baseline.log",
+          "bytes": 1268,
+          "sha256": "840a7e0fb3688bda807d569cc1b1f8804c43965afe5cf1fddc793a2b43fd48a5"
+        },
+        {
+          "name": "protocol.json",
+          "bytes": 2364,
+          "sha256": "1abf0790ba4130ae38d038a14fbff227e4bdf4a732293ab1204812c24d99e4a3"
+        }
+      ]
+    }
+  ]
+}
