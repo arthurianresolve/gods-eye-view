@@ -15,6 +15,10 @@ import {
   assertNativeResolutionEvidence,
   readNativeResolutionEvidenceInPage,
   resolveNativeSoakViewport,
+  createSoakDatacenterFixture,
+  createSoakDatacenterFixtureReceipt,
+  isSoakDatacenterAssetRequest,
+  SOAK_DATACENTER_FEATURE_COUNT,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
@@ -54,6 +58,133 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
       },
     },
   },
+});
+
+const testDatacenterFixtureReceipt = () => ({
+  schema: 'gev-soak-datacenter-fixture/v2',
+  fulfillmentProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
+  status: 'validated',
+  requestCount: 1,
+  preparedRequestCount: 1,
+  fulfilledRequestCount: 1,
+  applicationOrigin: 'http://127.0.0.1:4174',
+  assetOrigin: 'http://127.0.0.1:4174',
+  assetPath: '/assets/datacenters-CtzejECr.geojsonl',
+  responseStatus: 200,
+  expectedBodySha256: 'a'.repeat(64),
+  bodySha256: 'a'.repeat(64),
+  expectedFeatureCount: 8,
+  deliveredFeatureCount: 8,
+  materializedFeatureCount: 8,
+  disabledMaterializedFeatureCount: 0,
+  disabledRenderableCount: 0,
+  setupTiming: 'unmeasured-before-interaction-samples',
+  preloadEnabledObserved: true,
+  preloadDisabledObserved: true,
+  requests: [
+    {
+      origin: 'http://127.0.0.1:4174',
+      pathname: '/assets/datacenters-CtzejECr.geojsonl',
+      prepared: true,
+      fulfilled: true,
+      responseStatus: 200,
+      bodySha256: 'a'.repeat(64),
+      deliveredFeatureCount: 8,
+    },
+  ],
+});
+
+test('driver success receipt retains a bounded cloned fulfilled-request history', () => {
+  const validation = { ...testDatacenterFixtureReceipt() };
+  delete validation.requests;
+  const sourceRequest = {
+    origin: validation.assetOrigin,
+    pathname: validation.assetPath,
+    prepared: true,
+    fulfilled: true,
+    responseStatus: 200,
+    bodySha256: validation.bodySha256,
+    deliveredFeatureCount: 8,
+  };
+  const receipt = createSoakDatacenterFixtureReceipt(validation, [
+    sourceRequest,
+    ...Array.from({ length: 5 }, () => sourceRequest),
+  ]);
+  assert.equal(receipt.status, 'validated');
+  assert.equal(receipt.requests.length, 4);
+  assert.deepEqual(receipt.requests[0], sourceRequest);
+  assert.notEqual(receipt.requests[0], sourceRequest);
+  receipt.requests[0].fulfilled = false;
+  assert.equal(sourceRequest.fulfilled, true);
+  assert.equal(
+    createSoakDatacenterFixtureReceipt(validation, [sourceRequest]).requests[0]
+      .fulfilled,
+    true,
+    'a later consumer receives a fresh copy after another consumer mutates its snapshot',
+  );
+  let now = 0;
+  const acceptedReceipt = createSoakDatacenterFixtureReceipt(validation, [
+    sourceRequest,
+  ]);
+  return runMixedUseSoak({
+    durationMs: 100,
+    intervalMs: 0,
+    now: () => now,
+    driver: {
+      validateDatacenterSoakFixture: async () => acceptedReceipt,
+      runCycle: async () => {
+        now += 100;
+        return {
+          sourceToggles: 2,
+          replaySeeks: 1,
+          imports: 1,
+          workspaceReloads: 1,
+          archiveFailures: 1,
+          cameraRecoveries: 1,
+        };
+      },
+    },
+  }).then((report) => {
+    assert.equal(report.datacenterFixtureReceipt.requests[0].fulfilled, true);
+    assert.equal(
+      report.datacenterFixtureReceipt.requests[0].deliveredFeatureCount,
+      8,
+    );
+  });
+});
+
+test('rendered soak intercepts only the same-origin bundled datacenter asset with eight features', () => {
+  const base = 'http://127.0.0.1:4184/';
+  assert.equal(
+    isSoakDatacenterAssetRequest(
+      'http://127.0.0.1:4184/assets/datacenters-CtzejECr.geojsonl',
+      base,
+    ),
+    true,
+  );
+  assert.equal(
+    isSoakDatacenterAssetRequest(
+      'http://127.0.0.1:4184/src/data/local_data/datacenters/datacenters.geojsonl',
+      base,
+    ),
+    true,
+  );
+  for (const url of [
+    'http://other.test/assets/datacenters-CtzejECr.geojsonl',
+    'http://127.0.0.1:4184/assets/dams-CtzejECr.geojsonl',
+    'http://127.0.0.1:4184/assets/datacenters-not-a-vite-hash.geojsonl',
+  ])
+    assert.equal(isSoakDatacenterAssetRequest(url, base), false, url);
+  const fixture = createSoakDatacenterFixture({
+    latitude: 40.7,
+    longitude: -73.9,
+  });
+  const features = fixture.body.split('\n').map((line) => JSON.parse(line));
+  assert.equal(SOAK_DATACENTER_FEATURE_COUNT, 8);
+  assert.equal(fixture.featureCount, 8);
+  assert.equal(features.length, 8);
+  assert.equal(features[0].id, 'way/1');
+  assert.match(fixture.bodySha256, /^[a-f0-9]{64}$/);
 });
 
 test('rendered soak location accepts Ampfing coordinates and rejects invalid views', () => {
@@ -934,6 +1065,8 @@ test('operation failure preserves completed counts and retained checkpoints', as
       checkpointIntervalMs: 1,
       now: () => clock,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => metrics(),
         runCycle: async () => {
           clock += 20;
@@ -1045,6 +1178,7 @@ test('soak reports completed driver operations and labels short runs as smoke', 
     intervalMs: 0,
     now: () => now,
     driver: {
+      validateDatacenterSoakFixture: async () => testDatacenterFixtureReceipt(),
       startupPrewarm: { status: 'passed', durationMs: 12 },
       runCycle: async () => {
         now += 50;
@@ -1075,6 +1209,31 @@ test('soak reports completed driver operations and labels short runs as smoke', 
     status: 'passed',
     durationMs: 12,
   });
+  assert.deepEqual(
+    report.datacenterFixtureReceipt,
+    testDatacenterFixtureReceipt(),
+  );
+});
+
+test('mixed-use soak fails closed and preserves an unfulfilled fixture receipt', async () => {
+  const failedReceipt = testDatacenterFixtureReceipt();
+  failedReceipt.status = 'failed';
+  failedReceipt.fulfilledRequestCount = 0;
+  failedReceipt.requests[0].fulfilled = false;
+  const driver = {
+    validateDatacenterSoakFixture: async () => failedReceipt,
+    readDatacenterSoakFixtureReceipt: () => failedReceipt,
+    runCycle: async () => {
+      throw new Error('cycles must not start');
+    },
+    close: async () => ({ closeCompleted: true }),
+  };
+  await assert.rejects(runMixedUseSoak({ durationMs: 1, driver }), (error) => {
+    assert.match(error.message, /fulfilled, materialized eight-feature/);
+    assert.equal(error.soakReport.operationStatus, 'failed');
+    assert.equal(error.soakReport.datacenterFixtureReceipt.status, 'failed');
+    return true;
+  });
 });
 
 test('full soak anchors its end to the first retained checkpoint at or after 30 minutes', async () => {
@@ -1087,6 +1246,8 @@ test('full soak anchors its end to the first retained checkpoint at or after 30 
       checkpointIntervalMs: 10 * 60_000,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => metrics(heapAtCheckpoint(reads++)),
         runCycle: async () => {
           now += 6 * 60_000;
@@ -1131,6 +1292,7 @@ test('requested full-soak duration remains a floor when it exceeds the anchored 
     checkpointIntervalMs: 15 * 60_000,
     now: () => now,
     driver: {
+      validateDatacenterSoakFixture: async () => testDatacenterFixtureReceipt(),
       retainedMetrics: async () => metrics(),
       runCycle: async () => {
         now += 10 * 60_000;
@@ -1161,6 +1323,8 @@ test('full soak fails with bounded scheduling evidence when the anchor cannot fi
       checkpointIntervalMs: 80 * 60_000,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => metrics(),
         runCycle: async () => {
           now += 85 * 60_000;
@@ -1208,6 +1372,8 @@ test('full soak fails at the extension bound if no retention anchor was sampled'
       checkpointIntervalMs: 100 * 60_000,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => metrics(),
         runCycle: async () => {
           now += 85 * 60_000;
@@ -1244,6 +1410,8 @@ test('full soak continues past its requested duration while waiting for a retent
       checkpointIntervalMs: 100 * 60_000,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => metrics(),
         runCycle: async () => {
           now += 5 * 60_000;
@@ -1291,6 +1459,8 @@ test('full soak fails if the final retained read exceeds the extension bound', a
       checkpointIntervalMs: 30 * 60_000,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         retainedMetrics: async () => {
           if (++reads === 4) now += 25 * 60_000;
           return metrics();
@@ -1342,6 +1512,7 @@ test('soak report preserves native resolution at initial and retained checkpoint
     checkpointIntervalMs: 50,
     now: () => now,
     driver: {
+      validateDatacenterSoakFixture: async () => testDatacenterFixtureReceipt(),
       nativeResolution: initial,
       warmupIterations: 1,
       retainedMetrics: async () => ({
@@ -1400,6 +1571,8 @@ test('native drawing-buffer drift fails the soak and retains its failure report'
       checkpointIntervalMs: 50,
       now: () => now,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         nativeResolution: { observedDpr: 2, initial: evidence },
         retainedMetrics: async () => ({
           nativeResolution: assertNativeResolutionEvidence(
@@ -1458,6 +1631,8 @@ test('requested soak recording output is portable and reported without embedding
       now: () => now,
       recordingBundleOut: output,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         runCycle: async () => {
           now += 50;
           return {
@@ -1497,13 +1672,22 @@ test('software renderer detection rejects known fallback strings', async () => {
 });
 test('soak fails when an operation is missing or fails', async () => {
   await assert.rejects(
-    runMixedUseSoak({ durationMs: 1, driver: { runCycle: async () => ({}) } }),
+    runMixedUseSoak({
+      durationMs: 1,
+      driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
+        runCycle: async () => ({}),
+      },
+    }),
     /did not complete/,
   );
   await assert.rejects(
     runMixedUseSoak({
       durationMs: 1,
       driver: {
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
         runCycle: async () => {
           throw new Error('source failed');
         },

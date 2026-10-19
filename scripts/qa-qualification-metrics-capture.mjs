@@ -9,7 +9,11 @@ import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { createWindowsForegroundActivationSession } from './performance/windowsForegroundWindow.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v1';
+const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
+const INTERACTION_PROTOCOL =
+  'trusted-event-timeStamp-prerender-postrender-witness-v4';
+const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
+const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
 const WORK_PLAN = Object.freeze({
   warmupCycles: 2,
@@ -357,25 +361,28 @@ export function installInteractionObserverInPage(fixtureContract) {
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
   if (
-    !scene?.postRender?.addEventListener ||
-    typeof scene.requestRender !== 'function'
+    !scene?.preRender?.addEventListener ||
+    !scene?.postRender?.addEventListener
   )
     throw new Error(
-      'Qualification probe needs Cesium postRender and requestRender.',
+      'Qualification probe needs Cesium preRender and postRender.',
     );
   const observer = {
     pending: null,
     error: null,
     generation: 0,
     disposed: false,
+    armedTarget: null,
     records: [],
     removeInput: [],
     removeRender: null,
+    removePreRender: null,
+    preRenderWitness: null,
     pollTimer: null,
-    isReplayVisualWitness({ selectedRecord, renderedRecord, visualWitness }) {
+    pollPromise: null,
+    isReplayBillboardWitness({ selectedRecord, visualWitness }) {
       return Boolean(
         selectedRecord &&
-        renderedRecord &&
         visualWitness?.billboardVisible === true &&
         visualWitness.billboardId === selectedRecord.id &&
         Number.isFinite(visualWitness.billboardPosition?.latitude) &&
@@ -391,26 +398,147 @@ export function installInteractionObserverInPage(fixtureContract) {
         visualWitness.screenPosition.x >= 0 &&
         visualWitness.screenPosition.y >= 0 &&
         visualWitness.screenPosition.x < visualWitness.canvas?.width &&
-        visualWitness.screenPosition.y < visualWitness.canvas?.height &&
-        renderedRecord.icao24 === selectedRecord.id &&
+        visualWitness.screenPosition.y < visualWitness.canvas?.height,
+      );
+    },
+    isReplayVisualWitness({ selectedRecord, renderedRecord, visualWitness }) {
+      return Boolean(
+        observer.isReplayBillboardWitness({ selectedRecord, visualWitness }) &&
+        renderedRecord?.icao24 === selectedRecord.id &&
         renderedRecord.provenance?.positionObservedAtMs ===
           selectedRecord.positionTimeMs &&
         Math.abs(renderedRecord.lat - selectedRecord.latitude) <= 1e-9 &&
         Math.abs(renderedRecord.lon - selectedRecord.longitude) <= 1e-9,
       );
     },
+    readLocalControlFrameState(sample, frameNumber) {
+      const appNow = window.__godsEyeView;
+      const button = document.querySelector(sample.selector);
+      const layer = appNow.dataManager.layers.get('local-datacenters');
+      const lod = layer?.module?.getLodDiagnostics?.();
+      const total = Number.isInteger(lod?.total) ? lod.total : 0;
+      const active = Number.isInteger(lod?.active) ? lod.active : 0;
+      const enabled =
+        appNow.dataManager.isEnabled('local-datacenters') === true;
+      const buttonActive = button?.classList.contains('active') === true;
+      const ready = sample.expected
+        ? lod?.computed === true && total === 8 && active > 0
+        : lod?.computed === false && total === 0 && active === 0;
+      return {
+        frameNumber,
+        enabled,
+        buttonActive,
+        computed: lod?.computed === true,
+        total,
+        active,
+        matched:
+          enabled === sample.expected &&
+          buttonActive === sample.expected &&
+          ready,
+      };
+    },
+    readReplayFrameState(sample, frameNumber) {
+      const appNow = window.__godsEyeView;
+      const state = appNow.aircraftSource.getState();
+      const slider = document.querySelector(sample.selector);
+      const sliderValue = Number(slider?.value);
+      const targetMs =
+        sample.expected === 'end' ? sample.coverageToMs : sample.coverageFromMs;
+      const fixtureIndex = sample.expected === 'end' ? 3 : 0;
+      const selectedRecord = {
+        id: 'SYNTH-001',
+        positionTimeMs: targetMs,
+        latitude: Math.sin(fixtureIndex / 10) * 0.02,
+        longitude:
+          ((((179.7 + fixtureIndex * 0.01 + 180) % 360) + 360) % 360) - 180,
+      };
+      const renderedRecord = appNow.dataManager.layers
+        .get('flights')
+        ?.module?.getAnalystRecords?.(8)
+        ?.find((record) => record.icao24 === selectedRecord.id);
+      const visualWitness = window.__qualificationFlightWitnessReader?.(
+        selectedRecord.id,
+      );
+      const stateMatches =
+        state?.mode === 'recorded' &&
+        state?.recordingId === fixtureContract.recordingId &&
+        state?.recordCount === fixtureContract.expectedRecordCount &&
+        state?.targetMs === targetMs &&
+        state?.coverage?.from === sample.coverageFromMs &&
+        state?.coverage?.to === sample.coverageToMs &&
+        Number.isFinite(sliderValue) &&
+        sliderValue !== sample.previousSliderValue &&
+        selectedRecord.positionTimeMs !== sample.previousPositionTimeMs &&
+        (selectedRecord.latitude !== sample.previousLatitude ||
+          selectedRecord.longitude !== sample.previousLongitude);
+      const renderedRecordMatches = observer.isReplayVisualWitness({
+        selectedRecord,
+        renderedRecord,
+        visualWitness,
+      });
+      return {
+        frameNumber,
+        targetMs,
+        recordingId: state?.recordingId ?? null,
+        recordCount: state?.recordCount ?? null,
+        sliderValue: Number.isFinite(sliderValue) ? sliderValue : null,
+        selectedRecord,
+        renderedRecord: renderedRecord
+          ? {
+              id: renderedRecord.icao24,
+              positionTimeMs:
+                renderedRecord.provenance?.positionObservedAtMs ?? null,
+              latitude: renderedRecord.lat,
+              longitude: renderedRecord.lon,
+            }
+          : null,
+        visualWitness,
+        matched: stateMatches && renderedRecordMatches,
+      };
+    },
     onEvent(event) {
-      if (
-        observer.disposed ||
-        !observer.pending ||
-        observer.pending.inputAtMs != null
-      )
+      const sample = observer.pending;
+      if (observer.disposed || !sample) return;
+      if (sample.generation !== observer.generation) {
+        observer.error =
+          'Stale interaction generation received an input event.';
         return;
-      observer.pending.inputAtMs = performance.now();
-      observer.pending.inputEventAtMs = event.timeStamp;
-      observer.pending.inputType = event.type;
-      observer.pollState();
-      observer.pollTimer = setInterval(() => observer.pollState(), 10);
+      }
+      if (sample.inputAtMs != null) {
+        observer.error =
+          'Duplicate input event for an armed interaction sample.';
+        return;
+      }
+      const receivedAtMs = performance.now();
+      const expectedType =
+        sample.kind === 'localControl' ? 'pointerdown' : 'input';
+      const targetMatches =
+        event.currentTarget === observer.armedTarget &&
+        (event.target === observer.armedTarget ||
+          observer.armedTarget?.contains?.(event.target) === true);
+      if (
+        event.isTrusted !== true ||
+        event.type !== expectedType ||
+        !targetMatches ||
+        !Number.isFinite(event.timeStamp) ||
+        event.timeStamp < sample.armedAtMs ||
+        event.timeStamp > receivedAtMs
+      ) {
+        observer.error = 'Interaction input event failed freshness validation.';
+        return;
+      }
+      sample.inputAtMs = event.timeStamp;
+      sample.inputEventAtMs = event.timeStamp;
+      sample.handlerReceivedAtMs = receivedAtMs;
+      sample.inputEventType = event.type;
+      sample.inputTrusted = event.isTrusted;
+      sample.inputTargetMatched = targetMatches;
+      sample.inputClockSource = 'trusted-event-timeStamp';
+      sample.inputDeliveryDelayMs = receivedAtMs - event.timeStamp;
+      if (sample.kind === 'localControl') {
+        observer.pollPromise = observer.pollState();
+        observer.pollTimer = setInterval(() => observer.pollState(), 10);
+      }
     },
     async pollState() {
       const sample = observer.pending;
@@ -419,26 +547,37 @@ export function installInteractionObserverInPage(fixtureContract) {
         !observer.disposed &&
         observer.pending === sample &&
         observer.generation === generation;
-      if (!sample || !isCurrent() || sample.stateAtMs != null) return;
+      if (
+        !sample ||
+        !isCurrent() ||
+        sample.inputAtMs == null ||
+        sample.stateAtMs != null
+      )
+        return;
       const appNow = window.__godsEyeView;
       let matched = false;
       if (sample.kind === 'localControl') {
         const button = document.querySelector(sample.selector);
         const layer = appNow.dataManager.layers.get('local-datacenters');
-        const records = layer?.module?.getAnalystRecords?.() || [];
         const lod = layer?.module?.getLodDiagnostics?.();
+        const materializedRecordCount = Number.isInteger(lod?.total)
+          ? lod.total
+          : 0;
         const renderableCount = Number.isInteger(lod?.active) ? lod.active : 0;
         const renderablesReady = sample.expected
-          ? lod?.computed === true && renderableCount > 0
-          : renderableCount === 0 && lod?.computed === false;
+          ? lod?.computed === true &&
+            materializedRecordCount > 0 &&
+            renderableCount > 0
+          : materializedRecordCount === 0 &&
+            renderableCount === 0 &&
+            lod?.computed === false;
         matched =
           appNow.dataManager.isEnabled('local-datacenters') ===
             sample.expected &&
           button?.classList.contains('active') === sample.expected &&
-          records.length > 0 === sample.expected &&
           renderablesReady;
         if (matched) {
-          sample.loadedRecordCount = records.length;
+          sample.materializedRecordCount = materializedRecordCount;
           sample.renderableCount = renderableCount;
           sample.layerRenderablesObserved = renderableCount > 0;
           sample.expectedLayerEnabled = sample.expected;
@@ -449,109 +588,206 @@ export function installInteractionObserverInPage(fixtureContract) {
           );
         }
       } else if (sample.kind === 'loadedReplaySeek') {
-        const readout = document.querySelector('.investigation-timeline-times');
-        const slider = document.querySelector(
-          '.investigation-timeline-slider-control',
-        );
-        const state = appNow.aircraftSource.getState();
-        if (sample.pollingSnapshot) return;
-        sample.pollingSnapshot = true;
-        let records = [];
-        try {
-          records = (await appNow.aircraftSource.getSnapshot())?.records || [];
-        } catch (error) {
-          if (isCurrent()) observer.error = error?.message || String(error);
-          return;
-        } finally {
-          sample.pollingSnapshot = false;
-        }
-        if (!isCurrent()) return;
-        const fixtureAircraft = records.find(
-          (record) => record.id === 'SYNTH-001',
-        );
-        const text = readout?.textContent?.trim() || '';
-        const fixtureIndex = sample.expected === 'end' ? 3 : 0;
-        const expectedLongitude =
-          ((((179.7 + fixtureIndex * 0.01 + 180) % 360) + 360) % 360) - 180;
-        const layer = appNow.dataManager.layers.get('flights');
-        const renderedRecords = layer?.module?.getAnalystRecords?.() || [];
-        const renderedRecord = renderedRecords.find(
-          (record) => record.icao24 === fixtureAircraft?.id,
-        );
-        const visualWitness = window.__qualificationFlightWitnessReader?.(
-          fixtureAircraft?.id,
-        );
-        matched =
-          state?.mode === 'recorded' &&
-          state?.recordingId === fixtureContract.recordingId &&
-          state?.recordCount === fixtureContract.expectedRecordCount &&
-          Boolean(text) &&
-          Number.isFinite(Number(slider?.value)) &&
-          Number(slider.value) !== sample.previousSliderValue &&
-          Number.isFinite(fixtureAircraft?.latitude) &&
-          Number.isFinite(fixtureAircraft?.longitude) &&
-          fixtureAircraft.positionTimeMs !== sample.previousPositionTimeMs &&
-          (fixtureAircraft.latitude !== sample.previousLatitude ||
-            fixtureAircraft.longitude !== sample.previousLongitude) &&
-          state.targetMs ===
-            (sample.expected === 'end'
-              ? sample.coverageToMs
-              : sample.coverageFromMs) &&
-          fixtureAircraft.positionTimeMs === state.targetMs &&
-          fixtureAircraft.latitude === Math.sin(fixtureIndex / 10) * 0.02 &&
-          fixtureAircraft.longitude === expectedLongitude;
-        const visibleReplayMatch = observer.isReplayVisualWitness({
-          selectedRecord: fixtureAircraft,
-          renderedRecord,
-          visualWitness,
-        });
-        matched = matched && visibleReplayMatch;
-        if (matched) {
-          sample.selectedTimeText = text;
-          sample.selectedSourceMode = state.mode;
-          sample.selectedSliderValue = Number(slider.value);
-          sample.fixtureAircraftId = fixtureAircraft.id;
-          sample.fixtureAircraftLatitude = fixtureAircraft.latitude;
-          sample.fixtureAircraftLongitude = fixtureAircraft.longitude;
-          sample.positionTimeMs = fixtureAircraft.positionTimeMs;
-          sample.recordingId = state.recordingId;
-          sample.fixtureRecordCount = state.recordCount;
-          sample.coverageFromMs = state.coverage.from;
-          sample.coverageToMs = state.coverage.to;
-          sample.expectedFixtureIndex = fixtureIndex;
-          sample.renderedRecordPositionTimeMs =
-            renderedRecord.provenance.positionObservedAtMs;
-          sample.renderedRecordLatitude = renderedRecord.lat;
-          sample.renderedRecordLongitude = renderedRecord.lon;
-          sample.renderedBillboardId = fixtureAircraft.id;
-          sample.renderedBillboardLatitude =
-            visualWitness.billboardPosition.latitude;
-          sample.renderedBillboardLongitude =
-            visualWitness.billboardPosition.longitude;
-          sample.billboardScreenPosition = visualWitness.screenPosition;
-          sample.billboardCanvas = visualWitness.canvas;
-          sample.renderedBillboardVisible = visualWitness.billboardVisible;
-        }
+        return;
       }
       if (!matched || !isCurrent()) return;
-      sample.stateAtMs = performance.now();
-      sample.frameNumberAtState = scene.frameState.frameNumber;
-      sample.renderWitnessType = 'requested-post-state-render';
-      scene.requestRender();
+      return;
+    },
+    onPreRender() {
+      try {
+        const sample = observer.pending;
+        const frameNumber = scene.frameState.frameNumber;
+        const atMs = performance.now();
+        const localControl =
+          sample?.kind === 'localControl'
+            ? observer.readLocalControlFrameState(sample, frameNumber)
+            : null;
+        const replay =
+          sample?.kind === 'loadedReplaySeek' &&
+          sample.inputAtMs != null &&
+          sample.stateAtMs == null
+            ? observer.readReplayFrameState(sample, frameNumber)
+            : null;
+        observer.preRenderWitness = {
+          generation: observer.generation,
+          frameNumber,
+          atMs,
+          localControl,
+          replay,
+        };
+        if (
+          !observer.disposed &&
+          sample?.generation === observer.generation &&
+          sample.inputAtMs != null &&
+          sample.stateAtMs == null &&
+          localControl?.matched
+        ) {
+          sample.materializedRecordCount = localControl.total;
+          sample.renderableCount = localControl.active;
+          sample.layerRenderablesObserved = localControl.active > 0;
+          sample.expectedLayerEnabled = sample.expected;
+          sample.layerEnabledObserved = localControl.enabled;
+          sample.layerVisibleObserved = localControl.buttonActive;
+          sample.stateAtMs = atMs;
+          sample.frameNumberAtState = frameNumber;
+        }
+        if (
+          !observer.disposed &&
+          sample?.generation === observer.generation &&
+          sample.kind === 'loadedReplaySeek' &&
+          sample.inputAtMs != null &&
+          sample.stateAtMs == null &&
+          replay?.matched
+        ) {
+          const selected = replay.selectedRecord;
+          const rendered = replay.renderedRecord;
+          const visual = replay.visualWitness;
+          sample.selectedRecordWitness = selected;
+          sample.selectedSliderValue = replay.sliderValue;
+          sample.selectedSourceMode = 'recorded';
+          sample.fixtureAircraftId = selected.id;
+          sample.fixtureAircraftLatitude = selected.latitude;
+          sample.fixtureAircraftLongitude = selected.longitude;
+          sample.positionTimeMs = selected.positionTimeMs;
+          sample.recordingId = replay.recordingId;
+          sample.fixtureRecordCount = replay.recordCount;
+          sample.expectedFixtureIndex = sample.expected === 'end' ? 3 : 0;
+          sample.renderedRecordPositionTimeMs = rendered.positionTimeMs;
+          sample.renderedRecordLatitude = rendered.latitude;
+          sample.renderedRecordLongitude = rendered.longitude;
+          sample.renderedBillboardId = selected.id;
+          sample.renderedBillboardLatitude = visual.billboardPosition.latitude;
+          sample.renderedBillboardLongitude =
+            visual.billboardPosition.longitude;
+          sample.billboardScreenPosition = visual.screenPosition;
+          sample.billboardCanvas = visual.canvas;
+          sample.renderedBillboardVisible = visual.billboardVisible;
+          sample.frameSelectedTimeMs = replay.targetMs;
+          sample.framePositionTimeMs = selected.positionTimeMs;
+          sample.stateAtMs = atMs;
+          sample.frameNumberAtState = frameNumber;
+        }
+      } catch (error) {
+        observer.error = error?.message || String(error);
+      }
     },
     onRender() {
       const sample = observer.pending;
+      const frameNumber = scene.frameState.frameNumber;
+      const preRenderWitness = observer.preRenderWitness;
       if (
-        sample?.stateAtMs == null ||
-        scene.frameState.frameNumber <= sample.frameNumberAtState
+        observer.error ||
+        !sample ||
+        sample.generation !== observer.generation
       )
         return;
-      sample.renderedFrameAtMs = performance.now();
-      sample.frameNumberAtRendered = scene.frameState.frameNumber;
-      observer.records.push({ ...sample });
-      if (observer.pollTimer) clearInterval(observer.pollTimer);
-      observer.pollTimer = null;
-      observer.pending = null;
+      if (sample.kind === 'localControl') {
+        if (
+          sample.inputAtMs == null ||
+          !preRenderWitness ||
+          preRenderWitness.generation !== sample.generation ||
+          preRenderWitness.frameNumber !== frameNumber ||
+          preRenderWitness.atMs < sample.inputAtMs ||
+          !preRenderWitness.localControl?.matched ||
+          preRenderWitness.localControl.frameNumber !== frameNumber ||
+          sample.stateAtMs == null ||
+          sample.frameNumberAtState !== frameNumber
+        )
+          return;
+      } else if (
+        sample.stateAtMs == null ||
+        !observer.preRenderWitness?.replay?.matched ||
+        observer.preRenderWitness.frameNumber !== frameNumber ||
+        sample.frameNumberAtState !== frameNumber
+      ) {
+        return;
+      }
+      try {
+        const appNow = window.__godsEyeView;
+        let frameMatches = false;
+        if (sample.kind === 'localControl') {
+          const preRenderState = preRenderWitness.localControl;
+          const postRenderState = observer.readLocalControlFrameState(
+            sample,
+            frameNumber,
+          );
+          frameMatches =
+            postRenderState.matched &&
+            postRenderState.enabled === preRenderState.enabled &&
+            postRenderState.buttonActive === preRenderState.buttonActive &&
+            postRenderState.computed === preRenderState.computed &&
+            postRenderState.total === preRenderState.total &&
+            postRenderState.active === preRenderState.active;
+        } else if (sample.kind === 'loadedReplaySeek') {
+          const preReplay = observer.preRenderWitness.replay;
+          const postReplay = observer.readReplayFrameState(sample, frameNumber);
+          frameMatches =
+            postReplay.matched &&
+            postReplay.frameNumber === preReplay.frameNumber &&
+            postReplay.targetMs === preReplay.targetMs &&
+            postReplay.recordingId === preReplay.recordingId &&
+            postReplay.recordCount === preReplay.recordCount &&
+            postReplay.sliderValue === preReplay.sliderValue &&
+            postReplay.selectedRecord.positionTimeMs ===
+              preReplay.selectedRecord.positionTimeMs &&
+            postReplay.selectedRecord.latitude ===
+              preReplay.selectedRecord.latitude &&
+            postReplay.selectedRecord.longitude ===
+              preReplay.selectedRecord.longitude &&
+            postReplay.renderedRecord?.positionTimeMs ===
+              preReplay.renderedRecord?.positionTimeMs &&
+            postReplay.renderedRecord?.latitude ===
+              preReplay.renderedRecord?.latitude &&
+            postReplay.renderedRecord?.longitude ===
+              preReplay.renderedRecord?.longitude &&
+            postReplay.visualWitness?.billboardId ===
+              preReplay.visualWitness?.billboardId &&
+            postReplay.visualWitness?.billboardPosition?.latitude ===
+              preReplay.visualWitness?.billboardPosition?.latitude &&
+            postReplay.visualWitness?.billboardPosition?.longitude ===
+              preReplay.visualWitness?.billboardPosition?.longitude &&
+            postReplay.visualWitness?.screenPosition?.x ===
+              preReplay.visualWitness?.screenPosition?.x &&
+            postReplay.visualWitness?.screenPosition?.y ===
+              preReplay.visualWitness?.screenPosition?.y;
+          if (frameMatches) {
+            sample.preRenderFrameNumber = frameNumber;
+          }
+        }
+        if (!frameMatches) {
+          if (
+            sample.kind === 'localControl' &&
+            observer.preRenderWitness?.localControl?.matched &&
+            observer.preRenderWitness.frameNumber === frameNumber
+          ) {
+            sample.stateAtMs = null;
+            sample.frameNumberAtState = null;
+          } else if (
+            sample.kind === 'loadedReplaySeek' &&
+            observer.preRenderWitness?.replay?.matched &&
+            observer.preRenderWitness.frameNumber === frameNumber
+          ) {
+            sample.stateAtMs = null;
+            sample.frameNumberAtState = null;
+          }
+          return;
+        }
+        sample.preRenderFrameNumber = preRenderWitness.frameNumber;
+        sample.renderWitnessType =
+          sample.kind === 'localControl'
+            ? LOCAL_RENDER_WITNESS
+            : REPLAY_RENDER_WITNESS;
+        sample.renderedFrameAtMs = performance.now();
+        sample.frameNumberAtRendered = frameNumber;
+        observer.records.push({ ...sample });
+        if (observer.pollTimer) clearInterval(observer.pollTimer);
+        observer.pollTimer = null;
+        observer.pending = null;
+        observer.armedTarget = null;
+        observer.pollPromise = null;
+      } catch (error) {
+        observer.error = error?.message || String(error);
+      }
     },
     arm(
       kind,
@@ -568,11 +804,22 @@ export function installInteractionObserverInPage(fixtureContract) {
         throw new Error('Interaction observer has been disposed.');
       if (observer.pending)
         throw new Error('Previous interaction sample is still pending.');
-      const selector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
+      const selector =
+        kind === 'localControl'
+          ? '[data-layer-id="local-datacenters"] .data-toggle-btn'
+          : '.investigation-timeline-slider-control';
+      const inputTarget = document.querySelector(selector);
+      if (!inputTarget)
+        throw new Error(
+          `Qualification interaction control missing: ${selector}`,
+        );
+      observer.generation++;
       observer.pending = {
+        generation: observer.generation,
         kind,
         expected,
         selector,
+        armedAtMs: performance.now(),
         previousTimeText,
         previousSliderValue,
         previousLatitude,
@@ -586,6 +833,7 @@ export function installInteractionObserverInPage(fixtureContract) {
         frameNumberAtState: null,
         frameNumberAtRendered: null,
       };
+      observer.armedTarget = inputTarget;
     },
     take() {
       const value = observer.records.shift();
@@ -601,9 +849,14 @@ export function installInteractionObserverInPage(fixtureContract) {
       observer.removeInput.length = 0;
       observer.removeRender?.();
       observer.removeRender = null;
+      observer.removePreRender?.();
+      observer.removePreRender = null;
+      observer.preRenderWitness = null;
       if (observer.pollTimer) clearInterval(observer.pollTimer);
       observer.pollTimer = null;
       observer.pending = null;
+      observer.armedTarget = null;
+      observer.pollPromise = null;
     },
   };
   for (const [selector, name] of [
@@ -617,6 +870,9 @@ export function installInteractionObserverInPage(fixtureContract) {
     node.addEventListener(name, listener, true);
     observer.removeInput.push([node, name, listener]);
   }
+  observer.removePreRender = scene.preRender?.addEventListener?.(
+    observer.onPreRender,
+  );
   observer.removeRender = scene.postRender.addEventListener(observer.onRender);
   window.__qualificationMetricsObserver = observer;
 }
@@ -842,7 +1098,7 @@ async function loadReplay(page) {
         );
         const module = app.dataManager.layers.get('flights')?.module;
         const rendered = module
-          ?.getAnalystRecords?.()
+          ?.getAnalystRecords?.(8)
           ?.find((record) => record.icao24 === aircraft?.id);
         const visual = window.__qualificationFlightWitnessReader?.(
           aircraft?.id,
@@ -885,6 +1141,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
   let heapActualDurationMs = null;
   let browserIdentity = null;
   let localControlCameraSetup = null;
+  let datacenterFixtureReceipt = null;
   let replayCameraSetup = null;
   let foregroundSession = null;
   let browserPid = null;
@@ -957,6 +1214,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
         driver.location,
         LOCAL_CONTROL_CAMERA_ROUTE_ID,
       );
+      datacenterFixtureReceipt = await driver.validateDatacenterSoakFixture();
       const layerSelector =
         '[data-layer-id="local-datacenters"] .data-toggle-btn';
       await page.waitForSelector(layerSelector, {
@@ -1169,6 +1427,8 @@ async function collectForBuild({ role, url, expected, fixture }) {
   } catch (error) {
     operationFailure = error;
   } finally {
+    if (driver && !datacenterFixtureReceipt)
+      datacenterFixtureReceipt = driver.readDatacenterSoakFixtureReceipt();
     sampling = false;
     if (samplerPromise) await samplerPromise.catch(() => {});
     if (foregroundSession) {
@@ -1222,11 +1482,13 @@ async function collectForBuild({ role, url, expected, fixture }) {
   }
   return {
     status: operationFailure ? 'failed' : 'completed',
+    interactionProtocol: INTERACTION_PROTOCOL,
     interactionStatus,
     heapStatus,
     failureReason: operationFailure?.message || null,
     identity: browserIdentity,
     localControlCameraSetup,
+    datacenterFixtureReceipt,
     replayCameraSetup,
     browserClose: closeEvidence,
     foregroundIntegrity: {
@@ -1286,10 +1548,23 @@ export async function runQualificationMetricsCapture({
     },
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
+      interactionProtocol: INTERACTION_PROTOCOL,
       controls: ['local-datacenters-toggle', 'loaded-replay-slider-home-end'],
+      datacenterFixture: {
+        schema: 'gev-soak-datacenter-fixture/v2',
+        featureCount: 8,
+        assetSha256Semantics: 'SHA-256 of the served NDJSON fixture bytes',
+        fulfillmentReceipt: 'cdp-fetch-fulfilled-hash-count-v1',
+        materializationGate:
+          'the prepared same-origin response is acknowledged after successful Fetch.fulfillRequest; its delivered bytes/hash/count and exactly eight materialized features are verified by an unmeasured enable-disable preflight before interaction timing',
+      },
       interactionSemantics:
-        'input event to observed state and to the first scene.postRender frame explicitly requested after that state was observed; the fresh-frame witness is conservative and includes request/poll overhead',
-      renderWitnessType: 'requested-post-state-render',
+        'trusted input event timestamp includes delivery delay; local controls require a naturally produced preRender/postRender pair with matching state and layer output in the same frame, while replay seeks require a naturally produced same-frame preRender/postRender pair matching selected source time and visible billboard',
+      inputClockSource: 'trusted-event-timeStamp',
+      renderWitnessTypes: {
+        localControl: LOCAL_RENDER_WITNESS,
+        loadedReplaySeek: REPLAY_RENDER_WITNESS,
+      },
       cameraSetup: {
         localControl: {
           routeId: LOCAL_CONTROL_CAMERA_ROUTE_ID,
@@ -1383,6 +1658,7 @@ export async function runQualificationMetricsCapture({
           role,
           {
             applicationCommit: report.builds[role]?.identity?.applicationCommit,
+            interactionProtocol: report.builds[role]?.interactionProtocol,
             identity: report.builds[role]?.identity,
             status: report.builds[role]?.status,
             interactionStatus: report.builds[role]?.interactionStatus,
@@ -1391,6 +1667,8 @@ export async function runQualificationMetricsCapture({
             localControlCameraSetup:
               report.builds[role]?.localControlCameraSetup,
             replayCameraSetup: report.builds[role]?.replayCameraSetup,
+            datacenterFixtureReceipt:
+              report.builds[role]?.datacenterFixtureReceipt,
             localControl: report.builds[role]?.localControl,
             loadedReplaySeek: report.builds[role]?.loadedReplaySeek,
           },

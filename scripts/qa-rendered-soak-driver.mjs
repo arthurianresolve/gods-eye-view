@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   classifyRenderer,
   readBrowserGraphicsInfo,
@@ -24,11 +25,70 @@ import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture
 import { createRecordingBundle } from '../src/recording/bundle.js';
 
 const RENDERED_WORKSPACE_TIMEOUT_MS = 120_000;
+export const SOAK_DATACENTER_FEATURE_COUNT = 8;
+const SOAK_DATACENTER_FIXTURE_SCHEMA = 'gev-soak-datacenter-fixture/v2';
 const DEFAULT_SOAK_LOCATION = Object.freeze({
   latitude: 40.7,
   longitude: -73.9,
   altitude: 1000,
 });
+
+export function isSoakDatacenterAssetRequest(requestUrl, appBase) {
+  let request;
+  let base;
+  try {
+    request = new URL(String(requestUrl), appBase);
+    base = new URL(appBase);
+  } catch {
+    return false;
+  }
+  if (request.origin !== base.origin) return false;
+  return (
+    /(?:^|\/)assets\/datacenters-[A-Za-z0-9_-]{8}\.geojsonl$/.test(
+      request.pathname,
+    ) ||
+    request.pathname.endsWith(
+      '/src/data/local_data/datacenters/datacenters.geojsonl',
+    )
+  );
+}
+
+/** Return a bounded snapshot of fixture delivery state for persisted evidence. */
+export function createSoakDatacenterFixtureReceipt(validation, requests) {
+  return {
+    ...validation,
+    requests: (Array.isArray(requests) ? requests : [])
+      .slice(0, 4)
+      .map((request) => ({
+        origin: request.origin,
+        pathname: request.pathname,
+        prepared: request.prepared === true,
+        fulfilled: request.fulfilled === true,
+        responseStatus: request.responseStatus ?? null,
+        bodySha256: request.bodySha256 ?? null,
+        deliveredFeatureCount: request.deliveredFeatureCount ?? null,
+      })),
+  };
+}
+
+export function createSoakDatacenterFixture(location) {
+  const body = Array.from({ length: SOAK_DATACENTER_FEATURE_COUNT }, (_, n) =>
+    JSON.stringify({
+      type: 'Feature',
+      id: 'way/' + (n + 1),
+      properties: { name: 'Synthetic datacenter ' + n },
+      geometry: {
+        type: 'Point',
+        coordinates: [location.longitude + n * 0.002, location.latitude],
+      },
+    }),
+  ).join('\n');
+  return {
+    body,
+    featureCount: SOAK_DATACENTER_FEATURE_COUNT,
+    bodySha256: createHash('sha256').update(body).digest('hex'),
+  };
+}
 
 async function assertSoakConsoleOwnership(page) {
   const ownership = await flushFixturePageConsoleOwnership(page);
@@ -261,6 +321,33 @@ export async function createRenderedSoakDriver(
   const cameraHealthHistory = [];
   let archiveFailure = true;
   let archiveCalls = 0;
+  const datacenterFixture = createSoakDatacenterFixture(soakLocation);
+  const datacenterAssetRequests = [];
+  const datacenterPreparedRequests = new Map();
+  const datacenterFixtureValidation = {
+    schema: SOAK_DATACENTER_FIXTURE_SCHEMA,
+    fulfillmentProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
+    status: 'pending',
+    requestCount: 0,
+    preparedRequestCount: 0,
+    fulfilledRequestCount: 0,
+    applicationOrigin: new URL(base).origin,
+    assetOrigin: null,
+    assetPath: null,
+    responseStatus: null,
+    expectedBodySha256: datacenterFixture.bodySha256,
+    expectedFeatureCount: datacenterFixture.featureCount,
+    bodySha256: null,
+    deliveredFeatureCount: null,
+    materializedFeatureCount: null,
+    disabledMaterializedFeatureCount: null,
+    disabledRenderableCount: null,
+    setupTiming: 'unmeasured-before-interaction-samples',
+    preloadEnabledObserved: false,
+    preloadDisabledObserved: false,
+    failureReason: null,
+  };
+  let datacenterFixtureValidationPromise = null;
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
     'base64',
@@ -293,6 +380,35 @@ export async function createRenderedSoakDriver(
               viewport: resolveNativeSoakViewport(nativeDpr),
             }
           : {}),
+        onFulfilled({ requestId, url, status, bodyBase64 }) {
+          let fulfilledUrl;
+          try {
+            fulfilledUrl = new URL(url);
+          } catch {
+            return;
+          }
+          if (!isSoakDatacenterAssetRequest(fulfilledUrl.href, base)) return;
+          const bytes = Buffer.from(bodyBase64, 'base64');
+          const body = bytes.toString('utf8');
+          const rows = body.split(/\r?\n/).filter(Boolean);
+          const bodySha256 = createHash('sha256').update(bytes).digest('hex');
+          const prepared = datacenterPreparedRequests.get(requestId);
+          datacenterFixtureValidation.fulfilledRequestCount++;
+          datacenterFixtureValidation.responseStatus = status;
+          datacenterFixtureValidation.bodySha256 = bodySha256;
+          datacenterFixtureValidation.deliveredFeatureCount = rows.length;
+          if (prepared) {
+            const record = prepared.record;
+            record.fulfilled = true;
+            record.responseStatus = status;
+            record.bodySha256 = bodySha256;
+            record.deliveredFeatureCount = rows.length;
+            datacenterPreparedRequests.delete(requestId);
+          } else {
+            datacenterFixtureValidation.failureReason =
+              'Fulfilled fixture response did not match a prepared request.';
+          }
+        },
         respond(url, request) {
           if (url.hostname === 'terrain.reearth.land')
             return {
@@ -301,29 +417,34 @@ export async function createRenderedSoakDriver(
               body: 'fixture terrain unavailable',
             };
           // Keep the hermetic soak representative of the real infrastructure
-          // layer while bounding Cesium's data-source lifecycle. The production
-          // file is several thousand features and is covered by the layer's
-          // focused tests; the mixed-use soak must measure retained resources
-          // from repeated journeys rather than fixture volume.
-          if (url.pathname.endsWith('/datacenters.geojsonl'))
+          // layer while bounding Cesium's data-source lifecycle. Vite emits
+          // this imported asset as /assets/datacenters-<hash>.geojsonl.
+          if (isSoakDatacenterAssetRequest(url.href, base)) {
+            const prepared = {
+              origin: url.origin,
+              pathname: url.pathname,
+              prepared: true,
+              fulfilled: false,
+              responseStatus: null,
+              bodySha256: null,
+              deliveredFeatureCount: null,
+            };
+            if (datacenterAssetRequests.length < 4)
+              datacenterAssetRequests.push(prepared);
+            if (datacenterPreparedRequests.size < 4)
+              datacenterPreparedRequests.set(request.requestId, {
+                record: prepared,
+              });
+            datacenterFixtureValidation.requestCount++;
+            datacenterFixtureValidation.preparedRequestCount++;
+            datacenterFixtureValidation.assetOrigin = url.origin;
+            datacenterFixtureValidation.assetPath = url.pathname;
             return {
               status: 200,
               contentType: 'application/x-ndjson',
-              body: Array.from({ length: 8 }, (_, n) =>
-                JSON.stringify({
-                  type: 'Feature',
-                  id: 'way/' + (n + 1),
-                  properties: { name: 'Synthetic datacenter ' + n },
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [
-                      soakLocation.longitude + n * 0.002,
-                      soakLocation.latitude,
-                    ],
-                  },
-                }),
-              ).join('\n'),
+              body: datacenterFixture.body,
             };
+          }
           if (url.pathname === '/api/cctv/sources')
             return json({
               sources: [0, 1].map((n) => ({
@@ -1029,6 +1150,154 @@ export async function createRenderedSoakDriver(
         ? { observedDpr: nativeDpr, initial: initialNativeResolution }
         : null,
       runCycle: cycle,
+      async validateDatacenterSoakFixture() {
+        if (!datacenterFixtureValidationPromise)
+          datacenterFixtureValidationPromise = (async () => {
+            datacenterFixtureValidation.status = 'running';
+            try {
+              await page.evaluate(async () => {
+                const app = window.__godsEyeView;
+                if (app.dataManager.isEnabled('local-datacenters'))
+                  throw new Error(
+                    'Datacenter fixture preflight requires a disabled initial layer.',
+                  );
+                await app.dataManager.setEnabled('local-datacenters', true, {
+                  origin: 'programmatic',
+                });
+              });
+              await page.waitForFunction(
+                () => {
+                  const diagnostics = window.__godsEyeView.dataManager.layers
+                    .get('local-datacenters')
+                    ?.module?.getLodDiagnostics?.();
+                  return (
+                    diagnostics?.computed === true && diagnostics.total > 0
+                  );
+                },
+                { timeout: 30_000 },
+              );
+              const diagnostics = await page.evaluate(() => {
+                const app = window.__godsEyeView;
+                const module =
+                  app.dataManager.layers.get('local-datacenters')?.module;
+                return {
+                  enabled: app.dataManager.isEnabled('local-datacenters'),
+                  lod: module?.getLodDiagnostics?.() || null,
+                };
+              });
+              datacenterFixtureValidation.materializedFeatureCount =
+                diagnostics.lod?.total ?? null;
+              datacenterFixtureValidation.preloadEnabledObserved =
+                diagnostics.enabled === true &&
+                diagnostics.lod?.computed === true &&
+                diagnostics.lod?.active > 0;
+              await page.evaluate(async () => {
+                await window.__godsEyeView.dataManager.setEnabled(
+                  'local-datacenters',
+                  false,
+                  { origin: 'programmatic' },
+                );
+              });
+              await page.waitForFunction(
+                () => {
+                  const app = window.__godsEyeView;
+                  const lod = app.dataManager.layers
+                    .get('local-datacenters')
+                    ?.module?.getLodDiagnostics?.();
+                  return (
+                    !app.dataManager.isEnabled('local-datacenters') &&
+                    lod?.computed === false &&
+                    lod.total === 0 &&
+                    lod.active === 0
+                  );
+                },
+                { timeout: 30_000 },
+              );
+              const disabledState = await page.evaluate(() => {
+                const app = window.__godsEyeView;
+                const lod = app.dataManager.layers
+                  .get('local-datacenters')
+                  ?.module?.getLodDiagnostics?.();
+                return {
+                  enabled: app.dataManager.isEnabled('local-datacenters'),
+                  total: lod?.total ?? null,
+                  active: lod?.active ?? null,
+                };
+              });
+              datacenterFixtureValidation.disabledMaterializedFeatureCount =
+                disabledState.total;
+              datacenterFixtureValidation.disabledRenderableCount =
+                disabledState.active;
+              datacenterFixtureValidation.preloadDisabledObserved =
+                disabledState.enabled === false &&
+                disabledState.total === 0 &&
+                disabledState.active === 0;
+              assert.equal(
+                datacenterFixtureValidation.requestCount,
+                1,
+                'exactly one same-origin datacenter fixture response must be intercepted',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preparedRequestCount,
+                1,
+                'exactly one datacenter fixture response must be prepared',
+              );
+              assert.equal(
+                datacenterFixtureValidation.fulfilledRequestCount,
+                1,
+                'the prepared datacenter fixture response must be fulfilled',
+              );
+              assert.equal(
+                datacenterFixtureValidation.responseStatus,
+                200,
+                'the fulfilled datacenter fixture response must be successful',
+              );
+              assert.equal(
+                datacenterFixtureValidation.bodySha256,
+                datacenterFixtureValidation.expectedBodySha256,
+                'the fulfilled response hash must match the prepared fixture',
+              );
+              assert.equal(
+                datacenterFixtureValidation.deliveredFeatureCount,
+                datacenterFixtureValidation.expectedFeatureCount,
+                'the fulfilled response population must match the prepared fixture',
+              );
+              assert.equal(
+                datacenterAssetRequests[0]?.fulfilled,
+                true,
+                'the bounded request history must prove fulfillment',
+              );
+              assert.equal(
+                diagnostics.lod?.total,
+                datacenterFixture.featureCount,
+                'the materialized datacenter population must equal the delivered fixture',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preloadEnabledObserved &&
+                  datacenterFixtureValidation.preloadDisabledObserved,
+                true,
+                'fixture preflight must leave the layer disabled after materialization',
+              );
+              datacenterFixtureValidation.status = 'validated';
+            } catch (error) {
+              datacenterFixtureValidation.status = 'failed';
+              datacenterFixtureValidation.failureReason =
+                error?.message || String(error);
+              throw error;
+            }
+          })();
+        await datacenterFixtureValidationPromise;
+        return createSoakDatacenterFixtureReceipt(
+          datacenterFixtureValidation,
+          datacenterAssetRequests,
+        );
+      },
+      readDatacenterSoakFixtureReceipt() {
+        return createSoakDatacenterFixtureReceipt(
+          datacenterFixtureValidation,
+          datacenterAssetRequests,
+        );
+      },
       async metrics() {
         const consoleHandleOwnership = await assertSoakConsoleOwnership(page);
         return {

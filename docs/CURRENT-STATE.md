@@ -13,16 +13,36 @@ The current cable comparison passes. Dam motion p95 is within the 10% limit,
 but its original startup result fails at +10.43%. The predeclared ten-shard
 balanced confirmation completed: app-ready startup is -20.75% and
 loading-screen-hidden startup is -14.51%, with all foreground and cleanup
-checks passing. The original failure is preserved. The complete settled-scene screenshot is
-identical across builds, while later HUD-state captures fail visual comparison.
-Gaze/CCTV readiness checks are corrected in the harness; hardware rerun is
-pending. Replay metrics now validate the five observations retained from four
+checks passing. The original failure is preserved. The latest `aa400dfe` visual
+capture completes all four states but fails pixel comparison: settled and
+HUD-visible images each differ at 7,751 pixels around the logo; HUD-hidden is
+identical; HUD-restored differs at 772 logo/badge pixels. Recorded gaze and
+style inputs match. This remains an unresolved rendering/capture diagnosis,
+not a visual pass. Replay metrics now validate the five observations retained from four
 fixture timestamps, including an altitude correction. The latest attempt
 completed twenty controls and twenty seeks per build, then failed at a hidden
 import control before heap sampling. The harness now opens Workspace disclosures
 through application controls while retaining the visibility check. All 28
 browser-free QA tests pass on both VM Node versions; 39 PNG consumer tests pass
-on Windows. Map qualification is running; failed attempts remain archived.
+on Windows. Current map qualification passes: motion p95 is 392.3 versus
+359.2 ms (-8.44%), map-switch readiness is 14,413.9 versus 14,608.3 ms
+(+1.35%), and app-ready startup is 5,075 versus 3,961 ms (-21.95%).
+All six original files were independently hash-verified on VM105.
+The mixed-use fixture also missed Vite's hashed datacenter asset URL and loaded
+the bundled catalog despite declaring eight synthetic features. The correction
+requires verified fixture delivery and exact materialization before timing.
+Historical full-catalog reports remain unchanged; full-population matrix
+workloads are unaffected. The corrected interaction observer includes trusted
+input delivery time and requires matching state/output in the same natural
+preRender/postRender pair. It no longer normalizes the catalog repeatedly or
+requests an extra frame solely for timing. Both successful receipt APIs include
+the bounded, cloned request proof, and disabled controls retain their actual
+false state. The reviewed QA changes pass 71/71 tests on each VM Node version,
+format/syntax checks, and the 71-file capture no-undef check. New hardware evidence
+is required; the earlier 69-test receipt predates the review corrections.
+The initial balanced weather attempt failed foreground initialization before
+any measurement. A fresh run is prepared with the owned blank-page handoff.
+Failed attempts remain archived.
 Remaining workload comparisons, interaction/heap evidence, private browser
 workspace verification and the final Ampfing soak must bind the current candidate.
 The [current evidence ledger](performance-evidence/s69-native-matrix-20261019/README.md)

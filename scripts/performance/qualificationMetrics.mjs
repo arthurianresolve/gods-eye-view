@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 
 const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v1';
+const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
+const INTERACTION_PROTOCOL =
+  'trusted-event-timeStamp-prerender-postrender-witness-v4';
+const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
+const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const SAMPLED_HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
 const INTERACTION_SAMPLE_COUNT = 20;
 const LOCAL_CONTROL_LIMIT_MS = 100;
@@ -497,7 +501,69 @@ function assertSharedPairIdentity(baseline, candidate, label) {
   assert.match(baseline.identity.fixtureSha256, /^[a-f0-9]{64}$/);
 }
 
-function validateInteractionSide(side, label) {
+const DATACENTER_FIXTURE_SCHEMA = 'gev-soak-datacenter-fixture/v2';
+const DATACENTER_FIXTURE_FEATURE_COUNT = 8;
+const DATACENTER_FIXTURE_BODY_SHA256 =
+  '8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5';
+
+function validateDatacenterFixtureReceipt(receipt, label) {
+  assert.equal(receipt?.schema, DATACENTER_FIXTURE_SCHEMA);
+  assert.equal(
+    receipt?.fulfillmentProtocol,
+    'cdp-fetch-fulfilled-hash-count-v1',
+  );
+  assert.equal(receipt?.status, 'validated');
+  assert.equal(receipt?.requestCount, 1);
+  assert.equal(receipt?.preparedRequestCount, 1);
+  assert.equal(receipt?.fulfilledRequestCount, 1);
+  assert.equal(receipt?.responseStatus, 200);
+  assert.equal(
+    receipt?.applicationOrigin,
+    receipt?.assetOrigin,
+    `${label} datacenter asset must be served from the application origin`,
+  );
+  assert.match(receipt?.applicationOrigin || '', /^https?:\/\//);
+  assert.ok(
+    receipt?.assetPath ===
+      '/src/data/local_data/datacenters/datacenters.geojsonl' ||
+      /(?:^|\/)assets\/datacenters-[A-Za-z0-9_-]{8}\.geojsonl$/.test(
+        receipt?.assetPath || '',
+      ),
+    `${label} datacenter asset path must identify the bundled source asset`,
+  );
+  assert.match(receipt?.bodySha256 || '', /^[a-f0-9]{64}$/);
+  assert.equal(receipt?.bodySha256, DATACENTER_FIXTURE_BODY_SHA256);
+  assert.equal(receipt?.expectedBodySha256, receipt?.bodySha256);
+  assert.equal(receipt?.expectedFeatureCount, DATACENTER_FIXTURE_FEATURE_COUNT);
+  assert.equal(
+    receipt?.deliveredFeatureCount,
+    DATACENTER_FIXTURE_FEATURE_COUNT,
+  );
+  assert.equal(
+    receipt?.materializedFeatureCount,
+    DATACENTER_FIXTURE_FEATURE_COUNT,
+  );
+  assert.equal(receipt?.disabledMaterializedFeatureCount, 0);
+  assert.equal(receipt?.disabledRenderableCount, 0);
+  assert.equal(receipt?.preloadEnabledObserved, true);
+  assert.equal(receipt?.preloadDisabledObserved, true);
+  assert.equal(receipt?.setupTiming, 'unmeasured-before-interaction-samples');
+  assert.equal(Array.isArray(receipt?.requests), true);
+  assert.equal(receipt.requests.length, 1);
+  assert.equal(receipt.requests[0]?.origin, receipt.applicationOrigin);
+  assert.equal(receipt.requests[0]?.pathname, receipt.assetPath);
+  assert.equal(receipt.requests[0]?.prepared, true);
+  assert.equal(receipt.requests[0]?.fulfilled, true);
+  assert.equal(receipt.requests[0]?.responseStatus, 200);
+  assert.equal(receipt.requests[0]?.bodySha256, receipt.bodySha256);
+  assert.equal(
+    receipt.requests[0]?.deliveredFeatureCount,
+    DATACENTER_FIXTURE_FEATURE_COUNT,
+  );
+  return receipt;
+}
+
+function validateInteractionSide(side, label, expectedMaterializedCount) {
   assert.ok(Array.isArray(side), `${label} samples must be an array`);
   assert.equal(
     side.length,
@@ -507,6 +573,7 @@ function validateInteractionSide(side, label) {
   const ids = new Set();
   let previousInputAtMs = -1;
   let previousRenderedFrame = -1;
+  let previousGeneration = 0;
   return side.map((sample, index) => {
     assert.equal(typeof sample?.sampleId, 'string');
     assert.ok(sample.sampleId.length > 0);
@@ -526,10 +593,11 @@ function validateInteractionSide(side, label) {
       true,
       `${label} sample ${index + 1} must observe a completed rendered frame`,
     );
+    const isLocalControl = label.startsWith('localControl');
     assert.equal(
       sample?.renderWitnessType,
-      'requested-post-state-render',
-      `${label} sample ${index + 1} must identify its fresh-frame witness`,
+      isLocalControl ? LOCAL_RENDER_WITNESS : REPLAY_RENDER_WITNESS,
+      `${label} sample ${index + 1} must identify its matching natural frame`,
     );
     const { inputAtMs, stateAtMs, renderedFrameAtMs } = sample;
     assert.ok(
@@ -537,7 +605,7 @@ function validateInteractionSide(side, label) {
         Number.isFinite(stateAtMs) &&
         Number.isFinite(renderedFrameAtMs) &&
         inputAtMs >= 0 &&
-        stateAtMs >= inputAtMs &&
+        stateAtMs >= sample.handlerReceivedAtMs &&
         renderedFrameAtMs >= stateAtMs,
       `${label} sample ${index + 1} timestamps must be ordered and finite`,
     );
@@ -546,12 +614,41 @@ function validateInteractionSide(side, label) {
       `${label} input timestamps must advance`,
     );
     previousInputAtMs = inputAtMs;
+    assert.ok(
+      Number.isSafeInteger(sample.generation) &&
+        sample.generation > previousGeneration,
+      `${label} interaction generation must increase without reuse`,
+    );
+    previousGeneration = sample.generation;
+    assert.ok(Number.isFinite(sample.armedAtMs));
+    assert.ok(Number.isFinite(sample.handlerReceivedAtMs));
+    assert.ok(
+      sample.armedAtMs <= inputAtMs &&
+        inputAtMs === sample.inputEventAtMs &&
+        inputAtMs <= sample.handlerReceivedAtMs,
+      `${label} input timestamp must be a fresh trusted event time`,
+    );
+    assert.ok(
+      Number.isFinite(sample.inputDeliveryDelayMs) &&
+        sample.inputDeliveryDelayMs ===
+          sample.handlerReceivedAtMs - sample.inputAtMs &&
+        sample.inputDeliveryDelayMs >= 0,
+    );
+    assert.equal(sample.inputClockSource, 'trusted-event-timeStamp');
+    assert.equal(sample.inputTrusted, true);
+    assert.equal(sample.inputTargetMatched, true);
+    assert.equal(
+      sample.inputEventType,
+      label.startsWith('localControl') ? 'pointerdown' : 'input',
+    );
     assert.ok(Number.isSafeInteger(sample.frameNumberAtState));
     assert.ok(Number.isSafeInteger(sample.frameNumberAtRendered));
-    assert.ok(
-      sample.frameNumberAtRendered > sample.frameNumberAtState,
-      `${label} rendered frame must follow the state frame`,
+    assert.equal(
+      sample.frameNumberAtRendered,
+      sample.frameNumberAtState,
+      `${label} state and output must be paired to the same natural frame`,
     );
+    assert.equal(sample.preRenderFrameNumber, sample.frameNumberAtRendered);
     assert.ok(
       sample.frameNumberAtRendered > previousRenderedFrame,
       `${label} frame sequence must advance`,
@@ -566,10 +663,10 @@ function validateInteractionSide(side, label) {
         sample.expectedLayerEnabled,
       );
       assert.ok(
-        Number.isInteger(sample.loadedRecordCount) &&
+        Number.isInteger(sample.materializedRecordCount) &&
           (sample.expectedLayerEnabled
-            ? sample.loadedRecordCount > 0
-            : sample.loadedRecordCount === 0),
+            ? sample.materializedRecordCount === expectedMaterializedCount
+            : sample.materializedRecordCount === 0),
       );
       assert.ok(
         Number.isInteger(sample.renderableCount) &&
@@ -592,6 +689,8 @@ function validateInteractionSide(side, label) {
         sample.expectedFixtureIndex === 3
           ? sample.coverageToMs
           : sample.coverageFromMs;
+      assert.equal(sample.frameSelectedTimeMs, expectedPositionTime);
+      assert.equal(sample.framePositionTimeMs, expectedPositionTime);
       const expectedLatitude =
         Math.sin(sample.expectedFixtureIndex / 10) * 0.02;
       const expectedLongitude =
@@ -667,12 +766,6 @@ function validateInteractionSide(side, label) {
         `${label} sample ${index + 1} billboard must be on canvas`,
       );
     }
-    assert.ok(
-      sample.inputEventAtMs != null &&
-        Number.isFinite(sample.inputEventAtMs) &&
-        Math.abs(sample.inputAtMs - sample.inputEventAtMs) <= 20,
-      `${label} sample must be tied to a fresh observed input event`,
-    );
     return {
       inputToStateMs: stateAtMs - inputAtMs,
       inputToRenderedFrameMs: renderedFrameAtMs - inputAtMs,
@@ -765,6 +858,12 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       evidence.builds.candidate,
       'Interaction',
     );
+    for (const role of ['baseline', 'candidate'])
+      assert.equal(
+        evidence.builds[role]?.interactionProtocol,
+        INTERACTION_PROTOCOL,
+        `${role} interaction protocol is missing or unsupported`,
+      );
     assert.ok(
       evidence.pairing && typeof evidence.pairing === 'object',
       'Interaction pairing metadata is missing',
@@ -782,14 +881,65 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       evidence.pairing?.fixtureSha256,
       evidence.builds.baseline.identity.fixtureSha256,
     );
+    let expectedMaterializedCount = null;
+    if (name === 'localControl') {
+      const baselineFixture = validateDatacenterFixtureReceipt(
+        evidence.builds.baseline.datacenterFixtureReceipt,
+        'Baseline',
+      );
+      const candidateFixture = validateDatacenterFixtureReceipt(
+        evidence.builds.candidate.datacenterFixtureReceipt,
+        'Candidate',
+      );
+      for (const key of [
+        'bodySha256',
+        'deliveredFeatureCount',
+        'materializedFeatureCount',
+      ])
+        assert.equal(
+          baselineFixture[key],
+          candidateFixture[key],
+          `Datacenter fixture ${key} differs between builds`,
+        );
+      expectedMaterializedCount = DATACENTER_FIXTURE_FEATURE_COUNT;
+    }
     const baselineSamples = validateInteractionSide(
       evidence.builds?.baseline?.[name],
       `${name} baseline`,
+      expectedMaterializedCount,
     );
     const candidateSamples = validateInteractionSide(
       evidence.builds?.candidate?.[name],
       `${name} candidate`,
+      expectedMaterializedCount,
     );
+    for (const [role, localSamples, replaySamples] of [
+      [
+        'baseline',
+        evidence.builds.baseline.localControl,
+        evidence.builds.baseline.loadedReplaySeek,
+      ],
+      [
+        'candidate',
+        evidence.builds.candidate.localControl,
+        evidence.builds.candidate.loadedReplaySeek,
+      ],
+    ]) {
+      assert.ok(Array.isArray(localSamples) && Array.isArray(replaySamples));
+      const generations = [...localSamples, ...replaySamples].map(
+        (sample) => sample.generation,
+      );
+      assert.equal(
+        new Set(generations).size,
+        generations.length,
+        `${role} interaction generation was reused across controls`,
+      );
+      for (let index = 1; index < generations.length; index++)
+        assert.ok(
+          generations[index] > generations[index - 1],
+          `${role} interaction generation order is stale or duplicated`,
+        );
+    }
     const baselineStateP95Ms = p95(
       baselineSamples.map((sample) => sample.inputToStateMs),
     );
@@ -810,7 +960,9 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     return {
       status: failures.length ? 'failed' : 'measured',
       semantic:
-        'input event to observed state change and to first explicitly requested post-state completed rendered frame, reported separately; frame-witness request and polling overhead are included conservatively',
+        name === 'localControl'
+          ? 'trusted input event timestamp to matching application state and active layer output paired within one naturally rendered frame; input delivery delay is included'
+          : 'trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included',
       baseline: {
         sampleCount: baselineSamples.length,
         inputToStateP95Ms: baselineStateP95Ms,

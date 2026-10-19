@@ -32,6 +32,10 @@ loading-screen-hidden medians of 6,973 versus 5,961 ms (-14.51%); the original
 startup regression did not recur. This startup-only result does not establish
 the motion improvement target. Cable qualification passes at -1.14%
 motion p95, -14.87% app-ready startup and -3.61% loading-screen-hidden startup.
+The current map pair also passes: motion p95 is 392.3 versus 359.2 ms
+(-8.44%), map-switch readiness is 14,413.9 versus 14,608.3 ms (+1.35%),
+and app-ready startup is 5,075 versus 3,961 ms (-21.95%). All six original
+files are hash-verified on VM105 and reviewed by the unchanged consumer.
 The remaining matrix, visual comparison, local-control/replay latency,
 sampled peak heap, signed-package preflight and final Ampfing soak must qualify
 `b3c49b19` before deployment. The separately labeled `3141ffe3` comparison control
@@ -45,8 +49,24 @@ then hit a closed Workspace disclosure before heap sampling. The QA fixture now
 opens that panel through existing application controls, preserving the visible
 file-control requirement. The visual observer also checks settled logo gaze and
 CCTV presentation inputs. All 28 combined browser-free tests pass on each VM
-Node version, and 39 PNG consumer tests pass on Windows. Complete hardware
-metrics and visual runs remain required. These changes affect QA only.
+Node version, and 39 PNG consumer tests pass on Windows. The `aa400dfe` visual
+rerun completed all states but still fails: HUD-hidden is identical, while
+other states differ around the logo and camera badge despite matching recorded
+gaze/style inputs. Visual qualification remains unresolved. The mixed-use
+fixture also missed the hashed datacenter asset, loading the full catalog
+instead of its declared eight synthetic features. A delivery/materialization
+preflight now proves the fulfilled bytes, hash and exact eight-feature population
+before timing. The observer includes trusted input delivery delay and matching
+state/output in the same natural preRender/postRender pair. Review also fixed
+missing request proof in the successful receipt and incorrect disabled-control
+state. All 71 focused tests pass on each VM Node version, along with format,
+syntax and the 71-file capture no-undef check. New hardware measurements are
+still required. Original reports remain historical; full-catalog matrix
+workloads and performance limits are unchanged. The first current balanced
+weather attempt failed foreground initialization before any measurement; a
+fresh plan adds the owned blank-page handoff before the existing native checks.
+These changes affect QA only. Complete hardware metrics, weather, visual and
+soak evidence remain required.
 Production remains at `e7a878e`.
 
 All seven exact `b3c49b19` standard CI jobs, tracking and signed-package workflows

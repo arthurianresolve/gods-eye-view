@@ -32,9 +32,17 @@ foreground confirmation, exact settled logo transforms, consecutive unchanged
 layout boundaries, and bounded CCTV filter/animation/badge evidence. Structural
 observations are labeled as pre-readiness metadata. The
 [QA validation](readiness-import-validation.json) passes 28/28 on each VM Node
-version; the Windows PNG consumer separately passes 39/39. Hardware visual
-qualification remains pending. No mask, pixel threshold, fixture population or
-visual setting changed.
+version; the Windows PNG consumer separately passes 39/39. The subsequent
+[`aa400dfe` hardware capture](final-visual-b3c49b19-aa400-failure.json) completes
+all four states but remains failed: settled and HUD-visible images each have
+7,751 differing pixels, HUD-hidden matches exactly, and HUD-restored has 772
+differences. The differences are confined to the logo and eight camera-badge
+corner pixels. Recorded gaze and style inputs match; the relevant logo source
+is unchanged between applications. The [within-build diagnostic](visual-within-build-aa400-diagnostic.json) also finds the
+baseline's logo shadow changing after HUD restoration (7,218 pixels, maximum
+channel delta 6), while the candidate's logo stays identical. This localizes
+some raster variability but does not explain or clear the cross-build maximum
+delta of 103. No mask, pixel threshold or visual setting changed.
 
 The [new dam comparison](infrastructure-dams-b3c49b19-result.json) has motion
 p95 of 299.7 versus 304.6 ms (+1.63%), within the unchanged regression limit.
@@ -51,6 +59,18 @@ The [cable comparison](infrastructure-cables-b3c49b19-result.json)
 passes: motion p95 changes from 332.8 to 329.0 ms (-1.14%), app-ready startup
 changes -14.87%, and loading-screen-hidden startup changes -3.61%. Settled idle
 timing remains unavailable in both builds, rather than being reported as zero.
+
+The [current map comparison](map-streaming-b3c49b19-result.json) also passes:
+motion p95 is 392.3 versus 359.2 ms (-8.44%), map-switch readiness is
+14,413.9 versus 14,608.3 ms (+1.35%), and app-ready startup is 5,075 versus
+3,961 ms (-21.95%). All six original files are independently hash-verified
+on VM105. The pinned map corpus and native profile are unchanged.
+
+The [first current balanced weather attempt](weather-b3c49b19-foreground-failure.json)
+failed native foreground initialization before recording any sample. Its six
+original files are hash-verified on VM105. A fresh, separately declared plan
+uses the owned blank-page handoff before the same native foreground checks;
+measurement durations, source deadlines, paired order and limits are unchanged.
 
 The exact `b3c49b19`
 [tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280015189)
@@ -85,7 +105,30 @@ build, then failed before heap sampling at the visible import-control wait.
 The Workspace disclosure was never opened by this harness. The shared import
 fixture now opens its disclosures through application controls before requiring
 the same visible file chooser. Missing APIs and hidden controls still fail;
-the failed attempts are preserved. A new complete metrics run is required.
+the failed attempts are preserved.
+
+The metrics diagnosis also found that the shared mixed-use fixture matched
+`/datacenters.geojsonl` but missed the production asset
+`/assets/datacenters-CtzejECr.geojsonl`. The unmodified bundled bytes contain
+4,351 source rows and materialize 4,362 features, rather than the fixture's
+declared eight. The correction matches only the same-origin bundled source
+asset and requires a delivery/materialization preflight before timing. Old
+full-catalog measurements and soaks are retained with their original meaning;
+the Dense and infrastructure matrix still use their full populations.
+The observer correction counts trusted input delivery delay, avoids catalog
+normalization in every poll, and requires matching selected state and visible
+output in the same natural preRender/postRender pair. Both fixture receipt APIs
+return bounded cloned request evidence. Disabled controls record their actual
+false state, separately from whether that state matches the expectation.
+The [reviewed QA validation](interaction-fixture-reviewed-qa-validation.json)
+passes 71/71 tests on Node 24.16.0 and 26.11.0, format/syntax checks, and the
+capture no-undef check across 71 files. The earlier
+[69-test receipt](interaction-fixture-qa-validation.json) is retained as historical
+evidence; code review identified the success-receipt and disabled-state gaps
+after that run. No runtime, renderer, visual-setting or threshold changes are
+included. The 100 ms local-control and 250 ms loaded-seek limits remain in force.
+A new complete
+metrics run and a new exact-candidate soak are required.
 Production still serves `e7a878e`.
 
 The previous candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes

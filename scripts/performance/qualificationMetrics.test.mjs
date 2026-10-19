@@ -255,27 +255,84 @@ const samples = (stateMs, frameMs, prefix) =>
   Array.from({ length: 20 }, (_, index) => ({
     sampleId: `${prefix}-${index + 1}`,
     inputAtMs: index * 1000,
+    armedAtMs: index * 1000,
     inputEventAtMs: index * 1000,
+    handlerReceivedAtMs: index * 1000 + 1,
+    inputDeliveryDelayMs: 1,
+    inputEventType: prefix.includes('local') ? 'pointerdown' : 'input',
+    inputTrusted: true,
+    inputTargetMatched: true,
+    inputClockSource: 'trusted-event-timeStamp',
+    generation: index + 1 + (prefix.includes('replay') ? 20 : 0),
     stateAtMs: index * 1000 + stateMs,
     renderedFrameAtMs: index * 1000 + frameMs,
     stateObserved: true,
     renderedFrameObserved: true,
-    renderWitnessType: 'requested-post-state-render',
+    renderWitnessType: 'natural-replay-prerender-postrender-v1',
+    preRenderFrameNumber: index * 2 + 2,
     visibilityState: 'visible',
     focused: true,
     frameNumberAtState: index * 2 + 1,
-    frameNumberAtRendered: index * 2 + 2,
+    frameNumberAtRendered: index * 2 + 1,
+    preRenderFrameNumber: index * 2 + 1,
   }));
+const localSamples = (stateMs, frameMs, prefix) =>
+  samples(stateMs, frameMs, prefix).map((sample) => ({
+    ...sample,
+    frameNumberAtRendered: sample.frameNumberAtState,
+    preRenderFrameNumber: sample.frameNumberAtState,
+    renderWitnessType: 'natural-prerender-postrender-pair-v1',
+  }));
+
+const datacenterFixtureReceipt = () => ({
+  schema: 'gev-soak-datacenter-fixture/v2',
+  fulfillmentProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
+  status: 'validated',
+  requestCount: 1,
+  preparedRequestCount: 1,
+  fulfilledRequestCount: 1,
+  applicationOrigin: 'http://127.0.0.1:4184',
+  assetOrigin: 'http://127.0.0.1:4184',
+  assetPath: '/assets/datacenters-CtzejECr.geojsonl',
+  responseStatus: 200,
+  bodySha256:
+    '8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5',
+  expectedBodySha256:
+    '8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5',
+  expectedFeatureCount: 8,
+  deliveredFeatureCount: 8,
+  materializedFeatureCount: 8,
+  disabledMaterializedFeatureCount: 0,
+  disabledRenderableCount: 0,
+  setupTiming: 'unmeasured-before-interaction-samples',
+  preloadEnabledObserved: true,
+  preloadDisabledObserved: true,
+  failureReason: null,
+  requests: [
+    {
+      origin: 'http://127.0.0.1:4184',
+      pathname: '/assets/datacenters-CtzejECr.geojsonl',
+      prepared: true,
+      fulfilled: true,
+      responseStatus: 200,
+      bodySha256:
+        '8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5',
+      deliveredFeatureCount: 8,
+    },
+  ],
+});
 
 function interactionEvidence(overrides = {}) {
   const base = {
-    schema: 'gev-interaction-latency-evidence/v1',
+    schema: 'gev-interaction-latency-evidence/v2',
     status: 'completed',
     pairing: { fixtureSha256: ID.fixtureSha256, routeId: ID.routeId },
     builds: {
       baseline: {
         status: 'completed',
         interactionStatus: 'completed',
+        interactionProtocol:
+          'trusted-event-timeStamp-prerender-postrender-witness-v4',
         browserClose: { closeCompleted: true, forcedProcessTermination: false },
         foregroundIntegrity: {
           status: 'completed',
@@ -290,6 +347,7 @@ function interactionEvidence(overrides = {}) {
         },
         applicationCommit: '1'.repeat(40),
         identity: identity('1'),
+        datacenterFixtureReceipt: datacenterFixtureReceipt(),
         localControlCameraSetup: cameraSetup(
           'rendered-soak-driver-default-location-v1',
           { latitude: 40.7, longitude: -73.9, altitude: 1000 },
@@ -300,13 +358,13 @@ function interactionEvidence(overrides = {}) {
           { latitude: 0, longitude: 179.7, altitude: 500000 },
           150,
         ),
-        localControl: samples(10, 30, 'b-local').map((sample, index) => ({
+        localControl: localSamples(10, 30, 'b-local').map((sample, index) => ({
           ...sample,
           expectedLayerEnabled: index % 2 === 0,
           layerEnabledObserved: index % 2 === 0,
           layerVisibleObserved: index % 2 === 0,
           layerRenderablesObserved: index % 2 === 0,
-          loadedRecordCount: index % 2 === 0 ? 4 : 0,
+          materializedRecordCount: index % 2 === 0 ? 8 : 0,
           renderableCount: index % 2 === 0 ? 4 : 0,
         })),
         loadedReplaySeek: samples(20, 80, 'b-replay').map((sample, index) => ({
@@ -318,6 +376,8 @@ function interactionEvidence(overrides = {}) {
           coverageFromMs: 1000,
           coverageToMs: 4000,
           expectedFixtureIndex: index % 2 ? 0 : 3,
+          frameSelectedTimeMs: index % 2 ? 1000 : 4000,
+          framePositionTimeMs: index % 2 ? 1000 : 4000,
           previousPositionTimeMs: index % 2 ? 4000 : 1000,
           positionTimeMs: index % 2 ? 1000 : 4000,
           fixtureAircraftLatitude: Math.sin((index % 2 ? 0 : 3) / 10) * 0.02,
@@ -342,6 +402,8 @@ function interactionEvidence(overrides = {}) {
       candidate: {
         status: 'completed',
         interactionStatus: 'completed',
+        interactionProtocol:
+          'trusted-event-timeStamp-prerender-postrender-witness-v4',
         browserClose: { closeCompleted: true, forcedProcessTermination: false },
         foregroundIntegrity: {
           status: 'completed',
@@ -356,6 +418,7 @@ function interactionEvidence(overrides = {}) {
         },
         applicationCommit: '2'.repeat(40),
         identity: identity('2'),
+        datacenterFixtureReceipt: datacenterFixtureReceipt(),
         localControlCameraSetup: cameraSetup(
           'rendered-soak-driver-default-location-v1',
           { latitude: 40.7, longitude: -73.9, altitude: 1000 },
@@ -366,13 +429,13 @@ function interactionEvidence(overrides = {}) {
           { latitude: 0, longitude: 179.7, altitude: 500000 },
           250,
         ),
-        localControl: samples(10, 30, 'c-local').map((sample, index) => ({
+        localControl: localSamples(10, 30, 'c-local').map((sample, index) => ({
           ...sample,
           expectedLayerEnabled: index % 2 === 0,
           layerEnabledObserved: index % 2 === 0,
           layerVisibleObserved: index % 2 === 0,
           layerRenderablesObserved: index % 2 === 0,
-          loadedRecordCount: index % 2 === 0 ? 4 : 0,
+          materializedRecordCount: index % 2 === 0 ? 8 : 0,
           renderableCount: index % 2 === 0 ? 4 : 0,
         })),
         loadedReplaySeek: samples(20, 80, 'c-replay').map((sample, index) => ({
@@ -384,6 +447,8 @@ function interactionEvidence(overrides = {}) {
           coverageFromMs: 1000,
           coverageToMs: 4000,
           expectedFixtureIndex: index % 2 ? 0 : 3,
+          frameSelectedTimeMs: index % 2 ? 1000 : 4000,
+          framePositionTimeMs: index % 2 ? 1000 : 4000,
           previousPositionTimeMs: index % 2 ? 4000 : 1000,
           positionTimeMs: index % 2 ? 1000 : 4000,
           fixtureAircraftLatitude: Math.sin((index % 2 ? 0 : 3) / 10) * 0.02,
@@ -491,6 +556,33 @@ function replacePageGlobals(values) {
   };
 }
 
+function inputControl(extra = {}) {
+  return {
+    listeners: new Map(),
+    addEventListener(name, listener) {
+      this.listeners.set(name, listener);
+    },
+    removeEventListener(name) {
+      this.listeners.delete(name);
+    },
+    contains(target) {
+      return target === this || target?.parentNode === this;
+    },
+    dispatch(name, timeStamp = performance.now(), overrides = {}) {
+      const listener = this.listeners.get(name);
+      listener?.({
+        type: name,
+        currentTarget: this,
+        target: this,
+        timeStamp,
+        isTrusted: true,
+        ...overrides,
+      });
+    },
+    ...extra,
+  };
+}
+
 test('startup remains a separate five-run metric and other missing evidence is pending', () => {
   const result = evaluateQualificationMetrics({
     baseline: capture(),
@@ -530,6 +622,37 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
     80,
   );
 
+  const queuedEvents = interactionEvidence();
+  for (const sample of queuedEvents.builds.candidate.localControl) {
+    sample.handlerReceivedAtMs += 40;
+    sample.inputDeliveryDelayMs = 41;
+    sample.stateAtMs += 40;
+    sample.renderedFrameAtMs += 40;
+  }
+  const queuedResult = evaluateQualificationMetrics({
+    baseline: capture(),
+    candidate: capture(undefined, '2'),
+    interactionEvidence: queuedEvents,
+  });
+  assert.equal(
+    queuedResult.metrics.localControl.candidate.inputToStateP95Ms,
+    50,
+  );
+  assert.equal(
+    queuedResult.metrics.localControl.candidate.inputToRenderedFrameP95Ms,
+    70,
+    'latency starts at the event timestamp, so delivery delay remains included',
+  );
+
+  const oldWitness = interactionEvidence();
+  oldWitness.schema = 'gev-interaction-latency-evidence/v1';
+  const oldWitnessResult = evaluateQualificationMetrics({
+    baseline: capture(),
+    candidate: capture(undefined, '2'),
+    interactionEvidence: oldWitness,
+  });
+  assert.equal(oldWitnessResult.metrics.localControl.status, 'unavailable');
+
   const equivalentCameraAngles = interactionEvidence();
   equivalentCameraAngles.builds.baseline.localControlCameraSetup.observedPose.heading =
     2 * Math.PI;
@@ -559,6 +682,36 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
 
   for (const mutate of [
     (e) => {
+      delete e.builds.candidate.datacenterFixtureReceipt;
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.assetOrigin =
+        'http://other.test';
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.materializedFeatureCount = 4362;
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.bodySha256 = 'bad';
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.fulfilledRequestCount = 0;
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.requests[0].fulfilled = false;
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.requests[0].bodySha256 =
+        'bad';
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.requests[0].pathname =
+        '/assets/dams-CtzejECr.geojsonl';
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].materializedRecordCount = 4362;
+    },
+    (e) => {
       e.builds.candidate.identity.browserVersion = 'Chrome/154.0.0.0';
     },
     (e) => {
@@ -581,8 +734,7 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
         e.builds.baseline.localControl[0].sampleId;
     },
     (e) => {
-      e.builds.candidate.loadedReplaySeek[0].frameNumberAtRendered =
-        e.builds.candidate.loadedReplaySeek[0].frameNumberAtState;
+      e.builds.candidate.loadedReplaySeek[0].frameNumberAtRendered++;
     },
     (e) =>
       delete e.builds.candidate.loadedReplaySeek[0].renderedBillboardVisible,
@@ -623,7 +775,49 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
       e.builds.candidate.localControl[0].inputEventAtMs = -100;
     },
     (e) => {
+      e.builds.candidate.localControl[0].handlerReceivedAtMs = -1;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].armedAtMs = 100;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].inputTrusted = false;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].inputEventType = 'click';
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].inputTargetMatched = false;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].inputDeliveryDelayMs++;
+    },
+    (e) => {
+      e.builds.candidate.localControl[1].generation =
+        e.builds.candidate.localControl[0].generation;
+    },
+    (e) => {
+      e.builds.candidate.loadedReplaySeek[0].frameSelectedTimeMs++;
+    },
+    (e) => {
+      e.builds.candidate.loadedReplaySeek[0].framePositionTimeMs++;
+    },
+    (e) => {
+      e.builds.candidate.loadedReplaySeek[0].renderWitnessType =
+        'natural-matching-postrender-v2';
+    },
+    (e) => {
       e.builds.candidate.localControl[0].renderableCount = 0;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].preRenderFrameNumber++;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].frameNumberAtRendered++;
+    },
+    (e) => {
+      e.builds.candidate.localControl[0].renderWitnessType =
+        'natural-matching-postrender-v2';
     },
   ]) {
     const evidence = interactionEvidence();
@@ -965,29 +1159,35 @@ test('observer cleanup deletes page ownership and surfaces disposal failure', as
   }
 });
 
-test('settled interaction requests and measures a fresh post-state render', async () => {
+test('interaction measures the first naturally produced matching frame without requesting one', async () => {
   let renderListener;
+  let preRenderListener;
   let renderRequests = 0;
+  let intervalCallback;
+  let layerEnabled = false;
+  let buttonActive = false;
+  let lod = { computed: false, total: 0, active: 0 };
   const controls = new Map();
-  const control = () => ({
-    listeners: new Map(),
-    addEventListener(name, listener) {
-      this.listeners.set(name, listener);
-    },
-    removeEventListener(name) {
-      this.listeners.delete(name);
-    },
-  });
-  controls.set('[data-layer-id="local-datacenters"] .data-toggle-btn', {
-    ...control(),
-    classList: { contains: (name) => name === 'active' },
-  });
-  controls.set('.investigation-timeline-slider-control', control());
+  controls.set(
+    '[data-layer-id="local-datacenters"] .data-toggle-btn',
+    inputControl({
+      classList: { contains: (name) => name === 'active' && buttonActive },
+    }),
+  );
+  controls.set('.investigation-timeline-slider-control', inputControl());
   const scene = {
     requestRenderMode: true,
     frameState: { frameNumber: 50 },
     requestRender() {
       renderRequests++;
+    },
+    preRender: {
+      addEventListener(listener) {
+        preRenderListener = listener;
+        return () => {
+          preRenderListener = null;
+        };
+      },
     },
     postRender: {
       addEventListener(listener) {
@@ -1002,14 +1202,16 @@ test('settled interaction requests and measures a fresh post-state render', asyn
     __godsEyeView: {
       viewer: { scene },
       dataManager: {
-        isEnabled: () => true,
+        isEnabled: () => layerEnabled,
         layers: new Map([
           [
             'local-datacenters',
             {
               module: {
-                getAnalystRecords: () => [{ id: 'dc-1' }],
-                getLodDiagnostics: () => ({ computed: true, active: 1 }),
+                getAnalystRecords: () => {
+                  throw new Error('local poll must not normalize analyst rows');
+                },
+                getLodDiagnostics: () => lod,
               },
             },
           ],
@@ -1020,7 +1222,10 @@ test('settled interaction requests and measures a fresh post-state render', asyn
   const restoreGlobals = replacePageGlobals({
     window: globalWindow,
     document: { querySelector: (selector) => controls.get(selector) || null },
-    setInterval: () => 1,
+    setInterval: (callback) => {
+      intervalCallback = callback;
+      return 1;
+    },
     clearInterval() {},
   });
   try {
@@ -1031,34 +1236,468 @@ test('settled interaction requests and measures a fresh post-state render', asyn
     assert.equal(observer.records.length, 0);
     assert.equal(renderRequests, 0);
     observer.arm('localControl', true);
-    observer.pending.inputAtMs = performance.now();
-    await observer.pollState();
-
-    assert.equal(renderRequests, 1);
-    assert.equal(
-      observer.pending.renderWitnessType,
-      'requested-post-state-render',
+    const node = controls.get(
+      '[data-layer-id="local-datacenters"] .data-toggle-btn',
     );
-    assert.equal(observer.pending.frameNumberAtState, 50);
+    node.dispatch('pointerdown');
+    await observer.pollPromise;
+    assert.equal(observer.pending.stateAtMs, null);
+    for (let index = 0; index < 25; index++) await intervalCallback();
+    layerEnabled = true;
+    buttonActive = true;
+    preRenderListener();
+    lod = { computed: true, total: 8, active: 67 };
+    await intervalCallback();
+    assert.equal(renderRequests, 0);
+    assert.equal(observer.pending.renderWitnessType, undefined);
+    assert.equal(observer.pending.materializedRecordCount, 8);
     assert.equal(observer.records.length, 0);
 
-    scene.frameState.frameNumber = 51;
+    renderListener();
+    assert.equal(
+      observer.pending.stateAtMs,
+      null,
+      'postRender-only readiness changes must not qualify a frame',
+    );
+    scene.frameState.frameNumber++;
+    preRenderListener();
+    assert.ok(Number.isFinite(observer.pending.stateAtMs));
     renderListener();
     const record = observer.take();
     assert.equal(record.frameNumberAtRendered, 51);
+    assert.equal(record.frameNumberAtState, 51);
+    assert.equal(record.preRenderFrameNumber, 51);
     assert.equal(
-      record.frameNumberAtRendered > record.frameNumberAtState,
-      true,
+      record.renderWitnessType,
+      'natural-prerender-postrender-pair-v1',
     );
-    assert.equal(record.renderWitnessType, 'requested-post-state-render');
+    assert.equal(record.inputEventType, 'pointerdown');
+    assert.equal(record.inputTrusted, true);
+    assert.equal(record.inputAtMs, record.inputEventAtMs);
+    assert.ok(record.handlerReceivedAtMs >= record.inputAtMs);
+    assert.equal(record.layerEnabledObserved, true);
+    assert.equal(record.layerVisibleObserved, true);
+    assert.equal(renderRequests, 0);
+
+    observer.arm('localControl', false);
+    node.dispatch('pointerdown');
+    await observer.pollPromise;
+    layerEnabled = false;
+    buttonActive = false;
+    lod = { computed: false, total: 0, active: 0 };
+    scene.frameState.frameNumber++;
+    preRenderListener();
+    renderListener();
+    const disabledRecord = observer.take();
+    assert.equal(disabledRecord.expectedLayerEnabled, false);
+    assert.equal(disabledRecord.layerEnabledObserved, false);
+    assert.equal(disabledRecord.layerVisibleObserved, false);
+    assert.equal(disabledRecord.layerRenderablesObserved, false);
+    assert.equal(renderRequests, 0);
     observer.dispose();
+    assert.equal(preRenderListener, null, 'preRender listener is disposed');
   } finally {
     globalWindow.__qualificationMetricsObserver?.dispose();
     restoreGlobals();
   }
 });
 
-test('replay witness rejects source-only, offscreen and mismatched rendered aircraft', () => {
+test('interaction observer rejects scenes without a preRender event boundary', () => {
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  globalThis.window = {
+    __godsEyeView: {
+      viewer: {
+        scene: { postRender: { addEventListener: () => () => {} } },
+      },
+    },
+  };
+  try {
+    assert.throws(
+      () =>
+        installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT),
+      /needs Cesium preRender and postRender/,
+    );
+  } finally {
+    if (originalWindow)
+      Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+  }
+});
+
+test('interaction input rejects stale, wrong-target/type, untrusted, future and duplicate events', async () => {
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const originalDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document',
+  );
+  try {
+    for (const invalid of [
+      { name: 'stale timestamp', type: 'pointerdown', time: -1 },
+      { name: 'nonfinite timestamp', type: 'pointerdown', time: Number.NaN },
+      { name: 'wrong type', type: 'click' },
+      { name: 'untrusted', isTrusted: false },
+      { name: 'wrong target', target: {} },
+      { name: 'future timestamp', future: true },
+    ]) {
+      const local = inputControl();
+      const slider = inputControl();
+      const scene = {
+        frameState: { frameNumber: 10 },
+        preRender: { addEventListener: () => () => {} },
+        postRender: { addEventListener: () => () => {} },
+      };
+      globalThis.window = { __godsEyeView: { viewer: { scene } } };
+      globalThis.document = {
+        querySelector: (selector) =>
+          selector.includes('data-layer-id') ? local : slider,
+      };
+      installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+      const observer = globalThis.window.__qualificationMetricsObserver;
+      observer.arm('localControl', true);
+      const now = performance.now();
+      const options = {
+        ...(invalid.time != null ? { timeStamp: invalid.time } : {}),
+        ...(invalid.isTrusted != null ? { isTrusted: invalid.isTrusted } : {}),
+        ...(invalid.target ? { target: invalid.target } : {}),
+        ...(invalid.future ? { timeStamp: now + 60_000 } : {}),
+      };
+      local.dispatch('pointerdown', now, {
+        ...(invalid.type ? { type: invalid.type } : {}),
+        ...options,
+      });
+      assert.match(
+        observer.error || '',
+        /input event failed freshness validation/,
+      );
+      assert.equal(observer.pending.inputAtMs, null, invalid.name);
+      observer.dispose();
+    }
+
+    const local = inputControl();
+    const slider = inputControl();
+    const scene = {
+      frameState: { frameNumber: 10 },
+      preRender: { addEventListener: () => () => {} },
+      postRender: { addEventListener: () => () => {} },
+    };
+    globalThis.window = { __godsEyeView: { viewer: { scene } } };
+    globalThis.document = {
+      querySelector: (selector) =>
+        selector.includes('data-layer-id') ? local : slider,
+    };
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+    const observer = globalThis.window.__qualificationMetricsObserver;
+    local.dispatch('pointerdown');
+    assert.equal(observer.pending, null, 'input before arm is not captured');
+    observer.arm('localControl', true);
+    local.dispatch('pointerdown', observer.pending.armedAtMs - 1);
+    assert.match(
+      observer.error || '',
+      /input event failed freshness validation/,
+    );
+    observer.dispose();
+  } finally {
+    if (originalWindow)
+      Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+    if (originalDocument)
+      Object.defineProperty(globalThis, 'document', originalDocument);
+    else delete globalThis.document;
+  }
+});
+
+test('interaction input rejects duplicate and superseded-generation events', async () => {
+  const local = inputControl({ classList: { contains: () => false } });
+  const slider = inputControl();
+  const scene = {
+    frameState: { frameNumber: 10 },
+    preRender: { addEventListener: () => () => {} },
+    postRender: { addEventListener: () => () => {} },
+  };
+  const restoreGlobals = replacePageGlobals({
+    window: {
+      __godsEyeView: {
+        viewer: { scene },
+        dataManager: {
+          isEnabled: () => false,
+          layers: new Map([
+            [
+              'local-datacenters',
+              {
+                module: {
+                  getLodDiagnostics: () => ({
+                    computed: false,
+                    total: 0,
+                    active: 0,
+                  }),
+                },
+              },
+            ],
+          ]),
+        },
+      },
+    },
+    document: {
+      querySelector: (selector) =>
+        selector.includes('data-layer-id') ? local : slider,
+    },
+    setInterval: () => 1,
+    clearInterval() {},
+  });
+  try {
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+    const observer = globalThis.window.__qualificationMetricsObserver;
+    observer.arm('localControl', false);
+    local.dispatch('pointerdown');
+    await observer.pollPromise;
+    local.dispatch('pointerdown');
+    assert.match(observer.error || '', /Duplicate input event/);
+    observer.pending = null;
+    observer.armedTarget = null;
+    observer.error = null;
+    observer.arm('localControl', false);
+    observer.generation++;
+    local.dispatch('pointerdown');
+    assert.match(observer.error || '', /Stale interaction generation/);
+    observer.dispose();
+  } finally {
+    globalThis.window?.__qualificationMetricsObserver?.dispose();
+    restoreGlobals();
+  }
+});
+
+test('natural replay frame rejects changed source time and billboard, then accepts matching output', async () => {
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const originalDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document',
+  );
+  const local = inputControl();
+  const slider = inputControl({ value: '4000' });
+  const selected = {
+    id: 'SYNTH-001',
+    positionTimeMs: 4000,
+    latitude: Math.sin(0.3) * 0.02,
+    longitude: ((((179.7 + 3 * 0.01 + 180) % 360) + 360) % 360) - 180,
+  };
+  const visual = {
+    billboardId: selected.id,
+    billboardVisible: true,
+    billboardPosition: {
+      latitude: selected.latitude,
+      longitude: selected.longitude,
+    },
+    screenPosition: { x: 200, y: 300 },
+    canvas: { width: 1440, height: 1000 },
+  };
+  let frameListener;
+  let preRenderListener;
+  const scene = {
+    frameState: { frameNumber: 30 },
+    preRender: {
+      addEventListener(listener) {
+        preRenderListener = listener;
+        return () => {
+          preRenderListener = null;
+        };
+      },
+    },
+    postRender: {
+      addEventListener(listener) {
+        frameListener = listener;
+        return () => {
+          frameListener = null;
+        };
+      },
+    },
+  };
+  let analystRecordReads = 0;
+  const app = {
+    viewer: { scene },
+    aircraftSource: {
+      getState: () => ({
+        mode: 'recorded',
+        recordingId: 'recording-rendered-soak',
+        recordCount: 5,
+        targetMs: 4000,
+        coverage: { from: 1000, to: 4000 },
+      }),
+      getSnapshot: async () => ({ records: [selected] }),
+    },
+    dataManager: {
+      layers: new Map([
+        [
+          'flights',
+          {
+            module: {
+              getAnalystRecords(limit) {
+                analystRecordReads++;
+                assert.equal(limit, 8, 'replay witness must stay bounded');
+                return [
+                  {
+                    icao24: selected.id,
+                    provenance: {
+                      positionObservedAtMs:
+                        analystRecordReads <= 4
+                          ? selected.positionTimeMs - 1000
+                          : selected.positionTimeMs,
+                    },
+                    lat: selected.latitude,
+                    lon: selected.longitude,
+                  },
+                ];
+              },
+            },
+          },
+        ],
+      ]),
+    },
+  };
+  globalThis.window = {
+    __godsEyeView: app,
+    __qualificationFlightWitnessReader: () => visual,
+  };
+  globalThis.document = {
+    querySelector: (selector) => {
+      if (selector === '.investigation-timeline-times')
+        return { textContent: '00:00:04' };
+      return selector.includes('data-layer-id') ? local : slider;
+    },
+  };
+  try {
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+    const observer = globalThis.window.__qualificationMetricsObserver;
+    observer.arm(
+      'loadedReplaySeek',
+      'end',
+      '00:00:01',
+      1000,
+      0,
+      179.7,
+      1000,
+      1000,
+      4000,
+    );
+    slider.dispatch('input');
+    preRenderListener();
+    frameListener();
+    assert.equal(observer.pending.stateAtMs, null);
+    assert.equal(analystRecordReads, 1);
+    scene.frameState.frameNumber = 31;
+    app.aircraftSource.getState = () => ({
+      mode: 'recorded',
+      recordingId: 'recording-rendered-soak',
+      recordCount: 5,
+      targetMs: 1000,
+      coverage: { from: 1000, to: 4000 },
+    });
+    preRenderListener();
+    frameListener();
+    assert.equal(observer.records.length, 0, 'wrong source time is rejected');
+
+    app.aircraftSource.getState = () => ({
+      mode: 'recorded',
+      recordingId: 'recording-rendered-soak',
+      recordCount: 5,
+      targetMs: 4000,
+      coverage: { from: 1000, to: 4000 },
+    });
+    visual.billboardId = 'OTHER';
+    scene.frameState.frameNumber = 32;
+    preRenderListener();
+    frameListener();
+    assert.equal(observer.records.length, 0, 'wrong aircraft is rejected');
+
+    visual.billboardId = selected.id;
+    scene.frameState.frameNumber = 33;
+    preRenderListener();
+    frameListener();
+    assert.equal(
+      observer.records.length,
+      0,
+      'stale preRender layer provenance is rejected',
+    );
+    assert.equal(analystRecordReads, 4);
+    scene.frameState.frameNumber = 34;
+    preRenderListener();
+    assert.equal(observer.pending.frameNumberAtState, 34);
+    frameListener();
+    const record = observer.take();
+    assert.equal(analystRecordReads, 6);
+    assert.equal(record.renderedRecordPositionTimeMs, selected.positionTimeMs);
+    assert.equal(record.frameSelectedTimeMs, 4000);
+    assert.equal(record.framePositionTimeMs, 4000);
+    assert.equal(record.renderedBillboardId, selected.id);
+    assert.equal(
+      record.renderWitnessType,
+      'natural-replay-prerender-postrender-v1',
+    );
+    observer.dispose();
+  } finally {
+    globalThis.window?.__qualificationMetricsObserver?.dispose();
+    if (originalWindow)
+      Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+    if (originalDocument)
+      Object.defineProperty(globalThis, 'document', originalDocument);
+    else delete globalThis.document;
+  }
+});
+
+test('interaction remains pending without a natural completed frame', async () => {
+  const node = inputControl({ classList: { contains: () => true } });
+  const scene = {
+    frameState: { frameNumber: 12 },
+    preRender: { addEventListener: () => () => {} },
+    postRender: { addEventListener: () => () => {} },
+  };
+  const restoreGlobals = replacePageGlobals({
+    window: {
+      __godsEyeView: {
+        viewer: { scene },
+        dataManager: {
+          isEnabled: () => true,
+          layers: new Map([
+            [
+              'local-datacenters',
+              {
+                module: {
+                  getLodDiagnostics: () => ({
+                    computed: true,
+                    total: 4,
+                    active: 2,
+                  }),
+                },
+              },
+            ],
+          ]),
+        },
+      },
+    },
+    document: {
+      querySelector: (selector) =>
+        selector.includes('data-layer-id') ? node : inputControl(),
+    },
+    setInterval: () => 1,
+    clearInterval() {},
+  });
+  try {
+    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+    const observer = globalThis.window.__qualificationMetricsObserver;
+    observer.arm('localControl', true);
+    node.dispatch('pointerdown');
+    await observer.pollPromise;
+    assert.equal(observer.pending.stateAtMs, null);
+    assert.equal(observer.records.length, 0);
+    assert.equal(typeof scene.requestRender, 'undefined');
+    observer.dispose();
+  } finally {
+    globalThis.window?.__qualificationMetricsObserver?.dispose();
+    restoreGlobals();
+  }
+});
+
+test('replay witness rejects source-only, offscreen and mismatched displayed aircraft', () => {
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   const originalDocument = Object.getOwnPropertyDescriptor(
     globalThis,
@@ -1073,6 +1712,7 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
     __godsEyeView: {
       viewer: {
         scene: {
+          preRender: { addEventListener: () => () => {} },
           postRender: { addEventListener: () => () => {} },
           requestRender() {},
         },
@@ -1090,10 +1730,10 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
       longitude: 179.7,
     };
     const renderedRecord = {
-      icao24: 'SYNTH-001',
-      provenance: { positionObservedAtMs: 1000 },
-      lat: 0,
-      lon: 179.7,
+      icao24: selectedRecord.id,
+      provenance: { positionObservedAtMs: selectedRecord.positionTimeMs },
+      lat: selectedRecord.latitude,
+      lon: selectedRecord.longitude,
     };
     const visualWitness = {
       billboardId: 'SYNTH-001',
@@ -1111,7 +1751,7 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
       true,
     );
     assert.equal(
-      observer.isReplayVisualWitness({ selectedRecord, renderedRecord }),
+      observer.isReplayVisualWitness({ selectedRecord, visualWitness }),
       false,
       'source records without a visible rendered billboard are rejected',
     );
@@ -1151,11 +1791,14 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
     assert.equal(
       observer.isReplayVisualWitness({
         selectedRecord,
-        renderedRecord: { ...renderedRecord, lon: 178 },
+        renderedRecord: {
+          ...renderedRecord,
+          provenance: { positionObservedAtMs: 999 },
+        },
         visualWitness,
       }),
       false,
-      'rendered layer coordinates must match the selected source time',
+      'stale layer provenance is rejected even when billboard pose matches',
     );
     observer.dispose();
   } finally {
@@ -1168,27 +1811,46 @@ test('replay witness rejects source-only, offscreen and mismatched rendered airc
   }
 });
 
-test('a replay snapshot resolving after observer disposal cannot revive a sample', async () => {
-  let resolveSnapshot;
-  let markSnapshotStarted;
-  let renderRequests = 0;
-  const snapshotStarted = new Promise((resolve) => {
-    markSnapshotStarted = resolve;
-  });
-  const snapshot = new Promise((resolve) => {
-    resolveSnapshot = resolve;
-  });
+test('disposed replay frame observers cannot revive a sample', async () => {
+  let preRenderListener;
+  let renderListener;
+  let analystReads = 0;
   const scene = {
     frameState: { frameNumber: 70 },
-    requestRender() {
-      renderRequests++;
+    preRender: {
+      addEventListener(listener) {
+        preRenderListener = listener;
+        return () => {
+          preRenderListener = null;
+        };
+      },
     },
-    postRender: { addEventListener: () => () => {} },
+    postRender: {
+      addEventListener(listener) {
+        renderListener = listener;
+        return () => {
+          renderListener = null;
+        };
+      },
+    },
   };
-  const controlNode = () => ({
-    addEventListener() {},
-    removeEventListener() {},
-  });
+  const controlNode = () => inputControl();
+  const selected = {
+    id: 'SYNTH-001',
+    positionTimeMs: 4000,
+    latitude: Math.sin(0.3) * 0.02,
+    longitude: ((((179.7 + 3 * 0.01 + 180) % 360) + 360) % 360) - 180,
+  };
+  const visual = {
+    billboardId: selected.id,
+    billboardVisible: true,
+    billboardPosition: {
+      latitude: selected.latitude,
+      longitude: selected.longitude,
+    },
+    screenPosition: { x: 200, y: 300 },
+    canvas: { width: 1440, height: 1000 },
+  };
   const controls = new Map([
     ['.investigation-timeline-times', { textContent: '00:00:04' }],
     [
@@ -1208,18 +1870,38 @@ test('a replay snapshot resolving after observer disposal cannot revive a sample
           targetMs: 4000,
           coverage: { from: 1000, to: 4000 },
         }),
-        getSnapshot() {
-          markSnapshotStarted();
-          return snapshot;
-        },
+      },
+      dataManager: {
+        layers: new Map([
+          [
+            'flights',
+            {
+              module: {
+                getAnalystRecords(limit) {
+                  analystReads++;
+                  assert.equal(limit, 8);
+                  return [
+                    {
+                      icao24: selected.id,
+                      provenance: {
+                        positionObservedAtMs: selected.positionTimeMs,
+                      },
+                      lat: selected.latitude,
+                      lon: selected.longitude,
+                    },
+                  ];
+                },
+              },
+            },
+          ],
+        ]),
       },
     },
+    __qualificationFlightWitnessReader: () => visual,
   };
   const restoreGlobals = replacePageGlobals({
     window: globalWindow,
     document: { querySelector: (selector) => controls.get(selector) || null },
-    setInterval: () => 2,
-    clearInterval() {},
   });
   try {
     installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
@@ -1235,24 +1917,15 @@ test('a replay snapshot resolving after observer disposal cannot revive a sample
       1000,
       4000,
     );
-    const inFlightPoll = observer.pollState();
-    await snapshotStarted;
+    const slider = controls.get('.investigation-timeline-slider-control');
+    slider.dispatch('input');
     await disposeQualificationObserver({ evaluate: (fn) => fn() });
-    resolveSnapshot({
-      records: [
-        {
-          id: 'SYNTH-001',
-          latitude: Math.sin(0.3) * 0.02,
-          longitude: 179.73,
-          positionTimeMs: 4000,
-        },
-      ],
-    });
-    await inFlightPoll;
+    preRenderListener?.();
+    renderListener?.();
     assert.equal(globalWindow.__qualificationMetricsObserver, undefined);
     assert.equal(observer.pending, null);
     assert.equal(observer.records.length, 0);
-    assert.equal(renderRequests, 0);
+    assert.equal(analystReads, 0, 'disposed observers perform no frame reads');
   } finally {
     globalWindow.__qualificationMetricsObserver?.dispose();
     restoreGlobals();

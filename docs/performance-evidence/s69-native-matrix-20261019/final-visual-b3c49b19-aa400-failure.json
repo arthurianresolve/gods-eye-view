@@ -1,0 +1,830 @@
+{
+  "schema": "gev-visual-pixel-failure-diagnosis/v1",
+  "reviewedAt": "2026-10-19T17:46:59.173Z",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874"
+  },
+  "producerCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "processCode": 1,
+  "files": [
+    {
+      "name": "baseline-observations.json",
+      "bytes": 651894,
+      "sha256": "97bd94a9c5581ade7d6546e0defc1e1b31ecb1ab0284588b816690970d378795"
+    },
+    {
+      "name": "candidate-observations.json",
+      "bytes": 425716,
+      "sha256": "b1c40d02b753d7c6a84e71625a3d81743c3127d7a297ea0aea6690b1be677d6d"
+    },
+    {
+      "name": "final-visual-qualification-partial.json",
+      "bytes": 1141214,
+      "sha256": "36050017f201b87d289b50bb8cbd1871fa868ec407e1622158939c434318fb3c"
+    },
+    {
+      "name": "final-visual-qualification.json",
+      "bytes": 1106097,
+      "sha256": "0d2b4d8acfeca6d54770964f174a7dcb8dacfcb0b1493a503c481ed0e7967c05"
+    },
+    {
+      "name": "hud-hidden-baseline-attempt-1.png",
+      "bytes": 1431281,
+      "sha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5"
+    },
+    {
+      "name": "hud-hidden-candidate-attempt-1.png",
+      "bytes": 1431281,
+      "sha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5"
+    },
+    {
+      "name": "hud-restored-baseline-attempt-1.png",
+      "bytes": 1522284,
+      "sha256": "7b8bc2f4c35315450ed89d2583d195897b4c28f7f01f20f495574748046d5126"
+    },
+    {
+      "name": "hud-restored-candidate-attempt-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "hud-visible-baseline-attempt-1.png",
+      "bytes": 1522762,
+      "sha256": "7972b0d373cf5e04b4962fc7cde9b425d3f5bc5ca8b7de9284e7bb4b1a2e0f69"
+    },
+    {
+      "name": "hud-visible-candidate-attempt-1.png",
+      "bytes": 1522320,
+      "sha256": "8e2e524ac06801310084be66951815534b93a92e453e1881aecbab0c7f7eed5f"
+    },
+    {
+      "name": "still-settled-baseline-attempt-1.png",
+      "bytes": 1522762,
+      "sha256": "7972b0d373cf5e04b4962fc7cde9b425d3f5bc5ca8b7de9284e7bb4b1a2e0f69"
+    },
+    {
+      "name": "still-settled-candidate-attempt-1.png",
+      "bytes": 1522320,
+      "sha256": "8e2e524ac06801310084be66951815534b93a92e453e1881aecbab0c7f7eed5f"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2014,
+      "sha256": "f476dcecfe7c10443ffa41ff59a9a1e5a9fd573f5abce462824d8389b9ba71ce"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 2920,
+      "sha256": "b3686bb152dfe35c1218ec0399adcd2f21716d97138ea1e673d3a7df7b007dc6"
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-b3c49b19-aa400dfe",
+  "pixels": {
+    "schema": "gev-portable-png-pair-review/v1",
+    "status": "failed",
+    "acceptanceEligible": false,
+    "decoder": {
+      "name": "pngjs",
+      "version": "7.0.0",
+      "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+      "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+    },
+    "policySha256": "bdce8d73a7badaa8ed60d6eaf1fb317fc10aee157f139779394cf7c09825ec77",
+    "states": 4,
+    "images": [
+      {
+        "state": "still-settled",
+        "role": "baseline",
+        "path": "still-settled-baseline-attempt-1.png",
+        "pngSha256": "7972b0d373cf5e04b4962fc7cde9b425d3f5bc5ca8b7de9284e7bb4b1a2e0f69",
+        "rgbaSha256": "f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "still-settled",
+        "role": "candidate",
+        "path": "still-settled-candidate-attempt-1.png",
+        "pngSha256": "8e2e524ac06801310084be66951815534b93a92e453e1881aecbab0c7f7eed5f",
+        "rgbaSha256": "86b7849ef69be2ecf5ffd28a3aa63ec3da5fd3be93d377708946b86d6d77ee70",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-visible",
+        "role": "baseline",
+        "path": "hud-visible-baseline-attempt-1.png",
+        "pngSha256": "7972b0d373cf5e04b4962fc7cde9b425d3f5bc5ca8b7de9284e7bb4b1a2e0f69",
+        "rgbaSha256": "f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-visible",
+        "role": "candidate",
+        "path": "hud-visible-candidate-attempt-1.png",
+        "pngSha256": "8e2e524ac06801310084be66951815534b93a92e453e1881aecbab0c7f7eed5f",
+        "rgbaSha256": "86b7849ef69be2ecf5ffd28a3aa63ec3da5fd3be93d377708946b86d6d77ee70",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-hidden",
+        "role": "baseline",
+        "path": "hud-hidden-baseline-attempt-1.png",
+        "pngSha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5",
+        "rgbaSha256": "8ec7777041a0fa4d113f979bef1064b7b4bd408e0a9852bccdd8c8f193c30db8",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-hidden",
+        "role": "candidate",
+        "path": "hud-hidden-candidate-attempt-1.png",
+        "pngSha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5",
+        "rgbaSha256": "8ec7777041a0fa4d113f979bef1064b7b4bd408e0a9852bccdd8c8f193c30db8",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-restored",
+        "role": "baseline",
+        "path": "hud-restored-baseline-attempt-1.png",
+        "pngSha256": "7b8bc2f4c35315450ed89d2583d195897b4c28f7f01f20f495574748046d5126",
+        "rgbaSha256": "e3d4c23ddac169b1a80b958dea50bdfe37d978151df5ee2ddea9e6d5e9b83bb4",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-restored",
+        "role": "candidate",
+        "path": "hud-restored-candidate-attempt-1.png",
+        "pngSha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405",
+        "rgbaSha256": "00b0aa4be746e94f75d291a56a28ddf602c2265a3f0de03dc8367de131888e75",
+        "width": 2880,
+        "height": 1800
+      }
+    ],
+    "comparisons": [
+      {
+        "state": "still-settled",
+        "differentPixels": 7751,
+        "maximumChannelDelta": 103,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-visible",
+        "differentPixels": 7751,
+        "maximumChannelDelta": 103,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-hidden",
+        "differentPixels": 0,
+        "maximumChannelDelta": 0,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-restored",
+        "differentPixels": 772,
+        "maximumChannelDelta": 103,
+        "alphaDifferences": 0
+      }
+    ],
+    "rasterVariance": null,
+    "failures": [
+      "hud-visible decoded rendered pixels changed",
+      "hud-restored decoded rendered pixels changed",
+      "Visible controls differ across builds"
+    ],
+    "scope": "Independent decoding and unchanged pixel-policy evaluation only. Native Windows full qualification validates build, camera, phase, settings, source, foreground and cleanup separately. Original PNG bytes are read without modification."
+  },
+  "differences": [
+    {
+      "state": "still-settled",
+      "count": 7751,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      },
+      "maxDelta": 103,
+      "sample": [
+        {
+          "x": 81,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 82,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 83,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 84,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 85,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 86,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 87,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 88,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 89,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 90,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 80,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 81,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 82,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 83,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 84,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 85,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 86,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 87,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 88,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 89,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 79,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 80,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 81,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 82,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 83,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 84,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 85,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 86,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 87,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 88,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 207,
+          "y": 2,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 208,
+          "y": 2,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        }
+      ]
+    },
+    {
+      "state": "hud-visible",
+      "count": 7751,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      },
+      "maxDelta": 103,
+      "sample": [
+        {
+          "x": 81,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 82,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 83,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 84,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 85,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 86,
+          "y": 0,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 87,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 88,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 89,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 90,
+          "y": 0,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 80,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 81,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 82,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 83,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 84,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 85,
+          "y": 1,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 86,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 87,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 88,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 89,
+          "y": 1,
+          "baseline": [5, 8, 11, 255],
+          "candidate": [5, 7, 11, 255]
+        },
+        {
+          "x": 79,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 80,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 81,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 82,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 83,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 84,
+          "y": 2,
+          "baseline": [5, 6, 9, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 85,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 86,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 87,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 88,
+          "y": 2,
+          "baseline": [5, 7, 10, 255],
+          "candidate": [5, 6, 10, 255]
+        },
+        {
+          "x": 207,
+          "y": 2,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 208,
+          "y": 2,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        }
+      ]
+    },
+    {
+      "state": "hud-hidden",
+      "count": 0,
+      "bounds": null,
+      "maxDelta": 0,
+      "sample": []
+    },
+    {
+      "state": "hud-restored",
+      "count": 772,
+      "bounds": {
+        "minX": 62,
+        "minY": 68,
+        "maxX": 2372,
+        "maxY": 1007
+      },
+      "maxDelta": 103,
+      "sample": [
+        {
+          "x": 105,
+          "y": 68,
+          "baseline": [20, 68, 84, 255],
+          "candidate": [20, 69, 84, 255]
+        },
+        {
+          "x": 106,
+          "y": 68,
+          "baseline": [45, 103, 137, 255],
+          "candidate": [45, 103, 138, 255]
+        },
+        {
+          "x": 105,
+          "y": 70,
+          "baseline": [43, 82, 107, 255],
+          "candidate": [43, 82, 108, 255]
+        },
+        {
+          "x": 108,
+          "y": 70,
+          "baseline": [35, 67, 83, 255],
+          "candidate": [35, 67, 84, 255]
+        },
+        {
+          "x": 106,
+          "y": 71,
+          "baseline": [35, 67, 83, 255],
+          "candidate": [35, 67, 84, 255]
+        },
+        {
+          "x": 108,
+          "y": 71,
+          "baseline": [35, 67, 84, 255],
+          "candidate": [35, 68, 84, 255]
+        },
+        {
+          "x": 109,
+          "y": 71,
+          "baseline": [40, 77, 98, 255],
+          "candidate": [40, 77, 99, 255]
+        },
+        {
+          "x": 114,
+          "y": 71,
+          "baseline": [11, 64, 75, 255],
+          "candidate": [11, 65, 75, 255]
+        },
+        {
+          "x": 116,
+          "y": 71,
+          "baseline": [4, 54, 59, 255],
+          "candidate": [4, 54, 58, 255]
+        },
+        {
+          "x": 117,
+          "y": 71,
+          "baseline": [4, 53, 58, 255],
+          "candidate": [4, 52, 58, 255]
+        },
+        {
+          "x": 122,
+          "y": 71,
+          "baseline": [96, 124, 126, 255],
+          "candidate": [96, 125, 127, 255]
+        },
+        {
+          "x": 81,
+          "y": 72,
+          "baseline": [5, 30, 34, 255],
+          "candidate": [4, 30, 35, 255]
+        },
+        {
+          "x": 108,
+          "y": 72,
+          "baseline": [55, 107, 146, 255],
+          "candidate": [55, 108, 146, 255]
+        },
+        {
+          "x": 112,
+          "y": 72,
+          "baseline": [4, 56, 60, 255],
+          "candidate": [4, 56, 61, 255]
+        },
+        {
+          "x": 113,
+          "y": 72,
+          "baseline": [4, 54, 60, 255],
+          "candidate": [4, 54, 59, 255]
+        },
+        {
+          "x": 119,
+          "y": 72,
+          "baseline": [159, 214, 216, 255],
+          "candidate": [161, 214, 217, 255]
+        },
+        {
+          "x": 128,
+          "y": 72,
+          "baseline": [155, 210, 214, 255],
+          "candidate": [155, 211, 214, 255]
+        },
+        {
+          "x": 130,
+          "y": 72,
+          "baseline": [84, 136, 139, 255],
+          "candidate": [85, 137, 139, 255]
+        },
+        {
+          "x": 80,
+          "y": 73,
+          "baseline": [5, 29, 34, 255],
+          "candidate": [5, 30, 34, 255]
+        },
+        {
+          "x": 109,
+          "y": 73,
+          "baseline": [26, 83, 104, 255],
+          "candidate": [26, 84, 104, 255]
+        },
+        {
+          "x": 111,
+          "y": 73,
+          "baseline": [4, 53, 59, 255],
+          "candidate": [4, 54, 59, 255]
+        },
+        {
+          "x": 124,
+          "y": 73,
+          "baseline": [116, 240, 244, 255],
+          "candidate": [116, 239, 244, 255]
+        },
+        {
+          "x": 125,
+          "y": 73,
+          "baseline": [121, 233, 237, 255],
+          "candidate": [122, 234, 238, 255]
+        },
+        {
+          "x": 126,
+          "y": 73,
+          "baseline": [137, 240, 244, 255],
+          "candidate": [139, 239, 243, 255]
+        },
+        {
+          "x": 105,
+          "y": 74,
+          "baseline": [51, 100, 134, 255],
+          "candidate": [51, 100, 135, 255]
+        },
+        {
+          "x": 109,
+          "y": 74,
+          "baseline": [4, 55, 59, 255],
+          "candidate": [4, 55, 60, 255]
+        },
+        {
+          "x": 111,
+          "y": 74,
+          "baseline": [89, 120, 122, 255],
+          "candidate": [90, 121, 123, 255]
+        },
+        {
+          "x": 112,
+          "y": 74,
+          "baseline": [156, 194, 196, 255],
+          "candidate": [157, 195, 197, 255]
+        },
+        {
+          "x": 116,
+          "y": 74,
+          "baseline": [161, 252, 255, 255],
+          "candidate": [148, 251, 255, 255]
+        },
+        {
+          "x": 117,
+          "y": 74,
+          "baseline": [161, 252, 255, 255],
+          "candidate": [160, 251, 254, 255]
+        },
+        {
+          "x": 120,
+          "y": 74,
+          "baseline": [0, 235, 244, 255],
+          "candidate": [0, 236, 244, 255]
+        },
+        {
+          "x": 125,
+          "y": 74,
+          "baseline": [0, 235, 244, 255],
+          "candidate": [0, 236, 244, 255]
+        }
+      ]
+    }
+  ],
+  "status": "failed",
+  "acceptanceEligible": false,
+  "productionChanged": false
+}

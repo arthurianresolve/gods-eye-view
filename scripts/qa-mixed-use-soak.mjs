@@ -30,6 +30,7 @@ export function createSoakSetupFailureReport(error) {
   const report = {
     operationStatus: 'failed',
     error: error?.message || 'Rendered soak setup failed.',
+    datacenterFixtureProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
     fullSoak: false,
     hardwareRenderingValidated: false,
     stability: {
@@ -40,6 +41,49 @@ export function createSoakSetupFailureReport(error) {
   if (error?.browserClose) report.browserClose = error.browserClose;
   if (error?.cleanupError) report.cleanupError = error.cleanupError;
   return report;
+}
+
+function assertSoakDatacenterFixtureReceipt(receipt) {
+  if (
+    receipt?.schema !== 'gev-soak-datacenter-fixture/v2' ||
+    receipt.fulfillmentProtocol !== 'cdp-fetch-fulfilled-hash-count-v1' ||
+    receipt.status !== 'validated' ||
+    receipt.requestCount !== 1 ||
+    receipt.preparedRequestCount !== 1 ||
+    receipt.fulfilledRequestCount !== 1 ||
+    receipt.responseStatus !== 200 ||
+    receipt.applicationOrigin !== receipt.assetOrigin ||
+    !/^https?:\/\//.test(receipt.applicationOrigin || '') ||
+    (!/(?:^|\/)assets\/datacenters-[A-Za-z0-9_-]{8}\.geojsonl$/.test(
+      receipt.assetPath || '',
+    ) &&
+      !String(receipt.assetPath || '').endsWith(
+        '/src/data/local_data/datacenters/datacenters.geojsonl',
+      )) ||
+    !/^[a-f0-9]{64}$/.test(receipt.bodySha256 || '') ||
+    receipt.bodySha256 !== receipt.expectedBodySha256 ||
+    receipt.deliveredFeatureCount !== 8 ||
+    receipt.expectedFeatureCount !== 8 ||
+    receipt.materializedFeatureCount !== 8 ||
+    receipt.disabledMaterializedFeatureCount !== 0 ||
+    receipt.disabledRenderableCount !== 0 ||
+    receipt.setupTiming !== 'unmeasured-before-interaction-samples' ||
+    receipt.preloadEnabledObserved !== true ||
+    receipt.preloadDisabledObserved !== true ||
+    !Array.isArray(receipt.requests) ||
+    receipt.requests.length !== 1 ||
+    receipt.requests[0]?.prepared !== true ||
+    receipt.requests[0]?.fulfilled !== true ||
+    receipt.requests[0]?.responseStatus !== 200 ||
+    receipt.requests[0]?.bodySha256 !== receipt.bodySha256 ||
+    receipt.requests[0]?.deliveredFeatureCount !== 8 ||
+    receipt.requests[0]?.origin !== receipt.applicationOrigin ||
+    receipt.requests[0]?.pathname !== receipt.assetPath
+  )
+    throw new Error(
+      'Rendered soak requires a fulfilled, materialized eight-feature datacenter fixture preflight.',
+    );
+  return receipt;
 }
 
 /** No counters advance until a real operation reports completion. Short runs are smoke tests. */
@@ -70,6 +114,7 @@ export async function runMixedUseSoak({
     nativeResolution,
   });
   let report, runFailure;
+  let datacenterFixtureReceipt = null;
   const exportRecordingBundle = async () => {
     if (!recordingBundleOut) return null;
     if (typeof driver.exportRecordingBundle !== 'function')
@@ -95,6 +140,13 @@ export async function runMixedUseSoak({
     };
   };
   try {
+    if (typeof driver.validateDatacenterSoakFixture !== 'function')
+      throw new Error(
+        'Rendered soak driver does not provide the required datacenter fixture preflight.',
+      );
+    datacenterFixtureReceipt = assertSoakDatacenterFixtureReceipt(
+      await driver.validateDatacenterSoakFixture(),
+    );
     for (let i = 0; i < (driver.warmupIterations || 0); i++)
       await driver.runCycle(i);
     const firstRetainedMetrics = await driver.retainedMetrics?.();
@@ -134,6 +186,8 @@ export async function runMixedUseSoak({
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
       startupPrewarm: driver.startupPrewarm || null,
+      datacenterFixtureReceipt,
+      datacenterFixtureProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
       warmupIterations: driver.warmupIterations || 0,
       firstRetainedMetrics,
       checkpoints,
@@ -285,6 +339,14 @@ export async function runMixedUseSoak({
     }
   } catch (error) {
     runFailure = error;
+    if (!report) {
+      report = createSoakSetupFailureReport(error);
+      report.datacenterFixtureReceipt =
+        datacenterFixtureReceipt ||
+        driver.readDatacenterSoakFixtureReceipt?.() ||
+        null;
+      error.soakReport = report;
+    }
     throw error;
   } finally {
     if (ownsDriver) {
