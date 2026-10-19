@@ -434,6 +434,42 @@ function receiptHash(receipt) {
   return jsonDigest(copy);
 }
 
+/** Validate the portable, hash-pinned portion of a build receipt without local files. */
+export function validatePortableBuildProvenanceReceipt(
+  receipt,
+  { expectedAppCommit, expectedHarnessCommit } = {},
+) {
+  if (receipt?.schema !== RECEIPT_SCHEMA)
+    throw new Error('Build provenance receipt schema is unsupported.');
+  if (
+    receipt?.scope !==
+    'unsigned local source-build receipt; not a hardware or release attestation'
+  )
+    throw new Error('Build provenance receipt scope is unsupported.');
+  assertSha(expectedAppCommit, SHA1, 'Expected application commit');
+  assertSha(expectedHarnessCommit, SHA1, 'Expected build harness commit');
+  assertSha(receipt.receiptSha256, SHA256, 'Receipt hash');
+  if (receiptHash(receipt) !== receipt.receiptSha256)
+    throw new Error('Build provenance receipt hash is invalid.');
+  const totalAssetBytes = validateAssetRecords(receipt.assets);
+  if (
+    receipt.assetCount !== receipt.assets.length ||
+    receipt.totalAssetBytes !== totalAssetBytes
+  )
+    throw new Error('Build provenance asset summary is invalid.');
+  if (
+    receipt.source?.commit !== expectedAppCommit ||
+    receipt.source?.worktree !== 'clean'
+  )
+    throw new Error('Application source does not match the build receipt.');
+  if (
+    receipt.harness?.commit !== expectedHarnessCommit ||
+    receipt.harness?.worktree !== 'clean'
+  )
+    throw new Error('Build harness source does not match the build receipt.');
+  return receipt.receiptSha256;
+}
+
 function compareRecord(actual, expected, label) {
   if (JSON.stringify(actual) !== JSON.stringify(expected))
     throw new Error(`${label} does not match its provenance receipt.`);

@@ -11,6 +11,7 @@ import {
   WEATHER_BALANCED_ENVELOPE_SCHEMA,
   WEATHER_BALANCED_ORDER,
 } from './performance/weatherBalancedQualification.mjs';
+import { validatePortableBuildProvenanceReceipt } from './performance/buildProvenance.mjs';
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -49,6 +50,7 @@ function verifyChrome() {
   );
 }
 verifyChrome();
+const buildReceiptBytes = {};
 for (const role of ['control', 'candidate']) {
   const receipt = fs.readFileSync(plan[role].build.receipt);
   const digest = crypto.createHash('sha256').update(receipt).digest('hex');
@@ -57,11 +59,26 @@ for (const role of ['control', 'candidate']) {
     plan[role].build.receiptSha256,
     `${role} build receipt changed`,
   );
+  validatePortableBuildProvenanceReceipt(JSON.parse(receipt.toString('utf8')), {
+    expectedAppCommit: plan[role].appCommit,
+    expectedHarnessCommit: plan.buildHarness.commit,
+  });
+  buildReceiptBytes[role] = receipt;
 }
 fs.mkdirSync(outputRoot, { recursive: false });
 fs.writeFileSync(path.join(outputRoot, 'qualification-plan.json'), planBytes, {
   flag: 'wx',
 });
+const buildReceipts = {};
+for (const role of ['control', 'candidate']) {
+  const file = `build-receipt-${role}.json`;
+  const bytes = buildReceiptBytes[role];
+  fs.writeFileSync(path.join(outputRoot, file), bytes, { flag: 'wx' });
+  buildReceipts[role] = {
+    path: file,
+    sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+  };
+}
 const startedAt = new Date().toISOString();
 const children = [];
 
@@ -133,6 +150,7 @@ try {
       path: 'qualification-plan.json',
       sha256: crypto.createHash('sha256').update(planBytes).digest('hex'),
     },
+    buildReceipts,
     order: WEATHER_BALANCED_ORDER,
     startedAt,
     completedAt: new Date().toISOString(),
@@ -151,6 +169,7 @@ try {
       path: 'qualification-plan.json',
       sha256: crypto.createHash('sha256').update(planBytes).digest('hex'),
     },
+    buildReceipts,
     order: WEATHER_BALANCED_ORDER,
     startedAt,
     completedAt: new Date().toISOString(),

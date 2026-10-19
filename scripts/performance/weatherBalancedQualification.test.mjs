@@ -36,7 +36,63 @@ const expectedReadinessReasons = [
   'weather-balanced-qualification-shard-is-ineligible-standalone',
 ].sort();
 
+function makeBuildReceipt(appCommit) {
+  const body = {
+    schema: 'gev-build-provenance/v1',
+    scope:
+      'unsigned local source-build receipt; not a hardware or release attestation',
+    source: { commit: appCommit, worktree: 'clean' },
+    harness: { commit: harnessCommit, worktree: 'clean' },
+    buildRecipe: {
+      nodeVersion: 'v24.16.0',
+      npmVersion: '11.13.0',
+      dependencyInstall: 'npm ci --no-audit --no-fund',
+      buildInvocation:
+        'npm run build -- --outDir <new-empty-task-owned-directory>',
+      packageJsonSha256: '3'.repeat(64),
+      packageLockSha256: '4'.repeat(64),
+      buildScriptSha256: '5'.repeat(64),
+    },
+    assets: [
+      { path: 'index.html', bytes: 10, sha256: '6'.repeat(64) },
+      { path: 'assets/app.js', bytes: 20, sha256: '7'.repeat(64) },
+    ],
+    assetCount: 2,
+    totalAssetBytes: 30,
+  };
+  return {
+    ...body,
+    receiptSha256: digest(JSON.stringify(body)),
+  };
+}
+
+function buildReceiptBytes(appCommit) {
+  return Buffer.from(
+    `${JSON.stringify(makeBuildReceipt(appCommit), null, 2)}\n`,
+  );
+}
+
+function resignReceipt(receipt) {
+  const body = { ...receipt };
+  delete body.receiptSha256;
+  receipt.receiptSha256 = digest(JSON.stringify(body));
+  return receipt;
+}
+
+function replaceReceiptAndPlan(root, plan, envelope, role, receipt) {
+  const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`);
+  fs.writeFileSync(path.join(root, envelope.buildReceipts[role].path), bytes);
+  const receiptDigest = digest(bytes);
+  plan[role].build.receiptSha256 = receiptDigest;
+  envelope.buildReceipts[role].sha256 = receiptDigest;
+  const planBytes = Buffer.from(`${JSON.stringify(plan, null, 2)}\n`);
+  fs.writeFileSync(path.join(root, envelope.planArtifact.path), planBytes);
+  envelope.planArtifact.sha256 = digest(planBytes);
+}
+
 function makePlan(root) {
+  const controlReceipt = buildReceiptBytes(baselineCommit);
+  const candidateReceipt = buildReceiptBytes(candidateCommit);
   return {
     schema: WEATHER_BALANCED_PLAN_SCHEMA,
     planId: '11111111-2222-4333-8444-555555555555',
@@ -70,7 +126,7 @@ function makePlan(root) {
       appCheckout: path.join(root, 'control-app'),
       build: {
         receipt: path.join(root, 'control-receipt.json'),
-        receiptSha256: '1'.repeat(64),
+        receiptSha256: digest(controlReceipt),
         root: path.join(root, 'control-build'),
         baseUrl: 'http://127.0.0.1:4173',
       },
@@ -80,7 +136,7 @@ function makePlan(root) {
       appCheckout: path.join(root, 'candidate-app'),
       build: {
         receipt: path.join(root, 'candidate-receipt.json'),
-        receiptSha256: '2'.repeat(64),
+        receiptSha256: digest(candidateReceipt),
         root: path.join(root, 'candidate-build'),
         baseUrl: 'http://127.0.0.1:4174',
       },
@@ -90,6 +146,7 @@ function makePlan(root) {
 
 function makeShard(commit, role) {
   const report = makeWeatherReport(commit);
+  const receipt = makeBuildReceipt(commit);
   report.url =
     role === 'control' ? 'http://127.0.0.1:4173' : 'http://127.0.0.1:4174';
   report.captures = report.captures.filter((capture) => capture.run === 1);
@@ -124,6 +181,19 @@ function makeShard(commit, role) {
   };
   report.source.buildProvenance.buildHarnessCommit = harnessCommit;
   report.source.buildHarnessCommit = harnessCommit;
+  report.source.buildProvenance.receiptSha256 = receipt.receiptSha256;
+  report.source.buildProvenance.buildRecipe = structuredClone(
+    receipt.buildRecipe,
+  );
+  report.source.buildProvenance.before = {
+    ...report.source.buildProvenance.before,
+    receiptSha256: receipt.receiptSha256,
+    assetCount: receipt.assetCount,
+    totalAssetBytes: receipt.totalAssetBytes,
+  };
+  report.source.buildProvenance.after = structuredClone(
+    report.source.buildProvenance.before,
+  );
   for (const capture of report.captures) {
     capture.settings = {};
     for (const boundary of ['before', 'after']) {
@@ -162,6 +232,14 @@ function createEnvelope(root, mutate = () => {}) {
   fs.mkdirSync(root, { recursive: true });
   const planBytes = Buffer.from(`${JSON.stringify(plan, null, 2)}\n`);
   fs.writeFileSync(path.join(root, 'qualification-plan.json'), planBytes);
+  const buildReceipts = {};
+  for (const role of ['control', 'candidate']) {
+    const appCommit = plan[role].appCommit;
+    const bytes = buildReceiptBytes(appCommit);
+    const file = `build-receipt-${role}.json`;
+    fs.writeFileSync(path.join(root, file), bytes);
+    buildReceipts[role] = { path: file, sha256: digest(bytes) };
+  }
   const children = [];
   let time = Date.parse('2026-10-19T00:01:00.000Z');
   for (let index = 0; index < WEATHER_BALANCED_ORDER.length; index += 1) {
@@ -201,6 +279,7 @@ function createEnvelope(root, mutate = () => {}) {
       path: 'qualification-plan.json',
       sha256: digest(planBytes),
     },
+    buildReceipts,
     order: [...WEATHER_BALANCED_ORDER],
     startedAt: '2026-10-19T00:00:30.000Z',
     completedAt: new Date(time).toISOString(),
@@ -267,6 +346,106 @@ test('balanced weather envelope validates five complete alternating pairs and ag
   assert.equal(result.scenarios['scripted-motion'].regressionOver10Pct, false);
   assert.equal(result.scenarios.idle.status, 'unavailable');
   assert.equal(result.scenarios.idle.changePct, null);
+});
+
+test('balanced weather envelope requires portable plan-bound build receipts', () => {
+  const invalidCases = [
+    [
+      'missing receipt descriptor',
+      ({ envelope }) => {
+        delete envelope.buildReceipts.control;
+      },
+    ],
+    [
+      'receipt artifact hash mismatch',
+      ({ envelope }) => {
+        envelope.buildReceipts.control.sha256 = 'f'.repeat(64);
+      },
+    ],
+    [
+      'tampered receipt bytes',
+      ({ root, envelope }) => {
+        fs.appendFileSync(
+          path.join(root, envelope.buildReceipts.control.path),
+          ' ',
+        );
+      },
+    ],
+    [
+      'plan and artifact digest mismatch',
+      ({ plan }) => {
+        plan.control.build.receiptSha256 = 'f'.repeat(64);
+      },
+    ],
+    [
+      'invalid internal receipt digest',
+      ({ root, plan, envelope }) => {
+        const receipt = JSON.parse(
+          fs.readFileSync(
+            path.join(root, envelope.buildReceipts.control.path),
+            'utf8',
+          ),
+        );
+        receipt.receiptSha256 = 'f'.repeat(64);
+        replaceReceiptAndPlan(root, plan, envelope, 'control', receipt);
+      },
+    ],
+    [
+      'wrong receipt source identity',
+      ({ root, plan, envelope }) => {
+        const receipt = JSON.parse(
+          fs.readFileSync(
+            path.join(root, envelope.buildReceipts.control.path),
+            'utf8',
+          ),
+        );
+        receipt.source.commit = 'f'.repeat(40);
+        replaceReceiptAndPlan(
+          root,
+          plan,
+          envelope,
+          'control',
+          resignReceipt(receipt),
+        );
+      },
+    ],
+    [
+      'wrong receipt build harness identity',
+      ({ root, plan, envelope }) => {
+        const receipt = JSON.parse(
+          fs.readFileSync(
+            path.join(root, envelope.buildReceipts.control.path),
+            'utf8',
+          ),
+        );
+        receipt.harness.commit = 'f'.repeat(40);
+        replaceReceiptAndPlan(
+          root,
+          plan,
+          envelope,
+          'control',
+          resignReceipt(receipt),
+        );
+      },
+    ],
+  ];
+  for (const [label, mutate] of invalidCases) {
+    const root = path.join(
+      os.tmpdir(),
+      `gev-weather-balanced-receipt-${Date.now()}-${Math.random()}`,
+    );
+    const fixture = createEnvelope(root);
+    mutate({ root, ...fixture });
+    assert.throws(
+      () =>
+        validateWeatherBalancedEnvelope(fixture.envelope, {
+          root,
+          plan: fixture.plan,
+        }),
+      undefined,
+      label,
+    );
+  }
 });
 
 test('balanced weather envelope rejects missing, duplicate, reordered and overlapping shards', () => {
@@ -452,6 +631,64 @@ test('weather shards derive an omitted profile label from consistent native obse
   assert.equal(
     validateWeatherBalancedEnvelope(envelope, { root, plan }).status,
     'comparable',
+  );
+});
+
+test('weather shards accept only the pinned full browser version or its reduced UA version', () => {
+  const root = path.join(
+    os.tmpdir(),
+    `gev-weather-balanced-reduced-browser-${Date.now()}`,
+  );
+  const reduced = '152.0.0.0';
+  const valid = createEnvelope(root, (report) => {
+    report.environment.userAgent = `Mozilla/5.0 Chrome/${reduced}`;
+    report.comparisonContract.browser.version = reduced;
+  });
+  assert.equal(
+    validateWeatherBalancedEnvelope(valid.envelope, {
+      root,
+      plan: valid.plan,
+    }).status,
+    'comparable',
+  );
+
+  const invalidVersions = [
+    ['wrong major', '153.0.0.0'],
+    ['wrong minor', '152.1.0.0'],
+    ['conflicting full version', '152.0.7977.76'],
+  ];
+  for (const [label, version] of invalidVersions) {
+    const invalidRoot = path.join(
+      os.tmpdir(),
+      `gev-weather-balanced-wrong-browser-${Date.now()}-${Math.random()}`,
+    );
+    const invalid = createEnvelope(invalidRoot, (report) => {
+      report.environment.userAgent = `Mozilla/5.0 Chrome/${version}`;
+      report.comparisonContract.browser.version = version;
+    });
+    assert.throws(
+      () =>
+        validateWeatherBalancedEnvelope(invalid.envelope, {
+          root: invalidRoot,
+          plan: invalid.plan,
+        }),
+      undefined,
+      label,
+    );
+  }
+
+  const mismatchRoot = path.join(
+    os.tmpdir(),
+    `gev-weather-balanced-browser-ua-mismatch-${Date.now()}`,
+  );
+  const mismatch = createEnvelope(mismatchRoot, (report) => {
+    report.comparisonContract.browser.version = reduced;
+  });
+  assert.throws(() =>
+    validateWeatherBalancedEnvelope(mismatch.envelope, {
+      root: mismatchRoot,
+      plan: mismatch.plan,
+    }),
   );
 });
 

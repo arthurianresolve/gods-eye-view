@@ -5,6 +5,7 @@ import path from 'node:path';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 import { comparableCaptureConditions } from './captureIntegrity.mjs';
 import { NATIVE_SHARPNESS_PROFILE_ID } from './nativeSharpnessProfile.mjs';
+import { validatePortableBuildProvenanceReceipt } from './buildProvenance.mjs';
 import { validateWeatherBalancedQualificationShard } from './pairedReport.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
 
@@ -211,7 +212,10 @@ export function validateWeatherBalancedPlan(plan) {
   return plan;
 }
 
-export function validateWeatherBalancedEnvelope(envelope, { root, plan } = {}) {
+export function validateWeatherBalancedEnvelope(
+  envelope,
+  { root, plan, buildReceiptRoot = root } = {},
+) {
   validateWeatherBalancedPlan(plan);
   assert.ok(root && path.isAbsolute(root), 'Evidence root must be absolute');
   assert.equal(envelope?.schema, WEATHER_BALANCED_ENVELOPE_SCHEMA);
@@ -228,13 +232,43 @@ export function validateWeatherBalancedEnvelope(envelope, { root, plan } = {}) {
   assert.equal(envelope.planArtifact.path, 'qualification-plan.json');
   assert.deepEqual(envelope.order, WEATHER_BALANCED_ORDER);
   assert.equal(envelope.children?.length, WEATHER_BALANCED_ORDER.length);
+  assert.deepEqual(
+    Object.keys(envelope.buildReceipts || {}).sort(),
+    ['candidate', 'control'],
+    'exactly the two role-bound build receipts are required',
+  );
+  const artifactPaths = new Set([envelope.planArtifact.path]);
+  assert.ok(
+    buildReceiptRoot && path.isAbsolute(buildReceiptRoot),
+    'Build receipt evidence root must be absolute',
+  );
+  const buildReceipts = {};
+  for (const role of ['control', 'candidate']) {
+    const descriptor = envelope.buildReceipts[role];
+    assert.ok(
+      !artifactPaths.has(descriptor?.path),
+      `${role} build receipt reuses an artifact path`,
+    );
+    artifactPaths.add(descriptor?.path);
+    const artifact = readChild(buildReceiptRoot, descriptor);
+    const revision = plan[role];
+    assert.equal(
+      artifact.digest,
+      revision.build.receiptSha256,
+      `${role} build receipt does not match the predeclared plan digest`,
+    );
+    validatePortableBuildProvenanceReceipt(artifact.report, {
+      expectedAppCommit: revision.appCommit,
+      expectedHarnessCommit: plan.buildHarness.commit,
+    });
+    buildReceipts[role] = artifact.report;
+  }
   assert.ok(Number.isFinite(Date.parse(envelope.startedAt)));
   assert.ok(Number.isFinite(Date.parse(envelope.completedAt)));
   assert.ok(Date.parse(envelope.startedAt) >= Date.parse(plan.predeclaredAt));
   assert.ok(Date.parse(envelope.completedAt) >= Date.parse(envelope.startedAt));
 
   const validated = [];
-  const childPaths = new Set();
   let priorEnd = Date.parse(envelope.startedAt);
   for (let index = 0; index < envelope.children.length; index += 1) {
     const entry = envelope.children[index];
@@ -252,10 +286,10 @@ export function validateWeatherBalancedEnvelope(envelope, { root, plan } = {}) {
       `${plan.planId}-${role}-${String(pairIndex).padStart(2, '0')}`,
     );
     assert.ok(
-      !childPaths.has(entry.path),
-      `capture ${index + 1} reuses a child path`,
+      !artifactPaths.has(entry.path),
+      `capture ${index + 1} reuses an artifact path`,
     );
-    childPaths.add(entry.path);
+    artifactPaths.add(entry.path);
     const started = Date.parse(entry.startedAt);
     const completed = Date.parse(entry.completedAt);
     assert.ok(Number.isFinite(started) && Number.isFinite(completed));
@@ -288,17 +322,58 @@ export function validateWeatherBalancedEnvelope(envelope, { root, plan } = {}) {
       child.report.comparisonContract?.browser?.name,
       plan.browser.name,
     );
+    const contractBrowserVersion =
+      child.report.comparisonContract?.browser?.version;
+    const userAgentBrowser = child.report.environment?.userAgent?.match(
+      /(HeadlessChrome|Chrome|Chromium)\/([\d.]+)/,
+    );
+    const reducedUserAgentVersion = `${plan.browser.version.split('.')[0]}.0.0.0`;
+    assert.ok(
+      contractBrowserVersion === plan.browser.version ||
+        contractBrowserVersion === reducedUserAgentVersion,
+      `capture ${index + 1} browser contract version differs from the pinned executable`,
+    );
+    assert.ok(
+      userAgentBrowser,
+      `capture ${index + 1} browser user agent is missing`,
+    );
     assert.equal(
-      child.report.comparisonContract?.browser?.version,
-      plan.browser.version,
+      child.report.comparisonContract.browser.name,
+      userAgentBrowser[1],
+      `capture ${index + 1} browser name differs from user agent`,
+    );
+    assert.equal(
+      contractBrowserVersion,
+      userAgentBrowser[2],
+      `capture ${index + 1} browser contract version differs from user agent`,
     );
     assert.equal(
       child.report.graphics?.browserVersion,
       `Chrome/${plan.browser.version}`,
     );
-    assert.equal(
-      child.report.source?.buildProvenance?.receiptSha256,
-      revision.build.receiptSha256,
+    const receipt = buildReceipts[role];
+    const provenance = child.report.source?.buildProvenance;
+    assert.equal(provenance?.receiptSha256, receipt.receiptSha256);
+    equal(
+      provenance?.buildRecipe,
+      receipt.buildRecipe,
+      `capture ${index + 1} build recipe differs from its receipt`,
+    );
+    for (const phase of ['before', 'after']) {
+      assert.equal(provenance?.[phase]?.assetCount, receipt.assetCount);
+      assert.equal(
+        provenance?.[phase]?.totalAssetBytes,
+        receipt.totalAssetBytes,
+      );
+    }
+    const receiptedPaths = new Set(
+      receipt.assets.map(({ path: asset }) => asset),
+    );
+    assert.ok(
+      provenance?.pageAssetAudit?.loadedAssetPaths?.every((asset) =>
+        receiptedPaths.has(asset),
+      ),
+      `capture ${index + 1} loaded an asset absent from its build receipt`,
     );
     assert.equal(child.report.url, new URL(revision.build.baseUrl).origin);
     assert.equal(child.report.workload?.fixture?.sha256, plan.fixtureSha256);
