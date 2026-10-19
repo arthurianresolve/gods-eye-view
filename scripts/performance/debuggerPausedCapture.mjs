@@ -56,6 +56,7 @@ export async function captureWithDebuggerPause({
   readCallbackArgs,
   pauseWhen = null,
   describeGuardFailure = null,
+  requestNextGuardFrame = null,
   screenshot,
   pauseTimeoutMs,
   operationTimeoutMs,
@@ -91,6 +92,15 @@ export async function captureWithDebuggerPause({
     throw new TypeError(
       'Guard diagnostics require a bounded synchronous callback and a pause guard.',
     );
+  if (
+    requestNextGuardFrame !== null &&
+    (pauseWhen === null ||
+      typeof requestNextGuardFrame !== 'function' ||
+      requestNextGuardFrame.toString().length > 4096)
+  )
+    throw new TypeError(
+      'A guard frame request requires a bounded synchronous callback and a pause guard.',
+    );
   // The predicate and debugger statement execute in the same browser task.
   // Host-side readiness followed by a separate pause can cross an animation
   // boundary. Polling here never takes or selects a screenshot: it only waits
@@ -103,6 +113,14 @@ export async function captureWithDebuggerPause({
     const ready = (${pauseWhen.toString()})(snapshot);
     if (typeof ready !== 'boolean') throw new TypeError('Pause guard must return a boolean.');
     if (ready) debugger;
+    ${
+      requestNextGuardFrame === null
+        ? ''
+        : `if (!ready) {
+      const requested = (${requestNextGuardFrame.toString()})(snapshot);
+      if (typeof requested !== 'boolean') throw new TypeError('Guard frame request must return a boolean.');
+    }`
+    }
     ${
       describeGuardFailure === null
         ? ''

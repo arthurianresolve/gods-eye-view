@@ -44,6 +44,7 @@ import {
   readVisualSnapshotPhaseInPage,
   isVisualSnapshotReadyToPause,
   describeVisualPauseReadiness,
+  requestVisualGuardFrame,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
@@ -548,6 +549,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
             describeGuardFailure: describeVisualPauseReadiness,
+            requestNextGuardFrame: requestVisualGuardFrame,
             screenshot: (readBefore) => {
               const settled = presentationStayedSettled(
                 readBefore?.hud,

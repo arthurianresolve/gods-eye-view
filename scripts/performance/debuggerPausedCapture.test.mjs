@@ -299,6 +299,50 @@ test('guard diagnostics reject asynchronous or oversized results and clean up', 
   }
 });
 
+test('a parked phase advances only after an explicit guard frame request', async () => {
+  const context = { phase: 2, requests: 0 };
+  const fake = fakePage({ guardContext: context });
+  let captures = 0;
+  const result = await captureWithDebuggerPause({
+    page: fake.page,
+    readCallback: () => ({ phase: globalThis.phase }),
+    pauseWhen: (snapshot) => snapshot.phase === 0,
+    requestNextGuardFrame: (snapshot) => {
+      if (snapshot.phase !== 2) return false;
+      globalThis.requests++;
+      globalThis.phase = 0;
+      return true;
+    },
+    screenshot: () => {
+      captures++;
+      return Buffer.from('png');
+    },
+    pauseTimeoutMs: 1000,
+  });
+  assert.equal(context.requests, 1);
+  assert.equal(result.pause.guard.checks, 2);
+  assert.equal(captures, 1);
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+});
+
+test('guard frame callbacks cannot extend ownership with asynchronous work', async () => {
+  const fake = fakePage();
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      readCallback: () => ({ phase: 2 }),
+      pauseWhen: () => false,
+      requestNextGuardFrame: async () => true,
+      screenshot: () => {
+        throw new Error('must not capture');
+      },
+      pauseTimeoutMs: 100,
+    }),
+    /Atomic pause guard failed/,
+  );
+  assert.equal(fake.calls.at(-1).method, 'detach');
+});
+
 test('rejects a pause without a top call frame and still disables/detaches', async () => {
   const fake = fakePage({ frame: false });
   await assert.rejects(

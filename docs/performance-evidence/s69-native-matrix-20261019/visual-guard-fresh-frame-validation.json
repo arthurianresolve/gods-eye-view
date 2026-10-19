@@ -1,0 +1,69 @@
+{
+  "schema": "gev-visual-guard-fresh-frame-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T23:16:37.326Z",
+  "files": [
+    {
+      "name": "scripts/performance/debuggerPausedCapture.mjs",
+      "bytes": 12387,
+      "sha256": "2a086732bd6047d3f4c555914c4d1de763e733eab32cba36097a13c4a7a8f0af",
+      "submittedSha256": "0ba67c90809bef3934af7f243547ff437a4a2ca4081e63d42ed2d224978c0223"
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+      "bytes": 16974,
+      "sha256": "4388e6c7be30f8139b33cc31fc9f1f61fa1034521501ce0ebb856f11d241fbbd",
+      "submittedSha256": "9d8b345ceba8eb3e8d4286b41ad685930a28ed36dd3bf9437049df8b114b7a14"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "bytes": 14628,
+      "sha256": "16ee84dc191d371278e5040da60ae91429356687503dc8719c47354cd7bcb0aa",
+      "submittedSha256": "16ee84dc191d371278e5040da60ae91429356687503dc8719c47354cd7bcb0aa"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.mjs",
+      "bytes": 38855,
+      "sha256": "5931b70b06aa9c789bc08c59ce4ef3604008a8d5b0810319b8a914149c99b7ca",
+      "submittedSha256": "5931b70b06aa9c789bc08c59ce4ef3604008a8d5b0810319b8a914149c99b7ca"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "bytes": 20802,
+      "sha256": "d0ccc1ee78bc31903ab41232df86eb2877cac54ab2fa27e96f00eb7b79c46bbe",
+      "submittedSha256": "8bbc209ea396c8b03d6dbdb755f605b0c4f1d62698b367f8274457e0fbad36fe"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "8b009e3d4f4d817cdea23dc758c0516c7784fbc6b94faf8c47baa7e15a04e3e2",
+      "summary": "scripts/performance/debuggerPausedCapture.mjs 77ms\nscripts/performance/debuggerPausedCapture.test.mjs 44ms\nscripts/performance/finalVisualQualificationState.mjs 27ms (unchanged)\nscripts/performance/runFinalVisualQualification.mjs 64ms (unchanged)\nscripts/performance/runFinalVisualQualification.test.mjs 47ms\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "925ddf5d7d949dd8999aea83a6b78e78c0e40fee83404a241a87f3e35dbde418",
+      "summary": "election, or visual setting failures (2.253645ms)\n✔ visual state page callback serializes without Node or outer bindings (0.873374ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (2.491103ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.54197ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.722502ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (0.832074ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.816383ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.731279ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.560711ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (8.869841ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.641527ms)\n✔ visual readiness requires advancing scene frame numbers (1.350043ms)\n✔ presentation observer counts real changes, retains cycles and releases its listener (5.389552ms)\n✔ visual readiness comparison rejects scrollbar layout and pointer changes (0.782258ms)\n✔ gaze readiness checks target transforms, resets, inline loading and fallback mode (1.013704ms)\n✔ capture settlement rejects changed CCTV scroll or geometry inputs (1.164966ms)\n✔ capture eligibility rejects focus loss and a still-typing summary (0.210906ms)\n✔ presentation must reach the requested rendered HUD state (0.286863ms)\nℹ tests 44\nℹ suites 0\nℹ pass 44\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 539.518701\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "8f0abb73042687933d7b06d0675e66c4df649669d03d10af08d6632701a77b5c",
+      "summary": "selection, or visual setting failures (1.541221ms)\n✔ visual state page callback serializes without Node or outer bindings (0.745527ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (2.335813ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.477798ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.85184ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (0.894855ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.847474ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.746068ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.608353ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (7.20902ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.669511ms)\n✔ visual readiness requires advancing scene frame numbers (0.649112ms)\n✔ presentation observer counts real changes, retains cycles and releases its listener (5.254802ms)\n✔ visual readiness comparison rejects scrollbar layout and pointer changes (0.792178ms)\n✔ gaze readiness checks target transforms, resets, inline loading and fallback mode (1.450837ms)\n✔ capture settlement rejects changed CCTV scroll or geometry inputs (0.365304ms)\n✔ capture eligibility rejects focus loss and a still-typing summary (0.270722ms)\n✔ presentation must reach the requested rendered HUD state (0.273017ms)\nℹ tests 44\nℹ suites 0\nℹ pass 44\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 535.061997\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "completedAt": "2026-10-19T23:16:41.425Z"
+}

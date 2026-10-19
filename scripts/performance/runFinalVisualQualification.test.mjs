@@ -7,6 +7,7 @@ import {
   readVisualSnapshotPhaseInPage,
   isVisualSnapshotReadyToPause,
   describeVisualPauseReadiness,
+  requestVisualGuardFrame,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 
@@ -31,6 +32,34 @@ test('guard failure projection is self-contained, bounded, and omits page conten
   assert.equal(JSON.stringify(detail).includes('private page content'), false);
   assert.ok(JSON.stringify(detail).length < 4096);
   assert.equal(describe(null).phase, null);
+});
+
+test('visual guard requests only the missing canvas phase without a render hold', () => {
+  let requests = 0;
+  const request = vm.runInNewContext(
+    `(${requestVisualGuardFrame.toString()})`,
+    {
+      window: {
+        __godsEyeView: {
+          viewer: {
+            scene: {
+              requestRender() {
+                requests++;
+              },
+            },
+          },
+        },
+      },
+    },
+  );
+  assert.equal(request({ phase: 2, hud: { documentVisible: true } }), true);
+  for (const snapshot of [
+    null,
+    { phase: 0, hud: { documentVisible: true } },
+    { phase: 2, hud: { documentVisible: false } },
+  ])
+    assert.equal(request(snapshot), false);
+  assert.equal(requests, 1);
 });
 
 test('atomic visual eligibility rejects advancing phases and incomplete presentation', () => {

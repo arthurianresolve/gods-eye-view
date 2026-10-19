@@ -133,6 +133,21 @@ export function describeVisualPauseReadiness(snapshot) {
   };
 }
 
+/**
+ * A settled demand-rendered scene can retain scanline phase 2 indefinitely.
+ * Ask for one fresh frame when needed; waiting on a read-only phase check cannot
+ * advance that canvas. This does not change clocks, settings, or render holds.
+ */
+export function requestVisualGuardFrame(snapshot) {
+  if (snapshot?.phase !== 2 || snapshot.hud?.documentVisible !== true)
+    return false;
+  const scene = window.__godsEyeView?.viewer?.scene;
+  if (typeof scene?.requestRender !== 'function')
+    throw new Error('Visual guard cannot request its next completed frame.');
+  scene.requestRender();
+  return true;
+}
+
 /** Read-only paused-frame evidence for the detection scanline phase. */
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const boundary = window.__gevVisualPresentationBoundary?.read?.();
