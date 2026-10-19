@@ -124,10 +124,18 @@ function makeShard(commit, role) {
   };
   report.source.buildProvenance.buildHarnessCommit = harnessCommit;
   report.source.buildHarnessCommit = harnessCommit;
-  for (const capture of report.captures)
-    for (const boundary of ['before', 'after'])
+  for (const capture of report.captures) {
+    capture.settings = {};
+    for (const boundary of ['before', 'after']) {
       capture.conditions[boundary].environment.nativeSharpnessProfile =
         structuredClone(profile);
+      capture.conditions[boundary].settings.nativeSharpnessProfile =
+        structuredClone(profile);
+      capture.settings[boundary] = structuredClone(
+        capture.conditions[boundary].settings,
+      );
+    }
+  }
   report.comparisonContract = createObservedWeatherEffectsComparisonContract({
     fixture: report.workload.fixture,
     fixtureDelivery: report.fixtureDelivery,
@@ -431,6 +439,115 @@ test('candidate evidence consumes only the hash-bound balanced envelope', () => 
   assert.equal(reviewed.comparisons[0].error, null);
   assert.equal(reviewed.comparisons[0].renderer.kind, 'native-gpu');
   assert.equal(reviewed.comparisons[0].validation.controlReport, undefined);
+});
+
+test('weather shards derive an omitted profile label from consistent native observations', () => {
+  const root = path.join(
+    os.tmpdir(),
+    `gev-weather-balanced-derived-profile-${Date.now()}`,
+  );
+  const { plan, envelope } = createEnvelope(root, (report) => {
+    delete report.comparisonProfile;
+  });
+  assert.equal(
+    validateWeatherBalancedEnvelope(envelope, { root, plan }).status,
+    'comparable',
+  );
+});
+
+test('weather shards reject missing or inconsistent profile observations when the label is omitted', () => {
+  const cases = [
+    [
+      'missing boundary profile',
+      (report) => {
+        delete report.comparisonProfile;
+        delete report.captures[0].conditions.before.environment
+          .nativeSharpnessProfile;
+      },
+    ],
+    [
+      'mismatched boundary profile',
+      (report) => {
+        delete report.comparisonProfile;
+        const changed = structuredClone(profile);
+        changed.viewport.dpr = 2;
+        changed.drawingBuffer.width = 2880;
+        changed.drawingBuffer.height = 1800;
+        report.captures[0].conditions.before.environment.nativeSharpnessProfile =
+          changed;
+      },
+    ],
+    [
+      'mismatched aggregate profile',
+      (report) => {
+        delete report.comparisonProfile;
+        report.environment.nativeSharpnessProfile.viewport.dpr = 2;
+        report.environment.nativeSharpnessProfile.drawingBuffer.width = 2880;
+        report.environment.nativeSharpnessProfile.drawingBuffer.height = 1800;
+      },
+    ],
+    [
+      'missing recorded capture settings profile',
+      (report) => {
+        delete report.comparisonProfile;
+        delete report.captures[0].settings.before.nativeSharpnessProfile;
+      },
+    ],
+    [
+      'mismatched condition settings profile',
+      (report) => {
+        delete report.comparisonProfile;
+        report.captures[0].conditions.before.settings.nativeSharpnessProfile.viewport.width = 1280;
+      },
+    ],
+    [
+      'wrong recorded resolution scale',
+      (report) => {
+        delete report.comparisonProfile;
+        report.captures[0].settings.after.resolutionScale = 0.75;
+      },
+    ],
+    [
+      'mismatched capture condition dimensions',
+      (report) => {
+        delete report.comparisonProfile;
+        report.captures[0].conditions.after.environment.viewport.width = 1280;
+      },
+    ],
+    [
+      'mismatched aggregate dimensions',
+      (report) => {
+        delete report.comparisonProfile;
+        report.environment.drawingBuffer.width = 1280;
+      },
+    ],
+    [
+      'explicitly wrong profile label',
+      (report) => {
+        report.comparisonProfile = 'other-profile';
+      },
+    ],
+    [
+      'explicit null profile label',
+      (report) => {
+        report.comparisonProfile = null;
+      },
+    ],
+  ];
+  for (const [label, mutate] of cases) {
+    const root = path.join(
+      os.tmpdir(),
+      `gev-weather-balanced-invalid-profile-${Date.now()}-${Math.random()}`,
+    );
+    const { plan, envelope } = createEnvelope(root, (report, index) => {
+      if (index === 0) mutate(report);
+    });
+    assert.throws(
+      () => validateWeatherBalancedEnvelope(envelope, { root, plan }),
+      undefined,
+      label,
+    );
+  }
 });
 
 test('balanced envelope remains portable when archived outside its capture output root', () => {

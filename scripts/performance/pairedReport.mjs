@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   assertCaptureIntegrity,
   comparableCaptureConditions,
+  deriveNativeSharpnessProfile,
 } from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
@@ -1378,15 +1379,72 @@ export function validateWeatherBalancedQualificationShard(
     ].sort(),
     'Qualification shard has unexpected ineligibility reasons',
   );
-  assert.equal(report?.comparisonProfile, NATIVE_SHARPNESS_PROFILE_ID);
+  if (Object.hasOwn(report || {}, 'comparisonProfile'))
+    assert.equal(report.comparisonProfile, NATIVE_SHARPNESS_PROFILE_ID);
   assertNativeSharpnessProfile(report, `${role} environment`);
   assert.equal(report.environment?.hardwareEligible, true);
+  const derivedProfile = deriveNativeSharpnessProfile(report.captures);
+  assert.deepEqual(
+    report.environment.nativeSharpnessProfile,
+    derivedProfile,
+    `${role} aggregate native sharpness profile differs from capture boundaries`,
+  );
+  assert.deepEqual(
+    report.environment.viewport,
+    derivedProfile.viewport,
+    `${role} aggregate viewport differs from native sharpness profile`,
+  );
+  assert.deepEqual(
+    report.environment.drawingBuffer,
+    derivedProfile.drawingBuffer,
+    `${role} aggregate drawing buffer differs from native sharpness profile`,
+  );
   for (const [index, capture] of (report.captures || []).entries())
-    for (const boundary of ['before', 'after'])
+    for (const boundary of ['before', 'after']) {
+      const conditions = capture.conditions?.[boundary];
+      const environment = conditions?.environment;
+      const settings = conditions?.settings;
+      const capturedSettings = capture.settings?.[boundary];
       assertNativeSharpnessProfile(
-        { environment: capture.conditions?.[boundary]?.environment },
+        { environment },
         `${role} capture ${index + 1} ${boundary}`,
       );
+      assert.deepEqual(
+        environment?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} profile differs`,
+      );
+      assert.deepEqual(
+        environment?.viewport,
+        derivedProfile.viewport,
+        `${role} capture ${index + 1} ${boundary} viewport differs`,
+      );
+      assert.deepEqual(
+        environment?.drawingBuffer,
+        derivedProfile.drawingBuffer,
+        `${role} capture ${index + 1} ${boundary} drawing buffer differs`,
+      );
+      assert.deepEqual(
+        settings?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} condition settings profile differs`,
+      );
+      assert.equal(
+        settings?.resolutionScale,
+        1,
+        `${role} capture ${index + 1} ${boundary} condition resolution scale differs`,
+      );
+      assert.deepEqual(
+        capturedSettings?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} settings profile differs`,
+      );
+      assert.equal(
+        capturedSettings?.resolutionScale,
+        1,
+        `${role} capture ${index + 1} ${boundary} resolution scale differs`,
+      );
+    }
   assert.equal(report.source?.harnessCommit, expectedHarnessCommit);
   assert.equal(
     report.source?.buildProvenance?.buildHarnessCommit,
