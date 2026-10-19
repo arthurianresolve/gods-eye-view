@@ -1,5 +1,16 @@
 # Cesium performance plan
 
+The 19 October continuation adds a weather-manifest ownership correction at
+`55639cc7`, with exact-commit tracking and signed packaging passing. All seven
+selected PR CI jobs also pass. Native map qualification exposed missing
+level-16 imagery in the test fixture; its coverage correction preserves the
+existing image patterns and remains subject to physical validation. Dam/cable
+regressions, weather/map qualification and the final candidate Ampfing soak
+remain open. Production still serves verified `e7a878e`. See the
+[current evidence record](performance-evidence/s69-native-matrix-20261019/README.md)
+for exact revisions and failed attempts; the older matrix below is historical
+evidence for `19065997`, not a pass for the new weather-fix application.
+
 ## Approved follow-up roadmap — S61–S70 (18 October 2026)
 
 S61 merges frozen upstream evidence and adds the declared sharpness-preserving

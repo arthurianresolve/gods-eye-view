@@ -270,7 +270,7 @@ export function makeReport(
 /** Build a paired fixture from the registered five-run map-streaming contract. */
 export function makeMapReport(commit, readinessMs = 20) {
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'f'.repeat(64),
   };
   const route = {

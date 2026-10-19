@@ -214,6 +214,7 @@ const mapStreamingWorkloadSelected =
   providerFixtureMode === MAP_STREAMING_WORKLOAD_ID;
 let mapStreamingModule = null;
 let mapStreamingDeliveryFactory = null;
+let assertMapStreamingDeliveryHealthy = null;
 let mapStreamingFixture = null;
 let mapStreamingJourney = null;
 let mapStreamingJourneys = [];
@@ -1478,8 +1479,10 @@ if (mapStreamingWorkloadSelected) {
   mapStreamingModule = await import('./performance/mapStreamingCapture.mjs');
   const { createDeterministicMapStreamingFixture } =
     await import('./performance/mapStreamingFixture.mjs');
-  ({ createMapStreamingFixtureDelivery: mapStreamingDeliveryFactory } =
-    await import('./performance/mapStreamingFixtureDelivery.mjs'));
+  ({
+    createMapStreamingFixtureDelivery: mapStreamingDeliveryFactory,
+    assertMapStreamingDeliveryHealthy,
+  } = await import('./performance/mapStreamingFixtureDelivery.mjs'));
   mapStreamingFixture = await createDeterministicMapStreamingFixture();
   failureProgress.fixture = {
     id: mapStreamingFixture.id,
@@ -4061,6 +4064,8 @@ try {
         },
       );
       mapStreamingJourneys.push({ run, ...journey });
+      for (const owner of mapStreamingFixtureOwners)
+        assertMapStreamingDeliveryHealthy(owner.delivery);
       if (!mapStreamingJourney) mapStreamingJourney = journey;
     }
     failureProgress.workload.mapStreamingCapture = {
@@ -6054,6 +6059,8 @@ try {
         failureProgress.workload.depthPickAttribution =
           depthPickAttributionEnvelope();
       }
+      for (const owner of mapStreamingFixtureOwners)
+        assertMapStreamingDeliveryHealthy(owner.delivery);
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }

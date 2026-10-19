@@ -1065,7 +1065,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
   );
 
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'a'.repeat(64),
   };
   const buildProfile = {
@@ -1493,7 +1493,7 @@ test('fault-control build projection uses the local build receipt asset and prof
   const appCommit = 'a'.repeat(40);
   const harnessCommit = 'b'.repeat(40);
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'c'.repeat(64),
   };
   const receipt = {

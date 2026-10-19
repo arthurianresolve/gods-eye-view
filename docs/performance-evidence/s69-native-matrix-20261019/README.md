@@ -258,6 +258,52 @@ runs remain failures until a new revision completes its checks.
 
 ## Completion conditions
 
+### Native map fixture coverage correction
+
+The map attempt at producer `45c9096e` completed five startup samples, five
+map journeys and ten timed samples, but failed final integrity. Its six
+interception sessions released successfully; the measured document instead
+recorded 402 missing-asset observations across 90 distinct paths. The retained
+first requests are level-16 OSM imagery, starting at `imagery/16/14985/26981.png`.
+The v4 fixture only covered levels 0–15. The aggregate cleanup message therefore
+obscured a fixture coverage failure, not an established application resource leak.
+The original report remains failed in `map-qualification-1792373760332`.
+
+Fixture v5 adds complete level-16 route coverage and its metadata. All 168
+existing compressed high-level PNG patterns remain byte-identical; eight more
+patterns complete the original pixel formula's 176-pattern inventory. The
+reproducible generator is `scripts/generate-map-native-imagery.mjs`; its `--check`
+mode verifies the pinned output. The corpus has 1,994 assets totaling 5,886,509
+bytes, bounded by 2,100 assets and 8 MiB including its index. These are fixture
+storage limits, not reduced rendering detail. Unknown levels and out-of-route
+requests still fail closed. Delivery errors are now checked between journeys
+and timed samples, before further repetitions can conceal them behind cleanup.
+
+Native Windows image tests confirmed the previously missing requests decode and
+existing patterns retain their bytes. The initial full local image suite then
+encountered an outdated overflow-test bound and stalled in its provider-parser
+test; it was explicitly cancelled before the next GPU sample. VM105 cannot run
+its installed native Sharp binary because its virtual CPU lacks x86-64-v2.
+These attempts are not full-suite passes. The corrected six focused image and
+corruption tests pass on Windows. The revised delivery/capture/comparison suite
+passes 121 checks on both VM105 Node versions, with two Windows-only cleanup
+checks explicitly skipped. Logs and hashes are retained in
+`native-map-corpus-check-1792376088073`. A new physical fixture capture and the
+full image-parser suite remain required.
+
+Application `55639cc7` now contains the weather ownership correction below.
+Its exact-commit [signed packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39187761110)
+and [tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39187765119)
+pass. Its [PR integration CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39187029881)
+passes all seven selected jobs. PR merge artifacts are not substituted for the
+exact application artifact. Production still serves the verified `e7a878e`.
+
+The cable presentation diagnostic compares the same `19065997` app in fresh
+Chrome 152, 155, 155 and 152 processes. Actual full runtime versions and executable
+hashes are recorded. This experiment uses default composition and framebuffer
+settings and is ineligible for performance acceptance. No browser upgrade
+benefit or resolution of the dam/cable regressions is established by a partial run.
+
 ### Weather metadata ownership correction
 
 The instrumented producer `52ca6010` reproduced the baseline failure in idle

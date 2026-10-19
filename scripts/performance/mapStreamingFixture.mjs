@@ -4,30 +4,30 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 
-export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v4';
-export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v4';
-export const MAP_STREAMING_GENERATOR_VERSION = '4.0.0';
-export const MAP_STREAMING_MAX_BYTES = 5 * 1024 * 1024;
-export const MAP_STREAMING_MAX_ASSETS = 640;
+export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v5';
+export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v5';
+export const MAP_STREAMING_GENERATOR_VERSION = '5.0.0';
+export const MAP_STREAMING_MAX_BYTES = 8 * 1024 * 1024;
+export const MAP_STREAMING_MAX_ASSETS = 2_100;
 
-const IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH = 28_370;
+const IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH = 30_064;
 const IMAGERY_TEMPLATE_INDEX_SHA256 =
-  'd7c9b77091f1ac6daff16542fcd972f95cb47ab6f858e650208d0406b28fa764';
-const IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH = 225_583;
+  'ae50c9282f09381606334ebb274a4b68baf6c37a9de587e3eac155aab9aa9d04';
+const IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH = 236_362;
 const IMAGERY_TEMPLATE_CORPUS_SHA256 =
-  'f2de5cbdd02f5dfd91de10bedabf55511aceb81538aa083d9908ea3cd9271025';
-const IMAGERY_TEMPLATE_SEED_COUNT = 232;
-const IMAGERY_TEMPLATE_PATTERN_COUNT = 168;
+  '63ba23e27807fa0997a6e55c5541b0c5a7e22a9395c672109ec3c069ec3087d9';
+const IMAGERY_TEMPLATE_SEED_COUNT = 256;
+const IMAGERY_TEMPLATE_PATTERN_COUNT = 176;
 const IMAGERY_TEMPLATE_PERIOD = 176;
 const IMAGERY_TEMPLATE_DESCRIPTOR = Object.freeze({
   schema: 'gev-map-png-template-index/v1',
-  version: 'austin-map-high-imagery-templates-v1',
+  version: 'austin-map-high-imagery-templates-v2',
   indexSha256: IMAGERY_TEMPLATE_INDEX_SHA256,
   corpusSha256: IMAGERY_TEMPLATE_CORPUS_SHA256,
   corpusByteLength: IMAGERY_TEMPLATE_CORPUS_BYTE_LENGTH,
   seedCount: IMAGERY_TEMPLATE_SEED_COUNT,
   patternCount: IMAGERY_TEMPLATE_PATTERN_COUNT,
-  levels: Object.freeze([13, 14, 15]),
+  levels: Object.freeze([13, 14, 15, 16]),
   pixelPatternVersion: 'contour-period-176-v1',
 });
 
@@ -280,7 +280,7 @@ const ROUTE = Object.freeze({
   north: 30.34,
 });
 const IMAGERY_LEVELS = Object.freeze(
-  Array.from({ length: 16 }, (_, level) => level),
+  Array.from({ length: 17 }, (_, level) => level),
 );
 const TERRAIN_LEVELS = Object.freeze(
   Array.from({ length: 11 }, (_, level) => level),
@@ -417,7 +417,7 @@ function seedFromId(id) {
 
 function requiredHighImagerySeeds() {
   const seeds = new Set();
-  for (const level of [13, 14, 15])
+  for (const level of [13, 14, 15, 16])
     for (const tile of tileCoordinates(
       new Cesium.WebMercatorTilingScheme(),
       ROUTE,
@@ -453,9 +453,9 @@ export function validatePinnedMapImageryTemplateCorpus(
   if (
     !stableJson(index).equals(indexBytes) ||
     index.schema !== 'gev-map-png-template-index/v1' ||
-    index.version !== 'austin-map-high-imagery-templates-v1' ||
+    index.version !== 'austin-map-high-imagery-templates-v2' ||
     !stableJson(index.routeBoundsDegrees).equals(stableJson(ROUTE)) ||
-    !stableJson(index.levels).equals(stableJson([13, 14, 15])) ||
+    !stableJson(index.levels).equals(stableJson([13, 14, 15, 16])) ||
     index.width !== 256 ||
     index.height !== 256 ||
     index.bitDepth !== 8 ||
@@ -555,7 +555,7 @@ let cachedPinnedImageryTemplates;
 
 function loadPinnedMapImageryTemplatesSync() {
   if (cachedPinnedImageryTemplates) return cachedPinnedImageryTemplates;
-  const base = new URL('./fixtures/austin-map-streaming-v3/', import.meta.url);
+  const base = new URL('./fixtures/austin-map-streaming-v5/', import.meta.url);
   const indexBytes = readFileSync(
     fileURLToPath(new URL('imagery-png-templates.json', base)),
   );
@@ -571,7 +571,7 @@ function loadPinnedMapImageryTemplatesSync() {
 
 async function loadPinnedMapImageryTemplates() {
   if (cachedPinnedImageryTemplates) return cachedPinnedImageryTemplates;
-  const base = new URL('./fixtures/austin-map-streaming-v3/', import.meta.url);
+  const base = new URL('./fixtures/austin-map-streaming-v5/', import.meta.url);
   const [indexBytes, corpusBytes] = await Promise.all([
     readFile(new URL('imagery-png-templates.json', base)),
     readFile(new URL('imagery-png-templates.bin', base)),

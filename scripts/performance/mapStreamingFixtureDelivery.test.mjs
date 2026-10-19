@@ -11,12 +11,50 @@ import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mj
 import { validateMapStreamingSmokeDeliverySummary } from './mapStreamingCapture.mjs';
 import {
   createMapStreamingFixtureDelivery,
+  assertMapStreamingDeliveryHealthy,
   MAP_STREAMING_MAX_MISSING_ASSET_PATHS,
   MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
   validateMapStreamingFaultDeliverySummary,
 } from './mapStreamingFixtureDelivery.mjs';
 
 const APP_ORIGIN = 'http://127.0.0.1:4173';
+
+test('map delivery rejects missing native tiles before cleanup and preserves pending work', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const delivery = createMapStreamingFixtureDelivery(fixture, {
+    appOrigin: APP_ORIGIN,
+  });
+  try {
+    const request = (requestId, url) =>
+      fixtureRequestCommand(
+        { requestId, request: { url, method: 'GET', postData: null } },
+        APP_ORIGIN,
+        delivery.respond,
+      );
+    await request(
+      'native-level16',
+      'https://tile.openstreetmap.org/16/14985/26981.png',
+    );
+    assert.ok(delivery.summary().pendingCount > 0);
+    assert.doesNotThrow(() => assertMapStreamingDeliveryHealthy(delivery));
+    assert.equal(delivery.summary().status, 'active');
+    await assert.rejects(
+      () =>
+        request(
+          'undeclared-level17',
+          'https://tile.openstreetmap.org/17/29970/53962.png',
+        ),
+      /native-asset-not-in-manifest/,
+    );
+    assert.throws(
+      () => assertMapStreamingDeliveryHealthy(delivery),
+      /Map fixture delivery failed: native-asset-not-in-manifest/,
+    );
+    assert.equal(delivery.summary().status, 'active');
+  } finally {
+    delivery.dispose();
+  }
+});
 const ARCGIS =
   'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer';
 const TERRAIN = 'https://terrain.reearth.land/cesium-mesh/ellipsoid';

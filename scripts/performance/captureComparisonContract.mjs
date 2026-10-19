@@ -2002,8 +2002,10 @@ export function getCaptureComparisonIneligibilityReasons({
   const austinOperatingFixture =
     fixture?.schema === 'gev-austin-operating-fixture/v1';
   const denseFixture = contract?.workloadId === 'dense-investigation';
-  const mapStreamingFixture =
-    fixture?.manifest?.schema === 'gev-map-streaming-fixture/v4';
+  const mapStreamingFixture = [
+    'gev-map-streaming-fixture/v4',
+    'gev-map-streaming-fixture/v5',
+  ].includes(fixture?.manifest?.schema);
   if (mapStreamingFixture) {
     if (workload?.mapStreamingCapture?.performanceAcceptanceEligible !== true)
       reasons.push('map-streaming-five-run-contract-is-incomplete');
