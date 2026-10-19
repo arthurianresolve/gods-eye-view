@@ -226,6 +226,24 @@ was relaxed.
 
 ## Completion conditions
 
+The first same-build cable control completed at producer `6753d211` with motion
+p95 434.3 ms and 206 rendered frames. Windows refused foreground activation of
+the second fresh browser while Discord held the foreground, before any startup
+or timed sample. The four-launch diagnostic is incomplete and supplies no
+qualification result. Its raw directory is
+`cable-same-build-control-1792372176711`; the failed launch is retained.
+
+An opt-in `--browser-ready-file` handoff now allows the operator to foreground
+the owned Chrome window before navigation. It requires a fresh path separate
+from capture outputs and the owned PID file, accepts only that browser PID, and
+times out after 120 seconds. The original native-window and page-focus checks
+still run after the handoff and at their existing boundaries; readiness alone
+does not establish foreground ownership. No timed sample or warmup is extended.
+The focused readiness, foreground and weather checks pass 55/55 on Node 24 and
+26 on VM105, with the Windows-only PowerShell parser test explicitly skipped.
+The corresponding 26 readiness/foreground checks, including that parser test,
+pass on the physical Windows machine under Node 24.16.0.
+
 The corrected weather replay at producer `6753d211` reproduced a source
 transition failure on baseline `e7a878e` in idle run 4. Three idle samples
 completed. At 25,305.9 ms, the visible timeline and clock selected 11:55 UTC,

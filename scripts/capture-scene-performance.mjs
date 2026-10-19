@@ -164,6 +164,7 @@ import {
   waitForPostMeasurementSourceDrain,
 } from './performance/postMeasurementSourceDrain.mjs';
 import { activateForegroundPage } from './performance/foregroundPageActivation.mjs';
+import { waitForBrowserReadiness } from './performance/browserReadinessGate.mjs';
 import {
   createWindowsForegroundActivationSession,
   focusOwnedWindowsBrowserWindow,
@@ -409,6 +410,25 @@ if (browserTraceEnabled && !frameTraceEnabled)
     '--browser-trace-out requires --frame-trace-out so the diagnostic trace is paired with frame evidence.',
   );
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
+const browserReadyFile = option('--browser-ready-file', null);
+if (browserReadyFile) {
+  if (!ownedBrowserPidFile || args.includes('--headless'))
+    throw new Error(
+      '--browser-ready-file requires a headful owned browser PID file.',
+    );
+  if (
+    [ownedBrowserPidFile, out, frameTraceOut, browserTraceOut]
+      .filter(Boolean)
+      .some((file) => path.resolve(file) === path.resolve(browserReadyFile))
+  )
+    throw new Error('Browser readiness must use a separate, fresh file.');
+  try {
+    await fs.access(browserReadyFile);
+    throw new Error('Browser readiness file already exists.');
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
 const hostedFixture = args.includes('--hosted-fixture');
@@ -2272,6 +2292,17 @@ async function releaseFlightFixtureSession(session) {
 }
 
 try {
+  if (browserReadyFile) {
+    failureProgress.phase = 'await-browser-readiness';
+    failureProgress.current = { phase: failureProgress.phase };
+    process.stdout.write(
+      '[performance] owned browser is waiting for its pre-navigation foreground handoff\n',
+    );
+    failureProgress.workload.browserReadiness = await waitForBrowserReadiness({
+      file: browserReadyFile,
+      browserPid: ownedBrowserPid,
+    });
+  }
   if (!args.includes('--headless')) {
     if (!Number.isInteger(ownedBrowserPid) || ownedBrowserPid < 1)
       throw new Error('Owned browser process ID is unavailable.');
@@ -6390,6 +6421,9 @@ try {
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
     startupRuns: startupSamples.length,
+    ...(failureProgress.workload.browserReadiness
+      ? { browserReadiness: failureProgress.workload.browserReadiness }
+      : {}),
     scenarios,
     rendererProbeCleanup: [
       ...(failureProgress.workload.rendererProbeCleanup || []),
