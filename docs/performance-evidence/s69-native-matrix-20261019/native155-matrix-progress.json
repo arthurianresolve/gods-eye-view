@@ -1,6 +1,6 @@
 {
   "schema": "gev-current-matrix-progress/v1",
-  "recordedAt": "2026-10-19T04:09:06.658Z",
+  "recordedAt": "2026-10-19T05:05:55.758Z",
   "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
   "candidate": "55639cc7fde03daacf25e643f16f803e001113f9",
   "producer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
@@ -130,8 +130,35 @@
     },
     {
       "id": "map-streaming",
-      "status": "pending",
-      "reports": {}
+      "status": "rejected-unmatched-frame-routes",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/map-streaming-baseline.json",
+          "sha256": "437c3a0b44a7183258f39f28fe6d439114a8dfcb0e35262f6b881f228964db25",
+          "bytes": 1123875,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/map-streaming-candidate.json",
+          "sha256": "268abc72a547917388d3fc4b20ed5bd8db64c9093ccc3f245c9d8bb5ca6a324f",
+          "bytes": 1124204,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "map-streaming-route": {
+          "status": "measured",
+          "baselineMedianP95Ms": 14238.799999998882,
+          "candidateMedianP95Ms": 14201.599999999627,
+          "changePct": -0.26125797117213434,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": []
     }
   ],
   "acceptance": "incomplete; comparable pairs alone do not authorize deployment",

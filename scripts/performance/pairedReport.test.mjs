@@ -284,6 +284,118 @@ test('five-run map streaming contracts compare transition readiness and reject i
   );
 });
 
+test('map frame samples expose motion regressions independently of switching readiness', () => {
+  const base = makeMapReport(baselineCommit, 20, {
+    includeFrames: true,
+    motionP95: [40, 40, 40, 40, 40],
+  });
+  const next = makeMapReport(candidateCommit, 15, {
+    includeFrames: true,
+    motionP95: [50, 50, 50, 50, 50],
+  });
+  const result = validate(base, next);
+  assert.equal(result.mapStreaming.frameCaptureCoverage, 'validated');
+  assert.equal(result.scenarios['map-streaming-route'].changePct, -25);
+  assert.equal(result.scenarios['scripted-motion'].changePct, 25);
+  assert.equal(result.scenarios.idle.status, 'unavailable');
+  assert.deepEqual(result.regressionsOver10Pct, ['scripted-motion']);
+  assert.equal(
+    validate(makeMapReport(baselineCommit), makeMapReport(candidateCommit))
+      .mapStreaming.frameCaptureCoverage,
+    'not-collected',
+  );
+});
+
+test('map frame evidence rejects incomplete, altered and unmatched samples', () => {
+  const pair = () =>
+    [baselineCommit, candidateCommit].map((commit) =>
+      makeMapReport(commit, 20, { includeFrames: true }),
+    );
+  const invalid = [
+    [
+      (r) => {
+        r.captures.pop();
+      },
+      /exactly five runs/,
+    ],
+    [
+      (r) => {
+        r.captures[1].run = 1;
+      },
+      /duplicate run ids/,
+    ],
+    [
+      (r) => {
+        r.captures = [];
+      },
+      /declared map frame captures are missing/,
+    ],
+    [
+      (r) => {
+        r.captures = {};
+      },
+      /must be an array/,
+    ],
+    [
+      (r) => {
+        r.captures[5].frameIntervalMs.p95 = null;
+      },
+      /moving\/tracking p95/,
+    ],
+    [
+      (r) => {
+        r.captures[5].foregroundThroughout = false;
+      },
+      /foreground/,
+    ],
+    [
+      (r) => {
+        r.captures[5].durationMs = 59000;
+      },
+      /shorter than 60/,
+    ],
+    [
+      (r) => {
+        for (const sample of r.captures)
+          sample.cameraPath.start.position.x += 100;
+      },
+      /routes differ/,
+    ],
+    [
+      (r) => {
+        for (const sample of r.captures)
+          for (const point of [
+            sample.conditions.before,
+            sample.conditions.after,
+          ])
+            point.settings.resolutionScale = 0.5;
+      },
+      /conditions differ/,
+    ],
+    [
+      (r) => {
+        r.captures[0].conditions.after.environment.appCommit = 'f'.repeat(40);
+      },
+      /wrong application commit/,
+    ],
+    [
+      (r) => {
+        r.workload.scenarios = ['scripted-motion'];
+      },
+      /map frame scenarios/,
+    ],
+  ];
+  for (const [mutate, error] of invalid) {
+    const reports = pair();
+    mutate(reports[1]);
+    assert.throws(() => validate(...reports), error);
+  }
+  assert.throws(
+    () => validate(pair()[0], makeMapReport(candidateCommit)),
+    /coverage differs/,
+  );
+});
+
 test('paired weather reports require five 30/60 runs with phase-bound sources and strict common capture identity', () => {
   const baseline = makeWeatherReport(baselineCommit);
   const candidate = makeWeatherReport(candidateCommit);

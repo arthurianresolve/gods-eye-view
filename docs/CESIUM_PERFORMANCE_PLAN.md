@@ -12,7 +12,12 @@ comparison, with no failure relabeled. The new five-run dam comparison is within
 the regression limit: 299.7 ms baseline versus 305.9 ms candidate motion p95
 (+2.1%). Cables also pass at 332.8 versus 336.1 ms (+1.0%). These complete
 Chrome 155 runs do not reproduce the old large dam/cable regressions; they do
-not prove that the browser upgrade alone fixed their cause. Map qualification,
+not prove that the browser upgrade alone fixed their cause. Map switching
+readiness passes, but the additional frame comparison is invalid because the
+harness restored different startup camera poses. The corrected producer pins
+the fixture pose and speed; the consumer now validates supplied map frame
+samples and rejects mismatched routes. All 135 focused tests pass on Node 24/26.
+Map recapture,
 the complete final matrix and the candidate Ampfing soak remain open.
 Production still serves verified `e7a878e`;
 exact `55639cc7` is prepared but inactive, with 16 host checks passing. See the

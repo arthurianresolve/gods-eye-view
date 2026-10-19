@@ -891,7 +891,52 @@ function validateMapStreamingReport(
   return {
     contract,
     mapRuns: contract.timing.runs,
+    frameCaptures: validateMapFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      contract,
+    ),
     buildRecipe,
+  };
+}
+
+// Historical journey-only reports remain readable, but supplied frame samples
+// must pass the same integrity and matching checks as other workloads.
+function validateMapFrameCaptures(report, side, expectedAppCommit, contract) {
+  assert.ok(
+    report.captures == null || Array.isArray(report.captures),
+    `${side}: map frame captures must be an array`,
+  );
+  const declared = report.workload.scenarios;
+  if (!declared && !report.captures?.length) return null;
+  equal(
+    declared,
+    ['idle', 'scripted-motion'],
+    `${side}: map frame scenarios must include idle and scripted-motion`,
+  );
+  assert.ok(
+    Array.isArray(report.captures) && report.captures.length,
+    `${side}: declared map frame captures are missing`,
+  );
+  const frameContract = {
+    ...contract,
+    fixture: report.workload.fixture,
+    routes: Object.fromEntries(
+      declared.map((scenario) => [
+        scenario,
+        report.captures.find((sample) => sample.scenario === scenario)
+          ?.cameraPath,
+      ]),
+    ),
+  };
+  return {
+    byScenario: validateFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      frameContract,
+    ),
   };
 }
 
@@ -1285,6 +1330,27 @@ function validateReport(report, side, expectedAppCommit) {
       `${side}: report infrastructure contract is not derived from its fixture and capture evidence`,
     );
   }
+  return {
+    contract,
+    byScenario: validateFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      contract,
+      { austin },
+    ),
+    buildRecipe,
+  };
+}
+
+function validateFrameCaptures(
+  report,
+  side,
+  expectedAppCommit,
+  contract,
+  { austin = false } = {},
+) {
+  const { workload, environment, captures } = report;
   assert.equal(
     workload?.warmupMs,
     30_000,
@@ -1611,13 +1677,85 @@ function validateReport(report, side, expectedAppCommit) {
       `${side}: ${scenario} run ids must be 1 through 5`,
     );
   }
-  return { contract, byScenario, buildRecipe };
+  return byScenario;
 }
 
 const median = (values) => {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)];
 };
+
+function compareFrameCaptures(base, next, scenarioNames) {
+  // Application revision is the sole condition that may vary. Run metrics are
+  // deliberately omitted because they are the measured outputs of this pair.
+  for (const scenario of scenarioNames) {
+    const baseRuns = base.byScenario.get(scenario);
+    const candidateRuns = next.byScenario.get(scenario);
+    for (const baseRun of baseRuns) {
+      const candidateRun = candidateRuns.find((run) => run.run === baseRun.run);
+      const pairedConditions = (sample) => {
+        const conditions = structuredClone(sample.conditions);
+        for (const key of ['before', 'after']) {
+          conditions[key] = comparableCaptureConditions(
+            conditions[key],
+            'manual',
+          );
+          const point = conditions[key];
+          delete point.environment.appCommit;
+        }
+        return conditions;
+      };
+      equal(
+        pairedConditions(baseRun),
+        pairedConditions(candidateRun),
+        `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
+      );
+      assertRouteDescriptorsEquivalent(
+        baseRun.cameraPath,
+        candidateRun.cameraPath,
+        `${scenario} run ${baseRun.run}: baseline and candidate routes differ beyond camera pose roundoff`,
+      );
+    }
+  }
+
+  const scenarios = {};
+  for (const scenario of scenarioNames) {
+    const baseRuns = base.byScenario.get(scenario);
+    const candidateRuns = next.byScenario.get(scenario);
+    const p95 = (runs) => runs.map((sample) => sample.frameIntervalMs.p95);
+    const available =
+      p95(baseRuns).every(Number.isFinite) &&
+      p95(candidateRuns).every(Number.isFinite);
+    if (!available) {
+      scenarios[scenario] = {
+        status: 'unavailable',
+        baselineMedianP95Ms: null,
+        candidateMedianP95Ms: null,
+        changePct: null,
+        regressionOver10Pct: false,
+      };
+      continue;
+    }
+    const baselineMedianP95Ms = median(p95(baseRuns));
+    const candidateMedianP95Ms = median(p95(candidateRuns));
+    const changePct =
+      ((candidateMedianP95Ms - baselineMedianP95Ms) / baselineMedianP95Ms) *
+      100;
+    assert.ok(
+      baselineMedianP95Ms > 0 && Number.isFinite(changePct),
+      `${scenario}: invalid median p95 change`,
+    );
+    scenarios[scenario] = {
+      status: 'measured',
+      baselineMedianP95Ms,
+      candidateMedianP95Ms,
+      changePct,
+      regressionOver10Pct: changePct > 10,
+    };
+  }
+
+  return scenarios;
+}
 
 /** Validate paired five-run evidence and report measured p95 deltas without making a hardware acceptance claim. */
 export function validatePairedPerformanceReports({
@@ -1799,6 +1937,19 @@ export function validatePairedPerformanceReports({
       changePct,
       regressionOver10Pct: changePct > 10,
     };
+    assert.equal(
+      Boolean(base.frameCaptures),
+      Boolean(next.frameCaptures),
+      'Map frame capture coverage differs between builds',
+    );
+    const frameScenarios = base.frameCaptures
+      ? compareFrameCaptures(
+          base.frameCaptures,
+          next.frameCaptures,
+          baseline.workload.scenarios,
+        )
+      : {};
+    const scenarios = { 'map-streaming-route': scenario, ...frameScenarios };
     return {
       status: 'comparable',
       evidenceScope:
@@ -1815,11 +1966,14 @@ export function validatePairedPerformanceReports({
         targetImprovementPct: 20,
         scenarios: {},
       },
-      scenarios: { 'map-streaming-route': scenario },
+      scenarios,
       mapStreaming: {
         metric: baseTiming.metric,
         baselineRuns: baseRuns,
         candidateRuns,
+        frameCaptureCoverage: base.frameCaptures
+          ? 'validated'
+          : 'not-collected',
       },
       fixtureDeliveryDiagnostics: {
         baseline: {
@@ -1833,9 +1987,9 @@ export function validatePairedPerformanceReports({
           perSample: null,
         },
       },
-      regressionsOver10Pct: scenario.regressionOver10Pct
-        ? ['map-streaming-route']
-        : [],
+      regressionsOver10Pct: Object.keys(scenarios).filter(
+        (name) => scenarios[name].regressionOver10Pct,
+      ),
     };
   }
   const { routes: baseRoutes, ...baseContract } = base.contract;
@@ -1926,73 +2080,11 @@ export function validatePairedPerformanceReports({
       'Native sharpness profile differs',
     );
 
-  // Application revision is the sole condition that may vary. Run metrics are
-  // deliberately omitted because they are the measured outputs of this pair.
-  for (const scenario of baseline.workload.scenarios) {
-    const baseRuns = base.byScenario.get(scenario);
-    const candidateRuns = next.byScenario.get(scenario);
-    for (const baseRun of baseRuns) {
-      const candidateRun = candidateRuns.find((run) => run.run === baseRun.run);
-      const pairedConditions = (sample) => {
-        const conditions = structuredClone(sample.conditions);
-        for (const key of ['before', 'after']) {
-          conditions[key] = comparableCaptureConditions(
-            conditions[key],
-            'manual',
-          );
-          const point = conditions[key];
-          delete point.environment.appCommit;
-        }
-        return conditions;
-      };
-      equal(
-        pairedConditions(baseRun),
-        pairedConditions(candidateRun),
-        `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
-      );
-      assertRouteDescriptorsEquivalent(
-        baseRun.cameraPath,
-        candidateRun.cameraPath,
-        `${scenario} run ${baseRun.run}: baseline and candidate routes differ beyond camera pose roundoff`,
-      );
-    }
-  }
-
-  const scenarios = {};
-  for (const scenario of baseline.workload.scenarios) {
-    const baseRuns = base.byScenario.get(scenario);
-    const candidateRuns = next.byScenario.get(scenario);
-    const p95 = (runs) => runs.map((sample) => sample.frameIntervalMs.p95);
-    const available =
-      p95(baseRuns).every(Number.isFinite) &&
-      p95(candidateRuns).every(Number.isFinite);
-    if (!available) {
-      scenarios[scenario] = {
-        status: 'unavailable',
-        baselineMedianP95Ms: null,
-        candidateMedianP95Ms: null,
-        changePct: null,
-        regressionOver10Pct: false,
-      };
-      continue;
-    }
-    const baselineMedianP95Ms = median(p95(baseRuns));
-    const candidateMedianP95Ms = median(p95(candidateRuns));
-    const changePct =
-      ((candidateMedianP95Ms - baselineMedianP95Ms) / baselineMedianP95Ms) *
-      100;
-    assert.ok(
-      baselineMedianP95Ms > 0 && Number.isFinite(changePct),
-      `${scenario}: invalid median p95 change`,
-    );
-    scenarios[scenario] = {
-      status: 'measured',
-      baselineMedianP95Ms,
-      candidateMedianP95Ms,
-      changePct,
-      regressionOver10Pct: changePct > 10,
-    };
-  }
+  const scenarios = compareFrameCaptures(
+    base,
+    next,
+    baseline.workload.scenarios,
+  );
 
   const workloadObjectiveScenarios =
     baseline.comparisonContract.objectiveScenarios;

@@ -20,6 +20,7 @@ import {
   resolveMapFixtureBuildProfile,
 } from './performance/buildProvenance.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
+import { establishMapFrameCaptureHomeInPage } from './performance/mapFrameCaptureHome.mjs';
 import {
   closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
@@ -4077,6 +4078,12 @@ try {
       transitionCount: mapStreamingJourney.transitions.length,
       runCount: mapStreamingJourneys.length,
     };
+    // The initial home was sampled during the application's startup flight.
+    // Never reuse that time-dependent pose for the separate frame measurements.
+    await page.evaluate(
+      establishMapFrameCaptureHomeInPage,
+      mapStreamingModule.MAP_STREAMING_ROUTE,
+    );
   }
 
   const scenarios = ['idle', 'scripted-motion'];
@@ -4907,6 +4914,7 @@ try {
           recordFrameWindow,
           expectedRunOrdinal,
           frameTraceEnabled,
+          motionMetersPerSecond = 320,
         }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
@@ -5121,8 +5129,10 @@ try {
                 viewer.camera.moveRight(distance);
                 motionDistance = distance;
               };
-              finishMotion = () => applyDistance((durationMs * 16) / 50);
-              updateMotion = (elapsed) => applyDistance((elapsed * 16) / 50);
+              finishMotion = () =>
+                applyDistance((durationMs * motionMetersPerSecond) / 1000);
+              updateMotion = (elapsed) =>
+                applyDistance((elapsed * motionMetersPerSecond) / 1000);
             }
             if (renderDemandOwnership.requested) {
               motionStartedAt = performance.now();
@@ -5378,6 +5388,9 @@ try {
           recordFrameWindow: collectSceneFrameAttribution,
           expectedRunOrdinal: phaseRunOrdinal,
           frameTraceEnabled,
+          motionMetersPerSecond: mapStreamingWorkloadSelected
+            ? mapStreamingModule.MAP_STREAMING_ROUTE.moveRightMetersPerSecond
+            : 320,
         },
       ];
       const rawSamplePromise = Promise.resolve().then(() =>

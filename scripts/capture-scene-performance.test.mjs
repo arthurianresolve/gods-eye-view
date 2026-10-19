@@ -221,6 +221,23 @@ function runRawSample(callbackSource, harness, parameters) {
   return callback(parameters);
 }
 
+test('raw map frame samples use the bounded fixture speed without altering other routes', async () => {
+  const callback = await extractRawSampleCallback();
+  for (const speed of [120, 320]) {
+    const sample = await runRawSample(callback, createRawSampleHarness(), {
+      durationMs: 35,
+      scenarioName: 'scripted-motion',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: false,
+      motionMetersPerSecond: speed,
+    });
+    assert.equal(sample.cameraPath.motionDistanceM, (35 * speed) / 1000);
+    assert.equal(sample.renderDemandOwnership.restored, true);
+  }
+});
+
 test('raw sample tracing resets pre-window frames and records applied route phase', async () => {
   const callback = await extractRawSampleCallback();
   const harness = createRawSampleHarness();

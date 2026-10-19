@@ -4,11 +4,24 @@ Candidate `55639cc7` is not yet approved for deployment. Its complete weather
 functional capture passes, and its new five-run dam comparison is within the
 regression limit: 299.7 ms baseline versus 305.9 ms candidate motion p95 (+2.1%).
 Cables also pass: 332.8 ms baseline versus 336.1 ms candidate (+1.0%). Map
-qualification is running. The corrected weather timing control,
+switching readiness is within the limit (14,238.8 versus 14,201.6 ms), but its
+separate frame samples started from different camera poses and cannot qualify.
+The corrected weather timing control,
 remaining exact-candidate comparisons, visual checks and final soak remain
 pending. The [current report index](native155-matrix-progress.json) binds completed
 raw reports; the older `19065997` matrix and failures below remain historical.
 Production remains at `e7a878e`.
+
+The [map frame review](map-frame-route-review.json) preserves the raw motion
+medians, 323.7 versus 361.2 ms. Their apparent +11.6% difference is not a valid
+runtime regression finding: the harness restored a home sampled during startup
+flight, outside the dedicated map journey's fixed route. The report consumer
+also returned after checking switching readiness, ignoring the extra samples.
+The correction establishes the declared map pose and speed for frame samples,
+validates supplied frame evidence, and compares routes before timing. Historical
+journey-only reports explicitly retain `not-collected` frame coverage. All 135
+focused tests pass on VM105 with Node 24 and 26; the corrected consumer rejects
+the original pair. A new native map pair is required.
 
 The new complete Chrome 155 comparisons do not reproduce the large historical
 dam/cable regressions. The separate same-build browser diagnostic does not
