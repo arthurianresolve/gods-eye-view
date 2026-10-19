@@ -1,6 +1,51 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
-Candidate `55639cc7` is not yet approved for deployment. Its complete weather
+The current candidate is `d8ef9002`. Its cancelled-camera-image cleanup fixes
+a native DOM ownership leak reproduced on Chrome 155; the
+[intervention and engine census](image-cleanup-census-review.json) and
+[allocation-cohort review](allocation-cohort-review-d8ef.json) record the
+bounded diagnostics. Old data sources, visualizers and batches are collectible;
+the sampled remaining allocations predominantly include compiled code, terrain
+caches and current scene state. This does not replace the full retention gate
+or clear the earlier failed soak.
+
+All seven selected [PR CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199),
+[exact-commit tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684)
+and [signed candidate packaging](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237505166)
+pass. The independently downloaded archive has SHA-256
+`30aca862210f2f857ebc5265d618d4cee73c73ea091263f4faf26644bf2e0669`.
+Its 2,126 packaged files and GitHub-hosted attestation were reverified on VM105;
+all 16 private production-host checks pass. It is prepared behind a private
+loopback preview. Production still serves `e7a878e`.
+
+The [balanced full weather review](weather-balanced-d8ef-review.json) validates
+all ten captures against this exact candidate. Median run-level motion p95 is
+272.6 ms for the weather correctness control and 296.1 ms for the candidate
+(+8.62%), within the unchanged 10% regression limit; this is not a speedup.
+Consumer `16cddc98` checks recorded native profiles, Chrome's exact full runtime
+version alongside its reduced user agent, and both the byte hashes and internal
+canonical hashes of the predeclared build receipts. Node 24 and 26 checks and
+independent revalidation pass on VM105. The consumer's
+[CI and packaging checks](consumer-ci-16cddc98.json) also pass. All 16 evidence files were hash-verified
+there. The original producer envelope's metadata failure and all raw captures
+are preserved; no acceptance limit or measurement was rewritten.
+
+The first exact-package Ampfing attempt was [interrupted after 37 cycles](staged-ampfing-soak-d8ef-foreground-interruption.json)
+when Windows could not confirm foreground ownership. It cannot satisfy the
+60-minute gate. A formatting command invoked a `.cjs` file without Node and
+opened it in VS Code, a likely cause consistent with the observed editor window;
+the original wrapper did not retain Windows' failing foreground response, so
+exact attribution is unavailable. The retry explicitly preserves that response
+on failure. It began its measured hour at 12:05 UTC on 19 October against the
+same application and soak producer. Its final retention result, remaining
+exact-candidate matrix and visual checks are pending. Interim checkpoints are
+not a stability pass.
+The reports below retain their original application revisions; earlier
+`55639cc7` passes are not relabeled as `d8ef9002` evidence. The inactive unpacked
+`55639cc7` package was removed only after its manifest and retained signed
+archive were verified; its source, archive and evidence remain available.
+
+The earlier candidate `55639cc7` was not approved for deployment. Its complete weather
 functional capture passes, and its new five-run dam comparison is within the
 regression limit: 299.7 ms baseline versus 305.9 ms candidate motion p95 (+2.1%).
 Cables also pass: 332.8 ms baseline versus 336.1 ms candidate (+1.0%). The
@@ -14,7 +59,7 @@ p95 at 282.7 versus 241.6 ms (+17.0%) and idle intervals at 3,235.5 versus
 2,398.6 ms (+34.9%). The
 [reverse-order uninstrumented confirmation](weather-confirmation-review.json)
 passes all 60 source deadlines across the pair, but repeats the motion flag:
-274.2 versus 308.0 ms (+12.3%). Weather performance remains unaccepted. Its idle
+274.2 versus 308.0 ms (+12.3%). That historical timing pair remains unaccepted. Its idle
 interval result reverses direction, illustrating that these gaps include
 deliberate request-render idle time; no generic waiver is applied. The bounded
 ABBA trace diagnostic remains separate from these full captures.

@@ -1,0 +1,293 @@
+{
+  "schema": "gev-exact-candidate-ci-review/v1",
+  "reviewedAt": "2026-10-19T11:04:44.493Z",
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "checks": [
+    {
+      "kind": "ci",
+      "runId": 39237487199,
+      "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+      "event": "pull_request",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199",
+      "status": "success",
+      "jobsArtifactSha256": "18fa56fd2213026f76047a837602225e4ef7acbc77e7c90df0d4b491306fbf2e",
+      "jobs": [
+        {
+          "name": "Street Level browser gate",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980486",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Install and update recovery (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980778",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Node 26.x",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980864",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Node 24.14.0",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980922",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Install and update recovery (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980942",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Windows onboarding",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009980944",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Install and update recovery (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009981083",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009981872",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated CCTV lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982096",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Aircraft tracking regression",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982109",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated terrain and picking lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982399",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated mission render-demand correctness",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982517",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Free hosted Mac accelerated retention diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982823",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Native WebGL probe (${{ matrix.os }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009982941",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated rendered mixed-use smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009983032",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated import and workspace lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118009983870",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Baseline-compatible performance build smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118010017715",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "60-minute rendered application soak",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118010034449",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Free hosted Mac rendering diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237487199/job/118010044590",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        }
+      ]
+    },
+    {
+      "kind": "release",
+      "runId": 39237505166,
+      "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+      "event": "workflow_dispatch",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237505166",
+      "status": "success",
+      "jobsArtifactSha256": "946e43ec266e7f45124c3597cc4be44f5f21abc6ec9d814e306711f168f80c45",
+      "jobs": [
+        {
+          "name": "Build and verify release artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237505166/job/118010049697",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        }
+      ]
+    },
+    {
+      "kind": "tracking",
+      "runId": 39237600684,
+      "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+      "event": "workflow_dispatch",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684",
+      "status": "success",
+      "jobsArtifactSha256": "349cd124eeb0041be4caf3297574fa63b629ddd4f7c10571fa0fd2f5d5951302",
+      "jobs": [
+        {
+          "name": "Aircraft tracking regression",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010387130",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Windows onboarding",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388524",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Baseline-compatible performance build smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388770",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated terrain and picking lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388831",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated import and workspace lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388903",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated CCTV lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388932",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "60-minute rendered application soak",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010388975",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated rendered mixed-use smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389123",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Free hosted Mac accelerated retention diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389282",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Street Level browser gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389763",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Isolated mission render-demand correctness",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389792",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Install and update recovery (${{ matrix.os }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389797",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Free hosted Mac rendering diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010389967",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Native WebGL probe (${{ matrix.os }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010390091",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Node ${{ matrix.node }}",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010390576",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        },
+        {
+          "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "htmlUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39237600684/job/118010423550",
+          "headSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+        }
+      ]
+    }
+  ],
+  "scope": "Selected automated jobs only. Intentional optional-job skips are retained separately and do not represent hardware or human acceptance."
+}

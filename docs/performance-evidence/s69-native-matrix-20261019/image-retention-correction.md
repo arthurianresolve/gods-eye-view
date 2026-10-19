@@ -31,9 +31,22 @@ This finding is consistent with Chromium's
 [image source selection and viewport-listener ownership](https://chromium.googlesource.com/chromium/src/+/HEAD/third_party/blink/renderer/core/html/html_image_element.cc).
 The local reproduction establishes the behavior on the recorded browser; the
 moving upstream source link is explanatory, not proof of the installed binary.
-The intervention in the complete application and the final 60-minute soak are
-still required. The earlier 6.32% heap-growth failure remains failed; this fix
-does not yet establish that all retained-heap growth is resolved.
+The intervention in the complete application subsequently released all nine
+observed retired images and reduced the DOM count by 55. Immediate JavaScript
+heap recovery was negligible, so this does not establish that the earlier
+heap-growth failure had the same cause. Eight further cycles with empty-source
+cleanup left zero observed retired images alive.
+
+A separate native diagnostic on `d8ef9002` completed 12 measured cycles. Its
+223,952 Cesium Event instances, 246,819 listener pairs, 8,740 entities and five
+entity collections remained fixed. Heap was 261.1 MB after four cycles,
+261.5 MB after twelve, and 259.9 MB after the final drain. This diagnostic used
+CDP class queries and additional garbage collection; it is not a latency or
+60-minute stability pass. The exact receipts and archive hashes are recorded
+in [the intervention and census review](image-cleanup-census-review.json).
+
+The earlier 6.32% heap-growth failure remains failed. The final candidate still
+requires the complete soak and its unchanged final-30-minute retention gate.
 
 Private snapshot hashes:
 
