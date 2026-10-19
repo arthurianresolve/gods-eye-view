@@ -198,6 +198,7 @@ import {
   summarizeWeatherIdleDiagnostic,
   WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
 } from './performance/weatherIdleDiagnostic.mjs';
+import { probeWeatherVisibleWind } from './performance/weatherVisibleWindProbe.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -248,6 +249,9 @@ const weatherBalancedQualificationShard = args.includes(
   '--weather-balanced-qualification-shard',
 );
 const weatherIdleDiagnosticEnabled = args.includes('--weather-idle-diagnostic');
+const weatherVisibleWindProbeEnabled = args.includes(
+  '--weather-visible-wind-probe',
+);
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 if (
@@ -278,6 +282,7 @@ const providerFixtureTime = option(
 );
 const weatherIdleDiagnosticContract = resolveWeatherIdleDiagnosticContract({
   enabled: weatherIdleDiagnosticEnabled,
+  visibleWindProbe: weatherVisibleWindProbeEnabled,
   workloadId: providerFixtureMode,
   warmupMs,
   seconds,
@@ -6834,6 +6839,13 @@ try {
         }
         for (const owner of mapStreamingFixtureOwners)
           assertMapStreamingDeliveryHealthy(owner.delivery);
+        // This intentionally runs only after the original measurement and
+        // settings checks. Its elevated pose and pause/resume exercise are
+        // separate functionality evidence, never latency samples.
+        if (weatherVisibleWindProbeEnabled)
+          sample.weatherVisibleWindProbe = await probeWeatherVisibleWind({
+            page,
+          });
         captures.push({ scenario, run, ...sample });
         failureProgress.current = null;
       }

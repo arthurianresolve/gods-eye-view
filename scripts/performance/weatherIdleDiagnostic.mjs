@@ -21,7 +21,12 @@ export function resolveWeatherIdleDiagnosticContract({
   seconds,
   runs,
   otherWeatherDiagnostic = false,
+  visibleWindProbe = false,
 } = {}) {
+  if (visibleWindProbe && !enabled)
+    throw new TypeError(
+      '--weather-visible-wind-probe requires --weather-idle-diagnostic.',
+    );
   if (!enabled) return null;
   if (workloadId !== WEATHER_WORKLOAD_ID)
     throw new TypeError(
@@ -41,6 +46,7 @@ export function resolveWeatherIdleDiagnosticContract({
     diagnosticOnly: true,
     performanceAcceptanceEligible: false,
     ineligibleReason: WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+    ...(visibleWindProbe ? { visibleWindProbe: 'after-measurement-only' } : {}),
   });
 }
 

@@ -15,6 +15,26 @@ const BASE = {
   runs: 1,
 };
 
+test('visible wind probe is restricted to a post-measurement idle diagnostic', () => {
+  for (const options of [
+    { visibleWindProbe: true },
+    { ...BASE, enabled: false, visibleWindProbe: true },
+    { ...BASE, otherWeatherDiagnostic: true, visibleWindProbe: true },
+    { ...BASE, runs: 5, visibleWindProbe: true },
+  ])
+    assert.throws(
+      () => resolveWeatherIdleDiagnosticContract(options),
+      TypeError,
+    );
+  const result = resolveWeatherIdleDiagnosticContract({
+    ...BASE,
+    visibleWindProbe: true,
+  });
+  assert.equal(result.visibleWindProbe, 'after-measurement-only');
+  assert.equal(result.performanceAcceptanceEligible, false);
+  assert.deepEqual(result.scenarios, ['idle']);
+});
+
 test('weather idle diagnostic is exact-duration and explicitly ineligible', () => {
   assert.deepEqual(resolveWeatherIdleDiagnosticContract(BASE), {
     mode: 'idle-render-demand-diagnostic',

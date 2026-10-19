@@ -1,0 +1,69 @@
+{
+  "schema": "gev-visible-wind-integration-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T22:42:48.656Z",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 320983,
+      "sha256": "9de6369750659275f5edff7e6e1d1fd5d78fb5532b113cce07d17384c51dbfa2",
+      "submittedSha256": "8d1ba3b32fe759d18b610a8fca4a499ea72b33838bf849df677f6f37bd059511"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "bytes": 17142,
+      "sha256": "d898b1b81596380d655dab9febf302a4a42a8d6ba4ace9aa386d9eda90797342",
+      "submittedSha256": "d898b1b81596380d655dab9febf302a4a42a8d6ba4ace9aa386d9eda90797342"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.test.mjs",
+      "bytes": 12777,
+      "sha256": "4c43879a77b198b561396d210eecd018e9ce6c86d1a562c3a52215bb833b906c",
+      "submittedSha256": "04ecc98ca0f7a602cfa7e3c1c432b27e67e2945a117aec854342c4079192d49d"
+    },
+    {
+      "name": "scripts/performance/weatherVisibleWindProbe.mjs",
+      "bytes": 30713,
+      "sha256": "11e7e0ba23d753c7c0767acd2d74a3bdf52d245bd4531b5bb64ad886443d47d5",
+      "submittedSha256": "11e7e0ba23d753c7c0767acd2d74a3bdf52d245bd4531b5bb64ad886443d47d5"
+    },
+    {
+      "name": "scripts/performance/weatherVisibleWindProbe.test.mjs",
+      "bytes": 14902,
+      "sha256": "3dfa2b47ed223beefc1c6d76f457fdba83092add44f53c6636111991ce844361",
+      "submittedSha256": "3dfa2b47ed223beefc1c6d76f457fdba83092add44f53c6636111991ce844361"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "6dd7a53bf3beeedc51909aa21d2fe79e7cdb30bc91f0bc903d7e760f10b83b50",
+      "summary": "scripts/capture-scene-performance.mjs 420ms\nscripts/performance/weatherIdleDiagnostic.mjs 33ms (unchanged)\nscripts/performance/weatherIdleDiagnostic.test.mjs 23ms\nscripts/performance/weatherVisibleWindProbe.mjs 45ms (unchanged)\nscripts/performance/weatherVisibleWindProbe.test.mjs 24ms (unchanged)\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "28dd31dec4caed9ebeb02886378bccced83b7102f94ea61a37dffe203f581e29",
+      "summary": "t labels and caps retained frame records (2.134281ms)\n✔ idle gaps retain bounded public wind state and distinguish GPU fade from unknown canvas visibility (0.663688ms)\n✔ wind renderer diagnostics null invalid values, omit payload fields, and bound per-gap samples (0.414208ms)\n✔ missing or malformed wind observations cannot certify a fully faded interval (0.36383ms)\n✔ visible wind probe proves visible GPU flow, pause stability, resume, and restoration (6.507635ms)\n✔ visible wind probe rejects absent GPU readiness and zero visible geometry (7.519876ms)\n✔ visible wind probe requires normalized settled population counts (1.619409ms)\n✔ visible wind probe requires one explicitly identified streamline material (4.051444ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (3.641615ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.582499ms)\n✔ camera restoration checks orientation and records refused owned navigation (3.274157ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.281158ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.436661ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.635775ms)\n✔ probe deadline fails closed and still restores owned page state (1.182038ms)\n✔ probe timing and returned diagnostic report fail closed (0.477941ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.259146ms)\nℹ tests 45\nℹ suites 0\nℹ pass 45\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3211.97138\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "afe5052e401398af86ecb94e2f448d6df8144df433ae2e5309b143cee14677e6",
+      "summary": " labels and caps retained frame records (1.978571ms)\n✔ idle gaps retain bounded public wind state and distinguish GPU fade from unknown canvas visibility (0.701711ms)\n✔ wind renderer diagnostics null invalid values, omit payload fields, and bound per-gap samples (0.379922ms)\n✔ missing or malformed wind observations cannot certify a fully faded interval (0.340005ms)\n✔ visible wind probe proves visible GPU flow, pause stability, resume, and restoration (5.615017ms)\n✔ visible wind probe rejects absent GPU readiness and zero visible geometry (4.738989ms)\n✔ visible wind probe requires normalized settled population counts (1.311707ms)\n✔ visible wind probe requires one explicitly identified streamline material (2.602544ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (2.397188ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.300495ms)\n✔ camera restoration checks orientation and records refused owned navigation (2.557667ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.069401ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.34791ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.399229ms)\n✔ probe deadline fails closed and still restores owned page state (1.041185ms)\n✔ probe timing and returned diagnostic report fail closed (0.431602ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.073547ms)\nℹ tests 45\nℹ suites 0\nℹ pass 45\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3100.323103\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "completedAt": "2026-10-19T22:42:57.971Z"
+}

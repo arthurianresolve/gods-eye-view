@@ -1,0 +1,62 @@
+{
+  "schema": "gev-private-package-workspace-review/v1",
+  "reviewedAt": "2026-10-19T22:39:30.696Z",
+  "status": "passed",
+  "files": [
+    {
+      "name": "private-preflight-190c5ab6-attempt-20261019T223805483Z-7e0417d2-8aab-479b-89de-db8b63b61194.json",
+      "bytes": 7078,
+      "sha256": "b6b8bbf15e9244ffd3d45cdeadffbfbe023b073f871973f149c73331d8677bde"
+    },
+    {
+      "name": "observe-activation-190c5ab6.mjs",
+      "bytes": 36536,
+      "sha256": "c33f67f17f61315cf348e0d7965e7b22614a273c3bfad7028df8153585770189"
+    }
+  ],
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "releaseManifestSha256": "ebf2157685269c24af7d4487bfcfa12b66b89cf61cfa26fa85c79b1bd1334a5d",
+  "successfulAttempt": "private-preflight-190c5ab6-attempt-20261019T223805483Z-7e0417d2-8aab-479b-89de-db8b63b61194.json",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "documentSha256": "a9bc2579b8aff20135997c9c2a572e631a21a62707361641d639cc934a3b2bec",
+  "applicationScriptSha256": "0f64188acc9157843f128512ce72909484e28acbf2d1ca93337b8350d0fc0d49",
+  "workspace": {
+    "workspaceId": "investigation-12959b408df45f1f01ff5e0a377c9f0b",
+    "importedWorkspaceId": "investigation-303915ac148c72298bd01e65eb92468b",
+    "uiExportSha256": "983a53471c82cd353a21ca2f66e81e397e3f95597f17702f82eb97a05b572e06",
+    "bundleSha256": "983a53471c82cd353a21ca2f66e81e397e3f95597f17702f82eb97a05b572e06",
+    "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "importedAssetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "reopenedAssetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "renderedFeaturesAfterReopen": 1,
+    "reloadAndReopenPassed": true,
+    "userProfileTouched": false
+  },
+  "cleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "status": "passed",
+    "temporaryProfileRemoved": true
+  },
+  "productionChanged": false,
+  "archive": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/private-package-preflight-190c5ab6-20261019",
+    "status": "verified",
+    "fileCount": 2,
+    "files": [
+      {
+        "name": "private-preflight-190c5ab6-attempt-20261019T223805483Z-7e0417d2-8aab-479b-89de-db8b63b61194.json",
+        "bytes": 7078,
+        "sha256": "b6b8bbf15e9244ffd3d45cdeadffbfbe023b073f871973f149c73331d8677bde"
+      },
+      {
+        "name": "observe-activation-190c5ab6.mjs",
+        "bytes": 36536,
+        "sha256": "c33f67f17f61315cf348e0d7965e7b22614a273c3bfad7028df8153585770189"
+      }
+    ]
+  },
+  "priorAttempts": [],
+  "helperScope": "Archived after successful preflight. Earlier helper revisions are not retained; failed attempt receipts remain unchanged.",
+  "scope": "Private loopback preview of the verified signed package. UI save/export/import/reload/reopen preserved the workspace asset bytes in a throwaway profile. This does not prove public HTTPS activation or satisfy performance, visual or retention gates. Loopback secure-context support does not establish public TLS validity."
+}

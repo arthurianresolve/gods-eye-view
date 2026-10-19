@@ -1,0 +1,285 @@
+{
+  "schema": "gev-failed-visual-pixels/v1",
+  "reviewedAt": "2026-10-19T22:41:00.860Z",
+  "acceptanceEligible": false,
+  "scope": "Unmasked decoded pixels from an incomplete failed diagnostic. No visual acceptance inferred.",
+  "comparisons": [
+    {
+      "left": "slot-01-baseline/hud-visible-1.png",
+      "right": "slot-01-baseline/hud-restored-1.png",
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 7751,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      },
+      "changedTiles": [
+        {
+          "origin": "64,64",
+          "pixels": 1116,
+          "maxDelta": 103
+        },
+        {
+          "origin": "128,64",
+          "pixels": 1009,
+          "maxDelta": 42
+        },
+        {
+          "origin": "128,128",
+          "pixels": 980,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,128",
+          "pixels": 929,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,0",
+          "pixels": 841,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,0",
+          "pixels": 745,
+          "maxDelta": 2
+        },
+        {
+          "origin": "0,64",
+          "pixels": 479,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,128",
+          "pixels": 373,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,0",
+          "pixels": 312,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,64",
+          "pixels": 303,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,0",
+          "pixels": 262,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 250,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,192",
+          "pixels": 58,
+          "maxDelta": 1
+        },
+        {
+          "origin": "64,192",
+          "pixels": 38,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,192",
+          "pixels": 37,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,192",
+          "pixels": 19,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 16
+    },
+    {
+      "left": "slot-01-baseline/hud-visible-1.png",
+      "right": "slot-02-candidate/hud-visible-1.png",
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 1250,
+      "maximumChannelDelta": 252,
+      "bounds": {
+        "minX": 62,
+        "minY": 41,
+        "maxX": 2313,
+        "maxY": 321
+      },
+      "changedTiles": [
+        {
+          "origin": "2240,256",
+          "pixels": 927,
+          "maxDelta": 252
+        },
+        {
+          "origin": "2304,256",
+          "pixels": 268,
+          "maxDelta": 29
+        },
+        {
+          "origin": "2240,320",
+          "pixels": 31,
+          "maxDelta": 2
+        },
+        {
+          "origin": "128,192",
+          "pixels": 10,
+          "maxDelta": 1
+        },
+        {
+          "origin": "64,192",
+          "pixels": 8,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,192",
+          "pixels": 2,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,192",
+          "pixels": 2,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,0",
+          "pixels": 1,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 1,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 9
+    },
+    {
+      "left": "slot-01-baseline/hud-restored-1.png",
+      "right": "slot-02-candidate/hud-visible-1.png",
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 8953,
+      "maximumChannelDelta": 252,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 2313,
+        "maxY": 321
+      },
+      "changedTiles": [
+        {
+          "origin": "64,64",
+          "pixels": 1116,
+          "maxDelta": 103
+        },
+        {
+          "origin": "128,64",
+          "pixels": 1009,
+          "maxDelta": 42
+        },
+        {
+          "origin": "128,128",
+          "pixels": 980,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,128",
+          "pixels": 929,
+          "maxDelta": 2
+        },
+        {
+          "origin": "2240,256",
+          "pixels": 927,
+          "maxDelta": 252
+        },
+        {
+          "origin": "64,0",
+          "pixels": 841,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,0",
+          "pixels": 745,
+          "maxDelta": 2
+        },
+        {
+          "origin": "0,64",
+          "pixels": 479,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,128",
+          "pixels": 373,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,0",
+          "pixels": 312,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,64",
+          "pixels": 303,
+          "maxDelta": 1
+        },
+        {
+          "origin": "2304,256",
+          "pixels": 268,
+          "maxDelta": 29
+        },
+        {
+          "origin": "192,0",
+          "pixels": 261,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 249,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,192",
+          "pixels": 48,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,192",
+          "pixels": 35,
+          "maxDelta": 1
+        },
+        {
+          "origin": "2240,320",
+          "pixels": 31,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,192",
+          "pixels": 30,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,192",
+          "pixels": 17,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 19
+    }
+  ],
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+    "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+  }
+}

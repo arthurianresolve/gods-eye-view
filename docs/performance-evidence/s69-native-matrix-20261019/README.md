@@ -24,18 +24,39 @@ its [private production-host smoke test](production-host-smoke-190c5ab6.json)
 passes all sixteen checks. The [prepared release](prepared-release-190c5ab6.json)
 is available only through a private preview. Public production is unchanged.
 
-The corrected `0dc5cdb1` idle diagnostic completes both observations: 79 control
-and 78 candidate rendered frames in sixty seconds. Every observed gap above
-one second has no registered continuous demand. This alone does not establish
-that a visible animation is updating, because wind calls `scene.requestRender`
-directly. Source inspection also finds that the 12,000 m fixture camera is below
-the existing 15,000 m wind fade threshold on both builds. The next bounded
-diagnostic therefore records the public wind renderer mode, fade, visible-cell
-counts and observation times; missing observations remain unknown. Its
+The [signed-package browser preflight](private-package-preflight-190c5ab6-review.json)
+also passes on physical Windows Chrome: saving, exporting, importing, reloading,
+and reopening preserve the workspace's asset bytes in an isolated profile.
+This check does not replace the full visual-settings comparison, latency tests,
+retention soak, or public deployment verification.
+
+The [corrected `0dc5cdb1` idle diagnostic](weather-idle-diagnostic-b3c49b19-0dc5cdb1-review.json)
+completes both historical observations: 79 control and 78 candidate rendered
+frames in sixty seconds. Every observed gap above one second has no registered
+continuous demand. The [current `236b7704` diagnostic](weather-wind-visibility-190c5ab6-236b7704-review.json)
+additionally observes the actual GPU wind state on correctness control `76cc760b`
+and runtime candidate `190c5ab6`. All 311 control and 299 candidate observations
+have a ready GPU renderer, zero height fade, and zero visible cells. The existing
+12,000 m fixture camera is below the 15,000 m streamline fade threshold on both
+builds. These gaps therefore do not establish stalled visible wind animation.
+They also do not establish animation correctness at an eligible camera height;
+that requires a separate visible-wind pause/resume probe. Wind calls
+`scene.requestRender` directly, so governor holds alone are insufficient. The
 [focused checks](weather-wind-visibility-validation-20261020.json) pass 31/31
 on each VM Node version and all 75 capture no-undef checks. Diagnostic reports
 remain ineligible for performance acceptance. Visible wind coverage, the full
 visual gate and final corrected-candidate soak are still required.
+
+The [first corrected-candidate repeated visual diagnostic](visual-production-repeat-190c5ab6-failure-review.json)
+fails on the second of four planned pages: the candidate's presentation invariant
+changes during the paused capture. Nine PNGs were preserved; every three-image
+group is internally byte-identical. The helper discarded the candidate's
+before/after presentation snapshots when the assertion threw, so that report
+cannot identify the changed field. A reporting-only correction preserves those
+snapshots before checking the same invariant. [Independent pixel inspection](visual-production-repeat-190c5ab6-pixels.json)
+also finds a logo difference between two states of the same baseline and other
+HUD differences between builds. The failed attempt and its possible unrelated
+local-test overlap remain recorded; none of these images grants visual acceptance.
 
 The first idle-only weather diagnostic using producer `190c5ab6` failed during
 final report construction: the shared lifecycle validator still expected both

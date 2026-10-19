@@ -1,0 +1,397 @@
+{
+  "schema": "gev-idle-demand-independent-review/v1",
+  "reviewedAt": "2026-10-19T22:29:04.208Z",
+  "status": "diagnostic-complete",
+  "performanceAcceptanceEligible": false,
+  "producerCommit": "0dc5cdb10affbb20eed5e02c6f0e6329a618406d",
+  "roles": [
+    {
+      "role": "control",
+      "applicationCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "reportSha256": "fdcc21762afc9ddf585a3dfc7e5aa293dadbf2f37cffa9e08c6513d7120cd4c5",
+      "renderedFrames": 79,
+      "governorSamples": 225,
+      "instrumentation": {
+        "samplePeriodMs": 250,
+        "maximumFrameEvents": 512,
+        "maximumGovernorSamples": 300,
+        "frameEventsObserved": 79,
+        "frameEventsRecorded": 79,
+        "frameEventsOmitted": 0,
+        "governorSamplesObserved": 225,
+        "governorSamplesRecorded": 225,
+        "governorSamplesOmitted": 0,
+        "samplingMaxGapMs": 1413.0999999940395,
+        "snapshotReadCount": 304,
+        "snapshotReadFailureCount": 0,
+        "snapshotReadTotalDurationMs": 7.899999871850014,
+        "snapshotReadMaxDurationMs": 0.29999999701976776,
+        "phaseRequestEventsOmitted": 0,
+        "gapsOverOneSecondOmitted": 0
+      },
+      "ownerChanges": [],
+      "phases": [
+        {
+          "id": "early-history",
+          "scheduledTargetElapsedMs": 0,
+          "pageObservedCompletionElapsedMs": 2406.5,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "middle-history",
+          "scheduledTargetElapsedMs": 20000,
+          "pageObservedCompletionElapsedMs": 22320.79999999702,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "latest-history",
+          "scheduledTargetElapsedMs": 40000,
+          "pageObservedCompletionElapsedMs": 42559.70000000298,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "startAtMs": 2921.2999999970198,
+          "endAtMs": 11140,
+          "intervalMs": 8218.70000000298,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 35,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 12095.70000000298,
+          "endAtMs": 20030.09999999404,
+          "intervalMs": 7934.399999991059,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 34,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 23142.09999999404,
+          "endAtMs": 26155.5,
+          "intervalMs": 3013.4000000059605,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 14,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 27262,
+          "endAtMs": 40034.09999999404,
+          "intervalMs": 12772.09999999404,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 54,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 43383.79999999702,
+          "endAtMs": 56141.5,
+          "intervalMs": 12757.70000000298,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 53,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 57039.20000000298,
+          "endAtMs": 59691.79999999702,
+          "intervalMs": 2652.5999999940395,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 12,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation",
+            "layer-tick:weather-radar"
+          ]
+        }
+      ],
+      "wind": {
+        "observations": 304,
+        "missing": 304,
+        "renderModes": [],
+        "heightFades": [],
+        "visibleCells": [],
+        "gpuReady": [],
+        "pathCounts": [],
+        "paused": []
+      },
+      "requestAttribution": null
+    },
+    {
+      "role": "candidate",
+      "applicationCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+      "reportSha256": "7773475699b76dc40a7b39407785097e5118e5c2ca2505a47160fd44497df8c0",
+      "renderedFrames": 78,
+      "governorSamples": 225,
+      "instrumentation": {
+        "samplePeriodMs": 250,
+        "maximumFrameEvents": 512,
+        "maximumGovernorSamples": 300,
+        "frameEventsObserved": 78,
+        "frameEventsRecorded": 78,
+        "frameEventsOmitted": 0,
+        "governorSamplesObserved": 225,
+        "governorSamplesRecorded": 225,
+        "governorSamplesOmitted": 0,
+        "samplingMaxGapMs": 1591.2999999970198,
+        "snapshotReadCount": 303,
+        "snapshotReadFailureCount": 0,
+        "snapshotReadTotalDurationMs": 7.100000008940697,
+        "snapshotReadMaxDurationMs": 0.20000000298023224,
+        "phaseRequestEventsOmitted": 0,
+        "gapsOverOneSecondOmitted": 0
+      },
+      "ownerChanges": [],
+      "phases": [
+        {
+          "id": "early-history",
+          "scheduledTargetElapsedMs": 0,
+          "pageObservedCompletionElapsedMs": 2079.4000000059605,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "middle-history",
+          "scheduledTargetElapsedMs": 20000,
+          "pageObservedCompletionElapsedMs": 22153.60000000894,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "latest-history",
+          "scheduledTargetElapsedMs": 40000,
+          "pageObservedCompletionElapsedMs": 42158.80000001192,
+          "sourceObservationTimes": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "startAtMs": 2962.2000000029802,
+          "endAtMs": 15038.60000000894,
+          "intervalMs": 12076.40000000596,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 51,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 16068.70000000298,
+          "endAtMs": 20047.70000000298,
+          "intervalMs": 3979,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 18,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 22749.70000000298,
+          "endAtMs": 30033.40000000596,
+          "intervalMs": 7283.70000000298,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 32,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 30899.80000001192,
+          "endAtMs": 40035,
+          "intervalMs": 9135.199999988079,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 39,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        },
+        {
+          "startAtMs": 42623.10000000894,
+          "endAtMs": 45030.20000000298,
+          "intervalMs": 2407.0999999940395,
+          "continuousDemandDuringGap": "observed-absent",
+          "observedGovernorStateCount": 12,
+          "observedModes": [
+            "idle"
+          ],
+          "observedHolds": [],
+          "observedScheduledUpdates": [],
+          "observedRequestReasons": [
+            "detection-visibility",
+            "quality-profile",
+            "detection-animation"
+          ]
+        }
+      ],
+      "wind": {
+        "observations": 303,
+        "missing": 303,
+        "renderModes": [],
+        "heightFades": [],
+        "visibleCells": [],
+        "gpuReady": [],
+        "pathCounts": [],
+        "paused": []
+      },
+      "requestAttribution": null
+    }
+  ],
+  "files": [
+    {
+      "name": "candidate.json",
+      "bytes": 352385,
+      "sha256": "7773475699b76dc40a7b39407785097e5118e5c2ca2505a47160fd44497df8c0"
+    },
+    {
+      "name": "candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "9882ec29635c96ee4cec59ce49e2c6d6fbb83e32438d016690a259cf77f5a953"
+    },
+    {
+      "name": "candidate.json.invocation.json",
+      "bytes": 2479,
+      "sha256": "cac1fb5b7dbabbde9450e90a2e0e39aafc3d276d8636e178089bc30d7e88df7f"
+    },
+    {
+      "name": "candidate.json.log",
+      "bytes": 308,
+      "sha256": "80bc191dc16af59dff4cd8383b09390405fd5a3d779432c6ca21ade44dd0354e"
+    },
+    {
+      "name": "control.json",
+      "bytes": 353473,
+      "sha256": "fdcc21762afc9ddf585a3dfc7e5aa293dadbf2f37cffa9e08c6513d7120cd4c5"
+    },
+    {
+      "name": "control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "87319397e0ea71eaf34d3bc5a98cd6cc5bb8923a3fc2ab3f7cfdbbfed13df064"
+    },
+    {
+      "name": "control.json.invocation.json",
+      "bytes": 2473,
+      "sha256": "71bbce13cd086d05a75c875f9e3a961749218e9dd159b5bfb6b4962830cdaf19"
+    },
+    {
+      "name": "control.json.log",
+      "bytes": 306,
+      "sha256": "e1cf128cda022e02e88e96a7ac4ecc8466c6036076252537ae9629523995de80"
+    },
+    {
+      "name": "invocation-plan.json",
+      "bytes": 3263,
+      "sha256": "41cc61fa9d78dec1d629a996a283a5b01ebbd4519ac41f23ef9dc2fbe7d240ef"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1282,
+      "sha256": "e2efe042e1614045754199086017e1e9c022302d0bf8a456a262796342e70986"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 5864,
+      "sha256": "ff9ca041692049f9c85279d6d3b59aa8b862e06cfb3a638138c7d7149bfc53e7"
+    }
+  ],
+  "scope": "Hash-verified diagnostic observations only. No latency or visual acceptance is inferred. Missing wind observations remain unknown."
+}
