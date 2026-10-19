@@ -27,6 +27,37 @@ const createPng = (red = 32) =>
     .png()
     .toBuffer();
 
+const scrollContainer = (id, width, scrollHeight, clientHeight) => ({
+  id,
+  present: true,
+  rect: {
+    left: 20,
+    top: 12,
+    right: 20 + width,
+    bottom: 12 + clientHeight,
+    width,
+    height: clientHeight,
+  },
+  scroll: {
+    left: 0,
+    top: 0,
+    width,
+    height: scrollHeight,
+    clientWidth: width,
+    clientHeight,
+    offsetWidth: width + 2,
+    offsetHeight: clientHeight + 2,
+  },
+  computed: {
+    display: 'block',
+    visibility: 'visible',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+    scrollbarGutter: 'auto',
+    scrollbarWidth: 'thin',
+  },
+});
+
 async function fixture(t) {
   const png = await createPng();
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gev-final-visual-'));
@@ -86,6 +117,13 @@ async function fixture(t) {
       summary: 'Synthetic CCTV fixture',
       documentVisible: true,
       documentFocused: true,
+      pointer: { x: 1, y: 1, pointerType: 'mouse' },
+      activeElement: { tagName: 'BODY', id: '', className: 'app-shell' },
+      scrollContainers: [
+        scrollContainer('cctv-panel', 360, 1000, 876),
+        scrollContainer('cctv-panel-inner', 360, 1200, 850),
+        { id: 'cctv-cyber-panel-body', present: false },
+      ],
     };
   };
   const alphaRows = Array.from({ length: 8 }, (_, cssRow) => ({

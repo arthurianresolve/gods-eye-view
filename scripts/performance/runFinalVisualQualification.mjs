@@ -41,6 +41,7 @@ import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
+  waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
 import { VISIBLE_CONTROL_VARIANCE_POLICY } from './visibleControlVariance.mjs';
@@ -53,6 +54,7 @@ import {
   installVisualPresentationBoundaryInPage,
   disposeVisualPresentationBoundaryInPage,
   presentationStayedSettled,
+  visualReadinessInputsMatch,
 } from './visualPresentationBoundary.mjs';
 
 const ROOT = path.resolve(
@@ -64,6 +66,7 @@ const VIEWPORT = Object.freeze({
   height: 900,
   deviceScaleFactor: 0,
 });
+const CAPTURE_POINTER = Object.freeze({ x: 1, y: 1 });
 const QUALIFICATION_VIEW = Object.freeze({
   longitude: -97.7431,
   latitude: 30.2672,
@@ -414,6 +417,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         if (!result?.ok || result.visible !== false)
           throw new Error('HUD hidden state failed.');
       }
+      await page.mouse.move(CAPTURE_POINTER.x, CAPTURE_POINTER.y);
       const foregroundReply = await foregroundSession.request(
         browserPid,
         15_000,
@@ -460,10 +464,22 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           { polling: 25, timeout: 15_000 },
           id !== 'hud-hidden',
         );
-        const completedRender = await page.evaluate(
-          waitForCctvLifecycleRenderInPage,
-          15_000,
-        );
+        const readiness = await page.evaluate(waitForVisualReadinessInPage, {
+          expectedHudVisible: id !== 'hud-hidden',
+          pointer: CAPTURE_POINTER,
+          timeoutMs: 5000,
+          stableRenders: 2,
+        });
+        if (readiness.status !== 'ready') {
+          attempts.push({
+            attempt,
+            accepted: false,
+            reason: readiness.reason || 'visual-readiness-unavailable',
+            readiness,
+          });
+          continue;
+        }
+        const completedRender = readiness.completedRender;
         const profile = await readNativeProfile(page);
         observedProfile = profile;
         const observed = await observedState(page, profile, appSha);
@@ -489,7 +505,16 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
                 readBefore?.hud,
                 expectedHudVisible,
               );
-              if (readBefore?.phase !== 0 || !settled) return null;
+              if (
+                readBefore?.phase !== 0 ||
+                !settled ||
+                !visualReadinessInputsMatch(
+                  readiness.proof,
+                  readBefore?.hud,
+                  CAPTURE_POINTER,
+                )
+              )
+                return null;
               pngCount++;
               return captureQualificationPng(
                 page,
@@ -510,11 +535,37 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         const after = pausedCapture.readAfter?.hud;
         const beforePhase = pausedCapture.readBefore?.phase;
         const afterPhase = pausedCapture.readAfter?.phase;
+        const readinessInputsAtCapture = visualReadinessInputsMatch(
+          readiness.proof,
+          before,
+          CAPTURE_POINTER,
+        );
         const unchanged =
           Boolean(pausedCapture.screenshot) &&
           beforePhase === 0 &&
           afterPhase === 0 &&
-          presentationStayedSettled(before, after, expectedHudVisible);
+          presentationStayedSettled(before, after, expectedHudVisible) &&
+          readinessInputsAtCapture &&
+          visualReadinessInputsMatch(readiness.proof, after, CAPTURE_POINTER);
+        const attemptReason = unchanged
+          ? null
+          : !pausedCapture.screenshot
+            ? pausedCapture.readBefore?.reason ||
+              (beforePhase !== 0
+                ? 'scanline-phase-not-zero'
+                : !readinessInputsAtCapture
+                  ? 'scroll-layout-or-pointer-changed-after-readiness'
+                  : 'presentation-not-settled-before-screenshot')
+            : afterPhase !== 0
+              ? 'scanline-phase-changed-during-capture'
+              : !presentationStayedSettled(before, after, expectedHudVisible) ||
+                  !visualReadinessInputsMatch(
+                    readiness.proof,
+                    after,
+                    CAPTURE_POINTER,
+                  )
+                ? 'presentation-or-scroll-layout-changed-during-capture'
+                : 'capture-not-accepted';
         attempts.push({
           attempt,
           before,
@@ -530,19 +581,26 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             after: pausedCapture.readAfter?.alphaRows,
           },
           cleanup: pausedCapture.cleanup,
-          reason: pausedCapture.screenshot
-            ? null
-            : pausedCapture.readBefore?.reason ||
-              (beforePhase !== 0
-                ? 'scanline-phase-not-zero'
-                : 'hud-presentation-unsettled'),
+          reason: attemptReason,
           accepted: unchanged,
+          readiness: {
+            status: readiness.status,
+            consecutiveStableRenders: readiness.consecutiveStableRenders,
+            completedRenders: readiness.completedRenders,
+            proof: readiness.proof,
+          },
           image: pausedCapture.screenshot,
         });
         if (!unchanged) continue;
         accepted = {
           id,
           completedRender,
+          readiness: {
+            status: readiness.status,
+            consecutiveStableRenders: readiness.consecutiveStableRenders,
+            completedRenders: readiness.completedRenders,
+            proof: readiness.proof,
+          },
           foreground,
           captureMethod: 'debugger-paused-snapshot',
           pauseCleanup: pausedCapture.cleanup,
@@ -935,6 +993,10 @@ async function produceFinalVisualQualificationInternal(options, progress) {
       phase: {
         baseline: baseline.states[index].phase,
         candidate: candidate.states[index].phase,
+      },
+      readiness: {
+        baseline: baseline.states[index].readiness,
+        candidate: candidate.states[index].readiness,
       },
       pauseCleanup: {
         baseline: baseline.states[index].pauseCleanup,

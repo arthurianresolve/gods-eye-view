@@ -153,3 +153,205 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
     },
   };
 }
+
+/**
+ * Wait for stable CCTV layout/scroll state over completed Cesium renders and
+ * the browser layout frame that follows each render. This is capture
+ * readiness only; it does not change application state or accept pixels.
+ */
+export async function waitForVisualReadinessInPage({
+  expectedHudVisible,
+  pointer = { x: 1, y: 1 },
+  timeoutMs = 5000,
+  stableRenders = 2,
+} = {}) {
+  const scene = window.__godsEyeView?.viewer?.scene;
+  const boundary = window.__gevVisualPresentationBoundary;
+  if (
+    !scene?.postRender?.addEventListener ||
+    typeof scene.requestRender !== 'function' ||
+    typeof boundary?.read !== 'function' ||
+    !Number.isSafeInteger(stableRenders) ||
+    stableRenders < 2 ||
+    !Number.isFinite(timeoutMs) ||
+    timeoutMs <= 0
+  )
+    throw new Error('Visual readiness observer is unavailable.');
+
+  const startedAt = performance.now();
+  const deadline = startedAt + timeoutMs;
+  let previousSignature = null;
+  let consecutive = 0;
+  let completedRenders = 0;
+  let lastProof = null;
+  let lastFrame = null;
+  let previousFrameNumber = null;
+  let reason = 'scroll-layout-not-stable';
+
+  while (performance.now() < deadline) {
+    const remaining = Math.max(1, deadline - performance.now());
+    const frame = await new Promise((resolve) => {
+      let timer;
+      let removeListener;
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        removeListener?.();
+        resolve(value);
+      };
+      const listener = () =>
+        finish({
+          status: 'rendered',
+          frameNumber: Number.isSafeInteger(scene.frameState?.frameNumber)
+            ? scene.frameState.frameNumber
+            : null,
+          elapsedMs: performance.now() - startedAt,
+        });
+      try {
+        const remove = scene.postRender.addEventListener(listener);
+        removeListener =
+          typeof remove === 'function'
+            ? remove
+            : () => scene.postRender.removeEventListener(listener);
+        timer = setTimeout(
+          () => finish({ status: 'render-timeout' }),
+          remaining,
+        );
+        scene.requestRender();
+      } catch {
+        finish({ status: 'render-request-failed' });
+      }
+    });
+    if (frame.status !== 'rendered') {
+      reason =
+        frame.status === 'render-request-failed'
+          ? 'render-request-failed'
+          : 'completed-render-timeout';
+      break;
+    }
+    completedRenders++;
+    lastFrame = frame;
+    if (!Number.isSafeInteger(frame.frameNumber)) {
+      reason = 'render-frame-number-unavailable';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
+    if (
+      previousFrameNumber !== null &&
+      frame.frameNumber <= previousFrameNumber
+    ) {
+      reason = 'render-frame-number-not-advanced';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
+    previousFrameNumber = frame.frameNumber;
+    let layoutTimer = null;
+    let layoutFrameHandle = null;
+    const layoutFrameResult = await new Promise((resolve) => {
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        if (layoutTimer !== null) clearTimeout(layoutTimer);
+        if (layoutFrameHandle !== null) cancelAnimationFrame(layoutFrameHandle);
+        resolve(value);
+      };
+      const remaining = Math.max(1, deadline - performance.now());
+      try {
+        layoutTimer = setTimeout(() => finish('timeout'), remaining);
+        layoutFrameHandle = requestAnimationFrame(() => finish('rendered'));
+      } catch {
+        finish('request-failed');
+      }
+    });
+    if (layoutFrameResult !== 'rendered') {
+      reason =
+        layoutFrameResult === 'request-failed'
+          ? 'browser-layout-frame-request-failed'
+          : 'browser-layout-frame-timeout';
+      break;
+    }
+    const proof = boundary.read();
+    lastProof = proof;
+    const containers = proof?.scrollContainers;
+    if (
+      !Array.isArray(containers) ||
+      containers.length !== 3 ||
+      containers[0]?.present !== true ||
+      containers[1]?.present !== true
+    ) {
+      reason = 'cctv-scroll-surfaces-unavailable';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
+    if (
+      proof?.pointer?.x !== pointer.x ||
+      proof?.pointer?.y !== pointer.y ||
+      proof?.pointer?.pointerType !== 'mouse'
+    ) {
+      reason = 'fixed-pointer-position-unobserved';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
+    if (
+      proof?.hudVisible !== expectedHudVisible ||
+      proof?.hudDisplay === 'none' ||
+      proof?.hudVisibility !== (expectedHudVisible ? 'visible' : 'hidden') ||
+      !Number.isFinite(proof?.hudOpacity) ||
+      (expectedHudVisible
+        ? proof.hudOpacity < 0.999
+        : proof.hudOpacity > 0.001) ||
+      proof?.recordingVisible !== true ||
+      proof?.summaryTypingComplete !== true ||
+      !proof?.summary ||
+      proof?.documentVisible !== true ||
+      proof?.documentFocused !== true ||
+      !proof?.activeElement ||
+      typeof proof.activeElement.tagName !== 'string' ||
+      typeof proof.activeElement.id !== 'string' ||
+      typeof proof.activeElement.className !== 'string'
+    ) {
+      reason = 'hud-or-document-not-settled';
+      previousSignature = null;
+      consecutive = 0;
+      continue;
+    }
+    const signature = JSON.stringify({
+      revision: proof.revision,
+      hudVisible: proof.hudVisible,
+      hudOpacity: proof.hudOpacity,
+      hudVisibility: proof.hudVisibility,
+      hudDisplay: proof.hudDisplay,
+      summary: proof.summary,
+      scrollContainers: containers,
+      pointer: proof.pointer,
+      activeElement: proof.activeElement,
+    });
+    if (signature === previousSignature) consecutive++;
+    else consecutive = 1;
+    previousSignature = signature;
+    reason = 'scroll-layout-not-stable';
+    if (consecutive >= stableRenders)
+      return {
+        status: 'ready',
+        consecutiveStableRenders: consecutive,
+        completedRenders,
+        completedRender: lastFrame,
+        proof,
+      };
+  }
+  return {
+    status: 'not-ready',
+    reason,
+    consecutiveStableRenders: consecutive,
+    completedRenders,
+    completedRender: lastFrame,
+    proof: lastProof,
+  };
+}

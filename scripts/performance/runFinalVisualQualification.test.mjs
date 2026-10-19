@@ -5,6 +5,7 @@ import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
   readVisualSnapshotPhaseInPage,
+  waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 
 function activationFixture(tilesLoaded) {
@@ -227,4 +228,263 @@ test('snapshot phase stays unavailable for absent strokes or contradictory edges
   const dimensions = phaseFixture();
   dimensions.canvas.getBoundingClientRect = () => ({ width: 0, height: 900 });
   assert.throws(dimensions.read, /dimensions are unavailable/);
+});
+
+function visualReadinessProof(scrollTop = 0) {
+  return {
+    revision: 1,
+    recordingVisible: true,
+    summaryTypingComplete: true,
+    summary: 'fixture',
+    documentVisible: true,
+    documentFocused: true,
+    hudVisible: true,
+    hudDisplay: 'block',
+    hudVisibility: 'visible',
+    hudOpacity: 1,
+    pointer: { x: 1, y: 1, pointerType: 'mouse' },
+    activeElement: { tagName: 'BODY', id: '', className: 'app-shell' },
+    scrollContainers: [
+      {
+        id: 'cctv-panel',
+        present: true,
+        rect: {
+          left: 0,
+          top: 0,
+          right: 360,
+          bottom: 850,
+          width: 360,
+          height: 850,
+        },
+        scroll: {
+          left: 0,
+          top: 0,
+          width: 360,
+          height: 1000,
+          clientWidth: 360,
+          clientHeight: 850,
+          offsetWidth: 360,
+          offsetHeight: 850,
+        },
+        computed: {
+          display: 'block',
+          visibility: 'visible',
+          overflowX: 'hidden',
+          overflowY: 'visible',
+          scrollbarGutter: 'auto',
+          scrollbarWidth: 'auto',
+        },
+      },
+      {
+        id: 'cctv-panel-inner',
+        present: true,
+        rect: {
+          left: 0,
+          top: 0,
+          right: 360,
+          bottom: 850,
+          width: 360,
+          height: 850,
+        },
+        scroll: {
+          left: 0,
+          top: scrollTop,
+          width: 360,
+          height: 1200,
+          clientWidth: 360,
+          clientHeight: 850,
+          offsetWidth: 360,
+          offsetHeight: 850,
+        },
+        computed: {
+          display: 'flex',
+          visibility: 'visible',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          scrollbarGutter: 'auto',
+          scrollbarWidth: 'thin',
+        },
+      },
+      { id: 'cctv-cyber-panel-body', present: false },
+    ],
+  };
+}
+
+function makeVisualReadinessPage(
+  readProof,
+  {
+    frameNumbers = null,
+    requestRenderThrows = false,
+    holdRaf = false,
+    requestAnimationFrameThrows = false,
+  } = {},
+) {
+  const listeners = new Set();
+  const pendingRafs = new Map();
+  const pendingTimers = new Set();
+  let frameNumber = 0;
+  let renderCount = 0;
+  let rafSequence = 0;
+  let clock = 0;
+  const scopedSetTimeout = (callback, delay) => {
+    const timer = setTimeout(() => {
+      pendingTimers.delete(timer);
+      callback();
+    }, delay);
+    pendingTimers.add(timer);
+    return timer;
+  };
+  const scopedClearTimeout = (timer) => {
+    clearTimeout(timer);
+    pendingTimers.delete(timer);
+  };
+  const scene = {
+    frameState: { frameNumber },
+    postRender: {
+      addEventListener(listener) {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    },
+    requestRender() {
+      if (requestRenderThrows)
+        throw new Error('synthetic render request error');
+      renderCount++;
+      frameNumber = frameNumbers
+        ? frameNumbers[Math.min(renderCount - 1, frameNumbers.length - 1)]
+        : frameNumber + 1;
+      scene.frameState.frameNumber = frameNumber;
+      queueMicrotask(() => [...listeners].forEach((listener) => listener()));
+    },
+  };
+  const scope = {
+    window: {
+      __godsEyeView: { viewer: { scene } },
+      __gevVisualPresentationBoundary: { read: readProof },
+    },
+    performance: { now: () => ++clock },
+    requestAnimationFrame: (callback) => {
+      if (requestAnimationFrameThrows)
+        throw new Error('synthetic animation frame error');
+      const handle = ++rafSequence;
+      pendingRafs.set(handle, callback);
+      if (!holdRaf)
+        queueMicrotask(() => {
+          const pending = pendingRafs.get(handle);
+          if (!pending) return;
+          pendingRafs.delete(handle);
+          pending(clock);
+        });
+      return handle;
+    },
+    cancelAnimationFrame: (handle) => pendingRafs.delete(handle),
+    setTimeout: scopedSetTimeout,
+    clearTimeout: scopedClearTimeout,
+  };
+  return {
+    wait: vm.runInNewContext(
+      `(${waitForVisualReadinessInPage.toString()})`,
+      scope,
+    ),
+    stats: () => ({
+      listeners: listeners.size,
+      pendingRafs: pendingRafs.size,
+      pendingTimers: pendingTimers.size,
+      renderCount,
+    }),
+  };
+}
+
+test('visual readiness waits for two stable post-render and layout samples', async () => {
+  const topValues = [0, 12, 12, 12];
+  let reads = 0;
+  const page = makeVisualReadinessPage(() =>
+    visualReadinessProof(topValues[Math.min(reads++, topValues.length - 1)]),
+  );
+  const result = await page.wait({
+    expectedHudVisible: true,
+    timeoutMs: 100,
+    stableRenders: 2,
+  });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.completedRenders, 3);
+  assert.equal(result.consecutiveStableRenders, 2);
+  assert.equal(result.proof.scrollContainers[1].scroll.top, 12);
+  assert.deepEqual(page.stats(), {
+    listeners: 0,
+    pendingRafs: 0,
+    pendingTimers: 0,
+    renderCount: 3,
+  });
+});
+
+test('visual readiness remains ineligible when scroll geometry never settles', async () => {
+  let reads = 0;
+  const page = makeVisualReadinessPage(() => visualReadinessProof(reads++));
+  const result = await page.wait({
+    expectedHudVisible: true,
+    timeoutMs: 8,
+    stableRenders: 2,
+  });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'scroll-layout-not-stable');
+  assert.ok(result.completedRenders >= 1);
+});
+
+test('visual readiness cleans listeners and timers if requesting a render throws', async () => {
+  const page = makeVisualReadinessPage(() => visualReadinessProof(), {
+    requestRenderThrows: true,
+  });
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 20 });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'render-request-failed');
+  assert.deepEqual(page.stats(), {
+    listeners: 0,
+    pendingRafs: 0,
+    pendingTimers: 0,
+    renderCount: 0,
+  });
+});
+
+test('visual readiness cancels a layout frame when its bounded wait expires', async () => {
+  const page = makeVisualReadinessPage(() => visualReadinessProof(), {
+    holdRaf: true,
+  });
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 10 });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'browser-layout-frame-timeout');
+  assert.deepEqual(page.stats(), {
+    listeners: 0,
+    pendingRafs: 0,
+    pendingTimers: 0,
+    renderCount: 1,
+  });
+});
+
+test('visual readiness clears its layout timer if animation frame scheduling throws', async () => {
+  const page = makeVisualReadinessPage(() => visualReadinessProof(), {
+    requestAnimationFrameThrows: true,
+  });
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 20 });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'browser-layout-frame-request-failed');
+  assert.deepEqual(page.stats(), {
+    listeners: 0,
+    pendingRafs: 0,
+    pendingTimers: 0,
+    renderCount: 1,
+  });
+});
+
+test('visual readiness requires advancing scene frame numbers', async () => {
+  const page = makeVisualReadinessPage(() => visualReadinessProof(), {
+    frameNumbers: [7, 7, 7],
+  });
+  const result = await page.wait({ expectedHudVisible: true, timeoutMs: 12 });
+  assert.equal(result.status, 'not-ready');
+  assert.equal(result.reason, 'render-frame-number-not-advanced');
+  assert.equal(page.stats().listeners, 0);
+  assert.equal(page.stats().pendingRafs, 0);
+  assert.equal(page.stats().pendingTimers, 0);
+  assert.ok(page.stats().renderCount > 0);
 });
