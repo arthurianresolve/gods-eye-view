@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   cleanupFixturePageDiagnostics,
   flushFixturePageConsoleOwnership,
+  bootFixturePage,
   importFixtureGeometry,
   prepareFixturePage,
   readFixturePageDiagnostics,
@@ -56,6 +57,48 @@ class MockPage extends EventEmitter {
     this.events.push(`remove-binding:${name}`);
   }
 }
+
+test('bootFixturePage joins welcome URL once and preserves a base path and requested hash', async () => {
+  const cases = [
+    [
+      'http://127.0.0.1:4301',
+      'http://127.0.0.1:4301/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'http://127.0.0.1:4301/',
+      'http://127.0.0.1:4301/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'https://fixture.test/app/base/',
+      'https://fixture.test/app/base/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'https://fixture.test/app/base',
+      'https://fixture.test/app/base/?welcome=0#fixture=phase-2',
+    ],
+  ];
+  for (const [base, expectedUrl] of cases) {
+    const navigations = [];
+    const page = {
+      async bringToFront() {},
+      async goto(url, options) {
+        navigations.push({ url, options });
+      },
+      async waitForFunction() {},
+      async evaluate() {},
+    };
+    await bootFixturePage(page, base, {
+      hash: '#fixture=phase-2',
+      applicationReadyTimeoutMs: 1_000,
+    });
+    assert.deepEqual(navigations, [
+      {
+        url: expectedUrl,
+        options: { waitUntil: 'domcontentloaded' },
+      },
+    ]);
+  }
+});
 
 function consoleMessage(type, text, handles = []) {
   return {

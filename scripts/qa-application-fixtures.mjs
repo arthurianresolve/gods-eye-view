@@ -466,8 +466,12 @@ export async function bootFixturePage(
   // before navigation; this is a no-op for headless callers.
   await page.bringToFront?.();
   onProgress('navigation');
+  const navigationUrl = new URL(base);
+  navigationUrl.pathname = `${navigationUrl.pathname.replace(/\/+$/, '')}/`;
+  navigationUrl.searchParams.set('welcome', '0');
+  navigationUrl.hash = hash;
   try {
-    await page.goto(base + '/?welcome=0' + hash, {
+    await page.goto(navigationUrl.href, {
       // The standalone entry point has a large ESM graph. A dev-server
       // navigation can receive the document while Chromium is still
       // compiling/evaluating that graph, so the application-state gate below
