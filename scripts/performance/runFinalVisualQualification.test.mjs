@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
@@ -8,6 +9,7 @@ import {
   isVisualSnapshotReadyToPause,
   describeVisualPauseReadiness,
   requestVisualGuardFrame,
+  isReleasedVisualGuardTimeout,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 
@@ -291,7 +293,19 @@ function phaseFixture({
   const scope = {
     window: {
       __gevVisualPresentationBoundary: {
-        read: () => ({ hudVisible: true, revision: 1 }),
+        read: () => ({
+          hudVisible: true,
+          revision: 1,
+          recordingVisible: true,
+          summaryTypingComplete: true,
+          summary: 'ready',
+          documentVisible: true,
+          documentFocused: true,
+          gaze: { status: 'ready' },
+          hudDisplay: 'block',
+          hudVisibility: 'visible',
+          hudOpacity: 1,
+        }),
       },
       __godsEyeView: {
         viewer: { scene: { frameState: { frameNumber: 42 } } },
@@ -370,6 +384,162 @@ test('hidden REC eligibility avoids GPU readback without inventing a phase', () 
   assert.deepEqual(result.alphaRows, []);
   assert.deepEqual(fixture.reads, []);
   assert.equal(isVisualSnapshotReadyToPause(result), false);
+});
+
+test('every cheap mandatory guard failure avoids GPU readback without changing eligibility', () => {
+  for (const patch of [
+    { recordingVisible: false },
+    { summaryTypingComplete: false },
+    { summary: '' },
+    { documentVisible: false },
+    { documentFocused: false },
+    { gaze: { status: 'pending' } },
+    { hudDisplay: 'none' },
+    { hudOpacity: 0.5 },
+    { hudOpacity: NaN },
+    { hudVisibility: 'hidden' },
+    { hudVisible: false, hudOpacity: 0, hudVisibility: 'hidden' },
+  ]) {
+    const fixture = phaseFixture();
+    const ready = fixture.scope.window.__gevVisualPresentationBoundary.read();
+    fixture.scope.window.__gevVisualPresentationBoundary.read = () => ({
+      ...ready,
+      ...patch,
+    });
+    const result = fixture.read();
+    assert.equal(result.phase, null);
+    assert.notEqual(result.reason, null);
+    assert.equal(result.observation.pixelReadDurationMs, null);
+    assert.deepEqual(result.alphaRows, []);
+    assert.deepEqual(fixture.reads, []);
+    assert.equal(isVisualSnapshotReadyToPause(result), false);
+  }
+});
+
+function releasedGuardTimeout() {
+  return Object.assign(new Error('Debugger pause deadline exceeded.'), {
+    pauseDiagnostics: {
+      pauseTimeoutMs: 5000,
+      pauseObserved: false,
+      guardFinalEvaluation: null,
+      guardChecks: 32,
+      guardSamples: [{ detail: { phase: 0, summaryTypingComplete: false } }],
+    },
+    pauseCleanup: { resumed: false, disabled: true, detached: true },
+  });
+}
+
+test('only a fully released never-paused guard deadline with no screenshot is readiness unavailable', () => {
+  assert.equal(
+    isReleasedVisualGuardTimeout(releasedGuardTimeout(), 0, 0),
+    true,
+  );
+  assert.equal(
+    isReleasedVisualGuardTimeout(releasedGuardTimeout(), 2, 2),
+    true,
+  );
+  for (const [before, after] of [
+    [0, 1],
+    [3, 3],
+    [-1, -1],
+    [0, undefined],
+  ])
+    assert.equal(
+      isReleasedVisualGuardTimeout(releasedGuardTimeout(), before, after),
+      false,
+    );
+  for (const corrupt of [
+    (error) => {
+      error.name = 'TypeError';
+    },
+    (error) => {
+      error.message = 'paused screenshot deadline exceeded.';
+    },
+    (error) => {
+      error.message = 'Atomic pause guard failed.';
+    },
+    (error) => {
+      error.pauseDiagnostics.pauseObserved = true;
+    },
+    (error) => {
+      error.pauseDiagnostics.pauseTimeoutMs = 15000;
+    },
+    (error) => {
+      error.pauseDiagnostics.guardChecks = 0;
+    },
+    (error) => {
+      error.pauseDiagnostics.guardSamples = [];
+    },
+    (error) => {
+      error.pauseDiagnostics.guardFinalEvaluation = {};
+    },
+    (error) => {
+      error.pauseCleanup.resumed = true;
+    },
+    (error) => {
+      error.pauseCleanup.disabled = false;
+    },
+    (error) => {
+      error.pauseCleanup.detached = false;
+    },
+    (error) => {
+      error.cleanupErrors = [{ stage: 'disable' }];
+    },
+  ]) {
+    const error = releasedGuardTimeout();
+    corrupt(error);
+    assert.equal(isReleasedVisualGuardTimeout(error, 0, 0), false);
+  }
+});
+
+test('actual producer catch consumes the existing attempt bound without resetting PNG count', () => {
+  const source = readFileSync(
+    new URL('./runFinalVisualQualification.mjs', import.meta.url),
+    'utf8',
+  );
+  const pauseStart = source.indexOf(
+    'pausedCapture = await captureWithDebuggerPause(',
+  );
+  const catchStart = source.indexOf('} catch (error) {', pauseStart);
+  const catchEnd = source.indexOf(
+    'const before = pausedCapture.readBefore',
+    catchStart,
+  );
+  assert.ok(pauseStart > 0 && catchStart > pauseStart && catchEnd > catchStart);
+  const catchBlock = source.slice(catchStart, catchEnd);
+  const loop = source.match(
+    /for \(let attempt = 1; attempt <= 12 && pngCount < 3; attempt\+\+\) \{/,
+  );
+  assert.ok(loop);
+  const execute = vm.runInNewContext(
+    `(error, pngCount) => {
+      const attempts = [], states = [], id = 'hud-visible';
+      const pngCountBeforeCapture = pngCount;
+      ${loop[0]}
+        try { throw error;
+        ${catchBlock}
+      }
+      return { attempts, states, pngCount };
+    }`,
+    {
+      isReleasedVisualGuardTimeout,
+      boundedError: (error) => ({ message: error.message }),
+    },
+  );
+  const result = execute(releasedGuardTimeout(), 1);
+  assert.equal(result.attempts.length, 12);
+  assert.equal(result.states.length, 0);
+  assert.equal(result.pngCount, 1);
+  assert.ok(
+    result.attempts.every(
+      (attempt) =>
+        attempt.accepted === false &&
+        attempt.reason === 'visual-pause-readiness-timeout',
+    ),
+  );
+  const afterPause = releasedGuardTimeout();
+  afterPause.pauseDiagnostics.pauseObserved = true;
+  assert.throws(() => execute(afterPause, 1), /Debugger pause deadline/);
 });
 
 test('pause readiness diagnostics keep page timing and frame evidence bounded', () => {

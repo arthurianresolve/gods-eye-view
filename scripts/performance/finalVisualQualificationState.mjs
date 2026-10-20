@@ -173,21 +173,80 @@ export function requestVisualGuardFrame(snapshot) {
   return true;
 }
 
+/** Only a completed, released pre-pause readiness wait can consume an attempt. */
+export function isReleasedVisualGuardTimeout(
+  error,
+  pngCountBefore,
+  pngCountAfter,
+) {
+  const diagnostic = error?.pauseDiagnostics;
+  const cleanup = error?.pauseCleanup;
+  return Boolean(
+    error?.name === 'Error' &&
+    [
+      'Debugger pause deadline exceeded.',
+      'Atomic pause guard deadline exceeded.',
+    ].includes(error?.message) &&
+    Number.isSafeInteger(pngCountBefore) &&
+    pngCountBefore >= 0 &&
+    pngCountBefore < 3 &&
+    pngCountAfter === pngCountBefore &&
+    diagnostic?.pauseTimeoutMs === 5000 &&
+    diagnostic.pauseObserved === false &&
+    diagnostic.guardFinalEvaluation === null &&
+    Number.isSafeInteger(diagnostic.guardChecks) &&
+    diagnostic.guardChecks > 0 &&
+    Array.isArray(diagnostic.guardSamples) &&
+    diagnostic.guardSamples.length > 0 &&
+    cleanup?.resumed === false &&
+    cleanup.disabled === true &&
+    cleanup.detached === true &&
+    (error.cleanupErrors == null ||
+      (Array.isArray(error.cleanupErrors) && error.cleanupErrors.length === 0)),
+  );
+}
+
 /** Read-only paused-frame evidence for the detection scanline phase. */
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const pageReadStartedAtMs = performance.now();
   const boundary = window.__gevVisualPresentationBoundary?.read?.();
-  // This presentation can never pass the existing atomic guard. Avoid flushing
-  // the GPU-backed canvas while waiting for the real REC timer to make it
-  // eligible; no phase is inferred and no application clock is changed.
-  if (boundary?.recordingVisible === false) {
+  if (!boundary)
+    throw new Error('Visual snapshot presentation boundary is unavailable.');
+  // Readback can flush the GPU. None of these presentations can pass the
+  // existing atomic guard, so wait without reading or inferring any pixels.
+  const unavailableReason =
+    boundary.recordingVisible !== true
+      ? 'recording-indicator-hidden'
+      : boundary.summaryTypingComplete !== true
+        ? 'summary-typing-incomplete'
+        : typeof boundary.summary !== 'string' || boundary.summary.length === 0
+          ? 'summary-missing'
+          : boundary.documentVisible !== true
+            ? 'document-hidden'
+            : boundary.documentFocused !== true
+              ? 'document-unfocused'
+              : boundary.gaze?.status !== 'ready'
+                ? 'logo-gaze-not-settled'
+                : boundary.hudDisplay === 'none' ||
+                    !Number.isFinite(boundary.hudOpacity) ||
+                    (expectedHudVisible !== undefined &&
+                      boundary.hudVisible !== expectedHudVisible) ||
+                    !(boundary.hudVisible === true
+                      ? boundary.hudVisibility === 'visible' &&
+                        boundary.hudOpacity >= 0.999
+                      : boundary.hudVisible === false &&
+                        boundary.hudVisibility === 'hidden' &&
+                        boundary.hudOpacity <= 0.001)
+                  ? 'hud-state-unsettled'
+                  : null;
+  if (unavailableReason) {
     const pageReadCompletedAtMs = performance.now();
     const frameNumber =
       window.__godsEyeView?.viewer?.scene?.frameState?.frameNumber;
     return {
       hud: boundary,
       phase: null,
-      reason: 'recording-indicator-hidden',
+      reason: unavailableReason,
       alphaRows: [],
       dimensions: null,
       observation: {

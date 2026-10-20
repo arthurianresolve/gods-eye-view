@@ -44,6 +44,7 @@ import {
   isVisualSnapshotReadyToPause,
   describeVisualPauseReadiness,
   requestVisualGuardFrame,
+  isReleasedVisualGuardTimeout,
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
@@ -562,6 +563,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         }
         const expectedHudVisible = id !== 'hud-hidden';
         let pausedCapture;
+        const pngCountBeforeCapture = pngCount;
         try {
           pausedCapture = await captureWithDebuggerPause({
             page,
@@ -612,11 +614,20 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             },
           });
         } catch (error) {
+          const readinessUnavailable = isReleasedVisualGuardTimeout(
+            error,
+            pngCountBeforeCapture,
+            pngCount,
+          );
           attempts.push({
             attempt,
             accepted: false,
+            reason: readinessUnavailable
+              ? 'visual-pause-readiness-timeout'
+              : null,
             error: boundedError(error),
           });
+          if (readinessUnavailable) continue;
           states.push({ id, captureFailed: true, presentation: { attempts } });
           throw error;
         }
