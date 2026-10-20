@@ -1,0 +1,252 @@
+{
+  "schema": "gev-qualification-build-identity-validation/v1",
+  "status": "passed",
+  "baseCommit": "7e508daed1354519483b624fc17552655709d0eb",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r3/source",
+  "files": [
+    {
+      "file": "scripts/performance/qualificationBuildIdentity.mjs",
+      "bytes": 25352,
+      "sha256": "b2252011234c15717d89b700785c110ec9a3d2cb9768e58a8ea599c569dc4cf9"
+    },
+    {
+      "file": "scripts/performance/qualificationBuildIdentity.test.mjs",
+      "bytes": 30198,
+      "sha256": "c2b5732787fe917efa155383937d098d8d67c800e99a8563363e43a641e9814c"
+    },
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 94342,
+      "sha256": "b0ea4718f060328d5ddfc11b4a0eb68cda7b87b01f7eb65199bfbb1c258fad7c"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 70248,
+      "sha256": "074ada2e028d102a08fe7b6f799906839a95aea4c5cd6aecbc3f82a1e72c04fa"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 134625,
+      "sha256": "4c0c1fabffbe44f4f2ba40e3aa471da67ef84601416f798decf7c17e0d282843"
+    },
+    {
+      "file": "scripts/format-scope.json",
+      "bytes": 57683,
+      "sha256": "1c5a62662f3cc94df9fa08e6ab19b1bf15860e0f62a4aa4aeeec8dd933068b4c"
+    },
+    {
+      "file": "scripts/run-unit-tests.mjs",
+      "bytes": 13362,
+      "sha256": "0b01b1c7de1c6279eca07a129c1357fada4a2b4087d1d2b8c69eb53f54892193"
+    },
+    {
+      "file": "scripts/captureNoUndefConfig.mjs",
+      "bytes": 6884,
+      "sha256": "066a524a30039abcd448e76898f85fad247e202be6f164007e050f221b2f7af3"
+    }
+  ],
+  "docs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 14957,
+      "sha256": "34c0202e5a30f567c904bdd519649d707f8e64f43b3a9b19feccbaf07269c7e3",
+      "tests": 167,
+      "pass": 167,
+      "fail": 0,
+      "tail": "tup allowance (5.164608ms)\n✔ sealed-preview worker probe uses the application Cesium module and retains diagnostics (1.247655ms)\n✔ setup failure reports retain owned browser cleanup evidence (0.152413ms)\n✔ stability accepts a complete plateau and leaves short/missing evidence pending (0.276612ms)\n✔ stability fails retained owners, excessive heap and a persistent browser listener trend (0.32141ms)\n✔ missing and sparse heap checkpoints cannot pass as zero growth (0.181319ms)\n✔ retention accepts atomic hardware cycles up to twelve minutes apart (0.177443ms)\n✔ retention compares owned gauges rather than cumulative provider activity (0.417355ms)\n✔ retention gates scene entities and explicitly scoped import point instances (0.396674ms)\n✔ operation failure preserves completed counts and retained checkpoints (0.363871ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.461459ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (5.508562ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.738714ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.470588ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.199846ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.682596ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.237096ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.356056ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.281863ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.335717ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.291962ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.269009ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.310179ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (6.350555ms)\n✔ software renderer detection rejects known fallback strings (0.399731ms)\n✔ soak fails when an operation is missing or fails (0.379741ms)\n✔ a committed harness may validate a separately frozen application commit (0.173305ms)\nℹ tests 167\nℹ suites 0\nℹ pass 167\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2846.030764\n",
+      "reusedFrom": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r4/validation.json",
+      "reuseReason": "Exact eight source bytes and tracked check scope unchanged; only artificial V8 memory cap removed for missing package check."
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1827 source files.\n",
+      "reusedFrom": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r4/validation.json",
+      "reuseReason": "Exact eight source bytes and tracked check scope unchanged; only artificial V8 memory cap removed for missing package check."
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n",
+      "reusedFrom": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r4/validation.json",
+      "reuseReason": "Exact eight source bytes and tracked check scope unchanged; only artificial V8 memory cap removed for missing package check."
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n",
+      "reusedFrom": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r4/validation.json",
+      "reuseReason": "Exact eight source bytes and tracked check scope unchanged; only artificial V8 memory cap removed for missing package check."
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 14951,
+      "sha256": "28d07ae10817b907529feaeb5b9282aa9e692443eaedb6aa8c2dddc777734c2e",
+      "tests": 167,
+      "pass": 167,
+      "fail": 0,
+      "tail": " atomic hardware cycles up to twelve minutes apart (0.197581ms)\n✔ retention compares owned gauges rather than cumulative provider activity (0.40456ms)\n✔ retention gates scene entities and explicitly scoped import point instances (0.408719ms)\n✔ operation failure preserves completed counts and retained checkpoints (0.397617ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.451591ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (10.34161ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.528229ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.344324ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.211508ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.635205ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.260873ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.28493ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.25936ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.378019ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.295871ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.276253ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.342941ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (12.907527ms)\n✔ software renderer detection rejects known fallback strings (0.44095ms)\n✔ soak fails when an operation is missing or fails (0.532026ms)\n✔ a committed harness may validate a separately frozen application commit (0.182122ms)\nℹ tests 167\nℹ suites 0\nℹ pass 167\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2853.685643\n"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "sourceStatus": " M scripts/captureNoUndefConfig.mjs\n M scripts/format-scope.json\n M scripts/performance/qualificationMetrics.mjs\n M scripts/performance/qualificationMetrics.test.mjs\n M scripts/qa-qualification-metrics-capture.mjs\n M scripts/run-unit-tests.mjs\n?? scripts/performance/qualificationBuildIdentity.mjs\n?? scripts/performance/qualificationBuildIdentity.test.mjs\n",
+  "completedAt": "2026-10-20T11:38:22.854Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "limits": "Pure/mock and static checks. No live qualification capture, startup or performance credit.",
+  "validationOutput": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r5",
+  "previousFailedAttempt": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-build-identity-validation-20261020-r4/validation.json",
+    "status": "failed",
+    "reason": "Runner imposed512MiB V8 cap caused package check heap exhaustion; exact source unchanged; failed log retained."
+  }
+}

@@ -1,0 +1,268 @@
+{
+  "schema": "gev-prospective-decoration-visual-result/v1",
+  "status": "passed",
+  "scope": "Prospective four-state CCTV/header visual equivalence on the declared native Windows Chrome profile; no timing, cadence, interaction latency, or universal feature-quality acceptance.",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "e6e1abc10b154b5317101d6e1b9bb18779e469ce"
+  },
+  "visualHarnessCommit": "7ab0acac48ae619c6277cabb7edcda19ca6339a3",
+  "policy": "source-bound-decoration-quantization-v1",
+  "criteriaAmendmentCommit": "7ff23838",
+  "policyReference": "decoration-quantization-v1/policy.md",
+  "planSha256": "51762b5309af01c51ec86d54e428f4b0654bb776d50b47a459fcf6e8503ce2ff",
+  "calibrationSha256": "71a616958532389ee4d1ec32980ed007c07d32370fa13232e352702c6190ead6",
+  "headerPaintSha256": "8543d1a4c93f12c60c911a8817a29b9fb5c8631bc292942b797dafa9939534b5",
+  "acquisition": {
+    "profile": "native-sharpness-v1",
+    "browserVersion": "Chrome/155.0.8059.84",
+    "cssViewport": { "width": 1440, "height": 900, "dpr": 2 },
+    "pngDimensions": { "width": 2880, "height": 1800 },
+    "freshDocumentsPerBuild": 3,
+    "stateIds": ["still-settled", "hud-visible", "hud-hidden", "hud-restored"],
+    "pngCount": 24,
+    "comparisonsPerState": 15,
+    "totalComparisons": 60,
+    "roleOrder": [
+      "baseline",
+      "candidate",
+      "baseline",
+      "candidate",
+      "baseline",
+      "candidate"
+    ],
+    "pointerSweepPolicy": "reachable-logo-extents-v1",
+    "imageSelection": "all-six-images-all-unordered-pairs-no-fallback",
+    "allCapturesUsedFirstAttempt": true,
+    "discardedImages": 0,
+    "outcomeRetries": 0
+  },
+  "pixelContract": {
+    "logoMaximumRgbDelta": 2,
+    "badgeMaximumRgbDelta": 7,
+    "alphaAndExteriorExact": true,
+    "opaqueLogoInteriorExact": true,
+    "protectedOpaqueLogoPixels": 2026,
+    "badgeTextAndInteriorExact": true,
+    "textWithinLogoSupport": "bounded-composite-equivalence-with-exact-source-text-font-and-geometry",
+    "noNearestImageOrValueFallback": true,
+    "noChangedPixelBudget": true
+  },
+  "observed": {
+    "comparisonCount": 60,
+    "changedPixelRange": [0, 175],
+    "maximumChangedExactRegionPixels": 0,
+    "maximumLogoRgbDelta": 1,
+    "maximumBadgeRgbDelta": 7
+  },
+  "states": [
+    {
+      "id": "still-settled",
+      "totalPixels": 5184000,
+      "allPairs": {
+        "comparisonCount": 15,
+        "changedPixelRange": [8, 132],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      },
+      "baselineControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [20, 33],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      },
+      "candidateControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [51, 132],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      },
+      "crossBuild": {
+        "comparisonCount": 9,
+        "changedPixelRange": [8, 122],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      }
+    },
+    {
+      "id": "hud-visible",
+      "totalPixels": 5184000,
+      "allPairs": {
+        "comparisonCount": 15,
+        "changedPixelRange": [0, 52],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      },
+      "baselineControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [0, 19],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "candidateControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [0, 35],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "crossBuild": {
+        "comparisonCount": 9,
+        "changedPixelRange": [18, 52],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      }
+    },
+    {
+      "id": "hud-hidden",
+      "totalPixels": 5184000,
+      "allPairs": {
+        "comparisonCount": 15,
+        "changedPixelRange": [0, 48],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "baselineControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [0, 25],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "candidateControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [20, 48],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "crossBuild": {
+        "comparisonCount": 9,
+        "changedPixelRange": [0, 48],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      }
+    },
+    {
+      "id": "hud-restored",
+      "totalPixels": 5184000,
+      "allPairs": {
+        "comparisonCount": 15,
+        "changedPixelRange": [0, 175],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      },
+      "baselineControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [25, 144],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "candidateControls": {
+        "comparisonCount": 3,
+        "changedPixelRange": [0, 23],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 0
+      },
+      "crossBuild": {
+        "comparisonCount": 9,
+        "changedPixelRange": [8, 175],
+        "maximumChangedExactRegionPixels": 0,
+        "maximumLogoRgbDelta": 1,
+        "maximumBadgeRgbDelta": 7
+      }
+    }
+  ],
+  "qualificationProofs": {
+    "sourceClosureFiles": 16,
+    "originalDecorationSourceFiles": 8,
+    "beforeAfterAndAcrossAllSixControlsValidated": true,
+    "rawTextRangesComputedStylesActualPlatformFontsValidated": true,
+    "fullAncestorGeometryAndTransformProofValidated": true,
+    "fullPointerSweepAndCanonicalHistoryValidated": true,
+    "allNativeReadinessPresentationAndCleanupProofsValidated": true
+  },
+  "servedAssets": {
+    "baseline": {
+      "receiptFileSha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "489bfb7348d300d19fc108cb59ab1a8b799061562d769919c38601378fb1857a",
+      "assetCount": 443,
+      "totalAssetBytes": 44850466
+    },
+    "candidate": {
+      "receiptFileSha256": "b5428f65072db9a0fb1aa3b7fa9ca9093fa1a7bf1a83f273ca2af894de2df4a3",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "818168ce3e4dd30582842e1e3ac44ff30c39502fe822e088d320f54b88085558",
+      "assetCount": 886,
+      "totalAssetBytes": 68599285
+    }
+  },
+  "cleanup": {
+    "source": "Completed native capture cleanup, retained in all six observation envelopes and validated in both consumers.",
+    "browserCount": 6,
+    "browsersClosed": 6,
+    "openPageCountAfterCleanup": 0,
+    "normalExitCount": 6,
+    "forcedProcessTerminationCount": 0,
+    "interceptionReleaseCount": 6,
+    "capturesWithDebuggerResumedDisabledDetached": 24,
+    "cleanupErrorCount": 0
+  },
+  "evidence": {
+    "localRawDirectory": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac",
+    "vmRawDirectory": "/opt/gods-eye-view-validation/s61-s70-20261018/repeated-decoration-e6e1abc1-7ab0acac-complete-20261020",
+    "archivedFileCount": 38,
+    "archivedBytes": 95766251,
+    "archivedPngCount": 24,
+    "transferManifestSha256": "6af64b6d1cb3300a61f1d64a166a80af9b5e636611d537970c0e664c60c165f9",
+    "prepared": {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac-prepared.json",
+      "bytes": 7247,
+      "sha256": "e6bb95c946e840a4966570d344a9ef78930f3c045deb9c6b44552968fd99bbd2"
+    },
+    "prelaunchReadback": {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac-prelaunch-readback.json",
+      "bytes": 4436,
+      "sha256": "813b190fec99605ce2174bbcc0b3105bcb357785c006a13d327fe160aed90297"
+    },
+    "windowsValidation": {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/validation.json",
+      "bytes": 30496,
+      "sha256": "46e5d0fa0e5ff70fe4d6a32060062bd7f6766b6a387a94d724aa6795e5668b0a"
+    },
+    "pairReportSha256": [
+      "bcf71a7a68d774d115e0794131254309b6ab5e1546a01031bc5eb1bea0cd5417",
+      "2a68506c80ba33436f34185ba583f3839acbcfc5b1541421b9a39de1c7452636",
+      "f2f6ca8d23865a0b2df98ac728edaf832351aede8db0641b5bec15a14034c7e9"
+    ],
+    "vmReview": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/review.json",
+      "bytes": 36627,
+      "sha256": "ec7059880258eca533c4d0015f52920d80024ca1e72430bd75cd98a548e820d6"
+    },
+    "readbackReference": "decoration-quantization-e6e1abc1-readback.json"
+  },
+  "historicalResultsSuperseded": false,
+  "historicalDisposition": {
+    "priorStrictFullImageCohorts": "Retained as failed under their original declared policies; not rereviewed as passing under this policy.",
+    "qa2e448245ZeroImageCohort": "Retained as a pre-image eligibility failure caused by rejecting a legitimate display:contents ancestor box.",
+    "boxlessCorrection": "Only finite, nonnegative ancestor boxes may be empty. Visible surface and text rectangles remain nonempty; all source/style/transform and pixel requirements remain unchanged.",
+    "originalFailedCaptureGeometryRecovered": false,
+    "separateBaselineEligibilityPreflight": "A later retained diagnostic independently confirmed the zero-box .cyber-panel-body ancestor in all four states; it produced no acceptance-eligible PNGs."
+  }
+}

@@ -2,7 +2,7 @@
 
 ## Current qualification checkpoint
 
-The next visual cohort will use the explicitly amended
+The fresh visual cohort passes under the explicitly amended
 [source-bound decoration contract](decoration-quantization-v1/policy.md).
 The complete `c373d91b` / QA `3cd4d528` cohort retains all 24 images and fails
 its original strict consumer. Its 35 files (67,400,789 bytes) are preserved
@@ -22,7 +22,7 @@ No pixels are ignored and no nearest-control fallback or pixel-count budget
 applies. Commit `2e448245` implements the opt-in rule. Its initial 88-test closure
 and final eleven affected tests pass on both Node 24 and 26, along with 43
 Windows image-integration tests. Independent source/receipt review passes.
-A newly declared and captured cohort is still required before visual acceptance.
+The newly declared and captured cohort below supplies this visual validation.
 
 The first `2e448245` / `e6e1abc1` new-policy attempt stops before its first
 PNG: the proof validator requires nonempty boxes from all ancestors,
@@ -44,8 +44,17 @@ acceptance. Its seven files (5,165,019 bytes), including result SHA-256
 `3b7c4d3b90be77057b0e84f5175a95e1310e9a38362773cded4d0db2c72bba20`,
 are preserved at VM task
 `decoration-eligibility-e7-boxless-complete-20261020`.
-The fresh `e6e1abc1` / QA `7ab0acac` 24-image cohort is in progress;
-all sixty comparisons and normal cleanup must pass.
+The fresh [`e6e1abc1` / QA `7ab0acac` cohort](decoration-quantization-e6e1abc1-result.json)
+passes all 24 images and all sixty comparisons on its first capture attempts.
+All six browsers close normally. The declared exact regions have zero changed
+pixels; observed logo channel differences are at most one and badge-border
+differences at most seven. All source, geometry, text, actual-font and capture
+proofs pass. Its 38 files (95,766,251 bytes) are preserved at VM task
+`repeated-decoration-e6e1abc1-7ab0acac-complete-20261020`.
+Independent VM decoding and comparison of the same immutable images also
+passes all sixty comparisons. Historical strict-policy failures remain failures;
+this result supplies visual equivalence for the fresh candidate cohort, not
+interaction, motion-performance, soak or deployment acceptance.
 
 The [rail measurement correction](rail-measurement-validation.json) at
 `e6e1abc1` preserves the existing layout equations while reading invariant
@@ -86,8 +95,8 @@ observations above 100 ms, all on disabling datacenters. The candidate observati
 are 40, 96, 48, 112, 80, 128, 80 and 128 ms. Median full scene readiness
 changes from 303.7 to 304.75 ms for enabling and 17.85 to 16.65 ms for disabling.
 These mixed diagnostic results establish neither an interaction pass nor a
-repeatable performance benefit. The next gate uses the formal twenty-sample
-producer without these additional attribution observers.
+repeatable performance benefit. The formal twenty-sample capture below omits
+these additional attribution observers.
 
 The [exact `e6e1abc1` CI receipt](rail-layout-e6e1abc1-ci.json) records
 seven selected CI jobs and release verification passing. Node 24/26,
@@ -100,6 +109,45 @@ without changing old fixed-size reports or timing gates. Its
 [validation receipt](native-window-metrics-validation.json) records 146 tests
 passing on each Node version, plus the required static checks. This implements
 the capture/consumer contract; it does not qualify the application by itself.
+
+Commit `f6e35691` adds an explicit identity-only input for this formal producer.
+It checks the exact application/build/browser identities, complete source and
+served assets before and after the whole capture, and the live owned-window
+proofs. It retains one full envelope with digest references from interaction
+and heap evidence. Legacy and weather inputs retain their interpretation;
+inputs cannot be mixed, and the new source supplies no startup or performance
+credit. Its [validation receipt](qualification-build-identity-validation.json)
+records 167/167 focused tests on both Node versions, plus formatting,
+undefined-reference, import and package checks passing. Independent readback
+matches all eight source files and ten raw logs. Earlier sparse-setup and
+explicit 512 MiB heap-cap failures remain preserved; the package check passes
+using the previously validated environment.
+
+The completed [formal capture](formal-native20-e6e1abc1-f6e35691-result.json)
+uses correctness control `76cc760b`, candidate `e6e1abc1` and QA `f6e35691`.
+Both builds complete twenty local-control actions, twenty loaded replay seeks
+and 84 heap samples. All source, asset, native-window and foreground checks
+pass, and both browsers close normally. The [archive readback](formal-native20-e6e1abc1-f6e35691-readback.json)
+binds fifteen files (2,723,889 bytes), independently hash-verified on VM105.
+One short concurrent metadata-writing command is disclosed in the run conditions;
+its exact timing and effect are unknown.
+
+The frozen consumer rejects local-control evidence because all forty actions
+contain an unproven-geometry observation after positive visible feedback and
+before their Event Timing endpoint. It does not establish actual hidden feedback:
+the old producer did not retain mutation categories. These reports remain failed.
+The raw Event Timing p95 is 160 ms for control and 216 ms for candidate;
+these are descriptive values without acceptance credit. The candidate's first
+two actions take 296 and 216 ms, while later actions range from 48 to 112 ms.
+Both the continuity proof and the runtime delay require correction or diagnosis;
+fixing the proof alone would not establish the unchanged 100 ms gate.
+
+Loaded replay passes at p95 55.4 → 79.5 ms against the 250 ms limit.
+Sampled peak heap is 73,152,748 → 71,763,568 bytes, a 1.899% reduction and
+within the regression gate. This is sampled non-GC peak heap, not retained
+heap or a soak result. Cold startup is unavailable for the deliberately
+identity-only input. No capture is repeated or observation removed to obtain
+these results; the next GPU run awaits the separate proof and runtime fixes.
 
 The completed [native-window diagnostic](native-window-c373d91b-diagnostic.json)
 and [independent VM readback](native-window-c373d91b-readback.json) retain all

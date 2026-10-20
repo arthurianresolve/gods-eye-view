@@ -7,7 +7,7 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-For the next visual cohort, adopt the prospective
+The fresh `e6e1abc1` visual cohort passes the prospectively declared
 [decoration quantization contract](performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/policy.md).
 The completed 24-image `c373d91b` / `3cd4d528` cohort remains a strict-policy
 failure. Independent baseline images establish small color differences in the
@@ -23,7 +23,13 @@ capture, not a retrospective acceptance of existing images. Commit `2e448245`
 implements the opt-in rule. The initial 88-test closure and final eleven
 affected checks pass on both Node 24 and 26; all 43 Windows image-integration
 checks pass. Independent review verifies the exact source and receipts.
-Hardware validation under this new policy remains pending.
+The [new hardware cohort](performance-evidence/s69-native-matrix-20261019/decoration-quantization-e6e1abc1-result.json)
+passes all 24 first-attempt images and sixty comparisons, with six normal
+browser closures. Independent VM decoding and comparison also passes.
+The declared exact regions have zero changed pixels; maximum logo and badge
+channel differences are one and seven respectively. All source, geometry,
+text, actual-font and capture proofs pass. This is visual validation for
+`e6e1abc1` under QA `7ab0acac`; performance and final soak remain separate.
 
 The first new-policy attempt stops before its first PNG because the proof
 validator incorrectly requires a nonempty box for every DOM ancestor.
@@ -38,8 +44,8 @@ records 36/36 focused tests plus formatting and undefined-reference checks
 passing on both Node versions. The actual baseline page passes all four
 proof states on their first attempt and confirms the zero-box ancestor is
 the existing `display: contents` wrapper. That separate check captures no
-images and carries no visual-acceptance credit. The fresh 24-image cohort
-is underway; all sixty comparisons and cleanup remain mandatory.
+images and carries no visual-acceptance credit. The subsequent fresh 24-image
+cohort passes all sixty comparisons and cleanup, as recorded above.
 
 Runtime `e6e1abc1` moves invariant panel-spacing and collapsed-sibling reads
 before temporary measurement styles are restored, avoiding a redundant forced
@@ -73,7 +79,7 @@ observations above 100 ms. Enabling median full scene readiness changes from
 303.7 to 304.75 ms; disabling changes from 17.85 to 16.65 ms. These mixed
 diagnostic results establish no repeatable latency benefit or acceptance pass.
 Formal twenty-sample qualification without the extra attribution observers
-is next; its timing limits remain unchanged.
+is recorded below; its timing limits remain unchanged.
 
 Its [exact-commit CI receipt](performance-evidence/s69-native-matrix-20261019/rail-layout-e6e1abc1-ci.json)
 records all seven selected CI jobs and release verification passing.
@@ -88,6 +94,37 @@ passes on both Node versions. Complete owned-window proofs are required at
 startup, document restore, cohort boundaries and workspace-restore checkpoints.
 The existing twenty-sample count, 100 ms / 250 ms limits and 10% regression gate
 remain unchanged; legacy fixed-size reports keep their original interpretation.
+
+Commit `f6e35691` adds a separately declared build-identity source for the
+formal native-window interaction and heap capture. It verifies both complete
+builds and their served assets before browser capture and after closure,
+and binds the actual Chrome executable, version, renderer, settings and
+owned-window proofs. The complete evidence envelope is stored once and
+referenced by digest. This avoids repeating a long performance workload solely
+to establish build identity; it supplies no startup or performance credit.
+Its [validation receipt](performance-evidence/s69-native-matrix-20261019/qualification-build-identity-validation.json)
+records 167/167 focused tests on Node 24 and 26 and all static checks passing.
+Initial validation setup and explicit heap-cap failures are retained;
+the exact source closure and passing raw logs were independently read back.
+The [completed formal capture](performance-evidence/s69-native-matrix-20261019/formal-native20-e6e1abc1-f6e35691-result.json)
+compares correctness control `76cc760b` with candidate `e6e1abc1`, with
+twenty local-control and twenty loaded-replay actions plus 84 heap samples
+per build. Source/asset/window/foreground proofs and normal browser cleanup
+pass. All fifteen evidence files are independently hash-verified on VM105.
+Local-control evidence fails: all forty actions have an unproven-geometry
+observation after visible feedback and before the Event Timing endpoint.
+The old producer lacks mutation categories, so this does not prove actual
+visibility loss. Raw Event Timing p95 is 160 → 216 ms, without acceptance
+credit; the first two candidate actions take 296 and 216 ms.
+The proof defect and runtime delay are investigated separately. The 100 ms
+gate remains unchanged, and the failed reports remain failed.
+
+Replay passes at p95 55.4 → 79.5 ms against the 250 ms limit. Sampled peak
+heap decreases 1.899%, from 73,152,748 to 71,763,568 bytes; this is neither
+post-GC retained heap nor soak evidence. Cold startup is unavailable for
+the identity-only input. A short concurrent metadata-writing command is
+disclosed without attributing an effect. The next GPU run awaits the proof
+and runtime corrections; production remains unchanged.
 
 The completed [native-window diagnostic](performance-evidence/s69-native-matrix-20261019/native-window-c373d91b-diagnostic.json)
 uses driver `3360f672`, unchanged runtime `c373d91b` and control `8c14b106`.
