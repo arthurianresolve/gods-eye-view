@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { lstatSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
 
 const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
 const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
@@ -16,6 +20,7 @@ const CAMERA_POSITION_TOLERANCE_DEG = 1e-6;
 const CAMERA_ALTITUDE_TOLERANCE_M = 1;
 const CAMERA_ANGLE_TOLERANCE_RAD = 1e-6;
 const QUALIFICATION_VIEWPORT = Object.freeze({ width: 1440, height: 1000 });
+const MAX_WEATHER_ARTIFACT_BYTES = 64 * 1024 * 1024;
 const LOCAL_CONTROL_CAMERA_ROUTE_ID =
   'rendered-soak-driver-default-location-v1';
 const LOCAL_CONTROL_CAMERA_LOCATION = Object.freeze({
@@ -131,6 +136,142 @@ function assertRawCaptureIdentity(report, label) {
     userAgent: report.environment.userAgent,
     platform: report.environment.platform,
     sourceProfile: profile,
+  };
+}
+
+/**
+ * Read one exact control/candidate pair as identity evidence only, after
+ * validating the complete balanced-weather envelope and all ten child hashes.
+ * These one-run shards never become cold-start comparison inputs.
+ */
+export function readWeatherBalancedIdentityCapturePair({
+  envelopePath,
+  baselinePath,
+  candidatePath,
+} = {}) {
+  assert.equal(typeof envelopePath, 'string');
+  assert.equal(typeof baselinePath, 'string');
+  assert.equal(typeof candidatePath, 'string');
+  const envelopeFile = path.resolve(envelopePath || '');
+  const root = path.dirname(envelopeFile);
+  const envelopeStat = lstatSync(envelopeFile);
+  assert.equal(
+    envelopeStat.isSymbolicLink(),
+    false,
+    'Envelope cannot be a symlink',
+  );
+  assert.ok(envelopeStat.isFile(), 'Envelope must be a regular file');
+  assert.ok(
+    envelopeStat.size > 0 && envelopeStat.size <= MAX_WEATHER_ARTIFACT_BYTES,
+    'Envelope size is invalid',
+  );
+  const envelopeBytes = readFileSync(envelopeFile);
+  const envelope = JSON.parse(envelopeBytes.toString('utf8'));
+  const review = validateWeatherBalancedEnvelopeArtifact(envelope, { root });
+  assert.equal(review.status, 'comparable');
+  assert.equal(review.pairCount, 5);
+
+  const normalized = (value) => {
+    const resolved = path.resolve(value);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const selectChild = (inputPath, role) => {
+    const target = normalized(inputPath || '');
+    const matches = envelope.children.filter(
+      (entry) => normalized(path.resolve(root, entry.path)) === target,
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `${role} path must name exactly one envelope child`,
+    );
+    const entry = matches[0];
+    assert.equal(entry.role, role, `${role} path is bound to the wrong role`);
+    assert.ok(
+      Number.isSafeInteger(entry.pairIndex) &&
+        entry.pairIndex >= 1 &&
+        entry.pairIndex <= 5,
+      `${role} child pair index is invalid`,
+    );
+    const childPath = path.resolve(root, entry.path);
+    assert.ok(
+      childPath.startsWith(`${root}${path.sep}`),
+      `${role} child path escapes the envelope root`,
+    );
+    const childStat = lstatSync(childPath);
+    assert.equal(
+      childStat.isSymbolicLink(),
+      false,
+      `${role} child cannot be a symlink`,
+    );
+    assert.ok(childStat.isFile(), `${role} child must be a regular file`);
+    assert.ok(
+      childStat.size > 0 && childStat.size <= MAX_WEATHER_ARTIFACT_BYTES,
+      `${role} child size is invalid`,
+    );
+    const bytes = readFileSync(childPath);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    assert.equal(
+      sha256,
+      entry.sha256,
+      `${role} child hash changed after envelope validation`,
+    );
+    const report = JSON.parse(bytes.toString('utf8'));
+    assert.equal(report?.integrity?.status, 'passed');
+    assert.equal(
+      report?.comparisonEligible,
+      false,
+      `${role} balanced-weather shard must remain standalone-ineligible`,
+    );
+    const identity = assertRawCaptureIdentity(report, `${role} identity shard`);
+    const expectedCommit =
+      role === 'control'
+        ? review.controlReport.source.appCommit
+        : review.candidateReport.source.appCommit;
+    assert.equal(identity.applicationCommit, expectedCommit);
+    return {
+      report,
+      identity,
+      path: childPath,
+      sha256,
+      role,
+      pairIndex: entry.pairIndex,
+      comparisonEligible: false,
+    };
+  };
+  const baseline = selectChild(baselinePath, 'control');
+  const candidate = selectChild(candidatePath, 'candidate');
+  assert.equal(
+    baseline.pairIndex,
+    candidate.pairIndex,
+    'Identity shards must belong to the same predeclared pair',
+  );
+  for (const key of [
+    'browserVersion',
+    'renderer',
+    'userAgent',
+    'platform',
+    'sourceProfile',
+  ])
+    assert.deepEqual(
+      baseline.identity[key],
+      candidate.identity[key],
+      `Identity shards differ in ${key}`,
+    );
+  return {
+    baseline,
+    candidate,
+    pairIndex: baseline.pairIndex,
+    envelope: {
+      path: envelopeFile,
+      sha256: createHash('sha256').update(envelopeBytes).digest('hex'),
+      planId: envelope.planId,
+      planPath: path.resolve(root, envelope.planArtifact.path),
+      planSha256: envelope.planArtifact.sha256,
+      evidenceScope: review.evidenceScope,
+      pairCount: review.pairCount,
+      status: review.status,
+    },
   };
 }
 

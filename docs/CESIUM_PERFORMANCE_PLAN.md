@@ -36,6 +36,14 @@ passes 36 focused tests on each Node version, with the old source failing the
 new positive case. The [exact committed `ae74be8b` consumer](performance-evidence/s69-native-matrix-20261019/weather-balanced-190c5ab6-idle-disposition-ae74be8b-review.json)
 validates the cadence interpretation. It resolves only the idle interval flag;
 it does not establish a CPU/GPU speedup or clear any other workload's gate.
+The interaction/heap capture can now take build identities from one exact pair
+in the complete validated weather envelope. All ten child hashes, both roles,
+pair membership, browser, renderer and native profile must agree. Individual
+shards remain comparison-ineligible and cannot supply cold-start acceptance.
+[VM validation](performance-evidence/s69-native-matrix-20261019/weather-identity-validation-20261020-r3.json)
+passes 38 focused tests on each Node version and verifies the unchanged real
+envelope. This avoids a redundant identity-only workload; fresh interaction,
+sampled heap and final retained-resource measurements are still required.
 The full visual capture at QA producer `25cab4fd` now reaches all four states on
 both builds but fails the visible-HUD pixel comparison. All eight original PNGs
 and reports are retained. [Independent pixel localization](performance-evidence/s69-native-matrix-20261019/final-visual-190c5ab6-25cab4fd-pixel-localization-review.json)

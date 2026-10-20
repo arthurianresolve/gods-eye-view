@@ -29,6 +29,19 @@ validates the unchanged real probe and resolves only the idle frame-interval
 interpretation. It does not claim CPU/GPU savings or establish another
 workload's acceptance. Capture-producer identities remain unchanged.
 
+The qualification capture now accepts an identity-only pair from the complete
+validated weather envelope. It verifies all ten child hashes and requires exact
+control/candidate roles, a shared declared pair, matching browser/renderer and
+native visual profile. The single shards retain `comparisonEligible: false`;
+their startup values cannot replace the separate five-pair startup review.
+[All 38 focused tests](weather-identity-validation-20261020-r3.json) pass on
+Node 24 and 26 on VM105, and the same reader validates the original real envelope.
+The initial test fixtures omitted [integrity status](weather-identity-validation-20261020.json)
+and [per-capture browser metadata](weather-identity-validation-20261020-r2.json);
+those failed test results remain recorded. The fixture corrections do not alter
+the reader's checks or the original evidence. Fresh interaction and sampled-heap
+measurements remain pending.
+
 The [full visual attempt with producer `97c82fca`](final-visual-190c5ab6-97c82fca-failure-review.json)
 stops before any screenshot. Its guard observes phase 2 nine times, then phase 0
 while REC and summary are unsettled; eleven calls started and ten returned before

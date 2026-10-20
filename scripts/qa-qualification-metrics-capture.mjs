@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { createWindowsForegroundActivationSession } from './performance/windowsForegroundWindow.mjs';
+import { readWeatherBalancedIdentityCapturePair } from './performance/qualificationMetrics.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
 const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
@@ -1598,12 +1599,22 @@ export async function runQualificationMetricsCapture({
   candidateUrl,
   baselineCapturePath,
   candidateCapturePath,
+  weatherIdentityEnvelopePath,
   outputPath,
 }) {
-  const [baseline, candidate] = await Promise.all([
-    readCapture(baselineCapturePath, 'baseline'),
-    readCapture(candidateCapturePath, 'candidate'),
-  ]);
+  const weatherIdentityPair = weatherIdentityEnvelopePath
+    ? readWeatherBalancedIdentityCapturePair({
+        envelopePath: weatherIdentityEnvelopePath,
+        baselinePath: baselineCapturePath,
+        candidatePath: candidateCapturePath,
+      })
+    : null;
+  const [baseline, candidate] = weatherIdentityPair
+    ? [weatherIdentityPair.baseline, weatherIdentityPair.candidate]
+    : await Promise.all([
+        readCapture(baselineCapturePath, 'baseline'),
+        readCapture(candidateCapturePath, 'candidate'),
+      ]);
   assert.notEqual(
     baseline.identity.applicationCommit,
     candidate.identity.applicationCommit,
@@ -1622,10 +1633,31 @@ export async function runQualificationMetricsCapture({
         ),
       ),
     },
-    sourceCaptures: {
-      baseline: { path: baseline.path, sha256: baseline.sha256 },
-      candidate: { path: candidate.path, sha256: candidate.sha256 },
-    },
+    sourceCaptures: weatherIdentityPair
+      ? {
+          purpose: 'identity-only-from-validated-weather-balanced-pair',
+          coldStartupEligible: false,
+          pairIndex: weatherIdentityPair.pairIndex,
+          envelope: weatherIdentityPair.envelope,
+          baseline: {
+            path: baseline.path,
+            sha256: baseline.sha256,
+            role: baseline.role,
+            pairIndex: baseline.pairIndex,
+            comparisonEligible: false,
+          },
+          candidate: {
+            path: candidate.path,
+            sha256: candidate.sha256,
+            role: candidate.role,
+            pairIndex: candidate.pairIndex,
+            comparisonEligible: false,
+          },
+        }
+      : {
+          baseline: { path: baseline.path, sha256: baseline.sha256 },
+          candidate: { path: candidate.path, sha256: candidate.sha256 },
+        },
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
       interactionProtocol: INTERACTION_PROTOCOL,
@@ -1811,6 +1843,7 @@ if (isMain()) {
     candidateUrl: args['candidate-url'],
     baselineCapturePath: args['baseline-capture'],
     candidateCapturePath: args['candidate-capture'],
+    weatherIdentityEnvelopePath: args['weather-identity-envelope'],
     outputPath: args.out,
   });
   if (report.status !== 'completed') process.exitCode = 1;

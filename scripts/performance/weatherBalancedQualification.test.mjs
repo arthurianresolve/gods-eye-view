@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { evaluateManifestPerformanceEvidence } from './candidatePerformanceEvidence.mjs';
+import { readWeatherBalancedIdentityCapturePair } from './qualificationMetrics.mjs';
 import { createObservedWeatherEffectsComparisonContract } from './captureComparisonContract.mjs';
 import {
   baselineCommit,
@@ -618,6 +619,71 @@ test('candidate evidence consumes only the hash-bound balanced envelope', () => 
   assert.equal(reviewed.comparisons[0].error, null);
   assert.equal(reviewed.comparisons[0].renderer.kind, 'native-gpu');
   assert.equal(reviewed.comparisons[0].validation.controlReport, undefined);
+});
+
+test('weather envelope can supply only its exact hash-bound identity pair', () => {
+  const root = path.join(
+    os.tmpdir(),
+    `gev-weather-identity-pair-${Date.now()}`,
+  );
+  const { plan, envelope } = createEnvelope(root, (report) => {
+    report.integrity = { status: 'passed' };
+    for (const capture of report.captures)
+      for (const boundary of ['before', 'after'])
+        for (const key of ['renderer', 'userAgent', 'platform'])
+          capture.conditions[boundary].environment[key] =
+            report.environment[key];
+  });
+  const envelopePath = path.join(root, 'qualification-envelope.json');
+  fs.writeFileSync(envelopePath, `${JSON.stringify(envelope, null, 2)}\n`);
+  const controlPath = path.join(root, envelope.children[0].path);
+  const candidatePath = path.join(root, envelope.children[1].path);
+
+  const pair = readWeatherBalancedIdentityCapturePair({
+    envelopePath,
+    baselinePath: controlPath,
+    candidatePath,
+  });
+  assert.equal(pair.pairIndex, 1);
+  assert.equal(pair.baseline.role, 'control');
+  assert.equal(pair.candidate.role, 'candidate');
+  assert.equal(pair.baseline.comparisonEligible, false);
+  assert.equal(pair.candidate.comparisonEligible, false);
+  assert.equal(pair.envelope.planId, plan.planId);
+  assert.equal(
+    pair.envelope.evidenceScope,
+    'balanced-five-pair-full-weather-qualification',
+  );
+
+  assert.throws(
+    () =>
+      readWeatherBalancedIdentityCapturePair({
+        envelopePath,
+        baselinePath: candidatePath,
+        candidatePath,
+      }),
+    /control path is bound to the wrong role/,
+  );
+  assert.throws(
+    () =>
+      readWeatherBalancedIdentityCapturePair({
+        envelopePath,
+        baselinePath: controlPath,
+        candidatePath: path.join(root, envelope.children[2].path),
+      }),
+    /same predeclared pair/,
+  );
+
+  fs.appendFileSync(candidatePath, ' ');
+  assert.throws(
+    () =>
+      readWeatherBalancedIdentityCapturePair({
+        envelopePath,
+        baselinePath: controlPath,
+        candidatePath,
+      }),
+    /SHA-256/,
+  );
 });
 
 test('weather shards derive an omitted profile label from consistent native observations', () => {
