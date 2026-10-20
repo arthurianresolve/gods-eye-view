@@ -1,4 +1,5 @@
 import {
+  execFile as defaultExecFile,
   execFileSync as defaultExecFileSync,
   spawn as defaultSpawn,
 } from 'node:child_process';
@@ -443,14 +444,117 @@ export function captureOwnedBrowserProcessTree(
       truncated: parsed.truncated === true || summarized.truncated,
     };
   } catch (error) {
-    return unavailableSnapshot(
-      error?.code === 'ETIMEDOUT'
-        ? 'process-snapshot-timeout'
-        : error?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'
-          ? 'process-list-overflow'
-          : 'process-snapshot-failed',
-    );
+    return processTreeErrorSnapshot(error);
   }
+}
+
+function processTreeErrorSnapshot(error) {
+  return unavailableSnapshot(
+    error?.code === 'ETIMEDOUT'
+      ? 'process-snapshot-timeout'
+      : error?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'
+        ? 'process-list-overflow'
+        : 'process-snapshot-failed',
+  );
+}
+
+function summarizeProcessTreeOutput(output, rootPid, maxRows) {
+  if (
+    typeof output !== 'string' ||
+    Buffer.byteLength(output, 'utf8') > MAX_PROCESS_TREE_OUTPUT_BYTES
+  )
+    return unavailableSnapshot('process-list-overflow');
+  let parsed;
+  try {
+    parsed = JSON.parse(output);
+  } catch {
+    return unavailableSnapshot('process-list-invalid');
+  }
+  if (typeof parsed?.truncated !== 'boolean')
+    return unavailableSnapshot('process-list-invalid');
+  const summarized = summarizeOwnedProcessTree(parsed?.rows, rootPid, maxRows);
+  if (summarized.status !== 'available') return summarized;
+  return {
+    ...summarized,
+    truncated: parsed.truncated === true || summarized.truncated,
+  };
+}
+
+/** Async bounded process snapshot so cleanup diagnostics do not block exit events. */
+export function captureOwnedBrowserProcessTreeAsync(
+  child,
+  {
+    platform = process.platform,
+    execFile = defaultExecFile,
+    timeoutMs = PROCESS_TREE_TIMEOUT_MS,
+    maxRows = MAX_PROCESS_TREE_ROWS,
+    setTimer = setTimeout,
+    clearTimer = clearTimeout,
+  } = {},
+) {
+  if (platform !== 'win32')
+    return Promise.resolve(unavailableSnapshot('unsupported-platform'));
+  const rootPid = child?.pid;
+  if (!Number.isSafeInteger(rootPid) || rootPid < 1)
+    return Promise.resolve(
+      unavailableSnapshot('owned-browser-pid-unavailable'),
+    );
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > PROCESS_TREE_TIMEOUT_MS ||
+    !Number.isSafeInteger(maxRows) ||
+    maxRows < 1 ||
+    maxRows > MAX_PROCESS_TREE_ROWS
+  )
+    return Promise.resolve(
+      unavailableSnapshot('process-snapshot-limits-invalid'),
+    );
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let helper = null;
+    let timer = null;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimer(timer);
+      resolve(result);
+    };
+    try {
+      helper = execFile(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          createOwnedProcessTreePowerShellCommand(rootPid, maxRows),
+        ],
+        {
+          encoding: 'utf8',
+          timeout: timeoutMs,
+          maxBuffer: MAX_PROCESS_TREE_OUTPUT_BYTES,
+          windowsHide: true,
+        },
+        (error, output) => {
+          if (error) return finish(processTreeErrorSnapshot(error));
+          finish(summarizeProcessTreeOutput(output, rootPid, maxRows));
+        },
+      );
+    } catch (error) {
+      finish(processTreeErrorSnapshot(error));
+      return;
+    }
+    if (!settled)
+      timer = setTimer(() => {
+        finish(unavailableSnapshot('process-snapshot-timeout'));
+        try {
+          helper?.kill?.();
+        } catch {
+          // The diagnostic subprocess is best-effort and never owns Chrome.
+        }
+      }, timeoutMs);
+  });
 }
 
 function applicationPages(pages, baseUrl) {
@@ -1025,10 +1129,11 @@ export async function closeRecoveryBrowser(
           closeResult.kind === 'timeout' ? 'atTimeout' : 'atCloseFailure',
         );
         try {
-          diagnosticProcessTree =
+          diagnosticProcessTree = await Promise.resolve().then(() =>
             typeof shutdownDiagnostics?.processTreeSnapshot === 'function'
               ? shutdownDiagnostics.processTreeSnapshot(child)
-              : captureOwnedBrowserProcessTree(child);
+              : captureOwnedBrowserProcessTreeAsync(child),
+          );
         } catch {
           diagnosticProcessTree = unavailable('process-snapshot-failed');
         }

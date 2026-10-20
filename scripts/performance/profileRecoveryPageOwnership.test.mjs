@@ -10,6 +10,7 @@ import {
   assertInitialRecoveryPage,
   assertOwnedRecoveryPage,
   captureOwnedBrowserProcessTree,
+  captureOwnedBrowserProcessTreeAsync,
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
   createOwnedProcessTreePowerShellCommand,
@@ -1302,6 +1303,82 @@ test('Windows process tree capture is bounded and omits command lines', () => {
   );
 });
 
+test('async Windows process tree capture resolves callbacks and fails closed on timeout, overflow and malformed output', async () => {
+  const valid = JSON.stringify({
+    rows: [{ pid: 1234, ppid: 1, image: 'chrome.exe', category: 'browser' }],
+    truncated: false,
+  });
+  let invocation;
+  const available = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (executable, args, options, callback) => {
+        invocation = { executable, args, options };
+        queueMicrotask(() => callback(null, valid));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.equal(available.status, 'available');
+  assert.equal(invocation.executable, 'powershell.exe');
+  assert.equal(invocation.options.timeout, 1500);
+  assert.equal(available.rows[0].category, 'browser');
+
+  let helperKilled = false;
+  const timedOut = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      timeoutMs: 5,
+      execFile: () => {
+        const helper = new EventEmitter();
+        helper.kill = () => {
+          helperKilled = true;
+        };
+        return helper;
+      },
+    },
+  );
+  assert.deepEqual(timedOut, {
+    status: 'unavailable',
+    reason: 'process-snapshot-timeout',
+  });
+  assert.equal(helperKilled, true);
+
+  const overflow = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (_executable, _args, _options, callback) => {
+        const error = new Error('bounded output');
+        error.code = 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER';
+        queueMicrotask(() => callback(error));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.deepEqual(overflow, {
+    status: 'unavailable',
+    reason: 'process-list-overflow',
+  });
+
+  const malformed = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (_executable, _args, _options, callback) => {
+        queueMicrotask(() => callback(null, '{bad json'));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.deepEqual(malformed, {
+    status: 'unavailable',
+    reason: 'process-list-invalid',
+  });
+});
+
 test(
   'PowerShell skips command-line queries when the owned root is absent',
   {
@@ -1964,6 +2041,48 @@ test('shutdown diagnostic errors do not prevent forced cleanup or alter failed c
   );
   assert.equal(JSON.stringify(outcome).includes('private data'), false);
   assert.equal(JSON.stringify(outcome).includes('process path'), false);
+});
+
+test('async process snapshot lets a browser exit settle before owned force cleanup', async () => {
+  const child = fakeBrowserProcess();
+  const browser = new EventEmitter();
+  let forceCalled = false;
+  browser.process = () => child;
+  browser.isConnected = () => true;
+  browser.targets = () => [];
+  browser.close = () => {
+    browser.emit('disconnected');
+    return new Promise(() => {});
+  };
+
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 10,
+    postDisconnectExitTimeoutMs: 0,
+    shutdownDiagnostics: {
+      processTreeSnapshot: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        return { status: 'unavailable', reason: 'process-snapshot-timeout' };
+      },
+    },
+    forceProcess: async () => {
+      forceCalled = true;
+      return { attempted: true, confirmed: false };
+    },
+  });
+
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(forceCalled, false);
+  assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(outcome.observation.forceProcessStatus, 'already-exited');
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.processTreeBeforeForce.reason,
+    'process-snapshot-timeout',
+  );
+  assert.equal(browser.listenerCount('disconnected'), 0);
+  assert.equal(child.listenerCount('exit'), 0);
 });
 
 test('timeout target inventory is captured when the browser has not disconnected', async () => {
