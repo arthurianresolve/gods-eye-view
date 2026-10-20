@@ -12,9 +12,14 @@ import {
   localDatasetError,
   localInfrastructureOverlayCopy,
   selectLocalInfrastructureOverlayCohort,
+  localGeoJsonServices,
 } from './localGeojson.js';
+import { createLocalGeoJsonLayer as createCoreLocalGeoJsonLayer } from './localGeojsonCore.js';
 import { layerFeedState } from './manager.js';
-import { INFRA_LOD_ACTIVE_MIN, INFRA_LOD_ACTIVE_MAX } from './localGeojsonLod.js';
+import {
+  INFRA_LOD_ACTIVE_MIN,
+  INFRA_LOD_ACTIVE_MAX,
+} from './localGeojsonLod.js';
 import {
   installRenderGovernor,
   getRenderGovernorDiagnostics,
@@ -59,6 +64,15 @@ async function createRealLocalLayerHarness({
   surfaceRenderer = 'entities',
   primitiveAddThrowsAfterAttach = false,
   featureCount = 1,
+  featureSpacingDegrees = 0.03,
+  initialCameraHeightM = 100_000,
+  initialGlobe = null,
+  autoEnable = true,
+  projectToWindow = () => ({ x: 400, y: 300 }),
+  servicesOverrides = null,
+  osmDerived = false,
+  onOverlayEntries = null,
+  onOverlayClear = null,
 } = {}) {
   const originalFetch = globalThis.fetch;
   const originalWindow = globalThis.window;
@@ -115,7 +129,7 @@ async function createRealLocalLayerHarness({
     },
   };
   const features = Array.from({ length: featureCount }, (_, index) => {
-    const shift = index * 0.03;
+    const shift = index * featureSpacingDegrees;
     return {
       type: 'Feature',
       id: index === 0 ? 'real-dam' : `real-dam-${index}`,
@@ -139,18 +153,30 @@ async function createRealLocalLayerHarness({
   const geojsonLines = features
     .map((feature) => JSON.stringify(feature))
     .join('\n');
-  globalThis.fetch = async () => ({
+  const serveFixture = async () => ({
     ok: true,
     status: 200,
     text: async () => geojsonLines,
   });
   globalThis.window = { dispatchEvent() {} };
   let sampleHeightImpl = sampleHeight;
-  const sampleCalls = { count: 0 };
+  const sampleCalls = { count: 0, records: [] };
+  const publications = [];
   const overlayHost = {
     setVisible: (...args) => hostCalls.push(['visible', ...args]),
-    setEntries: (...args) => hostCalls.push(['entries', ...args]),
-    clearSource: (...args) => hostCalls.push(['clear', ...args]),
+    setEntries: (...args) => {
+      hostCalls.push(['entries', ...args]);
+      onOverlayEntries?.(...args, {
+        layer,
+        viewer,
+        dataSources,
+        primitiveOwners,
+      });
+    },
+    clearSource: (...args) => {
+      hostCalls.push(['clear', ...args]);
+      onOverlayClear?.(...args);
+    },
   };
   const viewer = {
     selectedEntity: undefined,
@@ -166,7 +192,11 @@ async function createRealLocalLayerHarness({
       },
     },
     camera: {
-      positionWC: Cesium.Cartesian3.fromDegrees(-97.695, 30.205, 100_000),
+      positionWC: Cesium.Cartesian3.fromDegrees(
+        -97.695,
+        30.205,
+        initialCameraHeightM,
+      ),
       frustum: { fov: Math.PI / 3 },
       moveEnd,
       flyTo(options) {
@@ -177,39 +207,66 @@ async function createRealLocalLayerHarness({
       canvas: { clientWidth: 800, clientHeight: 600 },
       primitives,
       preRender,
+      globe: initialGlobe,
       sampleHeightSupported,
       sampleHeight: (...args) => {
         sampleCalls.count += 1;
+        sampleCalls.records.push({
+          cartographic: args[0],
+          exclusions: args[1],
+          dataSourcesHidden: dataSources.every(
+            (source) => source.show === false,
+          ),
+          primitiveOwnersHidden: primitiveOwners.every(
+            (owner) => owner.show === false,
+          ),
+        });
         return sampleHeightImpl(...args);
       },
       screenSpaceCameraController: { enableInputs: true },
       pick() {
         return picked;
       },
-      requestRender() {},
+      requestRender() {
+        publications.push(
+          dataSources.map((source) => ({
+            show: source.show,
+            entities: source.entities.values.map((entity) => ({
+              id: entity.id,
+              base: Cesium.Cartesian3.clone(entity.__localBaseCartesian),
+              tip: Cesium.Cartesian3.clone(
+                entity.position.getValue(Cesium.JulianDate.now()),
+              ),
+            })),
+          })),
+        );
+      },
     },
   };
-  const layer = createLocalGeoJsonLayer({
+  const layerOptions = {
     id: 'local-dams',
     url: '/runtime-dam.geojsonl',
     name: 'Runtime Dams',
     color: '#0088ff',
     surfaceRenderer,
+    osmDerived,
     overlayHost,
-    projectToWindow: () => ({ x: 400, y: 300 }),
+    projectToWindow,
     screenSpaceEventHandlerFactory: () => ({
       setInputAction(action) {
         clickAction = action;
       },
       destroy() {},
     }),
-  });
-  try {
-    await layer.enable(viewer);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-  return {
+  };
+  const layer = servicesOverrides
+    ? createCoreLocalGeoJsonLayer(layerOptions, {
+        ...localGeoJsonServices,
+        ...servicesOverrides,
+        overlayHost,
+      })
+    : createLocalGeoJsonLayer(layerOptions);
+  const environment = {
     layer,
     viewer,
     dataSources,
@@ -219,6 +276,15 @@ async function createRealLocalLayerHarness({
     preRender,
     moveEnd,
     sampleCalls,
+    publications,
+    async enable() {
+      globalThis.fetch = serveFixture;
+      try {
+        await layer.enable(viewer);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
     /** Swap scene.sampleHeight mid-test (e.g. tiles finally arrive). */
     setSampleHeight(next) {
       sampleHeightImpl = next;
@@ -230,12 +296,621 @@ async function createRealLocalLayerHarness({
       clickAction?.({ position });
     },
     cleanup() {
+      globalThis.fetch = originalFetch;
       if (originalWindow === undefined) delete globalThis.window;
       else globalThis.window = originalWindow;
       restoreBrowserClassStubs();
     },
   };
+  if (autoEnable) await environment.enable();
+  return environment;
 }
+
+for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+  for (const [terrainHeight, sampledHeight, expectedHeight, globeShown] of [
+    [117, -2238, 117, true],
+    [-400, -410, -400, true],
+    [117, 180, 180, true],
+    [117, -20, -20, false],
+  ]) {
+    test(`initial ${surfaceRenderer} grounding stays hidden and first publication preserves exact surface ${expectedHeight}`, async (t) => {
+      installFakeClock(t);
+      const env = await createRealLocalLayerHarness({
+        autoEnable: false,
+        surfaceRenderer,
+        featureCount: 3,
+        initialCameraHeightM: 20_000,
+        sampleHeightSupported: true,
+        sampleHeight: () => sampledHeight,
+        initialGlobe: {
+          show: globeShown,
+          tilesLoaded: true,
+          getHeight: () => terrainHeight,
+        },
+      });
+      t.after(() => {
+        env.layer.destroy(env.viewer);
+        env.cleanup();
+      });
+      await env.enable();
+      assert.equal(env.sampleCalls.count, 3);
+      assert.ok(
+        env.sampleCalls.records.every(
+          (record) => record.dataSourcesHidden && record.primitiveOwnersHidden,
+        ),
+      );
+      assert.equal(env.dataSources.length, 1);
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(env.primitiveOwners.every((owner) => owner.show === true));
+      assert.equal(env.layer.getLodDiagnostics().active, 3);
+      assert.equal(env.layer.getLodDiagnostics().computed, true);
+      assert.equal(env.layer.getAnalystRecords().length, 3);
+      const published = env.publications.at(-1)[0];
+      assert.equal(published.show, true);
+      assert.equal(published.entities.length, 3);
+      for (const [
+        index,
+        entity,
+      ] of env.dataSources[0].entities.values.entries()) {
+        const query = env.sampleCalls.records[index];
+        assert.equal(
+          query.cartographic,
+          entity.__localBaseCarto,
+          'same exact sample cartographic',
+        );
+        assert.deepEqual(
+          query.exclusions,
+          [entity],
+          'same native pick exclusion identity',
+        );
+        const initialBase = Cesium.Cartesian3.fromRadians(
+          query.cartographic.longitude,
+          query.cartographic.latitude,
+          0,
+        );
+        const distance = Cesium.Cartesian3.distance(
+          env.viewer.camera.positionWC,
+          initialBase,
+        );
+        const tipHeight =
+          expectedHeight + distance * 2 * Math.tan(Math.PI / 6) * (65 / 600);
+        const expectedTip = Cesium.Cartesian3.fromRadians(
+          query.cartographic.longitude,
+          query.cartographic.latitude,
+          tipHeight,
+        );
+        assert.ok(
+          Cesium.Cartesian3.distance(
+            published.entities[index].tip,
+            expectedTip,
+          ) < 1e-6,
+          'first published tip matches unchanged ground and screen-size equation',
+        );
+        assert.ok(
+          Math.abs(
+            Cesium.Cartographic.fromCartesian(published.entities[index].base)
+              .height - expectedHeight,
+          ) < 0.01,
+        );
+        assert.equal(published.entities[index].id, entity.id);
+      }
+      env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        3,
+        'first visible frame does not repeat the initial readbacks',
+      );
+    });
+  }
+  test(`coincident ${surfaceRenderer} features retain separate identities and exact queries`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false, surfaceRenderer, featureCount: 3, featureSpacingDegrees: 0,
+      initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    });
+    t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+    await env.enable();
+    const entities = env.dataSources[0].entities.values;
+    assert.equal(entities.length, 3);
+    assert.equal(new Set(entities.map(entity => entity.id)).size, 3);
+    assert.equal(env.layer.getAnalystRecords().length, 3);
+    assert.equal(new Set(env.layer.getAnalystRecords().map(record => record.sourceRecordId)).size, 3);
+    assert.equal(env.layer.getLodDiagnostics().active, 3);
+    assert.equal(env.sampleCalls.count, 3, 'no coordinate-key coalescing or hidden shared cache');
+    const [first] = env.sampleCalls.records;
+    for (const [index, record] of env.sampleCalls.records.entries()) {
+      assert.deepEqual(record.cartographic, first.cartographic);
+      assert.equal(record.cartographic, entities[index].__localBaseCarto);
+      assert.deepEqual(record.exclusions, [entities[index]]);
+      assert.equal(record.dataSourcesHidden, true);
+      assert.equal(record.primitiveOwnersHidden, true);
+    }
+  });
+}
+
+test('aborted activation never samples or publishes its completed hidden load', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const pending = env.enable();
+  env.layer.disable(env.viewer);
+  await pending;
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.layer.getLodDiagnostics().total, 0);
+});
+
+test('only the latest activation samples and publishes a shared pending load', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const stale = env.enable();
+  const latest = env.layer.enable(env.viewer);
+  await Promise.all([stale, latest]);
+  assert.equal(
+    env.sampleCalls.count,
+    1,
+    'superseded continuation cannot run another grounding pass',
+  );
+  assert.equal(env.publications.length, 1);
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.preRender.listeners.size, 1);
+  assert.equal(env.moveEnd.listeners.size, 1);
+  assert.equal(env.dataSources[0].show, true);
+});
+
+test('destroy during asynchronous scene insertion removes the exact late owner without sampling', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  let finishAdd;
+  env.viewer.dataSources.add = (source) =>
+    new Promise((resolve) => {
+      finishAdd = () => {
+        env.dataSources.push(source);
+        resolve(source);
+      };
+    });
+  const pending = env.enable();
+  for (let turn = 0; turn < 32 && !finishAdd; turn++) await Promise.resolve();
+  assert.ok(
+    finishAdd,
+    'fixture reached the real asynchronous insertion boundary',
+  );
+  env.layer.destroy(env.viewer);
+  finishAdd();
+  await pending;
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('initial preparation failure releases hidden resources and permits a clean retry', async (t) => {
+  installFakeClock(t);
+  let failProjection = true;
+  const credits = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    osmDerived: true,
+    servicesOverrides: {
+      showOsmCredit: () => credits.push('show'),
+      hideOsmCredit: () => credits.push('hide'),
+    },
+    projectToWindow: () => {
+      if (failProjection) throw new Error('initial projection failed');
+      return { x: 400, y: 300 };
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await assert.rejects(env.enable(), /initial projection failed/);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.layer.getStats().count, 0);
+  assert.equal(env.layer.getStats().lastUpdate, null);
+  assert.match(env.layer.getStats().error, /initial projection failed/);
+  assert.deepEqual(credits, ['show', 'hide']);
+  assert.equal(
+    env.hostCalls.some((call) => call[0] === 'entries'),
+    false,
+    'hidden preparation cannot publish an overlay cohort',
+  );
+  assert.deepEqual(
+    env.hostCalls
+      .filter((call) => call[0] === 'visible')
+      .map((call) => call[2]),
+    [true, false],
+  );
+  failProjection = false;
+  await env.enable();
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.primitiveOwners[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+});
+
+for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+  test(`hidden preparation matches the normal first visible ${surfaceRenderer} pass`, async (t) => {
+    installFakeClock(t);
+    const snapshot = (env) => ({
+      lod: env.layer.getLodDiagnostics(),
+      analyst: env.layer.getAnalystRecords(),
+      entities: env.dataSources[0].entities.values.map((entity) => ({
+        id: entity.id,
+        show: entity.show,
+        base: [
+          entity.__localBaseCartesian.x,
+          entity.__localBaseCartesian.y,
+          entity.__localBaseCartesian.z,
+        ],
+        tip: Object.values(
+          Cesium.Cartesian3.clone(
+            entity.position.getValue(Cesium.JulianDate.now()),
+          ),
+        ),
+      })),
+      queries: env.sampleCalls.records.map((record) => ({
+        position: [
+          record.cartographic.longitude,
+          record.cartographic.latitude,
+          record.cartographic.height,
+        ],
+        excludedIds: record.exclusions.map((entity) => entity.id),
+      })),
+      cohort: env.hostCalls
+        .filter((call) => call[0] === 'entries')
+        .at(-1)?.[2]
+        .map((entry) => ({
+          id: entry.id,
+          title: entry.title,
+          source: entry.source,
+          details: entry.details,
+          position: [entry.position.x, entry.position.y, entry.position.z],
+        })),
+    });
+    const common = {
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeight: () => 180,
+      initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+    };
+    const prepared = await createRealLocalLayerHarness({
+      ...common,
+      sampleHeightSupported: true,
+    });
+    await prepared.enable();
+    const expected = snapshot(prepared);
+    prepared.layer.destroy(prepared.viewer);
+    prepared.cleanup();
+    const normal = await createRealLocalLayerHarness({
+      ...common,
+      sampleHeightSupported: false,
+    });
+    t.after(() => {
+      normal.layer.destroy(normal.viewer);
+      normal.cleanup();
+    });
+    await normal.enable();
+    assert.equal(normal.layer.getLodDiagnostics().computed, false);
+    normal.viewer.scene.sampleHeightSupported = true;
+    normal.preRender.raise();
+    assert.deepEqual(
+      snapshot(normal),
+      expected,
+      'same exact geometry, selection, evidence, exclusions and cohort as the existing visible pass',
+    );
+  });
+}
+
+test('overlay publication sees visible owners and a reentrant disable cannot resurrect them', async (t) => {
+  installFakeClock(t);
+  let published = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    onOverlayEntries: (id, entries, options, context) => {
+      assert.ok(context.dataSources.every((source) => source.show === true));
+      assert.ok(context.primitiveOwners.every((owner) => owner.show === true));
+      published = entries;
+      context.layer.disable(context.viewer);
+    },
+    onOverlayClear: () => {
+      published = [];
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.deepEqual(published, []);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(
+    env.publications.length,
+    0,
+    'cancelled activation must not request a publication render',
+  );
+});
+
+test('a partially successful overlay host write is cleared when publication fails', async (t) => {
+  installFakeClock(t);
+  let published = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    onOverlayEntries: (id, entries) => {
+      published = entries;
+      throw new Error('host write failed');
+    },
+    onOverlayClear: () => {
+      published = [];
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await assert.rejects(env.enable(), /host write failed/);
+  assert.deepEqual(published, []);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('reentrant cancellation during a query prevents later queries and stale primitive writes', async (t) => {
+  installFakeClock(t);
+  let env;
+  let queriedEntity;
+  let originalBase;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      queriedEntity = entity;
+      originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+      env.layer.disable(env.viewer);
+      return 117;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(
+    env.sampleCalls.count,
+    1,
+    'an already-entered public query may finish; cancellation prevents every later query',
+  );
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 0);
+  assert.deepEqual(queriedEntity.__localBaseCartesian, originalBase, 'cancelled readback must not mutate its released Entity');
+});
+
+test('terrain-floor callback cancellation does not write the released ground record', async (t) => {
+  installFakeClock(t);
+  let env;
+  let releasedEntity;
+  let originalBase;
+  const globe = { show: true, tilesLoaded: true, getHeight() {
+    releasedEntity = env.dataSources[0].entities.values[0];
+    originalBase = Cesium.Cartesian3.clone(releasedEntity.__localBaseCartesian);
+    env.layer.disable(env.viewer);
+    return 180;
+  } };
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, surfaceRenderer: 'primitive-collections', initialCameraHeightM: 20_000,
+    sampleHeightSupported: true, sampleHeight: () => 117, initialGlobe: globe,
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.deepEqual(releasedEntity.__localBaseCartesian, originalBase);
+  assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 0); assert.equal(env.preRender.listeners.size, 0);
+});
+
+test('real position definitionChanged cancellation prevents every following primitive write', async (t) => {
+  installFakeClock(t);
+  let env;
+  let positionEvents = 0;
+  let primitiveWrites = 0;
+  let releasedOwner;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, surfaceRenderer: 'primitive-collections', initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      releasedOwner = env.primitiveOwners[0];
+      const point = releasedOwner.get(0).get(0);
+      const stem = releasedOwner.get(1).get(0);
+      for (const [primitive, property] of [[point, 'position'], [stem, 'positions']]) {
+        let value = primitive[property];
+        Object.defineProperty(primitive, property, { configurable: true,
+          get: () => value, set(next) { primitiveWrites += 1; value = next; },
+        });
+      }
+      entity.position.definitionChanged.addEventListener(() => {
+        positionEvents += 1;
+        assert.equal(releasedOwner.show, false, 'callback occurs during hidden preparation');
+        env.layer.disable(env.viewer);
+      });
+      return 117;
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(positionEvents, 1, 'real ConstantPositionProperty raised the synchronous callback');
+  assert.equal(releasedOwner.isDestroyed(), true);
+  assert.equal(primitiveWrites, 0, 'no attempted point or stem writes after callback teardown');
+  assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 0); assert.equal(env.preRender.listeners.size, 0);
+});
+
+test('projection callback cancellation cannot publish or dereference a released source', async (t) => {
+  installFakeClock(t);
+  let env;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    projectToWindow: () => { env.layer.disable(env.viewer); return { x: 400, y: 300 }; },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.dataSources.length, 0); assert.equal(env.publications.length, 0);
+  assert.equal(env.hostCalls.some(call => call[0] === 'entries'), false);
+  assert.equal(env.preRender.listeners.size, 0); assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('an unavailable camera preserves the existing deferred visibility path', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  env.viewer.camera.positionWC = undefined;
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources[0].show, true);
+  env.preRender.raise();
+});
+
+test('an initial depth miss keeps the existing visible fallback and bounded retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  env.setSampleHeight(() => 117);
+  clock.advance(2_100);
+  t.mock.timers.tick(2_100);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 2);
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+  env.layer.disable(env.viewer);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+});
+
+test('streaming initial terrain keeps the existing deferred pass and bounded retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const globe = { show: true, tilesLoaded: false, getHeight: () => 117 };
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    initialGlobe: globe,
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.layer.getLodDiagnostics().computed, false);
+  assert.equal(env.dataSources[0].show, true);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  globe.tilesLoaded = true;
+  clock.advance(2_100);
+  t.mock.timers.tick(2_100);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+});
+
+test('a failed empty-cohort host write retains cleanup ownership of its previous cohort', () => {
+  let entries = [];
+  let clearCount = 0;
+  const publisher = createLocalInfrastructureOverlayPublisher({
+    sourceId: 'local-dams',
+    host: {
+      setVisible() {},
+      setEntries(id, next) {
+        if (next.length === 0) throw new Error('empty write failed');
+        entries = next;
+      },
+      clearSource() { entries = []; clearCount += 1; },
+    },
+  });
+  publisher.show();
+  publisher.publish([{ id: 'owned' }]);
+  assert.throws(() => publisher.publish([]), /empty write failed/);
+  publisher.hide();
+  assert.equal(clearCount, 1);
+  assert.deepEqual(entries, []);
+});
 
 test('local infrastructure card copy uses the owner-approved source fields', () => {
   assert.deepEqual(localInfrastructureOverlayCopy({
