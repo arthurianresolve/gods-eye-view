@@ -25,6 +25,41 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
+The public QA head `09df4331` has passed [all seven selected CI
+jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39482916327)
+and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39482916170).
+Twelve optional jobs were skipped. This validates that head's software checks;
+it does not close the hardware gates below.
+
+The latest private experiment `143eae30` removes redundant inactive Context
+writes and skips intrinsic Data-panel measurement only when a guarded padding
+lower bound proves the same allocation. An initial implementation, `e96717fe`,
+was ineligible in the real fixture because it required visible HUD readouts;
+the fixture hides those readouts while keeping the Data panel visible.
+The corrected child passes 208 focused Node 24 tests, 291 focused Node 26
+tests, import/package checks, an isolated production build, and ten mounted
+browser cases with HUD readouts off. Placement is equivalent in those cases,
+including ordinary measurement fallback for physically hidden panels.
+
+Its six-action diagnostic against `ec0f1b2b` nevertheless demonstrates
+**no sufficient latency benefit**. Native durations are
+**304/160/40/112/40/96 ms** on the control and
+**384/304/40/112/40/88 ms** on the child. ON readiness is
+**428/106.3/110.7 ms** versus **560.8/123/119.8 ms**. Both roles complete
+normally with verified assets and foreground observations. No left intrinsic
+measurement markers are retained for the child, and its final public metadata
+reports the lower-bound path; that final observation alone is not proof of
+each action's branch. This experiment remains private and is not adopted.
+Raw SHA-256:
+`fff0d076754c768789a3221ce8522ea7e7eaebc1efe3fabb8a06f0c696319607`.
+The preceding failed diagnostic and all raw samples remain preserved.
+The [disposition receipt](performance-evidence/s69-native-matrix-20261019/context-bound-143eae30-rejected.json)
+binds the results to the complete 194-file VM archive and two independent
+readbacks.
+Six actions do not establish the twenty-sample gate. The next investigation
+must distinguish browser presentation work from completed Cesium rendering;
+another broad qualification run is not justified by this result.
+
 The latest formal attempt compares the default Entity application
 `ec0f1b2b` with correctness control `76cc760b`, using unchanged frozen QA
 `6de65358`, acknowledgement v6 and readiness v7. Both roles use the newly
