@@ -7,6 +7,46 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+For the next visual cohort, adopt the prospective
+[decoration quantization contract](performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/policy.md).
+The completed 24-image `c373d91b` / `3cd4d528` cohort remains a strict-policy
+failure. Independent baseline images establish small color differences in the
+unchanged logo filter and CCTV badge border; some later cross-build one-level
+differences are systematic and are not labeled random noise.
+The new rule permits at most two RGB levels within the source-derived logo
+filter support, excluding its exact opaque interior, and seven at the badge's
+mathematical antialiased border, excluding text. Alpha and all other pixels
+remain exact. It also requires unchanged source, text, fonts, geometry and
+before/after capture proof, with all sixty image comparisons passing.
+This is an explicit bounded quality-equivalence amendment for a new predeclared
+capture, not a retrospective acceptance of existing images. Commit `2e448245`
+implements the opt-in rule. The initial 88-test closure and final eleven
+affected checks pass on both Node 24 and 26; all 43 Windows image-integration
+checks pass. Independent review verifies the exact source and receipts.
+Hardware validation under this new policy remains pending.
+
+Runtime `e6e1abc1` moves invariant panel-spacing and collapsed-sibling reads
+before temporary measurement styles are restored, avoiding a redundant forced
+layout. Its [validation receipt](performance-evidence/s69-native-matrix-20261019/rail-measurement-validation.json)
+records 96 passing focused tests on each Node version, with both new regression
+tests failing against the original runtime. One package check was terminated
+with SIGKILL while VM memory was exhausted; the cause of that signal is not
+independently established. That failed attempt is preserved, and the missing
+check passes in isolation. The first new paired hardware attempt stops before
+application navigation or samples: Chrome's page reports the maximized
+1280 × 537 viewport while its debugging API still reports 1037 × 511.
+The exact consistency check rejects this transient disagreement, and the
+browser closes normally. Its six raw files remain preserved. A bounded
+preparation-only settlement correction is under development; no latency
+benefit is claimed yet.
+
+The formal metrics producer at `ff927fb2` now supports an explicit native-window
+mode. Its [146-test validation](performance-evidence/s69-native-matrix-20261019/native-window-metrics-validation.json)
+passes on both Node versions. Complete owned-window proofs are required at
+startup, document restore, cohort boundaries and workspace-restore checkpoints.
+The existing twenty-sample count, 100 ms / 250 ms limits and 10% regression gate
+remain unchanged; legacy fixed-size reports keep their original interpretation.
+
 The completed [native-window diagnostic](performance-evidence/s69-native-matrix-20261019/native-window-c373d91b-diagnostic.json)
 uses driver `3360f672`, unchanged runtime `c373d91b` and control `8c14b106`.
 All twenty owned-window checkpoints prove that the 1280 × 537 CSS viewport and

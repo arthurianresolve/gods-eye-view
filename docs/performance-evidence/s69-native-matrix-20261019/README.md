@@ -2,6 +2,50 @@
 
 ## Current qualification checkpoint
 
+The next visual cohort will use the explicitly amended
+[source-bound decoration contract](decoration-quantization-v1/policy.md).
+The complete `c373d91b` / QA `3cd4d528` cohort retains all 24 images and fails
+its original strict consumer. Its 35 files (67,400,789 bytes) are preserved
+on VM105 at `repeated-full-extent-c373d91b-3cd4d528-complete-20261020`.
+All images were captured on their first attempt, with normal browser cleanup.
+Independent examination of all sixty pairs isolates differences to the
+unchanged logo filter and badge border, with equal source/semantic evidence.
+The later cohort includes stable one-level cross-build shifts, so this is
+not a claim that all differences are random.
+
+The prospective rule uses independently calibrated channel bounds of two for
+the source-derived logo filter support and seven for the mathematical badge
+border. The logo's opaque interior, badge text/interior, exterior RGB and
+all alpha remain exact. Complete source, text, actual font, geometry and
+capture-boundary proof must match, and every one of the sixty pairs must pass.
+No pixels are ignored and no nearest-control fallback or pixel-count budget
+applies. Commit `2e448245` implements the opt-in rule. Its initial 88-test closure
+and final eleven affected tests pass on both Node 24 and 26, along with 43
+Windows image-integration tests. Independent source/receipt review passes.
+A newly declared and captured cohort is still required before visual acceptance.
+
+The [rail measurement correction](rail-measurement-validation.json) at
+`e6e1abc1` preserves the existing layout equations while reading invariant
+spacing before temporary measurement styles are restored. Both Node versions
+pass 96 focused tests; the two new regression cases fail on the original
+runtime. The earlier Node 24 package check ended with SIGKILL during observed
+VM memory exhaustion, rather than the initially suspected timeout. Its empty
+log and failed receipt remain preserved; the missing check passes in isolation.
+The first new paired hardware attempt stops before navigation or samples:
+the page has its maximized 1280 × 537 viewport, but CDP still reports
+1037 × 511. The exact consistency check rejects the transient disagreement.
+Its six files (71,185 bytes) are retained at VM task
+`native-window-rail-comparison-e6e1abc1-3360f672-preparation-failed-20261020`;
+the browser closes normally with no forced termination. A bounded
+preparation-only settlement correction is under development. This is not
+application performance evidence and establishes no latency benefit.
+
+The formal producer at `ff927fb2` adds explicit native-window qualification
+without changing old fixed-size reports or timing gates. Its
+[validation receipt](native-window-metrics-validation.json) records 146 tests
+passing on each Node version, plus the required static checks. This implements
+the capture/consumer contract; it does not qualify the application by itself.
+
 The completed [native-window diagnostic](native-window-c373d91b-diagnostic.json)
 and [independent VM readback](native-window-c373d91b-readback.json) retain all
 six raw files (1,712,120 bytes), twenty owned-window checkpoints and sixteen
