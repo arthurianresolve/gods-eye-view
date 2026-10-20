@@ -271,6 +271,9 @@ export function buildQualificationIdentity(
     applicationCommit: actual.applicationCommit,
     browserVersion: actual.browserVersion,
     renderer: actual.renderer,
+    // Observed capability metadata only; absent evidence remains unavailable.
+    // Acceleration classification and acceptance gates do not depend on it.
+    graphics: actual.graphics ?? null,
     userAgent: actual.userAgent,
     platform: actual.platform,
     viewport: actual.viewport,
@@ -1846,6 +1849,7 @@ export async function collectQualificationMetricsForBuild({
       applicationCommit: driver.applicationCommit,
       browserVersion: version,
       renderer: renderer?.renderer,
+      graphics: structuredClone(driver.graphics ?? null),
       ...settings,
     };
     const nativeWindowProof = nativeWindowViewport

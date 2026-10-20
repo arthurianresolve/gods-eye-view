@@ -39,7 +39,9 @@ import {
   INTERACTION_EVENT_TIMING_PLAN_V4,
   INTERACTION_EVENT_TIMING_PLAN_V5,
   INTERACTION_EVENT_TIMING_PLAN_V6,
+  assertInteractionEventTimingPlan,
 } from './interactionEventTiming.mjs';
+import { readBrowserGraphicsInfo } from './rendererEvidence.mjs';
 import {
   createQualificationBuildIdentityPlan,
   inspectQualificationBuildIdentityPlan,
@@ -2723,6 +2725,142 @@ test('capture identity carries observed 1440x1000 workload settings instead of m
       }),
     /height/,
   );
+});
+
+test('actual collector retains the existing graphics snapshot and missing status without new queries', async () => {
+  const source = readFileSync(
+    new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
+    'utf8',
+  );
+  const guardStart = source.indexOf('function assertCaptureEventTimingPlan(');
+  const guardEnd = source.indexOf(
+    '\nfunction circularAngleDifference(',
+    guardStart,
+  );
+  assert.ok(guardStart > 0 && guardEnd > guardStart);
+  const assertCaptureEventTimingPlan = runInNewContext(
+    `(${source.slice(guardStart, guardEnd)})`,
+    {
+      assert,
+      assertInteractionEventTimingPlan,
+      resolveQualificationEventTimingPlan,
+    },
+  );
+  for (const rasterization of [
+    'enabled',
+    'disabled_software',
+    undefined,
+    null,
+    'query-unavailable',
+  ]) {
+    const commands = [];
+    let detached = 0;
+    const graphics =
+      rasterization === null
+        ? undefined
+        : await readBrowserGraphicsInfo({
+            target: () => ({
+              createCDPSession: async () => ({
+                async send(command) {
+                  commands.push(command);
+                  if (
+                    command === 'SystemInfo.getInfo' &&
+                    rasterization === 'query-unavailable'
+                  )
+                    throw new Error('unsupported GPU query');
+                  return command === 'SystemInfo.getInfo'
+                    ? {
+                        gpu: {
+                          featureStatus: {
+                            webgl: 'enabled',
+                            gpu_compositing: 'enabled',
+                            ...(rasterization === undefined
+                              ? {}
+                              : { rasterization }),
+                          },
+                          devices: [],
+                        },
+                      }
+                    : { product: ID.browserVersion };
+                },
+                async detach() {
+                  detached++;
+                },
+              }),
+            }),
+          });
+    const originalGraphics = structuredClone(graphics ?? null);
+    const actual = identity('1');
+    const expected = { ...actual, sourceProfile: ID.sourceProfile };
+    let closeCalls = 0;
+    const driver = {
+      applicationCommit: actual.applicationCommit,
+      browserVersion: actual.browserVersion,
+      renderer: { renderer: actual.renderer },
+      hardwareRenderingValidated: true,
+      ...(rasterization === null ? {} : { graphics }),
+      page: {
+        async evaluate(callback) {
+          assert.equal(callback, readEffectiveMeasurementStateInPage);
+          return actual;
+        },
+      },
+      readDatacenterSoakFixtureReceipt: () => null,
+      async close() {
+        closeCalls++;
+        return { closeCompleted: true, forcedProcessTermination: false };
+      },
+    };
+    const execute = runInNewContext(
+      `(${collectQualificationMetricsForBuild.toString()})`,
+      {
+        assert,
+        structuredClone,
+        assertCaptureEventTimingPlan,
+        buildQualificationIdentity,
+        readEffectiveMeasurementStateInPage,
+        process: { platform: 'test-no-foreground', env: {} },
+        INTERACTION_EVENT_TIMING_PLAN,
+        INTERACTION_PROTOCOL:
+          'trusted-click-event-timing-prerender-postrender-witness-v7',
+        LOCAL_READINESS_REGISTRATION_POLICY,
+      },
+    );
+    const result = await execute({
+      role: 'baseline',
+      url: 'http://127.0.0.1:4323/',
+      expected,
+      fixture: {},
+      eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN_V6,
+      createDriver: async () => driver,
+    });
+    assert.equal(result.status, 'failed');
+    assert.equal(
+      result.failureReason,
+      'Qualification capture requires a Windows foreground witness.',
+      'Stop after the real identity boundary without browser or foreground work',
+    );
+    assert.equal(closeCalls, 1);
+    assert.deepEqual(result.identity.graphics, originalGraphics);
+    if (graphics) {
+      assert.equal(
+        result.identity.graphics.featureStatus.rasterization,
+        rasterization ?? null,
+      );
+      assert.notEqual(result.identity.graphics, driver.graphics);
+      driver.graphics.featureStatus.rasterization = 'later driver mutation';
+      assert.deepEqual(result.identity.graphics, originalGraphics);
+    } else assert.equal(result.identity.graphics, null);
+    assert.deepEqual(
+      commands,
+      rasterization === null
+        ? []
+        : rasterization === 'query-unavailable'
+          ? ['SystemInfo.getInfo']
+          : ['SystemInfo.getInfo', 'Browser.getVersion'],
+    );
+    assert.equal(detached, rasterization === null ? 0 : 1);
+  }
 });
 
 test('live settings use relevant getVisualState fields and exclude HUD state', () => {

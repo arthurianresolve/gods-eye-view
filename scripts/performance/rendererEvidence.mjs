@@ -60,10 +60,9 @@ export async function readBrowserGraphicsInfo(browser) {
     return {
       browserVersion,
       featureStatus: Object.fromEntries(
-        ['webgl', 'webgl2', 'gpu_compositing', 'opengl'].map((key) => [
-          key,
-          gpu?.featureStatus?.[key] ?? null,
-        ]),
+        ['webgl', 'webgl2', 'gpu_compositing', 'rasterization', 'opengl'].map(
+          (key) => [key, gpu?.featureStatus?.[key] ?? null],
+        ),
       ),
       devices: (gpu?.devices || []).slice(0, 4).map((device) => ({
         vendor: String(device.vendorString || '').slice(0, 160),
