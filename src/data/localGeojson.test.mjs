@@ -442,6 +442,156 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
   });
 }
 
+for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+  test(`${surfaceRenderer} attachment observes completed graphics without setup notifications`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 117,
+    });
+    const removeObservers = [];
+    t.after(() => {
+      for (const remove of removeObservers) remove();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const originalAdd = env.viewer.dataSources.add;
+    let attachedEntities;
+    let collectionChanges = 0;
+    let setupChanges = 0;
+    let visibilityChanges = 0;
+    env.viewer.dataSources.add = (source) => {
+      assert.equal(source.show, false);
+      assert.equal(env.preRender.listeners.size, 0);
+      assert.equal(env.sampleCalls.count, 0);
+      attachedEntities = [...source.entities.values];
+      assert.equal(attachedEntities.length, 3);
+      for (const entity of attachedEntities) {
+        assert.equal(entity.__localLayerId, 'local-dams');
+        assert.ok(entity.__localBaseCarto);
+        assert.ok(entity.__localBaseCartesian);
+        assert.ok(entity.position instanceof Cesium.ConstantPositionProperty);
+        if (surfaceRenderer === 'entities') {
+          assert.ok(entity.point instanceof Cesium.PointGraphics);
+          assert.ok(entity.polyline instanceof Cesium.PolylineGraphics);
+        } else {
+          assert.equal(entity.point, undefined);
+          assert.equal(entity.polyline, undefined);
+        }
+        removeObservers.push(
+          entity.definitionChanged.addEventListener((_entity, property) => {
+            if (property === 'isShowing') visibilityChanges++;
+            else setupChanges++;
+          }),
+        );
+      }
+      removeObservers.push(
+        source.entities.collectionChanged.addEventListener(() => {
+          collectionChanges++;
+        }),
+      );
+      return originalAdd(source);
+    };
+
+    await env.enable();
+    assert.equal(setupChanges, 0, 'Attached visualizers need no setup graphics notifications');
+    assert.equal(visibilityChanges, 3, 'Final source visibility must still reach each entity');
+    assert.deepEqual(env.dataSources[0].entities.values, attachedEntities);
+    assert.equal(env.sampleCalls.count, 0);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 3);
+    for (const [index, query] of env.sampleCalls.records.entries()) {
+      assert.equal(query.cartographic, attachedEntities[index].__localBaseCarto);
+      assert.deepEqual(query.exclusions, [attachedEntities[index]]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+    }
+    assert.ok(setupChanges > 0, 'Natural grounding must still update the live graphics');
+    assert.ok(collectionChanges > 1, 'The real Cesium collection observer sees publication and geometry changes');
+  });
+
+  test(`${surfaceRenderer} staged insertion is adopted only by the latest activation`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 117,
+    });
+    t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+    let finishAdd;
+    let stagedSource;
+    env.viewer.dataSources.add = (source) => {
+      stagedSource = source;
+      return new Promise((resolve) => {
+        finishAdd = () => {
+          env.dataSources.push(source);
+          resolve(source);
+        };
+      });
+    };
+    const obsolete = env.enable();
+    for (let turn = 0; turn < 32 && !finishAdd; turn++) await Promise.resolve();
+    assert.ok(finishAdd);
+    assert.equal(env.sampleCalls.count, 0);
+    env.layer.disable(env.viewer);
+    const latest = env.layer.enable(env.viewer);
+    finishAdd();
+    await Promise.all([obsolete, latest]);
+    assert.deepEqual(env.dataSources, [stagedSource]);
+    assert.equal(stagedSource.show, true);
+    assert.equal(env.preRender.addCount, 1);
+    assert.equal(env.moveEnd.addCount, 1);
+    assert.equal(env.publications.length, 1);
+    assert.equal(env.sampleCalls.count, 0);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 3);
+    assert.equal(env.layer.getAnalystRecords().length, 3);
+    for (const [index, query] of env.sampleCalls.records.entries()) {
+      assert.deepEqual(query.exclusions, [stagedSource.entities.values[index]]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+    }
+  });
+}
+
+test('destroy during staged context registration prevents attachment and later graphics writes', async (t) => {
+  let env;
+  let registrations = 0;
+  let changesAfterDestroy = 0;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    featureCount: 3,
+    servicesOverrides: {
+      registerEntityContext(entity) {
+        registrations++;
+        entity.definitionChanged.addEventListener(() => { changesAfterDestroy++; });
+        env.layer.destroy(env.viewer);
+      },
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  let addCalls = 0;
+  env.viewer.dataSources.add = () => { addCalls++; };
+  await env.enable();
+  assert.equal(registrations, 1);
+  assert.equal(changesAfterDestroy, 0);
+  assert.equal(addCalls, 0);
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().pendingJobs, 0);
+  assert.equal(env.layer.getLodDiagnostics().total, 0);
+});
+
 test('aborted activation never samples or publishes its completed load', async (t) => {
   installFakeClock(t);
   const env = await createRealLocalLayerHarness({
@@ -1695,7 +1845,9 @@ function asyncDataSources({ rejectAdd = false } = {}) {
   const added = [];
   return {
     added,
+    addCalls: 0,
     add(dataSource) {
+      this.addCalls++;
       if (rejectAdd) return Promise.reject(new Error('scene rejected the data source'));
       return Promise.resolve().then(() => {
         added.push(dataSource);
@@ -1727,11 +1879,7 @@ function windowThatFailsOnce() {
   };
 }
 
-test('a post-processing failure after the scene accepts the source rolls it back, and the retry does not double-add', async () => {
-  // The window between GeoJsonDataSource.load() and the end of entity
-  // post-processing. Publishing early made every later enable() skip the
-  // loader; rolling back before the add settled left Cesium to insert the
-  // "removed" source afterwards, which the retry would then double up on.
+test('a conversion failure never attaches a partial source and the retry adds once', async () => {
   const scene = asyncDataSources();
   const { layer, cleanup, enable } = await enableLayerWithFetch(serveOnePolygon, {
     dataSources: scene,
@@ -1744,7 +1892,8 @@ test('a post-processing failure after the scene accepts the source rolls it back
   assert.equal(failed.lastUpdate, null);
   assert.equal(layerFeedState(failed), 'unavailable');
   assert.equal(scene.added.length, 0,
-    'rollback must remove the source the scene already accepted');
+    'a conversion failure cannot leave a source in the scene');
+  assert.equal(scene.addCalls, 0, 'visualizers must never observe the failed conversion');
 
   await enable();
   const retried = layer.getStats();
@@ -1752,7 +1901,38 @@ test('a post-processing failure after the scene accepts the source rolls it back
   assert.equal(retried.count, 1);
   assert.ok(Number.isFinite(retried.lastUpdate));
   assert.equal(scene.added.length, 1, 'the retry must not leave two sources in the scene');
+  assert.equal(scene.addCalls, 1);
   cleanup();
+});
+
+test('a real collection listener failure after attachment removes the exact source and permits retry', async () => {
+  const scene = new Cesium.DataSourceCollection();
+  const accepted = [];
+  const removed = [];
+  let rejectOnce = true;
+  scene.dataSourceAdded.addEventListener((_collection, source) => {
+    accepted.push(source);
+    if (rejectOnce) {
+      rejectOnce = false;
+      throw new Error('scene listener rejected the added source');
+    }
+  });
+  scene.dataSourceRemoved.addEventListener((_collection, source) => { removed.push(source); });
+  const { layer, cleanup, enable } = await enableLayerWithFetch(serveOnePolygon, { dataSources: scene });
+  try {
+    assert.equal(layer.getStats().error, 'dataset unavailable (scene listener rejected the added source)');
+    assert.equal(layer.getStats().count, 0);
+    assert.equal(scene.length, 0);
+    assert.deepEqual(removed, [accepted[0]]);
+    await enable();
+    assert.equal(layer.getStats().error, null);
+    assert.equal(scene.length, 1);
+    assert.equal(accepted.length, 2);
+    assert.equal(scene.get(0), accepted[1]);
+    assert.notEqual(accepted[1], accepted[0]);
+  } finally {
+    cleanup();
+  }
 });
 
 test('a rejected scene add surfaces as an error instead of healthy stats', async () => {

@@ -721,18 +721,27 @@ export function createLocalGeoJsonLayer(
             _error = null;
             let loaded = null;
             let buildingSurfaceCollections = null;
-            // Whether the scene has actually accepted `loaded` — the two rollback
-            // windows (before vs after the add settles) need different cleanup.
-            let addedToScene = false;
+            // An add can attach before one of its listeners throws. Once the
+            // attempt starts, rollback must try removal even if it rejects.
+            let addAttempted = false;
             const disposeLoaded = () => {
               if (!loaded) return;
+              const sourceToDispose = loaded;
+              loaded = null;
+              let removed = false;
               try {
-                if (addedToScene) viewer?.dataSources?.remove(loaded, true);
-                else loaded.destroy?.();
+                if (addAttempted)
+                  removed =
+                    viewer?.dataSources?.remove(sourceToDispose, true) === true;
               } catch {
                 // A stale load can race viewer teardown; cleanup is best effort.
               }
-              loaded = null;
+              try {
+                if (!removed && !sourceToDispose.isDestroyed?.())
+                  sourceToDispose.destroy?.();
+              } catch {
+                // The collection may already have destroyed the same owner.
+              }
             };
             try {
               let features = _cachedFeatures;
@@ -773,21 +782,10 @@ export function createLocalGeoJsonLayer(
               }
               loaded.name = name;
               loaded.show = false;
-              // Cesium's DataSourceCollection.add() returns a promise and only
-              // inserts on a later microtask. Without this await, a throw during
-              // post-processing would roll back a source the scene had not
-              // accepted yet — and Cesium would then insert the "removed" source
-              // anyway, leaving an orphan the retry would double up on. Awaiting
-              // also routes an add() rejection into the error path below instead
-              // of leaving it uncaught with healthy-looking stats.
-              await viewer.dataSources.add(loaded);
-              addedToScene = true;
-              if (_destroyed) {
-                disposeLoaded();
-                return;
-              }
 
-              // Convert parsed points into 3D stems or style polygons
+              // Finish conversion before attachment. DataSourceDisplay creates
+              // visualizers on add; they need only the completed graphics, not
+              // every intermediate entity/property change during setup.
               const entities = loaded.entities.values;
               _count = entities.length;
               _stemRecords = [];
@@ -872,6 +870,10 @@ export function createLocalGeoJsonLayer(
                     Cesium.Math.toDegrees(carto.longitude).toFixed(6),
                   ),
                 });
+                if (_destroyed) {
+                  disposeLoaded();
+                  return;
+                }
 
                 // Constant properties are refreshed on the existing 450 ms source
                 // cadence. Cesium no longer evaluates 2-3 callbacks per entity on
@@ -933,6 +935,20 @@ export function createLocalGeoJsonLayer(
                 _stemRecords.push(stemRecord);
                 _stemRecordByEntity.set(feature, stemRecord);
               }
+              if (_destroyed) {
+                disposeLoaded();
+                return;
+              }
+              // Keep the asynchronous insertion boundary owned: await its exact
+              // result before publishing, and remove an owner that arrives after
+              // teardown. Grounding still runs only in the first natural visible
+              // preRender after the normal DataSourceDisplay update.
+              addAttempted = true;
+              await viewer.dataSources.add(loaded);
+              if (_destroyed) {
+                disposeLoaded();
+                return;
+              }
               if (surfaceRenderer === 'primitive-collections') {
                 buildingSurfaceCollections = createLocalSurfaceCollections(
                   _stemRecords,
@@ -954,25 +970,10 @@ export function createLocalGeoJsonLayer(
               // The dataset ships with the build, so this is a broken install,
               // not a blip — it has to reach the chip, not just the console.
               if (!_destroyed) _error = localDatasetError(e);
-              // Roll the partial build back so a later enable() retries from
-              // scratch instead of inheriting a half-populated source. Only the
-              // post-add window has something in the scene to remove: a failure
-              // before (or inside) add() never reached the collection, and
-              // removing then would race Cesium's pending insert.
-              if (addedToScene) {
-                try {
-                  viewer?.dataSources?.remove(loaded, true);
-                } catch {
-                  /* already gone */
-                }
-              } else {
-                try {
-                  loaded?.destroy?.();
-                } catch {
-                  /* already gone */
-                }
-              }
-              loaded = null;
+              // Conversion failure has no scene attachment. An attempted add
+              // has settled here and may have partially succeeded before its
+              // rejection, so rollback also checks that exact owner.
+              disposeLoaded();
               if (buildingSurfaceCollections)
                 releaseSurfaceCollections(viewer, buildingSurfaceCollections);
               if (_destroyed) return;
