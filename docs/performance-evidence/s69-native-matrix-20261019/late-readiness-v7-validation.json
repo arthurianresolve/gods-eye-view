@@ -1,0 +1,51 @@
+{
+  "schema": "gev-late-readiness-v7-validation/v1",
+  "runtime": "v24.16.0",
+  "platform": "win32",
+  "source": {
+    "scripts/qa-qualification-metrics-capture.mjs": "06c3e8cd75760420926da99ca2b6100cd3dea08f0b57946f95761cd104bf5468",
+    "scripts/performance/qualificationMetrics.mjs": "4f46219e9ecabc22bc39fd933393fc125960d748d3268ed438e7e57c58e11ce7",
+    "scripts/performance/qualificationMetrics.test.mjs": "72cbd896e4f485a1e7813f46071b39ec09d2ab7765795564389f978563d51c15",
+    "scripts/performance/interactionEventTiming.mjs": "45f6a24ccc56fca2e2288f214e4bbe7ea1c4eaef12dabb1fcbd772bc5fe914af"
+  },
+  "sourceStable": true,
+  "checks": [
+    {
+      "name": "focused",
+      "args": [
+        "--import",
+        "./qa-artifacts/windows-visual-dependencies.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "startedAt": "2026-10-20T13:57:47.861Z",
+      "endedAt": "2026-10-20T13:57:50.678Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "focused.log",
+      "sha256": "ce12cb5553217eb0d5147b30e20f5cadb09cfadc8b7308a18af211e777ed380d"
+    },
+    {
+      "name": "format",
+      "args": [
+        "../gev-dev/node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "scripts/qa-qualification-metrics-capture.mjs",
+        "scripts/performance/qualificationMetrics.mjs",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "startedAt": "2026-10-20T13:57:50.679Z",
+      "endedAt": "2026-10-20T13:57:51.468Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    }
+  ],
+  "status": "passed",
+  "scope": "focused browser-free qualification metrics tests and three-file formatting; no browser/GPU/VM/build; no acceptance rerating",
+  "priorAttempt": "Selected test run10/11 initially expected failed instead of existing unavailable on malformed proof; assertion corrected to non-measured, consumer unchanged."
+}

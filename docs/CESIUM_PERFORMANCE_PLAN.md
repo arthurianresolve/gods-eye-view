@@ -15,13 +15,13 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-| Scope   | Engineering                                                  | Automatic validation                                                              | Hardware qualification                                                                             |
-| ------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                           | Results have their recorded workload/revision scope; no blanket current-candidate pass             |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                     | Performance objectives and final acceptance unresolved                                             |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below             | Final shared qualification pending                                                                 |
-| S69     | Open: complete candidate qualification                       | Current full CI running; measurement corrections below require fresh validation   | Local-control latency remains unresolved; current visual, startup and matrix qualification pending |
-| S70     | Open: verify the staged artifact and deliver                 | Native-window soak support implemented; final packaging/deployment checks pending | One final frozen-runtime Ampfing soak pending                                                      |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                | Hardware qualification                                                                             |
+| ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                             | Results have their recorded workload/revision scope; no blanket current-candidate pass             |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                       | Performance objectives and final acceptance unresolved                                             |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                               | Final shared qualification pending                                                                 |
+| S69     | Open: complete candidate qualification                       | New measurement corrections pass 82 focused tests on each Node version and static checks; full integration tracked separately below | Local-control latency remains unresolved; current visual, startup and matrix qualification pending |
+| S70     | Open: verify the staged artifact and deliver                 | Native-window soak support implemented; final packaging/deployment checks pending                                                   | One final frozen-runtime Ampfing soak pending                                                      |
 
 ### Remaining work, in execution order
 
@@ -31,20 +31,30 @@ completion is separate from performance acceptance.
    [16–32 ms](performance-evidence/s69-native-matrix-20261019/native-dom-compositor-control.json);
    this rules out an unavoidable Windows/Chrome presentation floor under that
    control's conditions, but does not identify the application's cause.
-   Complete the already planned two-action application GPU-service trace;
-   choose any runtime change from its evidence. Do not repeat a broad cohort
-   merely to obtain a better result.
+   The two-action application GPU-service trace and bounded attribution are
+   complete. Investigate a safe change at the demonstrated repaint and
+   WebGL program-information boundaries; exact CSS or shader ownership is
+   not yet established. Keep activation and deactivation findings separate,
+   and require evidence before changing runtime behavior. Do not repeat a
+   broad cohort merely to obtain a better result.
 2. **Validate the prospective measurement corrections.** Explicit Event Timing
    policy v4 at `e5db55b9` permits a complete, timely natural reproof after mixed
    mutation batches, with [35 focused tests passing](performance-evidence/s69-native-matrix-20261019/fresh-reproof-v4-validation.json).
    Missing/late proof, observed hidden or contrary state, stale identity,
    later invalidation and measurement-restoration obligations still fail.
-   V2/v3 reports keep their original interpretation. The separate readiness
-   correction is in progress: bind the local pre-render observer to the exact
-   successful activation, after the layer installs its update callback.
-   Do not substitute a post-render state read that could accept changes made
-   after rendering. New acquisition/proof metadata and negative tests must
-   validate before use.
+   V2/v3 reports keep their original interpretation. Readiness protocol v7 at
+   `5f055666` now binds the local pre-render observer to the exact successful
+   activation, after the layer installs its update callback.
+   Its [initial 47 focused tests pass on Node 24](performance-evidence/s69-native-matrix-20261019/late-readiness-v7-validation.json),
+   including real Cesium event ordering and cleanup failures. The combined
+   exact-`5f055666` [VM validation](performance-evidence/s69-native-matrix-20261019/late-readiness-5f055666-validation.json)
+   now passes **82/82 tests on both Node 24 and Node 26**, with no skips, plus
+   formatting, undefined-variable, import and package checks.
+   [Independent readback](performance-evidence/s69-native-matrix-20261019/late-readiness-5f055666-readback.json)
+   verifies all 11 evidence files and eight source inputs. The protocol retains
+   separate before-render readiness and completed-frame observations, and
+   rejects readiness first created after rendering. Full integration and
+   fresh browser acquisition for the combined corrections remain pending.
 3. **Freeze the runtime and acquire fresh affected comparisons.** Declare the
    application, harness, fixtures, settings and prospective policies before
    capture. Run both sides with the same corrected protocol. Preserve old
@@ -98,12 +108,14 @@ first eligible frame or be relabeled with a prospective policy.
 ### Current evidence and blockers
 
 Integration [CI at `d07d9d10`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39432962137)
-is running: both full Node suites, Windows onboarding and Windows/Linux recovery
-have passed; Street Level and macOS recovery are not yet complete. The
+has passed all seven selected jobs: both full Node suites, Windows onboarding,
+Windows/macOS/Linux recovery and the combined browser gate. The
 [release build](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39432962118)
-has passed. These runs include the test repairs at `34c0ec0c`, but
-cannot validate the newer local QA corrections. Their focused validation is
-recorded separately above.
+also passed. The [CI receipt](performance-evidence/s69-native-matrix-20261019/qualification-d07d9d10-ci.json)
+records exact revisions, job URLs and equal head/merge trees. Twelve optional
+jobs were skipped and are not counted as passes. These runs include the test
+repairs at `34c0ec0c`, but cannot validate the newer QA corrections at
+`e5db55b9` and `5f055666`. Their focused validation is recorded separately above.
 
 The latest hardware-tested runtime is `fb389928`. Its
 [six-action comparison with `a18c6a76`](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)
@@ -117,7 +129,24 @@ was observed. The capture is diagnostic only and cannot replace twenty-sample
 qualification. Its raw files and independent review are
 [archived with verified hashes on VM105](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-transfer.json).
 
-The completed observer experiment separates observer overhead from application work.
+The [two-action GPU-service trace](performance-evidence/s69-native-matrix-20261019/gpu-service-trace-summary.json)
+records native durations of 232 and 112 ms at `fb389928` with frozen QA
+`3fdbcf42`. For deactivation, the exact input/surface/display linkage places
+the renderer commit at 26.527 ms and presentation at 113.312 ms after input.
+Fresh raster tasks and GPU-service composition occur in that interval;
+no renderer pixel readback occurs during deactivation. Separately, a later
+activation frame waits about 170 and 142 ms on two WebGL program-information
+queries. Those waits finish before the deactivation input and are not its
+measured cause. They are not proven shader-compilation time.
+The trace does not map the slow compositor layers to particular DOM/CSS
+owners or establish a unique GPU-driver cause. It supports targeted
+investigation, not a specific unverified CSS patch or quality reduction.
+The [raw trace and setup failures](performance-evidence/s69-native-matrix-20261019/gpu-service-trace-transfer.json)
+and [final analysis](performance-evidence/s69-native-matrix-20261019/gpu-service-trace-analysis-transfer.json)
+are preserved on VM105 with verified hashes. This is diagnostic evidence,
+not a new formal latency or performance pass.
+
+The completed observer experiment examines whether observer work explains the latency.
 Existing [trace attribution](performance-evidence/s69-native-matrix-20261019/formal-render-phase-r3-qa-callback-attribution.json)
 measures 2.1–6.2 ms of separately timed QA callback
 work inside OFF interactions, including forced style/layout reads. These are
@@ -138,8 +167,9 @@ temporary directories instead of mutating shared dependencies. The
 [VM validation](performance-evidence/s69-native-matrix-20261019/release-test-and-soak-34c0ec0c-validation.json)
 passes 128 focused tests on each Node version, formatting and all static boundary
 checks. The package check initially exceeded a 512 MiB test-runner cap; its
-preserved failure is followed by a successful bounded 1 GiB rerun. Full CI on
-the fixes remains pending. The soak CLI now exposes actual native-window
+preserved failure is followed by a successful bounded 1 GiB rerun. Full CI and
+release checks on the fixes now pass at `d07d9d10`, as recorded above.
+The soak CLI now exposes actual native-window
 measurement at `5007ea9b`. No new soak has run and production is unchanged.
 
 The final long soak is required once for the frozen runtime, rather than after
@@ -153,6 +183,7 @@ not diagnose or waive interaction latency. Later QA-only changes do not by
 themselves invalidate that runtime evidence, provided source/build equivalence
 and the continued applicability of the measurement contract are established
 and recorded explicitly.
+
 ## Historical checkpoint log and detailed slice records
 
 The following checkpoints retain their original revision-specific scope.
