@@ -22,6 +22,14 @@ slash from producing `//?welcome=0` requests. The [exact current fixture closure
 passes nine tests on each of Node 24 and 26. Frozen hardware producers and the
 application runtime remain unchanged.
 
+The newer [Windows recovery job at `62295363`](windows-recovery-62295363-failure.json)
+fails during owned-page cleanup after settings, workspace and rendered-asset
+checks pass. One page target remains before browser shutdown, which subsequently
+completes normally without forced termination. The page helper conflates
+rejection and timeout; its two-second bound and pass criteria remain unchanged.
+The failure is archived on VM105 and is separate from the passing native GPU
+soak. This QA revision leaves the application runtime unchanged.
+
 The [cable follow-up](cable-idle-followup-324eebe1-20261020-review.json) observes
 zero frames in both settled 60-second idle windows, no tile-progress events and
 no completed provider resource entries. The original burst is not reproduced;
@@ -41,8 +49,9 @@ failed qualification result. All diagnostic listeners and wrappers are restored.
 The [height-query attribution](local-control-height-attribution-20261020-review.json)
 then measures eight synchronous `scene.sampleHeight` calls on each enable,
 consuming 301.4, 242.6 and 82.3 ms. Disable actions make none. This identifies
-repeated height work as a contributor to latency. A bounded reuse prototype is
-being evaluated; these six instrumented actions do not replace the failed
+repeated height work as a contributor to latency. A [cache prototype was rejected](ground-sample-cache-disposition-20261020.json)
+before runtime adoption because it could not establish safe surface ownership
+using Cesium's public API. These six instrumented actions do not replace the failed
 qualification result or certify completed LOD placement.
 
 The [four-page transition diagnostic](visual-transition-path-b843cac5-20261020-review.json)

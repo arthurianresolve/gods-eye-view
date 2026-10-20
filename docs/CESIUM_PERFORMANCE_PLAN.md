@@ -24,6 +24,14 @@ QA-only URL fix `45cd4c6a` prevents a trailing slash in a preview origin from
 creating a `//?welcome=0` request. Its [current eight-file test closure](performance-evidence/s69-native-matrix-20261019/qa-boot-url-fix-20261020.json)
 passes nine tests on each of Node 24 and 26; it does not change the tested runtime.
 
+The newer [Windows recovery job at `62295363`](performance-evidence/s69-native-matrix-20261019/windows-recovery-62295363-failure.json)
+fails its owned-page cleanup gate after settings, workspace and rendered-asset
+checks pass. One page target remains before browser shutdown; the browser then
+closes normally without forced termination. The two-second page-close helper
+currently conflates rejection and timeout, so the precise failure is unresolved.
+The failed job is preserved separately from the passing physical GPU soak and
+earlier CI. This QA revision does not change application runtime files.
+
 The [bounded cable follow-up](performance-evidence/s69-native-matrix-20261019/cable-idle-followup-324eebe1-20261020-review.json)
 observes zero rendered frames in both settled 60-second idle windows, with no
 tile-progress events or completed provider resource entries. The earlier burst
@@ -33,8 +41,10 @@ or turn the unavailable frame-interval comparison into a pass.
 The [height-query attribution](performance-evidence/s69-native-matrix-20261019/local-control-height-attribution-20261020-review.json)
 finds eight synchronous `scene.sampleHeight` calls on each of three datacenter
 enables, consuming 301.4, 242.6 and 82.3 ms. Disables make no such calls. Repeated
-height work is a measured contributor to latency; a bounded reuse implementation
-is being evaluated separately. The official 625.4 ms control result is unchanged.
+height work is a measured contributor to latency. A [cache prototype was rejected](performance-evidence/s69-native-matrix-20261019/ground-sample-cache-disposition-20261020.json)
+before runtime adoption: its public surface-ownership checks could not enable
+safe reuse in a real Cesium viewer. The original teardown behavior and official
+625.4 ms control result are unchanged.
 
 The [radio-state visual follow-up](performance-evidence/s69-native-matrix-20261019/visual-radio-state-20261020-review.json)
 records no active radio animation and equal paint signatures. Its new cross-build
