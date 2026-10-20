@@ -6,17 +6,17 @@
  */
 export function waitForVisibilityPaint({
   signal,
-  documentRef = globalThis.document,
+  documentRef = null,
 } = {}) {
-  const view = documentRef?.defaultView || globalThis;
+  const view = documentRef?.defaultView;
   if (
     signal?.aborted ||
     !documentRef ||
     documentRef.hidden ||
     typeof documentRef.addEventListener !== 'function' ||
     typeof documentRef.removeEventListener !== 'function' ||
-    typeof view.requestAnimationFrame !== 'function' ||
-    typeof view.cancelAnimationFrame !== 'function'
+    typeof view?.requestAnimationFrame !== 'function' ||
+    typeof view?.cancelAnimationFrame !== 'function'
   )
     return Promise.resolve();
 

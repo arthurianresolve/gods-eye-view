@@ -1995,6 +1995,7 @@
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/lifecycle.js",
+      "src/data/visibilityPaint.js",
       "src/data/localGeojson.js",
       "src/data/localGeojsonCore.js",
       "src/data/localGeojsonLod.js",
@@ -3405,6 +3406,7 @@
     "exports": ["./data/lifecycle"],
     "modules": [
       "src/data/lifecycle.js",
+      "src/data/visibilityPaint.js",
       "src/data/cameraArrival.js",
       "src/performance/cpuTimings.js"
     ],
