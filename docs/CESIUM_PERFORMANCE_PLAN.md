@@ -25,7 +25,44 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
-The latest formal attempt is frozen application and QA `278c7854`, with
+The latest formal attempt is frozen application and QA `6de65358`, with
+explicit acknowledgement v6/readiness v7. Acquisition completed with all
+20 local actions, 20 replay seeks and eight mixed-use cycles per role.
+Both V6 acknowledgement validators pass, with zero owned ResizeObservers;
+compositor-content attribution remains unavailable. The frozen consumer
+still **fails** three independent numeric gates:
+
+- Native local-control p95 is **136 ms**, above 100 ms. The first ON/OFF
+  actions are **504/136 ms**; all other 18 actions are **40–64 ms**. All
+  actions remain in the cohort. Accepted-intent p95 is 4.4 ms.
+- Pre-render readiness p95 is **141.7 ms versus 89.5 ms**, a **58.32%**
+  regression. Completed-frame p95 is **144.3 ms versus 91.6 ms**, a
+  **57.53%** regression. Warm ON readiness is consistently slower; this
+  cannot be dismissed as a single cold outlier.
+- Replay completed-frame p95 is **112.7 ms**, below 250 ms. Sampled peak
+  heap is **2.58% above control**, within its independent 10% gate.
+
+All foreground observations are visible and focused. Both browsers and
+geometry helpers close normally with no forced termination or cleanup
+failure. Raw SHA-256
+`275ee7ecdbc1a25958291a277ab6bec9e2abea21ea715c484dd39a2b4e0744e9`
+and the frozen failed review are preserved with 30 independently verified
+files on VM105 under
+`qualification-metrics-6de65358-native-window-v6-v7-acceptance-failed-complete-20261020`.
+This closes the acknowledgement-measurement defect, not performance
+acceptance. Qualification and the final Ampfing soak remain uncommissioned
+while these primary gates fail.
+
+The next bounded investigation separates first-OFF presentation scheduling
+from warm-ON activation/materialization. The existing static Entity stem
+pipeline can build geometry before grounding and rebuild after the first
+height update. An earlier stem-only collection prototype was deferred,
+not measured or rejected; it may now be evaluated while retaining exact
+ground queries, Entity points/polygons, identities and current visual cadence.
+No cache, skipped height query, renderer-mode adoption or default change is
+accepted without functional, visual and performance evidence.
+
+The preceding frozen application and QA `278c7854` attempt used
 feedback v5/readiness v7. Acquisition completed on the Windows UHD 620 at
 1280×537 CSS pixels, DPR 2, with unchanged Manual 75% settings. Both roles
 completed 20 local actions, 20 replay seeks, two warmup and six measured
