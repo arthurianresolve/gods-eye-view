@@ -117,6 +117,15 @@ jobs were skipped and are not counted as passes. These runs include the test
 repairs at `34c0ec0c`, but cannot validate the newer QA corrections at
 `e5db55b9` and `5f055666`. Their focused validation is recorded separately above.
 
+The subsequent `ed195ce0` [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39436934204)
+fails one test because its source-evaluated capture producer does not bind the
+new real protocol guard. The test repair binds the actual v3/v4 declarations
+and validation functions, verifies both policies and v7 metadata, and retains
+the preflight/postflight failure checks. Its [VM validation](performance-evidence/s69-native-matrix-20261019/build-identity-producer-binding-validation.json)
+passes 93 focused tests on each Node version plus scoped formatting. Full CI
+on that repair remains pending; this is a test-harness repair, not a runtime
+performance improvement.
+
 The latest hardware-tested runtime is `fb389928`. Its
 [six-action comparison with `a18c6a76`](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)
 completes all twelve native clicks, matching geometry, asset checks and normal

@@ -7,6 +7,11 @@ import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  INTERACTION_EVENT_TIMING_PLAN,
+  INTERACTION_EVENT_TIMING_PLAN_V4,
+  assertInteractionEventTimingPlan,
+} from './interactionEventTiming.mjs';
+import {
   QUALIFICATION_BUILD_IDENTITY_KIND,
   createQualificationBuildIdentityPlan,
   assertQualificationBuildIdentityPlan,
@@ -872,13 +877,45 @@ test('actual producer brackets all captures with source checks and retains prima
     ),
     end = source.indexOf('\nif (isMain())', start);
   assert.ok(start > 0 && end > start);
-  for (const failBefore of [false, true]) {
+  const protocolStart = source.indexOf('const SCHEMA ='),
+    protocolEnd = source.indexOf(
+      '\nfunction circularAngleDifference(',
+      protocolStart,
+    );
+  assert.ok(protocolStart > 0 && protocolEnd > protocolStart);
+  const protocol = runInNewContext(
+    `(() => {
+      ${source.slice(protocolStart, protocolEnd).replaceAll('export ', '')}
+      return {
+        assertCaptureEventTimingPlan, INTERACTION_EVENT_TIMING_PLAN,
+        SCHEMA, INTERACTION_SCHEMA, INTERACTION_PROTOCOL,
+        LOCAL_READINESS_REGISTRATION_POLICY,
+        LOCAL_RENDER_WITNESS, REPLAY_RENDER_WITNESS, HEAP_SCHEMA,
+        WORK_PLAN, SAMPLE_CADENCE_MS, SAMPLE_MAX_GAP_MS,
+        LOCAL_CONTROL_CAMERA_ROUTE_ID, LOCAL_CONTROL_CAMERA_LOCATION,
+      };
+    })()`,
+    {
+      assert,
+      INTERACTION_EVENT_TIMING_PLAN,
+      INTERACTION_EVENT_TIMING_PLAN_V4,
+      assertInteractionEventTimingPlan,
+    },
+  );
+  const scenarios = [
+    INTERACTION_EVENT_TIMING_PLAN,
+    INTERACTION_EVENT_TIMING_PLAN_V4,
+  ].flatMap((eventTimingPlan) =>
+    [false, true].map((failBefore) => ({ eventTimingPlan, failBefore })),
+  );
+  for (const { eventTimingPlan, failBefore } of scenarios) {
     const events = [],
       writes = [];
     const execute = runInNewContext(
       `(${source.slice(start, end).replace('export ', '').replaceAll('import.meta.url', "'file:///capture-producer.mjs'")})`,
       {
         assert,
+        ...protocol,
         URL,
         Buffer,
         resolveQualificationIdentitySource,
@@ -921,6 +958,7 @@ test('actual producer brackets all captures with source checks and retains prima
         },
         collectQualificationMetricsForBuild: async (input) => {
           events.push(`capture-${input.role}`);
+          assert.equal(input.eventTimingPlan, eventTimingPlan);
           assert.equal(
             input.buildIdentityContext.planSha256,
             fx.context.planSha256,
@@ -941,32 +979,43 @@ test('actual producer brackets all captures with source checks and retains prima
           assert.fail('A failed capture must not issue identity eligibility'),
         qualificationBuildIdentityEvidenceReference: () =>
           assert.fail('No valid envelope exists'),
-        SCHEMA: 'gev-qualification-capture/v1',
-        INTERACTION_SCHEMA: 'gev-interaction-latency-evidence/v4',
-        INTERACTION_PROTOCOL: 'unchanged',
-        INTERACTION_EVENT_TIMING_PLAN: {},
-        LOCAL_RENDER_WITNESS: 'unchanged',
-        REPLAY_RENDER_WITNESS: 'unchanged',
         QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA:
           'gev-qualification-native-window-environment/v1',
         QUALIFICATION_NATIVE_WINDOW_MODE: 'native-window-viewport-v1',
-        LOCAL_CONTROL_CAMERA_ROUTE_ID: 'unchanged',
-        LOCAL_CONTROL_CAMERA_LOCATION: {},
-        HEAP_SCHEMA: 'gev-sampled-heap-evidence/v1',
-        WORK_PLAN: { phaseIds: [], operationsPerCycle: {} },
-        SAMPLE_CADENCE_MS: 1000,
-        SAMPLE_MAX_GAP_MS: 5000,
       },
     );
-    const result = await execute({
+    const captureOptions = {
       baselineUrl: fx.plan.builds.baseline.baseUrl,
       candidateUrl: fx.plan.builds.candidate.baseUrl,
       buildIdentityPlanPath: fx.planPath,
       buildIdentityPlanSha256: fx.context.planSha256,
       nativeWindowViewport: true,
+      eventTimingPlan,
       outputPath: 'exclusive-output.json',
-    });
+    };
+    await assert.rejects(() =>
+      execute({
+        ...captureOptions,
+        eventTimingPlan: { ...eventTimingPlan, actionDrainMs: 0 },
+      }),
+    );
+    assert.deepEqual(events, []);
+    assert.deepEqual(writes, []);
+    const result = await execute(captureOptions);
     assert.equal(result.status, 'failed');
+    assert.equal(result.protocol.eventTimingPlan, eventTimingPlan);
+    assert.equal(
+      result.protocol.interactionProtocol,
+      'trusted-click-event-timing-prerender-postrender-witness-v7',
+    );
+    assert.equal(
+      result.protocol.localReadinessRegistrationPolicy,
+      'settled-intent-after-layer-prerender-v1',
+    );
+    assert.equal(
+      result.interactionEvidence.localReadinessRegistrationPolicy,
+      result.protocol.localReadinessRegistrationPolicy,
+    );
     assert.equal(
       result.failureReason,
       failBefore ? 'preflight failure' : 'original primary failure',

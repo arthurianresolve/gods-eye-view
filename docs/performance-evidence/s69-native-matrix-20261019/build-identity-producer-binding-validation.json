@@ -1,0 +1,141 @@
+{
+  "schema": "gev-build-identity-producer-test-binding-validation/v1",
+  "status": "passed",
+  "baseCommit": "ed195ce074ef4c7d3be12032dd02a901730c6306",
+  "ownedFiles": [
+    "scripts/performance/qualificationBuildIdentity.test.mjs"
+  ],
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/build-identity-producer-binding-ed195ce0-validation-20261020-r2/source",
+  "inputs": [
+    {
+      "file": "scripts/performance/qualificationBuildIdentity.test.mjs",
+      "bytes": 31774,
+      "sha256": "d4d39db3cf32b8d0204a82063cf58d8e97bfaf066a946fbb109aa9a48ba843dc"
+    },
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 103262,
+      "sha256": "06c3e8cd75760420926da99ca2b6100cd3dea08f0b57946f95761cd104bf5468"
+    },
+    {
+      "file": "scripts/performance/qualificationBuildIdentity.mjs",
+      "bytes": 25352,
+      "sha256": "b2252011234c15717d89b700785c110ec9a3d2cb9768e58a8ea599c569dc4cf9"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.mjs",
+      "bytes": 51357,
+      "sha256": "45f6a24ccc56fca2e2288f214e4bbe7ea1c4eaef12dabb1fcbd772bc5fe914af"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.test.mjs",
+      "bytes": 63544,
+      "sha256": "8d007c2ef3d915d16ccd683b03ad4acf72ce98e1b99313109623bd95b2ccc0cf"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 72285,
+      "sha256": "4f46219e9ecabc22bc39fd933393fc125960d748d3268ed438e7e57c58e11ce7"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 158095,
+      "sha256": "72cbd896e4f485a1e7813f46071b39ec09d2ab7765795564389f978563d51c15"
+    },
+    {
+      "file": "scripts/performance/nativeWindowViewport.mjs",
+      "bytes": 39434,
+      "sha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848"
+    },
+    {
+      "file": "scripts/performance/buildProvenance.mjs",
+      "bytes": 31403,
+      "sha256": "8cf0f6e23b8f0942ebc5d5a22b7f7a9d59ca218da022fed2eeab2f5dc37dc7ce"
+    },
+    {
+      "file": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/performance/qualificationBuildIdentity.test.mjs",
+        "scripts/performance/interactionEventTiming.test.mjs",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 9985,
+      "sha256": "9d7a28d6145db73666b8979bc8fe5b6302380d4ddfd0b277087155a1aff16aa8",
+      "tests": 93,
+      "pass": 93,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/performance/qualificationBuildIdentity.test.mjs",
+        "scripts/performance/interactionEventTiming.test.mjs",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 9986,
+      "sha256": "93093ef054caafa3c27760b0a2857a2fe7014bc57f2b31df59b8eebbc753aafa",
+      "tests": 93,
+      "pass": 93,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "label": "node24",
+      "name": "scoped-format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--input-type=module",
+        "-e",
+        "import fs from \"node:fs/promises\";import * as p from \"prettier\";const f=\"scripts/performance/qualificationBuildIdentity.test.mjs\",o={...(await p.resolveConfig(f)),filepath:f};if(!(await p.check(await fs.readFile(f,\"utf8\"),o)))process.exit(1);console.log(\"Scoped format passed:1file\");"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-scoped-format.log",
+      "bytes": 27,
+      "sha256": "afe8498eaa51c008c850f785f44045a6b4f8e0022978bd7c7142f4bc42372acc",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0
+    }
+  ],
+  "changedFiles": [
+    "scripts/performance/qualificationBuildIdentity.test.mjs"
+  ],
+  "dependenciesInstalled": false,
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "scope": "Test harness only: source-executed real protocol declarations, resolver and guard; both V3/V4 plans; V7 metadata; invalid plan rejected beforeI/O; original pre/post failure ownership retained.",
+  "completedAt": "2026-10-20T14:21:21.133Z"
+}
