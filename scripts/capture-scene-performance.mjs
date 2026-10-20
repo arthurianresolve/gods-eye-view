@@ -5881,6 +5881,10 @@ try {
                                 weatherIdleTrace.frameEvents.at(-1).atMs),
                           )
                         : null,
+                    globeTilesLoaded:
+                      typeof scene.globe?.tilesLoaded === 'boolean'
+                        ? scene.globe.tilesLoaded
+                        : null,
                     governor: frameGovernor?.governor ?? null,
                     windRenderer: frameGovernor?.windRenderer ?? null,
                   });
@@ -5911,6 +5915,10 @@ try {
                   focused: document.hasFocus(),
                   visible: !document.hidden,
                   requestRenderMode: Boolean(scene.requestRenderMode),
+                  globeTilesLoaded:
+                    typeof scene.globe?.tilesLoaded === 'boolean'
+                      ? scene.globe.tilesLoaded
+                      : null,
                   governor: governor
                     ? {
                         mode: governor.mode ?? null,
@@ -5925,6 +5933,21 @@ try {
                           ? governor.scheduledUpdates
                               .slice(0, 32)
                               .map(boundedDiagnosticLabel)
+                          : null,
+                        recentRequests: Array.isArray(governor.recentRequests)
+                          ? governor.recentRequests
+                              .slice(-16)
+                              .map((request) => ({
+                                reason: boundedDiagnosticLabel(request?.reason),
+                                atWallClockMs: Number.isFinite(request?.at)
+                                  ? request.at
+                                  : null,
+                              }))
+                          : null,
+                        recentRequestsDroppedCount: Array.isArray(
+                          governor.recentRequests,
+                        )
+                          ? Math.max(0, governor.recentRequests.length - 16)
                           : null,
                       }
                     : null,
@@ -8030,6 +8053,8 @@ try {
       const trace = {
         schema: 'gev-performance-frame-trace/v1',
         diagnosticOnly: true,
+        comparisonEligible: false,
+        acceptanceEligible: false,
         appCommit: source.appCommit,
         harnessCommit: source.harnessCommit,
         buildHarnessCommit: source.buildHarnessCommit,
@@ -8050,7 +8075,7 @@ try {
           cameraPath: sample.cameraPath || null,
         })),
         limits: { maxFramesPerCapture: 4096, maxCaptures: captures.length },
-        note: 'Diagnostic-only preRender/postRender wall times; sceneRenderWallMs is not GPU execution time.',
+        note: 'Diagnostic-only preRender/postRender wall times and bounded public governor snapshots; sceneRenderWallMs is not GPU execution time. Each frame keeps the latest 16 governor recentRequests and reports the omitted count. Their atWallClockMs comes from app Date.now and may be frozen by a fixture, so it cannot establish request-to-frame timing or every direct Cesium scene.requestRender cause.',
       };
       await fs.mkdir(path.dirname(path.resolve(frameTraceOut)), {
         recursive: true,

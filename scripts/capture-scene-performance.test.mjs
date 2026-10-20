@@ -84,6 +84,7 @@ async function extractRawSampleCallback() {
 function createRawSampleHarness({
   throwOnRender = false,
   framesPerRender = 1,
+  globeTilesLoaded = false,
 } = {}) {
   let clock = 1000;
   let manualStarted = false;
@@ -127,6 +128,7 @@ function createRawSampleHarness({
   const scene = {
     preRender,
     postRender,
+    globe: globeTilesLoaded === null ? null : { tilesLoaded: globeTilesLoaded },
     requestRenderMode: true,
     requestRender() {},
   };
@@ -152,6 +154,10 @@ function createRawSampleHarness({
         mode: 'continuous',
         holds: ['diagnostic'],
         scheduledUpdates: [],
+        recentRequests: Array.from({ length: 18 }, (_, index) => ({
+          reason: `request-${index}`,
+          at: 1_000_000 + index,
+        })),
       }),
     },
     __gevPerformanceHome: {
@@ -254,7 +260,20 @@ test('raw sample tracing resets pre-window frames and records applied route phas
   assert.equal(sample.frameTrace.length, harness.renderedPhases.length);
   assert.equal(sample.frameTrace[0].routePhaseMs, 0);
   assert.equal(sample.frameTrace[0].sceneRenderWallMs, 7);
+  assert.ok(
+    sample.frameTrace.every((frame) => frame.globeTilesLoaded === false),
+  );
   assert.ok(sample.frameTrace.every((frame) => frame.routePhaseMs !== null));
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(sample.frameTrace[0].governor.recentRequests)),
+    [
+      ...Array.from({ length: 16 }, (_, index) => ({
+        reason: `request-${index + 2}`,
+        atWallClockMs: 1_000_002 + index,
+      })),
+    ],
+  );
+  assert.equal(sample.frameTrace[0].governor.recentRequestsDroppedCount, 2);
   assert.ok(
     sample.frameTrace.every(
       (frame) =>
@@ -336,6 +355,23 @@ test('idle trace records explicit null manual-pump timing fields', async () => {
     assert.equal(frame.viewerRenderStartedAtMs, null);
     assert.equal(frame.viewerRenderReturnedAtMs, null);
   }
+
+  const unavailable = await runRawSample(
+    callback,
+    createRawSampleHarness({ globeTilesLoaded: null }),
+    {
+      durationMs: 35,
+      scenarioName: 'scripted-motion',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: true,
+    },
+  );
+  assert.ok(unavailable.frameTrace.length > 0);
+  assert.ok(
+    unavailable.frameTrace.every((frame) => frame.globeTilesLoaded === null),
+  );
 });
 
 test('raw sample trace caps frames and reports truncation without losing observed counts', async () => {
