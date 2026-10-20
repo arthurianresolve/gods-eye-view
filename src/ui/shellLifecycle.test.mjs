@@ -195,91 +195,103 @@ function pairedControllerFixture() {
   return { ...f, owner, calls, run };
 }
 
-test('pending Tactical pair consumes the right callback without an alignment follow-up', () => {
-  const f = pairedControllerFixture();
-  try {
-    f.owner._scheduleLeftPanelLayout();
-    f.owner._scheduleRightPanelLayout();
-    const left = f.owner._leftStackLayoutFrame;
-    const oldRight = f.frames.get(f.owner._rightStackLayoutFrame);
-    f.run(left);
-    assert.deepEqual(f.calls, ['pair']);
-    assert.equal(f.frames.size, 0);
-    oldRight();
-    assert.deepEqual(
-      f.calls,
-      ['pair'],
-      'cancelled callback cannot execute twice',
-    );
-  } finally {
-    f.owner.destroy();
-    f.restore();
-  }
-});
-
-test('requests made during a paired pass survive and a cancelled old callback cannot clear them', () => {
-  const f = pairedControllerFixture();
-  try {
-    f.owner._syncPairedPanelAdaptiveLayout = () => {
-      f.calls.push('pair');
-      f.owner._scheduleRightPanelLayout();
-      f.owner._scheduleLeftPanelLayout();
-    };
-    f.owner._scheduleLeftPanelLayout();
-    f.owner._scheduleRightPanelLayout();
-    const oldRight = f.frames.get(f.owner._rightStackLayoutFrame);
-    f.run(f.owner._leftStackLayoutFrame);
-    const nextRight = f.owner._rightStackLayoutFrame;
-    const nextLeft = f.owner._leftStackLayoutFrame;
-    assert.equal(f.frames.size, 2);
-    oldRight();
-    assert.equal(f.owner._rightStackLayoutFrame, nextRight);
-    f.run(nextRight);
-    f.run(nextLeft);
-    assert.deepEqual(f.calls, ['pair', 'right', 'left']);
-    assert.equal(f.frames.size, 0);
-  } finally {
-    f.owner.destroy();
-    f.restore();
-  }
-});
-
-for (const reason of [
-  'left-reconsider',
-  'right-reconsider',
-  'mobile',
-  'cyber',
-  'placement',
-]) {
-  test(`paired scheduling retains separate passes for ${reason}`, () => {
+for (const first of ['left', 'right']) {
+  const schedulePair = (owner) => {
+    if (first === 'right') owner._scheduleRightPanelLayout();
+    owner._scheduleLeftPanelLayout();
+    owner._scheduleRightPanelLayout();
+  };
+  test(`${first}-first Tactical pair consumes both callbacks without an alignment follow-up`, () => {
     const f = pairedControllerFixture();
     try {
-      if (reason === 'mobile') window.matchMedia = () => ({ matches: true });
-      if (reason === 'cyber')
-        f.owner.readHud = () => ({ visible: true, variant: 'cyber' });
-      if (reason === 'placement') {
-        const panel = { parentElement: null };
-        const parent = {};
-        const header = {};
-        f.nodes.set('radio-panel', panel);
-        f.nodes.set('global-context-panel', {
-          querySelector: (selector) =>
-            selector === '.panel-header' ? header : parent,
-        });
-        f.nodes.set('context-radio-dock', { parentElement: header });
-        f.nodes.set('context-radio-mini', { parentElement: null });
-      }
-      f.owner._scheduleLeftPanelLayout({
-        reconsiderAutoCollapse: reason === 'left-reconsider',
-      });
-      f.owner._scheduleRightPanelLayout({
-        reconsiderAutoCollapse: reason === 'right-reconsider',
-      });
-      const right = f.owner._rightStackLayoutFrame;
-      f.run(f.owner._leftStackLayoutFrame);
-      assert.equal(f.owner._rightStackLayoutFrame, right);
-      f.run(right);
-      assert.deepEqual(f.calls, ['left', 'right']);
+      schedulePair(f.owner);
+      const oldCallbacks = [...f.frames.values()];
+      f.run(f.frames.keys().next().value);
+      assert.deepEqual(f.calls, ['pair']);
+      assert.equal(f.frames.size, 0);
+      assert.equal(f.timers.size, 0, 'pairing adds no pause or timer');
+      for (const callback of oldCallbacks) callback();
+      assert.deepEqual(
+        f.calls,
+        ['pair'],
+        'neither consumed callback may execute twice',
+      );
+    } finally {
+      f.owner.destroy();
+      f.restore();
+    }
+  });
+
+  test(`${first}-first paired pass preserves newer requests against both old callbacks`, () => {
+    const f = pairedControllerFixture();
+    try {
+      f.owner._syncPairedPanelAdaptiveLayout = () => {
+        f.calls.push('pair');
+        if (f.calls.length === 1) {
+          f.owner._scheduleRightPanelLayout();
+          f.owner._scheduleLeftPanelLayout();
+        }
+      };
+      schedulePair(f.owner);
+      const oldCallbacks = [...f.frames.values()];
+      f.run(f.frames.keys().next().value);
+      const nextRight = f.owner._rightStackLayoutFrame;
+      const nextLeft = f.owner._leftStackLayoutFrame;
+      assert.equal(f.frames.size, 2);
+      oldCallbacks.forEach((callback) => callback());
+      assert.equal(f.owner._rightStackLayoutFrame, nextRight);
+      assert.equal(f.owner._leftStackLayoutFrame, nextLeft);
+      const cancelledLeft = f.frames.get(nextLeft);
+      f.run(nextRight);
+      cancelledLeft();
+      assert.deepEqual(f.calls, ['pair', 'pair']);
+      assert.equal(f.frames.size, 0);
+    } finally {
+      f.owner.destroy();
+      f.restore();
+    }
+  });
+
+  test(`${first}-first pair uses invalidations received after scheduling`, () => {
+    const f = pairedControllerFixture();
+    try {
+      schedulePair(f.owner);
+      f.owner._scheduleLeftPanelLayout({ reconsiderAutoCollapse: true });
+      const callbacks = [...f.frames.keys()];
+      callbacks.forEach((id) => f.run(id));
+      assert.deepEqual(
+        f.calls,
+        first === 'left' ? ['left', 'right'] : ['right', 'left'],
+      );
+      assert.equal(f.owner._leftStackReconsiderAutoCollapse, false);
+      assert.equal(f.frames.size, 0);
+    } finally {
+      f.owner.destroy();
+      f.restore();
+    }
+  });
+
+  test(`${first}-first paired failure retains one right request and destruction cancels it`, () => {
+    const f = pairedControllerFixture();
+    try {
+      f.owner._syncPairedPanelAdaptiveLayout = () => {
+        f.owner._scheduleRightPanelLayout();
+        throw new Error('measurement failed');
+      };
+      schedulePair(f.owner);
+      const oldCallbacks = [...f.frames.values()];
+      assert.throws(
+        () => f.run(f.frames.keys().next().value),
+        /measurement failed/,
+      );
+      assert.equal(f.frames.size, 1);
+      oldCallbacks.forEach((callback) => callback());
+      assert.equal(f.frames.size, 1);
+      const late = [...f.frames.values()][0];
+      f.owner.destroy();
+      late();
+      assert.deepEqual(f.calls, []);
+      assert.equal(f.frames.size, 0);
     } finally {
       f.owner.destroy();
       f.restore();
@@ -287,25 +299,66 @@ for (const reason of [
   });
 }
 
-test('failed paired measurement retains one right request and destruction cancels it', () => {
+for (const first of ['left', 'right'])
+  for (const reason of [
+    'left-reconsider',
+    'right-reconsider',
+    'mobile',
+    'cyber',
+    'placement',
+  ]) {
+    test(`${first}-first pairing retains separate passes for ${reason}`, () => {
+      const f = pairedControllerFixture();
+      try {
+        if (reason === 'mobile') window.matchMedia = () => ({ matches: true });
+        if (reason === 'cyber')
+          f.owner.readHud = () => ({ visible: true, variant: 'cyber' });
+        if (reason === 'placement') {
+          const panel = { parentElement: null };
+          const parent = {};
+          const header = {};
+          f.nodes.set('radio-panel', panel);
+          f.nodes.set('global-context-panel', {
+            querySelector: (selector) =>
+              selector === '.panel-header' ? header : parent,
+          });
+          f.nodes.set('context-radio-dock', { parentElement: header });
+          f.nodes.set('context-radio-mini', { parentElement: null });
+        }
+        const left = () =>
+          f.owner._scheduleLeftPanelLayout({
+            reconsiderAutoCollapse: reason === 'left-reconsider',
+          });
+        const right = () =>
+          f.owner._scheduleRightPanelLayout({
+            reconsiderAutoCollapse: reason === 'right-reconsider',
+          });
+        (first === 'left' ? [left, right] : [right, left]).forEach((schedule) =>
+          schedule(),
+        );
+        [...f.frames.keys()].forEach((id) => f.run(id));
+        assert.deepEqual(
+          f.calls,
+          first === 'left' ? ['left', 'right'] : ['right', 'left'],
+        );
+      } finally {
+        f.owner.destroy();
+        f.restore();
+      }
+    });
+  }
+
+test('right-first pair rechecks current viewport instead of queued eligibility', () => {
   const f = pairedControllerFixture();
   try {
-    f.owner._syncPairedPanelAdaptiveLayout = () => {
-      f.owner._scheduleRightPanelLayout();
-      throw new Error('measurement failed');
-    };
-    f.owner._scheduleLeftPanelLayout();
     f.owner._scheduleRightPanelLayout();
-    assert.throws(
-      () => f.run(f.owner._leftStackLayoutFrame),
-      /measurement failed/,
-    );
-    assert.equal(f.frames.size, 1);
-    const late = [...f.frames.values()][0];
-    f.owner.destroy();
-    late();
-    assert.deepEqual(f.calls, []);
-    assert.equal(f.frames.size, 0);
+    f.owner._scheduleLeftPanelLayout();
+    // A viewport change must retain independent solves even though both
+    // requests were made while the desktop pairing contract held.
+    window.matchMedia = () => ({ matches: true });
+    f.run(f.owner._rightStackLayoutFrame);
+    f.run(f.owner._leftStackLayoutFrame);
+    assert.deepEqual(f.calls, ['right', 'left']);
   } finally {
     f.owner.destroy();
     f.restore();
@@ -638,22 +691,42 @@ test('a joint root/panel response can use the allocation proof exactly once', (t
   assert.equal(f.frames.size, 1);
 });
 
-test('paired solve arms the same one-use response without retaining the cancelled right pass', (t) => {
+for (const first of ['left', 'right'])
+  test(`${first}-first paired solve arms the same one-use allocation response`, (t) => {
+    const f = allocatedRailResizeFixture(t);
+    let pairs = 0;
+    f.owner._syncPairedPanelAdaptiveLayout = () => {
+      pairs++;
+      f.panel.style.setProperty('--left-panel-allocated-height', '600px');
+    };
+    if (first === 'right') f.owner._scheduleRightPanelLayout();
+    f.owner._scheduleLeftPanelLayout();
+    f.owner._scheduleRightPanelLayout();
+    f.flush();
+    assert.equal(pairs, 1);
+    assert.equal(f.frames.size, 0);
+    assert.equal(f.owner._leftStackLayoutFrame, null);
+    assert.equal(f.owner._rightStackLayoutFrame, null);
+    assert.ok(f.owner._leftStackAllocationResponse);
+    f.resize.callback(f.boxes(325.75));
+    assert.equal(f.frames.size, 0);
+  });
+
+test('right-first pair cannot arm an allocation response over a newer content invalidation', (t) => {
   const f = allocatedRailResizeFixture(t);
-  let pairs = 0;
   f.owner._syncPairedPanelAdaptiveLayout = () => {
-    pairs++;
     f.panel.style.setProperty('--left-panel-allocated-height', '600px');
+    f.owner._scheduleLeftPanelLayout();
   };
-  f.owner._scheduleLeftPanelLayout();
   f.owner._scheduleRightPanelLayout();
-  f.flush();
-  assert.equal(pairs, 1);
-  assert.equal(f.frames.size, 0);
-  assert.equal(f.owner._rightStackLayoutFrame, null);
-  assert.ok(f.owner._leftStackAllocationResponse);
-  f.resize.callback(f.boxes(325.75));
-  assert.equal(f.frames.size, 0);
+  f.owner._scheduleLeftPanelLayout();
+  const first = f.owner._rightStackLayoutFrame;
+  const callback = f.frames.get(first);
+  f.frames.delete(first);
+  callback();
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  assert.notEqual(f.owner._leftStackLayoutFrame, null);
+  assert.equal(f.frames.size, 1);
 });
 
 for (const [name, change] of [

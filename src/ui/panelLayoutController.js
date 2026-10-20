@@ -354,6 +354,7 @@ export class PanelLayoutController {
     if (!this._rightPanelStack || this._rightStackLayoutFrame !== null) return;
     const frame = requestAnimationFrame(() => {
       if (this.destroyed || this._rightStackLayoutFrame !== frame) return;
+      if (this._tryPendingPanelPair()) return;
       this._rightStackLayoutFrame = null;
       if (this._rightStackReconsiderAutoCollapse) {
         this._rightStackReconsiderAutoCollapse = false;
@@ -529,37 +530,12 @@ export class PanelLayoutController {
     this._leftStackAllocationResponse = null;
     if (reconsiderAutoCollapse) this._leftStackReconsiderAutoCollapse = true;
     if (!this._leftPanelStack || this._leftStackLayoutFrame !== null) return;
-    this._leftStackLayoutFrame = requestAnimationFrame(() => {
-      if (this.destroyed) return;
+    const frame = requestAnimationFrame(() => {
+      if (this.destroyed || this._leftStackLayoutFrame !== frame) return;
+      if (this._tryPendingPanelPair()) return;
       this._leftStackLayoutFrame = null;
       const allocationBefore = this._readLeftAllocationState();
       const revision = this._leftStackContentRevision;
-      // Only consume a right pass that is already pending behind this left
-      // callback. Disclosure reconsideration retains the ordinary callbacks.
-      // Tactical desktop widths are independent in layers.css/scenes.css;
-      // right vertical obstacle/alignment reads still follow left application.
-      if (
-        this._rightStackLayoutFrame !== null &&
-        !this._leftStackReconsiderAutoCollapse &&
-        !this._rightStackReconsiderAutoCollapse &&
-        window.matchMedia &&
-        !window.matchMedia('(max-width: 720px)').matches &&
-        this.readHud().variant === 'tactical' &&
-        isRadioPanelPlacementCurrent(document)
-      ) {
-        cancelAnimationFrame(this._rightStackLayoutFrame);
-        this._rightStackLayoutFrame = null;
-        try {
-          this._syncPairedPanelAdaptiveLayout();
-          this._rememberLeftAllocationResponse(allocationBefore, revision);
-        } catch (error) {
-          // A failed left measurement must not lose the previously owned right
-          // request. Any newer request made during the pass remains coalesced.
-          this._scheduleRightPanelLayout();
-          throw error;
-        }
-        return;
-      }
       if (this._leftStackReconsiderAutoCollapse) {
         this._leftStackReconsiderAutoCollapse = false;
         for (const panel of this._leftPanelStack.querySelectorAll(
@@ -572,6 +548,43 @@ export class PanelLayoutController {
       this._syncLeftPanelAdaptiveLayout();
       this._rememberLeftAllocationResponse(allocationBefore, revision);
     });
+    this._leftStackLayoutFrame = frame;
+  }
+
+  _tryPendingPanelPair() {
+    // Either rail may have been queued first. Consume only these two existing
+    // requests, before either measures stale left geometry independently.
+    // Disclosure reconsideration retains the ordinary callbacks. The current
+    // Tactical desktop widths are independent in layers.css/scenes.css; the
+    // paired transaction still reads final right geometry after left applies.
+    if (
+      this.destroyed ||
+      this._leftStackLayoutFrame === null ||
+      this._rightStackLayoutFrame === null ||
+      this._leftStackReconsiderAutoCollapse ||
+      this._rightStackReconsiderAutoCollapse ||
+      !window.matchMedia ||
+      window.matchMedia('(max-width: 720px)').matches ||
+      this.readHud().variant !== 'tactical' ||
+      !isRadioPanelPlacementCurrent(document)
+    )
+      return false;
+    cancelAnimationFrame(this._leftStackLayoutFrame);
+    cancelAnimationFrame(this._rightStackLayoutFrame);
+    this._leftStackLayoutFrame = null;
+    this._rightStackLayoutFrame = null;
+    try {
+      const allocationBefore = this._readLeftAllocationState();
+      const revision = this._leftStackContentRevision;
+      this._syncPairedPanelAdaptiveLayout();
+      this._rememberLeftAllocationResponse(allocationBefore, revision);
+    } catch (error) {
+      // A failed measurement must not lose the previously owned right request.
+      // Requests created during this pass retain their own handles/revisions.
+      this._scheduleRightPanelLayout();
+      throw error;
+    }
+    return true;
   }
 
   _readLeftAllocationState() {
