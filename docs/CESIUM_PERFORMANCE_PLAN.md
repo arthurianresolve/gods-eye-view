@@ -7,6 +7,45 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The latest hardware-tested runtime is `fb389928`. Its
+[six-action comparison with `a18c6a76`](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)
+completes all twelve native clicks, matching geometry, asset checks and normal
+browser cleanup. First activation Event Timing changes from 288 to 192 ms in
+this single pair, but both builds' three deactivations remain 112, 96 and 112 ms.
+This does not resolve the 100 ms target or establish a repeatable improvement.
+Readiness and full-render timings are mixed. All six candidate actions also
+lack the complete continuity proof required by frozen QA `3fdbcf42`; no hiding
+was observed. The capture is diagnostic only and cannot replace twenty-sample
+qualification. Its raw files and independent review are
+[archived with verified hashes on VM105](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-transfer.json).
+
+The completed observer experiment separates observer overhead from application work.
+Existing [trace attribution](performance-evidence/s69-native-matrix-20261019/formal-render-phase-r3-qa-callback-attribution.json)
+measures 2.1–6.2 ms of separately timed QA callback
+work inside OFF interactions, including forced style/layout reads. These are
+not total observer costs and cannot be subtracted from Event Timing: those
+reads may perform work the browser would otherwise do later. No latency
+threshold or historical result has changed. The
+[four-session ON/OFF/OFF/ON diagnostic](performance-evidence/s69-native-matrix-20261019/geometry-witness-perturbation-r2-readback.json)
+retains all 24 exact native click matches on the same application and settings.
+Both observer states have five of twelve interactions above 100 ms; disabling
+geometry observation produces no consistent improvement. All four browsers
+close normally. The [raw evidence is archived on VM105](performance-evidence/s69-native-matrix-20261019/geometry-witness-perturbation-r2-transfer.json).
+This does not establish formal acceptance or justify subtracting observer costs.
+
+Release CI at `eb681c95` exposed a stale source-text assertion and a concurrent
+temporary-file race in dependency tests. Commit `34c0ec0c` fixes both: behavioral
+rail tests replace the stale assertion, and stock Cesium fixtures use owned
+temporary directories instead of mutating shared dependencies. The
+[VM validation](performance-evidence/s69-native-matrix-20261019/release-test-and-soak-34c0ec0c-validation.json)
+passes 128 focused tests on each Node version, formatting and all static boundary
+checks. The package check initially exceeded a 512 MiB test-runner cap; its
+preserved failure is followed by a successful bounded 1 GiB rerun. Full CI on
+the fixes remains pending. The soak CLI now exposes actual native-window
+measurement at `5007ea9b`. No new soak has run and production is unchanged.
+
+The following checkpoints retain their original revision-specific scope.
+
 The fresh `a18c6a76` / QA `3fdbcf42`
 [native Windows capture](performance-evidence/s69-native-matrix-20261019/formal-native20-a18c6a76-3fdbcf42-result.json)
 completes both builds and all asset, foreground and cleanup checks, but
@@ -49,10 +88,10 @@ schedule layout. Existing viewport, HUD and cockpit changes independently
 invalidate the root's horizontal position. The [combined VM validation](performance-evidence/s69-native-matrix-20261019/rail-dom-controller-validation.json)
 passes 77 tests on each Node version plus full formatting, import-boundary
 and undefined-reference checks. An independent readback verifies the exact
-commit, seven source hashes and five logs. Hardware comparison remains
-pending; no performance gain is claimed yet.
+commit, seven source hashes and five logs. The short hardware result is
+recorded above; formal qualification remains pending.
 
-The latest hardware-tested runtime is `a18c6a76`. User-triggered layer activation
+The previous hardware-tested runtime is `a18c6a76`. User-triggered layer activation
 now waits for one animation-frame callback followed by its owned task,
 instead of waiting for two callbacks. The real lifecycle already publishes
 the loading presentation synchronously. This preserves a rendering opportunity
@@ -287,8 +326,9 @@ screenshot: capture-phase listeners treated descendant `pointerleave` events
 as a document exit. The correction at `f5cac94f` implements the application's
 boundary-event semantics, and an actual-application baseline still capture now
 succeeds. A subsequent HUD-visible capture reached its guard deadline; that
-failed attempt is preserved and under investigation. Full visual acceptance
-remains unqualified, and the failed runs and pixel policy remain intact.
+failed attempt is preserved. That historical attempt is unqualified; the later
+exact-`e6e1abc1` visual cohort passes as recorded above, while current-`fb389928`
+visual qualification remains pending.
 The `f637e20c` CI unit/release failure is separately traced to a
 source-text test of mobile height cleanup. Commit `77d7fc13` replaces that
 literal-call assertion with the actual mobile behavior; 57 tests pass on both
@@ -312,7 +352,7 @@ updated without changing pixel thresholds. CI and signed-release verification
 for `3add2a3a` pass, including Windows recovery; the frozen `190c5ab6` r21
 qualification and public deployment remain unchanged.
 
-Current qualification checkpoint: application candidate `190c5ab6` remains
+Historical qualification checkpoint: application candidate `190c5ab6` remained
 unactivated; production remains `e7a878e`. Engineering completion is still
 **21/24 slices (87.5%)**. The ten-slot default-empty-layer startup confirmation
 passes its scoped 10% gates (app-ready +5.383%, loading-hidden -0.0219%), with
@@ -323,7 +363,7 @@ page-observed run and +43.23% in the original matrix dams row); the scoped
 confirmation does not retroactively clear them or qualify dam activation. See
 the [normalized startup report](performance-evidence/s69-native-matrix-20261019/normalized-startup-default-boot-190c5ab6-79d555cf-report.json).
 
-The [normalized current v3 interaction/heap report](performance-evidence/s69-native-matrix-20261019/normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
+The [historical v3 interaction/heap report](performance-evidence/s69-native-matrix-20261019/normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
 passes loaded replay (91.3 ms p95) and
 non-GC sampled peak heap (-2.634%), but fails local-control visible feedback
 (709.3 ms p95) and the full-readiness 10% regression gate. A separate
@@ -356,7 +396,8 @@ remains recorded. The complete [integrated r21 report](performance-evidence/s69-
 (SHA-256 `b800329bc9f5a0713365584f00037f29b4a8698e07c7ff0f772a86d45b6dc1e3`)
 is `NOT_ACCEPTED`: local-control interaction and strict visual equivalence fail;
 matrix, scoped startup, weather, idle dispositions, soak, private workspace, CI
-and signed-release artifact are measured. No gate is pending. The original
+and signed-release artifact are measured. No gate was pending for that frozen
+`190c5ab6` report; this does not qualify later application commits. The original
 live-provider startup and baseline cable failures remain in the report's
 preserved failures. The stale pre-readiness HUD comparison was
 corrected separately at `220349dd`; all screenshot-boundary HUD states agree.
@@ -967,18 +1008,18 @@ Implementation, automated validation and primary Windows evidence remain
 separate. Draft PR #6 runs the broader integration checks; no stable publication,
 human review or performance-objective achievement is inferred from a build pass.
 
-| Slice | Deliverable                                                       | Engineering                                                                            | Automatic validation                                                                                                                                                                                                                                                                                                        | Primary evidence                                                                                                                                                                                                           |
-| ----- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                            | profile checks and exact CI pass at `19065997`                                                                                                                                                                                                                                                                              | operating and Dense pairs complete; narrow idle disposition reviewed                                                                                                                                                       |
-| S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                            | four clean VM builds; archive and attestation verified at `19065997`                                                                                                                                                                                                                                                        | pending final candidate qualification                                                                                                                                                                                      |
-| S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                               | production-only install and 16 private HTTP checks pass at `19065997`                                                                                                                                                                                                                                                       | pending deployment verification                                                                                                                                                                                            |
-| S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                                       | focused checks and exact CI pass at `19065997`                                                                                                                                                                                                                                                                              | pending shared matrix                                                                                                                                                                                                      |
-| S65   | Owned still-camera refresh, final frame, video/fade preservation  | implemented; cancelled-image ownership correction `d8ef9002`                           | focused cleanup checks and exact candidate CI pass                                                                                                                                                                                                                                                                          | native ownership and exact `d8ef9002` retention pass; final visual and matrix pending                                                                                                                                      |
-| S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                            | 24 focused checks and exact CI pass at `19065997`                                                                                                                                                                                                                                                                           | exact `d8ef9002` retention passes; visual variance diagnosis and final matrix remain open                                                                                                                                  |
-| S67   | Async locale preparation, races and retry                         | implemented                                                                            | 19 focused checks, builds and browser gates pass at `19065997`                                                                                                                                                                                                                                                              | pending shared matrix                                                                                                                                                                                                      |
-| S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                                 | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved                                                                                                                                                                                                   | runtime unchanged; no latency benefit claimed                                                                                                                                                                              |
-| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | current `190c5ab6` preserves workspace visual settings; subsequent changes are QA only | exact `190c5ab6` CI and signed packaging pass; eight workload captures retained with declared baseline reuse; matrix, scoped default-boot startup, weather, replay and sampled-heap evidence measured; local-control interaction and visual equivalence fail; candidate cable idle passes while baseline burst is preserved | r21 review is `NOT_ACCEPTED`; original live-provider startup failure remains preserved; strict visual/local-control failures block acceptance; 20% objective not achieved                                                  |
-| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `190c5ab6` prepared privately on VM105; production remains at `e7a878e`          | archive/attestation, all 2,128 packaged files, 16 private host checks and isolated workspace save/export/import/reload/reopen preflight pass                                                                                                                                                                                | signed-`190`/`b843` Ampfing soak passes 60m39s/251 cycles at 2.895% retained growth; r21 records workspace, CI and release checks measured, while local-control and visual gates fail; no deployment or overall acceptance |
+| Slice | Deliverable                                                       | Engineering                                                                                                                                               | Automatic validation                                                                                                                                                                                                                   | Primary evidence                                                                                                                                                               |
+| ----- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S61   | Frozen upstream reconciliation; native/legacy capture profiles    | implemented; profile corrections `c8918393`                                                                                                               | profile checks and exact CI pass at `19065997`                                                                                                                                                                                         | operating and Dense pairs complete; narrow idle disposition reviewed                                                                                                           |
+| S62   | Patched Cesium content paths, gzip/Brotli, cache manifest         | implemented                                                                                                                                               | four clean VM builds; archive and attestation verified at `19065997`                                                                                                                                                                   | pending final candidate qualification                                                                                                                                          |
+| S63   | Production Node HTTP host and release packaging                   | implemented; host corrections `9db16e2f`                                                                                                                  | production-only install and 16 private HTTP checks pass at `19065997`                                                                                                                                                                  | pending deployment verification                                                                                                                                                |
+| S64   | Bounded diagnostics and Auto sample eligibility                   | implemented; availability corrections `3aaeb656`                                                                                                          | focused checks and exact CI pass at `19065997`                                                                                                                                                                                         | pending shared matrix                                                                                                                                                          |
+| S65   | Owned still-camera refresh, final frame, video/fade preservation  | implemented; cancelled-image ownership correction `d8ef9002`                                                                                              | focused cleanup checks and exact candidate CI pass                                                                                                                                                                                     | native ownership and exact `d8ef9002` retention pass; final visual and matrix pending                                                                                          |
+| S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                                                                                               | 24 focused checks and exact CI pass at `19065997`                                                                                                                                                                                      | exact `d8ef9002` retention passes; visual variance diagnosis and final matrix remain open                                                                                      |
+| S67   | Async locale preparation, races and retry                         | implemented                                                                                                                                               | 19 focused checks, builds and browser gates pass at `19065997`                                                                                                                                                                         | pending shared matrix                                                                                                                                                          |
+| S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                                                                                                    | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved                                                                                                              | runtime unchanged; no latency benefit claimed                                                                                                                                  |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | current runtime `fb389928` includes later lifecycle and rail changes; these are not QA-only                                                               | 77 focused tests pass on each Node version with static checks; short native comparison is diagnostic and remains above the local latency target; current full CI, formal metrics, startup, visual and eight-row qualification are open | historical `190c5ab6` r21 is `NOT_ACCEPTED`; exact-`e6e1abc1` visuals pass; neither transfers to the current runtime; 20% objective remains unachieved                         |
+| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | `fb389928` source build and all 886 assets verified privately on VM105; production remains `e7a878e`; actual-window soak option implemented at `5007ea9b` | current signed packaging, private workspace/recovery and final candidate soak remain pending                                                                                                                                           | historical signed-`190`/`b843` Ampfing soak passes 60m39s/251 cycles at 2.895% retained growth; it does not qualify later runtime changes; no deployment or overall acceptance |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
 records the failed matrix and separate phase-timing runs. Most observed helper

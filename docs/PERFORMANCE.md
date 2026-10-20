@@ -1,5 +1,20 @@
 # Performance baseline
 
+Current status, 20 October 2026: runtime `fb389928` is privately built and has
+77 focused tests passing on each Node version. Its
+[short native comparison](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)
+retains matching fixture geometry and normal cleanup, but does not clear the
+100 ms local-control target: candidate deactivations are 112, 96 and 112 ms.
+The two test defects exposed by release CI are fixed in `34c0ec0c`, with
+128 focused tests passing on each Node version and full static checks passing
+on VM105. Full CI on these fixes is pending. A separate 24-click observer
+comparison shows no consistent improvement from disabling geometry checks. Full
+current-candidate qualification, final Ampfing soak and deployment are open;
+production remains `e7a878e`. The
+[implementation ledger](CESIUM_PERFORMANCE_PLAN.md) separates these gaps from
+completed engineering work (21/24 slices). Reports below are historical,
+revision-bound evidence, not acceptance of the current candidate.
+
 The S61–S70 follow-up keeps the accepted S47–S60 evidence denominator of 14
 separate from its new denominator of 10. The existing eight-row matrix remains
 the historical primary report; dense and tracking objectives are recorded as
@@ -9,7 +24,7 @@ must declare native DPR and viewport, `useBrowserRecommendedResolution=false`,
 `resolutionScale=1`, and globe `maximumScreenSpaceError=1` before warmup and
 verify those values after measurement.
 
-Current physical-Windows checkpoint (15 October 2026): the merged `dev`
+Historical physical-Windows checkpoint (15 October 2026): the merged `dev`
 candidate `786583e0ee8a36a670fe81cd244e8923bf84014b` passes the 60-minute
 mixed-use retention gate on Intel UHD 620 / ANGLE D3D11 / WebGL 2. The run
 completes 252 cycles and 13 post-GC checkpoints in 3,606,892 ms, with 2.34%
@@ -27,7 +42,7 @@ polygons. Their measured active spans also remain above the 4 ms target.
 [Paired timings, raw artifacts and limits](performance-evidence/import-geometry-wake-current-dev/README.md)
 record the result without changing production scheduling or preparation.
 
-Latest checkpoint (11 October 2026): imported-point collection integration is
+Historical checkpoint (11 October 2026): imported-point collection integration is
 accepted after five hosted comparison pairs (median cooperative-load change
 -56.9%), 55 exact image pairs, native picking, full integration CI, and the
 corrected 60-minute retention gate. [Comparison details](performance-evidence/import-point-current-dev/README.md)

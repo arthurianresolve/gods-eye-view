@@ -1,0 +1,2175 @@
+{
+  "schema": "gev-existing-r3-qa-callback-attribution/v1",
+  "createdAt": "2026-10-20T13:22:26.306Z",
+  "raw": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\formal-render-phase-trace-76-a18c6a76-3fdbcf42-20261020-r3\\process.json",
+    "sha256": "278f1d6de6cb9190ab8b4b5f0e7e9432cc042048b118509c7abc5361af974281"
+  },
+  "reader": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\attribute-formal-r3-qa-callback-cost-20261020.mjs",
+    "sha256": "eae83f4bd8e1eb9edfbe7277a7b9b98d5044909a9f65f9f9acb761cb25f4e245"
+  },
+  "sourcePolicy": "Exact script IDs identified by serialized frozen installer callback names/line numbers, then all FunctionCall spans for those IDs. No duration cutoff. Other pptr evaluations are separate, not silently assigned to these two installers.",
+  "limits": "Observed traced inclusive callback wall/CPU costs only; no instrumentation-free counterfactual. Same-name interval unions avoid nesting; nested style/layout costs are included in callback costs and must not be added. Complete callback tdur totals exclude spans crossing the window boundary. Callbacks nested inside a Cesium/application call remain inclusive in the engine/application parent. No physical GPU or presentation-cause claim; no acceptance credit.",
+  "builds": {
+    "baseline": {
+      "traceSha256": "3b80fd7c3d17cfc3d03ad8c86a4261cf3e22589bcbb7cd3887c5822afc2d802e",
+      "sourceScriptIds": {
+        "frozenVisibleFeedback": [
+          "77"
+        ],
+        "frozenEventTimingContinuity": [
+          "75"
+        ]
+      },
+      "samples": [
+        {
+          "sampleId": "baseline-local-01",
+          "on": true,
+          "eventTimingMs": 304,
+          "tracePresentationMs": 304.60799999701885,
+          "commitFinishMs": 206.53699999701894,
+          "owners": {
+            "other-application": {
+              "count": 44,
+              "wallUnionMs": 7.735000000000582,
+              "completeCallbackThreadCpuMs": 7.6000000000000005,
+              "callbacksWithCpu": 44,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 7.8289999999979045,
+              "completeCallbackThreadCpuMs": 7.806,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.753999999998996,
+              "nestedLayoutUnionMs": 0.4110000000000582
+            },
+            "qa-event-timing-continuity": {
+              "count": 9,
+              "wallUnionMs": 2.6260000000002037,
+              "completeCallbackThreadCpuMs": 2.618,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "other-harness-evaluation": {
+              "count": 7,
+              "wallUnionMs": 9.351999999998952,
+              "completeCallbackThreadCpuMs": 9.289,
+              "callbacksWithCpu": 7,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 38,
+              "wallUnionMs": 186.9309999979705,
+              "completeCallbackThreadCpuMs": 87.91500000000003,
+              "callbacksWithCpu": 38,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.5740000000005239,
+              "nestedLayoutUnionMs": 0.2139999999999418
+            },
+            "app-left-rail": {
+              "count": 2,
+              "wallUnionMs": 10.546000000000276,
+              "completeCallbackThreadCpuMs": 10.525,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 5.8070000000006985,
+              "nestedLayoutUnionMs": 0.7000000000007276
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 4.816999999999098,
+              "completeCallbackThreadCpuMs": 4.808,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 3.0749999999989086,
+              "nestedLayoutUnionMs": 0.3680000000003929
+            }
+          },
+          "knownQaCallbackWallUnionMs": 10.454999999998108,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 7.776999995112419,
+              "wallMs": 0.389,
+              "threadCpuMs": 0.39
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "listener",
+              "line": 683,
+              "column": 24,
+              "afterClickMs": 10.460999995470047,
+              "wallMs": 0.561,
+              "threadCpuMs": 0.563
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 12.778999999165535,
+              "wallMs": 0.229,
+              "threadCpuMs": 0.23
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 13.277999997138977,
+              "wallMs": 1.881,
+              "threadCpuMs": 1.872
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 18.256999999284744,
+              "wallMs": 0.046,
+              "threadCpuMs": 0.045
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 22.86599999666214,
+              "wallMs": 0.025,
+              "threadCpuMs": 0.024
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 39.69499999284744,
+              "wallMs": 0.056,
+              "threadCpuMs": 0.053
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 44.108999997377396,
+              "wallMs": 0.021,
+              "threadCpuMs": 0.021
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "listener",
+              "line": 709,
+              "column": 24,
+              "afterClickMs": 53.32600000500679,
+              "wallMs": 0.203,
+              "threadCpuMs": 0.203
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 191.5059999972582,
+              "wallMs": 2.487,
+              "threadCpuMs": 2.482
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 198.1089999973774,
+              "wallMs": 0.426,
+              "threadCpuMs": 0.426
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 256.53399999439716,
+              "wallMs": 2.843,
+              "threadCpuMs": 2.832
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 265.92000000178814,
+              "wallMs": 0.619,
+              "threadCpuMs": 0.615
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeRenderBoundary",
+              "line": 307,
+              "column": 33,
+              "afterClickMs": 272.09399999678135,
+              "wallMs": 0.669,
+              "threadCpuMs": 0.668
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-02",
+          "on": false,
+          "eventTimingMs": 112,
+          "tracePresentationMs": 113.02099999403981,
+          "commitFinishMs": 28.21599999403952,
+          "owners": {
+            "other-application": {
+              "count": 22,
+              "wallUnionMs": 1.106999999999971,
+              "completeCallbackThreadCpuMs": 1.0930000000000002,
+              "callbacksWithCpu": 22,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 9,
+              "wallUnionMs": 3.396999999999025,
+              "completeCallbackThreadCpuMs": 3.38,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.055000000000291,
+              "nestedLayoutUnionMs": 0.3899999999994179
+            },
+            "other-harness-evaluation": {
+              "count": 9,
+              "wallUnionMs": 1.8280000000013388,
+              "completeCallbackThreadCpuMs": 1.8260000000000003,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 6,
+              "wallUnionMs": 0.1819999999970605,
+              "completeCallbackThreadCpuMs": 0.181,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 3,
+              "wallUnionMs": 19.260999998570696,
+              "completeCallbackThreadCpuMs": 11.401,
+              "callbacksWithCpu": 3,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.7850000000016735,
+              "nestedLayoutUnionMs": 1.8150000000005093
+            },
+            "app-left-rail": {
+              "count": 2,
+              "wallUnionMs": 14.465000000000146,
+              "completeCallbackThreadCpuMs": 14.425999999999998,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 8.07799999999952,
+              "nestedLayoutUnionMs": 1.1610000000000582
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 4.5349999999998545,
+              "completeCallbackThreadCpuMs": 4.506,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 2.7409999999981665,
+              "nestedLayoutUnionMs": 0.29100000000107684
+            }
+          },
+          "knownQaCallbackWallUnionMs": 3.5789999999960855,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.431999996304512,
+              "wallMs": 0.018,
+              "threadCpuMs": 0.017
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8059999942779541,
+              "wallMs": 0.013,
+              "threadCpuMs": 0.013
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8390000015497208,
+              "wallMs": 0.076,
+              "threadCpuMs": 0.074
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.0659999996423721,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 3.310000002384186,
+              "wallMs": 0.014,
+              "threadCpuMs": 0.014
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.511999994516373,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 6.306999996304512,
+              "wallMs": 0.004,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 15.43699999153614,
+              "wallMs": 1.147,
+              "threadCpuMs": 1.144
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 21.30300000309944,
+              "wallMs": 0.059,
+              "threadCpuMs": 0.059
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 28.906999990344048,
+              "wallMs": 0.05,
+              "threadCpuMs": 0.049
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 31.899999991059303,
+              "wallMs": 0.043,
+              "threadCpuMs": 0.042
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 42.79399999976158,
+              "wallMs": 0.042,
+              "threadCpuMs": 0.042
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 52.74099999666214,
+              "wallMs": 0.026,
+              "threadCpuMs": 0.026
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 70.63199999928474,
+              "wallMs": 1.982,
+              "threadCpuMs": 1.973
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 82.91599999368191,
+              "wallMs": 0.095,
+              "threadCpuMs": 0.095
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-03",
+          "on": true,
+          "eventTimingMs": 144,
+          "tracePresentationMs": 145.23899999403875,
+          "commitFinishMs": 78.36299999404036,
+          "owners": {
+            "other-application": {
+              "count": 17,
+              "wallUnionMs": 0.7229999999999563,
+              "completeCallbackThreadCpuMs": 0.739,
+              "callbacksWithCpu": 17,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 4,
+              "wallUnionMs": 1.6310000000012224,
+              "completeCallbackThreadCpuMs": 1.625,
+              "callbacksWithCpu": 4,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.8999999999996362,
+              "nestedLayoutUnionMs": 0.25900000000001455
+            },
+            "other-harness-evaluation": {
+              "count": 6,
+              "wallUnionMs": 1.6170000000020082,
+              "completeCallbackThreadCpuMs": 1.614,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 5,
+              "wallUnionMs": 0.06499999999869033,
+              "completeCallbackThreadCpuMs": 0.064,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 118.10400000548361,
+              "completeCallbackThreadCpuMs": 19.834,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.12700000000040745,
+              "nestedLayoutUnionMs": 0
+            },
+            "app-left-rail": {
+              "count": 1,
+              "wallUnionMs": 3.513999999999214,
+              "completeCallbackThreadCpuMs": 3.511,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.9249999999992724,
+              "nestedLayoutUnionMs": 0.23699999999917054
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 5.0049999999992,
+              "completeCallbackThreadCpuMs": 4.964,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 3.125,
+              "nestedLayoutUnionMs": 0.43699999999989814
+            }
+          },
+          "knownQaCallbackWallUnionMs": 1.6959999999999127,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.5679999887943268,
+              "wallMs": 0.022,
+              "threadCpuMs": 0.022
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.9049999862909317,
+              "wallMs": 0.029,
+              "threadCpuMs": 0.029
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.9559999853372574,
+              "wallMs": 0.109,
+              "threadCpuMs": 0.108
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.1759999841451645,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 2.6959999799728394,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 6.298999980092049,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 7.171999976038933,
+              "wallMs": 0.004,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 65.22699998319149,
+              "wallMs": 1.471,
+              "threadCpuMs": 1.466
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 70.2599999755621,
+              "wallMs": 0.046,
+              "threadCpuMs": 0.047
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-04",
+          "on": false,
+          "eventTimingMs": 96,
+          "tracePresentationMs": 95.55099999404047,
+          "commitFinishMs": 28.000999994039375,
+          "owners": {
+            "other-application": {
+              "count": 24,
+              "wallUnionMs": 1.706000000003769,
+              "completeCallbackThreadCpuMs": 1.681,
+              "callbacksWithCpu": 24,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 6,
+              "wallUnionMs": 4.636000000000422,
+              "completeCallbackThreadCpuMs": 4.5809999999999995,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.478000000000975,
+              "nestedLayoutUnionMs": 0.5300000000006548
+            },
+            "other-harness-evaluation": {
+              "count": 9,
+              "wallUnionMs": 1.470999999999549,
+              "completeCallbackThreadCpuMs": 1.4680000000000002,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 7,
+              "wallUnionMs": 0.5949999999993452,
+              "completeCallbackThreadCpuMs": 0.591,
+              "callbacksWithCpu": 7,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 3,
+              "wallUnionMs": 12.182000000000698,
+              "completeCallbackThreadCpuMs": 12.07,
+              "callbacksWithCpu": 3,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.4279999999998836,
+              "nestedLayoutUnionMs": 0.6239999999997963
+            },
+            "app-left-rail": {
+              "count": 3,
+              "wallUnionMs": 21.511999998330793,
+              "completeCallbackThreadCpuMs": 19.783,
+              "callbacksWithCpu": 3,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 10.645000000000437,
+              "nestedLayoutUnionMs": 1.5100000000002183
+            },
+            "app-right-rail": {
+              "count": 2,
+              "wallUnionMs": 12.402999999998428,
+              "completeCallbackThreadCpuMs": 12.350999999999999,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 6.04700000000048,
+              "nestedLayoutUnionMs": 1.0010000000002037
+            }
+          },
+          "knownQaCallbackWallUnionMs": 5.230999999999767,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.5600000023841858,
+              "wallMs": 0.047,
+              "threadCpuMs": 0.046
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.988999992609024,
+              "wallMs": 0.019,
+              "threadCpuMs": 0.018
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 1.0429999977350235,
+              "wallMs": 0.162,
+              "threadCpuMs": 0.157
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.3279999941587448,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 3.2650000005960464,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 4.870999991893768,
+              "wallMs": 0.02,
+              "threadCpuMs": 0.02
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.585999995470047,
+              "wallMs": 0.003,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 15.640000000596046,
+              "wallMs": 1.389,
+              "threadCpuMs": 1.384
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 20.913000002503395,
+              "wallMs": 0.046,
+              "threadCpuMs": 0.046
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 28.886999994516373,
+              "wallMs": 0.036,
+              "threadCpuMs": 0.036
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 39.74599999189377,
+              "wallMs": 2.983,
+              "threadCpuMs": 2.94
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 59.15299999713898,
+              "wallMs": 0.154,
+              "threadCpuMs": 0.153
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeRenderBoundary",
+              "line": 307,
+              "column": 33,
+              "afterClickMs": 68.0949999988079,
+              "wallMs": 0.362,
+              "threadCpuMs": 0.361
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-05",
+          "on": true,
+          "eventTimingMs": 128,
+          "tracePresentationMs": 129.16499999404004,
+          "commitFinishMs": 66.92599999403865,
+          "owners": {
+            "other-application": {
+              "count": 17,
+              "wallUnionMs": 0.6170000000020082,
+              "completeCallbackThreadCpuMs": 0.6,
+              "callbacksWithCpu": 17,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 4,
+              "wallUnionMs": 2.1899999999986903,
+              "completeCallbackThreadCpuMs": 2.167,
+              "callbacksWithCpu": 4,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.2530000000006112,
+              "nestedLayoutUnionMs": 0.4150000000008731
+            },
+            "other-harness-evaluation": {
+              "count": 7,
+              "wallUnionMs": 1.3170000000009168,
+              "completeCallbackThreadCpuMs": 1.315,
+              "callbacksWithCpu": 7,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 5,
+              "wallUnionMs": 0.0849999999973079,
+              "completeCallbackThreadCpuMs": 0.082,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 102.94600000178798,
+              "completeCallbackThreadCpuMs": 14.597,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.14600000000064028,
+              "nestedLayoutUnionMs": 0
+            },
+            "app-left-rail": {
+              "count": 1,
+              "wallUnionMs": 3.595999999999549,
+              "completeCallbackThreadCpuMs": 3.584,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.875,
+              "nestedLayoutUnionMs": 0.19900000000052387
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 3.8060000000004948,
+              "completeCallbackThreadCpuMs": 3.78,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 2.438000000000102,
+              "nestedLayoutUnionMs": 0.26199999999880674
+            }
+          },
+          "knownQaCallbackWallUnionMs": 2.2749999999959982,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.5269999951124191,
+              "wallMs": 0.016,
+              "threadCpuMs": 0.016
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.7919999957084656,
+              "wallMs": 0.014,
+              "threadCpuMs": 0.014
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8250000029802322,
+              "wallMs": 0.104,
+              "threadCpuMs": 0.099
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.0219999998807907,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 2.498999997973442,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.2819999903440475,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.971000000834465,
+              "wallMs": 0.003,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 54.93599998950958,
+              "wallMs": 2.056,
+              "threadCpuMs": 2.038
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 60.62999999523163,
+              "wallMs": 0.067,
+              "threadCpuMs": 0.066
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-06",
+          "on": false,
+          "eventTimingMs": 96,
+          "tracePresentationMs": 94.92099999105994,
+          "commitFinishMs": 23.873999991057644,
+          "owners": {
+            "other-application": {
+              "count": 22,
+              "wallUnionMs": 1.4239999999990687,
+              "completeCallbackThreadCpuMs": 1.342,
+              "callbacksWithCpu": 22,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 9,
+              "wallUnionMs": 1.9459999999962747,
+              "completeCallbackThreadCpuMs": 1.93,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.7329999999965366,
+              "nestedLayoutUnionMs": 0.22400000000197906
+            },
+            "other-harness-evaluation": {
+              "count": 9,
+              "wallUnionMs": 1.4059999999954016,
+              "completeCallbackThreadCpuMs": 1.3990000000000002,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 6,
+              "wallUnionMs": 0.18599999999787542,
+              "completeCallbackThreadCpuMs": 0.185,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 10.43999999999869,
+              "completeCallbackThreadCpuMs": 10.407,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.364000000001397,
+              "nestedLayoutUnionMs": 0.559000000001106
+            },
+            "app-left-rail": {
+              "count": 2,
+              "wallUnionMs": 12.04399999999805,
+              "completeCallbackThreadCpuMs": 11.953000000000001,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 7.078000000001339,
+              "nestedLayoutUnionMs": 0.6409999999996217
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 3.205999999998312,
+              "completeCallbackThreadCpuMs": 3.195,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 2.1189999999987776,
+              "nestedLayoutUnionMs": 0.18100000000049477
+            }
+          },
+          "knownQaCallbackWallUnionMs": 2.13199999999415,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.575999990105629,
+              "wallMs": 0.016,
+              "threadCpuMs": 0.015
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8369999974966049,
+              "wallMs": 0.01,
+              "threadCpuMs": 0.01
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.863999992609024,
+              "wallMs": 0.075,
+              "threadCpuMs": 0.073
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.075999990105629,
+              "wallMs": 0.01,
+              "threadCpuMs": 0.01
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 2.913999989628792,
+              "wallMs": 0.003,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 4.778999999165535,
+              "wallMs": 0.004,
+              "threadCpuMs": 0.003
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.537999987602234,
+              "wallMs": 0.002,
+              "threadCpuMs": 0.002
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 14.800999999046326,
+              "wallMs": 0.956,
+              "threadCpuMs": 0.951
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 18.461999997496605,
+              "wallMs": 0.027,
+              "threadCpuMs": 0.027
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 24.62999999523163,
+              "wallMs": 0.031,
+              "threadCpuMs": 0.031
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 32.24599999189377,
+              "wallMs": 0.092,
+              "threadCpuMs": 0.09
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 42.01599998772144,
+              "wallMs": 0.082,
+              "threadCpuMs": 0.081
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 52.11499999463558,
+              "wallMs": 0.039,
+              "threadCpuMs": 0.038
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 63.67299999296665,
+              "wallMs": 0.645,
+              "threadCpuMs": 0.641
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 73.8509999960661,
+              "wallMs": 0.14,
+              "threadCpuMs": 0.14
+            }
+          ]
+        }
+      ]
+    },
+    "candidate": {
+      "traceSha256": "fcc40d7d8caef6b6fe60b083cfc975928a1eadee3c10419d1be529c18c365e1b",
+      "sourceScriptIds": {
+        "frozenVisibleFeedback": [
+          "77"
+        ],
+        "frozenEventTimingContinuity": [
+          "75"
+        ]
+      },
+      "samples": [
+        {
+          "sampleId": "candidate-local-01",
+          "on": true,
+          "eventTimingMs": 256,
+          "tracePresentationMs": 256.33500000298045,
+          "commitFinishMs": 113.98200000297948,
+          "owners": {
+            "other-application": {
+              "count": 17,
+              "wallUnionMs": 7.819000000001324,
+              "completeCallbackThreadCpuMs": 7.643999999999999,
+              "callbacksWithCpu": 17,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 5.755999999999403,
+              "completeCallbackThreadCpuMs": 5.729,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.2039999999997235,
+              "nestedLayoutUnionMs": 0.09399999999914144
+            },
+            "qa-event-timing-continuity": {
+              "count": 6,
+              "wallUnionMs": 2.978000000000975,
+              "completeCallbackThreadCpuMs": 2.9259999999999997,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "other-harness-evaluation": {
+              "count": 5,
+              "wallUnionMs": 3.4329999999972642,
+              "completeCallbackThreadCpuMs": 3.416,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 132.11800000607946,
+              "completeCallbackThreadCpuMs": 24.566,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.5730000000003201,
+              "nestedLayoutUnionMs": 0
+            },
+            "app-left-rail": {
+              "count": 1,
+              "wallUnionMs": 16.389999999999418,
+              "completeCallbackThreadCpuMs": 15.998,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 10.111000000000786,
+              "nestedLayoutUnionMs": 1.3809999999994034
+            }
+          },
+          "knownQaCallbackWallUnionMs": 8.734000000000378,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 11.45499999821186,
+              "wallMs": 1.249,
+              "threadCpuMs": 1.249
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "listener",
+              "line": 683,
+              "column": 24,
+              "afterClickMs": 16.78599999845028,
+              "wallMs": 0.718,
+              "threadCpuMs": 0.717
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 20.528999999165535,
+              "wallMs": 0.126,
+              "threadCpuMs": 0.127
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 20.822999998927116,
+              "wallMs": 1.576,
+              "threadCpuMs": 1.553
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 24.538000002503395,
+              "wallMs": 0.069,
+              "threadCpuMs": 0.069
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 34.03000000119209,
+              "wallMs": 0.081,
+              "threadCpuMs": 0.082
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "listener",
+              "line": 709,
+              "column": 24,
+              "afterClickMs": 47.75499999523163,
+              "wallMs": 0.349,
+              "threadCpuMs": 0.351
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 75.320999994874,
+              "wallMs": 2.647,
+              "threadCpuMs": 2.642
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 94.59099999070168,
+              "wallMs": 1.114,
+              "threadCpuMs": 1.094
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 139.02300000190735,
+              "wallMs": 0.647,
+              "threadCpuMs": 0.613
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 140.40899999439716,
+              "wallMs": 0.158,
+              "threadCpuMs": 0.158
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-02",
+          "on": false,
+          "eventTimingMs": 128,
+          "tracePresentationMs": 127.17499999701977,
+          "commitFinishMs": 41.50899999702051,
+          "owners": {
+            "other-application": {
+              "count": 25,
+              "wallUnionMs": 2.5210000000042783,
+              "completeCallbackThreadCpuMs": 2.5060000000000002,
+              "callbacksWithCpu": 25,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 5.2630000000008295,
+              "completeCallbackThreadCpuMs": 5.242,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 2.771999999999025,
+              "nestedLayoutUnionMs": 0.5090000000000146
+            },
+            "other-harness-evaluation": {
+              "count": 6,
+              "wallUnionMs": 0.6769999999978609,
+              "completeCallbackThreadCpuMs": 0.6759999999999999,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 6,
+              "wallUnionMs": 0.9200000000000728,
+              "completeCallbackThreadCpuMs": 0.9179999999999999,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 4,
+              "wallUnionMs": 21.8179999999993,
+              "completeCallbackThreadCpuMs": 21.525,
+              "callbacksWithCpu": 4,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.2229999999999563,
+              "nestedLayoutUnionMs": 1.4309999999986758
+            },
+            "app-left-rail": {
+              "count": 3,
+              "wallUnionMs": 29.46699998497934,
+              "completeCallbackThreadCpuMs": 25.895,
+              "callbacksWithCpu": 3,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 19.088999989389777,
+              "nestedLayoutUnionMs": 1.7219999999979336
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 7.541999999999462,
+              "completeCallbackThreadCpuMs": 7.512,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 4.794000000001688,
+              "nestedLayoutUnionMs": 0.3760000000002037
+            }
+          },
+          "knownQaCallbackWallUnionMs": 6.183000000000902,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.6110000014305115,
+              "wallMs": 0.031,
+              "threadCpuMs": 0.031
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 1.1950000077486038,
+              "wallMs": 0.027,
+              "threadCpuMs": 0.027
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 1.248999997973442,
+              "wallMs": 0.138,
+              "threadCpuMs": 0.136
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.596000000834465,
+              "wallMs": 0.008,
+              "threadCpuMs": 0.007
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.293999999761581,
+              "wallMs": 0.01,
+              "threadCpuMs": 0.01
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 7.868000000715256,
+              "wallMs": 0.01,
+              "threadCpuMs": 0.009
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 14.234999999403954,
+              "wallMs": 3.469,
+              "threadCpuMs": 3.459
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 29.584000006318092,
+              "wallMs": 0.152,
+              "threadCpuMs": 0.151
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 51.038000002503395,
+              "wallMs": 1.598,
+              "threadCpuMs": 1.589
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 66.99700000882149,
+              "wallMs": 0.256,
+              "threadCpuMs": 0.257
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeRenderBoundary",
+              "line": 307,
+              "column": 33,
+              "afterClickMs": 72.32999999821186,
+              "wallMs": 0.484,
+              "threadCpuMs": 0.484
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-03",
+          "on": true,
+          "eventTimingMs": 48,
+          "tracePresentationMs": 45.76100000297993,
+          "commitFinishMs": 19.52700000297955,
+          "owners": {
+            "other-application": {
+              "count": 16,
+              "wallUnionMs": 0.6349999999965803,
+              "completeCallbackThreadCpuMs": 0.6250000000000001,
+              "callbacksWithCpu": 16,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 0.5740000000005239,
+              "completeCallbackThreadCpuMs": 0.5519999999999999,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.05500000000029104,
+              "nestedLayoutUnionMs": 0.027000000000043656
+            },
+            "other-harness-evaluation": {
+              "count": 6,
+              "wallUnionMs": 0.3919999999998254,
+              "completeCallbackThreadCpuMs": 0.391,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 4,
+              "wallUnionMs": 0.18099999999867578,
+              "completeCallbackThreadCpuMs": 0.17800000000000002,
+              "callbacksWithCpu": 4,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 13.99199999809207,
+              "completeCallbackThreadCpuMs": 0.327,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.11700000000018917,
+              "nestedLayoutUnionMs": 0
+            },
+            "app-left-rail": {
+              "count": 1,
+              "wallUnionMs": 2.855999999999767,
+              "completeCallbackThreadCpuMs": 2.853,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.5750000000007276,
+              "nestedLayoutUnionMs": 0.19700000000011642
+            }
+          },
+          "knownQaCallbackWallUnionMs": 0.7549999999991996,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.4360000044107437,
+              "wallMs": 0.021,
+              "threadCpuMs": 0.02
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.7230000048875809,
+              "wallMs": 0.028,
+              "threadCpuMs": 0.027
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.7830000072717667,
+              "wallMs": 0.106,
+              "threadCpuMs": 0.105
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 0.9900000095367432,
+              "wallMs": 0.006,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 2.1310000121593475,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 13.301000013947487,
+              "wallMs": 0.325,
+              "threadCpuMs": 0.306
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 16.51400001347065,
+              "wallMs": 0.034,
+              "threadCpuMs": 0.035
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 23.450000017881393,
+              "wallMs": 0.136,
+              "threadCpuMs": 0.134
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 24.114000007510185,
+              "wallMs": 0.094,
+              "threadCpuMs": 0.094
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-04",
+          "on": false,
+          "eventTimingMs": 96,
+          "tracePresentationMs": 95.8140000000003,
+          "commitFinishMs": 31.769000000000233,
+          "owners": {
+            "other-application": {
+              "count": 21,
+              "wallUnionMs": 1.2710000000006403,
+              "completeCallbackThreadCpuMs": 1.256,
+              "callbacksWithCpu": 21,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 2.2709999999988213,
+              "completeCallbackThreadCpuMs": 2.259,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.8240000000005239,
+              "nestedLayoutUnionMs": 0.2710000000006403
+            },
+            "other-harness-evaluation": {
+              "count": 8,
+              "wallUnionMs": 0.5670000000027358,
+              "completeCallbackThreadCpuMs": 0.565,
+              "callbacksWithCpu": 8,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 6,
+              "wallUnionMs": 1.0570000000006985,
+              "completeCallbackThreadCpuMs": 1.0550000000000002,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 3,
+              "wallUnionMs": 12.272999999999229,
+              "completeCallbackThreadCpuMs": 12.222999999999999,
+              "callbacksWithCpu": 3,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.4099999999980355,
+              "nestedLayoutUnionMs": 0.6270000000004075
+            },
+            "app-left-rail": {
+              "count": 2,
+              "wallUnionMs": 21.887000000000626,
+              "completeCallbackThreadCpuMs": 21.586000000000002,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 13.609000000000378,
+              "nestedLayoutUnionMs": 1.4799999999995634
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 6.117000000000189,
+              "completeCallbackThreadCpuMs": 6.106,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 4.050000000001091,
+              "nestedLayoutUnionMs": 0.3469999999997526
+            }
+          },
+          "knownQaCallbackWallUnionMs": 3.32799999999952,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.7519999891519547,
+              "wallMs": 0.076,
+              "threadCpuMs": 0.076
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 1.3029999881982803,
+              "wallMs": 0.034,
+              "threadCpuMs": 0.033
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 1.3669999986886978,
+              "wallMs": 0.153,
+              "threadCpuMs": 0.151
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.6699999868869781,
+              "wallMs": 0.018,
+              "threadCpuMs": 0.018
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 4.080999985337257,
+              "wallMs": 0.006,
+              "threadCpuMs": 0.006
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 5.272999987006187,
+              "wallMs": 0.012,
+              "threadCpuMs": 0.012
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 14.908999994397163,
+              "wallMs": 1.163,
+              "threadCpuMs": 1.16
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 20.47199998795986,
+              "wallMs": 0.079,
+              "threadCpuMs": 0.079
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 38.72599999606609,
+              "wallMs": 0.845,
+              "threadCpuMs": 0.839
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 57.3839999884367,
+              "wallMs": 0.43,
+              "threadCpuMs": 0.429
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeRenderBoundary",
+              "line": 307,
+              "column": 33,
+              "afterClickMs": 65.75599999725819,
+              "wallMs": 0.512,
+              "threadCpuMs": 0.511
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-05",
+          "on": true,
+          "eventTimingMs": 48,
+          "tracePresentationMs": 46.83299999999872,
+          "commitFinishMs": 20.870999999999185,
+          "owners": {
+            "other-application": {
+              "count": 14,
+              "wallUnionMs": 0.5349999999925785,
+              "completeCallbackThreadCpuMs": 0.5230000000000001,
+              "callbacksWithCpu": 14,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 5,
+              "wallUnionMs": 0.49399999999877764,
+              "completeCallbackThreadCpuMs": 0.489,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.05800000000090222,
+              "nestedLayoutUnionMs": 0.03299999999944703
+            },
+            "other-harness-evaluation": {
+              "count": 6,
+              "wallUnionMs": 0.27999999999883585,
+              "completeCallbackThreadCpuMs": 0.277,
+              "callbacksWithCpu": 6,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 4,
+              "wallUnionMs": 0.15200000000186265,
+              "completeCallbackThreadCpuMs": 0.15100000000000002,
+              "callbacksWithCpu": 4,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 13.095000005600014,
+              "completeCallbackThreadCpuMs": 0.295,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 1,
+              "nestedStyleUnionMs": 0.19099999999889405,
+              "nestedLayoutUnionMs": 0
+            },
+            "app-left-rail": {
+              "count": 1,
+              "wallUnionMs": 3.0169999999998254,
+              "completeCallbackThreadCpuMs": 3.013,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.6810000000004948,
+              "nestedLayoutUnionMs": 0.20799999999871943
+            }
+          },
+          "knownQaCallbackWallUnionMs": 0.6460000000006403,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.3779999911785126,
+              "wallMs": 0.016,
+              "threadCpuMs": 0.016
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.6219999939203262,
+              "wallMs": 0.013,
+              "threadCpuMs": 0.012
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.6519999951124191,
+              "wallMs": 0.075,
+              "threadCpuMs": 0.074
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 0.824999988079071,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.7859999984502792,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 14.337999999523163,
+              "wallMs": 0.321,
+              "threadCpuMs": 0.318
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 17.706999987363815,
+              "wallMs": 0.042,
+              "threadCpuMs": 0.041
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 23.710999995470047,
+              "wallMs": 0.1,
+              "threadCpuMs": 0.1
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 24.13799999654293,
+              "wallMs": 0.069,
+              "threadCpuMs": 0.069
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-06",
+          "on": false,
+          "eventTimingMs": 96,
+          "tracePresentationMs": 96.03399999106114,
+          "commitFinishMs": 24.694999991057557,
+          "owners": {
+            "other-application": {
+              "count": 19,
+              "wallUnionMs": 0.9240000000063446,
+              "completeCallbackThreadCpuMs": 0.9120000000000001,
+              "callbacksWithCpu": 19,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-visible-feedback": {
+              "count": 9,
+              "wallUnionMs": 2.9469999999928405,
+              "completeCallbackThreadCpuMs": 2.843,
+              "callbacksWithCpu": 9,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.75,
+              "nestedLayoutUnionMs": 0.3849999999983993
+            },
+            "other-harness-evaluation": {
+              "count": 8,
+              "wallUnionMs": 0.5129999999953725,
+              "completeCallbackThreadCpuMs": 0.512,
+              "callbacksWithCpu": 8,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "qa-event-timing-continuity": {
+              "count": 5,
+              "wallUnionMs": 0.19500000000334694,
+              "completeCallbackThreadCpuMs": 0.194,
+              "callbacksWithCpu": 5,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0,
+              "nestedLayoutUnionMs": 0
+            },
+            "cesium-inclusive": {
+              "count": 2,
+              "wallUnionMs": 13.817999999999302,
+              "completeCallbackThreadCpuMs": 13.441,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 0.510999999998603,
+              "nestedLayoutUnionMs": 0.7760000000016589
+            },
+            "app-left-rail": {
+              "count": 2,
+              "wallUnionMs": 18.877000000000407,
+              "completeCallbackThreadCpuMs": 18.405,
+              "callbacksWithCpu": 2,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 10.092000000000553,
+              "nestedLayoutUnionMs": 0.9570000000021537
+            },
+            "app-right-rail": {
+              "count": 1,
+              "wallUnionMs": 3.0489999999990687,
+              "completeCallbackThreadCpuMs": 3.044,
+              "callbacksWithCpu": 1,
+              "crossingEndpoint": 0,
+              "nestedStyleUnionMs": 1.8999999999978172,
+              "nestedLayoutUnionMs": 0.19399999999950523
+            }
+          },
+          "knownQaCallbackWallUnionMs": 3.1419999999961874,
+          "knownQaCallbacks": [
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.5979999899864197,
+              "wallMs": 0.016,
+              "threadCpuMs": 0.016
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8639999777078629,
+              "wallMs": 0.011,
+              "threadCpuMs": 0.01
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "listener",
+              "line": 783,
+              "column": 22,
+              "afterClickMs": 0.8949999809265137,
+              "wallMs": 0.123,
+              "threadCpuMs": 0.122
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 1.1079999804496765,
+              "wallMs": 0.011,
+              "threadCpuMs": 0.011
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 2.6839999854564667,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.005
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 3.6369999796152115,
+              "wallMs": 0.005,
+              "threadCpuMs": 0.004
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 415,
+              "column": 67,
+              "afterClickMs": 15.041999980807304,
+              "wallMs": 0.921,
+              "threadCpuMs": 0.917
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 18.99099998176098,
+              "wallMs": 0.042,
+              "threadCpuMs": 0.041
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 25.638999983668327,
+              "wallMs": 0.034,
+              "threadCpuMs": 0.033
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 31.513999983668327,
+              "wallMs": 0.029,
+              "threadCpuMs": 0.028
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 41.7589999884367,
+              "wallMs": 0.148,
+              "threadCpuMs": 0.149
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 419,
+              "column": 42,
+              "afterClickMs": 51.68999998271465,
+              "wallMs": 0.065,
+              "threadCpuMs": 0.064
+            },
+            {
+              "owner": "qa-visible-feedback",
+              "functionName": "",
+              "line": 327,
+              "column": 11,
+              "afterClickMs": 65.07699997723103,
+              "wallMs": 1.6,
+              "threadCpuMs": 1.504
+            },
+            {
+              "owner": "qa-event-timing-continuity",
+              "functionName": "observeMutations",
+              "line": 351,
+              "column": 28,
+              "afterClickMs": 82.95699998736382,
+              "wallMs": 0.132,
+              "threadCpuMs": 0.133
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
