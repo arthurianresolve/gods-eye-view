@@ -24,6 +24,15 @@ and final eleven affected tests pass on both Node 24 and 26, along with 43
 Windows image-integration tests. Independent source/receipt review passes.
 A newly declared and captured cohort is still required before visual acceptance.
 
+The first `2e448245` / `e6e1abc1` new-policy attempt stops before its first
+PNG: the proof validator requires nonempty boxes from all ancestors,
+including the existing `display: contents` badge wrapper. The raw failure
+does not preserve the exact rejected rectangle, so the source-based diagnosis
+is not presented as a recovered browser measurement. Normal owned-browser
+closure passes. Correcting that proof requirement leaves visible surface/text
+boxes, source/style equality and pixel limits intact; a fresh actual-page
+check and new cohort are still required.
+
 The [rail measurement correction](rail-measurement-validation.json) at
 `e6e1abc1` preserves the existing layout equations while reading invariant
 spacing before temporary measurement styles are restored. Both Node versions
@@ -36,9 +45,24 @@ the page has its maximized 1280 × 537 viewport, but CDP still reports
 1037 × 511. The exact consistency check rejects the transient disagreement.
 Its six files (71,185 bytes) are retained at VM task
 `native-window-rail-comparison-e6e1abc1-3360f672-preparation-failed-20261020`;
-the browser closes normally with no forced termination. A bounded
-preparation-only settlement correction is under development. This is not
+the browser closes normally with no forced termination. This is not
 application performance evidence and establishes no latency benefit.
+
+The preparation correction at `e26b0b54` now requires two consecutive complete
+and exactly matching Windows/CDP/page proofs before navigation, retaining
+every attempted proof. It bounds preparation and failed-session cleanup;
+post-navigation checks remain single-shot. Formal reports also retain and
+validate the configured trace. The [validation receipt](native-window-settlement-validation.json)
+records 153/153 focused tests on both Node 24 and 26 and all required static
+checks passing, with independent source/input/log readback. The initial sparse
+setup failure is retained separately; its missing tracked helper is present
+in the passing run. A fresh hardware attempt is still required.
+
+The [exact `e6e1abc1` CI receipt](rail-layout-e6e1abc1-ci.json) records
+seven selected CI jobs and release verification passing. Node 24/26,
+production builds, browser journeys, Windows onboarding and installation/
+recovery on Windows, macOS and Linux pass. Twelve optional dispatch-only
+jobs are skipped, not passed. Hardware qualification remains separate.
 
 The formal producer at `ff927fb2` adds explicit native-window qualification
 without changing old fixed-size reports or timing gates. Its

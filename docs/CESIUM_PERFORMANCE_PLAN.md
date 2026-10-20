@@ -25,6 +25,14 @@ affected checks pass on both Node 24 and 26; all 43 Windows image-integration
 checks pass. Independent review verifies the exact source and receipts.
 Hardware validation under this new policy remains pending.
 
+The first new-policy attempt stops before its first PNG because the proof
+validator incorrectly requires a nonempty box for every DOM ancestor.
+The existing badge wrapper uses `display: contents`; such an ancestor need
+not generate a box. The failed attempt and normal browser closure remain
+recorded. A correction preserves nonempty visible decoration/text boxes,
+complete ancestor geometry/style evidence and all pixel limits. It requires
+automatic and actual-application validation before a fresh cohort.
+
 Runtime `e6e1abc1` moves invariant panel-spacing and collapsed-sibling reads
 before temporary measurement styles are restored, avoiding a redundant forced
 layout. Its [validation receipt](performance-evidence/s69-native-matrix-20261019/rail-measurement-validation.json)
@@ -36,9 +44,26 @@ check passes in isolation. The first new paired hardware attempt stops before
 application navigation or samples: Chrome's page reports the maximized
 1280 × 537 viewport while its debugging API still reports 1037 × 511.
 The exact consistency check rejects this transient disagreement, and the
-browser closes normally. Its six raw files remain preserved. A bounded
-preparation-only settlement correction is under development; no latency
-benefit is claimed yet.
+browser closes normally. Its six raw files remain preserved. No application
+latency benefit is established by that failed setup.
+
+Commit `e26b0b54` corrects preparation by requiring two consecutive complete,
+exactly matching Windows/CDP/page proofs before navigation. It retains every
+attempt, bounds settlement and failure cleanup, and leaves later measurement
+checks single-shot. The formal report retains and validates the configured
+proof as well. Its [validation receipt](performance-evidence/s69-native-matrix-20261019/native-window-settlement-validation.json)
+records 153 passing focused tests on both Node 24 and 26, with formatting,
+import/package boundaries and undefined-reference checks passing. Independent
+source and raw-log readback passes. The first sparse validation attempt lacked
+a tracked build helper and remains preserved; the completed run includes it.
+Fresh hardware execution of this preparation fix remains pending.
+
+Its [exact-commit CI receipt](performance-evidence/s69-native-matrix-20261019/rail-layout-e6e1abc1-ci.json)
+records all seven selected CI jobs and release verification passing.
+This includes Node 24/26, production builds, browser journeys, Windows
+onboarding and recovery on Windows, macOS and Linux. Twelve optional
+dispatch-only jobs remain skipped. These are automatic checks, not hardware
+performance or deployment acceptance.
 
 The formal metrics producer at `ff927fb2` now supports an explicit native-window
 mode. Its [146-test validation](performance-evidence/s69-native-matrix-20261019/native-window-metrics-validation.json)
