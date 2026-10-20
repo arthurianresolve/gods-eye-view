@@ -15,15 +15,27 @@ before preparation while removing the second wait; it neither guarantees
 physical presentation nor establishes a performance pass. The
 [focused validation](performance-evidence/s69-native-matrix-20261019/single-raf-feedback-validation.json)
 passes 146 tests on each Node version and all required static checks.
-Earlier sparse-source setup failure is retained. A private VM build is being
-prepared; its hardware comparison, final soak and deployment remain pending.
+Earlier sparse-source setup failure is retained. The
+[private VM build and Windows inputs](performance-evidence/s69-native-matrix-20261019/single-raf-feedback-build-preflight.json)
+verify all 886 candidate assets against the exact source and build receipt.
+Its hardware comparison, final soak and deployment remain pending.
 
 A proposed QA exemption for restored measurement attributes was rejected
 before capture. The [actual-CSS browser reproduction](performance-evidence/s69-native-matrix-20261019/left-measurement-restoration-review.json)
 shows that disabled scroll anchoring can leave a control displaced after its
 height styles are restored. Current application source does not disable scroll
 anchoring; this is a counterexample to the proof rule, not an established
-production failure. A replacement must prove visibility after natural layout.
+production failure. The replacement v3 observer requires a bounded natural-layout
+ResizeObserver proof after each recognized measurement, with unchanged control
+geometry, clipping and ancestor scroll offsets. Mixed or unknown changes cannot
+be erased by that proof, and observed negative geometry remains a failure even
+after a later positive frame. Pure unknown uncertainty retains the existing
+natural-RAF recovery rule. The [validation and readback](performance-evidence/s69-native-matrix-20261019/interaction-continuity-v3-readback.json)
+record 78 passing tests on each Node version, static checks, and four isolated
+browser cases that distinguish actual restoration from residual scroll clamping.
+The final consumer correction reuses the browser cases only because the
+serialized installer is byte-identical. The full historical v2 evaluation is
+unchanged. Added observation work is bounded; its overhead remains unmeasured.
 The larger shared-rail experiment is parked with its 68 passing unit tests;
 it is not shipped and has no measured performance benefit.
 

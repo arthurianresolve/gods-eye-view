@@ -1,0 +1,146 @@
+{
+  "schema": "gev-continuity-v3-independent-readback/v1",
+  "status": "verified",
+  "validated": [
+    {
+      "folder": "interaction-continuity-v3-validation-20261020-r4",
+      "receiptSha256": "0bb42c18a9f51522661b18f616d14208e6049518cf691a77911dd0098a1ce1ce",
+      "source": "/opt/gods-eye-view-validation/s61-s70-20261018/interaction-continuity-v3-validation-20261020-r4/source",
+      "files": [
+        {
+          "file": "scripts/performance/interactionEventTiming.mjs",
+          "bytes": 48858,
+          "sha256": "93edd4ba681453101d64a1fc5f68a78a034266c00d54ad4348040374569fa7ee"
+        },
+        {
+          "file": "scripts/performance/interactionEventTiming.test.mjs",
+          "bytes": 49687,
+          "sha256": "608163ecbe4641195da773adc2f5b71b4327bb00157a964bfcf080417a535e80"
+        },
+        {
+          "file": "scripts/performance/qualificationMetrics.mjs",
+          "bytes": 70427,
+          "sha256": "281cd8ddd459fa11d649198f48ae4864a3ce65d7ecad94539122389e0732f44e"
+        },
+        {
+          "file": "scripts/performance/qualificationMetrics.test.mjs",
+          "bytes": 138873,
+          "sha256": "9f5d2ff633a8fa7460388abad2adf69cca310b78dae7c5ccaeb560a03bdf5a51"
+        }
+      ],
+      "checks": [
+        {
+          "label": "node24",
+          "name": "focused",
+          "exitCode": 0,
+          "sha256": "79fe81f92416e10beb1c7fb03746861ea366cd96de9c67aef96bed828ec59c7d",
+          "tests": 78,
+          "pass": 78,
+          "fail": 0
+        },
+        {
+          "label": "node26",
+          "name": "focused",
+          "exitCode": 0,
+          "sha256": "0c8b86fa68b22a1d48803a1002e8b2a67df57553f9b010bc534751b0e2e20d88",
+          "tests": 78,
+          "pass": 78,
+          "fail": 0
+        },
+        {
+          "label": "node24",
+          "name": "format",
+          "exitCode": 0,
+          "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+          "tests": 0,
+          "pass": 0,
+          "fail": 0
+        },
+        {
+          "label": "node24",
+          "name": "capture-no-undef",
+          "exitCode": 0,
+          "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+          "tests": 0,
+          "pass": 0,
+          "fail": 0
+        },
+        {
+          "label": "node24",
+          "name": "imports",
+          "exitCode": 0,
+          "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+          "tests": 0,
+          "pass": 0,
+          "fail": 0
+        }
+      ]
+    }
+  ],
+  "nativeDom": {
+    "path": "qa-artifacts/interaction-render-boundary-dom-regression-20261020-r4.json",
+    "sha256": "f940da1b6947dd23740d271b15904b29b990db22a097eff8c5658ee1ed2c01f4",
+    "observerSha256": "b9d4ce73f14171d2ae63b64f95ca47dce222204ea2d038e4a1a18d3b004539cb",
+    "cases": [
+      {
+        "mechanism": "marker",
+        "anchor": "auto",
+        "visible": true,
+        "restoredGeometry": true
+      },
+      {
+        "mechanism": "marker",
+        "anchor": "none",
+        "visible": false,
+        "restoredGeometry": false
+      },
+      {
+        "mechanism": "inline-allocation",
+        "anchor": "auto",
+        "visible": true,
+        "restoredGeometry": true
+      },
+      {
+        "mechanism": "inline-allocation",
+        "anchor": "none",
+        "visible": false,
+        "restoredGeometry": false
+      }
+    ],
+    "normalClose": true,
+    "reusedUnchangedProducerDomain": {
+      "domModuleSha256": "b9d4ce73f14171d2ae63b64f95ca47dce222204ea2d038e4a1a18d3b004539cb",
+      "currentModuleSha256": "93edd4ba681453101d64a1fc5f68a78a034266c00d54ad4348040374569fa7ee",
+      "serializedInstallerSha256": "e894f88268239d962d0a4e98efbe15214039da51382167882ba8bd8429234dd8",
+      "exactSerializedInstallerEquality": true,
+      "scope": "Only the offline consumer and tests changed after DOM4; no new browser run or inferred timing/acceptance credit."
+    }
+  },
+  "historicalV2": {
+    "rawPath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\qualification-metrics-e6e1abc1-f6e35691-native-window\\capture.json",
+    "sha256": "a175cdf155077314ee664d55a5a80f7278701ba61dd393b980a60b6806b60183",
+    "fullEvaluationExactlyMatchesFrozenReview": true,
+    "localControl": {
+      "status": "failed",
+      "reason": "Visible feedback or intent changed before rendering\n\ntrue !== false\n",
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "coldStartup": "unavailable",
+    "replay": "measured",
+    "sampledHeap": "measured"
+  },
+  "limits": "No new application/GPU timing. v2 remains failed. V3 measured negatives are sticky; recognized measurements need timely RO coverage. Unknown geometry uncertainty retains fresh-RAF recovery but cannot be erased by RO. Extra observer work is bounded; overhead is not measured."
+}

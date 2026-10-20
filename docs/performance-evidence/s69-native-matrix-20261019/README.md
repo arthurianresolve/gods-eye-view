@@ -14,7 +14,10 @@ The integration test exercises the real lifecycle/presentation subscription;
 abort, hide, supersession, teardown and scheduler failures retain cleanup.
 The initial sparse-source formatting setup failure remains recorded, and its
 successful Node 24 focused results are reused only with identical source bytes.
-The private build is pending hardware qualification; production is unchanged.
+The [private build and Windows inputs](single-raf-feedback-build-preflight.json)
+verify all 886 candidate assets and 443 control assets, locally and as served,
+against their exact source and build receipts. Hardware qualification remains
+pending; production is unchanged.
 
 The preceding `9d355c29` checkpoint passes all seven selected CI jobs and
 release verification, including Windows, macOS and Linux recovery. Its
@@ -33,7 +36,28 @@ and tactical/cyber styles are covered. Current source does not set
 `overflow-anchor:none`, so this is a proof-rule counterexample rather than an
 established cause of the earlier application failure. The tested but uncommitted
 attribute-only QA draft remains rejected intermediate evidence. Its replacement
-must recheck geometry at a natural layout boundary. The larger joint-rail
+rechecks geometry at a natural layout boundary. The
+[v3 validation](interaction-continuity-v3-validation.json) passes 78 tests on
+each Node version plus formatting, undefined-reference and import checks.
+The [independent readback](interaction-continuity-v3-readback.json) binds exact
+source and logs and preserves the complete failed historical v2 evaluation.
+Four isolated browser cases establish both restored positive geometry and true
+scroll-clamp negatives. The final mixed-batch correction affects the offline
+consumer only; byte-identical serialized installer code permits reuse of those
+browser cases without claiming a new run.
+
+V3 permits at most eight owned natural-layout ResizeObserver proofs per action.
+Every recognized measurement requires timely coverage with equal control rect,
+clip and ancestor scroll offsets. A mixed unknown mutation cannot inherit that
+recovery, and actual negative proofs remain sticky across later positive frames.
+Pure unknown geometry uncertainty retains v2's later-natural-RAF recovery rule;
+ResizeObserver cannot erase it. No rendering request, retry or extended drain
+is introduced. The extra observation work remains within measured interaction
+time, with separately quantified overhead unavailable. Earlier failed drafts
+and validations remain preserved. This change supplies a prospective proof
+contract, not an application performance pass.
+
+The larger joint-rail
 measurement experiment is parked separately, with 68 passing unit tests but
 no browser timing result or shipped runtime change.
 

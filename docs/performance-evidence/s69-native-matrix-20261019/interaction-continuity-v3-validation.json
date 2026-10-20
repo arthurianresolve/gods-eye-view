@@ -1,0 +1,143 @@
+{
+  "schema": "gev-interaction-continuity-v3-validation/v1",
+  "status": "passed",
+  "baseCommit": "b5e596ff8da8d00f51234d87ba72063f834cb15c",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/interaction-continuity-v3-validation-20261020-r4/source",
+  "files": [
+    {
+      "file": "scripts/performance/interactionEventTiming.mjs",
+      "bytes": 48858,
+      "sha256": "93edd4ba681453101d64a1fc5f68a78a034266c00d54ad4348040374569fa7ee"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.test.mjs",
+      "bytes": 49687,
+      "sha256": "608163ecbe4641195da773adc2f5b71b4327bb00157a964bfcf080417a535e80"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 70427,
+      "sha256": "281cd8ddd459fa11d649198f48ae4864a3ce65d7ecad94539122389e0732f44e"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 138873,
+      "sha256": "9f5d2ff633a8fa7460388abad2adf69cca310b78dae7c5ccaeb560a03bdf5a51"
+    }
+  ],
+  "docs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "name": "focused",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 8366,
+      "sha256": "79fe81f92416e10beb1c7fb03746861ea366cd96de9c67aef96bed828ec59c7d",
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "tail": " control, late proof, unknown change or missing ownership (2.791061ms)\n✔ v3 negative proofs and pending measurements cannot be erased by later RAFs or late RO delivery (1.531192ms)\n✔ owned post-layout observer coalesces batches, drains pending mutations and detects persistent geometry changes (4.515947ms)\n✔ post-layout arms are bounded and release pending targets on drain expiry, overflow, failure and disposal (5.338142ms)\n✔ measurement recognition remains bound to synchronous source and non-animated allocation CSS (5.24866ms)\n✔ observer installation rolls back native callbacks when any setup step throws (3.305584ms)\n✔ owned Browser.getVersion read is bounded, preserves failure and disposes only its session (64.895803ms)\n✔ identity source selection is explicit, mutually exclusive and keeps legacy/weather requirements (1.682664ms)\n✔ predeclared 76/e6 plan preserves roles, native quality, effects and identity-only scope (10.492711ms)\n✔ raw plan reader binds externally chosen bytes, selected commits and parsed content (5.682036ms)\n✔ full receipt and served-byte validator receive exact roles, roots, harness and all assets (7.598771ms)\n✔ changed Chrome, receipt bytes or provenance abort before a source identity can be issued (7.539506ms)\n✔ live identity requires protocol/page/process equality plus full native canvas and exact settings (11.583124ms)\n✔ both-role before/after evidence must bracket the complete formal capture, never an action (6.853254ms)\n✔ distinct direct evidence revalidates complete source and live proofs without inventing performance inputs (19.794725ms)\n✔ actual CLI requires one complete source kind, with unchanged legacy and native opt-in requirements (1.66487ms)\n✔ actual producer brackets all captures with source checks and retains primary failure if postflight fails (5.114862ms)\n✔ heap sampler keeps the final measured cycle while awaiting end-state verification (3.230688ms)\n✔ direct build identity validates native timing and heap without supplying startup or performance captures (52.501035ms)\n✔ direct timing and heap require the complete exact envelope and its same owned browser (63.237105ms)\n✔ direct producer launches the exact declared executable before any measurements (5.900827ms)\n✔ native-window metrics keep the actual client extent and require complete owned proofs (9.48569ms)\n✔ native-window consumer rejects relabelled, stale, clipped, emulated and mismatched proofs (96.221881ms)\n✔ native-window preparation failure retains OS/CDP evidence and factory cleanup without input (0.437554ms)\n✔ native-window producer retains every configured preparation attempt before document and cycle restores (4.422587ms)\n✔ new native metrics require the complete accepted preparation trace without weakening legacy modes (5.98476ms)\n✔ v4 gates candidate Event Timing, preserves baseline absolute failure and v3 semantics (11.564497ms)\n✔ versioned continuity preserves v2 failures and requires matching v3 plan and bounded proof metadata (10.621658ms)\n✔ v4 actual producer action awaits its owned drain after full readiness before returning (2.540659ms)\n✔ startup remains a separate five-run metric and other missing evidence is pending (0.305879ms)\n✔ interaction evidence binds exact source builds, browser, renderer, fixture, settings and 20 unique samples (32.563705ms)\n✔ v3 local metrics separate quick acknowledgements from full scene readiness (7.186346ms)\n✔ startup evidence requires real browser, renderer, profile and five foreground run identities (2.022439ms)\n✔ single startup shard reader validates one foreground cache-disabled run without granting eligibility (1.484582ms)\n✔ capture identity carries observed 1440x1000 workload settings instead of matrix settings (0.380955ms)\n✔ live settings use relevant getVisualState fields and exclude HUD state (0.41486ms)\n✔ native profile can be derived from observed settings when driver marker is absent (0.310949ms)\n✔ foreground checks fail closed and observer cleanup releases page ownership (0.464106ms)\n✔ observer cleanup deletes page ownership and surfaces disposal failure (0.195808ms)\n✔ interaction measures the first naturally produced matching frame without requesting one (2.469822ms)\n✔ interaction observer rejects scenes without a preRender event boundary (0.193042ms)\n✔ interaction input rejects stale, wrong-target/type, untrusted, future and duplicate events (0.785465ms)\n✔ interaction input rejects duplicate and superseded-generation events (0.410021ms)\n✔ natural replay frame rejects changed source time and billboard, then accepts matching output (0.798889ms)\n✔ interaction remains pending without a natural completed frame (0.288176ms)\n✔ replay witness rejects source-only, offscreen and mismatched displayed aircraft (0.292113ms)\n✔ disposed replay frame observers cannot revive a sample (0.318204ms)\n✔ serialized interaction observer completes local and replay render witnesses without module closures (2.750805ms)\n✔ camera setup claims app navigation ownership and waits for two matching completed renders (3.092363ms)\n✔ camera setup fails closed when app navigation ownership is unavailable (0.614715ms)\n✔ sampled peak derives from matched raw timestamped heap series, not old soak summaries (0.622581ms)\n✔ heap consumer rejects absent or malformed series, duplicate/dropped samples, stale timing, wrong build and wrong environment (5.55475ms)\n✔ heap sides require equal planned work but permit unequal realized durations (0.7ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.687355ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (0.462792ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.305338ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (27.350483ms)\nℹ tests 78\nℹ suites 0\nℹ pass 78\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1558.899774\n"
+    },
+    {
+      "label": "node26",
+      "node": "/opt/nodejs/current/bin/node",
+      "name": "focused",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 8371,
+      "sha256": "0c8b86fa68b22a1d48803a1002e8b2a67df57553f9b010bc534751b0e2e20d88",
+      "tests": 78,
+      "pass": 78,
+      "fail": 0,
+      "tail": "trol, late proof, unknown change or missing ownership (2.496413ms)\n✔ v3 negative proofs and pending measurements cannot be erased by later RAFs or late RO delivery (1.362457ms)\n✔ owned post-layout observer coalesces batches, drains pending mutations and detects persistent geometry changes (4.410724ms)\n✔ post-layout arms are bounded and release pending targets on drain expiry, overflow, failure and disposal (6.189945ms)\n✔ measurement recognition remains bound to synchronous source and non-animated allocation CSS (4.971315ms)\n✔ observer installation rolls back native callbacks when any setup step throws (3.213164ms)\n✔ owned Browser.getVersion read is bounded, preserves failure and disposes only its session (66.046902ms)\n✔ identity source selection is explicit, mutually exclusive and keeps legacy/weather requirements (2.304944ms)\n✔ predeclared 76/e6 plan preserves roles, native quality, effects and identity-only scope (9.168248ms)\n✔ raw plan reader binds externally chosen bytes, selected commits and parsed content (5.677817ms)\n✔ full receipt and served-byte validator receive exact roles, roots, harness and all assets (7.57234ms)\n✔ changed Chrome, receipt bytes or provenance abort before a source identity can be issued (6.45186ms)\n✔ live identity requires protocol/page/process equality plus full native canvas and exact settings (7.437669ms)\n✔ both-role before/after evidence must bracket the complete formal capture, never an action (5.998055ms)\n✔ distinct direct evidence revalidates complete source and live proofs without inventing performance inputs (19.32525ms)\n✔ actual CLI requires one complete source kind, with unchanged legacy and native opt-in requirements (1.681182ms)\n✔ actual producer brackets all captures with source checks and retains primary failure if postflight fails (4.795406ms)\n✔ heap sampler keeps the final measured cycle while awaiting end-state verification (3.220349ms)\n✔ direct build identity validates native timing and heap without supplying startup or performance captures (59.396891ms)\n✔ direct timing and heap require the complete exact envelope and its same owned browser (56.067121ms)\n✔ direct producer launches the exact declared executable before any measurements (7.876757ms)\n✔ native-window metrics keep the actual client extent and require complete owned proofs (12.375381ms)\n✔ native-window consumer rejects relabelled, stale, clipped, emulated and mismatched proofs (103.075846ms)\n✔ native-window preparation failure retains OS/CDP evidence and factory cleanup without input (0.452954ms)\n✔ native-window producer retains every configured preparation attempt before document and cycle restores (4.880089ms)\n✔ new native metrics require the complete accepted preparation trace without weakening legacy modes (6.347808ms)\n✔ v4 gates candidate Event Timing, preserves baseline absolute failure and v3 semantics (11.909042ms)\n✔ versioned continuity preserves v2 failures and requires matching v3 plan and bounded proof metadata (12.122474ms)\n✔ v4 actual producer action awaits its owned drain after full readiness before returning (2.929708ms)\n✔ startup remains a separate five-run metric and other missing evidence is pending (0.302343ms)\n✔ interaction evidence binds exact source builds, browser, renderer, fixture, settings and 20 unique samples (28.975196ms)\n✔ v3 local metrics separate quick acknowledgements from full scene readiness (6.790662ms)\n✔ startup evidence requires real browser, renderer, profile and five foreground run identities (2.18917ms)\n✔ single startup shard reader validates one foreground cache-disabled run without granting eligibility (1.432602ms)\n✔ capture identity carries observed 1440x1000 workload settings instead of matrix settings (0.375023ms)\n✔ live settings use relevant getVisualState fields and exclude HUD state (0.458554ms)\n✔ native profile can be derived from observed settings when driver marker is absent (0.331619ms)\n✔ foreground checks fail closed and observer cleanup releases page ownership (0.444638ms)\n✔ observer cleanup deletes page ownership and surfaces disposal failure (0.208051ms)\n✔ interaction measures the first naturally produced matching frame without requesting one (2.423873ms)\n✔ interaction observer rejects scenes without a preRender event boundary (0.16044ms)\n✔ interaction input rejects stale, wrong-target/type, untrusted, future and duplicate events (0.755647ms)\n✔ interaction input rejects duplicate and superseded-generation events (0.380775ms)\n✔ natural replay frame rejects changed source time and billboard, then accepts matching output (0.827886ms)\n✔ interaction remains pending without a natural completed frame (0.304306ms)\n✔ replay witness rejects source-only, offscreen and mismatched displayed aircraft (0.294649ms)\n✔ disposed replay frame observers cannot revive a sample (0.325147ms)\n✔ serialized interaction observer completes local and replay render witnesses without module closures (2.9201ms)\n✔ camera setup claims app navigation ownership and waits for two matching completed renders (1.307892ms)\n✔ camera setup fails closed when app navigation ownership is unavailable (0.702123ms)\n✔ sampled peak derives from matched raw timestamped heap series, not old soak summaries (0.625136ms)\n✔ heap consumer rejects absent or malformed series, duplicate/dropped samples, stale timing, wrong build and wrong environment (6.845268ms)\n✔ heap sides require equal planned work but permit unequal realized durations (0.713576ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.658419ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (0.740538ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.293637ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (71.674252ms)\nℹ tests 78\nℹ suites 0\nℹ pass 78\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1550.470761\n"
+    },
+    {
+      "label": "node24",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "name": "format",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node24",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "name": "capture-no-undef",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node24",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "name": "imports",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    }
+  ],
+  "sourceStatus": " M scripts/performance/interactionEventTiming.mjs\n M scripts/performance/interactionEventTiming.test.mjs\n M scripts/performance/qualificationMetrics.mjs\n M scripts/performance/qualificationMetrics.test.mjs\n",
+  "completedAt": "2026-10-20T12:22:47.781Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "limits": "Pure/mock and static validation of natural post-layout proof. Attribute-only r1 is rejected and preserved. v2 evidence retains strict historical outcome. Isolated DOM regression is separate; no application/hardware performance credit."
+}
