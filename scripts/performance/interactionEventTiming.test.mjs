@@ -8,6 +8,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN_V2,
   INTERACTION_EVENT_TIMING_PLAN_V4,
   INTERACTION_EVENT_TIMING_PLAN_V5,
+  INTERACTION_EVENT_TIMING_PLAN_V6,
   assertInteractionEventTimingPlan,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
@@ -173,6 +174,231 @@ function useFreshReproofPlan(capture) {
 function useCurrentGeometryPlan(capture) {
   Object.assign(capture, INTERACTION_EVENT_TIMING_PLAN_V5);
 }
+
+function observedAcknowledgementFixture() {
+  const result = fixture();
+  Object.assign(result.capture, INTERACTION_EVENT_TIMING_PLAN_V6);
+  return result;
+}
+
+function uncertainMutation(atMs = 1062) {
+  return {
+    atMs,
+    kind: 'unproven-geometry',
+    generation: 1,
+    invalid: true,
+    reason: 'mutation-batch',
+    mutation: {
+      callback: 1,
+      recordCount: 1,
+      restoredMeasurementTransactions: 0,
+      reasonCount: 1,
+      reasonsTruncated: false,
+      reasons: [{ target: 'other', attribute: 'none', reason: 'child-list' }],
+    },
+  };
+}
+
+test('v6 reports native next-paint plus observed acknowledgement, leaving compositor content unavailable', () => {
+  assertInteractionEventTimingPlan(INTERACTION_EVENT_TIMING_PLAN_V6);
+  const { samples, capture } = observedAcknowledgementFixture();
+  // The mutation falls inside the [60,68]ms rendering uncertainty interval.
+  // A later DOM update need not be in the frame whose presentation ET reports.
+  capture.observations.push(uncertainMutation());
+  assert.deepEqual(
+    validateInteractionEventTiming(capture, samples),
+    Array(20).fill(64),
+  );
+  assert.deepEqual(capture.compositorAttribution, {
+    status: 'unavailable',
+    reason: 'no-acknowledgement-to-presented-frame-binding',
+  });
+  assert.equal(capture.maximumRenderBoundaryProofsPerAction, 0);
+  assert.equal(capture.work.renderBoundaryArms, 0);
+  for (const plan of [
+    INTERACTION_EVENT_TIMING_PLAN,
+    INTERACTION_EVENT_TIMING_PLAN_V4,
+    INTERACTION_EVENT_TIMING_PLAN_V5,
+  ]) {
+    const old = fixture();
+    Object.assign(old.capture, plan);
+    old.capture.observations.push(uncertainMutation());
+    assert.throws(() =>
+      validateInteractionEventTiming(old.capture, old.samples),
+    );
+  }
+});
+
+test('v6 requires complete timely same-intent natural-RAF acknowledgement and exact metadata', () => {
+  for (const corrupt of [
+    ({ capture }) => {
+      delete capture.acknowledgementProof;
+    },
+    ({ capture }) => {
+      delete capture.compositorAttribution;
+    },
+    ({ capture }) => {
+      capture.compositorAttribution.status = 'measured';
+    },
+    ({ capture }) => {
+      capture.semantic = 'pixels-presented';
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses.pop();
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[0].intentEpoch++;
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[0].expected = false;
+    },
+    ({ capture }) => {
+      capture.actions[0].targetMatched = false;
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[0].geometry.clipRect.right = 1;
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[0].completedAtMs = NaN;
+    },
+    ({ capture, samples }) => {
+      const action = capture.actions[0];
+      Object.assign(action.witnesses[0], { atMs: 1061, completedAtMs: 1062 });
+      Object.assign(action.witnesses[1], { atMs: 1080, completedAtMs: 1081 });
+      samples[0].buttonFeedbackFirstFrameAtMs = 1061;
+      samples[0].buttonFeedbackAtMs = 1080;
+    },
+    ({ capture }) => {
+      capture.entries.pop();
+    },
+    ({ capture }) => {
+      capture.work.renderBoundaryArms = 1;
+    },
+  ]) {
+    const result = observedAcknowledgementFixture();
+    // Plan constants are immutable; each malformed capture owns its metadata.
+    result.capture.compositorAttribution = {
+      ...result.capture.compositorAttribution,
+    };
+    corrupt(result);
+    assert.throws(() =>
+      validateInteractionEventTiming(result.capture, result.samples),
+    );
+  }
+});
+
+test('v6 geometry diagnostics require a real owned generation and shape while retaining between-action observations', () => {
+  const pristine = {
+    atMs: 1062,
+    kind: 'unproven-geometry',
+    generation: 1,
+    invalid: true,
+    reason: 'window-scroll',
+  };
+  for (const corrupt of [
+    (observation) => {
+      delete observation.invalid;
+    },
+    (observation) => {
+      observation.invalid = false;
+    },
+    (observation) => {
+      observation.invalid = 'true';
+    },
+    (observation) => {
+      delete observation.generation;
+    },
+    (observation) => {
+      observation.generation = 0;
+    },
+    (observation) => {
+      observation.generation = 1.5;
+    },
+    (observation) => {
+      observation.generation = 21;
+    },
+    (observation) => {
+      observation.atMs = NaN;
+    },
+    (observation) => {
+      observation.atMs = Infinity;
+    },
+    (observation) => {
+      observation.atMs = 999;
+    },
+    (observation) => {
+      observation.atMs = 4002;
+    },
+  ]) {
+    for (const reason of ['window-scroll', 'window-resize']) {
+      const { capture, samples } = observedAcknowledgementFixture();
+      const observation = { ...pristine, reason };
+      corrupt(observation);
+      capture.observations.push(observation);
+      assert.throws(() => validateInteractionEventTiming(capture, samples));
+    }
+  }
+  const { capture, samples } = observedAcknowledgementFixture();
+  capture.observations.push(
+    { ...pristine, atMs: 2300 },
+    // The next input timestamp is 4000; receipt/registration is 4001. An owned
+    // prior-generation delivery in between remains legitimate diagnostic data.
+    { ...pristine, atMs: 4000.5, reason: 'window-resize' },
+    {
+      atMs: 2,
+      kind: 'foreground',
+      visible: true,
+      focused: true,
+      invalid: false,
+    },
+  );
+  assert.deepEqual(
+    validateInteractionEventTiming(capture, samples),
+    Array(20).fill(64),
+  );
+});
+
+test('v6 never replaces known negative geometry, identity, intent or foreground with a positive acknowledgement', () => {
+  for (const corrupt of [
+    ({ capture }) => {
+      capture.actions[0].witnesses[0].visible = false;
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[1].visible = false;
+    },
+    ({ capture }) => {
+      capture.actions[0].witnesses[1].focused = false;
+    },
+    ({ capture }) =>
+      capture.observations.push({
+        atMs: 1068,
+        kind: 'contrary-button-state',
+        generation: 1,
+        invalid: true,
+      }),
+    ({ capture }) =>
+      capture.observations.push({
+        atMs: 1025,
+        kind: 'contrary-intent',
+        generation: 1,
+        invalid: true,
+      }),
+    ({ capture }) =>
+      capture.observations.push({
+        atMs: 1062,
+        kind: 'foreground',
+        visible: false,
+        focused: true,
+        invalid: true,
+      }),
+  ]) {
+    const result = observedAcknowledgementFixture();
+    corrupt(result);
+    assert.throws(() =>
+      validateInteractionEventTiming(result.capture, result.samples),
+    );
+  }
+});
 
 function childListRecords(env) {
   return [
@@ -346,6 +572,169 @@ test('v5 serialized producer proves all 20 moved controls after bounded child-li
     assert.equal(env.renderState().renderObserved, false);
     assert.equal(env.listeners.size, 0);
     assert.equal(env.timers.size, 0);
+  }
+});
+
+test('v6 serialized producer retains 20 exact clicks and natural RAF proofs without constructing an RO', async () => {
+  const { samples } = fixture();
+  const env = browserFixture({
+    throwAt: 'render-constructor',
+    installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V6.policy },
+  });
+  assert.equal(env.initializationError, null);
+  try {
+    for (const sample of samples) {
+      const transition = sample.expectedLayerEnabled ? 'enabling' : 'disabling';
+      env.button.attributes.class = `data-toggle-btn transitioning ${transition}`;
+      env.button.dataset.feedState = transition;
+      const layer =
+        env.window.__godsEyeView.dataManager.layers.get('local-datacenters');
+      layer.visibilityIntentEpoch = sample.acceptedIntentEpoch;
+      layer.visibilityIntentEnabled = sample.expectedLayerEnabled;
+      env.setNow(sample.clickAtMs);
+      env.api.registerClick(
+        {
+          generation: sample.generation,
+          clickAtMs: sample.clickAtMs,
+          expected: sample.expectedLayerEnabled,
+        },
+        {
+          isTrusted: true,
+          type: 'click',
+          timeStamp: sample.clickAtMs,
+          target: env.button,
+        },
+      );
+      const witnessSample = {
+        generation: sample.generation,
+        acceptedIntentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+      };
+      for (const [atMs, raf] of [
+        [
+          sample.buttonFeedbackFirstFrameAtMs,
+          sample.buttonFeedbackFirstRafTimestampMs,
+        ],
+        [sample.buttonFeedbackAtMs, sample.buttonFeedbackSecondRafTimestampMs],
+      ]) {
+        env.setNow(atMs);
+        env.api.witness(witnessSample, raf, 'transition', atMs);
+      }
+      env.setNow(sample.clickAtMs + 62);
+      const reads = env.geometryReads();
+      env.mutate(childListRecords(env));
+      assert.equal(
+        env.geometryReads(),
+        reads,
+        'mutation delivery never reads geometry',
+      );
+      assert.equal(env.renderState().renderObserveCalls, 0);
+      env.setNow(sample.clickAtMs + 80);
+      env.deliver([
+        {
+          entryType: 'event',
+          name: 'click',
+          startTime: sample.clickAtMs,
+          duration: 64,
+          processingStart: sample.clickAtMs + 0.5,
+          processingEnd: sample.clickAtMs + 3,
+          interactionId: sample.generation * 7,
+          target: env.button,
+        },
+      ]);
+      env.setNow(sample.clickAtMs + 200);
+      const drain = env.api.drain(sample.generation);
+      env.setNow(sample.clickAtMs + 1200);
+      env.timers.get(1)();
+      env.timers.delete(1);
+      await drain;
+    }
+    const capture = structuredClone(env.api.read());
+    assert.deepEqual(
+      validateInteractionEventTiming(capture, samples),
+      Array(20).fill(64),
+    );
+    assert.equal(capture.observations.length, 20);
+    assert.equal(capture.work.geometryChecks, 40);
+    assert.equal(capture.work.renderBoundaryArms, 0);
+    assert.equal(capture.work.renderBoundaryCallbacks, 0);
+    assert.equal(capture.compositorAttribution.status, 'unavailable');
+  } finally {
+    env.api.dispose();
+  }
+  assert.equal(env.renderState().renderDisconnected, 0);
+  assert.equal(env.listeners.size, 0);
+  assert.equal(env.timers.size, 0);
+  assert.equal(env.window.__qualificationEventTiming, undefined);
+});
+
+test('v6 serialized mixed mutation still observes live replacement or contrary state without geometry reads', () => {
+  for (const change of [
+    (env) => {
+      env.button.isConnected = false;
+    },
+    (env) => {
+      env.document.querySelector = () => ({});
+    },
+    (env) => {
+      env.button.attributes.class = 'data-toggle-btn';
+    },
+    (env) => {
+      env.window.__godsEyeView.dataManager.layers.get('local-datacenters')
+        .visibilityIntentEpoch++;
+    },
+  ]) {
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V6.policy },
+    });
+    try {
+      witness(env);
+      change(env);
+      env.setNow(30);
+      const reads = env.geometryReads();
+      env.mutate(childListRecords(env));
+      assert.equal(env.geometryReads(), reads);
+      const last = env.api.read().observations.at(-1);
+      assert.equal(last.kind, 'contrary-button-state');
+      assert.equal(last.invalid, true);
+      assert.equal(env.renderState().renderObserveCalls, 0);
+    } finally {
+      env.api.dispose();
+    }
+  }
+});
+
+test('v6 natural RAF keeps real hidden, clipped, replaced or unfocused observations negative while allowing visible motion', () => {
+  for (const mode of ['hidden', 'clipped', 'replaced', 'unfocused', 'moved']) {
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V6.policy },
+    });
+    try {
+      witness(env);
+      if (mode === 'hidden') env.ancestor.style.opacity = '0';
+      if (mode === 'clipped') {
+        env.ancestor.style.overflowY = 'hidden';
+        env.ancestor.rect.bottom = 0;
+      }
+      if (mode === 'replaced') env.document.querySelector = () => ({});
+      if (mode === 'unfocused') env.document.hasFocus = () => false;
+      if (mode === 'moved') {
+        env.button.rect.top += 1 / 64;
+        env.button.rect.bottom += 1 / 64;
+      }
+      env.setNow(40);
+      env.api.witness(
+        { generation: 1, acceptedIntentEpoch: 1, expected: true },
+        32,
+        'transition',
+        40,
+      );
+      const proof = env.api.read().actions[0].witnesses[1];
+      assert.equal(proof.visible, mode === 'moved', mode);
+      assert.equal(env.renderState().renderObserveCalls, 0);
+    } finally {
+      env.api.dispose();
+    }
   }
 });
 

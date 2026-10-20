@@ -10,6 +10,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V4,
   INTERACTION_EVENT_TIMING_PLAN_V5,
+  INTERACTION_EVENT_TIMING_PLAN_V6,
   assertInteractionEventTimingPlan,
 } from './interactionEventTiming.mjs';
 import {
@@ -901,6 +902,7 @@ test('actual producer brackets all captures with source checks and retains prima
       INTERACTION_EVENT_TIMING_PLAN,
       INTERACTION_EVENT_TIMING_PLAN_V4,
       INTERACTION_EVENT_TIMING_PLAN_V5,
+      INTERACTION_EVENT_TIMING_PLAN_V6,
       assertInteractionEventTimingPlan,
     },
   );
@@ -908,6 +910,7 @@ test('actual producer brackets all captures with source checks and retains prima
     INTERACTION_EVENT_TIMING_PLAN,
     INTERACTION_EVENT_TIMING_PLAN_V4,
     INTERACTION_EVENT_TIMING_PLAN_V5,
+    INTERACTION_EVENT_TIMING_PLAN_V6,
   ].flatMap((eventTimingPlan) =>
     [false, true].map((failBefore) => ({ eventTimingPlan, failBefore })),
   );

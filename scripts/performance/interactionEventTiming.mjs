@@ -42,6 +42,23 @@ export const INTERACTION_EVENT_TIMING_PLAN_V5 = Object.freeze({
   feedbackReproof: 'same-intent-current-visible-geometry-owned-ro-v2',
 });
 
+// Prospective native next-paint latency plus observed acknowledgement
+// correctness. DOM observations do not identify the content of a presented
+// compositor frame. V2–V5 retain their original continuity requirements.
+export const INTERACTION_EVENT_TIMING_PLAN_V6 = Object.freeze({
+  ...INTERACTION_EVENT_TIMING_PLAN,
+  policy: 'trusted-click-event-timing-observed-acknowledgement-v6',
+  semantic:
+    'native-next-paint-latency-plus-observed-acknowledgement-correctness',
+  acknowledgementProof: 'same-intent-current-visible-natural-raf-v1',
+  measurementRestoration: 'not-acquired',
+  maximumRenderBoundaryProofsPerAction: 0,
+  compositorAttribution: Object.freeze({
+    status: 'unavailable',
+    reason: 'no-acknowledgement-to-presented-frame-binding',
+  }),
+});
+
 function eventTimingPlan(policy) {
   return policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
     ? INTERACTION_EVENT_TIMING_PLAN_V2
@@ -49,7 +66,9 @@ function eventTimingPlan(policy) {
       ? INTERACTION_EVENT_TIMING_PLAN_V4
       : policy === INTERACTION_EVENT_TIMING_PLAN_V5.policy
         ? INTERACTION_EVENT_TIMING_PLAN_V5
-        : INTERACTION_EVENT_TIMING_PLAN;
+        : policy === INTERACTION_EVENT_TIMING_PLAN_V6.policy
+          ? INTERACTION_EVENT_TIMING_PLAN_V6
+          : INTERACTION_EVENT_TIMING_PLAN;
 }
 
 /** Old evidence retains the original strict continuity policy. */
@@ -75,12 +94,15 @@ export function installInteractionEventTimingInPage(options = {}) {
     : 'trusted-click-event-timing-visible-intent-v3';
   const currentGeometryPolicy =
     policy === 'trusted-click-event-timing-visible-intent-v5';
+  const observedAcknowledgementPolicy =
+    policy === 'trusted-click-event-timing-observed-acknowledgement-v6';
   const freshReproofPolicy =
     policy === 'trusted-click-event-timing-visible-intent-v4' ||
     currentGeometryPolicy;
   if (
     policy !== 'trusted-click-event-timing-visible-intent-v3' &&
-    !freshReproofPolicy
+    !freshReproofPolicy &&
+    !observedAcknowledgementPolicy
   )
     throw new Error('Event Timing installer policy is unsupported');
   const selector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
@@ -92,7 +114,7 @@ export function installInteractionEventTimingInPage(options = {}) {
   const manager = window.__godsEyeView?.dataManager;
   if (
     typeof MutationObserver !== 'function' ||
-    typeof ResizeObserver !== 'function' ||
+    (!observedAcknowledgementPolicy && typeof ResizeObserver !== 'function') ||
     typeof manager?.subscribeVisibilityRequests !== 'function'
   )
     throw new Error(
@@ -331,7 +353,13 @@ export function installInteractionEventTimingInPage(options = {}) {
     );
   }
   function requestRenderBoundary(action, observation) {
-    if (!observation || disposed || overflow || action.drainEndedAtMs !== null)
+    if (
+      observedAcknowledgementPolicy ||
+      !observation ||
+      disposed ||
+      overflow ||
+      action.drainEndedAtMs !== null
+    )
       return;
     if (
       freshReproofPolicy &&
@@ -591,8 +619,9 @@ export function installInteractionEventTimingInPage(options = {}) {
       freshReproofPolicy &&
       uncertain &&
       (restored > 0 || currentGeometryPolicy);
-    const stateMatches =
-      (uncertain && !mixedMeasurement) || buttonIntentStateMatches(action);
+    const stateMatches = observedAcknowledgementPolicy
+      ? buttonIntentStateMatches(action)
+      : (uncertain && !mixedMeasurement) || buttonIntentStateMatches(action);
     if (!stateMatches) note(button, null, 'control-state');
     work.restoredMeasurementTransactions += restored;
     if (uncertain || !stateMatches || restored > 0) {
@@ -740,6 +769,18 @@ export function installInteractionEventTimingInPage(options = {}) {
       collect(performanceObserver?.takeRecords() || []);
       return {
         policy,
+        ...(observedAcknowledgementPolicy
+          ? {
+              semantic:
+                'native-next-paint-latency-plus-observed-acknowledgement-correctness',
+              acknowledgementProof:
+                'same-intent-current-visible-natural-raf-v1',
+              compositorAttribution: {
+                status: 'unavailable',
+                reason: 'no-acknowledgement-to-presented-frame-binding',
+              },
+            }
+          : {}),
         ...(freshReproofPolicy
           ? {
               feedbackReproof: currentGeometryPolicy
@@ -757,9 +798,13 @@ export function installInteractionEventTimingInPage(options = {}) {
         maximumMutationCallbacks: 4096,
         maximumMutationRecords: 65536,
         maximumGeometryProofsPerAction: 2,
-        measurementRestoration: 'source-owned-left-rail-render-boundary-v1',
+        measurementRestoration: observedAcknowledgementPolicy
+          ? 'not-acquired'
+          : 'source-owned-left-rail-render-boundary-v1',
         maximumMutationReasonsPerObservation: 8,
-        maximumRenderBoundaryProofsPerAction: 8,
+        maximumRenderBoundaryProofsPerAction: observedAcknowledgementPolicy
+          ? 0
+          : 8,
         work: { ...work, overhead: { ...work.overhead } },
         overflow,
         actions: actions.map(({ target, ...action }) => ({ ...action })),
@@ -786,7 +831,8 @@ export function installInteractionEventTimingInPage(options = {}) {
     },
   };
   try {
-    renderBoundaryObserver = new ResizeObserver(observeRenderBoundary);
+    if (!observedAcknowledgementPolicy)
+      renderBoundaryObserver = new ResizeObserver(observeRenderBoundary);
     if (supported) {
       performanceObserver = new PerformanceObserver((list) =>
         collect(list.getEntries()),
@@ -965,6 +1011,8 @@ export function validateInteractionEventTiming(capture, samples) {
   assert.equal(capture?.policy, plan.policy);
   const restoredPolicy = plan !== INTERACTION_EVENT_TIMING_PLAN_V2;
   const currentGeometryPolicy = plan === INTERACTION_EVENT_TIMING_PLAN_V5;
+  const observedAcknowledgementPolicy =
+    plan === INTERACTION_EVENT_TIMING_PLAN_V6;
   const freshReproofPolicy =
     plan === INTERACTION_EVENT_TIMING_PLAN_V4 || currentGeometryPolicy;
   assert.equal(capture.status, 'observed', 'Browser Event Timing unavailable');
@@ -988,6 +1036,11 @@ export function validateInteractionEventTiming(capture, samples) {
       assert.equal(capture[key], plan[key]);
   if (freshReproofPolicy)
     assert.equal(capture.feedbackReproof, plan.feedbackReproof);
+  if (observedAcknowledgementPolicy) {
+    assert.equal(capture.semantic, plan.semantic);
+    assert.equal(capture.acknowledgementProof, plan.acknowledgementProof);
+    assert.deepEqual(capture.compositorAttribution, plan.compositorAttribution);
+  }
   assert.equal(capture.overflow, false);
   assert.equal(capture.actions?.length, 20);
   assert.equal(samples?.length, 20);
@@ -1006,7 +1059,10 @@ export function validateInteractionEventTiming(capture, samples) {
   for (const [key, maximum] of [
     ['mutationCallbacks', 4096],
     ['mutationRecords', 65536],
-    ['continuityChecks', 4136 + (restoredPolicy ? 160 : 0)],
+    [
+      'continuityChecks',
+      4136 + (restoredPolicy && !observedAcknowledgementPolicy ? 160 : 0),
+    ],
   ])
     assert.ok(
       Number.isSafeInteger(capture.work[key]) &&
@@ -1019,7 +1075,7 @@ export function validateInteractionEventTiming(capture, samples) {
       assert.ok(
         Number.isSafeInteger(capture.work[key]) &&
           capture.work[key] >= 0 &&
-          capture.work[key] <= 160,
+          capture.work[key] <= plan.maximumRenderBoundaryProofsPerAction * 20,
       );
     assert.equal(
       capture.work.renderBoundaryCallbacks,
@@ -1150,6 +1206,42 @@ export function validateInteractionEventTiming(capture, samples) {
     }
     assert.equal(capture.work.restoredMeasurementTransactions, restored);
   }
+  if (observedAcknowledgementPolicy) {
+    const actionByGeneration = new Map();
+    for (const [index, action] of capture.actions.entries()) {
+      assert.ok(
+        Number.isSafeInteger(action.generation) && action.generation > 0,
+      );
+      assert.equal(actionByGeneration.has(action.generation), false);
+      actionByGeneration.set(action.generation, { action, index });
+    }
+    for (const observation of capture.observations) {
+      if (observation.kind !== 'unproven-geometry') continue;
+      assert.equal(observation.invalid, true);
+      assert.ok(
+        Number.isSafeInteger(observation.generation) &&
+          observation.generation > 0,
+      );
+      const owned = actionByGeneration.get(observation.generation);
+      assert.ok(owned, 'Geometry diagnostic has no owned action generation');
+      assert.ok(
+        Number.isFinite(observation.atMs) &&
+          observation.atMs >= owned.action.clickAtMs,
+        'Geometry diagnostic precedes its owned click',
+      );
+      // active() intentionally retains the last action after its drain. Such
+      // diagnostic observations may precede registration of the next click.
+      // Use receipt time: the next native event can already be queued while
+      // the previous action still owns a main-thread mutation delivery.
+      const next = samples[owned.index + 1];
+      if (next)
+        assert.ok(
+          Number.isFinite(next.clickReceivedAtMs) &&
+            observation.atMs <= next.clickReceivedAtMs,
+          'Geometry diagnostic outlives its owned action generation',
+        );
+    }
+  }
   const interactionIds = new Set();
   return samples.map((sample, index) => {
     const action = capture.actions[index];
@@ -1273,7 +1365,8 @@ export function validateInteractionEventTiming(capture, samples) {
       assert.ok(
         Number.isSafeInteger(action.renderBoundaryArms) &&
           action.renderBoundaryArms >= 0 &&
-          action.renderBoundaryArms <= 8,
+          action.renderBoundaryArms <=
+            plan.maximumRenderBoundaryProofsPerAction,
       );
       assert.equal(action.renderBoundaryPendingAtDrainEnd, false);
       assert.equal(
@@ -1374,6 +1467,7 @@ export function validateInteractionEventTiming(capture, samples) {
       }
       for (const observation of capture.observations)
         if (
+          !observedAcknowledgementPolicy &&
           observation.generation === sample.generation &&
           observation.atMs >= sample.clickAtMs &&
           observation.atMs <= latestEnd &&
@@ -1486,7 +1580,7 @@ export function validateInteractionEventTiming(capture, samples) {
           'Foreground was lost during click-to-render interval',
         );
       else if (
-        freshReproofPolicy &&
+        (freshReproofPolicy || observedAcknowledgementPolicy) &&
         ['contrary-intent', 'contrary-button-state'].includes(observation.kind)
       )
         assert.equal(
@@ -1495,6 +1589,13 @@ export function validateInteractionEventTiming(capture, samples) {
           'A known contrary intent or button state cannot be erased by reproof',
         );
       else if (
+        observedAcknowledgementPolicy &&
+        observation.kind === 'unproven-geometry'
+      ) {
+        // Main-thread mutation/scroll/resize uncertainty cannot identify what
+        // a queued compositor frame presented. It remains bounded diagnostic
+        // evidence, not an observed negative or a new RO deadline.
+      } else if (
         selected.kind === 'resize-observer-initial' &&
         observation.atMs >=
           action.witnesses.findLast(

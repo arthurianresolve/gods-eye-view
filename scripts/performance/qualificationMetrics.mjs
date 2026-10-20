@@ -9,6 +9,7 @@ import {
 } from './qualificationBuildIdentity.mjs';
 import {
   assertInteractionEventTimingPlan,
+  INTERACTION_EVENT_TIMING_PLAN_V6,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
 import {
@@ -1333,6 +1334,16 @@ function compareInteractionMetric(
       protocolVersion === 4 &&
       evidence.builds.baseline.interactionProtocol ===
         INTERACTION_PROTOCOL_LATE_READINESS;
+    if (
+      protocolVersion === 4 &&
+      evidence.eventTimingPlan.policy ===
+        INTERACTION_EVENT_TIMING_PLAN_V6.policy
+    )
+      assert.equal(
+        lateLocalReadiness,
+        true,
+        'V6 requires prospective v7 readiness acquisition',
+      );
     for (const role of ['baseline', 'candidate']) {
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
@@ -1451,6 +1462,9 @@ function compareInteractionMetric(
     const failures = [];
     if (name === 'localControl' && protocolVersion === 4) {
       const observed = {};
+      const observedAcknowledgementPolicy =
+        evidence.eventTimingPlan.policy ===
+        INTERACTION_EVENT_TIMING_PLAN_V6.policy;
       for (const [role, samples] of [
         ['baseline', baselineSamples],
         ['candidate', candidateSamples],
@@ -1474,6 +1488,23 @@ function compareInteractionMetric(
           clickToFullRenderedReadinessP95Ms: p95(
             samples.map((sample) => sample.inputToRenderedFrameMs),
           ),
+          ...(observedAcknowledgementPolicy
+            ? {
+                acknowledgementCorrectness: {
+                  status: 'observed',
+                  proof: evidence.eventTimingPlan.acknowledgementProof,
+                  sampleCount: samples.length,
+                },
+                compositorAttribution: {
+                  ...evidence.eventTimingPlan.compositorAttribution,
+                },
+                diagnosticUncertainGeometryObservations: evidence.builds[
+                  role
+                ].eventTimingCapture.observations.filter(
+                  (observation) => observation.kind === 'unproven-geometry',
+                ).length,
+              }
+            : {}),
         };
       }
       const absoluteFailures = (values) => [
@@ -1504,8 +1535,9 @@ function compareInteractionMetric(
         status: failures.length ? 'failed' : 'measured',
         protocolVersion,
         feedbackPolicy: evidence.eventTimingPlan.policy,
-        semantic:
-          'Interaction schema v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback under the separately declared feedback policy before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
+        semantic: observedAcknowledgementPolicy
+          ? 'Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.'
+          : 'Interaction schema v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback under the separately declared feedback policy before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
         baseline: {
           ...observed.baseline,
           absoluteAcknowledgementFailures: absoluteFailures(observed.baseline),

@@ -30,6 +30,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V4,
   INTERACTION_EVENT_TIMING_PLAN_V5,
+  INTERACTION_EVENT_TIMING_PLAN_V6,
   assertInteractionEventTimingPlan,
 } from './performance/interactionEventTiming.mjs';
 
@@ -71,6 +72,7 @@ export function resolveQualificationEventTimingPlan(policy) {
     INTERACTION_EVENT_TIMING_PLAN,
     INTERACTION_EVENT_TIMING_PLAN_V4,
     INTERACTION_EVENT_TIMING_PLAN_V5,
+    INTERACTION_EVENT_TIMING_PLAN_V6,
   ].find(
     (candidate) =>
       candidate.policy === (policy ?? INTERACTION_EVENT_TIMING_PLAN.policy),

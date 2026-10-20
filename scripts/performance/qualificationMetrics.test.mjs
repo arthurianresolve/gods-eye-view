@@ -38,6 +38,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN_V2,
   INTERACTION_EVENT_TIMING_PLAN_V4,
   INTERACTION_EVENT_TIMING_PLAN_V5,
+  INTERACTION_EVENT_TIMING_PLAN_V6,
 } from './interactionEventTiming.mjs';
 import {
   createQualificationBuildIdentityPlan,
@@ -1828,7 +1829,90 @@ test('v7 readiness proof is prospective, intent-bound and independent of Event T
   assert.equal(evaluate(slowReady).status, 'failed', '10% remains unchanged');
 });
 
-test('producer selects only predeclared v3/v4/v5 Event Timing plans before acquisition', async () => {
+test('v6 exposes acknowledgement correctness separately from unavailable compositor attribution without changing gates', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const evidence = eventTimingInteractionEvidence();
+  evidence.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V6;
+  evidence.localReadinessRegistrationPolicy =
+    LOCAL_READINESS_REGISTRATION_POLICY;
+  for (const build of Object.values(evidence.builds)) {
+    Object.assign(build.eventTimingCapture, INTERACTION_EVENT_TIMING_PLAN_V6);
+    build.interactionProtocol =
+      'trusted-click-event-timing-prerender-postrender-witness-v7';
+    build.localReadinessRegistrationPolicy =
+      LOCAL_READINESS_REGISTRATION_POLICY;
+    for (const sample of build.localControl)
+      sample.localReadinessRegistration = {
+        policy: LOCAL_READINESS_REGISTRATION_POLICY,
+        generation: sample.generation,
+        intentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+        completedAtMs: sample.acceptedIntentAtMs + 1,
+        registeredAtMs: sample.acceptedIntentAtMs + 2,
+      };
+  }
+  const timing = evidence.builds.candidate.eventTimingCapture;
+  timing.observations.push({
+    atMs: timing.actions[0].clickAtMs + 62,
+    kind: 'unproven-geometry',
+    generation: timing.actions[0].generation,
+    invalid: true,
+    reason: 'mutation-batch',
+    mutation: {
+      callback: 1,
+      recordCount: 1,
+      restoredMeasurementTransactions: 0,
+      reasonCount: 1,
+      reasonsTruncated: false,
+      reasons: [{ target: 'other', attribute: 'none', reason: 'child-list' }],
+    },
+  });
+  const evaluate = (value) =>
+    evaluateQualificationMetrics({ ...args, interactionEvidence: value })
+      .metrics.localControl;
+  const result = evaluate(evidence);
+  assert.equal(result.status, 'measured');
+  assert.equal(result.feedbackPolicy, INTERACTION_EVENT_TIMING_PLAN_V6.policy);
+  assert.equal(result.candidate.acknowledgementCorrectness.status, 'observed');
+  assert.equal(result.candidate.compositorAttribution.status, 'unavailable');
+  assert.equal(result.candidate.diagnosticUncertainGeometryObservations, 1);
+  assert.equal(result.absoluteAcknowledgementLimitMs, 100);
+  assert.equal(result.fullReadinessRegressionLimitPct, 10);
+  assert.match(
+    result.semantic,
+    /Neither DOM observation nor Event Timing identifies/,
+  );
+  for (const corrupt of [
+    (value) => {
+      for (const entry of value.builds.candidate.eventTimingCapture.entries)
+        entry.duration = 104;
+    },
+    (value) => {
+      delete value.builds.candidate.eventTimingCapture.compositorAttribution;
+    },
+    (value) => {
+      delete value.builds.candidate.localControl[0].localReadinessRegistration;
+    },
+    (value) => {
+      value.builds.baseline.interactionProtocol =
+        value.builds.candidate.interactionProtocol =
+          'trusted-click-event-timing-prerender-postrender-witness-v6';
+    },
+    (value) => {
+      value.builds.candidate.eventTimingCapture.actions[0].witnesses[1].visible = false;
+    },
+    (value) => {
+      for (const sample of value.builds.candidate.localControl)
+        sample.stateAtMs = sample.inputAtMs + 70;
+    },
+  ]) {
+    const bad = structuredClone(evidence);
+    corrupt(bad);
+    assert.equal(evaluate(bad).status, 'failed');
+  }
+});
+
+test('producer selects only predeclared v3/v4/v5/v6 Event Timing plans before acquisition', async () => {
   assert.equal(
     resolveQualificationEventTimingPlan(),
     INTERACTION_EVENT_TIMING_PLAN,
@@ -1849,10 +1933,17 @@ test('producer selects only predeclared v3/v4/v5 Event Timing plans before acqui
     ),
     INTERACTION_EVENT_TIMING_PLAN_V5,
   );
+  assert.equal(
+    resolveQualificationEventTimingPlan(
+      INTERACTION_EVENT_TIMING_PLAN_V6.policy,
+    ),
+    INTERACTION_EVENT_TIMING_PLAN_V6,
+  );
   for (const plan of [
     undefined,
     INTERACTION_EVENT_TIMING_PLAN_V4,
     INTERACTION_EVENT_TIMING_PLAN_V5,
+    INTERACTION_EVENT_TIMING_PLAN_V6,
   ]) {
     const calls = [];
     await installInteractionObserver(
@@ -1914,6 +2005,7 @@ test('producer selects only predeclared v3/v4/v5 Event Timing plans before acqui
     undefined,
     INTERACTION_EVENT_TIMING_PLAN_V4.policy,
     INTERACTION_EVENT_TIMING_PLAN_V5.policy,
+    INTERACTION_EVENT_TIMING_PLAN_V6.policy,
     'unknown',
   ]) {
     let received;
