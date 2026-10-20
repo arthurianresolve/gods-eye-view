@@ -119,6 +119,34 @@ async function prepareMockFixture(options = {}) {
   return { ...fixture, events };
 }
 
+test('native-window fixture skips emulation only on its explicit opt-in path', async () => {
+  for (const nativeWindowViewport of [false, true]) {
+    const calls = [];
+    const page = new MockPage();
+    page.viewport = () => null;
+    page.setViewport = async (viewport) => calls.push(viewport);
+    await prepareFixturePage(null, 'https://fixture.test/', {
+      page,
+      nativeWindowViewport,
+    });
+    assert.deepEqual(
+      calls,
+      nativeWindowViewport ? [] : [{ width: 1440, height: 1000 }],
+    );
+    await cleanupFixturePageDiagnostics(page);
+  }
+  const page = new MockPage();
+  page.viewport = () => ({ width: 1440, height: 1000 });
+  await assert.rejects(
+    prepareFixturePage(null, 'https://fixture.test/', {
+      page,
+      nativeWindowViewport: true,
+    }),
+    /excludes viewport emulation/,
+  );
+  await cleanupFixturePageDiagnostics(page);
+});
+
 test('import fixture releases the selector ElementHandle it does not retain', async () => {
   const events = [];
   const page = {

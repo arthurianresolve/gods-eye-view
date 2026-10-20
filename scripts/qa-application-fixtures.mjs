@@ -56,6 +56,7 @@ export async function prepareFixturePage(
   {
     respond,
     viewport = { width: 1440, height: 1000 },
+    nativeWindowViewport = false,
     startupDiagnostics = null,
     page: existingPage = null,
     onFulfilled = null,
@@ -133,7 +134,13 @@ export async function prepareFixturePage(
   }
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
-  await page.setViewport(viewport);
+  if (nativeWindowViewport)
+    assert.equal(
+      page.viewport(),
+      null,
+      'Native window fixture excludes viewport emulation',
+    );
+  else await page.setViewport(viewport);
   const onError = (error) => {
     if (
       !page.isClosed() &&

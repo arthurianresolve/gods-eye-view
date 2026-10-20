@@ -1,4 +1,6 @@
 [
+  "scripts/performance/nativeWindowViewport.mjs",
+  "scripts/performance/nativeWindowViewport.test.mjs",
   ".prettierrc.json",
   "package.json",
   "scripts/format-scope.json",

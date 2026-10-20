@@ -23,6 +23,10 @@ import { closeTargetBeforeFixtureInterceptionRelease } from './performance/fixtu
 import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
 import { createRecordingBundle } from '../src/recording/bundle.js';
+import {
+  createNativeWindowViewportOwner,
+  resolveNativeWindowBrowserOptions,
+} from './performance/nativeWindowViewport.mjs';
 
 const RENDERED_WORKSPACE_TIMEOUT_MS = 120_000;
 export const SOAK_DATACENTER_FEATURE_COUNT = 8;
@@ -736,16 +740,38 @@ export async function createRenderedSoakDriver(
     prewarmApplication = false,
     location,
     nativeResolution = false,
+    nativeWindowViewport = false,
   } = {},
 ) {
   const soakLocation = resolveRenderedSoakLocation(location);
   const soakShareHash = createSoakFixtureShareHash(soakLocation);
+  const resolvedBrowserOptions = resolveNativeWindowBrowserOptions(
+    browserOptions,
+    {
+      nativeResolution,
+      nativeWindowViewport,
+    },
+  );
+  if (nativeWindowViewport) {
+    assert.equal(
+      process.platform,
+      'win32',
+      'Native-window v1 requires the Windows desktop',
+    );
+    assert.equal(
+      prewarmApplication,
+      false,
+      'Native-window v1 requires a fresh un-emulated page',
+    );
+  }
   const browser = await launchFixtureBrowser({
-    ...browserOptions,
+    ...resolvedBrowserOptions,
     ...(nativeResolution ? { defaultViewport: null } : {}),
   });
   const closeBrowser = createOwnedSoakCloser(browser);
   let diagnosticsPage = null;
+  let nativeWindowOwner = null;
+  const nativeWindowEvidence = {};
   let closePromise = null;
   const closeSoak = () => {
     if (closePromise) return closePromise;
@@ -756,6 +782,11 @@ export async function createRenderedSoakDriver(
           await cleanupFixturePageDiagnostics(diagnosticsPage);
       } catch (error) {
         diagnosticsError = error;
+      }
+      try {
+        await nativeWindowOwner?.dispose();
+      } catch (error) {
+        diagnosticsError ||= error;
       }
       let browserClose;
       let browserCloseError = null;
@@ -839,15 +870,28 @@ export async function createRenderedSoakDriver(
       : null;
     if (nativeResolution && (!Number.isFinite(nativeDpr) || nativeDpr <= 0))
       throw new Error('Native device pixel ratio could not be observed.');
+    if (nativeWindowViewport) {
+      nativeWindowOwner = await createNativeWindowViewportOwner({
+        page: nativePage,
+        browserPid: browser.process()?.pid,
+        browserOptions: resolvedBrowserOptions,
+      });
+      assert.equal(nativeWindowOwner.nativeDpr, nativeDpr);
+      nativeWindowEvidence.schema = nativeWindowOwner.schema;
+      nativeWindowEvidence.configured = nativeWindowOwner.configured;
+    }
     const { page, errors, verifyNetwork } = await prepareFixturePage(
       browser,
       base,
       {
         exclusiveConsoleHandleOwnership: true,
+        ...(nativeWindowViewport ? { nativeWindowViewport: true } : {}),
         ...(nativePage
           ? {
               page: nativePage,
-              viewport: resolveNativeSoakViewport(nativeDpr),
+              ...(!nativeWindowViewport
+                ? { viewport: resolveNativeSoakViewport(nativeDpr) }
+                : {}),
             }
           : {}),
         onFulfilled({ requestId, url, status, bodyBase64 }) {
@@ -1008,11 +1052,16 @@ export async function createRenderedSoakDriver(
       applicationReadyTimeoutMs: 180_000,
       hash: soakShareHash,
     });
+    if (nativeWindowOwner)
+      nativeWindowEvidence.startup = await nativeWindowOwner.capture(
+        'application-startup',
+      );
     const initialNativeResolution = nativeResolution
       ? assertNativeResolutionEvidence(
           await page.evaluate(readNativeResolutionEvidenceInPage),
           nativeDpr,
           'Initial soak',
+          nativeWindowEvidence.startup?.page.nativeResolution ?? null,
         )
       : null;
     console.log('SOAK application ready');
@@ -1063,6 +1112,9 @@ export async function createRenderedSoakDriver(
     await bootSoakFixtureFromFreshDocument(page, base, {
       hash: soakShareHash,
     });
+    if (nativeWindowOwner)
+      nativeWindowEvidence.freshDocumentRestore =
+        await nativeWindowOwner.capture('fresh-document-restore');
     console.log('SOAK application ready');
     const recordingOptionDeadlineAt = Date.now() + 30_000;
     await waitForReplayState(
@@ -1338,6 +1390,11 @@ export async function createRenderedSoakDriver(
         timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
         onProgress: onWorkspacePhase,
       });
+      if (nativeWindowOwner)
+        nativeWindowEvidence.latestWorkspaceRestore =
+          await nativeWindowOwner.capture(
+            'workspace-restore-start-' + iteration,
+          );
       await importFixtureGeometry(page, 'Rendered soak ' + iteration, {
         onProgress: onWorkspacePhase,
       });
@@ -1661,6 +1718,9 @@ export async function createRenderedSoakDriver(
       await openWorkspace(page, id, {
         timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
       });
+      if (nativeWindowOwner)
+        nativeWindowEvidence.latestWorkspaceRestore =
+          await nativeWindowOwner.capture('workspace-restore-end-' + iteration);
       assert.deepEqual(errors, []);
       return {
         sourceToggles: 8,
@@ -1688,6 +1748,16 @@ export async function createRenderedSoakDriver(
       nativeResolution: nativeResolution
         ? { observedDpr: nativeDpr, initial: initialNativeResolution }
         : null,
+      ...(nativeWindowOwner
+        ? {
+            nativeWindowViewport: nativeWindowEvidence,
+            async captureNativeWindowEvidence(label) {
+              const evidence = await nativeWindowOwner.capture(label);
+              nativeWindowEvidence.latestCheckpoint = evidence;
+              return evidence;
+            },
+          }
+        : {}),
       runCycle: cycle,
       async validateDatacenterSoakFixture() {
         if (!datacenterFixtureValidationPromise)
@@ -2001,6 +2071,9 @@ export async function createRenderedSoakDriver(
               initialNativeResolution,
             )
           : null;
+        const nativeWindowCheckpoint = nativeWindowOwner
+          ? await nativeWindowOwner.capture('retained-soak-checkpoint')
+          : null;
         return {
           ...(await page.metrics()),
           ...(await session.send('Memory.getDOMCounters')),
@@ -2008,6 +2081,9 @@ export async function createRenderedSoakDriver(
           consoleHandleOwnership,
           renderedFrames: previousFrames,
           nativeResolution: nativeEvidence,
+          ...(nativeWindowOwner
+            ? { nativeWindowViewport: nativeWindowCheckpoint }
+            : {}),
           garbageCollection: {
             status: 'completed',
             method: 'HeapProfiler.collectGarbage',
