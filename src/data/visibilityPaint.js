@@ -1,9 +1,10 @@
 /**
  * Give a published user transition an intervening rendering opportunity.
- * Two distinct RAF updates let the queued control refresh complete before
- * the following owned task starts work outside either RAF's microtasks.
+ * The lifecycle publishes control presentation synchronously. A RAF queues
+ * the following owned task so layer work stays outside that rendering
+ * update's callbacks and microtasks, without waiting for a second update.
  * This does not measure or guarantee physical presentation. The calling
- * visibility intent owns each RAF and the task through its AbortSignal.
+ * visibility intent owns the RAF and the task through its AbortSignal.
  */
 export function waitForVisibilityPaint({ signal, documentRef = null } = {}) {
   const view = documentRef?.defaultView;
@@ -23,7 +24,6 @@ export function waitForVisibilityPaint({ signal, documentRef = null } = {}) {
   return new Promise((resolve) => {
     let frame = null;
     let task = null;
-    let framesRemaining = 2;
     let finished = false;
     const finish = () => {
       if (finished) return;
@@ -49,11 +49,6 @@ export function waitForVisibilityPaint({ signal, documentRef = null } = {}) {
         return;
       }
       try {
-        framesRemaining -= 1;
-        if (framesRemaining > 0) {
-          frame = view.requestAnimationFrame(onFrame);
-          return;
-        }
         task = view.setTimeout(() => {
           task = null;
           finish();
