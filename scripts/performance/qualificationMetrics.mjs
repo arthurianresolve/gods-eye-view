@@ -7,6 +7,17 @@ import {
   INTERACTION_EVENT_TIMING_PLAN,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
+import {
+  assertNativeWindowViewportEvidence,
+  assertNativeWindowViewportPair,
+} from './nativeWindowViewport.mjs';
+
+export const QUALIFICATION_NATIVE_WINDOW_MODE = 'native-window-viewport-v1';
+export const QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA =
+  'gev-qualification-native-window-environment/v1';
+export const QUALIFICATION_NATIVE_WINDOW_HELPER_SHA256 = createHash('sha256')
+  .update(readFileSync(new URL('./nativeWindowViewport.mjs', import.meta.url)))
+  .digest('hex');
 
 const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
 const INTERACTION_SCHEMA_V2 = 'gev-interaction-latency-evidence/v2';
@@ -544,7 +555,93 @@ function captureIdentity(report, label) {
   return assertRawCaptureIdentity(report, label);
 }
 
-function validateIdentityAgainstCapture(side, expected, label) {
+/** Actual-window proof is additive; old fixed-size captures never supply it. */
+export function assertQualificationNativeWindowIdentity(
+  identity,
+  expectedDpr,
+  { complete = true } = {},
+) {
+  assert.equal(
+    identity?.measurementEnvironment,
+    QUALIFICATION_NATIVE_WINDOW_MODE,
+  );
+  const proof = identity.nativeWindowViewport;
+  assert.ok(proof, 'Native-window qualification proof is absent');
+  let lastOrdinal = 0;
+  let lastObservedAt = -Infinity;
+  const validate = (evidence) => {
+    assertNativeWindowViewportEvidence(evidence, { expectedDpr });
+    assert.equal(evidence.observedDprBeforeConfiguration, expectedDpr);
+    assert.ok(
+      Number.isSafeInteger(evidence.ordinal) && evidence.ordinal > lastOrdinal,
+    );
+    const observedAt = Date.parse(evidence.observedAtUtc);
+    assert.ok(Number.isFinite(observedAt) && observedAt >= lastObservedAt);
+    lastOrdinal = evidence.ordinal;
+    lastObservedAt = observedAt;
+    assert.equal(evidence.browserPid, proof.startup.browserPid);
+    assert.equal(evidence.host.windowHandle, proof.startup.host.windowHandle);
+    assert.equal(evidence.cdp.windowId, proof.startup.cdp.windowId);
+    assert.equal(evidence.page.focused, true);
+    assert.equal(evidence.host.foreground, true);
+    assertNativeWindowViewportPair(proof.before, evidence);
+  };
+  assertNativeWindowViewportEvidence(proof.before, { expectedDpr });
+  validate(proof.startup);
+  validate(proof.freshDocumentRestore);
+  validate(proof.before);
+  assert.deepEqual(identity.viewport, {
+    ...proof.before.page.inner,
+    dpr: expectedDpr,
+  });
+  assert.deepEqual(
+    identity.drawingBuffer,
+    proof.before.page.nativeResolution.sceneDrawingBuffer,
+  );
+  if (complete) {
+    assert.ok(Array.isArray(proof.restores));
+    assert.equal(proof.restores.length, 8);
+    for (const [index, restore] of proof.restores.entries()) {
+      assert.equal(restore.phase, index < 2 ? 'warmup' : 'measured');
+      assert.equal(restore.cycle, index < 2 ? index + 1 : index - 1);
+      validate(restore.latestWorkspaceRestore);
+    }
+    validate(proof.after);
+  }
+  return proof;
+}
+
+function validateMeasurementEnvironment(evidence) {
+  const environment = evidence.measurementEnvironment;
+  if (environment === undefined) return false;
+  assert.equal(
+    environment?.schema,
+    QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
+  );
+  assert.equal(environment.mode, QUALIFICATION_NATIVE_WINDOW_MODE);
+  assert.equal(
+    environment.helperSha256,
+    QUALIFICATION_NATIVE_WINDOW_HELPER_SHA256,
+  );
+  for (const role of ['baseline', 'candidate']) {
+    assert.deepEqual(
+      environment.viewport,
+      evidence.builds?.[role]?.identity?.viewport,
+    );
+    assert.deepEqual(
+      environment.drawingBuffer,
+      evidence.builds?.[role]?.identity?.drawingBuffer,
+    );
+  }
+  return true;
+}
+
+function validateIdentityAgainstCapture(
+  side,
+  expected,
+  label,
+  nativeWindowViewport = false,
+) {
   assert.ok(
     side?.applicationCommit != null,
     `${label} evidence applicationCommit is missing`,
@@ -577,18 +674,27 @@ function validateIdentityAgainstCapture(side, expected, label) {
     );
   }
   const identity = side.identity;
-  assert.deepEqual(identity.viewport, {
-    ...QUALIFICATION_VIEWPORT,
-    dpr: expected.sourceProfile.viewport.dpr,
-  });
-  assert.deepEqual(identity.drawingBuffer, {
-    width: Math.floor(
-      QUALIFICATION_VIEWPORT.width * expected.sourceProfile.viewport.dpr,
-    ),
-    height: Math.floor(
-      QUALIFICATION_VIEWPORT.height * expected.sourceProfile.viewport.dpr,
-    ),
-  });
+  if (nativeWindowViewport)
+    assertQualificationNativeWindowIdentity(
+      identity,
+      expected.sourceProfile.viewport.dpr,
+    );
+  else {
+    assert.equal(identity.measurementEnvironment, undefined);
+    assert.equal(identity.nativeWindowViewport, undefined);
+    assert.deepEqual(identity.viewport, {
+      ...QUALIFICATION_VIEWPORT,
+      dpr: expected.sourceProfile.viewport.dpr,
+    });
+    assert.deepEqual(identity.drawingBuffer, {
+      width: Math.floor(
+        QUALIFICATION_VIEWPORT.width * expected.sourceProfile.viewport.dpr,
+      ),
+      height: Math.floor(
+        QUALIFICATION_VIEWPORT.height * expected.sourceProfile.viewport.dpr,
+      ),
+    });
+  }
   assert.deepEqual(identity.nativeSharpnessProfile, {
     ...expected.sourceProfile,
     viewport: identity.viewport,
@@ -630,12 +736,23 @@ function assertSharedPairIdentity(baseline, candidate, label) {
     'drawingBuffer',
     'nativeSharpnessProfile',
     'settings',
+    'measurementEnvironment',
   ])
     assert.deepEqual(
       baseline?.identity?.[key],
       candidate?.identity?.[key],
       `${label} ${key} differs between builds`,
     );
+  if (
+    baseline?.identity?.measurementEnvironment ===
+    QUALIFICATION_NATIVE_WINDOW_MODE
+  ) {
+    for (const boundary of ['before', 'after'])
+      assertNativeWindowViewportPair(
+        baseline.identity.nativeWindowViewport[boundary],
+        candidate.identity.nativeWindowViewport[boundary],
+      );
+  }
   assert.notEqual(
     baseline?.identity?.applicationCommit,
     candidate?.identity?.applicationCommit,
@@ -1044,6 +1161,7 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     return unavailable('Interaction capture did not complete.');
 
   try {
+    const nativeWindowViewport = validateMeasurementEnvironment(evidence);
     if (protocolVersion === 4) {
       assert.deepEqual(evidence.eventTimingPlan, INTERACTION_EVENT_TIMING_PLAN);
       assert.match(evidence.eventTimingProducerSha256 || '', /^[a-f0-9]{64}$/);
@@ -1057,11 +1175,13 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       evidence.builds?.baseline,
       expected.baseline,
       'Baseline',
+      nativeWindowViewport,
     );
     validateIdentityAgainstCapture(
       evidence.builds?.candidate,
       expected.candidate,
       'Candidate',
+      nativeWindowViewport,
     );
     for (const role of ['baseline', 'candidate']) {
       assertBrowserClose(evidence.builds[role], `Interaction ${role}`);
@@ -1119,6 +1239,15 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       evidence.builds.candidate,
       'Interaction',
     );
+    if (nativeWindowViewport && name === 'loadedReplaySeek')
+      for (const role of ['baseline', 'candidate']) {
+        const side = evidence.builds[role];
+        for (const sample of side.loadedReplaySeek || [])
+          assert.deepEqual(sample.billboardCanvas, {
+            width: side.identity.viewport.width,
+            height: side.identity.viewport.height,
+          });
+      }
     for (const role of ['baseline', 'candidate'])
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
@@ -1407,6 +1536,7 @@ function compareSampledPeakHeap(evidence, captures) {
         }
       : unavailable('Sampled heap evidence did not complete.');
   try {
+    const nativeWindowViewport = validateMeasurementEnvironment(evidence);
     const plan = evidence.workPlan;
     if (
       !plan ||
@@ -1460,7 +1590,12 @@ function compareSampledPeakHeap(evidence, captures) {
         return unavailable(
           `${role} sampled-heap series, phase, identity, or duration evidence is absent.`,
         );
-      validateIdentityAgainstCapture(side, identity, `${role} heap`);
+      validateIdentityAgainstCapture(
+        side,
+        identity,
+        `${role} heap`,
+        nativeWindowViewport,
+      );
       assertBrowserClose(side, `Heap ${role}`);
       assert.equal(side?.heapStatus, 'completed');
       assertForegroundIntegrity(side, `Heap ${role}`);
@@ -1624,6 +1759,13 @@ export function evaluateQualificationMetrics({
     loadedReplaySeek,
     sampledPeakHeap,
   };
+  for (const [metric, evidence] of [
+    [localControl, interactionEvidence],
+    [loadedReplaySeek, interactionEvidence],
+    [sampledPeakHeap, sampledHeapEvidence],
+  ])
+    if (evidence?.measurementEnvironment !== undefined)
+      metric.measurementEnvironment = evidence.measurementEnvironment;
   const failed = Object.values(metrics).some(
     (metric) => metric.status === 'failed',
   );

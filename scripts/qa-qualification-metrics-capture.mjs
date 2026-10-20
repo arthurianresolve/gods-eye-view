@@ -7,7 +7,13 @@ import { resolve } from 'node:path';
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { createWindowsForegroundActivationSession } from './performance/windowsForegroundWindow.mjs';
-import { readWeatherBalancedIdentityCapturePair } from './performance/qualificationMetrics.mjs';
+import {
+  assertQualificationNativeWindowIdentity,
+  QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
+  QUALIFICATION_NATIVE_WINDOW_MODE,
+  readWeatherBalancedIdentityCapturePair,
+} from './performance/qualificationMetrics.mjs';
+import { assertNativeWindowViewportPair } from './performance/nativeWindowViewport.mjs';
 import {
   installInteractionEventTimingInPage,
   INTERACTION_EVENT_TIMING_PLAN,
@@ -64,6 +70,11 @@ function cliArgs(argv) {
     'out',
   ])
     if (!args[key]) throw new Error(`Missing --${key}`);
+  if (
+    args['native-window-viewport'] !== undefined &&
+    !['true', 'false'].includes(args['native-window-viewport'])
+  )
+    throw new Error('--native-window-viewport must be true or false');
   return args;
 }
 
@@ -174,7 +185,12 @@ async function readCapture(path, role) {
   };
 }
 
-export function buildQualificationIdentity(expected, actual, fixture = {}) {
+export function buildQualificationIdentity(
+  expected,
+  actual,
+  fixture = {},
+  { nativeWindowViewport = null } = {},
+) {
   assert.equal(actual.applicationCommit, expected.applicationCommit);
   assert.equal(actual.browserVersion, expected.browserVersion);
   assert.equal(actual.renderer, expected.renderer);
@@ -187,15 +203,17 @@ export function buildQualificationIdentity(expected, actual, fixture = {}) {
   );
   assert.equal(actual.nativeSharpnessProfile.resolutionScale, 1);
   assert.equal(actual.nativeSharpnessProfile.maximumScreenSpaceError, 1);
-  assert.deepEqual(actual.viewport, {
-    width: 1440,
-    height: 1000,
-    dpr: expected.sourceProfile.viewport.dpr,
-  });
-  assert.deepEqual(actual.drawingBuffer, {
-    width: Math.floor(1440 * expected.sourceProfile.viewport.dpr),
-    height: Math.floor(1000 * expected.sourceProfile.viewport.dpr),
-  });
+  if (!nativeWindowViewport) {
+    assert.deepEqual(actual.viewport, {
+      width: 1440,
+      height: 1000,
+      dpr: expected.sourceProfile.viewport.dpr,
+    });
+    assert.deepEqual(actual.drawingBuffer, {
+      width: Math.floor(1440 * expected.sourceProfile.viewport.dpr),
+      height: Math.floor(1000 * expected.sourceProfile.viewport.dpr),
+    });
+  }
   assert.deepEqual(actual.nativeSharpnessProfile.viewport, actual.viewport);
   assert.deepEqual(
     actual.nativeSharpnessProfile.drawingBuffer,
@@ -208,7 +226,7 @@ export function buildQualificationIdentity(expected, actual, fixture = {}) {
   assert.equal(typeof actual.settings?.antialias, 'boolean');
   assert.ok(Number.isFinite(actual.settings?.msaaSamples));
   assert.equal(typeof actual.settings?.fxaa, 'boolean');
-  return {
+  const identity = {
     applicationCommit: actual.applicationCommit,
     browserVersion: actual.browserVersion,
     renderer: actual.renderer,
@@ -221,7 +239,30 @@ export function buildQualificationIdentity(expected, actual, fixture = {}) {
     nativeSharpnessProfileAfter: actual.nativeSharpnessProfile,
     settingsAfter: actual.settings,
     ...fixture,
+    ...(nativeWindowViewport
+      ? {
+          measurementEnvironment: QUALIFICATION_NATIVE_WINDOW_MODE,
+          nativeWindowViewport,
+        }
+      : {}),
   };
+  if (nativeWindowViewport)
+    assertQualificationNativeWindowIdentity(
+      identity,
+      expected.sourceProfile.viewport.dpr,
+      { complete: false },
+    );
+  return identity;
+}
+
+function retainNativeWindowRestore(driver, proof, phase, cycle) {
+  proof.restores.push({
+    phase,
+    cycle,
+    latestWorkspaceRestore: structuredClone(
+      driver.nativeWindowViewport.latestWorkspaceRestore,
+    ),
+  });
 }
 
 function assertCycleOperations(result, label) {
@@ -1499,7 +1540,14 @@ async function loadReplay(page) {
   });
 }
 
-async function collectForBuild({ role, url, expected, fixture }) {
+export async function collectQualificationMetricsForBuild({
+  role,
+  url,
+  expected,
+  fixture,
+  nativeWindowViewport = false,
+  createDriver = createRenderedSoakDriver,
+}) {
   let driver;
   let closeEvidence = null;
   let operationFailure = null;
@@ -1521,15 +1569,19 @@ async function collectForBuild({ role, url, expected, fixture }) {
   let browserPid = null;
   let hostActivation = null;
   let foregroundFailure = null;
+  let failedNativeWindowViewport = null;
+  let factoryBrowserClose = null;
+  let cleanupError = null;
   const foregroundObservations = [];
   let sampling = false;
   let samplerPromise = null;
   try {
-    driver = await createRenderedSoakDriver(url, {
+    driver = await createDriver(url, {
       expectedCommit: expected.applicationCommit,
       nativeResolution: true,
       prewarmApplication: false,
       browserOptions: { headless: false },
+      ...(nativeWindowViewport ? { nativeWindowViewport: true } : {}),
     });
     if (process.env.GEV_QA_SOFTWARE_RENDERING === '1')
       throw new Error('Qualification capture refuses software rendering.');
@@ -1551,7 +1603,22 @@ async function collectForBuild({ role, url, expected, fixture }) {
       renderer: renderer?.renderer,
       ...settings,
     };
-    const identity = buildQualificationIdentity(expected, actual, fixture);
+    const nativeWindowProof = nativeWindowViewport
+      ? {
+          startup: structuredClone(driver.nativeWindowViewport?.startup),
+          freshDocumentRestore: structuredClone(
+            driver.nativeWindowViewport?.freshDocumentRestore,
+          ),
+          before: await driver.captureNativeWindowEvidence(
+            'qualification-before',
+          ),
+          after: null,
+          restores: [],
+        }
+      : null;
+    const identity = buildQualificationIdentity(expected, actual, fixture, {
+      nativeWindowViewport: nativeWindowProof,
+    });
     browserIdentity = identity;
 
     if (process.platform !== 'win32')
@@ -1696,8 +1763,16 @@ async function collectForBuild({ role, url, expected, fixture }) {
       interactionStatus = 'completed';
       consoleHandleOwnership.push(await driver.metrics());
 
-      for (let index = 0; index < 2; index++)
+      for (let index = 0; index < 2; index++) {
         warmupCycleOperations.push(await driver.runCycle());
+        if (nativeWindowViewport)
+          retainNativeWindowRestore(
+            driver,
+            nativeWindowProof,
+            'warmup',
+            index + 1,
+          );
+      }
       warmupCycleOperations.forEach((operations, index) =>
         assertCycleOperations(operations, `${role} warmup cycle ${index + 1}`),
       );
@@ -1761,6 +1836,13 @@ async function collectForBuild({ role, url, expected, fixture }) {
           `${role} measured cycle ${measuredCycle}`,
         );
         completedCycleOperations.push({ cycle: measuredCycle, operations });
+        if (nativeWindowViewport)
+          retainNativeWindowRestore(
+            driver,
+            nativeWindowProof,
+            'measured',
+            measuredCycle,
+          );
       }
       const endState = await page.evaluate(
         readEffectiveMeasurementStateInPage,
@@ -1784,6 +1866,15 @@ async function collectForBuild({ role, url, expected, fixture }) {
       await samplerPromise;
       samplerPromise = null;
       heapActualDurationMs = performance.now() - samplerStarted;
+      if (nativeWindowViewport) {
+        nativeWindowProof.after = await driver.captureNativeWindowEvidence(
+          'qualification-after',
+        );
+        assertQualificationNativeWindowIdentity(
+          identity,
+          expected.sourceProfile.viewport.dpr,
+        );
+      }
       assert.deepEqual(
         sampleErrors,
         [],
@@ -1808,6 +1899,12 @@ async function collectForBuild({ role, url, expected, fixture }) {
     }
   } catch (error) {
     operationFailure = error;
+    failedNativeWindowViewport = error.nativeWindowViewport || null;
+    cleanupError = error.cleanupError?.message || error.cleanupError || null;
+    if (!driver && error.browserClose) {
+      factoryBrowserClose = error.browserClose;
+      closeEvidence = error.browserClose;
+    }
   } finally {
     if (driver && !datacenterFixtureReceipt)
       datacenterFixtureReceipt = driver.readDatacenterSoakFixtureReceipt();
@@ -1873,6 +1970,9 @@ async function collectForBuild({ role, url, expected, fixture }) {
     datacenterFixtureReceipt,
     replayCameraSetup,
     browserClose: closeEvidence,
+    ...(nativeWindowViewport
+      ? { failedNativeWindowViewport, factoryBrowserClose, cleanupError }
+      : {}),
     foregroundIntegrity: {
       status:
         hostActivation &&
@@ -1903,7 +2003,9 @@ export async function runQualificationMetricsCapture({
   candidateCapturePath,
   weatherIdentityEnvelopePath,
   outputPath,
+  nativeWindowViewport = false,
 }) {
+  assert.equal(typeof nativeWindowViewport, 'boolean');
   const weatherIdentityPair = weatherIdentityEnvelopePath
     ? readWeatherBalancedIdentityCapturePair({
         envelopePath: weatherIdentityEnvelopePath,
@@ -1939,6 +2041,23 @@ export async function runQualificationMetricsCapture({
           new URL('./performance/interactionEventTiming.mjs', import.meta.url),
         ),
       ),
+      ...(nativeWindowViewport
+        ? {
+            nativeWindowViewportHelperSha256: sha256(
+              await readFile(
+                new URL(
+                  './performance/nativeWindowViewport.mjs',
+                  import.meta.url,
+                ),
+              ),
+            ),
+            applicationFixturesSha256: sha256(
+              await readFile(
+                new URL('./qa-application-fixtures.mjs', import.meta.url),
+              ),
+            ),
+          }
+        : {}),
     },
     sourceCaptures: weatherIdentityPair
       ? {
@@ -1999,7 +2118,16 @@ export async function runQualificationMetricsCapture({
         },
       },
       measurementEnvironment: {
-        viewport: { width: 1440, height: 1000 },
+        viewport: nativeWindowViewport ? null : { width: 1440, height: 1000 },
+        ...(nativeWindowViewport
+          ? {
+              mode: QUALIFICATION_NATIVE_WINDOW_MODE,
+              viewportSemantics:
+                'actual live native client extent; available only after owned-window preparation',
+              geometryProof:
+                'startup, single seeded-recording document restore, before/after cohort and the latest workspace restore per completed warmup/measured cycle; the driver validates both workspace restores live; exact helper validation across roles',
+            }
+          : {}),
         browserVersion: baseline.identity.browserVersion,
         renderer: baseline.identity.renderer,
         nativeSharpnessProfile: {
@@ -2036,20 +2164,44 @@ export async function runQualificationMetricsCapture({
       flag: 'w',
     });
   try {
-    report.builds.baseline = await collectForBuild({
+    report.builds.baseline = await collectQualificationMetricsForBuild({
       role: 'baseline',
       url: baselineUrl,
       expected: baseline.identity,
       fixture,
+      nativeWindowViewport,
     });
     await persistProgress();
-    report.builds.candidate = await collectForBuild({
+    report.builds.candidate = await collectQualificationMetricsForBuild({
       role: 'candidate',
       url: candidateUrl,
       expected: candidate.identity,
       fixture,
+      nativeWindowViewport,
     });
     await persistProgress();
+    if (
+      nativeWindowViewport &&
+      report.builds.baseline.status === 'completed' &&
+      report.builds.candidate.status === 'completed'
+    ) {
+      const baselineIdentity = report.builds.baseline.identity;
+      const candidateIdentity = report.builds.candidate.identity;
+      for (const boundary of ['before', 'after'])
+        assertNativeWindowViewportPair(
+          baselineIdentity.nativeWindowViewport[boundary],
+          candidateIdentity.nativeWindowViewport[boundary],
+        );
+      assert.deepEqual(baselineIdentity.settings, candidateIdentity.settings);
+      assert.deepEqual(
+        baselineIdentity.nativeSharpnessProfile,
+        candidateIdentity.nativeSharpnessProfile,
+      );
+      report.protocol.measurementEnvironment.viewport =
+        baselineIdentity.viewport;
+      report.protocol.measurementEnvironment.drawingBuffer =
+        baselineIdentity.drawingBuffer;
+    }
     report.status =
       report.builds.baseline.status === 'completed' &&
       report.builds.candidate.status === 'completed'
@@ -2066,8 +2218,19 @@ export async function runQualificationMetricsCapture({
     report.status = 'failed';
     report.failureReason = error.message;
   } finally {
+    const measurementEnvironment = nativeWindowViewport
+      ? {
+          schema: QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
+          mode: QUALIFICATION_NATIVE_WINDOW_MODE,
+          helperSha256: report.captureProducer.nativeWindowViewportHelperSha256,
+          viewport: report.builds.baseline?.identity?.viewport || null,
+          drawingBuffer:
+            report.builds.baseline?.identity?.drawingBuffer || null,
+        }
+      : null;
     report.interactionEvidence = {
       schema: INTERACTION_SCHEMA,
+      ...(measurementEnvironment ? { measurementEnvironment } : {}),
       eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
       eventTimingProducerSha256:
         report.captureProducer.eventTimingObserverSha256,
@@ -2102,6 +2265,7 @@ export async function runQualificationMetricsCapture({
     };
     report.sampledHeapEvidence = {
       schema: HEAP_SCHEMA,
+      ...(measurementEnvironment ? { measurementEnvironment } : {}),
       status: ['baseline', 'candidate'].every(
         (role) => report.builds[role]?.heapStatus === 'completed',
       )
@@ -2158,6 +2322,7 @@ if (isMain()) {
     candidateCapturePath: args['candidate-capture'],
     weatherIdentityEnvelopePath: args['weather-identity-envelope'],
     outputPath: args.out,
+    nativeWindowViewport: args['native-window-viewport'] === 'true',
   });
   if (report.status !== 'completed') process.exitCode = 1;
   console.log(

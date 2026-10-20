@@ -12,6 +12,10 @@ import {
 import {
   evaluateQualificationMetrics,
   QUALIFICATION_METRIC_THRESHOLDS,
+  QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
+  QUALIFICATION_NATIVE_WINDOW_MODE,
+  QUALIFICATION_NATIVE_WINDOW_HELPER_SHA256,
+  assertQualificationNativeWindowIdentity,
   readStartupObservation,
 } from './qualificationMetrics.mjs';
 import {
@@ -23,6 +27,7 @@ import {
   applyUnmeasuredCameraPoseInPage,
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
+  collectQualificationMetricsForBuild,
 } from '../qa-qualification-metrics-capture.mjs';
 import { INTERACTION_EVENT_TIMING_PLAN } from './interactionEventTiming.mjs';
 
@@ -94,6 +99,7 @@ test('heap sampler keeps the final measured cycle while awaiting end-state verif
       consoleHandleOwnership: [],
       SAMPLE_MAX_GAP_MS: 5000,
       SAMPLE_CADENCE_MS: 1000,
+      nativeWindowViewport: false,
       performance: { now: () => 1 },
       setTimeout(callback, delay) {
         if (delay === 1000) {
@@ -332,6 +338,456 @@ function identity(commit) {
     routeId: ID.routeId,
   };
 }
+
+function nativeWindowIdentity(commit) {
+  const actual = identity(commit);
+  actual.viewport = { width: 1280, height: 537, dpr: 2 };
+  actual.drawingBuffer = { width: 2560, height: 1074 };
+  actual.nativeSharpnessProfile = {
+    ...actual.nativeSharpnessProfile,
+    viewport: actual.viewport,
+    drawingBuffer: actual.drawingBuffer,
+  };
+  actual.nativeSharpnessProfileAfter = structuredClone(
+    actual.nativeSharpnessProfile,
+  );
+  actual.measurementEnvironment = QUALIFICATION_NATIVE_WINDOW_MODE;
+  const rect = (left, top, width, height) => ({
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  });
+  const browserPid = Number(commit) * 100 + 42;
+  let ordinal = 0;
+  const boundary = () => ({
+    schema: 'gev-native-window-viewport/v1',
+    browserPid,
+    ordinal: ++ordinal,
+    observedAtUtc: new Date(Date.UTC(2026, 9, 20, 0, 0, ordinal)).toISOString(),
+    observedDprBeforeConfiguration: 2,
+    metricsEmulation: 'cleared-before-navigation',
+    puppeteerViewport: null,
+    cdpBoundsMapping: 'native-DIPs:windowRect',
+    page: {
+      devicePixelRatio: 2,
+      inner: { width: 1280, height: 537 },
+      outer: { width: 1280, height: 680 },
+      screenPosition: { x: 0, y: 0 },
+      screen: {
+        width: 1280,
+        height: 720,
+        availLeft: 0,
+        availTop: 0,
+        availWidth: 1280,
+        availHeight: 680,
+        colorDepth: 24,
+        pixelDepth: 24,
+      },
+      visualViewport: {
+        width: 1280,
+        height: 537,
+        scale: 1,
+        offsetLeft: 0,
+        offsetTop: 0,
+        pageLeft: 0,
+        pageTop: 0,
+      },
+      documentClient: { width: 1280, height: 537 },
+      scroll: { x: 0, y: 0 },
+      visibilityState: 'visible',
+      focused: true,
+      nativeResolution: {
+        devicePixelRatio: 2,
+        canvas: {
+          clientWidth: 1280,
+          clientHeight: 537,
+          width: 2560,
+          height: 1074,
+        },
+        sceneDrawingBuffer: { width: 2560, height: 1074 },
+        resolutionScale: 1,
+        useBrowserRecommendedResolution: false,
+        maximumScreenSpaceError: 1,
+      },
+      canvasRect: rect(0, 0, 1280, 537),
+    },
+    host: {
+      schema: 'gev-owned-windows-window-geometry/v1',
+      browserPid,
+      ownerPid: browserPid,
+      windowHandle: String(browserPid),
+      ownedWindowCount: 1,
+      physicalPixelReadContext: 'per-monitor-aware-v2',
+      targetDpiAwareness: 2,
+      dpi: 192,
+      visible: true,
+      minimized: false,
+      maximized: true,
+      foreground: true,
+      windowRect: rect(-13, -13, 2586, 1386),
+      clientRect: rect(0, 0, 2560, 1360),
+      visibleFrameRect: rect(0, 0, 2560, 1360),
+      monitor: {
+        device: 'fixture-display',
+        bounds: rect(0, 0, 2560, 1440),
+        workArea: rect(0, 0, 2560, 1360),
+        displayMode: {
+          width: 2560,
+          height: 1440,
+          refreshHz: 60,
+          bitsPerPixel: 32,
+          orientation: 0,
+          positionX: 0,
+          positionY: 0,
+          adapter: 'Fixture GPU',
+        },
+      },
+    },
+    cdp: {
+      windowId: browserPid,
+      windowBounds: {
+        left: -7,
+        top: -7,
+        width: 1294,
+        height: 694,
+        windowState: 'maximized',
+      },
+      layoutMetrics: {
+        cssLayoutViewport: {
+          pageX: 0,
+          pageY: 0,
+          clientWidth: 1280,
+          clientHeight: 537,
+        },
+        cssVisualViewport: {
+          offsetX: 0,
+          offsetY: 0,
+          pageX: 0,
+          pageY: 0,
+          clientWidth: 1280,
+          clientHeight: 537,
+          scale: 1,
+          zoom: 1,
+        },
+        cssContentSize: { x: 0, y: 0, width: 1280, height: 537 },
+      },
+    },
+  });
+  actual.nativeWindowViewport = {
+    startup: boundary(),
+    freshDocumentRestore: boundary(),
+    before: boundary(),
+    restores: Array.from({ length: 8 }, (_, index) => ({
+      phase: index < 2 ? 'warmup' : 'measured',
+      cycle: index < 2 ? index + 1 : index - 1,
+      latestWorkspaceRestore: boundary(),
+    })),
+    after: boundary(),
+  };
+  return actual;
+}
+
+function useNativeWindowEnvironment(evidence) {
+  for (const [role, commit] of [
+    ['baseline', '1'],
+    ['candidate', '2'],
+  ]) {
+    evidence.builds[role].identity = nativeWindowIdentity(commit);
+    for (const sample of evidence.builds[role].loadedReplaySeek || [])
+      sample.billboardCanvas = { width: 1280, height: 537 };
+  }
+  evidence.measurementEnvironment = {
+    schema: QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
+    mode: QUALIFICATION_NATIVE_WINDOW_MODE,
+    helperSha256: QUALIFICATION_NATIVE_WINDOW_HELPER_SHA256,
+    viewport: { width: 1280, height: 537, dpr: 2 },
+    drawingBuffer: { width: 2560, height: 1074 },
+  };
+  return evidence;
+}
+
+test('native-window metrics keep the actual client extent and require complete owned proofs', () => {
+  const expected = {
+    ...identity('1'),
+    sourceProfile: structuredClone(ID.sourceProfile),
+  };
+  const actual = nativeWindowIdentity('1');
+  const built = buildQualificationIdentity(
+    expected,
+    actual,
+    {},
+    {
+      nativeWindowViewport: actual.nativeWindowViewport,
+    },
+  );
+  assert.deepEqual(built.viewport, { width: 1280, height: 537, dpr: 2 });
+  assert.deepEqual(built.nativeSharpnessProfile, actual.nativeSharpnessProfile);
+  assert.equal(expected.sourceProfile.viewport.height, 900);
+  assert.equal(
+    assertQualificationNativeWindowIdentity(built, 2),
+    built.nativeWindowViewport,
+  );
+  assert.throws(() => buildQualificationIdentity(expected, actual));
+  const interactionEvidence = useNativeWindowEnvironment(
+    eventTimingInteractionEvidence(),
+  );
+  const sampledHeapEvidence = useNativeWindowEnvironment(heapEvidence());
+  const result = evaluateQualificationMetrics({
+    baseline: capture(),
+    candidate: capture(undefined, '2'),
+    interactionEvidence,
+    sampledHeapEvidence,
+  });
+  for (const name of ['localControl', 'loadedReplaySeek', 'sampledPeakHeap']) {
+    assert.equal(
+      result.metrics[name].status,
+      'measured',
+      result.metrics[name].reason,
+    );
+    assert.deepEqual(
+      result.metrics[name].measurementEnvironment.viewport,
+      built.viewport,
+    );
+  }
+  assert.equal(
+    result.metrics.localControl.candidate.clickToNextRenderingP95Ms,
+    64,
+  );
+  assert.equal(
+    result.metrics.localControl.baseline.absoluteAcknowledgementFailures.length,
+    1,
+  );
+});
+
+test('native-window consumer rejects relabelled, stale, clipped, emulated and mismatched proofs', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const pristine = useNativeWindowEnvironment(eventTimingInteractionEvidence());
+  const mutations = [
+    (e) => {
+      delete e.measurementEnvironment;
+    },
+    (e) => {
+      e.measurementEnvironment.schema = 'old-capture-relabel';
+    },
+    (e) => {
+      e.measurementEnvironment.helperSha256 = '';
+    },
+    (e) => {
+      e.measurementEnvironment.helperSha256 = 'f'.repeat(64);
+    },
+    (e) => {
+      e.measurementEnvironment.viewport.height = 1000;
+    },
+    (e) => {
+      delete e.builds.candidate.identity.measurementEnvironment;
+    },
+    (e) => {
+      delete e.builds.candidate.identity.nativeWindowViewport;
+    },
+    (e) => {
+      delete e.builds.candidate.identity.nativeWindowViewport.after;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.restores.pop();
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.restores[2].cycle = 2;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.ordinal = 2;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.observedAtUtc =
+        'invalid';
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.before.browserPid++;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.puppeteerViewport =
+        { width: 1280, height: 537 };
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.host
+        .visibleFrameRect.right++;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.cdp.layoutMetrics.cssVisualViewport.zoom = 1.25;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.observedDprBeforeConfiguration = 1;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.after.page.nativeResolution.resolutionScale = 0.5;
+    },
+    (e) => {
+      e.builds.candidate.identity.nativeWindowViewport.restores[0].latestWorkspaceRestore.page.nativeResolution.maximumScreenSpaceError = 2;
+    },
+    (e) => {
+      e.builds.candidate.identity.viewport.width++;
+    },
+    (e) => {
+      e.builds.candidate.identity.settings.densityPct = 50;
+    },
+    (e) => {
+      e.builds.candidate.identity.settingsAfter.visual.bloomEnabled = true;
+    },
+    (e) => {
+      e.builds.candidate.datacenterFixtureReceipt.materializedFeatureCount = 7;
+    },
+    (e) => {
+      e.builds.candidate.localControl.pop();
+    },
+    (e) => {
+      for (const entry of e.builds.candidate.eventTimingCapture.entries)
+        entry.duration = 104;
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const evidence = structuredClone(pristine);
+    mutate(evidence);
+    const metric = evaluateQualificationMetrics({
+      ...args,
+      interactionEvidence: evidence,
+    }).metrics.localControl;
+    assert.notEqual(metric.status, 'measured', `negative ${index + 1}`);
+  }
+  const mixed = structuredClone(pristine);
+  mixed.builds.candidate.identity = identity('2');
+  assert.notEqual(
+    evaluateQualificationMetrics({ ...args, interactionEvidence: mixed })
+      .metrics.localControl.status,
+    'measured',
+  );
+  const mismatchedMonitor = structuredClone(pristine);
+  for (const boundary of [
+    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.startup,
+    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport
+      .freshDocumentRestore,
+    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.before,
+    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.after,
+    ...mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.restores.flatMap(
+      (r) => [r.latestWorkspaceRestore],
+    ),
+  ])
+    boundary.host.monitor.displayMode.adapter = 'Different native GPU';
+  assert.notEqual(
+    evaluateQualificationMetrics({
+      ...args,
+      interactionEvidence: mismatchedMonitor,
+    }).metrics.localControl.status,
+    'measured',
+  );
+  const replay = structuredClone(pristine);
+  replay.builds.candidate.loadedReplaySeek[0].billboardCanvas.height = 1000;
+  assert.notEqual(
+    evaluateQualificationMetrics({ ...args, interactionEvidence: replay })
+      .metrics.loadedReplaySeek.status,
+    'measured',
+  );
+  const heap = useNativeWindowEnvironment(heapEvidence());
+  heap.builds.candidate.identity.nativeWindowViewport.restores[7].latestWorkspaceRestore.host.foreground = false;
+  assert.notEqual(
+    evaluateQualificationMetrics({ ...args, sampledHeapEvidence: heap }).metrics
+      .sampledPeakHeap.status,
+    'measured',
+  );
+  const old = eventTimingInteractionEvidence();
+  old.measurementEnvironment = pristine.measurementEnvironment;
+  assert.notEqual(
+    evaluateQualificationMetrics({ ...args, interactionEvidence: old }).metrics
+      .localControl.status,
+    'measured',
+  );
+});
+
+test('native-window preparation failure retains OS/CDP evidence and factory cleanup without input', async () => {
+  const failedProof = nativeWindowIdentity('1').nativeWindowViewport.before;
+  const browserClose = {
+    closeCompleted: true,
+    forcedProcessTermination: false,
+    exitCode: 0,
+  };
+  let calls = 0;
+  const result = await collectQualificationMetricsForBuild({
+    role: 'baseline',
+    url: 'http://127.0.0.1:4312/',
+    expected: identity('1'),
+    fixture: {},
+    nativeWindowViewport: true,
+    createDriver: async (url, options) => {
+      calls++;
+      assert.equal(url, 'http://127.0.0.1:4312/');
+      assert.equal(options.nativeResolution, true);
+      assert.equal(options.nativeWindowViewport, true);
+      assert.equal(options.prewarmApplication, false);
+      assert.equal(options.browserOptions.headless, false);
+      throw Object.assign(new Error('native preparation failed'), {
+        nativeWindowViewport: failedProof,
+        browserClose,
+        cleanupError: new Error('retained cleanup diagnostic'),
+      });
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.status, 'failed');
+  assert.equal(result.identity, null);
+  assert.deepEqual(result.localControl, []);
+  assert.deepEqual(result.heapSamples, []);
+  assert.deepEqual(result.failedNativeWindowViewport, failedProof);
+  assert.deepEqual(result.factoryBrowserClose, browserClose);
+  assert.deepEqual(result.browserClose, browserClose);
+  assert.equal(result.cleanupError, 'retained cleanup diagnostic');
+});
+
+test('native-window producer retains the single document restore and each latest cycle restore in source order', () => {
+  const source = readFileSync(
+    new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('function retainNativeWindowRestore(');
+  const end = source.indexOf('\nfunction assertCycleOperations(', start);
+  assert.ok(start > 0 && end > start);
+  const retain = runInNewContext(
+    `${source.slice(start, end)}; retainNativeWindowRestore`,
+    { structuredClone },
+  );
+  const actual = nativeWindowIdentity('1');
+  const original = structuredClone(actual.nativeWindowViewport);
+  actual.nativeWindowViewport.restores = [];
+  const driver = {
+    nativeWindowViewport: {
+      freshDocumentRestore: structuredClone(original.freshDocumentRestore),
+      latestWorkspaceRestore: null,
+    },
+  };
+  for (const checkpoint of original.restores) {
+    driver.nativeWindowViewport.latestWorkspaceRestore = structuredClone(
+      checkpoint.latestWorkspaceRestore,
+    );
+    retain(
+      driver,
+      actual.nativeWindowViewport,
+      checkpoint.phase,
+      checkpoint.cycle,
+    );
+  }
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(actual.nativeWindowViewport)),
+    original,
+  );
+  driver.nativeWindowViewport.latestWorkspaceRestore.page.focused = false;
+  assertQualificationNativeWindowIdentity(actual, 2);
+  const stale = structuredClone(actual);
+  stale.nativeWindowViewport.restores[1].latestWorkspaceRestore =
+    structuredClone(
+      stale.nativeWindowViewport.restores[0].latestWorkspaceRestore,
+    );
+  assert.throws(() => assertQualificationNativeWindowIdentity(stale, 2));
+});
 
 function cameraSetup(routeId, location, frameNumber) {
   return {
