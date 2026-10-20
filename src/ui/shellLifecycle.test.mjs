@@ -536,6 +536,318 @@ test('left rail cockpit events and HUD theme mutations independently invalidate 
   );
 });
 
+function allocatedRailResizeFixture(t) {
+  const f = leftRailResizeFixture(t);
+  document.fonts = Object.assign(new Set([{ status: 'loaded' }]), {
+    status: 'loaded',
+  });
+  window.innerWidth = 1280;
+  window.innerHeight = 537;
+  window.matchMedia = () => ({ matches: false });
+  f.owner.readHud = () => ({ variant: 'tactical' });
+  f.panel.id = 'data-panel';
+  f.panel.parentElement = f.stack;
+  f.inner.parentElement = f.panel;
+  f.stack.classList.add('layout-focus');
+  f.panel.classList.add('active');
+  f.inner.classList.add('data-panel-inner');
+  const classNames = [
+    'layout-focus',
+    'layout-tail',
+    'active',
+    'collapsed',
+    'panel-floating',
+    'data-panel-inner',
+  ];
+  for (const node of [f.stack, f.panel, f.inner]) {
+    const styles = new Map();
+    const attributes = new Map();
+    node.style = {
+      getPropertyValue: (key) => styles.get(key) || '',
+      setProperty: (key, value) => styles.set(key, value),
+    };
+    node.getAttribute = (key) =>
+      key === 'class'
+        ? classNames.filter((name) => node.classList.contains(name)).join(' ')
+        : key === 'style'
+          ? JSON.stringify([...styles])
+          : (attributes.get(key) ?? null);
+    node.setAttribute = (key, value) => attributes.set(key, value);
+  }
+  f.panel.style.setProperty('--left-panel-allocated-height', '300px');
+  const box = (
+    target,
+    width,
+    height,
+    x = 0,
+    y = 0,
+    borderWidth = width,
+    borderHeight = height,
+  ) => ({
+    target,
+    contentRect: { x, y, width, height },
+    contentBoxSize: [{ inlineSize: width, blockSize: height }],
+    borderBoxSize: [{ inlineSize: borderWidth, blockSize: borderHeight }],
+  });
+  const boxes = (height, { root = false, rootHeight = height } = {}) => [
+    ...(root ? [box(f.stack, 360, rootHeight)] : []),
+    box(f.panel, 280, height),
+    box(f.inner, 246, height - 28, 16, 14, 280, height),
+  ];
+  f.resize.callback(boxes(300, { root: true, rootHeight: 325.75 }));
+  f.flush();
+  const solve = (allocation = '600px', during = () => {}) => {
+    const original = f.owner._syncLeftPanelAdaptiveLayout;
+    f.owner._syncLeftPanelAdaptiveLayout = () => {
+      original();
+      f.panel.style.setProperty('--left-panel-allocated-height', allocation);
+      during();
+    };
+    f.owner._scheduleLeftPanelLayout();
+    try {
+      f.flush();
+    } finally {
+      f.owner._syncLeftPanelAdaptiveLayout = original;
+    }
+  };
+  return { ...f, box, boxes, solve };
+}
+
+test('one owned allocation response avoids the measured second left pass without layout reads', (t) => {
+  const f = allocatedRailResizeFixture(t);
+  f.solve();
+  assert.ok(f.owner._leftStackAllocationResponse);
+  const before = f.layouts();
+  // Exact native R2 first post-solve boxes: panel 325.75; inner 297.75.
+  f.resize.callback(f.boxes(325.75));
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.layouts(), before);
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  // A later root transition is not covered by the already-consumed proof.
+  f.resize.callback(f.boxes(328.359375, { root: true }));
+  f.flush();
+  assert.equal(f.layouts(), before + 1);
+});
+
+test('a joint root/panel response can use the allocation proof exactly once', (t) => {
+  const f = allocatedRailResizeFixture(t);
+  f.solve();
+  f.resize.callback(f.boxes(328.359375, { root: true }));
+  assert.equal(f.frames.size, 0);
+  f.resize.callback(f.boxes(329.5, { root: true }));
+  assert.equal(f.frames.size, 1);
+});
+
+test('paired solve arms the same one-use response without retaining the cancelled right pass', (t) => {
+  const f = allocatedRailResizeFixture(t);
+  let pairs = 0;
+  f.owner._syncPairedPanelAdaptiveLayout = () => {
+    pairs++;
+    f.panel.style.setProperty('--left-panel-allocated-height', '600px');
+  };
+  f.owner._scheduleLeftPanelLayout();
+  f.owner._scheduleRightPanelLayout();
+  f.flush();
+  assert.equal(pairs, 1);
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.owner._rightStackLayoutFrame, null);
+  assert.ok(f.owner._leftStackAllocationResponse);
+  f.resize.callback(f.boxes(325.75));
+  assert.equal(f.frames.size, 0);
+});
+
+for (const [name, change] of [
+  ['content-only height not following the root', (f) => f.boxes(310)],
+  ['inner-only content resize', (f) => f.boxes(325.75).slice(1)],
+  [
+    'changed panel width',
+    (f) => {
+      const entries = f.boxes(325.75);
+      entries[0] = f.box(f.panel, 281, 325.75);
+      return entries;
+    },
+  ],
+  [
+    'changed inner width',
+    (f) => {
+      const entries = f.boxes(325.75);
+      entries[1] = f.box(f.inner, 245, 297.75, 16, 14, 280, 325.75);
+      return entries;
+    },
+  ],
+  [
+    'changed inner padding',
+    (f) => {
+      const entries = f.boxes(325.75);
+      entries[1] = f.box(f.inner, 246, 296.75, 16, 15, 280, 325.75);
+      return entries;
+    },
+  ],
+  ['mixed obstacle', (f) => [...f.boxes(325.75), f.box(f.obstacle, 10, 20)]],
+  ['duplicate target', (f) => [...f.boxes(325.75), f.boxes(325.75)[0]]],
+  [
+    'fragmented border box',
+    (f) => {
+      const entries = f.boxes(325.75);
+      entries[1].borderBoxSize.push({ inlineSize: 10, blockSize: 10 });
+      return entries;
+    },
+  ],
+  [
+    'vertical logical axes',
+    (f) => {
+      const entries = f.boxes(325.75);
+      entries[1].contentBoxSize = [{ inlineSize: 297.75, blockSize: 246 }];
+      return entries;
+    },
+  ],
+  ['nonfinite height', (f) => f.boxes(NaN)],
+  ['zero-height hiding', (f) => f.boxes(0)],
+  [
+    'root width change',
+    (f) => [f.box(f.stack, 361, 325.75), ...f.boxes(325.75)],
+  ],
+]) {
+  test(`allocated left rail still measures ${name}`, (t) => {
+    const f = allocatedRailResizeFixture(t);
+    f.solve();
+    const before = f.layouts();
+    f.resize.callback(change(f));
+    f.flush();
+    assert.equal(f.layouts(), before + 1);
+  });
+}
+
+for (const [name, invalidate] of [
+  [
+    'DOM content',
+    (f) => f.mutation.callback([{ type: 'childList', target: f.inner }]),
+  ],
+  ['explicit layout', (f) => f.owner._scheduleLeftPanelLayout()],
+  [
+    'disclosure reconsideration',
+    (f) => f.owner._scheduleLeftPanelLayout({ reconsiderAutoCollapse: true }),
+  ],
+  [
+    'HUD theme',
+    (f) =>
+      f.mutation.callback([
+        { type: 'attributes', target: f.hud, attributeName: 'data-variant' },
+      ]),
+  ],
+  [
+    'cockpit event',
+    () => window.dispatchEvent(new Event('gev:cockpit-mode-changed')),
+  ],
+]) {
+  test(`an owned allocation cannot erase independent ${name} invalidation`, (t) => {
+    const f = allocatedRailResizeFixture(t);
+    f.solve();
+    const before = f.layouts();
+    invalidate(f);
+    assert.equal(f.owner._leftStackAllocationResponse, null);
+    f.resize.callback(f.boxes(325.75));
+    f.flush();
+    assert.equal(f.layouts(), before + 1);
+  });
+}
+
+for (const [name, change] of [
+  ['viewport', () => window.innerHeight++],
+  ['collapsed panel', (f) => f.panel.classList.add('collapsed')],
+  ['floating panel', (f) => f.panel.classList.add('panel-floating')],
+  ['hidden panel', (f) => f.panel.setAttribute('hidden', '')],
+  [
+    'different allocation',
+    (f) => f.panel.style.setProperty('--left-panel-allocated-height', '590px'),
+  ],
+  ['tail mode', (f) => f.stack.classList.add('layout-tail')],
+  [
+    'second expanded participant',
+    (f) => {
+      const other = f.element();
+      f.stack.querySelectorAll = () => [f.panel, other];
+    },
+  ],
+  [
+    'replaced inner',
+    (f) => {
+      f.panel.children = [f.element()];
+    },
+  ],
+]) {
+  test(`changed ${name} invalidates a pending allocation response`, (t) => {
+    const f = allocatedRailResizeFixture(t);
+    f.solve();
+    const before = f.layouts();
+    change(f);
+    f.resize.callback(f.boxes(325.75));
+    f.flush();
+    assert.equal(f.layouts(), before + 1);
+  });
+}
+
+test('initial boxes, unchanged allocation, failed solve and in-pass retry cannot arm a response', (t) => {
+  const f = allocatedRailResizeFixture(t);
+  f.solve('300px');
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  f.owner._leftStackResizeBoxes = new WeakMap();
+  f.solve('600px');
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  f.resize.callback(f.boxes(325.75, { root: true }));
+  f.flush();
+  f.solve('610px', () => f.owner._scheduleLeftPanelLayout());
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  assert.equal(f.frames.size, 1, 'newer request survives the running pass');
+  f.flush();
+  assert.throws(
+    () =>
+      f.solve('620px', () => {
+        throw new Error('failed solve');
+      }),
+    /failed solve/,
+  );
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  f.owner.destroy();
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  assert.equal(f.owner._leftStackResizeBoxes.has(f.panel), false);
+});
+
+test('font loading prevents arming and a completed swap cannot consume an allocation proof', (t) => {
+  const f = allocatedRailResizeFixture(t);
+  document.fonts.status = 'loading';
+  f.solve();
+  assert.equal(f.owner._leftStackAllocationResponse, null);
+  document.fonts.status = 'loaded';
+  f.solve('610px');
+  assert.ok(f.owner._leftStackAllocationResponse);
+  document.fonts.status = 'loading';
+  f.resize.callback(f.boxes(325.75));
+  assert.equal(f.frames.size, 1);
+  document.fonts.status = 'loaded';
+  f.flush();
+  const face = [...document.fonts][0];
+  face.status = 'unloaded';
+  f.solve('620px');
+  assert.ok(f.owner._leftStackAllocationResponse);
+  face.status = 'loaded';
+  f.resize.callback(f.boxes(328.359375, { root: true }));
+  assert.equal(
+    f.frames.size,
+    1,
+    'a completed intervening font load retains measurement',
+  );
+  f.flush();
+  f.solve('630px');
+  document.fonts.add({ status: 'loaded' });
+  f.resize.callback(f.boxes(329.5, { root: true }));
+  assert.equal(
+    f.frames.size,
+    1,
+    'new font faces also revoke the response proof',
+  );
+});
+
 test('panel disposal cancels a live drag without saving or accepting later pointer movement', () => {
   const f = fixture();
   try {
