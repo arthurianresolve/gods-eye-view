@@ -289,6 +289,15 @@ function phaseFixture({
       __gevVisualPresentationBoundary: {
         read: () => ({ hudVisible: true, revision: 1 }),
       },
+      __godsEyeView: {
+        viewer: { scene: { frameState: { frameNumber: 42 } } },
+      },
+    },
+    performance: {
+      now: (() => {
+        let now = 100;
+        return () => now++;
+      })(),
     },
     document: {
       getElementById: (id) =>
@@ -325,6 +334,9 @@ test('serialized snapshot phase reads actual edge pixels at native DPR', () => {
         Array.from({ length: 8 }, (_, row) => Math.floor(row * dpr)),
       );
       assert.equal(result.dimensions.dpr, dpr);
+      assert.equal(result.observation.frameNumber, 42);
+      assert.ok(result.observation.pageReadDurationMs >= 0);
+      assert.ok(result.observation.pixelReadDurationMs >= 0);
       assert.deepEqual(
         fixture.reads,
         [
@@ -339,6 +351,33 @@ test('serialized snapshot phase reads actual edge pixels at native DPR', () => {
         'phase observation performs two bounded readbacks without changing sampled pixels',
       );
     }
+});
+
+test('pause readiness diagnostics keep page timing and frame evidence bounded', () => {
+  const describe = vm.runInNewContext(
+    `(${describeVisualPauseReadiness.toString()})`,
+  );
+  const detail = describe({
+    phase: 0,
+    observation: {
+      frameNumber: 71,
+      pageReadStartedAtMs: 150.25,
+      pageReadCompletedAtMs: 164.5,
+      pageReadDurationMs: 14.25,
+      pixelReadDurationMs: 12.5,
+    },
+    hud: {},
+  });
+  assert.equal(detail.frameNumber, 71);
+  assert.deepEqual(JSON.parse(JSON.stringify(detail.observation)), {
+    pageReadStartedAtMs: 150.25,
+    pageReadCompletedAtMs: 164.5,
+    pageReadDurationMs: 14.25,
+    pixelReadDurationMs: 12.5,
+  });
+  assert.equal(describe({}).frameNumber, null);
+  assert.equal(describe({}).observation.pixelReadDurationMs, null);
+  assert.ok(JSON.stringify(detail).length < 4096);
 });
 
 test('snapshot phase stays unavailable for absent strokes or contradictory edges', () => {

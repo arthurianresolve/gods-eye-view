@@ -1,0 +1,1333 @@
+{
+  "schema": "gev-startup-cpu-attribution-source-interpretation/v1",
+  "status": "supplemental-diagnostic-only",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "originalReview": {
+    "path": "startup-cpu-attribution-dams-190c5ab6-97c82fca/independent-review.json",
+    "sha256": "591c1265e7b98b1bb317ae7d3ff0b2f9ee7fbba982efc2751991f0d660ecc0c4",
+    "status": "diagnostic-only"
+  },
+  "method": "Reclassified only exact V8 native labels and known script URL classes from hash-verified profile topLocations; all other URL-less frames remain unknown-url-code. This interpretation does not recompute samples or change the original reviewer report.",
+  "correctedCategories": {
+    "idle": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(idle)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 321,
+        "sampledWeightMs": 588.76
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(idle)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 290,
+        "sampledWeightMs": 579.28
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(idle)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 272,
+        "sampledWeightMs": 534.08
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(idle)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 265,
+        "sampledWeightMs": 509.3
+      }
+    ],
+    "native-gc": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(garbage collector)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 21,
+        "sampledWeightMs": 40.35
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(garbage collector)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 21,
+        "sampledWeightMs": 40.1
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(garbage collector)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 20,
+        "sampledWeightMs": 34.21
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(garbage collector)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 16,
+        "sampledWeightMs": 28.65
+      }
+    ],
+    "cesium": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "b1e",
+        "urlClass": "cesium",
+        "lineNumber": 90,
+        "columnNumber": 11441,
+        "samples": 637,
+        "sampledWeightMs": 1129.05
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "b1e",
+        "urlClass": "cesium",
+        "lineNumber": 90,
+        "columnNumber": 11441,
+        "samples": 481,
+        "sampledWeightMs": 860.02
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "b1e",
+        "urlClass": "cesium",
+        "lineNumber": 90,
+        "columnNumber": 11441,
+        "samples": 449,
+        "sampledWeightMs": 819.31
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "b1e",
+        "urlClass": "cesium",
+        "lineNumber": 90,
+        "columnNumber": 11441,
+        "samples": 409,
+        "sampledWeightMs": 735.29
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "Nz",
+        "urlClass": "cesium",
+        "lineNumber": 96,
+        "columnNumber": 78185,
+        "samples": 118,
+        "sampledWeightMs": 215.45
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "qo.resize",
+        "urlClass": "cesium",
+        "lineNumber": 15909,
+        "columnNumber": 1613,
+        "samples": 76,
+        "sampledWeightMs": 153.47
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "qo.resize",
+        "urlClass": "cesium",
+        "lineNumber": 15909,
+        "columnNumber": 1613,
+        "samples": 80,
+        "sampledWeightMs": 148.05
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "qo.resize",
+        "urlClass": "cesium",
+        "lineNumber": 15909,
+        "columnNumber": 1613,
+        "samples": 77,
+        "sampledWeightMs": 142.13
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Nz",
+        "urlClass": "cesium",
+        "lineNumber": 96,
+        "columnNumber": 78185,
+        "samples": 67,
+        "sampledWeightMs": 120.81
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Nz",
+        "urlClass": "cesium",
+        "lineNumber": 96,
+        "columnNumber": 78185,
+        "samples": 65,
+        "sampledWeightMs": 115.35
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "qo.resize",
+        "urlClass": "cesium",
+        "lineNumber": 15909,
+        "columnNumber": 1613,
+        "samples": 58,
+        "sampledWeightMs": 112.25
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "od.readPixels",
+        "urlClass": "cesium",
+        "lineNumber": 3947,
+        "columnNumber": 59051,
+        "samples": 57,
+        "sampledWeightMs": 108.1
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "Nz",
+        "urlClass": "cesium",
+        "lineNumber": 96,
+        "columnNumber": 78185,
+        "samples": 57,
+        "sampledWeightMs": 102.94
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "ez",
+        "urlClass": "cesium",
+        "lineNumber": 93,
+        "columnNumber": 9668,
+        "samples": 33,
+        "sampledWeightMs": 60.96
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "ez",
+        "urlClass": "cesium",
+        "lineNumber": 93,
+        "columnNumber": 9668,
+        "samples": 25,
+        "sampledWeightMs": 51.45
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "get",
+        "urlClass": "cesium",
+        "lineNumber": 89,
+        "columnNumber": 16940,
+        "samples": 27,
+        "sampledWeightMs": 47.44
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "ez",
+        "urlClass": "cesium",
+        "lineNumber": 93,
+        "columnNumber": 9668,
+        "samples": 23,
+        "sampledWeightMs": 41.14
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "",
+        "urlClass": "cesium",
+        "lineNumber": 25,
+        "columnNumber": 12,
+        "samples": 20,
+        "sampledWeightMs": 39.99
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "ez",
+        "urlClass": "cesium",
+        "lineNumber": 93,
+        "columnNumber": 9668,
+        "samples": 20,
+        "sampledWeightMs": 35.33
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "",
+        "urlClass": "cesium",
+        "lineNumber": 25,
+        "columnNumber": 12,
+        "samples": 19,
+        "sampledWeightMs": 33.75
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "get",
+        "urlClass": "cesium",
+        "lineNumber": 89,
+        "columnNumber": 16940,
+        "samples": 19,
+        "sampledWeightMs": 33.29
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "",
+        "urlClass": "cesium",
+        "lineNumber": 25,
+        "columnNumber": 12,
+        "samples": 18,
+        "sampledWeightMs": 32.46
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "get",
+        "urlClass": "cesium",
+        "lineNumber": 89,
+        "columnNumber": 16940,
+        "samples": 18,
+        "sampledWeightMs": 31.66
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "dn.computeViewRectangle",
+        "urlClass": "cesium",
+        "lineNumber": 11512,
+        "columnNumber": 38413,
+        "samples": 15,
+        "sampledWeightMs": 29.78
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "",
+        "urlClass": "cesium",
+        "lineNumber": 25,
+        "columnNumber": 12,
+        "samples": 15,
+        "sampledWeightMs": 25.99
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "dn.computeViewRectangle",
+        "urlClass": "cesium",
+        "lineNumber": 11512,
+        "columnNumber": 38413,
+        "samples": 13,
+        "sampledWeightMs": 24.46
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "wt._Implementations.loadWithXhr",
+        "urlClass": "cesium",
+        "lineNumber": 79,
+        "columnNumber": 21049,
+        "samples": 13,
+        "sampledWeightMs": 22.96
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "get",
+        "urlClass": "cesium",
+        "lineNumber": 89,
+        "columnNumber": 16940,
+        "samples": 13,
+        "sampledWeightMs": 22.6
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "wt._Implementations.loadWithXhr",
+        "urlClass": "cesium",
+        "lineNumber": 79,
+        "columnNumber": 21049,
+        "samples": 12,
+        "sampledWeightMs": 22.57
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Gc.copyFromArrayView",
+        "urlClass": "cesium",
+        "lineNumber": 78,
+        "columnNumber": 27409,
+        "samples": 12,
+        "sampledWeightMs": 22.06
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "wt._Implementations.loadWithXhr",
+        "urlClass": "cesium",
+        "lineNumber": 79,
+        "columnNumber": 21049,
+        "samples": 12,
+        "sampledWeightMs": 21.76
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "Og.createGeometry",
+        "urlClass": "cesium",
+        "lineNumber": 10167,
+        "columnNumber": 141374,
+        "samples": 11,
+        "sampledWeightMs": 20.06
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "",
+        "urlClass": "cesium",
+        "lineNumber": 25,
+        "columnNumber": 473,
+        "samples": 11,
+        "sampledWeightMs": 19.78
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "dn.computeViewRectangle",
+        "urlClass": "cesium",
+        "lineNumber": 11512,
+        "columnNumber": 38413,
+        "samples": 11,
+        "sampledWeightMs": 19.77
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "wt._Implementations.loadWithXhr",
+        "urlClass": "cesium",
+        "lineNumber": 79,
+        "columnNumber": 21049,
+        "samples": 9,
+        "sampledWeightMs": 17.79
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "XZ.update",
+        "urlClass": "cesium",
+        "lineNumber": 15701,
+        "columnNumber": 1785,
+        "samples": 9,
+        "sampledWeightMs": 17.62
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "PGe",
+        "urlClass": "cesium",
+        "lineNumber": 78,
+        "columnNumber": 73665,
+        "samples": 9,
+        "sampledWeightMs": 16.08
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Hr",
+        "urlClass": "cesium",
+        "lineNumber": 3947,
+        "columnNumber": 52221,
+        "samples": 7,
+        "sampledWeightMs": 15.61
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "Hr",
+        "urlClass": "cesium",
+        "lineNumber": 3947,
+        "columnNumber": 52221,
+        "samples": 7,
+        "sampledWeightMs": 15.43
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "dn.computeViewRectangle",
+        "urlClass": "cesium",
+        "lineNumber": 11512,
+        "columnNumber": 38413,
+        "samples": 8,
+        "sampledWeightMs": 14.19
+      }
+    ],
+    "app": [
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "b",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 180,
+        "samples": 54,
+        "sampledWeightMs": 117.41
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "fze",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 94695,
+        "samples": 50,
+        "sampledWeightMs": 101.38
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "F1e",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 94695,
+        "samples": 50,
+        "sampledWeightMs": 92.83
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "b",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 180,
+        "samples": 46,
+        "sampledWeightMs": 80.63
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "fze",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 94695,
+        "samples": 42,
+        "sampledWeightMs": 80.23
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "F1e",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 94695,
+        "samples": 35,
+        "sampledWeightMs": 78.29
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "b",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 180,
+        "samples": 40,
+        "sampledWeightMs": 73.52
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "b",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 180,
+        "samples": 43,
+        "sampledWeightMs": 73.06
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Rtt",
+        "urlClass": "app",
+        "lineNumber": 1824,
+        "columnNumber": 9570,
+        "samples": 10,
+        "sampledWeightMs": 49.48
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Q3",
+        "urlClass": "app",
+        "lineNumber": 76,
+        "columnNumber": 52568,
+        "samples": 26,
+        "sampledWeightMs": 47.03
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "uze",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 90292,
+        "samples": 25,
+        "sampledWeightMs": 44.95
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "parse",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 105,
+        "samples": 23,
+        "sampledWeightMs": 44.26
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "re",
+        "urlClass": "app",
+        "lineNumber": 1770,
+        "columnNumber": 57886,
+        "samples": 17,
+        "sampledWeightMs": 41.08
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "N1e",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 90292,
+        "samples": 22,
+        "sampledWeightMs": 40.93
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "samples": 23,
+        "sampledWeightMs": 40.66
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "samples": 21,
+        "sampledWeightMs": 38
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "oe",
+        "urlClass": "app",
+        "lineNumber": 1770,
+        "columnNumber": 57886,
+        "samples": 22,
+        "sampledWeightMs": 37.8
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "m5",
+        "urlClass": "app",
+        "lineNumber": 76,
+        "columnNumber": 52486,
+        "samples": 21,
+        "sampledWeightMs": 37.26
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "samples": 21,
+        "sampledWeightMs": 36.89
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "samples": 20,
+        "sampledWeightMs": 35.74
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "Q3",
+        "urlClass": "app",
+        "lineNumber": 76,
+        "columnNumber": 52568,
+        "samples": 19,
+        "sampledWeightMs": 34.11
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "parse",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 105,
+        "samples": 16,
+        "sampledWeightMs": 31.46
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "m5",
+        "urlClass": "app",
+        "lineNumber": 76,
+        "columnNumber": 52486,
+        "samples": 16,
+        "sampledWeightMs": 28.92
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Sbe",
+        "urlClass": "app",
+        "lineNumber": 390,
+        "columnNumber": 141237,
+        "samples": 2,
+        "sampledWeightMs": 28.77
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "uze",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 90292,
+        "samples": 15,
+        "sampledWeightMs": 27.7
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "y8e",
+        "urlClass": "app",
+        "lineNumber": 1723,
+        "columnNumber": 34287,
+        "samples": 1,
+        "sampledWeightMs": 24.19
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "N1e",
+        "urlClass": "app",
+        "lineNumber": 502,
+        "columnNumber": 90292,
+        "samples": 12,
+        "sampledWeightMs": 22.38
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "re",
+        "urlClass": "app",
+        "lineNumber": 1770,
+        "columnNumber": 57886,
+        "samples": 13,
+        "sampledWeightMs": 22.05
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Zje",
+        "urlClass": "app",
+        "lineNumber": 1824,
+        "columnNumber": 11774,
+        "samples": 5,
+        "sampledWeightMs": 21.07
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "parse",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 105,
+        "samples": 12,
+        "sampledWeightMs": 20.72
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "parse",
+        "urlClass": "app",
+        "lineNumber": 0,
+        "columnNumber": 105,
+        "samples": 11,
+        "sampledWeightMs": 19.83
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "iOe",
+        "urlClass": "app",
+        "lineNumber": 1443,
+        "columnNumber": 370499,
+        "samples": 11,
+        "sampledWeightMs": 19.71
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "oe",
+        "urlClass": "app",
+        "lineNumber": 1770,
+        "columnNumber": 57886,
+        "samples": 9,
+        "sampledWeightMs": 17.28
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "qOe",
+        "urlClass": "app",
+        "lineNumber": 1443,
+        "columnNumber": 416572,
+        "samples": 10,
+        "sampledWeightMs": 17.08
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Wue",
+        "urlClass": "app",
+        "lineNumber": 76,
+        "columnNumber": 101612,
+        "samples": 3,
+        "sampledWeightMs": 16.41
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "OG",
+        "urlClass": "app",
+        "lineNumber": 1443,
+        "columnNumber": 583368,
+        "samples": 8,
+        "sampledWeightMs": 14.13
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "VVe",
+        "urlClass": "app",
+        "lineNumber": 1770,
+        "columnNumber": 1880,
+        "samples": 2,
+        "sampledWeightMs": 13.47
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "iOe",
+        "urlClass": "app",
+        "lineNumber": 1443,
+        "columnNumber": 370499,
+        "samples": 7,
+        "sampledWeightMs": 13.07
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "yUe",
+        "urlClass": "app",
+        "lineNumber": 487,
+        "columnNumber": 126334,
+        "samples": 5,
+        "sampledWeightMs": 12.84
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "YLe",
+        "urlClass": "app",
+        "lineNumber": 390,
+        "columnNumber": 137456,
+        "samples": 1,
+        "sampledWeightMs": 12.63
+      }
+    ],
+    "browser-program": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(program)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 491,
+        "sampledWeightMs": 886.61
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(program)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 434,
+        "sampledWeightMs": 882.43
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(program)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 388,
+        "sampledWeightMs": 754.89
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(program)",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 376,
+        "sampledWeightMs": 742.7
+      }
+    ],
+    "unknown-url-code": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "value",
+        "urlClass": "empty",
+        "lineNumber": 353,
+        "columnNumber": 20,
+        "samples": 382,
+        "sampledWeightMs": 685.91
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "value",
+        "urlClass": "empty",
+        "lineNumber": 353,
+        "columnNumber": 20,
+        "samples": 249,
+        "sampledWeightMs": 450.26
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "value",
+        "urlClass": "empty",
+        "lineNumber": 353,
+        "columnNumber": 20,
+        "samples": 211,
+        "sampledWeightMs": 380.63
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "value",
+        "urlClass": "empty",
+        "lineNumber": 353,
+        "columnNumber": 20,
+        "samples": 191,
+        "sampledWeightMs": 346.27
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "querySelectorAll",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 32,
+        "sampledWeightMs": 65.12
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "querySelectorAll",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 32,
+        "sampledWeightMs": 60.37
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "querySelectorAll",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 30,
+        "sampledWeightMs": 51.79
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "querySelectorAll",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 24,
+        "sampledWeightMs": 44.55
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "appendChild",
+        "urlClass": "empty",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 6,
+        "sampledWeightMs": 12
+      }
+    ]
+  },
+  "slots": [
+    {
+      "id": "infrastructure-dams-01",
+      "role": "control",
+      "rawProfileSha256": "908c467f29ea14497ff7c965e8148de4774e50b4b5125cf6f171f590f351bfa7",
+      "sampleCount": 2588,
+      "profileWindowMs": 4948.94,
+      "correctedTopLocations": [
+        {
+          "group": "browser-program",
+          "slot": "infrastructure-dams-01",
+          "functionName": "(program)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 434,
+          "sampledWeightMs": 882.43
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-01",
+          "functionName": "b1e",
+          "urlClass": "cesium",
+          "lineNumber": 90,
+          "columnNumber": 11441,
+          "samples": 481,
+          "sampledWeightMs": 860.02
+        },
+        {
+          "group": "idle",
+          "slot": "infrastructure-dams-01",
+          "functionName": "(idle)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 290,
+          "sampledWeightMs": 579.28
+        },
+        {
+          "group": "unknown-url-code",
+          "slot": "infrastructure-dams-01",
+          "functionName": "value",
+          "urlClass": "empty",
+          "lineNumber": 353,
+          "columnNumber": 20,
+          "samples": 191,
+          "sampledWeightMs": 346.27
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-01",
+          "functionName": "qo.resize",
+          "urlClass": "cesium",
+          "lineNumber": 15909,
+          "columnNumber": 1613,
+          "samples": 76,
+          "sampledWeightMs": 153.47
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-01",
+          "functionName": "Nz",
+          "urlClass": "cesium",
+          "lineNumber": 96,
+          "columnNumber": 78185,
+          "samples": 65,
+          "sampledWeightMs": 115.35
+        },
+        {
+          "group": "native-gc",
+          "slot": "infrastructure-dams-01",
+          "functionName": "(garbage collector)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 16,
+          "sampledWeightMs": 28.65
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-dams-02",
+      "role": "candidate",
+      "rawProfileSha256": "375d5ff976d010a37519fa272e00a9b33487ac95a4906538b4f73995ad9fc9ea",
+      "sampleCount": 2418,
+      "profileWindowMs": 4565.001,
+      "correctedTopLocations": [
+        {
+          "group": "browser-program",
+          "slot": "infrastructure-dams-02",
+          "functionName": "(program)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 388,
+          "sampledWeightMs": 754.89
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-02",
+          "functionName": "b1e",
+          "urlClass": "cesium",
+          "lineNumber": 90,
+          "columnNumber": 11441,
+          "samples": 409,
+          "sampledWeightMs": 735.29
+        },
+        {
+          "group": "idle",
+          "slot": "infrastructure-dams-02",
+          "functionName": "(idle)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 265,
+          "sampledWeightMs": 509.3
+        },
+        {
+          "group": "unknown-url-code",
+          "slot": "infrastructure-dams-02",
+          "functionName": "value",
+          "urlClass": "empty",
+          "lineNumber": 353,
+          "columnNumber": 20,
+          "samples": 249,
+          "sampledWeightMs": 450.26
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-02",
+          "functionName": "qo.resize",
+          "urlClass": "cesium",
+          "lineNumber": 15909,
+          "columnNumber": 1613,
+          "samples": 77,
+          "sampledWeightMs": 142.13
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-02",
+          "functionName": "Nz",
+          "urlClass": "cesium",
+          "lineNumber": 96,
+          "columnNumber": 78185,
+          "samples": 67,
+          "sampledWeightMs": 120.81
+        },
+        {
+          "group": "native-gc",
+          "slot": "infrastructure-dams-02",
+          "functionName": "(garbage collector)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 20,
+          "sampledWeightMs": 34.21
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-02",
+          "functionName": "Gc.copyFromArrayView",
+          "urlClass": "cesium",
+          "lineNumber": 78,
+          "columnNumber": 27409,
+          "samples": 12,
+          "sampledWeightMs": 22.06
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-dams-03",
+      "role": "candidate",
+      "rawProfileSha256": "ec36cae800c3a9072485b02d2890f83d6a7a95327377df5f22774a4a49e16878",
+      "sampleCount": 3068,
+      "profileWindowMs": 5547.805,
+      "correctedTopLocations": [
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-03",
+          "functionName": "b1e",
+          "urlClass": "cesium",
+          "lineNumber": 90,
+          "columnNumber": 11441,
+          "samples": 637,
+          "sampledWeightMs": 1129.05
+        },
+        {
+          "group": "browser-program",
+          "slot": "infrastructure-dams-03",
+          "functionName": "(program)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 491,
+          "sampledWeightMs": 886.61
+        },
+        {
+          "group": "unknown-url-code",
+          "slot": "infrastructure-dams-03",
+          "functionName": "value",
+          "urlClass": "empty",
+          "lineNumber": 353,
+          "columnNumber": 20,
+          "samples": 382,
+          "sampledWeightMs": 685.91
+        },
+        {
+          "group": "idle",
+          "slot": "infrastructure-dams-03",
+          "functionName": "(idle)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 321,
+          "sampledWeightMs": 588.76
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-03",
+          "functionName": "Nz",
+          "urlClass": "cesium",
+          "lineNumber": 96,
+          "columnNumber": 78185,
+          "samples": 118,
+          "sampledWeightMs": 215.45
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-03",
+          "functionName": "qo.resize",
+          "urlClass": "cesium",
+          "lineNumber": 15909,
+          "columnNumber": 1613,
+          "samples": 80,
+          "sampledWeightMs": 148.05
+        },
+        {
+          "group": "native-gc",
+          "slot": "infrastructure-dams-03",
+          "functionName": "(garbage collector)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 21,
+          "sampledWeightMs": 40.35
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-dams-04",
+      "role": "control",
+      "rawProfileSha256": "fe2d953df4e64804decd109367f9cfb39d772e1af7105278a7bfd789bcfec38c",
+      "sampleCount": 2355,
+      "profileWindowMs": 4381.934,
+      "correctedTopLocations": [
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-04",
+          "functionName": "b1e",
+          "urlClass": "cesium",
+          "lineNumber": 90,
+          "columnNumber": 11441,
+          "samples": 449,
+          "sampledWeightMs": 819.31
+        },
+        {
+          "group": "browser-program",
+          "slot": "infrastructure-dams-04",
+          "functionName": "(program)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 376,
+          "sampledWeightMs": 742.7
+        },
+        {
+          "group": "idle",
+          "slot": "infrastructure-dams-04",
+          "functionName": "(idle)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 272,
+          "sampledWeightMs": 534.08
+        },
+        {
+          "group": "unknown-url-code",
+          "slot": "infrastructure-dams-04",
+          "functionName": "value",
+          "urlClass": "empty",
+          "lineNumber": 353,
+          "columnNumber": 20,
+          "samples": 211,
+          "sampledWeightMs": 380.63
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-04",
+          "functionName": "qo.resize",
+          "urlClass": "cesium",
+          "lineNumber": 15909,
+          "columnNumber": 1613,
+          "samples": 58,
+          "sampledWeightMs": 112.25
+        },
+        {
+          "group": "cesium",
+          "slot": "infrastructure-dams-04",
+          "functionName": "Nz",
+          "urlClass": "cesium",
+          "lineNumber": 96,
+          "columnNumber": 78185,
+          "samples": 57,
+          "sampledWeightMs": 102.94
+        },
+        {
+          "group": "native-gc",
+          "slot": "infrastructure-dams-04",
+          "functionName": "(garbage collector)",
+          "urlClass": "empty",
+          "lineNumber": -1,
+          "columnNumber": -1,
+          "samples": 21,
+          "sampledWeightMs": 40.1
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "scripts/performance/earlyCesiumRendererProbe.mjs",
+      "sha256": "367d3fb6365addcb65535a7beb61a4fb4fb242db8bc64fd5128c04bc1a1ff13f",
+      "startLine": 375,
+      "endLine": 386
+    },
+    {
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Renderer/ShaderProgram.js",
+      "sha256": "b0ae609324f012437311fc443f483802917be375e3015c647173080dd15dba4f",
+      "startLine": 186,
+      "endLine": 218
+    },
+    {
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Renderer/Texture.js",
+      "sha256": "63e44bc23518d40d55f44a642dd631b494f1159d9839dab5c9cdb4ed5e53a7d6",
+      "startLine": 351,
+      "endLine": 370
+    },
+    {
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Renderer/Buffer.js",
+      "sha256": "110cce1938c2a3c530ab52c6545fdb5ab3a8e9da728f81178682dd8a932e5ebc",
+      "startLine": 277,
+      "endLine": 300
+    },
+    {
+      "path": "../gev-dev/node_modules/@cesium/widgets/Source/Viewer/Viewer.js",
+      "sha256": "5d2d6778b741684577f2e53c2fa0a9b3a92666cff45f56d3c26dac5cc3a74eda",
+      "startLine": 1542,
+      "endLine": 1555
+    }
+  ],
+  "sourceInterpretation": [
+    {
+      "signature": "Gc.copyFromArrayView @ /cesium/<sha>/Cesium.js:78:27409",
+      "category": "cesium",
+      "finding": "Not garbage collection. The identifier is Cesium’s Buffer.copyFromArrayView routine; it uploads a typed-array view to a GPU buffer. The original broad `gc` substring rule falsely grouped it as GC."
+    },
+    {
+      "signature": "(garbage collector)",
+      "category": "native-gc",
+      "finding": "Explicit V8 profiler native GC samples only; no arbitrary function names containing “gc” are classified as GC."
+    },
+    {
+      "signature": "value @ empty-url:353:20",
+      "category": "unknown-url-code",
+      "finding": "Correlates with the serialized early renderer probe wrapper in earlyCesiumRendererProbe.mjs (the getContext wrapper), called from Cesium initialization. This is harness instrumentation and its sampled weight is not application-only startup work."
+    },
+    {
+      "signature": "b1e @ /cesium/Cesium.js:90:11441",
+      "category": "cesium",
+      "finding": "Cesium engine shader/program path; inspected ShaderProgram source performs shader compilation, program linking and link-status queries. This attribution is descriptive and does not identify a candidate-only source change."
+    },
+    {
+      "signature": "qo.resize @ /cesium/Cesium.js:15909:1613",
+      "category": "cesium",
+      "finding": "Cesium viewer resize path; the matching Viewer source contains resize and widget resize work."
+    },
+    {
+      "signature": "Nz @ /cesium/Cesium.js:96:78185",
+      "category": "cesium",
+      "finding": "Cesium texture upload path; Texture source uses texImage2D. This is descriptive source-family correlation."
+    }
+  ],
+  "conclusion": "No candidate-specific application regression is established by these four sampled profiles. The largest identified samples are Cesium engine/program work, browser program time, idle, and the early getContext instrumentation; slot durations and weights vary, and this is diagnostic attribution rather than qualification or exact CPU/GPU time.",
+  "limits": [
+    "No source maps for the exact emitted Cesium asset were available in this local source package; engine function-family correlations are not exact minified-column mappings.",
+    "A profile samples JavaScript stacks and includes idle, CDP profiler overhead, and the early renderer probe. Sample weights are statistical attribution, not precise CPU execution or GPU time.",
+    "The four ABBA captures do not support an acceptance change or causal attribution of the startup regression."
+  ]
+}

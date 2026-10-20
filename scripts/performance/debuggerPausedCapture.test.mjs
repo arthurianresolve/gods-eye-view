@@ -147,11 +147,14 @@ test('atomic guard waits for the declared phase without taking rejected screensh
     pauseTimeoutMs: 1000,
   });
   assert.equal(screenshots, 1);
-  assert.deepEqual(result.pause.guard, {
-    method: 'atomic-read-then-debugger/v1',
-    checks: 3,
-    pollIntervalMs: 50,
-  });
+  assert.equal(result.pause.guard.method, 'atomic-read-then-debugger/v1');
+  assert.equal(result.pause.guard.checks, 3);
+  assert.equal(result.pause.guard.pollIntervalMs, 50);
+  assert.ok(result.pause.guard.debuggerEnableDurationMs >= 0);
+  assert.equal(
+    result.pause.guard.finalEvaluation.interruptedByDebuggerPause,
+    true,
+  );
   assert.equal(context.samples.length, 0);
   assert.equal(
     fake.calls.filter((c) => c.method === 'Runtime.evaluate').length,
@@ -299,6 +302,45 @@ test('guard diagnostics reject asynchronous or oversized results and clean up', 
   }
 });
 
+test('guard failure separates host CDP evaluation cost from page read timing', async () => {
+  const fake = fakePage({ pauseOnEnable: false });
+  await assert.rejects(
+    captureWithDebuggerPause({
+      page: fake.page,
+      readCallback: () => ({
+        phase: 2,
+        observation: {
+          frameNumber: 19,
+          pageReadStartedAtMs: 100,
+          pageReadCompletedAtMs: 104,
+          pageReadDurationMs: 4,
+          pixelReadDurationMs: 3,
+        },
+      }),
+      pauseWhen: () => false,
+      describeGuardFailure: (snapshot) => snapshot,
+      screenshot: fake.screenshot,
+      pauseTimeoutMs: 90,
+    }),
+    (error) => {
+      const diagnostics = error.pauseDiagnostics;
+      assert.equal(diagnostics.pauseObserved, false);
+      assert.ok(diagnostics.debuggerEnableDurationMs >= 0);
+      const sample = diagnostics.guardSamples[0];
+      assert.ok(sample.hostEvaluationStartedAtMs >= 0);
+      assert.ok(
+        sample.hostEvaluationCompletedAtMs >= sample.hostEvaluationStartedAtMs,
+      );
+      assert.ok(sample.hostEvaluationDurationMs >= 0);
+      assert.equal(sample.detail.observation.frameNumber, 19);
+      assert.equal(sample.detail.observation.pixelReadDurationMs, 3);
+      return true;
+    },
+  );
+  assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
+  assert.equal(fake.calls.at(-1).method, 'detach');
+});
+
 test('a parked phase advances only after an explicit guard frame request', async () => {
   const context = { phase: 2, requests: 0 };
   const fake = fakePage({ guardContext: context });
@@ -307,6 +349,7 @@ test('a parked phase advances only after an explicit guard frame request', async
     page: fake.page,
     readCallback: () => ({ phase: globalThis.phase }),
     pauseWhen: (snapshot) => snapshot.phase === 0,
+    describeGuardFailure: (snapshot) => ({ phase: snapshot.phase }),
     requestNextGuardFrame: (snapshot) => {
       if (snapshot.phase !== 2) return false;
       globalThis.requests++;
@@ -321,6 +364,12 @@ test('a parked phase advances only after an explicit guard frame request', async
   });
   assert.equal(context.requests, 1);
   assert.equal(result.pause.guard.checks, 2);
+  assert.ok(result.pause.guard.debuggerEnableDurationMs >= 0);
+  assert.equal(result.pause.guard.samples.length, 1);
+  assert.equal(
+    result.pause.guard.finalEvaluation.interruptedByDebuggerPause,
+    true,
+  );
   assert.equal(captures, 1);
   assert.equal(fake.session.listenerCount('Debugger.paused'), 0);
 });

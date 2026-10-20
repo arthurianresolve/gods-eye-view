@@ -621,6 +621,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           attempt,
           before,
           after,
+          pause: pausedCapture.pause,
           phaseBefore: beforePhase,
           phaseAfter: afterPhase,
           phaseDimensions: {
@@ -655,6 +656,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           foreground,
           captureMethod: 'debugger-paused-snapshot',
           pauseCleanup: pausedCapture.cleanup,
+          pause: pausedCapture.pause,
           phase: {
             before: beforePhase,
             after: afterPhase,

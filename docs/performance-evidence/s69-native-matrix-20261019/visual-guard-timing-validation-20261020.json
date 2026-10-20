@@ -1,0 +1,1661 @@
+{
+  "schema": "gev-visual-pause-timing-validation/v2",
+  "status": "passed",
+  "remoteDirectory": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-pause-timing-complete-20261020-r5",
+  "files": [
+    {
+      "name": "scripts/performance/debuggerPausedCapture.mjs",
+      "bytes": 13871,
+      "sha256": "9e6ad46483762595459db8d3960655a090140416800ccbc15b82d44780fb3e5a",
+      "changed": true,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+      "bytes": 18832,
+      "sha256": "acdb60555db0b9417a171938fa2dbc3eba389bf741d47b5ad94ce5d0f0e1c233",
+      "changed": true,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "bytes": 16443,
+      "sha256": "3adda9fe89bd6dbeffb21b3a6af4531b245811659bc9e861b97bfead53717f8d",
+      "changed": true,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.mjs",
+      "bytes": 38931,
+      "sha256": "bc355493d9004ce8fa5b3804f6945c21e374319df2f08a04926c619968bb558f",
+      "changed": true,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "bytes": 22665,
+      "sha256": "4720decaf1db05fd4de5d5dc6b36b358b11d24dad54ecf18ed08739a0d0924d3",
+      "changed": true,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.mjs",
+      "bytes": 21085,
+      "sha256": "1e2e6e750a6b2a482a77f2b5ae0721e5c7dfc72567bffe993dfbe4eaaf4e5201",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.test.mjs",
+      "bytes": 17342,
+      "sha256": "8785343d3e6e8729cb3fe3c1a4c62f21b4765f10723c37648caa2e6d6ce4c809",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.mjs",
+      "bytes": 21874,
+      "sha256": "0633166919888a2f865b7df1028c82b067ba91aa6286541c3eda196cacb358fe",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.test.mjs",
+      "bytes": 18314,
+      "sha256": "4ab981bbd76c2b23557183948d9fc7c740b564ee4ef4456f8db3d225fd15b0e9",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/performance/visibleControlVariance.mjs",
+      "bytes": 2291,
+      "sha256": "bdce8d73a7badaa8ed60d6eaf1fb317fc10aee157f139779394cf7c09825ec77",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/check-capture-no-undef.mjs",
+      "bytes": 731,
+      "sha256": "5db1898978e4e631c13791bfc5292c7147ed338e65418f8142cd732d796030ed",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "bytes": 5193,
+      "sha256": "b2a8ac7e8e9a15a6db36e88fc1d9902036b8cb160f9801332fb66250ffc424a3",
+      "changed": false,
+      "noUndef": false
+    },
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 328357,
+      "sha256": "1ade60e3ff7b3fb1183bc016c53f9ee46e3bc77687f041a127158a7ad0f58953",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/review-balanced-startup-confirmation.mjs",
+      "bytes": 5712,
+      "sha256": "d1811851fe44f66662ab6dafe9abb1678649b4e41c46ae233ac8cb8c3434fb2f",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.mjs",
+      "bytes": 13866,
+      "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "bytes": 19324,
+      "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.mjs",
+      "bytes": 6256,
+      "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.test.mjs",
+      "bytes": 777,
+      "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/capture-performance-matrix.mjs",
+      "bytes": 4093,
+      "sha256": "a28617412b53a14f55e6c51151a2166b55949dc0d1e1e081db34b89a6dcb8ba3",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/qa-performance-build-smoke.mjs",
+      "bytes": 263211,
+      "sha256": "1dce75a4766a0baa67adf0f326486895a6961546f1d5357957c46e4b26a39716",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/qa-performance-build-smoke.test.mjs",
+      "bytes": 208962,
+      "sha256": "d71bce701056c626ee48c33817a4827e9dbefd4015cd54045020268e76fa2e01",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/qa-application.mjs",
+      "bytes": 62234,
+      "sha256": "2b665818de31c01eef7078b916c1fbc41ec692424242c23b5e07de6b3edb9d46",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+      "bytes": 34114,
+      "sha256": "e62d1b01e246d1d0cd5c6818faaf88771545fa57c9e163c3ccfd969410a58e1a",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+      "bytes": 2552,
+      "sha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingDocumentEvidence.test.mjs",
+      "bytes": 5707,
+      "sha256": "ef6a28841f5122a79a24e799c5a27229ec01b3ba0634064a1db582814abbbd57",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+      "bytes": 10538,
+      "sha256": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingPopulationEvidence.test.mjs",
+      "bytes": 11097,
+      "sha256": "c1403239e0d78b065b92e29da4e255bbcb9549e9b919591f490a759899d26107",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingReadinessHistory.mjs",
+      "bytes": 20058,
+      "sha256": "ec43f7351dab232f6446446451ebacdf6953dd84dd97beaa7b736083cee8d007",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingReadinessHistory.test.mjs",
+      "bytes": 12117,
+      "sha256": "392f273d0c235175a421a45ef1b07bc1f5876ba96192fff47edba9f8347737bf",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadContract.mjs",
+      "bytes": 2331,
+      "sha256": "a616d780352daa2f6d1dc3805a09eadac112a9aed5819ab9369a76dbbcaa8300",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadFixture.mjs",
+      "bytes": 39440,
+      "sha256": "76e4f40b3ead874e035b138f4c265c46a559fa6393c02ad5756b5da847d0271e",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
+      "bytes": 25107,
+      "sha256": "f55e4e161c271303d7f7c5a514190bc4077613b2acbdf0989799c7582ec21750",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+      "bytes": 57798,
+      "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+      "bytes": 55394,
+      "sha256": "b72918f0ccee01eddf884db379101edb20e93a798277d8f5781c6b3f5fecf126",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/productionFlightFixture.mjs",
+      "bytes": 61932,
+      "sha256": "c03f903f8a1b45fcea4923335edeb184f100dc86434a756728898c4f4793fd42",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/productionFlightFixture.test.mjs",
+      "bytes": 51411,
+      "sha256": "7c2d68f2a5c516794aa6a41fb85b81e4e06e37419ef6c9f15ced9f977c824eb9",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+      "bytes": 14369,
+      "sha256": "f2a03f41c8f8109d4dcac19b3d21c41197bb0855869a9d97dc2d4bf5e8b482d2",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
+      "bytes": 7565,
+      "sha256": "29f0b546d1afd5c0518129b3c76212b07ef9fed90c30fe1315a38245b796fa22",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/aircraftFleetTickAudit.mjs",
+      "bytes": 28963,
+      "sha256": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/aircraftFleetTickAudit.test.mjs",
+      "bytes": 6339,
+      "sha256": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.mjs",
+      "bytes": 180109,
+      "sha256": "85278085a4cdbc466bd81c9843251e95baed53e7d3c806f9fcdf2394d61a8476",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.test.mjs",
+      "bytes": 118516,
+      "sha256": "fd6681c1713ff1c03943b410ace7310fa145948ce22fab40027e478c1c13d226",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixture.mjs",
+      "bytes": 61852,
+      "sha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixture.test.mjs",
+      "bytes": 65381,
+      "sha256": "16152515621cb8c58955a311f060b277bf904cf252b7eee5e7b61590b0b3ce53",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixtureDelivery.mjs",
+      "bytes": 34327,
+      "sha256": "16efcca87ea47bccfc4df0254cca1d549fb1511645f0204d5549346d8b4b59ae",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+      "bytes": 39166,
+      "sha256": "d40b3144a7077a3085630a94ca376a6740b6e97a513e75654e696ac8eb089f48",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/cctvViewshedRetention.mjs",
+      "bytes": 17994,
+      "sha256": "58e9a3aed7987af5194533eb6898e2e3319e9d428e137bbebb73980d7020eeef",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/cctvViewshedRetention.test.mjs",
+      "bytes": 12546,
+      "sha256": "8f089023ab6ca4c831715a3ff5349476e456baa0088a4b1c2779e3b5897ceb9b",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/s58PostProcessStageCensus.mjs",
+      "bytes": 15427,
+      "sha256": "58e8595ee59a2dd85eb4af0c3cdee6b893c3d3b9427d213a019963b2e9bdcea2",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/s58PostProcessStageCensus.test.mjs",
+      "bytes": 3107,
+      "sha256": "c6dbb8d5f6570ae2f3cd19c5d629e66b99cecece3a434e7d65082aabceb290c0",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/cctv-calibration-demand.js",
+      "bytes": 90798,
+      "sha256": "74ccf2c6cf2c7bf4869c12bcb7d8c755515919dd266b5983c95caadfff6ce8c5",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/qa-hosted-capture.mjs",
+      "bytes": 28041,
+      "sha256": "f7688f90440ca85105d18b3bd9b5bb18fd69b0b4a7a16fdb745df22773f37287",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/hostedNavigationDiagnostics.mjs",
+      "bytes": 13358,
+      "sha256": "32a6bff116c07e2227e0e1246c45d7770a2b06cded48e4a92ec65d43ce1e64df",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/hostedNavigationDiagnostics.test.mjs",
+      "bytes": 12157,
+      "sha256": "c6e4184dd7ec25c8c568509179176040abc66b649f9d896b1aa127ed9305d16c",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructure-runtime-collections.mjs",
+      "bytes": 67876,
+      "sha256": "0d717f5ddbc40a8f0c1fae694c8d2c63e78cc5dc4fa07cdac8eb36917e59c478",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs",
+      "bytes": 23676,
+      "sha256": "7772cad3d44a20edca7c1581602bd4b75e7979521c9edb32080fb97044a718fa",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs",
+      "bytes": 17227,
+      "sha256": "f9855ca7ad24d5886e0243eb82050eb783d245edd203af8a76f49a2ee1a56e11",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureCamera.mjs",
+      "bytes": 1891,
+      "sha256": "96bec8e5bc7542464e8f9058103ba9cb8b8beda362a5ee80245268c02044c27e",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureCamera.test.mjs",
+      "bytes": 4539,
+      "sha256": "323a1f9f43f6db41885a8e1afeab2e1680db0989d14545e1924337504f9d9306",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureLayer.mjs",
+      "bytes": 2746,
+      "sha256": "dfb2f912cccd31bfd14f0bddad32ad8bddc4bdd0963882a2ec46c89a5df832e9",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureNativePickOwnership.mjs",
+      "bytes": 1786,
+      "sha256": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
+      "bytes": 6441,
+      "sha256": "0b82b949f9f91ae6d1cb4cf10f87f6e7c2e5918d341de365fa94f84376c41a18",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
+      "bytes": 28484,
+      "sha256": "e74c5630129cc07fa68c926293a8fa9ef30621a971424c4dce61e869b045dbfa",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
+      "bytes": 18089,
+      "sha256": "47689eae136d369a4486b1696b3491ee0513b4efc7a28bc5b6474bd1a1609467",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",
+      "bytes": 39392,
+      "sha256": "2149fdb0f7e7c40380c9204935f88c40d4affb664e8b8dbcc06aa6ac42ee0ce5",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs",
+      "bytes": 21006,
+      "sha256": "03909f7633259a784a0180dbe6331859a2e15291ce9f62730dd59353da4f132c",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/infrastructureRuntimeComparison.mjs",
+      "bytes": 25763,
+      "sha256": "22f9f7719737d9dfc6cbaf67354817e363199b4afec2442959edaa449b250cc6",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/infrastructureRuntimeComparison.test.mjs",
+      "bytes": 30945,
+      "sha256": "cf54f84669c69a9dfc6dc633c72aa59c2422a1ddadd9aa30531aafda417fd5a4",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/mapStreamingWorkloadContract.mjs",
+      "bytes": 144,
+      "sha256": "f0fbc474cde873484e58ec3d2528ca42e0d3b87a15ed7132c78ac1fca306903f",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "bytes": 79727,
+      "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupAttribution.mjs",
+      "bytes": 16351,
+      "sha256": "b2c4d0f035704c0712dda1ed546a3fb0a5c13afa4df49e290bb4b477a6d86ae7",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupAttribution.test.mjs",
+      "bytes": 14494,
+      "sha256": "1403411b3778d3e0834140eea59d91a83d0b3a074d06f500a4edfa80ca49a97a",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.mjs",
+      "bytes": 5506,
+      "sha256": "1358d423ee06e011099b35c6e1df18700a6817e661e4239ef3cf44b214b1b0c4",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.test.mjs",
+      "bytes": 8652,
+      "sha256": "cdec501416c691fb9109cc256bf2283d9e2a74045b08638c9a397509a7b76cc5",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/pairedReport.mjs",
+      "bytes": 77427,
+      "sha256": "6ddb447d0fcaebdb4bbe16b122bafdcce80f67853b7500a88a358fbc77e135ad",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/pairedReport.test.mjs",
+      "bytes": 31667,
+      "sha256": "5172411bc9ff5ab71521247fc4c9420af77bd0c61eb4d3e933dbf91f1c03a006",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/performanceMatrix.mjs",
+      "bytes": 18511,
+      "sha256": "507fc930a26929f4fb0a211289c1ac65604481673ec719ccefad24607026051c",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/performanceMatrix.test.mjs",
+      "bytes": 19593,
+      "sha256": "d84237fa2de69d881815992d238321cc9e29233b312366b1fdbf47dd9ff8d68a",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 45710,
+      "sha256": "4be334b9c02c76f6a3ef3258db8f050100228bba3a01a0fcf5b279c4f659c6dd",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 80100,
+      "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 66689,
+      "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.mjs",
+      "bytes": 16274,
+      "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+      "bytes": 13401,
+      "sha256": "1e7ebf5e015ba185468499fea138b1ad8d5dd2b2970e88bcc9c9729419b28eb3",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/hostedRendererBackend.mjs",
+      "bytes": 4900,
+      "sha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/renderBoundaryObservation.mjs",
+      "bytes": 24933,
+      "sha256": "4af8dc017ae01748f21b1d75903a9157d3a26bc149d8b536201e9055425e2097",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/overlayAttribution.mjs",
+      "bytes": 3655,
+      "sha256": "aeff06ae49c558d5397d04cac61dfe35e121f3f2b9f0c0c302217e6fc0c7973d",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/overlayAttributionContract.mjs",
+      "bytes": 7041,
+      "sha256": "9f7c112ab79236aeef118d122414a6608f4e00a474ec243f10fbbef319302166",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "scripts/performance/overlayAttribution.test.mjs",
+      "bytes": 5404,
+      "sha256": "a1b01d3102a0be61ab2c85a49ea0260a7b1679fae841ffcfa0ba6cf4d48e84fc",
+      "changed": false,
+      "noUndef": true
+    },
+    {
+      "name": "src/overlays/worldOverlayAllocation.worker.mjs",
+      "bytes": 51634,
+      "sha256": "c2fe169f077e308e23cd28ea18ff9a50e832902ce8ced926e4b55426262de875",
+      "changed": false,
+      "noUndef": true
+    }
+  ],
+  "checks": [
+    {
+      "label": "prettier-check",
+      "status": "passed",
+      "files": [
+        {
+          "name": "scripts/performance/debuggerPausedCapture.mjs",
+          "formatted": true
+        },
+        {
+          "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+          "formatted": true
+        },
+        {
+          "name": "scripts/performance/finalVisualQualificationState.mjs",
+          "formatted": true
+        },
+        {
+          "name": "scripts/performance/runFinalVisualQualification.mjs",
+          "formatted": true
+        },
+        {
+          "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+          "formatted": true
+        }
+      ]
+    },
+    {
+      "label": "node24-focused-tests",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "139fd360fa6f2c94bca0ab8fb1c91c5cf99632b66ba457179c22085edecb11b8",
+      "testCount": 46,
+      "passed": 46,
+      "failed": 0,
+      "summary": "ccessful cleanup (0.656187ms)\n✔ guard failure projection is self-contained, bounded, and omits page content (2.26007ms)\n✔ visual guard requests only the missing canvas phase without a render hold (0.623734ms)\n✔ atomic visual eligibility rejects advancing phases and incomplete presentation (0.630627ms)\n✔ CCTV activation never samples an unfinished or unknown globe surface (2.689941ms)\n✔ serialized activation uses the production selection after surface readiness (0.711183ms)\n✔ ready surface does not hide enable, selection, or visual setting failures (2.107537ms)\n✔ visual state page callback serializes without Node or outer bindings (0.897082ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (6.206576ms)\n✔ pause readiness diagnostics keep page timing and frame evidence bounded (0.703036ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.446ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.694179ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (0.964873ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.921568ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.718085ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.542788ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (9.509089ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.718416ms)\n✔ visual readiness requires advancing scene frame numbers (0.656767ms)\n✔ presentation observer counts real changes, retains cycles and releases its listener (5.27588ms)\n✔ visual readiness comparison rejects scrollbar layout and pointer changes (0.782039ms)\n✔ gaze readiness checks target transforms, resets, inline loading and fallback mode (1.04161ms)\n✔ capture settlement rejects changed CCTV scroll or geometry inputs (1.162774ms)\n✔ capture eligibility rejects focus loss and a still-typing summary (0.205236ms)\n✔ presentation must reach the requested rendered HUD state (0.298255ms)\nℹ tests 46\nℹ suites 0\nℹ pass 46\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 626.726316\n"
+    },
+    {
+      "label": "node26-focused-tests",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "fe31afde004af70d0883f9d5997ae65f327f5277cb44e1ee18c67e572848b4dd",
+      "testCount": 46,
+      "passed": 46,
+      "failed": 0,
+      "summary": "ful cleanup (0.73084ms)\n✔ guard failure projection is self-contained, bounded, and omits page content (1.998116ms)\n✔ visual guard requests only the missing canvas phase without a render hold (0.646598ms)\n✔ atomic visual eligibility rejects advancing phases and incomplete presentation (0.774696ms)\n✔ CCTV activation never samples an unfinished or unknown globe surface (2.846633ms)\n✔ serialized activation uses the production selection after surface readiness (1.353321ms)\n✔ ready surface does not hide enable, selection, or visual setting failures (1.606199ms)\n✔ visual state page callback serializes without Node or outer bindings (0.796197ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (6.527956ms)\n✔ pause readiness diagnostics keep page timing and frame evidence bounded (0.724438ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.770266ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.885538ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (0.926327ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.995961ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.776739ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.571894ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (7.863023ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.763504ms)\n✔ visual readiness requires advancing scene frame numbers (0.757182ms)\n✔ presentation observer counts real changes, retains cycles and releases its listener (5.600907ms)\n✔ visual readiness comparison rejects scrollbar layout and pointer changes (0.726783ms)\n✔ gaze readiness checks target transforms, resets, inline loading and fallback mode (1.926237ms)\n✔ capture settlement rejects changed CCTV scroll or geometry inputs (0.417396ms)\n✔ capture eligibility rejects focus loss and a still-typing summary (0.209193ms)\n✔ presentation must reach the requested rendered HUD state (0.337732ms)\nℹ tests 46\nℹ suites 0\nℹ pass 46\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 635.119902\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "4f8e99fdae71b74a309884ed2a22ebf1a7ec6616a56990c93c78b03822220e08",
+      "testCount": null,
+      "passed": null,
+      "failed": null,
+      "summary": "Capture harness no-undef: 77 files passed.\n",
+      "checkedFiles": 77
+    }
+  ],
+  "noUndefInventory": {
+    "count": 77,
+    "files": [
+      {
+        "name": "scripts/capture-scene-performance.mjs",
+        "bytes": 328357,
+        "sha256": "1ade60e3ff7b3fb1183bc016c53f9ee46e3bc77687f041a127158a7ad0f58953"
+      },
+      {
+        "name": "scripts/review-balanced-startup-confirmation.mjs",
+        "bytes": 5712,
+        "sha256": "d1811851fe44f66662ab6dafe9abb1678649b4e41c46ae233ac8cb8c3434fb2f"
+      },
+      {
+        "name": "scripts/performance/balancedStartupConfirmation.mjs",
+        "bytes": 13866,
+        "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465"
+      },
+      {
+        "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+        "bytes": 19324,
+        "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0"
+      },
+      {
+        "name": "scripts/performance/startupObservationMethod.mjs",
+        "bytes": 6256,
+        "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21"
+      },
+      {
+        "name": "scripts/performance/startupObservationMethod.test.mjs",
+        "bytes": 777,
+        "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719"
+      },
+      {
+        "name": "scripts/capture-performance-matrix.mjs",
+        "bytes": 4093,
+        "sha256": "a28617412b53a14f55e6c51151a2166b55949dc0d1e1e081db34b89a6dcb8ba3"
+      },
+      {
+        "name": "scripts/qa-performance-build-smoke.mjs",
+        "bytes": 263211,
+        "sha256": "1dce75a4766a0baa67adf0f326486895a6961546f1d5357957c46e4b26a39716"
+      },
+      {
+        "name": "scripts/qa-performance-build-smoke.test.mjs",
+        "bytes": 208962,
+        "sha256": "d71bce701056c626ee48c33817a4827e9dbefd4015cd54045020268e76fa2e01"
+      },
+      {
+        "name": "scripts/qa-application.mjs",
+        "bytes": 62234,
+        "sha256": "2b665818de31c01eef7078b916c1fbc41ec692424242c23b5e07de6b3edb9d46"
+      },
+      {
+        "name": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+        "bytes": 34114,
+        "sha256": "e62d1b01e246d1d0cd5c6818faaf88771545fa57c9e163c3ccfd969410a58e1a"
+      },
+      {
+        "name": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+        "bytes": 2552,
+        "sha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545"
+      },
+      {
+        "name": "scripts/performance/austinOperatingDocumentEvidence.test.mjs",
+        "bytes": 5707,
+        "sha256": "ef6a28841f5122a79a24e799c5a27229ec01b3ba0634064a1db582814abbbd57"
+      },
+      {
+        "name": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+        "bytes": 10538,
+        "sha256": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d"
+      },
+      {
+        "name": "scripts/performance/austinOperatingPopulationEvidence.test.mjs",
+        "bytes": 11097,
+        "sha256": "c1403239e0d78b065b92e29da4e255bbcb9549e9b919591f490a759899d26107"
+      },
+      {
+        "name": "scripts/performance/austinOperatingReadinessHistory.mjs",
+        "bytes": 20058,
+        "sha256": "ec43f7351dab232f6446446451ebacdf6953dd84dd97beaa7b736083cee8d007"
+      },
+      {
+        "name": "scripts/performance/austinOperatingReadinessHistory.test.mjs",
+        "bytes": 12117,
+        "sha256": "392f273d0c235175a421a45ef1b07bc1f5876ba96192fff47edba9f8347737bf"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadContract.mjs",
+        "bytes": 2331,
+        "sha256": "a616d780352daa2f6d1dc3805a09eadac112a9aed5819ab9369a76dbbcaa8300"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadFixture.mjs",
+        "bytes": 39440,
+        "sha256": "76e4f40b3ead874e035b138f4c265c46a559fa6393c02ad5756b5da847d0271e"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
+        "bytes": 25107,
+        "sha256": "f55e4e161c271303d7f7c5a514190bc4077613b2acbdf0989799c7582ec21750"
+      },
+      {
+        "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+        "bytes": 57798,
+        "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd"
+      },
+      {
+        "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+        "bytes": 55394,
+        "sha256": "b72918f0ccee01eddf884db379101edb20e93a798277d8f5781c6b3f5fecf126"
+      },
+      {
+        "name": "scripts/performance/productionFlightFixture.mjs",
+        "bytes": 61932,
+        "sha256": "c03f903f8a1b45fcea4923335edeb184f100dc86434a756728898c4f4793fd42"
+      },
+      {
+        "name": "scripts/performance/productionFlightFixture.test.mjs",
+        "bytes": 51411,
+        "sha256": "7c2d68f2a5c516794aa6a41fb85b81e4e06e37419ef6c9f15ced9f977c824eb9"
+      },
+      {
+        "name": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+        "bytes": 14369,
+        "sha256": "f2a03f41c8f8109d4dcac19b3d21c41197bb0855869a9d97dc2d4bf5e8b482d2"
+      },
+      {
+        "name": "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
+        "bytes": 7565,
+        "sha256": "29f0b546d1afd5c0518129b3c76212b07ef9fed90c30fe1315a38245b796fa22"
+      },
+      {
+        "name": "scripts/performance/aircraftFleetTickAudit.mjs",
+        "bytes": 28963,
+        "sha256": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01"
+      },
+      {
+        "name": "scripts/performance/aircraftFleetTickAudit.test.mjs",
+        "bytes": 6339,
+        "sha256": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5"
+      },
+      {
+        "name": "scripts/performance/mapStreamingCapture.mjs",
+        "bytes": 180109,
+        "sha256": "85278085a4cdbc466bd81c9843251e95baed53e7d3c806f9fcdf2394d61a8476"
+      },
+      {
+        "name": "scripts/performance/mapStreamingCapture.test.mjs",
+        "bytes": 118516,
+        "sha256": "fd6681c1713ff1c03943b410ace7310fa145948ce22fab40027e478c1c13d226"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixture.mjs",
+        "bytes": 61852,
+        "sha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixture.test.mjs",
+        "bytes": 65381,
+        "sha256": "16152515621cb8c58955a311f060b277bf904cf252b7eee5e7b61590b0b3ce53"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixtureDelivery.mjs",
+        "bytes": 34327,
+        "sha256": "16efcca87ea47bccfc4df0254cca1d549fb1511645f0204d5549346d8b4b59ae"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+        "bytes": 39166,
+        "sha256": "d40b3144a7077a3085630a94ca376a6740b6e97a513e75654e696ac8eb089f48"
+      },
+      {
+        "name": "scripts/performance/cctvViewshedRetention.mjs",
+        "bytes": 17994,
+        "sha256": "58e9a3aed7987af5194533eb6898e2e3319e9d428e137bbebb73980d7020eeef"
+      },
+      {
+        "name": "scripts/performance/cctvViewshedRetention.test.mjs",
+        "bytes": 12546,
+        "sha256": "8f089023ab6ca4c831715a3ff5349476e456baa0088a4b1c2779e3b5897ceb9b"
+      },
+      {
+        "name": "scripts/performance/s58PostProcessStageCensus.mjs",
+        "bytes": 15427,
+        "sha256": "58e8595ee59a2dd85eb4af0c3cdee6b893c3d3b9427d213a019963b2e9bdcea2"
+      },
+      {
+        "name": "scripts/performance/s58PostProcessStageCensus.test.mjs",
+        "bytes": 3107,
+        "sha256": "c6dbb8d5f6570ae2f3cd19c5d629e66b99cecece3a434e7d65082aabceb290c0"
+      },
+      {
+        "name": "scripts/fixtures/cctv-calibration-demand.js",
+        "bytes": 90798,
+        "sha256": "74ccf2c6cf2c7bf4869c12bcb7d8c755515919dd266b5983c95caadfff6ce8c5"
+      },
+      {
+        "name": "scripts/qa-hosted-capture.mjs",
+        "bytes": 28041,
+        "sha256": "f7688f90440ca85105d18b3bd9b5bb18fd69b0b4a7a16fdb745df22773f37287"
+      },
+      {
+        "name": "scripts/performance/hostedNavigationDiagnostics.mjs",
+        "bytes": 13358,
+        "sha256": "32a6bff116c07e2227e0e1246c45d7770a2b06cded48e4a92ec65d43ce1e64df"
+      },
+      {
+        "name": "scripts/performance/hostedNavigationDiagnostics.test.mjs",
+        "bytes": 12157,
+        "sha256": "c6e4184dd7ec25c8c568509179176040abc66b649f9d896b1aa127ed9305d16c"
+      },
+      {
+        "name": "scripts/fixtures/infrastructure-runtime-collections.mjs",
+        "bytes": 67876,
+        "sha256": "0d717f5ddbc40a8f0c1fae694c8d2c63e78cc5dc4fa07cdac8eb36917e59c478"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs",
+        "bytes": 23676,
+        "sha256": "7772cad3d44a20edca7c1581602bd4b75e7979521c9edb32080fb97044a718fa"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs",
+        "bytes": 17227,
+        "sha256": "f9855ca7ad24d5886e0243eb82050eb783d245edd203af8a76f49a2ee1a56e11"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureCamera.mjs",
+        "bytes": 1891,
+        "sha256": "96bec8e5bc7542464e8f9058103ba9cb8b8beda362a5ee80245268c02044c27e"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureCamera.test.mjs",
+        "bytes": 4539,
+        "sha256": "323a1f9f43f6db41885a8e1afeab2e1680db0989d14545e1924337504f9d9306"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureLayer.mjs",
+        "bytes": 2746,
+        "sha256": "dfb2f912cccd31bfd14f0bddad32ad8bddc4bdd0963882a2ec46c89a5df832e9"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureNativePickOwnership.mjs",
+        "bytes": 1786,
+        "sha256": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
+        "bytes": 6441,
+        "sha256": "0b82b949f9f91ae6d1cb4cf10f87f6e7c2e5918d341de365fa94f84376c41a18"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
+        "bytes": 28484,
+        "sha256": "e74c5630129cc07fa68c926293a8fa9ef30621a971424c4dce61e869b045dbfa"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
+        "bytes": 18089,
+        "sha256": "47689eae136d369a4486b1696b3491ee0513b4efc7a28bc5b6474bd1a1609467"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",
+        "bytes": 39392,
+        "sha256": "2149fdb0f7e7c40380c9204935f88c40d4affb664e8b8dbcc06aa6ac42ee0ce5"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs",
+        "bytes": 21006,
+        "sha256": "03909f7633259a784a0180dbe6331859a2e15291ce9f62730dd59353da4f132c"
+      },
+      {
+        "name": "scripts/performance/infrastructureRuntimeComparison.mjs",
+        "bytes": 25763,
+        "sha256": "22f9f7719737d9dfc6cbaf67354817e363199b4afec2442959edaa449b250cc6"
+      },
+      {
+        "name": "scripts/performance/infrastructureRuntimeComparison.test.mjs",
+        "bytes": 30945,
+        "sha256": "cf54f84669c69a9dfc6dc633c72aa59c2422a1ddadd9aa30531aafda417fd5a4"
+      },
+      {
+        "name": "scripts/performance/mapStreamingWorkloadContract.mjs",
+        "bytes": 144,
+        "sha256": "f0fbc474cde873484e58ec3d2528ca42e0d3b87a15ed7132c78ac1fca306903f"
+      },
+      {
+        "name": "scripts/performance/captureComparisonContract.mjs",
+        "bytes": 79727,
+        "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48"
+      },
+      {
+        "name": "scripts/performance/startupAttribution.mjs",
+        "bytes": 16351,
+        "sha256": "b2c4d0f035704c0712dda1ed546a3fb0a5c13afa4df49e290bb4b477a6d86ae7"
+      },
+      {
+        "name": "scripts/performance/startupAttribution.test.mjs",
+        "bytes": 14494,
+        "sha256": "1403411b3778d3e0834140eea59d91a83d0b3a074d06f500a4edfa80ca49a97a"
+      },
+      {
+        "name": "scripts/performance/startupCpuAttribution.mjs",
+        "bytes": 5506,
+        "sha256": "1358d423ee06e011099b35c6e1df18700a6817e661e4239ef3cf44b214b1b0c4"
+      },
+      {
+        "name": "scripts/performance/startupCpuAttribution.test.mjs",
+        "bytes": 8652,
+        "sha256": "cdec501416c691fb9109cc256bf2283d9e2a74045b08638c9a397509a7b76cc5"
+      },
+      {
+        "name": "scripts/performance/pairedReport.mjs",
+        "bytes": 77427,
+        "sha256": "6ddb447d0fcaebdb4bbe16b122bafdcce80f67853b7500a88a358fbc77e135ad"
+      },
+      {
+        "name": "scripts/performance/pairedReport.test.mjs",
+        "bytes": 31667,
+        "sha256": "5172411bc9ff5ab71521247fc4c9420af77bd0c61eb4d3e933dbf91f1c03a006"
+      },
+      {
+        "name": "scripts/performance/performanceMatrix.mjs",
+        "bytes": 18511,
+        "sha256": "507fc930a26929f4fb0a211289c1ac65604481673ec719ccefad24607026051c"
+      },
+      {
+        "name": "scripts/performance/performanceMatrix.test.mjs",
+        "bytes": 19593,
+        "sha256": "d84237fa2de69d881815992d238321cc9e29233b312366b1fdbf47dd9ff8d68a"
+      },
+      {
+        "name": "scripts/performance/qualificationMetrics.mjs",
+        "bytes": 45710,
+        "sha256": "4be334b9c02c76f6a3ef3258db8f050100228bba3a01a0fcf5b279c4f659c6dd"
+      },
+      {
+        "name": "scripts/performance/qualificationMetrics.test.mjs",
+        "bytes": 80100,
+        "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b"
+      },
+      {
+        "name": "scripts/qa-qualification-metrics-capture.mjs",
+        "bytes": 66689,
+        "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253"
+      },
+      {
+        "name": "scripts/performance/idleCadenceDisposition.mjs",
+        "bytes": 16274,
+        "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985"
+      },
+      {
+        "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+        "bytes": 13401,
+        "sha256": "1e7ebf5e015ba185468499fea138b1ad8d5dd2b2970e88bcc9c9729419b28eb3"
+      },
+      {
+        "name": "scripts/performance/hostedRendererBackend.mjs",
+        "bytes": 4900,
+        "sha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4"
+      },
+      {
+        "name": "scripts/performance/renderBoundaryObservation.mjs",
+        "bytes": 24933,
+        "sha256": "4af8dc017ae01748f21b1d75903a9157d3a26bc149d8b536201e9055425e2097"
+      },
+      {
+        "name": "scripts/performance/overlayAttribution.mjs",
+        "bytes": 3655,
+        "sha256": "aeff06ae49c558d5397d04cac61dfe35e121f3f2b9f0c0c302217e6fc0c7973d"
+      },
+      {
+        "name": "scripts/performance/overlayAttributionContract.mjs",
+        "bytes": 7041,
+        "sha256": "9f7c112ab79236aeef118d122414a6608f4e00a474ec243f10fbbef319302166"
+      },
+      {
+        "name": "scripts/performance/overlayAttribution.test.mjs",
+        "bytes": 5404,
+        "sha256": "a1b01d3102a0be61ab2c85a49ea0260a7b1679fae841ffcfa0ba6cf4d48e84fc"
+      },
+      {
+        "name": "src/overlays/worldOverlayAllocation.worker.mjs",
+        "bytes": 51634,
+        "sha256": "c2fe169f077e308e23cd28ea18ff9a50e832902ce8ced926e4b55426262de875"
+      }
+    ],
+    "checker": {
+      "name": "scripts/check-capture-no-undef.mjs",
+      "sha256": "5db1898978e4e631c13791bfc5292c7147ed338e65418f8142cd732d796030ed"
+    },
+    "config": {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "b2a8ac7e8e9a15a6db36e88fc1d9902036b8cb160f9801332fb66250ffc424a3"
+    }
+  },
+  "previousFailedAttempt": {
+    "tests": 40,
+    "passed": 38,
+    "failed": 2,
+    "failures": [
+      {
+        "test": "atomic guard waits for the declared phase without taking rejected screenshots",
+        "cause": "expected the old guard object shape; actual result correctly included debuggerEnableDurationMs, bounded guard samples and finalEvaluation timing"
+      },
+      {
+        "test": "a parked phase advances only after an explicit guard frame request",
+        "cause": "the fake call did not provide describeGuardFailure, so no failed-check sample was expected; fixed test now declares the diagnostic callback"
+      }
+    ],
+    "preservation": "Initial output was returned by the validation command and was not overwritten; it was not persisted as a separate VM log."
+  },
+  "previousSharpPlatformFailure": {
+    "directory": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-pause-timing-complete-20261020-r2",
+    "log": "node24-focused-tests.log",
+    "cause": "finalVisualQualification.test.mjs cannot load the installed Sharp binary because the VM CPU lacks x86-64-v2; original log retained."
+  },
+  "completedAt": "2026-10-20T00:09:34.995Z",
+  "sourceHashes": [
+    {
+      "name": "scripts/performance/debuggerPausedCapture.mjs",
+      "bytes": 13871,
+      "sha256": "9e6ad46483762595459db8d3960655a090140416800ccbc15b82d44780fb3e5a",
+      "changed": true
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+      "bytes": 18832,
+      "sha256": "acdb60555db0b9417a171938fa2dbc3eba389bf741d47b5ad94ce5d0f0e1c233",
+      "changed": true
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "bytes": 16443,
+      "sha256": "3adda9fe89bd6dbeffb21b3a6af4531b245811659bc9e861b97bfead53717f8d",
+      "changed": true
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.mjs",
+      "bytes": 38931,
+      "sha256": "bc355493d9004ce8fa5b3804f6945c21e374319df2f08a04926c619968bb558f",
+      "changed": true
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "bytes": 22665,
+      "sha256": "4720decaf1db05fd4de5d5dc6b36b358b11d24dad54ecf18ed08739a0d0924d3",
+      "changed": true
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.mjs",
+      "bytes": 21085,
+      "sha256": "1e2e6e750a6b2a482a77f2b5ae0721e5c7dfc72567bffe993dfbe4eaaf4e5201",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.test.mjs",
+      "bytes": 17342,
+      "sha256": "8785343d3e6e8729cb3fe3c1a4c62f21b4765f10723c37648caa2e6d6ce4c809",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.mjs",
+      "bytes": 21874,
+      "sha256": "0633166919888a2f865b7df1028c82b067ba91aa6286541c3eda196cacb358fe",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.test.mjs",
+      "bytes": 18314,
+      "sha256": "4ab981bbd76c2b23557183948d9fc7c740b564ee4ef4456f8db3d225fd15b0e9",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/visibleControlVariance.mjs",
+      "bytes": 2291,
+      "sha256": "bdce8d73a7badaa8ed60d6eaf1fb317fc10aee157f139779394cf7c09825ec77",
+      "changed": false
+    },
+    {
+      "name": "scripts/check-capture-no-undef.mjs",
+      "bytes": 731,
+      "sha256": "5db1898978e4e631c13791bfc5292c7147ed338e65418f8142cd732d796030ed",
+      "changed": false
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "bytes": 5193,
+      "sha256": "b2a8ac7e8e9a15a6db36e88fc1d9902036b8cb160f9801332fb66250ffc424a3",
+      "changed": false
+    },
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 328357,
+      "sha256": "1ade60e3ff7b3fb1183bc016c53f9ee46e3bc77687f041a127158a7ad0f58953",
+      "changed": false
+    },
+    {
+      "name": "scripts/review-balanced-startup-confirmation.mjs",
+      "bytes": 5712,
+      "sha256": "d1811851fe44f66662ab6dafe9abb1678649b4e41c46ae233ac8cb8c3434fb2f",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.mjs",
+      "bytes": 13866,
+      "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "bytes": 19324,
+      "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.mjs",
+      "bytes": 6256,
+      "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.test.mjs",
+      "bytes": 777,
+      "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719",
+      "changed": false
+    },
+    {
+      "name": "scripts/capture-performance-matrix.mjs",
+      "bytes": 4093,
+      "sha256": "a28617412b53a14f55e6c51151a2166b55949dc0d1e1e081db34b89a6dcb8ba3",
+      "changed": false
+    },
+    {
+      "name": "scripts/qa-performance-build-smoke.mjs",
+      "bytes": 263211,
+      "sha256": "1dce75a4766a0baa67adf0f326486895a6961546f1d5357957c46e4b26a39716",
+      "changed": false
+    },
+    {
+      "name": "scripts/qa-performance-build-smoke.test.mjs",
+      "bytes": 208962,
+      "sha256": "d71bce701056c626ee48c33817a4827e9dbefd4015cd54045020268e76fa2e01",
+      "changed": false
+    },
+    {
+      "name": "scripts/qa-application.mjs",
+      "bytes": 62234,
+      "sha256": "2b665818de31c01eef7078b916c1fbc41ec692424242c23b5e07de6b3edb9d46",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+      "bytes": 34114,
+      "sha256": "e62d1b01e246d1d0cd5c6818faaf88771545fa57c9e163c3ccfd969410a58e1a",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+      "bytes": 2552,
+      "sha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingDocumentEvidence.test.mjs",
+      "bytes": 5707,
+      "sha256": "ef6a28841f5122a79a24e799c5a27229ec01b3ba0634064a1db582814abbbd57",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+      "bytes": 10538,
+      "sha256": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingPopulationEvidence.test.mjs",
+      "bytes": 11097,
+      "sha256": "c1403239e0d78b065b92e29da4e255bbcb9549e9b919591f490a759899d26107",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingReadinessHistory.mjs",
+      "bytes": 20058,
+      "sha256": "ec43f7351dab232f6446446451ebacdf6953dd84dd97beaa7b736083cee8d007",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingReadinessHistory.test.mjs",
+      "bytes": 12117,
+      "sha256": "392f273d0c235175a421a45ef1b07bc1f5876ba96192fff47edba9f8347737bf",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadContract.mjs",
+      "bytes": 2331,
+      "sha256": "a616d780352daa2f6d1dc3805a09eadac112a9aed5819ab9369a76dbbcaa8300",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadFixture.mjs",
+      "bytes": 39440,
+      "sha256": "76e4f40b3ead874e035b138f4c265c46a559fa6393c02ad5756b5da847d0271e",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
+      "bytes": 25107,
+      "sha256": "f55e4e161c271303d7f7c5a514190bc4077613b2acbdf0989799c7582ec21750",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+      "bytes": 57798,
+      "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+      "bytes": 55394,
+      "sha256": "b72918f0ccee01eddf884db379101edb20e93a798277d8f5781c6b3f5fecf126",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/productionFlightFixture.mjs",
+      "bytes": 61932,
+      "sha256": "c03f903f8a1b45fcea4923335edeb184f100dc86434a756728898c4f4793fd42",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/productionFlightFixture.test.mjs",
+      "bytes": 51411,
+      "sha256": "7c2d68f2a5c516794aa6a41fb85b81e4e06e37419ef6c9f15ced9f977c824eb9",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+      "bytes": 14369,
+      "sha256": "f2a03f41c8f8109d4dcac19b3d21c41197bb0855869a9d97dc2d4bf5e8b482d2",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
+      "bytes": 7565,
+      "sha256": "29f0b546d1afd5c0518129b3c76212b07ef9fed90c30fe1315a38245b796fa22",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/aircraftFleetTickAudit.mjs",
+      "bytes": 28963,
+      "sha256": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/aircraftFleetTickAudit.test.mjs",
+      "bytes": 6339,
+      "sha256": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.mjs",
+      "bytes": 180109,
+      "sha256": "85278085a4cdbc466bd81c9843251e95baed53e7d3c806f9fcdf2394d61a8476",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.test.mjs",
+      "bytes": 118516,
+      "sha256": "fd6681c1713ff1c03943b410ace7310fa145948ce22fab40027e478c1c13d226",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixture.mjs",
+      "bytes": 61852,
+      "sha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixture.test.mjs",
+      "bytes": 65381,
+      "sha256": "16152515621cb8c58955a311f060b277bf904cf252b7eee5e7b61590b0b3ce53",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixtureDelivery.mjs",
+      "bytes": 34327,
+      "sha256": "16efcca87ea47bccfc4df0254cca1d549fb1511645f0204d5549346d8b4b59ae",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+      "bytes": 39166,
+      "sha256": "d40b3144a7077a3085630a94ca376a6740b6e97a513e75654e696ac8eb089f48",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/cctvViewshedRetention.mjs",
+      "bytes": 17994,
+      "sha256": "58e9a3aed7987af5194533eb6898e2e3319e9d428e137bbebb73980d7020eeef",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/cctvViewshedRetention.test.mjs",
+      "bytes": 12546,
+      "sha256": "8f089023ab6ca4c831715a3ff5349476e456baa0088a4b1c2779e3b5897ceb9b",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/s58PostProcessStageCensus.mjs",
+      "bytes": 15427,
+      "sha256": "58e8595ee59a2dd85eb4af0c3cdee6b893c3d3b9427d213a019963b2e9bdcea2",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/s58PostProcessStageCensus.test.mjs",
+      "bytes": 3107,
+      "sha256": "c6dbb8d5f6570ae2f3cd19c5d629e66b99cecece3a434e7d65082aabceb290c0",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/cctv-calibration-demand.js",
+      "bytes": 90798,
+      "sha256": "74ccf2c6cf2c7bf4869c12bcb7d8c755515919dd266b5983c95caadfff6ce8c5",
+      "changed": false
+    },
+    {
+      "name": "scripts/qa-hosted-capture.mjs",
+      "bytes": 28041,
+      "sha256": "f7688f90440ca85105d18b3bd9b5bb18fd69b0b4a7a16fdb745df22773f37287",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/hostedNavigationDiagnostics.mjs",
+      "bytes": 13358,
+      "sha256": "32a6bff116c07e2227e0e1246c45d7770a2b06cded48e4a92ec65d43ce1e64df",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/hostedNavigationDiagnostics.test.mjs",
+      "bytes": 12157,
+      "sha256": "c6e4184dd7ec25c8c568509179176040abc66b649f9d896b1aa127ed9305d16c",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructure-runtime-collections.mjs",
+      "bytes": 67876,
+      "sha256": "0d717f5ddbc40a8f0c1fae694c8d2c63e78cc5dc4fa07cdac8eb36917e59c478",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs",
+      "bytes": 23676,
+      "sha256": "7772cad3d44a20edca7c1581602bd4b75e7979521c9edb32080fb97044a718fa",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs",
+      "bytes": 17227,
+      "sha256": "f9855ca7ad24d5886e0243eb82050eb783d245edd203af8a76f49a2ee1a56e11",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureCamera.mjs",
+      "bytes": 1891,
+      "sha256": "96bec8e5bc7542464e8f9058103ba9cb8b8beda362a5ee80245268c02044c27e",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureCamera.test.mjs",
+      "bytes": 4539,
+      "sha256": "323a1f9f43f6db41885a8e1afeab2e1680db0989d14545e1924337504f9d9306",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureFixtureLayer.mjs",
+      "bytes": 2746,
+      "sha256": "dfb2f912cccd31bfd14f0bddad32ad8bddc4bdd0963882a2ec46c89a5df832e9",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureNativePickOwnership.mjs",
+      "bytes": 1786,
+      "sha256": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
+      "bytes": 6441,
+      "sha256": "0b82b949f9f91ae6d1cb4cf10f87f6e7c2e5918d341de365fa94f84376c41a18",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
+      "bytes": 28484,
+      "sha256": "e74c5630129cc07fa68c926293a8fa9ef30621a971424c4dce61e869b045dbfa",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
+      "bytes": 18089,
+      "sha256": "47689eae136d369a4486b1696b3491ee0513b4efc7a28bc5b6474bd1a1609467",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",
+      "bytes": 39392,
+      "sha256": "2149fdb0f7e7c40380c9204935f88c40d4affb664e8b8dbcc06aa6ac42ee0ce5",
+      "changed": false
+    },
+    {
+      "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs",
+      "bytes": 21006,
+      "sha256": "03909f7633259a784a0180dbe6331859a2e15291ce9f62730dd59353da4f132c",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/infrastructureRuntimeComparison.mjs",
+      "bytes": 25763,
+      "sha256": "22f9f7719737d9dfc6cbaf67354817e363199b4afec2442959edaa449b250cc6",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/infrastructureRuntimeComparison.test.mjs",
+      "bytes": 30945,
+      "sha256": "cf54f84669c69a9dfc6dc633c72aa59c2422a1ddadd9aa30531aafda417fd5a4",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/mapStreamingWorkloadContract.mjs",
+      "bytes": 144,
+      "sha256": "f0fbc474cde873484e58ec3d2528ca42e0d3b87a15ed7132c78ac1fca306903f",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "bytes": 79727,
+      "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupAttribution.mjs",
+      "bytes": 16351,
+      "sha256": "b2c4d0f035704c0712dda1ed546a3fb0a5c13afa4df49e290bb4b477a6d86ae7",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupAttribution.test.mjs",
+      "bytes": 14494,
+      "sha256": "1403411b3778d3e0834140eea59d91a83d0b3a074d06f500a4edfa80ca49a97a",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.mjs",
+      "bytes": 5506,
+      "sha256": "1358d423ee06e011099b35c6e1df18700a6817e661e4239ef3cf44b214b1b0c4",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.test.mjs",
+      "bytes": 8652,
+      "sha256": "cdec501416c691fb9109cc256bf2283d9e2a74045b08638c9a397509a7b76cc5",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/pairedReport.mjs",
+      "bytes": 77427,
+      "sha256": "6ddb447d0fcaebdb4bbe16b122bafdcce80f67853b7500a88a358fbc77e135ad",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/pairedReport.test.mjs",
+      "bytes": 31667,
+      "sha256": "5172411bc9ff5ab71521247fc4c9420af77bd0c61eb4d3e933dbf91f1c03a006",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/performanceMatrix.mjs",
+      "bytes": 18511,
+      "sha256": "507fc930a26929f4fb0a211289c1ac65604481673ec719ccefad24607026051c",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/performanceMatrix.test.mjs",
+      "bytes": 19593,
+      "sha256": "d84237fa2de69d881815992d238321cc9e29233b312366b1fdbf47dd9ff8d68a",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 45710,
+      "sha256": "4be334b9c02c76f6a3ef3258db8f050100228bba3a01a0fcf5b279c4f659c6dd",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 80100,
+      "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b",
+      "changed": false
+    },
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 66689,
+      "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.mjs",
+      "bytes": 16274,
+      "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+      "bytes": 13401,
+      "sha256": "1e7ebf5e015ba185468499fea138b1ad8d5dd2b2970e88bcc9c9729419b28eb3",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/hostedRendererBackend.mjs",
+      "bytes": 4900,
+      "sha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/renderBoundaryObservation.mjs",
+      "bytes": 24933,
+      "sha256": "4af8dc017ae01748f21b1d75903a9157d3a26bc149d8b536201e9055425e2097",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/overlayAttribution.mjs",
+      "bytes": 3655,
+      "sha256": "aeff06ae49c558d5397d04cac61dfe35e121f3f2b9f0c0c302217e6fc0c7973d",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/overlayAttributionContract.mjs",
+      "bytes": 7041,
+      "sha256": "9f7c112ab79236aeef118d122414a6608f4e00a474ec243f10fbbef319302166",
+      "changed": false
+    },
+    {
+      "name": "scripts/performance/overlayAttribution.test.mjs",
+      "bytes": 5404,
+      "sha256": "a1b01d3102a0be61ab2c85a49ea0260a7b1679fae841ffcfa0ba6cf4d48e84fc",
+      "changed": false
+    },
+    {
+      "name": "src/overlays/worldOverlayAllocation.worker.mjs",
+      "bytes": 51634,
+      "sha256": "c2fe169f077e308e23cd28ea18ff9a50e832902ce8ced926e4b55426262de875",
+      "changed": false
+    }
+  ],
+  "localReceipt": "qa-artifacts/visual-guard-timing-validation-20261020-r5.json",
+  "capturedAt": "2026-10-20T00:09:34.136Z",
+  "sourceReceipt": {
+    "path": "qa-artifacts/visual-guard-timing-validation-20261020-r5.json",
+    "bytes": 62477,
+    "sha256": "d6f8c47b6d19187b0ff3b61a0d5fef150d3221de566a20e06d1e58ba3ce19f8f"
+  },
+  "correction": "The earlier r4 run used a stale 75-file VM lint inventory. Its receipt remains preserved. This r5 run transfers and validates the exact current checker, configuration, and all 77 files, and repeats both focused suites.",
+  "imageSuite": {
+    "status": "pending-exact-commit-hosted-ci",
+    "file": "scripts/performance/finalVisualQualification.test.mjs",
+    "includedBy": "scripts/run-unit-tests.mjs:PERFORMANCE_HARNESS_TEST_FILES",
+    "vmLimitation": "The installed Sharp Linux binary requires x86-64-v2, unavailable on VM105. The original load failure is retained."
+  },
+  "runtimeChanged": false,
+  "acceptanceThresholdsChanged": false
+}

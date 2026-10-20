@@ -18,11 +18,23 @@ also preserves asset bytes through save/export/import/reload/reopen. The package
 is staged privately and has not been activated. Subsequent QA commits change no
 runtime files. The new wind probe exposed a shared-material counting error in
 the probe itself; `ce0e2218` corrects it and passes 15 focused tests on each VM
-Node version. The failed diagnostic remains retained and requires a fresh run.
+Node version. A fresh `6025a88e` diagnostic now observes visible wind flow,
+pause and resume in both control and candidate, with no failed functional
+conditions and the original camera/pause state restored. VM105 independently
+verified all thirteen raw files. The failed diagnostic remains retained.
 The diagnostic-only governor-mode trace and weather cadence disposition now
 pass 119 focused checks on each Node version. They can resolve only the idle
 interval's interpretation, with hash-bound full weather and visible-wind
 evidence; they cannot turn a motion regression into a pass.
+
+The current capture diagnostic now records debugger initialization, host command
+latency, page snapshot and pixel-readback timing, scene frame number, and bounded
+guard history on both success and failure. Its
+[source-bound VM validation](performance-evidence/s69-native-matrix-20261019/visual-guard-timing-validation-20261020.json)
+passes 46 focused tests on each Node version, formatting, and 77 capture lint
+files. The installed Sharp binary cannot run on VM105's CPU; its image suite is
+included in the hosted CI unit tests. The diagnostic changes no runtime visuals,
+capture deadline, screenshot mask, or acceptance threshold.
 
 The corrected interaction/heap run exposed a workspace persistence defect:
 saved canonical views omit visual settings, and reopening them disables
@@ -74,6 +86,14 @@ The startup CPU and capture-phase changes pass 65 focused tests on each VM
 Node version, plus 28 integration checks per version, all 77 capture no-undef
 files, formatting and inventory checks. They are frozen as QA producer
 `97c82fca`; production and the runtime candidate remain unchanged.
+All four fixed ABBA CPU profiles completed with normal cleanup and without
+reaching their capture bounds. They show shader compilation, graphics
+initialization, browser work and idle time in both builds; they do not establish
+a candidate-only application cause. The
+[supplemental source interpretation](performance-evidence/s69-native-matrix-20261019/startup-cpu-attribution-dams-190c5ab6-97c82fca-source-interpretation.json)
+corrects a minified Cesium buffer-copy function incorrectly grouped as garbage
+collection and identifies the injected context probe among sampled frames.
+These diagnostic samples cannot clear the failed startup comparison.
 The first attribution attempt stopped before navigation because
 the owned Chrome window was not in front. Its failure is preserved, and the
 corrected handoff observes the actual foreground process before releasing the
@@ -118,17 +138,27 @@ three-image group was identical; one visible and one restored cross-build pair
 were pixel-identical. Within-build logo raster variation remained as large as
 103/255, so this is not visual acceptance. The phase observer now reads the
 same eight edge coordinates in two strips instead of sixteen separate GPU
-readbacks; fractional-DPR tests preserve the sampled pixels. Fresh hardware
-confirmation is required. No mask, timeout or acceptance threshold changed.
+readbacks; fractional-DPR tests preserve the sampled pixels. Its full hardware
+attempt still fails before any screenshot: eleven guard calls started, nine
+returned phase 2, and the tenth returned phase 0 while REC and the summary were
+unsettled. The eleventh did not complete before the five-second deadline.
+Normal browser closure and interception cleanup are independently verified in
+the [preserved failure](performance-evidence/s69-native-matrix-20261019/final-visual-190c5ab6-97c82fca-failure-review.json).
+The next diagnostic separates observer/setup cost from render advancement.
+No mask, timeout or acceptance threshold changed.
 
-The ten-shard balanced weather qualification is complete and independently
+The historical `b3c49b19` ten-shard balanced weather qualification is complete and independently
 hash-verified on VM105. Motion changes from 260.9 to 263.6 ms p95 (+1.03%), within
 the regression limit. Idle rendered-frame intervals change from 984 to 1,703.2 ms
 (+73.09%). A separate diagnostic on corrected candidate `190c5ab6` and control
 `76cc760b` finds that every observed long gap has no continuous demand and fully
 faded GPU wind streamlines at the existing 12,000 m fixture pose. Visible wind
-flow/pause/resume and the corrected candidate's complete weather comparison
-remain separate requirements. Remaining gates are that qualification, startup
+flow/pause/resume now passes the fresh diagnostic described above. Both builds
+report fully faded wind and no continuous render demand throughout the observed
+long idle gaps, with no unknown GPU-material observations. This explains those
+diagnostic gaps but does not grant timing acceptance. The corrected candidate's
+complete ten-shard weather comparison is running separately. Remaining gates
+are that qualification, startup
 confirmations, full visual consistency, twenty local controls, twenty loaded
 replay seeks, sampled peak heap and the
 final Ampfing soak on this Windows UHD 620. The replay/heap comparison control

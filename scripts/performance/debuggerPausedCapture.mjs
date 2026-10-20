@@ -146,6 +146,8 @@ export async function captureWithDebuggerPause({
   let pauseTimer;
   let guardPollTimer;
   let guardChecks = 0;
+  let debuggerEnableDurationMs = null;
+  let guardFinalEvaluation = null;
   const guardSamples = [];
   let guardSamplesOmitted = 0;
   const pausePromise = new Promise((resolve, reject) => {
@@ -177,11 +179,19 @@ export async function captureWithDebuggerPause({
       if (remaining < 1) throw new Error(`${label} deadline exceeded.`);
       return remaining;
     };
-    await withTimeout(
-      () => session.send('Debugger.enable'),
-      pauseRemaining('Debugger.enable'),
-      'Debugger.enable',
-    );
+    const debuggerEnableStartedAt = performance.now();
+    try {
+      await withTimeout(
+        () => session.send('Debugger.enable'),
+        pauseRemaining('Debugger.enable'),
+        'Debugger.enable',
+      );
+    } finally {
+      debuggerEnableDurationMs = Math.max(
+        0,
+        performance.now() - debuggerEnableStartedAt,
+      );
+    }
     pauseRemaining('Runtime.evaluate');
     // Dispatch a new task rather than interrupting an arbitrary render stack.
     // Interrupting Cesium while it is submitting a frame can leave the
@@ -191,6 +201,7 @@ export async function captureWithDebuggerPause({
       while (!pausedEvent) {
         pauseRemaining('Atomic pause guard');
         guardChecks++;
+        const evaluationStartedAt = performance.now();
         const outcome = await Promise.race([
           pausePromise.then((event) => ({ kind: 'paused', event })),
           session
@@ -201,7 +212,21 @@ export async function captureWithDebuggerPause({
             })
             .then((result) => ({ kind: 'evaluated', result })),
         ]);
-        if (outcome.kind === 'paused') break;
+        const evaluationCompletedAt = performance.now();
+        if (outcome.kind === 'paused') {
+          guardFinalEvaluation = {
+            hostEvaluationStartedAtMs:
+              evaluationStartedAt - (pauseDeadline - pauseLimit),
+            hostPauseObservedAtMs:
+              evaluationCompletedAt - (pauseDeadline - pauseLimit),
+            hostEvaluationDurationMs: Math.max(
+              0,
+              evaluationCompletedAt - evaluationStartedAt,
+            ),
+            interruptedByDebuggerPause: true,
+          };
+          break;
+        }
         if (
           outcome.result?.exceptionDetails ||
           outcome.result?.result?.subtype === 'error'
@@ -212,7 +237,15 @@ export async function captureWithDebuggerPause({
           if (guardSamples.length < 128)
             guardSamples.push({
               check: guardChecks,
-              elapsedMs: performance.now() - (pauseDeadline - pauseLimit),
+              elapsedMs: evaluationCompletedAt - (pauseDeadline - pauseLimit),
+              hostEvaluationStartedAtMs:
+                evaluationStartedAt - (pauseDeadline - pauseLimit),
+              hostEvaluationCompletedAtMs:
+                evaluationCompletedAt - (pauseDeadline - pauseLimit),
+              hostEvaluationDurationMs: Math.max(
+                0,
+                evaluationCompletedAt - evaluationStartedAt,
+              ),
               detail: value.detail,
             });
           else guardSamplesOmitted++;
@@ -293,6 +326,10 @@ export async function captureWithDebuggerPause({
                 method: 'atomic-read-then-debugger/v1',
                 checks: guardChecks,
                 pollIntervalMs: 50,
+                debuggerEnableDurationMs,
+                samples: guardSamples,
+                samplesOmitted: guardSamplesOmitted,
+                finalEvaluation: guardFinalEvaluation,
               },
             }
           : {}),
@@ -345,6 +382,8 @@ export async function captureWithDebuggerPause({
       guardChecks,
       guardSamples,
       guardSamplesOmitted,
+      debuggerEnableDurationMs,
+      guardFinalEvaluation,
       pauseTimeoutMs: pauseLimit,
       pauseObserved: pausedEvent !== null,
     };

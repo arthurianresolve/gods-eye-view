@@ -1,6 +1,37 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
-The most recently measured application is `b3c49b19`. Its
+The current runtime candidate is `190c5ab6`; public production remains at
+`e7a878e`. Its fresh dam motion comparison is within the regression limit,
+but the independently confirmed startup regression remains unresolved. The
+[four bounded startup CPU profiles](startup-cpu-attribution-dams-190c5ab6-97c82fca-review.json)
+show graphics initialization work in both builds without establishing a
+candidate-only cause. Their
+[supplemental interpretation](startup-cpu-attribution-dams-190c5ab6-97c82fca-source-interpretation.json)
+corrects the initial grouping of a minified Cesium function as garbage collection
+and identifies context-probe instrumentation. Neither report is timing acceptance.
+
+The [fresh visible-wind probe](weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready-review.json)
+passes flow, pause and resume for both current candidate and correctness control;
+the original camera and pause state are restored. The full current-candidate
+ten-shard weather timing comparison is separate and still running.
+
+The [full visual attempt with producer `97c82fca`](final-visual-190c5ab6-97c82fca-failure-review.json)
+stops before any screenshot. Its guard observes phase 2 nine times, then phase 0
+while REC and summary are unsettled; eleven calls started and ten returned before
+the five-second deadline. The complete failed reports and normal browser and
+interception cleanup are independently verified on VM105. Capture coordination
+remains under investigation; no mask or threshold has changed.
+
+The follow-up capture diagnostic separates debugger initialization, host command
+latency, page snapshot time, and pixel readback time, and records the observed
+scene frame number. Its bounded guard history is retained for successful and
+failed attempts. The [source-bound VM validation](visual-guard-timing-validation-20261020.json)
+passes 46 focused tests on each of Node 24 and 26, formatting, and the current
+77-file capture lint inventory. VM105 cannot load the installed Sharp binary
+because its CPU lacks x86-64-v2; the image suite remains in the required hosted
+unit-test inventory. No new hardware visual acceptance is claimed by these tests.
+
+The preceding complete workload matrix applies to `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes
 158/158 on each of VM105 Node 24.16.0 and 26.11.0, with five failing assertions
 against the original runtime. The [physical Windows check](replay-hardware-b3c49b19.json)

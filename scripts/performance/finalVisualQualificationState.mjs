@@ -112,6 +112,31 @@ export function describeVisualPauseReadiness(snapshot) {
   const hud = snapshot?.hud;
   return {
     phase: snapshot?.phase ?? null,
+    frameNumber: Number.isSafeInteger(snapshot?.observation?.frameNumber)
+      ? snapshot.observation.frameNumber
+      : null,
+    observation: {
+      pageReadStartedAtMs: Number.isFinite(
+        snapshot?.observation?.pageReadStartedAtMs,
+      )
+        ? snapshot.observation.pageReadStartedAtMs
+        : null,
+      pageReadCompletedAtMs: Number.isFinite(
+        snapshot?.observation?.pageReadCompletedAtMs,
+      )
+        ? snapshot.observation.pageReadCompletedAtMs
+        : null,
+      pageReadDurationMs: Number.isFinite(
+        snapshot?.observation?.pageReadDurationMs,
+      )
+        ? snapshot.observation.pageReadDurationMs
+        : null,
+      pixelReadDurationMs: Number.isFinite(
+        snapshot?.observation?.pixelReadDurationMs,
+      )
+        ? snapshot.observation.pixelReadDurationMs
+        : null,
+    },
     reason:
       typeof snapshot?.reason === 'string'
         ? snapshot.reason.slice(0, 120)
@@ -150,6 +175,7 @@ export function requestVisualGuardFrame(snapshot) {
 
 /** Read-only paused-frame evidence for the detection scanline phase. */
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
+  const pageReadStartedAtMs = performance.now();
   const boundary = window.__gevVisualPresentationBoundary?.read?.();
   const canvas = document.getElementById('world-overlay-detection-surface');
   const rect = canvas?.getBoundingClientRect?.();
@@ -171,6 +197,7 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   // canvas and make the observation itself miss the short animation phase.
   // The same eight pixel coordinates and alpha values remain authoritative.
   const stripHeight = Math.min(canvas.height, Math.floor(7 * dpr) + 1);
+  const pixelReadStartedAtMs = performance.now();
   const leftEdge = context.getImageData(0, 0, 1, stripHeight).data;
   const rightEdge = context.getImageData(
     Math.max(0, canvas.width - 1),
@@ -178,6 +205,10 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
     1,
     stripHeight,
   ).data;
+  const pixelReadDurationMs = Math.max(
+    0,
+    performance.now() - pixelReadStartedAtMs,
+  );
   const rows = [];
   for (let cssRow = 0; cssRow < 8; cssRow++) {
     const pixelRow = Math.floor(cssRow * dpr);
@@ -203,6 +234,9 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const hudSettled =
     expectedHudVisible === undefined ||
     boundary.hudVisible === expectedHudVisible;
+  const pageReadCompletedAtMs = performance.now();
+  const frameNumber =
+    window.__godsEyeView?.viewer?.scene?.frameState?.frameNumber;
   return {
     hud: boundary,
     phase,
@@ -218,6 +252,16 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
       width: canvas.width,
       height: canvas.height,
       dpr,
+    },
+    observation: {
+      pageReadStartedAtMs,
+      pageReadCompletedAtMs,
+      pageReadDurationMs: Math.max(
+        0,
+        pageReadCompletedAtMs - pageReadStartedAtMs,
+      ),
+      pixelReadDurationMs,
+      frameNumber: Number.isSafeInteger(frameNumber) ? frameNumber : null,
     },
   };
 }

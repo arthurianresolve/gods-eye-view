@@ -1,0 +1,563 @@
+{
+  "schema": "gev-startup-cpu-attribution-independent-review/v1",
+  "status": "diagnostic-only",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "startupFailureDisposition": "unchanged; CPU profiles cannot clear or replace startup acceptance failures",
+  "reviewedAt": "2026-10-19T23:51:55.791Z",
+  "producerCommit": "97c82fca8bf8f224513c0cbca2baff8d5e1807ef",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "applicationHarnessCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "sourceStatus": "diagnostics-complete",
+  "planSha256": "8af085bcf10d8a516ca880bd168c5b76b4a8f75bb6941e91fb76a4137fe85c14",
+  "wrapperSha256": "f662622a516934f9fd967c4bb116afea234474670f1cb665994fc4e7bea469f9",
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-cpu-attribution-dams-190c5ab6-97c82fca",
+  "files": [
+    {
+      "name": "infrastructure-dams-01-profiles/startup-infrastructure-dams-01-cpu-profile.json",
+      "bytes": 244368,
+      "sha256": "908c467f29ea14497ff7c965e8148de4774e50b4b5125cf6f171f590f351bfa7"
+    },
+    {
+      "name": "infrastructure-dams-01.json",
+      "bytes": 12571,
+      "sha256": "44630cfc0535a35de590b137c18236726cfc41399396226c13c4fee65abc6c7c"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "f92b98c95ba281c141002b92ccd14aa78046147a2b3060e2c4abc29db9c76ac8"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "b282b712eafdb29d47e9142a1c4eb5a8776385e445bf6d3551582824cec293a7"
+    },
+    {
+      "name": "infrastructure-dams-01.json.invocation.json",
+      "bytes": 2867,
+      "sha256": "fe10236f89a56b84407a62b91c91a1d38fdbcc4e7afc67b4f6255e8eb2bfa42f"
+    },
+    {
+      "name": "infrastructure-dams-01.json.log",
+      "bytes": 283,
+      "sha256": "8a9330fc75dca591067d1e907fa85f98905d49f6b0c4b7ebb4daf6f93085ed66"
+    },
+    {
+      "name": "infrastructure-dams-02-profiles/startup-infrastructure-dams-02-cpu-profile.json",
+      "bytes": 292952,
+      "sha256": "375d5ff976d010a37519fa272e00a9b33487ac95a4906538b4f73995ad9fc9ea"
+    },
+    {
+      "name": "infrastructure-dams-02.json",
+      "bytes": 12535,
+      "sha256": "787ec00562d4d3bfa657da4fa3ead8bb69824e1c8ea973fd8cee22a126c7a6e4"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "c83adaec2c12e24226aea2f2cbaafae40d8db71fa1996b41178b605d8e65a9cc"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "9bde6028c92e63fc4353546ccdcf8c72916b382009853ca0f1fe283aece23371"
+    },
+    {
+      "name": "infrastructure-dams-02.json.invocation.json",
+      "bytes": 2878,
+      "sha256": "518a18d71ffaf1be872c3e8dc89fa3e5183c88c9f64e598f44a8cbd312b8fe49"
+    },
+    {
+      "name": "infrastructure-dams-02.json.log",
+      "bytes": 283,
+      "sha256": "88a3d2fcdf51f9fe0e0eb29883999f94876451d9b0ea92d65739c4351b614c69"
+    },
+    {
+      "name": "infrastructure-dams-03-profiles/startup-infrastructure-dams-03-cpu-profile.json",
+      "bytes": 306229,
+      "sha256": "ec36cae800c3a9072485b02d2890f83d6a7a95327377df5f22774a4a49e16878"
+    },
+    {
+      "name": "infrastructure-dams-03.json",
+      "bytes": 12549,
+      "sha256": "756a43e1a654738bf473f50da6c4c59d4d819676564e6f77b2ff56d7199c123f"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "af43cfd213872c442e641e755aa72e4a94b04447290dd13e572a0b0484c3a0c5"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "40e6c403b07cbb72288d8faa7a452e4fba6bd33fe366e86928628d5c7f08972d"
+    },
+    {
+      "name": "infrastructure-dams-03.json.invocation.json",
+      "bytes": 2878,
+      "sha256": "deb15b49ac0698f3554432f9e5714c309f98c96174485fadae5f8ff07055d283"
+    },
+    {
+      "name": "infrastructure-dams-03.json.log",
+      "bytes": 283,
+      "sha256": "d05c167f5c332255ef51202a526d71f608cd6a64d65fe96d7105a16d9b8c9436"
+    },
+    {
+      "name": "infrastructure-dams-04-profiles/startup-infrastructure-dams-04-cpu-profile.json",
+      "bytes": 224330,
+      "sha256": "fe2d953df4e64804decd109367f9cfb39d772e1af7105278a7bfd789bcfec38c"
+    },
+    {
+      "name": "infrastructure-dams-04.json",
+      "bytes": 12574,
+      "sha256": "ca63e47f99c03be9793d823765a9eb22fa6646509f4eec9dc2c12096b89583c8"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "d22e9d3486d8c5a93378da1be1360dfc180c072b547f7ba8ec608b57c12b5c89"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "678f433b2840feaa75f9218a1836b00aa19df8f8d4b3816f413bb873da0be131"
+    },
+    {
+      "name": "infrastructure-dams-04.json.invocation.json",
+      "bytes": 2867,
+      "sha256": "6ecd5d9acac818e5af99ab8a7c00b70d40981030e746eb7a5c4ddb007a8ea579"
+    },
+    {
+      "name": "infrastructure-dams-04.json.log",
+      "bytes": 283,
+      "sha256": "7a79fd00907594c46adb417b2a24a210c3587e2bc7a71d7d909a50ea3ef08b20"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 2029,
+      "sha256": "8af085bcf10d8a516ca880bd168c5b76b4a8f75bb6941e91fb76a4137fe85c14"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2883,
+      "sha256": "8a5535388d3d48e301385ff4cfbcf570d97907f09b2feb847a919284858baf4b"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 9432,
+      "sha256": "f662622a516934f9fd967c4bb116afea234474670f1cb665994fc4e7bea469f9"
+    }
+  ],
+  "slots": [
+    {
+      "id": "infrastructure-dams-01",
+      "role": "control",
+      "row": "infrastructure-dams",
+      "fixture": {
+        "workloadId": "infrastructure-dams",
+        "id": "bundled-dams-static-v1",
+        "sha256": "bccfa5195affabf2a146e0c03fe2f42c9990710eeb8198edc958b7fd05d042a4"
+      },
+      "status": "diagnostic-only",
+      "appReadyMs": 4195,
+      "initialSettleMs": 5258,
+      "profile": {
+        "path": "infrastructure-dams-01-profiles/startup-infrastructure-dams-01-cpu-profile.json",
+        "sha256": "908c467f29ea14497ff7c965e8148de4774e50b4b5125cf6f171f590f351bfa7",
+        "byteLength": 244368,
+        "profileWindowMs": 4948.94,
+        "sampleCount": 2588,
+        "nodeCount": 1480,
+        "topLocations": 30
+      },
+      "errors": []
+    },
+    {
+      "id": "infrastructure-dams-02",
+      "role": "candidate",
+      "row": "infrastructure-dams",
+      "fixture": {
+        "workloadId": "infrastructure-dams",
+        "id": "bundled-dams-static-v1",
+        "sha256": "bccfa5195affabf2a146e0c03fe2f42c9990710eeb8198edc958b7fd05d042a4"
+      },
+      "status": "diagnostic-only",
+      "appReadyMs": 3788,
+      "initialSettleMs": 4764,
+      "profile": {
+        "path": "infrastructure-dams-02-profiles/startup-infrastructure-dams-02-cpu-profile.json",
+        "sha256": "375d5ff976d010a37519fa272e00a9b33487ac95a4906538b4f73995ad9fc9ea",
+        "byteLength": 292952,
+        "profileWindowMs": 4565.001,
+        "sampleCount": 2418,
+        "nodeCount": 1423,
+        "topLocations": 30
+      },
+      "errors": []
+    },
+    {
+      "id": "infrastructure-dams-03",
+      "role": "candidate",
+      "row": "infrastructure-dams",
+      "fixture": {
+        "workloadId": "infrastructure-dams",
+        "id": "bundled-dams-static-v1",
+        "sha256": "bccfa5195affabf2a146e0c03fe2f42c9990710eeb8198edc958b7fd05d042a4"
+      },
+      "status": "diagnostic-only",
+      "appReadyMs": 4740,
+      "initialSettleMs": 5778,
+      "profile": {
+        "path": "infrastructure-dams-03-profiles/startup-infrastructure-dams-03-cpu-profile.json",
+        "sha256": "ec36cae800c3a9072485b02d2890f83d6a7a95327377df5f22774a4a49e16878",
+        "byteLength": 306229,
+        "profileWindowMs": 5547.805,
+        "sampleCount": 3068,
+        "nodeCount": 1480,
+        "topLocations": 30
+      },
+      "errors": []
+    },
+    {
+      "id": "infrastructure-dams-04",
+      "role": "control",
+      "row": "infrastructure-dams",
+      "fixture": {
+        "workloadId": "infrastructure-dams",
+        "id": "bundled-dams-static-v1",
+        "sha256": "bccfa5195affabf2a146e0c03fe2f42c9990710eeb8198edc958b7fd05d042a4"
+      },
+      "status": "diagnostic-only",
+      "appReadyMs": 3435,
+      "initialSettleMs": 4889,
+      "profile": {
+        "path": "infrastructure-dams-04-profiles/startup-infrastructure-dams-04-cpu-profile.json",
+        "sha256": "fe2d953df4e64804decd109367f9cfb39d772e1af7105278a7bfd789bcfec38c",
+        "byteLength": 224330,
+        "profileWindowMs": 4381.934,
+        "sampleCount": 2355,
+        "nodeCount": 1362,
+        "topLocations": 30
+      },
+      "errors": []
+    }
+  ],
+  "profileSourceGroups": {
+    "idle": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(idle)",
+        "lineNumber": -1,
+        "samples": 321,
+        "sampledWeightMs": 588.76
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(idle)",
+        "lineNumber": -1,
+        "samples": 290,
+        "sampledWeightMs": 579.28
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(idle)",
+        "lineNumber": -1,
+        "samples": 272,
+        "sampledWeightMs": 534.08
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(idle)",
+        "lineNumber": -1,
+        "samples": 265,
+        "sampledWeightMs": 509.3
+      }
+    ],
+    "gc": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(garbage collector)",
+        "lineNumber": -1,
+        "samples": 21,
+        "sampledWeightMs": 40.35
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(garbage collector)",
+        "lineNumber": -1,
+        "samples": 21,
+        "sampledWeightMs": 40.1
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(garbage collector)",
+        "lineNumber": -1,
+        "samples": 20,
+        "sampledWeightMs": 34.21
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(garbage collector)",
+        "lineNumber": -1,
+        "samples": 16,
+        "sampledWeightMs": 28.65
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Gc.copyFromArrayView",
+        "lineNumber": 78,
+        "samples": 12,
+        "sampledWeightMs": 22.06
+      }
+    ],
+    "cesium": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "b1e",
+        "lineNumber": 90,
+        "samples": 637,
+        "sampledWeightMs": 1129.05
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "b1e",
+        "lineNumber": 90,
+        "samples": 481,
+        "sampledWeightMs": 860.02
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "b1e",
+        "lineNumber": 90,
+        "samples": 449,
+        "sampledWeightMs": 819.31
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "b1e",
+        "lineNumber": 90,
+        "samples": 409,
+        "sampledWeightMs": 735.29
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "Nz",
+        "lineNumber": 96,
+        "samples": 118,
+        "sampledWeightMs": 215.45
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "qo.resize",
+        "lineNumber": 15909,
+        "samples": 76,
+        "sampledWeightMs": 153.47
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "qo.resize",
+        "lineNumber": 15909,
+        "samples": 80,
+        "sampledWeightMs": 148.05
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "qo.resize",
+        "lineNumber": 15909,
+        "samples": 77,
+        "sampledWeightMs": 142.13
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "Nz",
+        "lineNumber": 96,
+        "samples": 67,
+        "sampledWeightMs": 120.81
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Nz",
+        "lineNumber": 96,
+        "samples": 65,
+        "sampledWeightMs": 115.35
+      }
+    ],
+    "app": [
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "b",
+        "lineNumber": 0,
+        "samples": 54,
+        "sampledWeightMs": 117.41
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "fze",
+        "lineNumber": 502,
+        "samples": 50,
+        "sampledWeightMs": 101.38
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "F1e",
+        "lineNumber": 502,
+        "samples": 50,
+        "sampledWeightMs": 92.83
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "b",
+        "lineNumber": 0,
+        "samples": 46,
+        "sampledWeightMs": 80.63
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "fze",
+        "lineNumber": 502,
+        "samples": 42,
+        "sampledWeightMs": 80.23
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "F1e",
+        "lineNumber": 502,
+        "samples": 35,
+        "sampledWeightMs": 78.29
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "b",
+        "lineNumber": 0,
+        "samples": 40,
+        "sampledWeightMs": 73.52
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "b",
+        "lineNumber": 0,
+        "samples": 43,
+        "sampledWeightMs": 73.06
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Rtt",
+        "lineNumber": 1824,
+        "samples": 10,
+        "sampledWeightMs": 49.48
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "Q3",
+        "lineNumber": 76,
+        "samples": 26,
+        "sampledWeightMs": 47.03
+      }
+    ],
+    "browser-program": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "(program)",
+        "lineNumber": -1,
+        "samples": 491,
+        "sampledWeightMs": 886.61
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "(program)",
+        "lineNumber": -1,
+        "samples": 434,
+        "sampledWeightMs": 882.43
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "(program)",
+        "lineNumber": -1,
+        "samples": 388,
+        "sampledWeightMs": 754.89
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "(program)",
+        "lineNumber": -1,
+        "samples": 376,
+        "sampledWeightMs": 742.7
+      }
+    ],
+    "unattributed": [
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "value",
+        "lineNumber": 353,
+        "samples": 382,
+        "sampledWeightMs": 685.91
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "value",
+        "lineNumber": 353,
+        "samples": 249,
+        "sampledWeightMs": 450.26
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "value",
+        "lineNumber": 353,
+        "samples": 211,
+        "sampledWeightMs": 380.63
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "value",
+        "lineNumber": 353,
+        "samples": 191,
+        "sampledWeightMs": 346.27
+      },
+      {
+        "slot": "infrastructure-dams-02",
+        "functionName": "querySelectorAll",
+        "lineNumber": -1,
+        "samples": 32,
+        "sampledWeightMs": 65.12
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "querySelectorAll",
+        "lineNumber": -1,
+        "samples": 32,
+        "sampledWeightMs": 60.37
+      },
+      {
+        "slot": "infrastructure-dams-03",
+        "functionName": "querySelectorAll",
+        "lineNumber": -1,
+        "samples": 30,
+        "sampledWeightMs": 51.79
+      },
+      {
+        "slot": "infrastructure-dams-04",
+        "functionName": "querySelectorAll",
+        "lineNumber": -1,
+        "samples": 24,
+        "sampledWeightMs": 44.55
+      },
+      {
+        "slot": "infrastructure-dams-01",
+        "functionName": "appendChild",
+        "lineNumber": -1,
+        "samples": 6,
+        "sampledWeightMs": 12
+      }
+    ]
+  },
+  "errors": [],
+  "scope": "Four predeclared ABBA startup CPU profiles; sample weights are statistical attribution, not exact CPU execution time, GPU time, or qualification. Top-location groups are descriptive and do not change the startup gate."
+}
