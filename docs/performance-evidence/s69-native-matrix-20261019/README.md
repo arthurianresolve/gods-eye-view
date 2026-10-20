@@ -1,5 +1,33 @@
 # S69 native Windows matrix checkpoint — 20 October 2026
 
+## Current qualification checkpoint
+
+The latest fully validated QA revision is `324eebe1` for application runtime `190c5ab6`; production remains at
+`e7a878e`. The [existing QA CI report](qa-ci-324eebe1.json) records all seven
+selected jobs passing. All eight matrix workloads have retained baseline/candidate captures,
+with baseline reuse explicitly declared. Map and weather measured gates qualify;
+sampled peak heap and loaded replay qualify. Cable idle comparison remains
+unavailable/pending. The dam-labelled empty-layer startup, local-control timing
+and full visual checks fail their declared gates.
+
+The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
+2.895% retained-heap growth, native Windows UHD 620/Chrome 155, with schedule,
+foreground, cleanup and owned-resource checks passing. See the [normalized soak
+report](ampfing-soak-190c5ab6-b843-20261020-report.json). The earlier no-space
+attempt remains historical; the [r11 integration report](qualification-r11-20261020-report.json)
+keeps startup, local-control, visual and cable-idle gates open.
+
+The subsequent QA-only URL fix `45cd4c6a` prevents preview origins ending in a
+slash from producing `//?welcome=0` requests. The [exact current fixture closure](qa-boot-url-fix-20261020.json)
+passes nine tests on each of Node 24 and 26. Frozen hardware producers and the
+application runtime remain unchanged.
+
+The [cable follow-up](cable-idle-followup-324eebe1-20261020-review.json) observes
+zero frames in both settled 60-second idle windows, no tile-progress events and
+no completed provider resource entries. The original burst is not reproduced;
+one diagnostic pair cannot qualify its unavailable frame-interval comparison.
+Completed resource entries do not prove that no requests were in flight.
+
 The [completed interaction and sampled-heap capture](interaction-heap-190c5ab6-b843cac5-review.json)
 passes source, identity and transfer verification. Candidate loaded-replay
 response is 90.9 ms p95, within 250 ms; sampled peak heap changes -0.56%.
@@ -10,6 +38,13 @@ finds enable calls take 2.7–8.5 ms and active-button updates 6.8–20.7 ms. It
 first matching frame does not require completed LOD, so it cannot replace the
 failed qualification result. All diagnostic listeners and wrappers are restored.
 
+The [height-query attribution](local-control-height-attribution-20261020-review.json)
+then measures eight synchronous `scene.sampleHeight` calls on each enable,
+consuming 301.4, 242.6 and 82.3 ms. Disable actions make none. This identifies
+repeated height work as a contributor to latency. A bounded reuse prototype is
+being evaluated; these six instrumented actions do not replace the failed
+qualification result or certify completed LOD placement.
+
 The [four-page transition diagnostic](visual-transition-path-b843cac5-20261020-review.json)
 and [paint-signature comparison](visual-paint-signature-b843-20261020-review.json)
 establish variation within an unchanged build. The later candidate image is
@@ -18,20 +53,32 @@ its own earlier capture. The new cross-build pair differs by eight pixels at
 maximum channel delta seven. These observations narrow the investigation but
 do not replace the failed full visual comparison or relax its policy.
 
+The [radio-state follow-up](visual-radio-state-20261020-review.json) records no
+active radio animation and equal paint signatures across builds. Its new pair
+differs by eight pixels at a maximum channel delta of seven. Earlier within-build
+header variation remains unexplained; no masks or tolerances were changed.
+
 All seven required [CI jobs and release packaging at `abc6dd91`](qa-ci-abc6dd91.json)
 pass. This revision changes QA only; the application candidate remains
 `190c5ab6`. The [signed-package Ampfing soak attempt](ampfing-soak-190c5ab6-no-space-review.json)
 failed after 26.5 minutes and 108 measured cycles when the Windows drive filled
 up. IndexedDB returned `FILE_ERROR_NO_SPACE`, and recording export failed with
 a storage quota error. Browser cleanup succeeded. The failed evidence is
-archived; a complete 60-minute run and final 30-minute retention assessment
-remain pending while space is recovered and a QA-only reserve guard is added.
+archived. The subsequent 60m39s run and final 30-minute retention assessment pass
+after space recovery and addition of a QA-only reserve guard, as recorded above.
 Production remains at `e7a878e`; no stable release has been promoted.
 
 The failed dam-labelled startup comparison measures empty-layer application
 boot before the dam layer is enabled. Its startup shard records no camera pose.
 It therefore remains an app-startup failure, separate from dam activation and
 the passing dam motion comparison.
+
+The [new coverage preflight](startup-coverage-preflight-20261020-review.json)
+completed one candidate document but found eight worker targets whose network
+sessions were not observed, plus five font/stylesheet requests outside the
+fixture allowlist. The proposed ten-slot synthetic-provider comparison was not
+started. This preserves the original startup failure while identifying gaps in
+the proposed measurement setup; it is not a runtime failure or timing pass.
 
 The [current dense investigation comparison](dense-investigation-190c5ab6-result.json)
 completes five observations per scenario. Motion p95 changes 518.1 to 405.1 ms

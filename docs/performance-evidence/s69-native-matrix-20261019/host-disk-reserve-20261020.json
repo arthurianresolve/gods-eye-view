@@ -1,0 +1,104 @@
+{
+  "schema": "gev-host-disk-reserve-review/v1",
+  "reviewedAt": "2026-10-20T05:10:22.731Z",
+  "status": "qa-guard-validated",
+  "frozenApplicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "frozenCaptureHarnessCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "runtimeChanged": false,
+  "filesDeleted": 0,
+  "priorAttempt": {
+    "startedAt": "2026-10-20T03:53:53.310Z",
+    "status": "failed",
+    "rawSha256": "22202557cce3e0f83d7b7b5c83969876e0653e794ebdc97fb99b10074cfcc668",
+    "causeObserved": "Host C: exhausted; IndexedDB FILE_ERROR_NO_SPACE and recording-export quota error.",
+    "evidencePreserved": true
+  },
+  "recovery": {
+    "method": "reversible NTFS compression of task-owned caches, evidence and source files",
+    "freeBeforeRestartBytes": 6672220160,
+    "operationLimits": "Text and diagnostic compression each preserved partial failure evidence when compact reported Out of memory. Further owned dependency compression was stopped after the required reserve was reached.",
+    "attributionLimit": "Windows pagefile shrink also freed space; concurrent free-space changes are not attributed entirely to compression."
+  },
+  "guard": {
+    "initialReserveBytes": 6442450944,
+    "runtimeReserveBytes": 2147483648,
+    "checkBoundaries": [
+      "before browser launch",
+      "before each cycle",
+      "before each retained-resource checkpoint",
+      "after cleanup"
+    ],
+    "observations": "Latest 128 cycle/checkpoint readings plus initial/end, total/omitted counts, global minimum and first failure.",
+    "rawAndArchiveSourceBinding": true
+  },
+  "validation": {
+    "receiptSha256": "c6025e1cd4312d94a1c79bf671b97c51ed3df038744beb56bb5d51f7cd19128a",
+    "tests": [
+      {
+        "command": "node qa-artifacts/run-staged-soak-disk-guard-tests-vm.mjs --node24",
+        "remoteNode": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+        "result": {
+          "passed": 17,
+          "failed": 0
+        }
+      },
+      {
+        "command": "node qa-artifacts/run-staged-soak-disk-guard-tests-vm.mjs",
+        "remoteNode": "/opt/nodejs/current/bin/node",
+        "result": {
+          "passed": 17,
+          "failed": 0
+        }
+      }
+    ],
+    "sourceFiles": [
+      {
+        "path": "qa-artifacts/stagedSoakHostDiskGuard.mjs",
+        "bytes": 6159,
+        "sha256": "81e811f38366d02ddd051e58c0fd7649a2e74b6ddc557bf7b9fd092ead34dc4f"
+      },
+      {
+        "path": "qa-artifacts/run-staged-ampfing-soak-190c5ab6-b843cac5.mjs",
+        "bytes": 17293,
+        "sha256": "7bef89d73f7a1ca9c1c2dfcb83fd5c000cad2de78f4479a3dbca33e04235a3d1"
+      },
+      {
+        "path": "qa-artifacts/stagedSoakArchiveContract.mjs",
+        "bytes": 10161,
+        "sha256": "11cdb04d11cf487c3eec4ade0635fe0ef5c39b6febd7bc36a2e71d69df3e1d9c"
+      },
+      {
+        "path": "qa-artifacts/archive-staged-ampfing-soak-190c5ab6-b843cac5.mjs",
+        "bytes": 21097,
+        "sha256": "4c372f6d89b369bfd95b9386e25187373a93c57653f21495e3e135ac24ae93b5"
+      },
+      {
+        "path": "qa-artifacts/stagedSoakHostDiskGuard.test.mjs",
+        "bytes": 7032,
+        "sha256": "6fb10d8e3d792a0919cfc6bc754152ba64cbd259ffcc47a52473d0e2f9ebf85d"
+      },
+      {
+        "path": "qa-artifacts/stagedSoakArchiveContract.test.mjs",
+        "bytes": 9581,
+        "sha256": "dfdbb14c50909f52ca9f4951310e149726083ecff10adb2fe92e884db59565a1"
+      },
+      {
+        "path": "qa-artifacts/run-staged-soak-disk-guard-tests-vm.mjs",
+        "bytes": 2359,
+        "sha256": "9249341b106b525eb2d544a8a041d64fa6edb03afdfb55c668e4fe7084a30f24"
+      },
+      {
+        "path": "qa-artifacts/ampfing-soak-disk-guard-20261020/run-staged-ampfing-soak-190c5ab6-b843cac5.original.mjs",
+        "bytes": 14040,
+        "sha256": "7029f325913d79f745b560fc00f15644e798d0d49d4d7d49a7a46ee43372be15"
+      }
+    ],
+    "vmArchive": {
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/host-reserve-recovery-20261020",
+      "verifiedFiles": 13,
+      "manifestSha256": "3412c8c65b0632bad0569f1836897f30d032048bce60df2112b19085a23feb52",
+      "filesDeleted": 0
+    }
+  },
+  "scope": "The external orchestration guard and its archive contract are validated. This report does not claim completion or acceptance of the restarted hardware soak."
+}

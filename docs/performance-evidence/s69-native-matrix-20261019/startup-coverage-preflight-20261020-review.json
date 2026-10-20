@@ -1,0 +1,40 @@
+{
+  "schema": "gev-startup-coverage-preflight-independent-review/v1",
+  "reviewedAt": "2026-10-20T06:20:33.985Z",
+  "status": "incomplete-network-coverage",
+  "diagnosticOnly": true,
+  "comparisonEligible": false,
+  "acceptanceEligible": false,
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "producerCommit": "4567b9a8ea0e2493fbabb7bc6cc8d4e05722b221",
+  "rawSha256": "3ef7bc2e9e54a9834948f225d67221f62116012a855e57a3f355770c9694fe6f",
+  "coverageSha256": "1794a413e2565dbb3bb4411b690bf82eaed05b4ed8b3a31989603c369fe60005",
+  "planSha256": "2954a33f81b9dcd73c4457a719f0488e3f54ebcbfa9118d726df28208d93e34c",
+  "filesIndependentlyVerified": 14,
+  "observations": {
+    "completedStartupDocuments": 1,
+    "observedWorkerTargets": 8,
+    "workerTargetTypes": {
+      "worker": 8
+    },
+    "workerNetworkObserver": "not-attached; any worker target makes this shard incomplete",
+    "pageTargets": 3,
+    "matchedPageTargets": 3,
+    "retiredPageObservers": 3,
+    "malformedPageLifecycleCount": 4,
+    "externalRequests": 20,
+    "outsideAllowlistRequests": 5,
+    "outsideAllowlistResourceTypes": [
+      "Stylesheet",
+      "Stylesheet",
+      "Font",
+      "Font",
+      "Font"
+    ],
+    "normalBrowserClose": true,
+    "observerCleanupConfirmed": true
+  },
+  "disposition": "Do not launch the proposed ten-slot synthetic-provider comparison with this observer. Worker Network coverage is missing and static font/style requests remain outside its deterministic fixture.",
+  "limitation": "This preflight tests measurement coverage; it does not attribute the original 28.53% startup regression or waive that failure.",
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/fixed-provider-startup-target-coverage-preflight-190c5ab6-20261020"
+}
