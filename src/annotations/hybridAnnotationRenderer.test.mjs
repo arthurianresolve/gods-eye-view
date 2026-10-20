@@ -359,6 +359,36 @@ test('hybrid outline upgrade preserves the screen group and adds world geometry'
   renderer.destroy();
 });
 
+test('world-only hybrid geometry leaves the screen board hidden until a screen caption is added', (t) => {
+  installBrowserGlobals(t);
+  const { viewer, dataSources } = fakeViewer(-99, 31);
+  const renderer = createHybridAnnotationRenderer(viewer);
+  t.after(() => renderer.destroy());
+  const { svg } = findAnnotationGroup(document);
+  const board = svg.parentNode;
+  assert.equal(board.style.display, 'none');
+  const anno = {
+    id: 'world-only',
+    type: 'area',
+    color: 'primary',
+    label: null,
+    alpha: 1,
+    anchor: { lon: -99, lat: 31, height: 0 },
+    ring: [[-99.01, 30.99], [-98.99, 30.99], [-99, 31.01]],
+  };
+  renderer.add(anno);
+  assert.ok(dataSources[0].entities.values.length > 0, 'world geometry still exists');
+  assert.equal(annotationGroups(svg).length, 0);
+  assert.equal(board.style.display, 'none');
+  anno.label = 'CAPTION';
+  renderer.update(anno);
+  assert.equal(annotationGroups(svg).length, 1);
+  assert.equal(board.style.display, '', 'a real screen caption reveals the original board');
+  renderer.remove(anno);
+  assert.equal(dataSources[0].entities.values.length, 0);
+  assert.equal(board.style.display, 'none', 'the fixture completes the existing departure timer');
+});
+
 // ── Partial-add rollback (review round 2) ─────────────────────────────────────
 //
 // The hybrid builds a mark across TWO sub-renderers. It used to record the

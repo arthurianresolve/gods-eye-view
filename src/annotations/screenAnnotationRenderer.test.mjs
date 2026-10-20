@@ -310,6 +310,7 @@ test('an add that throws after inserting its group unwinds instead of orphaning 
   assert.throws(() => renderer.add(anno), /projection failed/);
   Cesium.SceneTransforms.worldToWindowCoordinates = () => ({ x: 0, y: 0 });
   const { svg } = findAnnotationGroup(globalThis.document);
+  assert.equal(svg.parentNode.style.display, 'none', 'failed first add restores the empty surface state');
   assert.equal(
     svg.children.filter((child) => child.classList.contains('gev-anno')).length,
     0,
@@ -319,10 +320,176 @@ test('an add that throws after inserting its group unwinds instead of orphaning 
   // The id is free again: a retry draws exactly one mark, and remove() still
   // owns it (a leaked record would leave a second group behind).
   renderer.add(anno);
+  assert.equal(svg.parentNode.style.display, '', 'retry reveals the board before drawing');
   assert.equal(
     svg.children.filter((child) => child.classList.contains('gev-anno')).length,
     1,
     'the retry must draw one mark, not stack over an orphan',
   );
   renderer.destroy();
+});
+
+function installLifecycleFixture(t) {
+  const originals = new Map(['document', 'window', 'requestAnimationFrame'].map((key) => [key, globalThis[key]]));
+  const originalProjection = Cesium.SceneTransforms.worldToWindowCoordinates;
+  let now = 0;
+  let nextTimer = 0;
+  const timers = new Map();
+  const removedTimers = [];
+  const postRenderListeners = new Set();
+  globalThis.document = fakeDocument();
+  globalThis.requestAnimationFrame = (callback) => { callback(); return 1; };
+  globalThis.window = {
+    setTimeout(callback, delay) {
+      const id = ++nextTimer;
+      timers.set(id, { callback, due: now + delay, delay });
+      return id;
+    },
+    clearTimeout(id) {
+      removedTimers.push(id);
+      timers.delete(id);
+    },
+  };
+  Cesium.SceneTransforms.worldToWindowCoordinates = () => ({ x: 10, y: 10 });
+  t.after(() => {
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProjection;
+    for (const [key, value] of originals) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+  });
+  const positionWC = Cesium.Cartesian3.fromDegrees(0, 0, 1000);
+  const directionWC = Cesium.Cartesian3.normalize(Cesium.Cartesian3.negate(positionWC, new Cesium.Cartesian3()), new Cesium.Cartesian3());
+  const camera = { positionWC, directionWC, positionCartographic: { height: 1000 } };
+  const scene = {
+    camera,
+    canvas: { clientWidth: 800, clientHeight: 600, width: 800, height: 600 },
+    clampToHeightSupported: false,
+    postRender: {
+      addEventListener(callback) { postRenderListeners.add(callback); },
+      removeEventListener(callback) { postRenderListeners.delete(callback); },
+    },
+  };
+  const renderer = createScreenAnnotationRenderer({ scene, camera, trackedEntity: null }, {
+    activeTrackedReadoutId() {
+      assert.equal(document.body.children[0].style.display, '', 'the board is visible before projection and bbox work');
+      return null;
+    },
+  });
+  t.after(() => renderer.destroy());
+  return {
+    renderer,
+    layer: document.body.children[0],
+    timers,
+    removedTimers,
+    postRenderListeners,
+    advance(milliseconds) {
+      now += milliseconds;
+      for (const [id, timer] of [...timers]) {
+        if (timer.due <= now) {
+          timers.delete(id);
+          timer.callback();
+        }
+      }
+    },
+    anno(id = 'lifecycle') {
+      return { id, type: 'label', color: 'primary', label: 'VISIBLE', alpha: 1, anchor: { lon: 0, lat: 0, height: 0 } };
+    },
+  };
+}
+
+test('empty whiteboard stays hidden with its reusable SVG definitions intact', (t) => {
+  const { renderer, layer, postRenderListeners } = installLifecycleFixture(t);
+  assert.equal(layer.style.display, 'none');
+  assert.equal(layer.children[0].children[0].tagName, 'defs');
+  assert.equal(postRenderListeners.size, 1);
+  renderer.sync();
+  for (const callback of postRenderListeners) callback();
+  assert.equal(layer.style.display, 'none', 'idle projection does not create a display surface');
+});
+
+test('the last departing mark keeps its complete 360 ms fade before hiding the board', (t) => {
+  const f = installLifecycleFixture(t);
+  const anno = f.anno();
+  f.renderer.add(anno);
+  const { group } = findAnnotationGroup(document);
+  assert.equal(f.layer.style.display, '');
+  f.renderer.remove(anno);
+  assert.equal(group.classList.contains('gev-out'), true);
+  assert.equal([...f.timers.values()][0].delay, 360);
+  f.advance(359);
+  assert.equal(f.layer.style.display, '');
+  assert.ok(group.parentNode);
+  f.advance(1);
+  assert.equal(group.parentNode, null);
+  assert.equal(f.layer.style.display, 'none');
+});
+
+test('re-adding the same ID during departure cannot let its old timer hide the new mark', (t) => {
+  const f = installLifecycleFixture(t);
+  const anno = f.anno();
+  f.renderer.add(anno);
+  const old = findAnnotationGroup(document).group;
+  f.renderer.remove(anno);
+  f.advance(100);
+  f.renderer.add(anno);
+  f.advance(260);
+  const current = findAnnotationGroup(document).group;
+  assert.notEqual(current, old);
+  assert.equal(old.parentNode, null);
+  assert.ok(current.parentNode);
+  assert.equal(f.layer.style.display, '');
+  f.renderer.remove(anno);
+  f.advance(360);
+  assert.equal(f.layer.style.display, 'none');
+});
+
+test('multiple departing marks retain the board until the final removal deadline', (t) => {
+  const f = installLifecycleFixture(t);
+  const first = f.anno('first'), second = f.anno('second');
+  f.renderer.add(first);
+  f.renderer.add(second);
+  f.renderer.remove(first);
+  f.advance(120);
+  f.renderer.remove(second);
+  f.advance(240);
+  assert.equal(f.layer.style.display, '');
+  assert.equal(f.timers.size, 1);
+  f.advance(120);
+  assert.equal(f.layer.style.display, 'none');
+});
+
+test('failed addition during a departure preserves the existing fading mark', (t) => {
+  const f = installLifecycleFixture(t);
+  const existing = f.anno('departing');
+  f.renderer.add(existing);
+  f.renderer.remove(existing);
+  const { group } = findAnnotationGroup(document);
+  Cesium.SceneTransforms.worldToWindowCoordinates = () => { throw new Error('lost context'); };
+  assert.throws(() => f.renderer.add(f.anno('failed')), /lost context/);
+  assert.equal(f.layer.style.display, '');
+  assert.equal(findAnnotationGroup(document).group, group);
+  assert.equal(group.parentNode.children.filter((child) => child.classList.contains('gev-anno')).length, 1);
+  f.advance(360);
+  assert.equal(f.layer.style.display, 'none');
+});
+
+test('destroy cancels every owned departure timer and late callbacks cannot mutate the board', (t) => {
+  const f = installLifecycleFixture(t);
+  for (const id of ['one', 'two']) {
+    const anno = f.anno(id);
+    f.renderer.add(anno);
+    f.renderer.remove(anno);
+  }
+  const callbacks = [...f.timers.values()].map((timer) => timer.callback);
+  const remainingGroups = f.layer.children[0].children.slice();
+  f.renderer.destroy();
+  assert.equal(f.timers.size, 0);
+  assert.equal(f.removedTimers.length, 2);
+  assert.equal(f.postRenderListeners.size, 0);
+  assert.equal(f.layer.parentNode, null);
+  for (const callback of callbacks) callback();
+  assert.deepEqual(f.layer.children[0].children, remainingGroups);
+  f.renderer.destroy();
+  assert.equal(f.removedTimers.length, 2, 'a repeated destroy has no remaining timer ownership');
 });
