@@ -57,8 +57,60 @@ preserved. No final Ampfing soak has started for this failed candidate.
 A subsequent two-action diagnostic confirms the single-use allocation-response
 filter works, but exposes a separate right-first scheduling path: right and
 left rails measure separately, and the left pass queues another right pass.
-Correct that owner ordering and isolate ON completion-to-readiness cost before
-another formal capture. Prepared visual/startup captures remain unrun.
+Commit `5ecfdeb6` now coalesces pending rail measurements in either callback
+order, retaining the existing eligibility and cleanup rules. Its four focused
+suites pass 160/160 on both Node 24 and 26; hardware benefit is still unproved.
+The separate ON diagnostic measured 5.8 ms in module setup and 396.1 ms in
+eight existing depth queries inside a 398.6 ms pre-render callback. These are
+wall durations, not isolated CPU or GPU timings. Skipping or caching these
+queries without valid surface/visibility invalidation could change grounding,
+so no speculative shortcut is adopted. Prepared visual/startup captures remain
+unrun until the fresh interaction comparison passes.
+
+### Prospective interaction measurement correction — v6
+
+The next capture explicitly uses
+`trusted-click-event-timing-observed-acknowledgement-v6` with readiness v7.
+This is a correction of the claim the observations can support, not a
+reinterpretation of the failed v5 capture. The original v2–v5 policies and
+v3 default remain unchanged.
+
+V5 demanded a fresh post-layout proof after every uncertain mutation and
+before the earliest possible quantized Event Timing endpoint. A later mutation
+can occur within that endpoint's rounding interval, making this ordering
+impossible even when earlier feedback was already committed. The
+[Event Timing working draft](https://w3c.github.io/event-timing/#sec-events-measured)
+describes next-render latency at 8 ms granularity; it does not identify the
+pixels of a particular acknowledgement. The
+[HTML rendering steps](https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering)
+and [Chromium compositor design](https://chromium.googlesource.com/chromium/src/+/main/docs/how_cc_works.md)
+also distinguish main-thread observations from presentation of committed frames.
+Our conclusion is therefore limited: the old continuity requirement cannot
+prove the compositor-content claim it was intended to establish.
+
+V6 reports **native next-paint latency plus observed acknowledgement
+correctness**. It requires a complete positive same-intent observation of the
+original control in an existing natural RAF before the earliest quantized
+endpoint. Known negative geometry, replacement, contrary state and foreground
+loss remain fatal. Later uncertain mutations remain recorded diagnostics;
+they do not create an additional ResizeObserver deadline. The collector adds
+no ResizeObserver and retains the two existing natural RAF observations.
+Compositor-content attribution is explicitly **unavailable**, because neither
+DOM geometry nor Event Timing binds acknowledgement pixels to a presented
+frame. Separate visual and functional qualification remains required.
+
+This policy is declared before fresh acquisition on **both** roles. It does
+not change the 20-action cohort, one-second drains, native local-control
+p95 ≤100 ms, replay p95 ≤250 ms, independent ≤10% readiness/full-render/heap
+regression gates, visual fidelity, resource ownership or final-soak limits.
+No observer time is subtracted from measured latency. The 118 focused Node 24
+tests pass, including serialized acquisition with ResizeObserver unavailable,
+late/missing/wrong-intent acknowledgement, known negative observations,
+malformed evidence and unchanged legacy policies. Independent review added a
+diagnostic-record ownership/chronology guard; the affected suite then passed
+50/50 against final QA commit `f42effc9`. Legitimate post-drain diagnostic
+records remain supported. Integration validation and fresh hardware evidence
+for the combined candidate remain pending.
 
 The preceding `fbe839ea` attempt with feedback v4/readiness v7 remains
 **failed**, not accepted: candidate native local-control p95 was 208 ms versus
@@ -129,8 +181,9 @@ The completed hardware attempt and remaining failures are recorded above.
    its performance benefit remains unproved. Keep activation and deactivation findings separate,
    and require evidence before changing runtime behavior. Do not repeat a
    broad cohort merely to obtain a better result.
-2. **Validate the prospective measurement corrections.** Explicit Event Timing
-   policy v4 at `e5db55b9` permits a complete, timely natural reproof after mixed
+2. **Validate the prospective measurement corrections.** Use the explicit v6
+   contract above for the next fresh comparison, with readiness v7. The earlier
+   explicit Event Timing policy v4 at `e5db55b9` permitted a complete, timely natural reproof after mixed
    mutation batches, with [35 focused tests passing](performance-evidence/s69-native-matrix-20261019/fresh-reproof-v4-validation.json).
    Missing/late proof, observed hidden or contrary state, stale identity,
    later invalidation and measurement-restoration obligations still fail.
@@ -193,7 +246,7 @@ never rewrite an old result as an exact-commit test of a new artifact.
 Release checksums, attestations and deployment identity still verify the actual
 final artifact and source commit. Evidence affected by a corrected measurement
 bug cannot be reused merely because the application is unchanged. For the
-current v4 feedback policy and readiness-order correction, both application
+current v6 acknowledgement policy and readiness-order correction, both application
 roles need fresh acquisition: the old capture cannot reconstruct the missed
 first eligible frame or be relabeled with a prospective policy.
 
