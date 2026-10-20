@@ -16,6 +16,12 @@ The initial sparse-source formatting setup failure remains recorded, and its
 successful Node 24 focused results are reused only with identical source bytes.
 The private build is pending hardware qualification; production is unchanged.
 
+The preceding `9d355c29` checkpoint passes all seven selected CI jobs and
+release verification, including Windows, macOS and Linux recovery. Its
+[integration receipt](qualification-9d355c29-ci.json) independently verifies
+equal trees for the PR head and tested merge. Twelve optional jobs remain
+skipped. This receipt does not cover the subsequent `a18c6a76` runtime change.
+
 The [bounded actual-CSS reproduction](left-measurement-restoration-review.json)
 rejects the proposed attribute-only continuity exemption before any new capture.
 All sixteen normal cases start with the target visible. Eight restore exact
