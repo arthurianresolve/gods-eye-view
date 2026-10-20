@@ -654,6 +654,13 @@ function eventTimingInteractionEvidence() {
       status: 'observed',
       installedAtMs: 0,
       overflow: false,
+      work: {
+        mutationCallbacks: 20,
+        mutationRecords: 100,
+        continuityChecks: 40,
+        geometryChecks: 40,
+        overhead: { status: 'unavailable', reason: 'not-measured' },
+      },
       actions: build.localControl.map((sample) => ({
         generation: sample.generation,
         clickAtMs: sample.clickAtMs,
@@ -664,6 +671,7 @@ function eventTimingInteractionEvidence() {
         focused: true,
         witness: {
           atMs: sample.buttonFeedbackFirstFrameAtMs,
+          completedAtMs: sample.buttonFeedbackFirstFrameAtMs + 1,
           rafTimestampMs: sample.buttonFeedbackFirstRafTimestampMs,
           intentEpoch: sample.acceptedIntentEpoch,
           expected: sample.expectedLayerEnabled,
@@ -689,6 +697,19 @@ function eventTimingInteractionEvidence() {
       })),
       observations: [],
     };
+    for (const [index, action] of build.eventTimingCapture.actions.entries()) {
+      const sample = build.localControl[index];
+      action.witnesses = [
+        action.witness,
+        {
+          ...action.witness,
+          atMs: sample.buttonFeedbackAtMs,
+          completedAtMs: sample.buttonFeedbackAtMs + 1,
+          rafTimestampMs: sample.buttonFeedbackSecondRafTimestampMs,
+          state: sample.buttonFeedbackState,
+        },
+      ];
+    }
   }
   return evidence;
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
+import { readFileSync } from 'node:fs';
 import {
   installInteractionEventTimingInPage,
   INTERACTION_EVENT_TIMING_PLAN,
@@ -23,6 +24,8 @@ function fixture() {
       buttonFeedbackFirstRafTimestampMs: clickAtMs + 16,
       buttonFeedbackFirstState: 'transition',
       buttonFeedbackAtMs: clickAtMs + 40,
+      buttonFeedbackSecondRafTimestampMs: clickAtMs + 32,
+      buttonFeedbackState: 'transition',
       renderedFrameAtMs: clickAtMs + 200,
     };
   });
@@ -31,6 +34,13 @@ function fixture() {
     status: 'observed',
     installedAtMs: 1,
     overflow: false,
+    work: {
+      mutationCallbacks: 20,
+      mutationRecords: 100,
+      continuityChecks: 40,
+      geometryChecks: 40,
+      overhead: { status: 'unavailable', reason: 'not-measured' },
+    },
     actions: samples.map((sample) => ({
       generation: sample.generation,
       clickAtMs: sample.clickAtMs,
@@ -41,6 +51,7 @@ function fixture() {
       focused: true,
       witness: {
         atMs: sample.clickAtMs + 20,
+        completedAtMs: sample.clickAtMs + 21,
         rafTimestampMs: sample.clickAtMs + 16,
         intentEpoch: sample.acceptedIntentEpoch,
         expected: sample.expectedLayerEnabled,
@@ -66,6 +77,16 @@ function fixture() {
     })),
     observations: [],
   };
+  for (const action of capture.actions)
+    action.witnesses = [
+      action.witness,
+      {
+        ...action.witness,
+        atMs: action.clickAtMs + 40,
+        completedAtMs: action.clickAtMs + 41,
+        rafTimestampMs: action.clickAtMs + 32,
+      },
+    ];
   return { samples, capture };
 }
 
@@ -128,6 +149,18 @@ test('Event Timing requires exact complete native matches and preserves unavaila
     (value) => {
       value.overflow = true;
     },
+    (value) => {
+      value.policy = 'trusted-click-event-timing-visible-intent-v1';
+    },
+    (value) => {
+      value.work.geometryChecks = 41;
+    },
+    (value) => {
+      value.work.mutationRecords = 65537;
+    },
+    (value) => {
+      value.work.mutationCallbacks = Infinity;
+    },
   ]) {
     const changed = structuredClone(capture);
     corrupt(changed);
@@ -137,16 +170,22 @@ test('Event Timing requires exact complete native matches and preserves unavaila
 
 test('first visible same-intent state must precede earliest rendering endpoint; overlap is rejected', () => {
   const { samples, capture } = fixture();
+  capture.actions[0].witnesses[1].atMs = samples[0].clickAtMs + 80;
+  capture.actions[0].witnesses[1].completedAtMs = samples[0].clickAtMs + 81;
+  samples[0].buttonFeedbackAtMs = capture.actions[0].witnesses[1].atMs;
   capture.actions[0].witness.atMs = samples[0].clickAtMs + 60;
+  capture.actions[0].witness.completedAtMs = samples[0].clickAtMs + 60;
   samples[0].buttonFeedbackFirstFrameAtMs = capture.actions[0].witness.atMs;
   validateInteractionEventTiming(capture, samples);
   capture.actions[0].witness.atMs++;
+  capture.actions[0].witness.completedAtMs++;
   samples[0].buttonFeedbackFirstFrameAtMs++;
   assert.throws(
     () => validateInteractionEventTiming(capture, samples),
     /earliest/,
   );
   capture.actions[0].witness.atMs--;
+  capture.actions[0].witness.completedAtMs--;
   samples[0].buttonFeedbackFirstFrameAtMs--;
   capture.actions[0].witness.intentEpoch++;
   assert.throws(() => validateInteractionEventTiming(capture, samples));
@@ -191,7 +230,8 @@ test('foreground loss and contrary intent through rendering invalidate; native c
       invalid: true,
     },
     { atMs: 1068, kind: 'contrary-intent', invalid: true },
-    { atMs: 1030, kind: 'contrary-button-state', invalid: true },
+    { atMs: 1050, kind: 'contrary-button-state', invalid: true },
+    { atMs: 1050, kind: 'unproven-geometry', invalid: true },
   ]) {
     const changed = structuredClone(capture);
     changed.observations.push(observation);
@@ -205,6 +245,68 @@ test('foreground loss and contrary intent through rendering invalidate; native c
   validateInteractionEventTiming(capture, samples);
 });
 
+test('only a later existing RAF before the rendering endpoint can recover geometry uncertainty', () => {
+  const { samples, capture } = fixture();
+  capture.observations.push({
+    atMs: 1030,
+    kind: 'unproven-geometry',
+    generation: 1,
+    invalid: true,
+  });
+  capture.actions[0].witnesses[1].state = 'settled';
+  samples[0].buttonFeedbackState = 'settled';
+  validateInteractionEventTiming(capture, samples);
+  capture.actions[0].witnesses[1].atMs = 1061;
+  capture.actions[0].witnesses[1].completedAtMs = 1062;
+  samples[0].buttonFeedbackAtMs = 1061;
+  assert.throws(
+    () => validateInteractionEventTiming(capture, samples),
+    /changed before rendering/,
+  );
+  capture.actions[0].witnesses[1].atMs = 1040;
+  capture.actions[0].witnesses[1].completedAtMs = 1041;
+  samples[0].buttonFeedbackAtMs = 1040;
+  capture.actions[0].witnesses[1].visible = false;
+  assert.throws(
+    () => validateInteractionEventTiming(capture, samples),
+    /Latest eligible geometry proof/,
+  );
+});
+
+test('later negative proofs cannot be skipped, including the quantization uncertainty interval', () => {
+  for (const atMs of [1040, 1062]) {
+    const { samples, capture } = fixture();
+    const second = capture.actions[0].witnesses[1];
+    second.atMs = atMs;
+    second.completedAtMs = atMs + 1;
+    second.visible = false;
+    samples[0].buttonFeedbackAtMs = atMs;
+    assert.throws(
+      () => validateInteractionEventTiming(capture, samples),
+      /geometry proof/,
+    );
+  }
+  const recovered = fixture();
+  recovered.capture.actions[0].witness.visible = false;
+  validateInteractionEventTiming(recovered.capture, recovered.samples);
+});
+
+test('a visibility check finishing after the earliest endpoint cannot prove an earlier render', () => {
+  const { samples, capture } = fixture();
+  capture.observations.push({
+    atMs: 1030,
+    kind: 'unproven-geometry',
+    invalid: true,
+  });
+  capture.actions[0].witnesses[1].completedAtMs = 1061;
+  assert.throws(
+    () => validateInteractionEventTiming(capture, samples),
+    /changed before rendering/,
+  );
+  capture.actions[0].witnesses[1].completedAtMs = 1039;
+  assert.throws(() => validateInteractionEventTiming(capture, samples));
+});
+
 function browserFixture({ throwAt = null } = {}) {
   let now = 1;
   let observerCallback;
@@ -213,6 +315,9 @@ function browserFixture({ throwAt = null } = {}) {
   let mutationDisconnected = 0;
   let intentUnsubscribed = 0;
   let mutationCallback;
+  let geometryReads = 0;
+  let mutationPhase = false;
+  let pendingMutations = [];
   const mutationTargets = [];
   const timers = new Map();
   const listeners = new Map();
@@ -225,6 +330,11 @@ function browserFixture({ throwAt = null } = {}) {
     },
   });
   const layer = { visibilityIntentEpoch: 1, visibilityIntentEnabled: true };
+  function geometryRead(value) {
+    assert.equal(mutationPhase, false, 'Mutation delivery forced layout');
+    geometryReads++;
+    return value;
+  }
   const ancestor = {
     parentElement: null,
     style: {
@@ -235,30 +345,43 @@ function browserFixture({ throwAt = null } = {}) {
       overflowY: 'visible',
     },
     rect: { left: 0, top: 0, right: 100, bottom: 100 },
+    attributes: { style: '' },
+    getAttribute(name) {
+      return this.attributes[name] ?? null;
+    },
     getBoundingClientRect() {
-      return this.rect;
+      return geometryRead(this.rect);
     },
   };
   const button = {
     parentElement: ancestor,
+    closest: () => ancestor,
     isConnected: true,
-    checkVisibility: () => true,
+    checkVisibility: () => geometryRead(true),
+    children: [],
     disabled: false,
     textContent: 'ENABLING',
     dataset: { feedState: 'enabling' },
-    classList: {
-      contains: (name) => ['transitioning', 'enabling'].includes(name),
+    attributes: {
+      class: 'data-toggle-btn transitioning enabling',
+      'aria-busy': 'true',
+      'aria-disabled': 'true',
+      'data-feed-state': 'enabling',
     },
-    getAttribute: () => 'true',
+    classList: {
+      contains: (name) => button.attributes.class.split(' ').includes(name),
+    },
+    getAttribute: (name) => button.attributes[name] ?? null,
     contains: () => false,
-    getBoundingClientRect: () => ({
-      width: 50,
-      height: 20,
-      left: 5,
-      top: 5,
-      right: 55,
-      bottom: 25,
-    }),
+    getBoundingClientRect: () =>
+      geometryRead({
+        width: 50,
+        height: 20,
+        left: 5,
+        top: 5,
+        right: 55,
+        bottom: 25,
+      }),
   };
   const document = {
     visibilityState: 'visible',
@@ -270,11 +393,13 @@ function browserFixture({ throwAt = null } = {}) {
     innerWidth: 1440,
     innerHeight: 1000,
     getComputedStyle: (node) =>
-      node.style || { display: 'block', visibility: 'visible', opacity: '1' },
+      geometryRead(
+        node.style || { display: 'block', visibility: 'visible', opacity: '1' },
+      ),
     __godsEyeView: {
       dataManager: {
         layers: new Map([['local-datacenters', layer]]),
-        isEnabled: () => false,
+        isEnabled: () => button.classList.contains('active'),
         subscribeVisibilityRequests: () => {
           if (throwAt === 'intent')
             throw new Error('controlled intent setup failure');
@@ -321,6 +446,11 @@ function browserFixture({ throwAt = null } = {}) {
     disconnect() {
       mutationDisconnected++;
     }
+    takeRecords() {
+      const records = pendingMutations;
+      pendingMutations = [];
+      return records;
+    }
   }
   let initializationError = null;
   try {
@@ -351,7 +481,18 @@ function browserFixture({ throwAt = null } = {}) {
     timers,
     initializationError,
     mutationTargets,
-    mutate: () => mutationCallback([]),
+    mutate: (records = []) => {
+      mutationPhase = true;
+      try {
+        mutationCallback(records);
+      } finally {
+        mutationPhase = false;
+      }
+    },
+    queueMutations: (records) => {
+      pendingMutations = records;
+    },
+    geometryReads: () => geometryReads,
     setNow: (value) => {
       now = value;
     },
@@ -470,7 +611,15 @@ test('detached/replaced button and invisible/clipped ancestry cannot prove visib
     assert.equal(env.api.read().actions[0].witness.visible, true);
     mutate(env);
     env.setNow(30);
-    env.mutate();
+    env.ancestor.attributes.style = 'changed';
+    env.mutate([
+      {
+        type: 'attributes',
+        target: env.ancestor,
+        attributeName: 'style',
+        oldValue: '',
+      },
+    ]);
     assert.equal(env.api.read().observations.at(-1).invalid, true);
     env.api.dispose();
   }
@@ -491,6 +640,261 @@ test('detached/replaced button and invisible/clipped ancestry cannot prove visib
   env.api.witness(sample, 16, 'transition', 20);
   assert.equal(env.api.read().actions[0].witness.visible, false);
   env.api.dispose();
+});
+
+function witness(env) {
+  const sample = {
+    generation: 1,
+    clickAtMs: 10,
+    expected: true,
+    acceptedIntentEpoch: 1,
+  };
+  env.api.registerClick(sample, {
+    isTrusted: true,
+    type: 'click',
+    timeStamp: 10,
+    target: env.button,
+  });
+  env.api.witness(sample, 16, 'transition', 20);
+  env.setNow(30);
+}
+
+test('mutation continuity permits paint-only active changes without any synchronous geometry reads', () => {
+  const env = browserFixture();
+  witness(env);
+  const initialReads = env.geometryReads();
+  env.button.attributes.class = 'data-toggle-btn active transitioning enabling';
+  env.mutate([
+    {
+      type: 'attributes',
+      target: env.button,
+      attributeName: 'class',
+      oldValue: 'data-toggle-btn transitioning enabling',
+    },
+    {
+      type: 'attributes',
+      target: env.button,
+      attributeName: 'aria-busy',
+      oldValue: 'true',
+    },
+    {
+      type: 'attributes',
+      target: env.button,
+      attributeName: 'aria-disabled',
+      oldValue: 'true',
+    },
+    {
+      type: 'attributes',
+      target: env.button,
+      attributeName: 'data-feed-state',
+      oldValue: 'enabling',
+    },
+    {
+      type: 'childList',
+      target: env.button,
+      removedNodes: [{ nodeType: 3, data: 'ENABLING' }],
+      addedNodes: [{ nodeType: 3, data: 'ENABLING' }],
+    },
+  ]);
+  assert.equal(env.geometryReads(), initialReads);
+  const proof = env.api.read();
+  assert.equal(proof.observations.length, 0);
+  assert.equal(proof.work.geometryChecks, 1);
+  assert.equal(proof.work.mutationCallbacks, 1);
+  assert.equal(proof.work.mutationRecords, 5);
+  assert.equal(proof.work.continuityChecks, 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(proof.work.overhead)), {
+    status: 'unavailable',
+    reason: 'not-measured',
+  });
+  env.api.dispose();
+});
+
+test('active-class continuity exemption is limited to source-proven paint properties', () => {
+  const css = readFileSync(
+    new URL('../../src/ui/styles/radio.css', import.meta.url),
+    'utf8',
+  );
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((match) =>
+    match[1].includes('.data-toggle-btn.active'),
+  );
+  assert.equal(rules.length, 4);
+  const properties = new Set([
+    'color',
+    'border-color',
+    'background',
+    'box-shadow',
+  ]);
+  for (const [, , body] of rules)
+    for (const declaration of body.split(';').filter((value) => value.trim()))
+      assert.ok(properties.has(declaration.split(':')[0].trim()));
+});
+
+test('long control text and known width-changing classes remain unproven until a fresh RAF', () => {
+  for (const mode of ['text', 'class', 'characterData']) {
+    const env = browserFixture();
+    witness(env);
+    const before = env.geometryReads();
+    if (mode === 'class') {
+      const oldValue = env.button.attributes.class;
+      env.button.attributes.class += ' feed-loading';
+      env.mutate([
+        {
+          type: 'attributes',
+          target: env.button,
+          attributeName: 'class',
+          oldValue,
+        },
+      ]);
+    } else {
+      env.button.textContent = 'ENABLING '.repeat(100);
+      env.mutate(
+        mode === 'text'
+          ? [
+              {
+                type: 'childList',
+                target: env.button,
+                removedNodes: [{ nodeType: 3, data: 'ENABLING' }],
+                addedNodes: [{ nodeType: 3, data: env.button.textContent }],
+              },
+            ]
+          : [
+              {
+                type: 'characterData',
+                target: {
+                  parentNode: env.button,
+                  data: env.button.textContent,
+                },
+                oldValue: 'ENABLING',
+              },
+            ],
+      );
+    }
+    assert.equal(env.api.read().observations.at(-1).kind, 'unproven-geometry');
+    assert.equal(env.geometryReads(), before);
+    env.api.dispose();
+  }
+});
+
+test('observer uses at most the two existing natural RAF proofs and no new frame callbacks', () => {
+  const env = browserFixture();
+  witness(env);
+  const sample = {
+    generation: 1,
+    clickAtMs: 10,
+    expected: true,
+    acceptedIntentEpoch: 1,
+  };
+  env.button.attributes.class = 'data-toggle-btn active feed-nominal';
+  env.button.dataset.feedState = 'nominal';
+  env.button.textContent = 'ON';
+  env.api.witness(sample, 32, 'settled', 40);
+  const reads = env.geometryReads();
+  env.api.witness(sample, 48, 'settled', 50);
+  const proof = env.api.read();
+  assert.equal(proof.actions[0].witnesses.length, 2);
+  assert.equal(proof.actions[0].witnesses[1].state, 'settled');
+  assert.equal(proof.actions[0].witnesses[1].visible, true);
+  assert.equal(proof.work.geometryChecks, 2);
+  assert.equal(env.geometryReads(), reads);
+  env.api.dispose();
+});
+
+test('sibling text changes and transient unknown styling fail closed; true no-op writes are harmless', () => {
+  const env = browserFixture();
+  witness(env);
+  const sibling = { parentNode: env.ancestor, data: '12' };
+  assert.ok(
+    env.mutationTargets.some(
+      ({ target, options }) =>
+        target === env.ancestor &&
+        options.subtree &&
+        options.characterData &&
+        options.characterDataOldValue &&
+        options.attributeOldValue,
+    ),
+  );
+  env.mutate([
+    {
+      type: 'attributes',
+      target: env.ancestor,
+      attributeName: 'style',
+      oldValue: '',
+    },
+    { type: 'characterData', target: sibling, oldValue: '12' },
+    {
+      type: 'childList',
+      target: env.ancestor,
+      removedNodes: [{ nodeType: 3, data: '12' }],
+      addedNodes: [{ nodeType: 3, data: '12' }],
+    },
+  ]);
+  assert.equal(env.api.read().observations.length, 0);
+  sibling.data = '12345';
+  env.mutate([{ type: 'characterData', target: sibling, oldValue: '12' }]);
+  assert.equal(env.api.read().observations.at(-1).kind, 'unproven-geometry');
+  env.mutate([
+    {
+      type: 'attributes',
+      target: env.ancestor,
+      attributeName: 'style',
+      oldValue: '',
+    },
+    {
+      type: 'attributes',
+      target: env.ancestor,
+      attributeName: 'style',
+      oldValue: 'opacity:0',
+    },
+  ]);
+  assert.equal(env.api.read().observations.length, 2);
+  env.button.attributes.class += ' arbitrary-hidden-class';
+  env.mutate([
+    {
+      type: 'attributes',
+      target: env.button,
+      attributeName: 'class',
+      oldValue: 'data-toggle-btn transitioning enabling',
+    },
+  ]);
+  assert.equal(env.api.read().observations.length, 3);
+  env.api.dispose();
+});
+
+test('pending removal, resize and scroll invalidate continuity without remeasuring layout', () => {
+  const env = browserFixture();
+  witness(env);
+  const initialReads = env.geometryReads();
+  env.queueMutations([
+    {
+      type: 'childList',
+      target: env.ancestor,
+      addedNodes: [],
+      removedNodes: [env.button],
+    },
+  ]);
+  assert.equal(env.api.read().observations.at(-1).kind, 'unproven-geometry');
+  for (const name of ['scroll', 'resize'])
+    env.listeners.get(`window:${name}`).callback();
+  assert.equal(env.api.read().observations.length, 3);
+  assert.equal(env.geometryReads(), initialReads);
+  env.api.dispose();
+  assert.equal(env.listeners.size, 0);
+});
+
+test('mutation deliveries and record work are bounded even when all writes are unchanged', () => {
+  for (const mode of ['callbacks', 'records']) {
+    const env = browserFixture();
+    witness(env);
+    if (mode === 'callbacks')
+      for (let index = 0; index < 4097; index++) env.mutate([]);
+    else env.mutate(Array(65537).fill({}));
+    const proof = env.api.read();
+    assert.equal(proof.overflow, true);
+    assert.equal(proof.work.geometryChecks, 1);
+    assert.equal(env.disconnected().mutationDisconnected, 1);
+    env.api.dispose();
+  }
 });
 
 test('observer installation rolls back native callbacks when any setup step throws', () => {

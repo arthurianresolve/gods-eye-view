@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 export const INTERACTION_EVENT_TIMING_PROTOCOL =
-  'trusted-click-event-timing-visible-intent-v1';
+  'trusted-click-event-timing-visible-intent-v2';
 export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
   policy: INTERACTION_EVENT_TIMING_PROTOCOL,
   sampleCount: 20,
@@ -11,6 +11,9 @@ export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
   nextInputGuardMs: 8,
   maximumEntries: 128,
   maximumObservations: 1024,
+  maximumMutationCallbacks: 4096,
+  maximumMutationRecords: 65536,
+  maximumGeometryProofsPerAction: 2,
 });
 
 /** Serialized into the page. It observes native input; it never creates input. */
@@ -20,6 +23,9 @@ export function installInteractionEventTimingInPage() {
   const selector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
   const button = document.querySelector(selector);
   if (!button) throw new Error('Event Timing control is missing');
+  const layoutRoot = button.closest('#left-panel-stack');
+  if (!layoutRoot)
+    throw new Error('Event Timing control layout root is missing');
   const manager = window.__godsEyeView?.dataManager;
   if (
     typeof MutationObserver !== 'function' ||
@@ -43,6 +49,13 @@ export function installInteractionEventTimingInPage() {
   let mutationObserver = null;
   let removeIntent = null;
   const removers = [];
+  const work = {
+    mutationCallbacks: 0,
+    mutationRecords: 0,
+    continuityChecks: 0,
+    geometryChecks: 0,
+    overhead: { status: 'unavailable', reason: 'not-measured' },
+  };
   const active = () => actions.at(-1);
   function observe(value) {
     if (observations.length >= 1024) {
@@ -51,16 +64,72 @@ export function installInteractionEventTimingInPage() {
     }
     observations.push({ atMs: performance.now(), ...value });
   }
-  function buttonStateMatches(action) {
+  // These are the exact presentation classes owned by LayerPanel. Unknown
+  // styling cannot inherit the first RAF's visibility proof.
+  const buttonClasses = new Set([
+    'data-toggle-btn',
+    'active',
+    'transitioning',
+    'enabling',
+    'disabling',
+    'feed-nominal',
+    'feed-loading',
+    'feed-degraded',
+    'feed-stale',
+    'feed-partial',
+    'feed-fallback',
+    'feed-unavailable',
+  ]);
+  function knownClasses(value) {
+    const classes = (value || '').trim().split(/\s+/);
+    return (
+      classes.includes('data-toggle-btn') &&
+      classes.every((name) => buttonClasses.has(name))
+    );
+  }
+  function geometryClasses(value) {
+    // radio.css's active rules change only paint. Status/feed classes and text
+    // can change widths or adjacent counts, so they cannot share this exemption.
+    return (value || '')
+      .trim()
+      .split(/\s+/)
+      .filter((name) => name !== 'active')
+      .sort()
+      .join(' ');
+  }
+  function buttonIntentStateMatches(action) {
+    work.continuityChecks++;
+    const layer = manager?.layers?.get?.('local-datacenters');
+    const transition = action.expected ? 'enabling' : 'disabling';
+    return Boolean(
+      button.isConnected === true &&
+      document.querySelector(selector) === button &&
+      document.visibilityState === 'visible' &&
+      document.hasFocus() &&
+      button.disabled === false &&
+      button.textContent.trim().length > 0 &&
+      button.children.length === 0 &&
+      knownClasses(button.getAttribute('class')) &&
+      layer?.visibilityIntentEpoch === action.witness?.intentEpoch &&
+      layer?.visibilityIntentEnabled === action.expected &&
+      ((button.dataset?.feedState === transition &&
+        button.classList.contains('transitioning') &&
+        button.classList.contains(transition) &&
+        button.getAttribute('aria-busy') === 'true' &&
+        button.getAttribute('aria-disabled') === 'true') ||
+        (manager?.isEnabled('local-datacenters') === action.expected &&
+          button.classList.contains('active') === action.expected &&
+          !button.classList.contains('transitioning'))),
+    );
+  }
+  function buttonGeometryMatches(action) {
+    work.geometryChecks++;
     if (
-      button.isConnected !== true ||
-      document.querySelector(selector) !== button ||
+      !buttonIntentStateMatches(action) ||
       typeof button.checkVisibility !== 'function' ||
       !button.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
     )
       return false;
-    const manager = window.__godsEyeView?.dataManager;
-    const layer = manager?.layers?.get?.('local-datacenters');
     const rect = button.getBoundingClientRect();
     const style = window.getComputedStyle(button);
     const clip = {
@@ -118,22 +187,80 @@ export function installInteractionEventTimingInPage() {
       center.x < clip.right &&
       center.y >= clip.top &&
       center.y < clip.bottom;
-    const sameIntent =
-      layer?.visibilityIntentEpoch === action.witness?.intentEpoch &&
-      layer?.visibilityIntentEnabled === action.expected;
-    const transition = action.expected ? 'enabling' : 'disabling';
-    return Boolean(
-      visible &&
-      sameIntent &&
-      ((button.dataset?.feedState === transition &&
-        button.classList.contains('transitioning') &&
-        button.classList.contains(transition) &&
-        button.getAttribute('aria-busy') === 'true' &&
-        button.getAttribute('aria-disabled') === 'true') ||
-        (manager?.isEnabled('local-datacenters') === action.expected &&
-          button.classList.contains('active') === action.expected &&
-          !button.classList.contains('transitioning'))),
-    );
+    return Boolean(visible);
+  }
+  function observeMutations(records) {
+    if (disposed || overflow) return;
+    work.mutationCallbacks++;
+    if (
+      work.mutationCallbacks > 4096 ||
+      records.length > 65536 - work.mutationRecords
+    ) {
+      overflow = true;
+      mutationObserver?.disconnect();
+      return;
+    }
+    work.mutationRecords += records.length;
+    const action = active();
+    if (!action?.witness) return;
+    // Mutation delivery is a microtask. No geometry/style/visibility API may
+    // run here: that would force layout inside the measured click interval.
+    let uncertain = false;
+    const afterByNode = new Map();
+    for (let index = records.length - 1; index >= 0; index--) {
+      const record = records[index];
+      if (record.type === 'attributes') {
+        let afterByName = afterByNode.get(record.target);
+        if (!afterByName) {
+          afterByName = new Map();
+          afterByNode.set(record.target, afterByName);
+        }
+        const name = record.attributeName;
+        const after = afterByName.has(name)
+          ? afterByName.get(name)
+          : record.target.getAttribute(name);
+        afterByName.set(name, record.oldValue);
+        if (record.oldValue === after) continue;
+        if (record.target !== button) uncertain = true;
+        else if (name === 'class')
+          uncertain ||=
+            !knownClasses(after) ||
+            geometryClasses(record.oldValue) !== geometryClasses(after);
+        else if (
+          ![
+            'data-feed-state',
+            'aria-busy',
+            'aria-disabled',
+            'aria-label',
+            'title',
+          ].includes(name)
+        )
+          uncertain = true;
+      } else if (record.type === 'childList') {
+        // Only identical plain text replacement preserves layout inputs.
+        // Even a known status transition can change width or clipping.
+        const plainText = [...record.addedNodes, ...record.removedNodes].every(
+          (node) => node.nodeType === 3,
+        );
+        const unchangedText =
+          plainText &&
+          [...record.addedNodes].map((node) => node.data).join('') ===
+            [...record.removedNodes].map((node) => node.data).join('');
+        if (!unchangedText) uncertain = true;
+      } else if (record.type === 'characterData') {
+        const after = afterByNode.has(record.target)
+          ? afterByNode.get(record.target)
+          : record.target.data;
+        afterByNode.set(record.target, record.oldValue);
+        if (record.oldValue !== after) uncertain = true;
+      } else uncertain = true;
+    }
+    if (uncertain || !buttonIntentStateMatches(action))
+      observe({
+        kind: uncertain ? 'unproven-geometry' : 'contrary-button-state',
+        generation: action.generation,
+        invalid: true,
+      });
   }
   function collect(list) {
     if (disposed) return;
@@ -187,15 +314,20 @@ export function installInteractionEventTimingInPage() {
         visible: document.visibilityState === 'visible',
         focused: document.hasFocus(),
         witness: null,
+        witnesses: [],
         drainStartedAtMs: null,
         drainEndedAtMs: null,
       });
     },
     witness(sample, timestamp, state, observedAtMs) {
       const action = active();
-      if (!action || action.generation !== sample.generation || action.witness)
+      if (
+        !action ||
+        action.generation !== sample.generation ||
+        action.witnesses.length >= 2
+      )
         return;
-      action.witness = {
+      const witness = {
         atMs: observedAtMs,
         rafTimestampMs: timestamp,
         intentEpoch: sample.acceptedIntentEpoch,
@@ -203,9 +335,12 @@ export function installInteractionEventTimingInPage() {
         state,
         generation: sample.generation,
         visible: true,
-        focused: true,
+        focused: document.hasFocus(),
       };
-      if (!buttonStateMatches(action)) action.witness.visible = false;
+      action.witness ??= witness;
+      action.witnesses.push(witness);
+      if (!buttonGeometryMatches(action)) witness.visible = false;
+      witness.completedAtMs = performance.now();
     },
     drain(generation) {
       const action = active();
@@ -230,9 +365,11 @@ export function installInteractionEventTimingInPage() {
       });
     },
     read() {
+      const pendingMutations = mutationObserver?.takeRecords() || [];
+      if (pendingMutations.length) observeMutations(pendingMutations);
       collect(performanceObserver?.takeRecords() || []);
       return {
-        policy: 'trusted-click-event-timing-visible-intent-v1',
+        policy: 'trusted-click-event-timing-visible-intent-v2',
         status: supported ? 'observed' : 'unavailable',
         installedAtMs,
         durationThresholdMs: 16,
@@ -240,6 +377,10 @@ export function installInteractionEventTimingInPage() {
         actionDrainMs: 1000,
         maximumEntries: 128,
         maximumObservations: 1024,
+        maximumMutationCallbacks: 4096,
+        maximumMutationRecords: 65536,
+        maximumGeometryProofsPerAction: 2,
+        work: { ...work, overhead: { ...work.overhead } },
         overflow,
         actions: actions.map(({ target, ...action }) => ({ ...action })),
         entries: entries.map((entry) => ({ ...entry })),
@@ -300,29 +441,37 @@ export function installInteractionEventTimingInPage() {
       target.addEventListener(name, listener, true);
       removers.push(() => target.removeEventListener(name, listener, true));
     }
-    if (typeof MutationObserver === 'function') {
-      mutationObserver = new MutationObserver(() => {
+    for (const name of ['scroll', 'resize']) {
+      const listener = () => {
         const action = active();
-        if (action?.witness && !buttonStateMatches(action))
+        if (action?.witness)
           observe({
-            kind: 'contrary-button-state',
+            kind: 'unproven-geometry',
             generation: action.generation,
             invalid: true,
           });
-      });
-      mutationObserver.observe(button, {
+      };
+      window.addEventListener(name, listener, true);
+      removers.push(() => window.removeEventListener(name, listener, true));
+    }
+    if (typeof MutationObserver === 'function') {
+      mutationObserver = new MutationObserver(observeMutations);
+      mutationObserver.observe(layoutRoot, {
         attributes: true,
+        attributeOldValue: true,
         childList: true,
         characterData: true,
+        characterDataOldValue: true,
         subtree: true,
       });
       for (
-        let ancestor = button.parentElement;
+        let ancestor = layoutRoot.parentElement;
         ancestor;
         ancestor = ancestor.parentElement
       )
         mutationObserver.observe(ancestor, {
           attributes: true,
+          attributeOldValue: true,
           childList: true,
         });
     }
@@ -358,6 +507,9 @@ export function validateInteractionEventTiming(capture, samples) {
     'actionDrainMs',
     'maximumEntries',
     'maximumObservations',
+    'maximumMutationCallbacks',
+    'maximumMutationRecords',
+    'maximumGeometryProofsPerAction',
   ])
     assert.equal(capture[key], INTERACTION_EVENT_TIMING_PLAN[key]);
   assert.equal(capture.overflow, false);
@@ -367,6 +519,21 @@ export function validateInteractionEventTiming(capture, samples) {
     capture.entries?.length <= 128 && capture.observations?.length <= 1024,
   );
   assert.ok(Number.isFinite(capture.installedAtMs));
+  assert.deepEqual(capture.work?.overhead, {
+    status: 'unavailable',
+    reason: 'not-measured',
+  });
+  assert.equal(capture.work.geometryChecks, 40);
+  for (const [key, maximum] of [
+    ['mutationCallbacks', 4096],
+    ['mutationRecords', 65536],
+    ['continuityChecks', 4136],
+  ])
+    assert.ok(
+      Number.isSafeInteger(capture.work[key]) &&
+        capture.work[key] >= (key === 'continuityChecks' ? 40 : 0) &&
+        capture.work[key] <= maximum,
+    );
   const interactionIds = new Set();
   return samples.map((sample, index) => {
     const action = capture.actions[index];
@@ -438,43 +605,83 @@ export function validateInteractionEventTiming(capture, samples) {
         entry.deliveredAtMs <= action.drainEndedAtMs,
       'Event Timing chronology or declared delivery drain is invalid',
     );
-    const witness = action.witness;
-    assert.equal(witness?.generation, sample.generation);
-    assert.equal(witness?.intentEpoch, sample.acceptedIntentEpoch);
-    assert.equal(witness.expected, sample.expectedLayerEnabled);
-    assert.equal(witness.visible, true);
-    assert.equal(witness.focused, true);
-    assert.equal(witness.atMs, sample.buttonFeedbackFirstFrameAtMs);
-    assert.equal(
-      witness.rafTimestampMs,
-      sample.buttonFeedbackFirstRafTimestampMs,
+    assert.equal(action.witnesses?.length, 2);
+    assert.deepEqual(action.witness, action.witnesses[0]);
+    const expectedFrames = [
+      [
+        sample.buttonFeedbackFirstFrameAtMs,
+        sample.buttonFeedbackFirstRafTimestampMs,
+        sample.buttonFeedbackFirstState,
+      ],
+      [
+        sample.buttonFeedbackAtMs,
+        sample.buttonFeedbackSecondRafTimestampMs,
+        sample.buttonFeedbackState,
+      ],
+    ];
+    for (const [index, proof] of action.witnesses.entries()) {
+      assert.equal(proof.generation, sample.generation);
+      assert.equal(proof.intentEpoch, sample.acceptedIntentEpoch);
+      assert.equal(proof.expected, sample.expectedLayerEnabled);
+      assert.equal(typeof proof.visible, 'boolean');
+      assert.equal(typeof proof.focused, 'boolean');
+      assert.deepEqual(
+        [proof.atMs, proof.rafTimestampMs, proof.state],
+        expectedFrames[index],
+      );
+      assert.ok(['transition', 'settled'].includes(proof.state));
+      assert.ok(
+        Number.isFinite(proof.atMs) &&
+          Number.isFinite(proof.rafTimestampMs) &&
+          proof.rafTimestampMs <= proof.atMs &&
+          Number.isFinite(proof.completedAtMs) &&
+          proof.completedAtMs >= proof.atMs &&
+          proof.atMs >= sample.acceptedIntentAtMs &&
+          proof.atMs >= sample.clickReceivedAtMs,
+      );
+      if (index > 0)
+        assert.ok(
+          proof.atMs > action.witnesses[index - 1].atMs &&
+            proof.atMs >= action.witnesses[index - 1].completedAtMs &&
+            proof.rafTimestampMs > action.witnesses[index - 1].rafTimestampMs,
+          'The two existing natural RAF proofs must advance',
+        );
+    }
+    const witness = action.witnesses.findLast(
+      (proof) => proof.completedAtMs <= earliestEnd,
     );
-    assert.equal(witness.state, sample.buttonFeedbackFirstState);
-    assert.ok(['transition', 'settled'].includes(witness.state));
     assert.ok(
-      Number.isFinite(witness.atMs) &&
-        Number.isFinite(witness.rafTimestampMs) &&
-        witness.rafTimestampMs <= witness.atMs &&
-        witness.atMs >= sample.acceptedIntentAtMs &&
-        witness.atMs >= sample.clickReceivedAtMs &&
-        witness.atMs <= earliestEnd,
+      witness,
       'Same-intent visible feedback must precede the earliest quantized rendering endpoint',
     );
+    assert.ok(
+      witness.visible && witness.focused,
+      'Latest eligible geometry proof does not establish visible feedback',
+    );
+    for (const proof of action.witnesses)
+      if (proof.atMs >= witness.completedAtMs && proof.atMs <= latestEnd)
+        assert.ok(
+          proof.visible && proof.focused,
+          'A later geometry proof contradicts visible feedback before rendering',
+        );
     for (const observation of capture.observations) {
       assert.ok(Number.isFinite(observation.atMs));
       if (observation.atMs < sample.clickAtMs || observation.atMs > latestEnd)
         continue;
       assert.ok(
-        ['foreground', 'contrary-intent', 'contrary-button-state'].includes(
-          observation.kind,
-        ),
+        [
+          'foreground',
+          'contrary-intent',
+          'contrary-button-state',
+          'unproven-geometry',
+        ].includes(observation.kind),
       );
       if (observation.kind === 'foreground')
         assert.ok(
           observation.visible && observation.focused && !observation.invalid,
           'Foreground was lost during click-to-render interval',
         );
-      else if (observation.atMs >= witness.atMs)
+      else if (observation.atMs >= witness.completedAtMs)
         assert.equal(
           observation.invalid,
           false,
