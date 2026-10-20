@@ -8468,6 +8468,7 @@ try {
         : {}),
       source,
       url: new URL(url).origin,
+      comparisonProfile,
       comparisonEligible,
       ...(comparisonContract ? { comparisonContract } : {}),
       comparisonReadiness: {
