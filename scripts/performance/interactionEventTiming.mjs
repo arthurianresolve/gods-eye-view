@@ -24,20 +24,50 @@ export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
   maximumRenderBoundaryProofsPerAction: 8,
 });
 
+// Explicit prospective policy. Observation work is unchanged, and the observer
+// keeps its v3 default; old evidence is never implicitly reinterpreted.
+export const INTERACTION_EVENT_TIMING_PLAN_V4 = Object.freeze({
+  ...INTERACTION_EVENT_TIMING_PLAN,
+  policy: 'trusted-click-event-timing-visible-intent-v4',
+  feedbackReproof: 'same-intent-current-geometry-raf-or-owned-ro-v1',
+});
+
+function eventTimingPlan(policy) {
+  return policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
+    ? INTERACTION_EVENT_TIMING_PLAN_V2
+    : policy === INTERACTION_EVENT_TIMING_PLAN_V4.policy
+      ? INTERACTION_EVENT_TIMING_PLAN_V4
+      : INTERACTION_EVENT_TIMING_PLAN;
+}
+
 /** Old evidence retains the original strict continuity policy. */
 export function assertInteractionEventTimingPlan(plan) {
-  const expected =
-    plan?.policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
-      ? INTERACTION_EVENT_TIMING_PLAN_V2
-      : INTERACTION_EVENT_TIMING_PLAN;
+  const expected = eventTimingPlan(plan?.policy);
   assert.deepEqual(plan, expected);
   return expected;
 }
 
 /** Serialized into the page. It observes native input; it never creates input. */
-export function installInteractionEventTimingInPage() {
+export function installInteractionEventTimingInPage(options = {}) {
   if (window.__qualificationEventTiming)
     throw new Error('Qualification Event Timing already owned');
+  if (
+    !options ||
+    typeof options !== 'object' ||
+    Array.isArray(options) ||
+    Object.keys(options).some((name) => name !== 'policy')
+  )
+    throw new Error('Event Timing installer options are invalid');
+  const policy = Object.hasOwn(options, 'policy')
+    ? options.policy
+    : 'trusted-click-event-timing-visible-intent-v3';
+  const freshReproofPolicy =
+    policy === 'trusted-click-event-timing-visible-intent-v4';
+  if (
+    policy !== 'trusted-click-event-timing-visible-intent-v3' &&
+    !freshReproofPolicy
+  )
+    throw new Error('Event Timing installer policy is unsupported');
   const selector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
   const button = document.querySelector(selector);
   if (!button) throw new Error('Event Timing control is missing');
@@ -664,7 +694,13 @@ export function installInteractionEventTimingInPage() {
       if (pendingMutations.length) observeMutations(pendingMutations);
       collect(performanceObserver?.takeRecords() || []);
       return {
-        policy: 'trusted-click-event-timing-visible-intent-v3',
+        policy,
+        ...(freshReproofPolicy
+          ? {
+              feedbackReproof:
+                'same-intent-current-geometry-raf-or-owned-ro-v1',
+            }
+          : {}),
         status: supported ? 'observed' : 'unavailable',
         installedAtMs,
         durationThresholdMs: 16,
@@ -855,12 +891,10 @@ function assertGeometrySnapshot(proof) {
 
 /** All entries, including late old entries, are evaluated after the fixed cohort. */
 export function validateInteractionEventTiming(capture, samples) {
-  const plan =
-    capture?.policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
-      ? INTERACTION_EVENT_TIMING_PLAN_V2
-      : INTERACTION_EVENT_TIMING_PLAN;
+  const plan = eventTimingPlan(capture?.policy);
   assert.equal(capture?.policy, plan.policy);
-  const restoredPolicy = plan === INTERACTION_EVENT_TIMING_PLAN;
+  const restoredPolicy = plan !== INTERACTION_EVENT_TIMING_PLAN_V2;
+  const freshReproofPolicy = plan === INTERACTION_EVENT_TIMING_PLAN_V4;
   assert.equal(capture.status, 'observed', 'Browser Event Timing unavailable');
   for (const key of [
     'durationThresholdMs',
@@ -880,6 +914,8 @@ export function validateInteractionEventTiming(capture, samples) {
       'maximumRenderBoundaryProofsPerAction',
     ])
       assert.equal(capture[key], plan[key]);
+  if (freshReproofPolicy)
+    assert.equal(capture.feedbackReproof, plan.feedbackReproof);
   assert.equal(capture.overflow, false);
   assert.equal(capture.actions?.length, 20);
   assert.equal(samples?.length, 20);
@@ -1244,14 +1280,22 @@ export function validateInteractionEventTiming(capture, samples) {
           observation.atMs <= latestEnd &&
           observation.mutation?.restoredMeasurementTransactions > 0
         )
+          // v4 reproof concerns the complete current read, not which batch
+          // armed it. A recognized measurement still needs a timely owned RO;
+          // a later RAF alone never discharges that post-layout obligation.
           assert.ok(
-            sourceMeasurementOnly(observation) &&
+            (freshReproofPolicy
+              ? observation.kind === 'unproven-geometry'
+              : sourceMeasurementOnly(observation)) &&
               action.renderBoundaryProofs.some(
                 (proof) =>
-                  proof.armedByMutationCallback <=
-                    observation.mutation.callback &&
-                  proof.sourceMutationCallback >=
-                    observation.mutation.callback &&
+                  (freshReproofPolicy
+                    ? proof.observedThroughMutationCallback >=
+                      observation.mutation.callback
+                    : proof.armedByMutationCallback <=
+                        observation.mutation.callback &&
+                      proof.sourceMutationCallback >=
+                        observation.mutation.callback) &&
                   proof.atMs >= observation.atMs &&
                   proof.completedAtMs <= earliestEnd &&
                   proof.visible &&
@@ -1333,6 +1377,15 @@ export function validateInteractionEventTiming(capture, samples) {
           'Foreground was lost during click-to-render interval',
         );
       else if (
+        freshReproofPolicy &&
+        ['contrary-intent', 'contrary-button-state'].includes(observation.kind)
+      )
+        assert.equal(
+          observation.invalid,
+          false,
+          'A known contrary intent or button state cannot be erased by reproof',
+        );
+      else if (
         selected.kind === 'resize-observer-initial' &&
         observation.atMs >=
           action.witnesses.findLast(
@@ -1342,11 +1395,18 @@ export function validateInteractionEventTiming(capture, samples) {
         observation.invalid
       )
         assert.ok(
-          sourceMeasurementOnly(observation) &&
+          (freshReproofPolicy
+            ? observation.kind === 'unproven-geometry' &&
+              observation.generation === sample.generation
+            : sourceMeasurementOnly(observation)) &&
             observation.atMs <= witness.atMs &&
-            observation.mutation.callback <=
-              witness.observedThroughMutationCallback,
-          'Render-boundary recovery cannot erase an unknown or contrary change',
+            (freshReproofPolicy && observation.mutation === undefined
+              ? true
+              : observation.mutation.callback <=
+                witness.observedThroughMutationCallback),
+          freshReproofPolicy
+            ? 'Fresh render-boundary proof does not cover the invalidation'
+            : 'Render-boundary recovery cannot erase an unknown or contrary change',
         );
       else if (observation.atMs >= witness.completedAtMs)
         assert.equal(
