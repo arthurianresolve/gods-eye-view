@@ -2,7 +2,7 @@ import {
   execFileSync as defaultExecFileSync,
   spawn as defaultSpawn,
 } from 'node:child_process';
-import { withHostTimeout } from './startupDiagnostics.mjs';
+import { performance } from 'node:perf_hooks';
 
 const TARGET_TYPES = Object.freeze([
   'background_page',
@@ -522,21 +522,130 @@ export function assertOwnedRecoveryPage(pages, ownedPage, baseUrl) {
   return application.length;
 }
 
-export async function closeOwnedRecoveryPage(page, browser, timeoutMs = 2000) {
-  if (!page) return { closeCompleted: false, openPageCount: null };
-  const closeCompleted =
-    (await withHostTimeout(async () => {
-      if (!page.isClosed()) await page.close({ runBeforeUnload: false });
-      return true;
-    }, timeoutMs)) === true;
-  if (!closeCompleted) return { closeCompleted: false, openPageCount: null };
-  const remainingPages = await withHostTimeout(
-    () => browser.pages(),
-    timeoutMs,
-  );
+function boundedFailureName(error) {
+  const name = error?.name;
+  return typeof name === 'string' && /^[A-Za-z][A-Za-z0-9]*$/.test(name)
+    ? name.slice(0, 48)
+    : 'Error';
+}
+
+async function observeCloseStage(
+  operation,
+  timeoutMs,
+  { now, setTimer, clearTimer },
+) {
+  const startedAt = now();
+  let deadlineReached = false;
+  let timer;
+  const lateSettlement = { status: 'not-applicable' };
+  const pending = Promise.resolve()
+    .then(operation)
+    .then(
+      (value) => ({ status: 'completed', value }),
+      (error) => ({ status: 'rejected', errorName: boundedFailureName(error) }),
+    );
+  pending.then((result) => {
+    if (deadlineReached) lateSettlement.status = result.status;
+  });
+  const result = await Promise.race([
+    pending,
+    new Promise((resolve) => {
+      timer = setTimer(() => {
+        deadlineReached = true;
+        lateSettlement.status = 'pending';
+        resolve({ status: 'timed-out' });
+      }, timeoutMs);
+    }),
+  ]);
+  clearTimer(timer);
+  const elapsedMs = Math.max(0, now() - startedAt);
   return {
-    closeCompleted: true,
-    openPageCount: Array.isArray(remainingPages) ? remainingPages.length : null,
+    status: result.status,
+    elapsedMs: Number.isFinite(elapsedMs) ? elapsedMs : null,
+    errorName: result.errorName ?? null,
+    value: result.value,
+    lateSettlement,
+  };
+}
+
+/** Close the owned page before the browser, retaining bounded stage outcomes. */
+export async function closeOwnedRecoveryPage(
+  page,
+  browser,
+  timeoutMs = 2000,
+  {
+    now = () => performance.now(),
+    setTimer = setTimeout,
+    clearTimer = clearTimeout,
+  } = {},
+) {
+  const stageOptions = { now, setTimer, clearTimer };
+  if (!page)
+    return {
+      closeCompleted: false,
+      openPageCount: null,
+      closeObservation: {
+        status: 'not-attempted',
+        elapsedMs: 0,
+        errorName: null,
+        lateSettlement: { status: 'not-applicable' },
+        pageInventory: {
+          status: 'not-attempted',
+          elapsedMs: 0,
+          errorName: null,
+        },
+      },
+    };
+
+  const closeStage = await observeCloseStage(
+    async () => {
+      if (page.isClosed()) return 'already-closed';
+      await page.close({ runBeforeUnload: false });
+      return 'closed';
+    },
+    timeoutMs,
+    stageOptions,
+  );
+  const closeStatus =
+    closeStage.status === 'completed' && closeStage.value === 'already-closed'
+      ? 'already-closed'
+      : closeStage.status;
+  const closeCompleted = closeStage.status === 'completed';
+  let pageInventory = {
+    status: 'not-requested-after-close-failure',
+    elapsedMs: 0,
+    errorName: null,
+  };
+  let openPageCount = null;
+  if (closeCompleted) {
+    const inventoryStage = await observeCloseStage(
+      () => browser.pages(),
+      timeoutMs,
+      stageOptions,
+    );
+    pageInventory = {
+      status: inventoryStage.status,
+      elapsedMs: inventoryStage.elapsedMs,
+      errorName: inventoryStage.errorName,
+    };
+    if (
+      inventoryStage.status === 'completed' &&
+      Array.isArray(inventoryStage.value)
+    )
+      openPageCount = inventoryStage.value.length;
+    else if (inventoryStage.status === 'completed')
+      pageInventory.status = 'malformed';
+  }
+  return {
+    closeCompleted,
+    openPageCount,
+    closeObservation: {
+      status: closeStatus,
+      elapsedMs: closeStage.elapsedMs,
+      errorName: closeStage.errorName,
+      lateSettlement: closeStage.lateSettlement,
+      pageInventory,
+    },
   };
 }
 
@@ -1033,10 +1142,11 @@ export function recoveryPageCleanupError({
   openPageCount,
   unexpectedCreatedPageTargets,
   browserCloseCompleted,
+  closeObservation,
 }) {
   if (!closeCompleted || openPageCount !== 0)
     return new Error(
-      `Owned fixture page cleanup failed before browser close (closed=${closeCompleted}, remaining=${openPageCount}).`,
+      `Owned fixture page cleanup failed before browser close (pageClose=${closeObservation?.status ?? 'unknown'}, closed=${closeCompleted}, remaining=${openPageCount}).`,
     );
   if (unexpectedCreatedPageTargets > 0)
     return new Error(

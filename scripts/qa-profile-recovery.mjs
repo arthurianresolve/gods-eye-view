@@ -287,6 +287,7 @@ async function reopen(label, { seed = false } = {}) {
     unexpectedCreatedPageTargets: null,
     closeCompleted: null,
     openPagesBeforeBrowserClose: null,
+    closeObservation: null,
     browserCloseCompleted: null,
     forcedBrowserProcessTermination: false,
     browserCloseObservation: null,
@@ -504,6 +505,7 @@ async function reopen(label, { seed = false } = {}) {
       pageCleanup = await closeOwnedRecoveryPage(page, browser);
       pageOwnership.closeCompleted = pageCleanup.closeCompleted;
       pageOwnership.openPagesBeforeBrowserClose = pageCleanup.openPageCount;
+      pageOwnership.closeObservation = pageCleanup.closeObservation ?? null;
       pageOwnership.unexpectedCreatedPageTargets = page
         ? pageTargetGuard.unexpectedPageTargetCount(page)
         : null;
@@ -539,6 +541,17 @@ async function reopen(label, { seed = false } = {}) {
           stderr: browserStderr,
         }
       : null;
+    if (pageOwnership.closeObservation) {
+      const beforeCloseTargets =
+        browserClose.observation?.shutdownDiagnostics?.targetTypeCounts
+          ?.beforeClose;
+      pageOwnership.closeObservation.pageTargetsBeforeBrowserClose =
+        beforeCloseTargets?.status === 'available'
+          ? beforeCloseTargets.counts.page
+          : null;
+      pageOwnership.closeObservation.pageTargetSnapshotStatus =
+        beforeCloseTargets?.status ?? 'unavailable';
+    }
     browser = null;
     const pageCleanupFailure = recoveryPageCleanupError({
       ...pageCleanup,

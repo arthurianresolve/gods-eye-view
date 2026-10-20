@@ -981,9 +981,50 @@ test('owned page closes before browser close and leaves zero open pages', async 
     close: async () => order.push('browser-close'),
   };
   const outcome = await closeOwnedRecoveryPage(owned, browser);
-  assert.deepEqual(outcome, { closeCompleted: true, openPageCount: 0 });
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.openPageCount, 0);
+  assert.equal(outcome.closeObservation.status, 'completed');
+  assert.equal(outcome.closeObservation.errorName, null);
+  assert.equal(
+    outcome.closeObservation.lateSettlement.status,
+    'not-applicable',
+  );
+  assert.equal(outcome.closeObservation.pageInventory.status, 'completed');
+  assert.equal(outcome.closeObservation.pageInventory.errorName, null);
+  assert.equal(
+    Number.isFinite(outcome.closeObservation.pageInventory.elapsedMs),
+    true,
+  );
   await browser.close();
   assert.deepEqual(order, ['page-close', 'browser-close']);
+});
+
+test('owned-page close rejection is distinguished without retaining its message', async () => {
+  const owned = {
+    isClosed: () => false,
+    close: async () => {
+      throw Object.assign(new Error('sensitive close details'), {
+        name: 'ProtocolError',
+      });
+    },
+  };
+  let pageInventoryCalls = 0;
+  const outcome = await closeOwnedRecoveryPage(owned, {
+    pages: async () => {
+      pageInventoryCalls += 1;
+      return [];
+    },
+  });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.openPageCount, null);
+  assert.equal(outcome.closeObservation.status, 'rejected');
+  assert.equal(outcome.closeObservation.errorName, 'ProtocolError');
+  assert.equal(
+    outcome.closeObservation.lateSettlement.status,
+    'not-applicable',
+  );
+  assert.equal(pageInventoryCalls, 0);
+  assert.equal(JSON.stringify(outcome).includes('sensitive'), false);
 });
 
 test('wedged owned-page close is bounded and reported as incomplete', async (t) => {
@@ -1009,7 +1050,45 @@ test('wedged owned-page close is bounded and reported as incomplete', async (t) 
     'the declared deadline must settle the operation',
   );
   const outcome = await pending;
-  assert.deepEqual(outcome, { closeCompleted: false, openPageCount: null });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.openPageCount, null);
+  assert.equal(outcome.closeObservation.status, 'timed-out');
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'pending');
+});
+
+test('late owned-page close completion remains a failed pre-browser-close stage', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let finishClose;
+  let now = 0;
+  const owned = {
+    isClosed: () => false,
+    close: () => new Promise((resolve) => (finishClose = resolve)),
+  };
+  let pageInventoryCalls = 0;
+  const pending = closeOwnedRecoveryPage(
+    owned,
+    {
+      pages: async () => {
+        pageInventoryCalls += 1;
+        return [];
+      },
+    },
+    20,
+    { now: () => now },
+  );
+  await new Promise(setImmediate);
+  now = 20;
+  t.mock.timers.tick(20);
+  await new Promise(setImmediate);
+  const outcome = await pending;
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.closeObservation.status, 'timed-out');
+  assert.equal(outcome.closeObservation.elapsedMs, 20);
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'pending');
+  finishClose();
+  await new Promise(setImmediate);
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'completed');
+  assert.equal(pageInventoryCalls, 0);
 });
 
 test('a passed workspace check still fails when cleanup leaves a page open', () => {
