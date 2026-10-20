@@ -5,9 +5,12 @@ import path from 'node:path';
 import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
 
 const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
-const INTERACTION_PROTOCOL =
+const INTERACTION_SCHEMA_V2 = 'gev-interaction-latency-evidence/v2';
+const INTERACTION_SCHEMA_V3 = 'gev-interaction-latency-evidence/v3';
+const INTERACTION_PROTOCOL_V2 =
   'trusted-event-timeStamp-prerender-postrender-witness-v4';
+const INTERACTION_PROTOCOL_V3 =
+  'trusted-click-activation-prerender-postrender-witness-v5';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const SAMPLED_HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -704,7 +707,12 @@ function validateDatacenterFixtureReceipt(receipt, label) {
   return receipt;
 }
 
-function validateInteractionSide(side, label, expectedMaterializedCount) {
+function validateInteractionSide(
+  side,
+  label,
+  expectedMaterializedCount,
+  protocolVersion,
+) {
   assert.ok(Array.isArray(side), `${label} samples must be an array`);
   assert.equal(
     side.length,
@@ -715,6 +723,7 @@ function validateInteractionSide(side, label, expectedMaterializedCount) {
   let previousInputAtMs = -1;
   let previousRenderedFrame = -1;
   let previousGeneration = 0;
+  let previousIntentEpoch = 0;
   return side.map((sample, index) => {
     assert.equal(typeof sample?.sampleId, 'string');
     assert.ok(sample.sampleId.length > 0);
@@ -775,13 +784,79 @@ function validateInteractionSide(side, label, expectedMaterializedCount) {
           sample.handlerReceivedAtMs - sample.inputAtMs &&
         sample.inputDeliveryDelayMs >= 0,
     );
-    assert.equal(sample.inputClockSource, 'trusted-event-timeStamp');
+    assert.equal(
+      sample.inputClockSource,
+      protocolVersion === 3 && label.startsWith('localControl')
+        ? 'trusted-click-event-timeStamp'
+        : 'trusted-event-timeStamp',
+    );
     assert.equal(sample.inputTrusted, true);
     assert.equal(sample.inputTargetMatched, true);
     assert.equal(
       sample.inputEventType,
-      label.startsWith('localControl') ? 'pointerdown' : 'input',
+      protocolVersion === 3 && label.startsWith('localControl')
+        ? 'click'
+        : label.startsWith('localControl')
+          ? 'pointerdown'
+          : 'input',
     );
+    if (protocolVersion === 3 && label.startsWith('localControl')) {
+      assert.ok(
+        Number.isFinite(sample.pointerDownAtMs) &&
+          Number.isFinite(sample.pointerUpAtMs) &&
+          Number.isFinite(sample.clickAtMs) &&
+          Number.isFinite(sample.clickReceivedAtMs) &&
+          Number.isFinite(sample.pointerDownReceivedAtMs) &&
+          Number.isFinite(sample.pointerUpReceivedAtMs) &&
+          sample.pointerDownReceivedAtMs >= sample.pointerDownAtMs &&
+          sample.pointerUpReceivedAtMs >= sample.pointerUpAtMs,
+        `${label} sample ${index + 1} must retain the trusted pointer sequence`,
+      );
+      assert.ok(
+        sample.armedAtMs <= sample.pointerDownAtMs &&
+          sample.pointerDownAtMs <= sample.pointerUpAtMs &&
+          sample.pointerUpAtMs <= sample.clickAtMs &&
+          sample.clickAtMs === sample.inputAtMs &&
+          sample.inputAtMs <= sample.clickReceivedAtMs &&
+          sample.clickReceivedAtMs === sample.handlerReceivedAtMs,
+        `${label} sample ${index + 1} pointer/click timestamps are unordered`,
+      );
+      assert.ok(
+        sample.pointerDownToClickMs ===
+          sample.clickAtMs - sample.pointerDownAtMs &&
+          sample.pointerDownToClickMs >= 0,
+      );
+      assert.ok(
+        Number.isFinite(sample.acceptedIntentAtMs) &&
+          sample.acceptedIntentAtMs >= sample.clickReceivedAtMs &&
+          Number.isSafeInteger(sample.acceptedIntentEpoch) &&
+          sample.acceptedIntentEpoch > previousIntentEpoch,
+        `${label} sample ${index + 1} must witness accepted visibility intent`,
+      );
+      previousIntentEpoch = sample.acceptedIntentEpoch;
+      assert.ok(
+        Number.isFinite(sample.buttonFeedbackFirstFrameAtMs) &&
+          Number.isFinite(sample.buttonFeedbackFirstRafTimestampMs) &&
+          Number.isFinite(sample.buttonFeedbackSecondRafTimestampMs) &&
+          sample.buttonFeedbackSecondRafTimestampMs >
+            sample.buttonFeedbackFirstRafTimestampMs &&
+          Number.isFinite(sample.buttonFeedbackAtMs) &&
+          sample.buttonFeedbackAtMs >= sample.buttonFeedbackFirstFrameAtMs &&
+          sample.buttonFeedbackAtMs >= sample.clickReceivedAtMs &&
+          sample.buttonFeedbackAtMs >= sample.acceptedIntentAtMs &&
+          ['transition', 'settled'].includes(sample.buttonFeedbackState) &&
+          sample.buttonFeedbackIntentEpoch === sample.acceptedIntentEpoch &&
+          (sample.buttonFeedbackState !== 'transition' ||
+            (sample.transitionIntentEpoch === sample.acceptedIntentEpoch &&
+              Number.isFinite(sample.transitionAtMs) &&
+              sample.buttonFeedbackTransitionAtMs === sample.transitionAtMs &&
+              sample.buttonFeedbackAtMs >= sample.transitionAtMs)) &&
+          sample.buttonFeedbackWitnessType ===
+            'visible-button-two-distinct-raf-v3' &&
+          sample.buttonFeedbackConsecutiveFrames >= 2,
+        `${label} sample ${index + 1} must witness visible button feedback`,
+      );
+    }
     assert.ok(Number.isSafeInteger(sample.frameNumberAtState));
     assert.ok(Number.isSafeInteger(sample.frameNumberAtRendered));
     assert.equal(
@@ -910,6 +985,30 @@ function validateInteractionSide(side, label, expectedMaterializedCount) {
     return {
       inputToStateMs: stateAtMs - inputAtMs,
       inputToRenderedFrameMs: renderedFrameAtMs - inputAtMs,
+      clickToStateMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? stateAtMs - sample.clickAtMs
+          : null,
+      clickToRenderedFrameMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? renderedFrameAtMs - sample.clickAtMs
+          : null,
+      clickToAcceptedIntentMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? sample.acceptedIntentAtMs - sample.clickAtMs
+          : null,
+      clickToVisibleFeedbackMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? sample.buttonFeedbackAtMs - sample.clickAtMs
+          : null,
+      pointerdownToReadyMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? renderedFrameAtMs - sample.pointerDownAtMs
+          : null,
+      pointerdownToStateMs:
+        protocolVersion === 3 && label.startsWith('localControl')
+          ? stateAtMs - sample.pointerDownAtMs
+          : null,
     };
   });
 }
@@ -917,8 +1016,16 @@ function validateInteractionSide(side, label, expectedMaterializedCount) {
 function compareInteractionMetric(evidence, name, limitMs, captures) {
   if (!evidence)
     return unavailable('No interaction timing capture was supplied.');
-  if (evidence.schema !== INTERACTION_SCHEMA)
-    return unavailable(`Interaction evidence must use ${INTERACTION_SCHEMA}.`);
+  const protocolVersion =
+    evidence.schema === INTERACTION_SCHEMA_V2
+      ? 2
+      : evidence.schema === INTERACTION_SCHEMA_V3
+        ? 3
+        : null;
+  if (!protocolVersion)
+    return unavailable(
+      `Interaction evidence must use ${INTERACTION_SCHEMA_V2} or ${INTERACTION_SCHEMA_V3}.`,
+    );
   if (evidence.status === 'failed')
     return {
       status: 'failed',
@@ -1002,7 +1109,9 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     for (const role of ['baseline', 'candidate'])
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
-        INTERACTION_PROTOCOL,
+        protocolVersion === 3
+          ? INTERACTION_PROTOCOL_V3
+          : INTERACTION_PROTOCOL_V2,
         `${role} interaction protocol is missing or unsupported`,
       );
     assert.ok(
@@ -1048,11 +1157,13 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       evidence.builds?.baseline?.[name],
       `${name} baseline`,
       expectedMaterializedCount,
+      protocolVersion,
     );
     const candidateSamples = validateInteractionSide(
       evidence.builds?.candidate?.[name],
       `${name} candidate`,
       expectedMaterializedCount,
+      protocolVersion,
     );
     for (const [role, localSamples, replaySamples] of [
       [
@@ -1094,12 +1205,85 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       candidateSamples.map((sample) => sample.inputToRenderedFrameMs),
     );
     const failures = [];
+    if (name === 'localControl' && protocolVersion === 3) {
+      const baselineIntentP95Ms = p95(
+        baselineSamples.map((sample) => sample.clickToAcceptedIntentMs),
+      );
+      const candidateIntentP95Ms = p95(
+        candidateSamples.map((sample) => sample.clickToAcceptedIntentMs),
+      );
+      const baselineFeedbackP95Ms = p95(
+        baselineSamples.map((sample) => sample.clickToVisibleFeedbackMs),
+      );
+      const candidateFeedbackP95Ms = p95(
+        candidateSamples.map((sample) => sample.clickToVisibleFeedbackMs),
+      );
+      const regressionLimit = 1 + STARTUP_REGRESSION_LIMIT_PCT / 100;
+      const stateRegression =
+        baselineStateP95Ms === 0
+          ? candidateStateP95Ms === 0
+            ? 1
+            : Infinity
+          : candidateStateP95Ms / baselineStateP95Ms;
+      const frameRegression =
+        baselineFrameP95Ms === 0
+          ? candidateFrameP95Ms === 0
+            ? 1
+            : Infinity
+          : candidateFrameP95Ms / baselineFrameP95Ms;
+      if (baselineIntentP95Ms > limitMs || candidateIntentP95Ms > limitMs)
+        failures.push('click-to-accepted-intent p95 exceeds the 100ms limit');
+      if (baselineFeedbackP95Ms > limitMs || candidateFeedbackP95Ms > limitMs)
+        failures.push('click-to-visible-feedback p95 exceeds the 100ms limit');
+      if (stateRegression > regressionLimit)
+        failures.push('click-to-full-ready state regression exceeds 10%');
+      if (frameRegression > regressionLimit)
+        failures.push(
+          'click-to-full-rendered readiness regression exceeds 10%',
+        );
+      return {
+        status: failures.length ? 'failed' : 'measured',
+        protocolVersion,
+        semantic:
+          'v3 local control separates trusted click-to-accepted-intent and click-to-visible-button feedback (each <=100ms) from full active-LOD readiness and same-frame completed output (candidate p95 <=10% slower than matched control); all durations include trusted click delivery delay and full end-to-end values remain reported',
+        baseline: {
+          sampleCount: baselineSamples.length,
+          pointerdownToFullReadyStateP95Ms: p95(
+            baselineSamples.map((sample) => sample.pointerdownToStateMs),
+          ),
+          pointerdownToFullReadyP95Ms: p95(
+            baselineSamples.map((sample) => sample.pointerdownToReadyMs),
+          ),
+          clickToAcceptedIntentP95Ms: baselineIntentP95Ms,
+          clickToVisibleFeedbackP95Ms: baselineFeedbackP95Ms,
+          clickToFullReadyStateP95Ms: baselineStateP95Ms,
+          clickToFullRenderedReadinessP95Ms: baselineFrameP95Ms,
+        },
+        candidate: {
+          sampleCount: candidateSamples.length,
+          pointerdownToFullReadyStateP95Ms: p95(
+            candidateSamples.map((sample) => sample.pointerdownToStateMs),
+          ),
+          pointerdownToFullReadyP95Ms: p95(
+            candidateSamples.map((sample) => sample.pointerdownToReadyMs),
+          ),
+          clickToAcceptedIntentP95Ms: candidateIntentP95Ms,
+          clickToVisibleFeedbackP95Ms: candidateFeedbackP95Ms,
+          clickToFullReadyStateP95Ms: candidateStateP95Ms,
+          clickToFullRenderedReadinessP95Ms: candidateFrameP95Ms,
+        },
+        absoluteAcknowledgementLimitMs: limitMs,
+        fullReadinessRegressionLimitPct: STARTUP_REGRESSION_LIMIT_PCT,
+        failures,
+      };
+    }
     if (candidateStateP95Ms > limitMs)
       failures.push('input-to-state p95 exceeds the limit');
     if (candidateFrameP95Ms > limitMs)
       failures.push('input-to-rendered-frame p95 exceeds the limit');
     return {
       status: failures.length ? 'failed' : 'measured',
+      protocolVersion,
       semantic:
         name === 'localControl'
           ? 'trusted input event timestamp to matching application state and active layer output paired within one naturally rendered frame; input delivery delay is included'

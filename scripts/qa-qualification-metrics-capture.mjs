@@ -10,9 +10,9 @@ import { createWindowsForegroundActivationSession } from './performance/windowsF
 import { readWeatherBalancedIdentityCapturePair } from './performance/qualificationMetrics.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v2';
+const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v3';
 const INTERACTION_PROTOCOL =
-  'trusted-event-timeStamp-prerender-postrender-witness-v4';
+  'trusted-click-activation-prerender-postrender-witness-v5';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -382,9 +382,12 @@ export function installInteractionObserverInPage(fixtureContract) {
     removeInput: [],
     removeRender: null,
     removePreRender: null,
+    removeVisibilityRequest: null,
+    removeLifecycleEvent: null,
     preRenderWitness: null,
     pollTimer: null,
     pollPromise: null,
+    feedbackAnimationFrame: null,
     isReplayBillboardWitness({ selectedRecord, visualWitness }) {
       return Boolean(
         selectedRecord &&
@@ -501,6 +504,185 @@ export function installInteractionObserverInPage(fixtureContract) {
         matched: stateMatches && renderedRecordMatches,
       };
     },
+    isFreshTrustedEvent(event, sample, expectedType, receivedAtMs) {
+      const targetMatches =
+        event.currentTarget === observer.armedTarget &&
+        (event.target === observer.armedTarget ||
+          observer.armedTarget?.contains?.(event.target) === true);
+      return Boolean(
+        event.isTrusted === true &&
+        event.type === expectedType &&
+        targetMatches &&
+        Number.isFinite(event.timeStamp) &&
+        event.timeStamp >= sample.armedAtMs &&
+        event.timeStamp <= receivedAtMs,
+      );
+    },
+    onVisibilityRequest(change) {
+      const sample = observer.pending;
+      const entry =
+        window.__godsEyeView?.dataManager?.layers?.get?.('local-datacenters');
+      if (
+        observer.disposed ||
+        sample?.kind !== 'localControl' ||
+        sample.inputAtMs == null ||
+        sample.acceptedIntentAtMs != null ||
+        change?.type !== 'visibility-requested' ||
+        change.layerId !== 'local-datacenters' ||
+        change.enabled !== sample.expected ||
+        change.origin !== 'user' ||
+        !Number.isSafeInteger(change.intentEpoch) ||
+        entry?.visibilityIntentEpoch !== change.intentEpoch ||
+        entry.visibilityIntentEnabled !== change.enabled
+      )
+        return;
+      sample.acceptedIntentAtMs = performance.now();
+      sample.acceptedIntentEpoch = change.intentEpoch;
+    },
+    onVisibilityTransition(change) {
+      const sample = observer.pending;
+      if (
+        observer.disposed ||
+        sample?.kind !== 'localControl' ||
+        sample.acceptedIntentEpoch == null ||
+        change?.type !== 'visibility-transition' ||
+        change.layerId !== 'local-datacenters' ||
+        change.enabled !== sample.expected ||
+        change.origin !== 'user' ||
+        change.intentEpoch !== sample.acceptedIntentEpoch
+      )
+        return;
+      sample.transitionAtMs = performance.now();
+      sample.transitionIntentEpoch = change.intentEpoch;
+    },
+    finalizeSampleIfReady(sample) {
+      if (
+        observer.disposed ||
+        observer.pending !== sample ||
+        sample.generation !== observer.generation ||
+        !sample.fullReadyFrameObserved ||
+        sample.buttonFeedbackAtMs == null ||
+        sample.acceptedIntentAtMs == null
+      )
+        return false;
+      observer.records.push({ ...sample });
+      if (observer.pollTimer) clearInterval(observer.pollTimer);
+      observer.pollTimer = null;
+      observer.pending = null;
+      observer.armedTarget = null;
+      observer.pollPromise = null;
+      return true;
+    },
+    observeVisibleButtonFrame(sample, timestamp) {
+      observer.feedbackAnimationFrame = null;
+      if (
+        observer.disposed ||
+        observer.pending !== sample ||
+        sample.generation !== observer.generation ||
+        sample.buttonFeedbackAtMs != null
+      )
+        return;
+      const observedAtMs = performance.now();
+      if (!Number.isFinite(timestamp)) {
+        sample.buttonFeedbackConsecutiveFrames = 0;
+        sample.buttonFeedbackFirstFrameAtMs = null;
+        sample.buttonFeedbackFirstRafTimestampMs = null;
+        return;
+      }
+      const button = document.querySelector(sample.selector);
+      const rect = button?.getBoundingClientRect?.();
+      const style = button ? window.getComputedStyle(button) : null;
+      const visible = Boolean(
+        document.visibilityState === 'visible' &&
+        document.hasFocus?.() === true &&
+        rect &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.right > 0 &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.top < window.innerHeight &&
+        style?.display !== 'none' &&
+        style?.visibility !== 'hidden' &&
+        Number(style?.opacity) > 0 &&
+        button.disabled === false &&
+        typeof button.textContent === 'string' &&
+        button.textContent.trim().length > 0,
+      );
+      const appNow = window.__godsEyeView;
+      const dataManager = appNow?.dataManager;
+      const entry = dataManager?.layers?.get?.('local-datacenters');
+      const currentIntentMatches = Boolean(
+        sample.acceptedIntentEpoch != null &&
+        entry?.visibilityIntentEpoch === sample.acceptedIntentEpoch &&
+        entry.visibilityIntentEnabled === sample.expected,
+      );
+      const transitionState = sample.expected ? 'enabling' : 'disabling';
+      const transitionVisible = Boolean(
+        visible &&
+        currentIntentMatches &&
+        sample.transitionIntentEpoch === sample.acceptedIntentEpoch &&
+        button.dataset?.feedState === transitionState &&
+        button.classList.contains('transitioning') &&
+        button.classList.contains(transitionState) &&
+        button.getAttribute('aria-busy') === 'true' &&
+        button.getAttribute('aria-disabled') === 'true',
+      );
+      const settledVisible = Boolean(
+        visible &&
+        currentIntentMatches &&
+        dataManager.isEnabled('local-datacenters') === sample.expected &&
+        button.classList.contains('active') === sample.expected &&
+        !button.classList.contains('transitioning'),
+      );
+      const visibleState = transitionVisible
+        ? 'transition'
+        : settledVisible
+          ? 'settled'
+          : null;
+      if (visibleState) {
+        if (sample.buttonFeedbackFirstState !== visibleState) {
+          sample.buttonFeedbackConsecutiveFrames = 0;
+          sample.buttonFeedbackFirstFrameAtMs = null;
+          sample.buttonFeedbackFirstRafTimestampMs = null;
+        }
+        if (
+          sample.buttonFeedbackFirstRafTimestampMs != null &&
+          timestamp <= sample.buttonFeedbackFirstRafTimestampMs
+        ) {
+          sample.buttonFeedbackConsecutiveFrames = 0;
+          sample.buttonFeedbackFirstFrameAtMs = null;
+          sample.buttonFeedbackFirstRafTimestampMs = null;
+        }
+        sample.buttonFeedbackConsecutiveFrames =
+          (sample.buttonFeedbackConsecutiveFrames || 0) + 1;
+        sample.buttonFeedbackFirstFrameAtMs ??= observedAtMs;
+        sample.buttonFeedbackFirstRafTimestampMs ??= timestamp;
+        sample.buttonFeedbackFirstState = visibleState;
+        if (sample.buttonFeedbackConsecutiveFrames >= 2) {
+          sample.buttonFeedbackAtMs = observedAtMs;
+          sample.buttonFeedbackSecondRafTimestampMs = timestamp;
+          sample.buttonFeedbackState = visibleState;
+          sample.buttonFeedbackIntentEpoch = entry.visibilityIntentEpoch;
+          sample.buttonFeedbackTransitionAtMs =
+            visibleState === 'transition' ? sample.transitionAtMs : null;
+          sample.buttonFeedbackWitnessType =
+            'visible-button-two-distinct-raf-v3';
+          observer.finalizeSampleIfReady(sample);
+          return;
+        }
+      } else {
+        sample.buttonFeedbackConsecutiveFrames = 0;
+        sample.buttonFeedbackFirstFrameAtMs = null;
+        sample.buttonFeedbackFirstRafTimestampMs = null;
+        sample.buttonFeedbackFirstState = null;
+      }
+      if (typeof requestAnimationFrame === 'function')
+        observer.feedbackAnimationFrame = requestAnimationFrame(
+          (nextTimestamp) =>
+            observer.observeVisibleButtonFrame(sample, nextTimestamp),
+        );
+    },
     onEvent(event) {
       const sample = observer.pending;
       if (observer.disposed || !sample) return;
@@ -515,21 +697,57 @@ export function installInteractionObserverInPage(fixtureContract) {
         return;
       }
       const receivedAtMs = performance.now();
-      const expectedType =
-        sample.kind === 'localControl' ? 'pointerdown' : 'input';
-      const targetMatches =
-        event.currentTarget === observer.armedTarget &&
-        (event.target === observer.armedTarget ||
-          observer.armedTarget?.contains?.(event.target) === true);
+      if (sample.kind === 'localControl' && event.type !== 'input') {
+        if (
+          !this.isFreshTrustedEvent(event, sample, event.type, receivedAtMs)
+        ) {
+          observer.error =
+            'Interaction input event failed freshness validation.';
+          return;
+        }
+        if (event.type === 'pointerdown') {
+          if (sample.pointerDownAtMs != null || sample.clickAtMs != null) {
+            observer.error = 'Duplicate or stale pointerdown event.';
+            return;
+          }
+          sample.pointerDownAtMs = event.timeStamp;
+          sample.pointerDownReceivedAtMs = receivedAtMs;
+          return;
+        }
+        if (event.type === 'pointerup') {
+          if (
+            sample.pointerDownAtMs == null ||
+            sample.pointerUpAtMs != null ||
+            event.timeStamp < sample.pointerDownAtMs
+          ) {
+            observer.error = 'Pointerup did not follow the armed pointerdown.';
+            return;
+          }
+          sample.pointerUpAtMs = event.timeStamp;
+          sample.pointerUpReceivedAtMs = receivedAtMs;
+          return;
+        }
+        if (
+          event.type !== 'click' ||
+          sample.pointerDownAtMs == null ||
+          sample.pointerUpAtMs == null ||
+          event.timeStamp < sample.pointerUpAtMs
+        ) {
+          observer.error =
+            'Local control requires a fresh trusted click after pointerdown and pointerup.';
+          return;
+        }
+      }
+      const expectedType = sample.kind === 'localControl' ? 'click' : 'input';
       if (
-        event.isTrusted !== true ||
-        event.type !== expectedType ||
-        !targetMatches ||
-        !Number.isFinite(event.timeStamp) ||
-        event.timeStamp < sample.armedAtMs ||
-        event.timeStamp > receivedAtMs
+        !this.isFreshTrustedEvent(event, sample, expectedType, receivedAtMs)
       ) {
         observer.error = 'Interaction input event failed freshness validation.';
+        return;
+      }
+      if (sample.inputAtMs != null) {
+        observer.error =
+          'Duplicate input event for an armed interaction sample.';
         return;
       }
       sample.inputAtMs = event.timeStamp;
@@ -537,10 +755,20 @@ export function installInteractionObserverInPage(fixtureContract) {
       sample.handlerReceivedAtMs = receivedAtMs;
       sample.inputEventType = event.type;
       sample.inputTrusted = event.isTrusted;
-      sample.inputTargetMatched = targetMatches;
-      sample.inputClockSource = 'trusted-event-timeStamp';
+      sample.inputTargetMatched = true;
+      sample.inputClockSource =
+        sample.kind === 'localControl'
+          ? 'trusted-click-event-timeStamp'
+          : 'trusted-event-timeStamp';
       sample.inputDeliveryDelayMs = receivedAtMs - event.timeStamp;
       if (sample.kind === 'localControl') {
+        sample.clickAtMs = event.timeStamp;
+        sample.clickReceivedAtMs = receivedAtMs;
+        sample.pointerDownToClickMs = event.timeStamp - sample.pointerDownAtMs;
+        if (typeof requestAnimationFrame === 'function')
+          observer.feedbackAnimationFrame = requestAnimationFrame((timestamp) =>
+            observer.observeVisibleButtonFrame(sample, timestamp),
+          );
         observer.pollPromise = observer.pollState();
         observer.pollTimer = setInterval(() => observer.pollState(), 10);
       }
@@ -683,7 +911,8 @@ export function installInteractionObserverInPage(fixtureContract) {
       if (
         observer.error ||
         !sample ||
-        sample.generation !== observer.generation
+        sample.generation !== observer.generation ||
+        sample.fullReadyFrameObserved
       )
         return;
       if (sample.kind === 'localControl') {
@@ -784,12 +1013,17 @@ export function installInteractionObserverInPage(fixtureContract) {
             : replayRenderWitnessType;
         sample.renderedFrameAtMs = performance.now();
         sample.frameNumberAtRendered = frameNumber;
-        observer.records.push({ ...sample });
-        if (observer.pollTimer) clearInterval(observer.pollTimer);
-        observer.pollTimer = null;
-        observer.pending = null;
-        observer.armedTarget = null;
-        observer.pollPromise = null;
+        if (sample.kind === 'localControl') {
+          sample.fullReadyFrameObserved = true;
+          observer.finalizeSampleIfReady(sample);
+        } else {
+          observer.records.push({ ...sample });
+          if (observer.pollTimer) clearInterval(observer.pollTimer);
+          observer.pollTimer = null;
+          observer.pending = null;
+          observer.armedTarget = null;
+          observer.pollPromise = null;
+        }
       } catch (error) {
         observer.error = error?.message || String(error);
       }
@@ -833,6 +1067,22 @@ export function installInteractionObserverInPage(fixtureContract) {
         coverageFromMs,
         coverageToMs,
         inputAtMs: null,
+        pointerDownAtMs: null,
+        pointerUpAtMs: null,
+        clickAtMs: null,
+        acceptedIntentAtMs: null,
+        acceptedIntentEpoch: null,
+        transitionAtMs: null,
+        transitionIntentEpoch: null,
+        buttonFeedbackFirstFrameAtMs: null,
+        buttonFeedbackFirstRafTimestampMs: null,
+        buttonFeedbackSecondRafTimestampMs: null,
+        buttonFeedbackAtMs: null,
+        buttonFeedbackState: null,
+        buttonFeedbackFirstState: null,
+        buttonFeedbackIntentEpoch: null,
+        buttonFeedbackTransitionAtMs: null,
+        buttonFeedbackConsecutiveFrames: 0,
         stateAtMs: null,
         renderedFrameAtMs: null,
         frameNumberAtState: null,
@@ -856,7 +1106,17 @@ export function installInteractionObserverInPage(fixtureContract) {
       observer.removeRender = null;
       observer.removePreRender?.();
       observer.removePreRender = null;
+      observer.removeVisibilityRequest?.();
+      observer.removeVisibilityRequest = null;
+      observer.removeLifecycleEvent?.();
+      observer.removeLifecycleEvent = null;
       observer.preRenderWitness = null;
+      if (
+        observer.feedbackAnimationFrame != null &&
+        typeof cancelAnimationFrame === 'function'
+      )
+        cancelAnimationFrame(observer.feedbackAnimationFrame);
+      observer.feedbackAnimationFrame = null;
       if (observer.pollTimer) clearInterval(observer.pollTimer);
       observer.pollTimer = null;
       observer.pending = null;
@@ -866,6 +1126,8 @@ export function installInteractionObserverInPage(fixtureContract) {
   };
   for (const [selector, name] of [
     ['[data-layer-id="local-datacenters"] .data-toggle-btn', 'pointerdown'],
+    ['[data-layer-id="local-datacenters"] .data-toggle-btn', 'pointerup'],
+    ['[data-layer-id="local-datacenters"] .data-toggle-btn', 'click'],
     ['.investigation-timeline-slider-control', 'input'],
   ]) {
     const node = document.querySelector(selector);
@@ -879,6 +1141,15 @@ export function installInteractionObserverInPage(fixtureContract) {
     observer.onPreRender,
   );
   observer.removeRender = scene.postRender.addEventListener(observer.onRender);
+  const dataManager = window.__godsEyeView?.dataManager;
+  if (typeof dataManager?.subscribeVisibilityRequests === 'function')
+    observer.removeVisibilityRequest = dataManager.subscribeVisibilityRequests(
+      (change) => observer.onVisibilityRequest(change),
+    );
+  if (typeof dataManager?.subscribe === 'function')
+    observer.removeLifecycleEvent = dataManager.subscribe((change) =>
+      observer.onVisibilityTransition(change),
+    );
   window.__qualificationMetricsObserver = observer;
 }
 
@@ -1671,8 +1942,9 @@ export async function runQualificationMetricsCapture({
           'the prepared same-origin response is acknowledged after successful Fetch.fulfillRequest; its delivered bytes/hash/count and exactly eight materialized features are verified by an unmeasured enable-disable preflight before interaction timing',
       },
       interactionSemantics:
-        'trusted input event timestamp includes delivery delay; local controls require a naturally produced preRender/postRender pair with matching state and layer output in the same frame, while replay seeks require a naturally produced same-frame preRender/postRender pair matching selected source time and visible billboard',
-      inputClockSource: 'trusted-event-timeStamp',
+        'v3 local controls start at trusted click event.timeStamp after a recorded trusted pointerdown/up sequence; accepted visibility intent and two consecutive visible-button requestAnimationFrame observations are separate acknowledgements; full active-LOD readiness and same-frame postRender remain separately reported. Replay seeks retain trusted input event timestamps and their same-frame rendered-aircraft witness.',
+      inputClockSource:
+        'trusted-click-event-timeStamp for local controls; trusted-event-timeStamp for replay',
       renderWitnessTypes: {
         localControl: LOCAL_RENDER_WITNESS,
         loadedReplaySeek: REPLAY_RENDER_WITNESS,

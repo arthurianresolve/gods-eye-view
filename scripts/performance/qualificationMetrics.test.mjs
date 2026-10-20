@@ -477,6 +477,67 @@ function interactionEvidence(overrides = {}) {
   return Object.assign(base, overrides);
 }
 
+function clickInteractionEvidence({
+  baselineStateMs = 50,
+  baselineFrameMs = 80,
+  candidateStateMs = 55,
+  candidateFrameMs = 88,
+  candidateIntentMs = 5,
+  candidateFeedbackMs = 30,
+} = {}) {
+  const evidence = interactionEvidence();
+  evidence.schema = 'gev-interaction-latency-evidence/v3';
+  for (const role of ['baseline', 'candidate']) {
+    const build = evidence.builds[role];
+    build.interactionProtocol =
+      'trusted-click-activation-prerender-postrender-witness-v5';
+    build.localControl = build.localControl.map((sample, index) => {
+      const clickAtMs = 1000 + index * 1000;
+      const stateDuration =
+        role === 'baseline' ? baselineStateMs : candidateStateMs;
+      const frameDuration =
+        role === 'baseline' ? baselineFrameMs : candidateFrameMs;
+      const feedbackDuration = role === 'baseline' ? 25 : candidateFeedbackMs;
+      return {
+        ...sample,
+        armedAtMs: clickAtMs - 3,
+        pointerDownAtMs: clickAtMs - 3,
+        pointerDownReceivedAtMs: clickAtMs - 2,
+        pointerUpAtMs: clickAtMs - 1,
+        pointerUpReceivedAtMs: clickAtMs,
+        clickAtMs,
+        clickReceivedAtMs: clickAtMs + 1,
+        pointerDownToClickMs: 3,
+        inputAtMs: clickAtMs,
+        inputEventAtMs: clickAtMs,
+        handlerReceivedAtMs: clickAtMs + 1,
+        inputDeliveryDelayMs: 1,
+        inputEventType: 'click',
+        inputClockSource: 'trusted-click-event-timeStamp',
+        acceptedIntentAtMs:
+          clickAtMs + (role === 'baseline' ? 5 : candidateIntentMs),
+        acceptedIntentEpoch: index + (role === 'candidate' ? 100 : 1),
+        transitionAtMs:
+          clickAtMs + (role === 'baseline' ? 5 : candidateIntentMs),
+        transitionIntentEpoch: index + (role === 'candidate' ? 100 : 1),
+        buttonFeedbackFirstFrameAtMs: clickAtMs + feedbackDuration - 16,
+        buttonFeedbackFirstRafTimestampMs: clickAtMs + feedbackDuration - 16,
+        buttonFeedbackSecondRafTimestampMs: clickAtMs + feedbackDuration,
+        buttonFeedbackAtMs: clickAtMs + feedbackDuration,
+        buttonFeedbackState: 'transition',
+        buttonFeedbackIntentEpoch: index + (role === 'candidate' ? 100 : 1),
+        buttonFeedbackTransitionAtMs:
+          clickAtMs + (role === 'baseline' ? 5 : candidateIntentMs),
+        buttonFeedbackWitnessType: 'visible-button-two-distinct-raf-v3',
+        buttonFeedbackConsecutiveFrames: 2,
+        stateAtMs: clickAtMs + stateDuration,
+        renderedFrameAtMs: clickAtMs + frameDuration,
+      };
+    });
+  }
+  return evidence;
+}
+
 function heapEvidence() {
   const workPlan = {
     warmupCycles: 2,
@@ -582,6 +643,37 @@ function inputControl(extra = {}) {
       });
     },
     ...extra,
+  };
+}
+
+function dispatchLocalClick(node) {
+  node.dispatch('pointerdown');
+  node.dispatch('pointerup');
+  node.dispatch('click');
+}
+
+function createRafHarness(now = () => performance.now()) {
+  let nextId = 1;
+  const callbacks = new Map();
+  return {
+    requestAnimationFrame(callback) {
+      const id = nextId++;
+      callbacks.set(id, callback);
+      return id;
+    },
+    cancelAnimationFrame(id) {
+      callbacks.delete(id);
+    },
+    flush(timestamp = now() + 16) {
+      const entry = callbacks.entries().next().value;
+      if (!entry) throw new Error('No animation frame is queued.');
+      const [id, callback] = entry;
+      callbacks.delete(id);
+      callback(timestamp);
+    },
+    get pendingCount() {
+      return callbacks.size;
+    },
   };
 }
 
@@ -850,6 +942,130 @@ test('interaction evidence binds exact source builds, browser, renderer, fixture
     missingRendererResult.metrics.loadedReplaySeek.status,
     'unavailable',
   );
+});
+
+test('v3 local metrics separate quick acknowledgements from full scene readiness', () => {
+  const args = {
+    baseline: capture(),
+    candidate: capture(undefined, '2'),
+  };
+  const evidence = clickInteractionEvidence();
+  const result = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: evidence,
+  });
+  const metric = result.metrics.localControl;
+  assert.equal(metric.status, 'measured', metric.reason);
+  assert.equal(metric.baseline.clickToAcceptedIntentP95Ms, 5);
+  assert.equal(metric.candidate.clickToVisibleFeedbackP95Ms, 30);
+  assert.equal(metric.baseline.clickToFullReadyStateP95Ms, 50);
+  assert.equal(metric.baseline.pointerdownToFullReadyStateP95Ms, 53);
+  assert.equal(metric.candidate.clickToFullRenderedReadinessP95Ms, 88);
+  assert.equal(metric.candidate.pointerdownToFullReadyP95Ms, 91);
+
+  const slowFeedback = clickInteractionEvidence({ candidateFeedbackMs: 101 });
+  const slowFeedbackResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: slowFeedback,
+  });
+  assert.equal(slowFeedbackResult.metrics.localControl.status, 'failed');
+  assert.match(
+    slowFeedbackResult.metrics.localControl.failures.join('; '),
+    /visible-feedback.*100ms/,
+  );
+
+  const delayedIntent = clickInteractionEvidence({
+    candidateStateMs: 150,
+    candidateFrameMs: 180,
+    candidateIntentMs: 101,
+    candidateFeedbackMs: 110,
+  });
+  const delayedIntentResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: delayedIntent,
+  });
+  assert.equal(delayedIntentResult.metrics.localControl.status, 'failed');
+  assert.match(
+    delayedIntentResult.metrics.localControl.failures.join('; '),
+    /accepted-intent.*100ms/,
+  );
+
+  const lateVisualFeedback = clickInteractionEvidence({
+    candidateFeedbackMs: 101,
+  });
+  const lateVisualFeedbackResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: lateVisualFeedback,
+  });
+  assert.equal(lateVisualFeedbackResult.metrics.localControl.status, 'failed');
+  assert.match(
+    lateVisualFeedbackResult.metrics.localControl.failures.join('; '),
+    /visible-feedback.*100ms/,
+  );
+
+  const settledVisualFeedback = clickInteractionEvidence();
+  for (const role of ['baseline', 'candidate']) {
+    for (const sample of settledVisualFeedback.builds[role].localControl) {
+      sample.buttonFeedbackState = 'settled';
+      sample.buttonFeedbackTransitionAtMs = null;
+    }
+  }
+  assert.equal(
+    evaluateQualificationMetrics({
+      ...args,
+      interactionEvidence: settledVisualFeedback,
+    }).metrics.localControl.status,
+    'measured',
+    'a completed matching visible state remains a valid acknowledgement',
+  );
+
+  const staleTransition = clickInteractionEvidence();
+  staleTransition.builds.candidate.localControl[0].transitionIntentEpoch++;
+  const staleTransitionResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: staleTransition,
+  });
+  assert.notEqual(
+    staleTransitionResult.metrics.localControl.status,
+    'measured',
+  );
+
+  const slowFullReady = clickInteractionEvidence({ candidateFrameMs: 89 });
+  const slowFullReadyResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: slowFullReady,
+  });
+  assert.equal(slowFullReadyResult.metrics.localControl.status, 'failed');
+  assert.match(
+    slowFullReadyResult.metrics.localControl.failures.join('; '),
+    /full-rendered readiness regression exceeds 10%/,
+  );
+
+  const malformed = clickInteractionEvidence();
+  delete malformed.builds.candidate.localControl[0].acceptedIntentAtMs;
+  const malformedResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: malformed,
+  });
+  assert.equal(malformedResult.metrics.localControl.status, 'failed');
+
+  const reorderedPointer = clickInteractionEvidence();
+  reorderedPointer.builds.candidate.localControl[0].pointerUpAtMs =
+    reorderedPointer.builds.candidate.localControl[0].pointerDownAtMs - 1;
+  const reorderedResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: reorderedPointer,
+  });
+  assert.equal(reorderedResult.metrics.localControl.status, 'failed');
+
+  const mixedProtocol = clickInteractionEvidence();
+  mixedProtocol.builds.candidate.interactionProtocol =
+    'trusted-event-timeStamp-prerender-postrender-witness-v4';
+  const mixedProtocolResult = evaluateQualificationMetrics({
+    ...args,
+    interactionEvidence: mixedProtocol,
+  });
+  assert.equal(mixedProtocolResult.metrics.localControl.status, 'unavailable');
 });
 
 test('startup evidence requires real browser, renderer, profile and five foreground run identities', () => {
@@ -1166,14 +1382,70 @@ test('interaction measures the first naturally produced matching frame without r
   let preRenderListener;
   let renderRequests = 0;
   let intervalCallback;
+  let intentEpoch = 0;
   let layerEnabled = false;
   let buttonActive = false;
+  let buttonVisualState = 'off';
+  let lifecycleListener = null;
+  const layerEntry = {
+    visibilityIntentEpoch: 0,
+    visibilityIntentEnabled: false,
+    module: {
+      getAnalystRecords: () => {
+        throw new Error('local poll must not normalize analyst rows');
+      },
+      getLodDiagnostics: () => lod,
+    },
+  };
+  const raf = createRafHarness();
   let lod = { computed: false, total: 0, active: 0 };
   const controls = new Map();
   controls.set(
     '[data-layer-id="local-datacenters"] .data-toggle-btn',
     inputControl({
-      classList: { contains: (name) => name === 'active' && buttonActive },
+      classList: {
+        contains(name) {
+          if (name === 'active') return buttonActive;
+          if (name === 'transitioning')
+            return ['enabling', 'disabling'].includes(buttonVisualState);
+          if (name === 'enabling' || name === 'disabling')
+            return name === buttonVisualState;
+          return false;
+        },
+      },
+      dataset: {
+        get feedState() {
+          return buttonVisualState;
+        },
+      },
+      getAttribute(name) {
+        if (name === 'aria-busy')
+          return ['enabling', 'disabling'].includes(buttonVisualState)
+            ? 'true'
+            : 'false';
+        if (name === 'aria-disabled')
+          return ['enabling', 'disabling'].includes(buttonVisualState)
+            ? 'true'
+            : 'false';
+        return null;
+      },
+      get textContent() {
+        return {
+          enabling: 'ENABLING',
+          disabling: 'DISABLING',
+          on: 'LOADING',
+          off: 'OFF',
+        }[buttonVisualState];
+      },
+      disabled: false,
+      getBoundingClientRect: () => ({
+        left: 10,
+        top: 10,
+        right: 30,
+        bottom: 30,
+        width: 20,
+        height: 20,
+      }),
     }),
   );
   controls.set('.investigation-timeline-slider-control', inputControl());
@@ -1201,29 +1473,42 @@ test('interaction measures the first naturally produced matching frame without r
     },
   };
   const globalWindow = {
+    innerWidth: 800,
+    innerHeight: 600,
+    getComputedStyle: () => ({
+      display: 'block',
+      visibility: 'visible',
+      opacity: '1',
+    }),
     __godsEyeView: {
       viewer: { scene },
       dataManager: {
         isEnabled: () => layerEnabled,
-        layers: new Map([
-          [
-            'local-datacenters',
-            {
-              module: {
-                getAnalystRecords: () => {
-                  throw new Error('local poll must not normalize analyst rows');
-                },
-                getLodDiagnostics: () => lod,
-              },
-            },
-          ],
-        ]),
+        subscribe(listener) {
+          lifecycleListener = listener;
+          return () => {
+            lifecycleListener = null;
+          };
+        },
+        subscribeVisibilityRequests(listener) {
+          this.visibilityListener = listener;
+          return () => {
+            this.visibilityListener = null;
+          };
+        },
+        layers: new Map([['local-datacenters', layerEntry]]),
       },
     },
   };
   const restoreGlobals = replacePageGlobals({
     window: globalWindow,
-    document: { querySelector: (selector) => controls.get(selector) || null },
+    document: {
+      visibilityState: 'visible',
+      hasFocus: () => true,
+      querySelector: (selector) => controls.get(selector) || null,
+    },
+    requestAnimationFrame: raf.requestAnimationFrame,
+    cancelAnimationFrame: raf.cancelAnimationFrame,
     setInterval: (callback) => {
       intervalCallback = callback;
       return 1;
@@ -1241,12 +1526,45 @@ test('interaction measures the first naturally produced matching frame without r
     const node = controls.get(
       '[data-layer-id="local-datacenters"] .data-toggle-btn',
     );
-    node.dispatch('pointerdown');
+    dispatchLocalClick(node);
+    layerEntry.visibilityIntentEpoch = ++intentEpoch;
+    layerEntry.visibilityIntentEnabled = true;
+    globalWindow.__godsEyeView.dataManager.visibilityListener({
+      type: 'visibility-requested',
+      layerId: 'local-datacenters',
+      enabled: true,
+      origin: 'user',
+      intentEpoch,
+    });
+    buttonVisualState = 'enabling';
+    lifecycleListener({
+      type: 'visibility-transition',
+      layerId: 'local-datacenters',
+      enabled: true,
+      origin: 'user',
+      intentEpoch,
+    });
     await observer.pollPromise;
     assert.equal(observer.pending.stateAtMs, null);
     for (let index = 0; index < 25; index++) await intervalCallback();
+    const firstFrameTimestamp = performance.now() + 16;
+    raf.flush(firstFrameTimestamp);
+    raf.flush(firstFrameTimestamp);
+    assert.equal(
+      observer.pending.buttonFeedbackAtMs,
+      null,
+      'a repeated RAF timestamp cannot count as a second frame',
+    );
+    raf.flush(firstFrameTimestamp + 16);
+    assert.equal(observer.pending.buttonFeedbackState, 'transition');
+    assert.equal(observer.pending.stateAtMs, null);
+    assert.ok(
+      Number.isFinite(observer.pending.buttonFeedbackAtMs),
+      'visible transition can be acknowledged before full LOD readiness',
+    );
     layerEnabled = true;
     buttonActive = true;
+    buttonVisualState = 'on';
     preRenderListener();
     lod = { computed: true, total: 8, active: 67 };
     await intervalCallback();
@@ -1273,19 +1591,46 @@ test('interaction measures the first naturally produced matching frame without r
       record.renderWitnessType,
       'natural-prerender-postrender-pair-v1',
     );
-    assert.equal(record.inputEventType, 'pointerdown');
+    assert.equal(record.inputEventType, 'click');
     assert.equal(record.inputTrusted, true);
     assert.equal(record.inputAtMs, record.inputEventAtMs);
     assert.ok(record.handlerReceivedAtMs >= record.inputAtMs);
     assert.equal(record.layerEnabledObserved, true);
     assert.equal(record.layerVisibleObserved, true);
+    assert.equal(
+      record.buttonFeedbackWitnessType,
+      'visible-button-two-distinct-raf-v3',
+    );
+    assert.equal(record.buttonFeedbackConsecutiveFrames, 2);
+    assert.equal(record.acceptedIntentEpoch, 1);
     assert.equal(renderRequests, 0);
 
     observer.arm('localControl', false);
-    node.dispatch('pointerdown');
+    dispatchLocalClick(node);
+    layerEntry.visibilityIntentEpoch = ++intentEpoch;
+    layerEntry.visibilityIntentEnabled = false;
+    globalWindow.__godsEyeView.dataManager.visibilityListener({
+      type: 'visibility-requested',
+      layerId: 'local-datacenters',
+      enabled: false,
+      origin: 'user',
+      intentEpoch,
+    });
+    buttonVisualState = 'disabling';
+    lifecycleListener({
+      type: 'visibility-transition',
+      layerId: 'local-datacenters',
+      enabled: false,
+      origin: 'user',
+      intentEpoch,
+    });
     await observer.pollPromise;
+    raf.flush();
+    raf.flush();
+    assert.equal(observer.pending.buttonFeedbackState, 'transition');
     layerEnabled = false;
     buttonActive = false;
+    buttonVisualState = 'off';
     lod = { computed: false, total: 0, active: 0 };
     scene.frameState.frameNumber++;
     preRenderListener();
@@ -1296,8 +1641,33 @@ test('interaction measures the first naturally produced matching frame without r
     assert.equal(disabledRecord.layerVisibleObserved, false);
     assert.equal(disabledRecord.layerRenderablesObserved, false);
     assert.equal(renderRequests, 0);
+    observer.arm('localControl', true);
+    dispatchLocalClick(node);
+    layerEntry.visibilityIntentEpoch = ++intentEpoch;
+    layerEntry.visibilityIntentEnabled = true;
+    globalWindow.__godsEyeView.dataManager.visibilityListener({
+      type: 'visibility-requested',
+      layerId: 'local-datacenters',
+      enabled: true,
+      origin: 'user',
+      intentEpoch,
+    });
+    assert.equal(raf.pendingCount, 1);
     observer.dispose();
     assert.equal(preRenderListener, null, 'preRender listener is disposed');
+    assert.equal(renderListener, null, 'postRender listener is disposed');
+    assert.equal(raf.pendingCount, 0, 'pending feedback RAF is cancelled');
+    assert.equal(
+      globalWindow.__godsEyeView.dataManager.visibilityListener,
+      null,
+      'visibility request subscription is disposed',
+    );
+    assert.equal(
+      lifecycleListener,
+      null,
+      'lifecycle event subscription is disposed',
+    );
+    assert.equal(node.listeners.size, 0, 'input listeners are disposed');
   } finally {
     globalWindow.__qualificationMetricsObserver?.dispose();
     restoreGlobals();
@@ -1369,7 +1739,7 @@ test('interaction input rejects stale, wrong-target/type, untrusted, future and 
       });
       assert.match(
         observer.error || '',
-        /input event failed freshness validation/,
+        /input event failed freshness validation|requires a fresh trusted click/,
       );
       assert.equal(observer.pending.inputAtMs, null, invalid.name);
       observer.dispose();
@@ -1450,7 +1820,7 @@ test('interaction input rejects duplicate and superseded-generation events', asy
     installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
     const observer = globalThis.window.__qualificationMetricsObserver;
     observer.arm('localControl', false);
-    local.dispatch('pointerdown');
+    dispatchLocalClick(local);
     await observer.pollPromise;
     local.dispatch('pointerdown');
     assert.match(observer.error || '', /Duplicate input event/);
@@ -1687,7 +2057,7 @@ test('interaction remains pending without a natural completed frame', async () =
     installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
     const observer = globalThis.window.__qualificationMetricsObserver;
     observer.arm('localControl', true);
-    node.dispatch('pointerdown');
+    dispatchLocalClick(node);
     await observer.pollPromise;
     assert.equal(observer.pending.stateAtMs, null);
     assert.equal(observer.records.length, 0);
@@ -1943,6 +2313,14 @@ test('serialized interaction observer completes local and replay render witnesse
       value,
       classList: { contains: (name) => name === 'active' && active },
       contains: (target) => target === node,
+      getBoundingClientRect: () => ({
+        left: 10,
+        top: 10,
+        right: 30,
+        bottom: 30,
+        width: 20,
+        height: 20,
+      }),
       addEventListener: (name, listener) => handlers.set(name, listener),
       removeEventListener: (name, listener) => {
         if (handlers.get(name) === listener) handlers.delete(name);
@@ -1962,9 +2340,34 @@ test('serialized interaction observer completes local and replay render witnesse
     return node;
   };
   let now = 100;
+  const raf = createRafHarness(() => {
+    now += 16;
+    return now - 16;
+  });
   const localSelector = '[data-layer-id="local-datacenters"] .data-toggle-btn';
   const replaySelector = '.investigation-timeline-slider-control';
-  const localNode = createNode(localSelector, { active: true });
+  const localNode = createNode(localSelector, { active: false });
+  localNode.dataset = { feedState: 'off' };
+  localNode.disabled = false;
+  localNode.getAttribute = (name) =>
+    name === 'aria-busy' || name === 'aria-disabled' ? 'false' : null;
+  Object.defineProperty(localNode, 'textContent', {
+    get: () =>
+      ({
+        enabling: 'ENABLING',
+        disabling: 'DISABLING',
+        on: 'LOADING',
+        off: 'OFF',
+      })[localNode.dataset.feedState],
+  });
+  const localEntry = {
+    visibilityIntentEpoch: 0,
+    visibilityIntentEnabled: false,
+    module: {
+      getLodDiagnostics: () => ({ computed: true, total: 8, active: 8 }),
+    },
+  };
+  let lifecycleListener = null;
   const replayNode = createNode(replaySelector, { value: '4' });
   const selectedRecord = {
     id: 'SYNTH-001',
@@ -1990,20 +2393,15 @@ test('serialized interaction observer completes local and replay render witnesse
   const app = {
     viewer: { scene },
     dataManager: {
-      isEnabled: () => true,
+      isEnabled: () => localEntry.visibilityIntentEnabled,
+      subscribe: (listener) => {
+        lifecycleListener = listener;
+        return () => {
+          lifecycleListener = null;
+        };
+      },
       layers: new Map([
-        [
-          'local-datacenters',
-          {
-            module: {
-              getLodDiagnostics: () => ({
-                computed: true,
-                total: 8,
-                active: 8,
-              }),
-            },
-          },
-        ],
+        ['local-datacenters', localEntry],
         [
           'flights',
           {
@@ -2038,6 +2436,13 @@ test('serialized interaction observer completes local and replay render witnesse
   };
   const sandbox = {
     window: {
+      innerWidth: 800,
+      innerHeight: 600,
+      getComputedStyle: () => ({
+        display: 'block',
+        visibility: 'visible',
+        opacity: '1',
+      }),
       __godsEyeView: app,
       __qualificationFlightWitnessReader: (id) => ({
         billboardId: id,
@@ -2050,7 +2455,13 @@ test('serialized interaction observer completes local and replay render witnesse
         canvas: { width: 800, height: 600 },
       }),
     },
-    document: { querySelector: (selector) => controls.get(selector) || null },
+    document: {
+      visibilityState: 'visible',
+      hasFocus: () => true,
+      querySelector: (selector) => controls.get(selector) || null,
+    },
+    requestAnimationFrame: raf.requestAnimationFrame,
+    cancelAnimationFrame: raf.cancelAnimationFrame,
     performance: { now: () => now },
     setInterval: () => 1,
     clearInterval() {},
@@ -2064,9 +2475,39 @@ test('serialized interaction observer completes local and replay render witnesse
   const observer = sandbox.window.__qualificationMetricsObserver;
   try {
     observer.arm('localControl', true);
-    localNode.dispatch('pointerdown');
+    dispatchLocalClick(localNode);
+    localEntry.visibilityIntentEpoch = 1;
+    localEntry.visibilityIntentEnabled = true;
+    observer.onVisibilityRequest({
+      type: 'visibility-requested',
+      layerId: 'local-datacenters',
+      enabled: true,
+      origin: 'user',
+      intentEpoch: 1,
+    });
+    localNode.dataset.feedState = 'enabling';
+    localNode.classList.contains = (name) =>
+      name === 'active'
+        ? false
+        : name === 'transitioning' || name === 'enabling';
+    localNode.getAttribute = (name) =>
+      name === 'aria-busy' || name === 'aria-disabled' ? 'true' : null;
+    lifecycleListener({
+      type: 'visibility-transition',
+      layerId: 'local-datacenters',
+      enabled: true,
+      origin: 'user',
+      intentEpoch: 1,
+    });
     now += 1;
     scene.frameState.frameNumber = 8;
+    raf.flush();
+    raf.flush();
+    assert.equal(observer.pending.buttonFeedbackState, 'transition');
+    assert.equal(observer.pending.stateAtMs, null);
+    localNode.dataset.feedState = 'on';
+    localNode.classList.contains = (name) => name === 'active';
+    localNode.getAttribute = () => 'false';
     listeners.get('preRender')();
     listeners.get('postRender')();
     const local = observer.take();
@@ -2105,8 +2546,10 @@ test('serialized interaction observer completes local and replay render witnesse
     assert.equal(replay.renderedBillboardVisible, true);
     assert.equal(replay.preRenderFrameNumber, 9);
     assert.equal(replay.frameNumberAtRendered, 9);
+    assert.equal(lifecycleListener !== null, true);
   } finally {
     observer.dispose();
+    assert.equal(lifecycleListener, null);
   }
 });
 
