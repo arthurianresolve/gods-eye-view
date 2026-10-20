@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   FINAL_VISUAL_STATES,
   inspectRepeatedVisualPairEvidence,
+  readScreenshotBoundaryHudState,
 } from './finalVisualQualification.mjs';
 import {
   REPEATED_VISUAL_POLICY,
@@ -169,7 +170,7 @@ export async function validateRepeatedVisualQualification({
           settings: state.settings[side],
           populations: state.populations[side],
           timestamp: state.timestampMs[side],
-          hud: state.hud[side],
+          hud: readScreenshotBoundaryHudState(state, side),
           summary: state.presentation[side].before.summary,
           gaze,
           activeElement: state.presentation[side].before.activeElement,

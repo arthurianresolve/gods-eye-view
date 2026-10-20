@@ -22,6 +22,81 @@ export const FINAL_VISUAL_STATES = Object.freeze([
 ]);
 export const FINAL_VISUAL_TIME_MS = Date.parse('2026-10-08T12:00:00.000Z');
 
+/** Structural intent precedes readiness; CSS proof belongs to the paused PNG. */
+export function readScreenshotBoundaryHudState(state, side) {
+  const label = `${state.id} ${side} HUD`;
+  assert.equal(
+    state.observedStatePhase,
+    'pre-readiness-structural-observation',
+    `${label} structural observation phase`,
+  );
+  const structural = state.hud?.[side];
+  const expectedVisible = state.id !== 'hud-hidden';
+  assert.ok(structural, `${label} structural state missing`);
+  assert.equal(structural.visible, expectedVisible, `${label} visibility`);
+  assert.equal(
+    structural.mode,
+    expectedVisible ? 'on' : 'off',
+    `${label} mode`,
+  );
+  assert.ok(
+    typeof structural.variant === 'string' && structural.variant.length > 0,
+    `${label} variant missing`,
+  );
+  assert.ok(
+    [null, 'true', 'false'].includes(structural.ariaHidden),
+    `${label} accessibility intent missing`,
+  );
+  if (expectedVisible)
+    assert.notEqual(
+      structural.ariaHidden,
+      'true',
+      `${label} visible content is hidden from accessibility`,
+    );
+  const boundary = (phase) => {
+    const value = state.presentation?.[side]?.[phase];
+    assert.equal(value?.documentVisible, true, `${label} ${phase} document`);
+    assert.equal(value.documentFocused, true, `${label} ${phase} focus`);
+    assert.equal(
+      value.hudVisible,
+      expectedVisible,
+      `${label} ${phase} visibility intent`,
+    );
+    assert.equal(
+      value.hudVisibility,
+      expectedVisible ? 'visible' : 'hidden',
+      `${label} ${phase} CSS visibility`,
+    );
+    assert.ok(
+      typeof value.hudDisplay === 'string' &&
+        value.hudDisplay.length > 0 &&
+        value.hudDisplay !== 'none',
+      `${label} ${phase} CSS display`,
+    );
+    assert.ok(
+      Number.isFinite(value.hudOpacity) &&
+        value.hudOpacity >= 0 &&
+        value.hudOpacity <= 1 &&
+        (expectedVisible
+          ? value.hudOpacity >= 0.999
+          : value.hudOpacity <= 0.001),
+      `${label} ${phase} CSS opacity is not settled`,
+    );
+    return {
+      mode: structural.mode,
+      visible: structural.visible,
+      variant: structural.variant,
+      ariaHidden: structural.ariaHidden,
+      display: value.hudDisplay,
+      visibility: value.hudVisibility,
+      opacity: value.hudOpacity,
+    };
+  };
+  const before = boundary('before');
+  assert.deepEqual(before, boundary('after'), `${label} boundary changed`);
+  return before;
+}
+
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
 }
@@ -545,8 +620,8 @@ async function inspectFinalVisualQualification(
       `${state.id} per-revision camera differs`,
     );
     assert.deepEqual(
-      state.hud?.baseline,
-      state.hud?.candidate,
+      readScreenshotBoundaryHudState(state, 'baseline'),
+      readScreenshotBoundaryHudState(state, 'candidate'),
       `${state.id} per-revision HUD accessibility state differs`,
     );
     assert.ok(

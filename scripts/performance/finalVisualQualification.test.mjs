@@ -15,6 +15,7 @@ import {
   FINAL_VISUAL_STATES,
   FINAL_VISUAL_TIME_MS,
   captureQualificationPng,
+  readScreenshotBoundaryHudState,
   validateFinalVisualQualification,
 } from './finalVisualQualification.mjs';
 
@@ -30,6 +31,87 @@ const createPng = (red = 32) =>
   })
     .png()
     .toBuffer();
+
+test('HUD CSS proof uses matching screenshot boundaries instead of transitional pre-readiness CSS', () => {
+  const structural = {
+    mode: 'off',
+    visible: false,
+    variant: 'tactical',
+    ariaHidden: null,
+    display: 'block',
+    visibility: 'hidden',
+  };
+  const boundary = {
+    hudVisible: false,
+    hudOpacity: 0,
+    hudVisibility: 'hidden',
+    hudDisplay: 'block',
+    documentVisible: true,
+    documentFocused: true,
+  };
+  const state = {
+    id: 'hud-hidden',
+    observedStatePhase: 'pre-readiness-structural-observation',
+    hud: {
+      baseline: structural,
+      candidate: { ...structural, visibility: 'visible' },
+    },
+    presentation: Object.fromEntries(
+      ['baseline', 'candidate'].map((side) => [
+        side,
+        { before: { ...boundary }, after: { ...boundary } },
+      ]),
+    ),
+  };
+  const original = structuredClone(state);
+  assert.deepEqual(
+    readScreenshotBoundaryHudState(state, 'baseline'),
+    readScreenshotBoundaryHudState(state, 'candidate'),
+  );
+  assert.deepEqual(state, original, 'Raw diagnostic evidence is unchanged');
+  for (const patch of [
+    { hudVisible: true },
+    { hudVisibility: 'visible' },
+    { hudOpacity: 0.4 },
+    { hudDisplay: 'none' },
+    { documentVisible: false },
+    { documentFocused: false },
+  ]) {
+    for (const phase of ['before', 'after']) {
+      const invalid = structuredClone(state);
+      Object.assign(invalid.presentation.candidate[phase], patch);
+      assert.throws(() => readScreenshotBoundaryHudState(invalid, 'candidate'));
+    }
+  }
+  for (const patch of [
+    { mode: 'on' },
+    { visible: true },
+    { variant: '' },
+    { ariaHidden: undefined },
+  ]) {
+    const invalid = structuredClone(state);
+    Object.assign(invalid.hud.candidate, patch);
+    assert.throws(() => readScreenshotBoundaryHudState(invalid, 'candidate'));
+  }
+  const mismatched = structuredClone(state);
+  mismatched.presentation.candidate.after.hudDisplay = 'flex';
+  assert.throws(
+    () => readScreenshotBoundaryHudState(mismatched, 'candidate'),
+    /boundary changed/,
+  );
+  const inaccessible = structuredClone(state);
+  inaccessible.id = 'hud-visible';
+  inaccessible.hud.candidate = {
+    ...structural,
+    mode: 'on',
+    visible: true,
+    ariaHidden: 'true',
+  };
+  assert.throws(
+    () => readScreenshotBoundaryHudState(inaccessible, 'candidate'),
+    /hidden from accessibility/,
+  );
+});
 
 const scrollContainer = (id, width, scrollHeight, clientHeight) => ({
   id,
@@ -280,10 +362,19 @@ async function fixture(t) {
         baseline: { cctv: 1, entities: 1, dataSources: 0 },
         candidate: { cctv: 1, entities: 1, dataSources: 0 },
       },
-      hud: {
-        baseline: { visible: id !== 'hud-hidden' },
-        candidate: { visible: id !== 'hud-hidden' },
-      },
+      hud: Object.fromEntries(
+        ['baseline', 'candidate'].map((side) => [
+          side,
+          {
+            mode: id === 'hud-hidden' ? 'off' : 'on',
+            visible: id !== 'hud-hidden',
+            variant: 'tactical',
+            ariaHidden: null,
+            display: 'block',
+            visibility: id === 'hud-hidden' ? 'hidden' : 'visible',
+          },
+        ]),
+      ),
       presentation: {
         baseline: {
           before: phaseFor(id),
@@ -460,6 +551,14 @@ test('repeated visual consumer preserves native checks and rejects unplanned, se
       evidenceRoot: root,
     })),
   });
+  // The six raw pre-readiness samples may fall on either side of the unchanged
+  // CSS visibility transition. All PNG boundaries still prove hidden + zero
+  // opacity, and the original observations remain untouched in each report.
+  for (const [index, { report }] of captures.entries()) {
+    report.states[2].hud.baseline.visibility =
+      index === 2 ? 'visible' : 'hidden';
+    report.states[2].hud.candidate.visibility = 'visible';
+  }
   const success = await validateRepeatedVisualQualification(input());
   assert.equal(success.status, 'passed');
   assert.equal(success.pngCount, 24);
@@ -506,6 +605,15 @@ test('repeated visual consumer preserves native checks and rejects unplanned, se
     },
     (r) => {
       r.masks = [{ x: 1, y: 1, width: 1, height: 1 }];
+    },
+    (r) => {
+      r.states[2].presentation.candidate.after.hudVisibility = 'visible';
+    },
+    (r) => {
+      r.states[2].hud.candidate.ariaHidden = 'true';
+    },
+    (r) => {
+      r.states[2].hud.candidate.variant = 'minimal';
     },
   ];
   for (const mutate of mutations) {
