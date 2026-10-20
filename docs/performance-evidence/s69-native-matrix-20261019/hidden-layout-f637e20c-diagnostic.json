@@ -1,0 +1,311 @@
+{
+  "schema": "gev-hidden-layout-runtime-diagnostic/v1",
+  "status": "completed-diagnostic-only",
+  "acceptanceEligible": false,
+  "productionChanged": false,
+  "baselineCommit": "8c14b106eb064f63eab193c1af06bb8b7480cb55",
+  "candidateCommit": "f637e20ce6ad62d0c7fcea0ee1ad6089cb4d23a5",
+  "producerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+  "rawSha256": "12bcb31f061b75cacab66621533d3e84f69880ef20052564ef06c175855196d0",
+  "planSha256": "fa5776103f7da56b4c83234f3fe50b73f7526b4a457e1ba6c98dd87678d02223",
+  "rawStorage": "VM105 validation task/hidden-layout-comparison-f637e20c-42fae51d-complete-20261020",
+  "ranges": {
+    "baseline": {
+      "count": 8,
+      "nextRenderingOver100ms": 4,
+      "nextRenderingRangeMs": [
+        48,
+        536
+      ],
+      "inputDelayRangeMs": [
+        0.7999999970197678,
+        15.5
+      ],
+      "clickProcessingRangeMs": [
+        2,
+        11.099999994039536
+      ],
+      "fullReadinessRangeMs": [
+        14.099999994039536,
+        773.2999999970198
+      ]
+    },
+    "candidate": {
+      "count": 8,
+      "nextRenderingOver100ms": 5,
+      "nextRenderingRangeMs": [
+        64,
+        536
+      ],
+      "inputDelayRangeMs": [
+        1,
+        22
+      ],
+      "clickProcessingRangeMs": [
+        2.8999999910593033,
+        10.299999997019768
+      ],
+      "fullReadinessRangeMs": [
+        15.200000002980232,
+        649
+      ]
+    }
+  },
+  "samples": [
+    {
+      "slot": 1,
+      "role": "baseline",
+      "ordinal": 1,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 18.299999997019768,
+      "clickToFirstRafWitnessMs": 132.5,
+      "clickToSecondRafWitnessMs": 707.5,
+      "clickToFullRenderedReadinessMs": 773.2999999970198,
+      "nextRenderingMs": 536,
+      "inputDelayMs": 15.5,
+      "processingMs": 7.5999999940395355,
+      "postProcessingToQuantizedRenderingMs": 512.9000000059605,
+      "over100ms": true
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "ordinal": 2,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 4,
+      "clickToFirstRafWitnessMs": 28.19999998807907,
+      "clickToSecondRafWitnessMs": 61.3999999910593,
+      "clickToFullRenderedReadinessMs": 27.799999997019768,
+      "nextRenderingMs": 208,
+      "inputDelayMs": 3.5999999940395355,
+      "processingMs": 9.5,
+      "postProcessingToQuantizedRenderingMs": 194.90000000596046,
+      "over100ms": true
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "ordinal": 3,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 1.2999999970197678,
+      "clickToFirstRafWitnessMs": 13.899999991059303,
+      "clickToSecondRafWitnessMs": 109.79999999701977,
+      "clickToFullRenderedReadinessMs": 153.59999999403954,
+      "nextRenderingMs": 48,
+      "inputDelayMs": 1.0999999940395355,
+      "processingMs": 2.2000000029802322,
+      "postProcessingToQuantizedRenderingMs": 44.70000000298023,
+      "over100ms": false
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "ordinal": 4,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 1.4000000059604645,
+      "clickToFirstRafWitnessMs": 14.400000005960464,
+      "clickToSecondRafWitnessMs": 49.5,
+      "clickToFullRenderedReadinessMs": 14.099999994039536,
+      "nextRenderingMs": 144,
+      "inputDelayMs": 1.2999999970197678,
+      "processingMs": 3.7999999970197678,
+      "postProcessingToQuantizedRenderingMs": 138.90000000596046,
+      "over100ms": true
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "ordinal": 1,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 12.900000005960464,
+      "clickToFirstRafWitnessMs": 74.5,
+      "clickToSecondRafWitnessMs": 522.6000000089407,
+      "clickToFullRenderedReadinessMs": 519.5,
+      "nextRenderingMs": 424,
+      "inputDelayMs": 11.600000008940697,
+      "processingMs": 10.299999997019768,
+      "postProcessingToQuantizedRenderingMs": 402.09999999403954,
+      "over100ms": true
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "ordinal": 2,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 2.4000000059604645,
+      "clickToFirstRafWitnessMs": 18.299999997019768,
+      "clickToSecondRafWitnessMs": 49.1000000089407,
+      "clickToFullRenderedReadinessMs": 17.900000005960464,
+      "nextRenderingMs": 176,
+      "inputDelayMs": 2,
+      "processingMs": 6,
+      "postProcessingToQuantizedRenderingMs": 168,
+      "over100ms": true
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "ordinal": 3,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 1.7999999970197678,
+      "clickToFirstRafWitnessMs": 12.799999997019768,
+      "clickToSecondRafWitnessMs": 110.90000000596046,
+      "clickToFullRenderedReadinessMs": 109.90000000596046,
+      "nextRenderingMs": 64,
+      "inputDelayMs": 1.5,
+      "processingMs": 3.2999999970197678,
+      "postProcessingToQuantizedRenderingMs": 59.20000000298023,
+      "over100ms": false
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "ordinal": 4,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 1.0999999940395355,
+      "clickToFirstRafWitnessMs": 15.400000005960464,
+      "clickToSecondRafWitnessMs": 39.099999994039536,
+      "clickToFullRenderedReadinessMs": 15.200000002980232,
+      "nextRenderingMs": 80,
+      "inputDelayMs": 1,
+      "processingMs": 4.5,
+      "postProcessingToQuantizedRenderingMs": 74.5,
+      "over100ms": false
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "ordinal": 1,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 25.799999997019768,
+      "clickToFirstRafWitnessMs": 99.70000000298023,
+      "clickToSecondRafWitnessMs": 651,
+      "clickToFullRenderedReadinessMs": 649,
+      "nextRenderingMs": 536,
+      "inputDelayMs": 22,
+      "processingMs": 6.899999991059303,
+      "postProcessingToQuantizedRenderingMs": 507.1000000089407,
+      "over100ms": true
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "ordinal": 2,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 4.199999988079071,
+      "clickToFirstRafWitnessMs": 26.5,
+      "clickToSecondRafWitnessMs": 70.59999999403954,
+      "clickToFullRenderedReadinessMs": 26.19999998807907,
+      "nextRenderingMs": 176,
+      "inputDelayMs": 3.5,
+      "processingMs": 10.099999994039536,
+      "postProcessingToQuantizedRenderingMs": 162.40000000596046,
+      "over100ms": true
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "ordinal": 3,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 1.800000011920929,
+      "clickToFirstRafWitnessMs": 11.700000002980232,
+      "clickToSecondRafWitnessMs": 32.1000000089407,
+      "clickToFullRenderedReadinessMs": 145.1000000089407,
+      "nextRenderingMs": 80,
+      "inputDelayMs": 1.6000000089406967,
+      "processingMs": 2.8999999910593033,
+      "postProcessingToQuantizedRenderingMs": 75.5,
+      "over100ms": false
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "ordinal": 4,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 1.4000000059604645,
+      "clickToFirstRafWitnessMs": 18.200000002980232,
+      "clickToSecondRafWitnessMs": 53,
+      "clickToFullRenderedReadinessMs": 17.80000001192093,
+      "nextRenderingMs": 200,
+      "inputDelayMs": 1.2000000029802322,
+      "processingMs": 5.4000000059604645,
+      "postProcessingToQuantizedRenderingMs": 193.3999999910593,
+      "over100ms": true
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "ordinal": 1,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 12.700000002980232,
+      "clickToFirstRafWitnessMs": 105.6000000089407,
+      "clickToSecondRafWitnessMs": 639.6000000089407,
+      "clickToFullRenderedReadinessMs": 728.7000000029802,
+      "nextRenderingMs": 496,
+      "inputDelayMs": 10.600000008940697,
+      "processingMs": 8.5,
+      "postProcessingToQuantizedRenderingMs": 476.8999999910593,
+      "over100ms": true
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "ordinal": 2,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 3.5,
+      "clickToFirstRafWitnessMs": 24.80000001192093,
+      "clickToSecondRafWitnessMs": 55.6000000089407,
+      "clickToFullRenderedReadinessMs": 24,
+      "nextRenderingMs": 88,
+      "inputDelayMs": 2.9000000059604645,
+      "processingMs": 11.099999994039536,
+      "postProcessingToQuantizedRenderingMs": 74,
+      "over100ms": false
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "ordinal": 3,
+      "enabled": true,
+      "clickToAcceptedIntentMs": 1.2000000029802322,
+      "clickToFirstRafWitnessMs": 13.5,
+      "clickToSecondRafWitnessMs": 107.1000000089407,
+      "clickToFullRenderedReadinessMs": 254.30000001192093,
+      "nextRenderingMs": 48,
+      "inputDelayMs": 1,
+      "processingMs": 2,
+      "postProcessingToQuantizedRenderingMs": 45,
+      "over100ms": false
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "ordinal": 4,
+      "enabled": false,
+      "clickToAcceptedIntentMs": 1,
+      "clickToFirstRafWitnessMs": 16.400000005960464,
+      "clickToSecondRafWitnessMs": 48.20000000298023,
+      "clickToFullRenderedReadinessMs": 15.700000002980232,
+      "nextRenderingMs": 80,
+      "inputDelayMs": 0.7999999970197678,
+      "processingMs": 3.9000000059604645,
+      "postProcessingToQuantizedRenderingMs": 75.29999999701977,
+      "over100ms": false
+    }
+  ],
+  "geometry": {
+    "analysisSha256": "cd7df1c303ae1842dcaa2c0c284394bc9688fca190518bb2ce6590ea9193abb3",
+    "storage": "VM105 validation task/hidden-layout-geometry-analysis-f637e20c-20261020/analysis-r2.json",
+    "exactlyEqual": false,
+    "maximumObservedBaseDisplacementMetres": 0.00008197848542753295,
+    "scope": "Eight flat-fixture records only; stable within each build. No tolerance change or general roof/overlap equivalence claim.",
+    "disposition": "Reject hidden-source initial grounding as unqualified: it changes visible pick commands. Restore original visible first-preRender sampling; retain unrelated cancellation and layout hardening."
+  },
+  "interpretation": [
+    "All sixteen primary samples and matching click Event Timing entries are retained. This four-slot diagnostic is not the twenty-sample acceptance cohort.",
+    "Most delayed interactions spend their time after event processing. A first or second RAF timestamp does not certify completed browser presentation.",
+    "The cold exact-height task still overlaps the Event Timing rendering interval. Disables perform no height queries but can also exceed 100 ms.",
+    "Enabled native geometry is stable within each build but not exactly identical across builds. The separate geometry audit must be considered before accepting hidden-source grounding.",
+    "No target, screenshot tolerance, baseline result or production build is changed by this report."
+  ]
+}

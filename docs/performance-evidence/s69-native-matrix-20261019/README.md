@@ -2,7 +2,32 @@
 
 ## Current qualification checkpoint
 
-The latest [isolated ABBA scheduling diagnostic](feedback-runtime-8c14b106-isolated-diagnostic.json)
+The latest [combined runtime diagnostic](hidden-layout-f637e20c-diagnostic.json)
+preserves sixteen actions comparing `8c14b106` with `f637e20c`. Native
+next-rendering latency exceeds 100 ms in five of eight candidate observations
+and four of eight baseline observations. Candidate event processing itself
+takes 2.9–10.3 ms. The cold exact-height task still overlaps pending browser
+presentation; OFF can also be slow without height queries. Initial readiness
+improves in this small diagnostic, but this is not an acceptance cohort.
+Hidden-source grounding changes the pick command set; flat-fixture geometry
+differences below 0.1 mm do not prove arbitrary building/overlap equivalence.
+The next experiment restores normal visible first-render grounding and retains
+the independent cleanup improvements. Production remains unchanged.
+
+The first full-application run with the new pointer-sweep harness stopped before
+any screenshot because descendant `pointerleave` events were incorrectly
+treated as document exits. Its four partial files (35,294 bytes, zero PNGs)
+are preserved and hash-verified at VM validation task
+`repeated-full-extent-f637e20c-3e71b4f6-failed-20261020`. The observer
+correction at `f5cac94f` matches the application's boundary-event semantics;
+49 tests pass on both Node 24 and 26. It does not relax any visual threshold.
+
+The `f637e20c` CI unit and release checks fail one brittle mobile-height
+source-text assertion. The behavior-based replacement at `77d7fc13` passes
+57 attribution/panel tests on both Node 24 and 26; full CI must still be rerun.
+Historical checks and the frozen r21 report below remain unchanged.
+
+The earlier [isolated ABBA scheduling diagnostic](feedback-runtime-8c14b106-isolated-diagnostic.json)
 compares `2663fbff` with runtime experiment `8c14b106`. It retains all sixteen
 trusted actions and their matching Event Timing entries, with a fixed one-second
 drain between actions. Both builds have six of eight next-rendering observations
