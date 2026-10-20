@@ -7,13 +7,43 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-Current qualification checkpoint: all eight matrix workloads have retained
-baseline/candidate captures, with baseline reuse explicitly declared. The map
-and weather measured gates qualify; sampled peak heap and loaded replay qualify.
-Cable idle comparison remains unavailable/pending. The dam-labelled empty-layer
-startup, local-control timing and full visual checks fail their declared gates.
-The latest fully validated QA revision is `324eebe1` for application runtime `190c5ab6`; production remains at
-`e7a878e`. The [existing QA CI report](performance-evidence/s69-native-matrix-20261019/qa-ci-324eebe1.json)
+Current qualification checkpoint: application candidate `190c5ab6` remains
+unactivated; production remains `e7a878e`. Engineering completion is still
+**21/24 slices (87.5%)**. The new ten-slot default-empty-layer startup
+confirmation passes its declared startup-only 10% gates (app-ready +5.383%,
+loading-hidden -0.0219%), with independent VM readback marked measured. The
+earlier live-provider startup comparison remains a separate failed result
+(+28.53% / +26.46%) and is not retroactively cleared. See the [normalized
+startup report](performance-evidence/s69-native-matrix-20261019/normalized-startup-default-boot-190c5ab6-79d555cf-report.json).
+
+The [normalized current v3 interaction/heap report](performance-evidence/s69-native-matrix-20261019/normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
+passes loaded replay (91.3 ms p95) and
+non-GC sampled peak heap (-2.634%), but fails local-control visible feedback
+(709.3 ms p95) and the full-readiness 10% regression gate. Its baseline is
+`76cc760b`, which contains matching correctness changes and is not the original
+`e7a878e` runtime. The 60m39s signed-package Ampfing soak passes at 2.895%
+retained-heap growth. The [five-run cable idle capture](performance-evidence/s69-native-matrix-20261019/cable-settled-idle-190c5ab6-79d555cf-report.json)
+records zero completed frames in every candidate window. The baseline has a
+13-frame first-window burst; its other four windows have zero. The corrected
+candidate-facing evaluator at `0c5c4608` retains that baseline failure separately
+and keeps the original two-frame limit. Independent pair review remains pending.
+Full visual qualification still fails strict pixel policy. The stale pre-readiness HUD comparison was
+corrected separately at `220349dd`; all screenshot-boundary HUD states agree.
+CI and signed-release checks for `6dcf9a0e` passed. The [Windows recovery job at
+`220349dd`](performance-evidence/s69-native-matrix-20261019/windows-recovery-220349dd-failure.json)
+fails browser shutdown after settings and workspace checks pass; its page had
+closed successfully, unlike the older page-close failure below. Chrome acknowledged
+the close request and disconnected promptly but exceeded the ten-second close
+deadline. The eventual exit observation followed a blocking diagnostic and cannot
+establish the precise OS exit time. No overall candidate acceptance is claimed.
+
+The feedback observer correction at `42fae51d` retains consecutive valid transition
+and settled frames for the same user intent. It does not change runtime or full
+readiness. A subsequent four-slot ABBA diagnostic still finds delayed visible
+feedback on both builds: the transition text settles before the first natural
+frame, and eight synchronous height queries consume 310–555 ms per enable.
+An application fix is being investigated; the earlier failed metrics remain failed.
+Historical QA revision `324eebe1` also passed for application runtime `190c5ab6`. Its [retained QA CI report](performance-evidence/s69-native-matrix-20261019/qa-ci-324eebe1.json)
 records all seven selected jobs passing. The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
 2.895% retained-heap growth, native Windows UHD 620/Chrome 155, with schedule,
 foreground, cleanup and owned-resource checks passing. The [normalized soak

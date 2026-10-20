@@ -2,13 +2,42 @@
 
 ## Current qualification checkpoint
 
-The latest fully validated QA revision is `324eebe1` for application runtime `190c5ab6`; production remains at
-`e7a878e`. The [existing QA CI report](qa-ci-324eebe1.json) records all seven
-selected jobs passing. All eight matrix workloads have retained baseline/candidate captures,
-with baseline reuse explicitly declared. Map and weather measured gates qualify;
-sampled peak heap and loaded replay qualify. Cable idle comparison remains
-unavailable/pending. The dam-labelled empty-layer startup, local-control timing
-and full visual checks fail their declared gates.
+The current application candidate is `190c5ab6`; public production remains at
+`e7a878e`. Engineering completion remains **21/24 slices (87.5%)**. The latest
+selected CI and signed-release checks at QA revision `6dcf9a0e` passed. The
+[Windows recovery job for `220349dd`](windows-recovery-220349dd-failure.json)
+fails browser shutdown after successful data checks. No production activation
+is claimed.
+
+The new [default-boot startup confirmation](normalized-startup-default-boot-190c5ab6-79d555cf-report.json)
+passes its predeclared ten-slot startup-only gates: app-ready +5.383% and
+loading-hidden -0.0219%, within 10%. Its independent VM readback is recorded as
+measured. This does not erase the earlier live-provider startup failure
+(+28.53% / +26.46%), qualify dam activation, or replace motion evidence.
+
+The [v3 interaction/heap report](normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
+passes loaded replay seek at 91.3 ms p95 and sampled peak heap at -2.634%.
+Local-control visible feedback is 709.3 ms p95 and full readiness regresses by
+more than 10%, so the metrics report remains failed. The 76cc control includes
+the same correctness changes and is not the original e7 runtime.
+
+The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
+2.895% retained-heap growth. Map and weather measured gates qualify. The new
+[five-run cable idle capture](cable-settled-idle-190c5ab6-79d555cf-report.json)
+records zero frames in all five candidate windows. Its baseline records 13
+frames in the first window and zero in the others. The corrected evaluator at
+`0c5c4608` applies the unchanged budget to the candidate while preserving the
+baseline failure; independent pair review remains pending.
+Full visual qualification still fails its strict pixel policy.
+The stale pre-readiness HUD comparison was corrected separately at `220349dd`;
+all screenshot-boundary HUD states agree. Production remains unchanged.
+
+The QA observer correction at `42fae51d` retains valid feedback when the same
+intent changes from transition to settled text between frames. The subsequent
+four-slot ABBA diagnostic still finds delayed feedback on both builds. The
+transition settles before the first natural frame; eight synchronous height
+queries consume 310–555 ms on each enable. This identifies work to fix without
+clearing the earlier failed acceptance report.
 
 The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
 2.895% retained-heap growth, native Windows UHD 620/Chrome 155, with schedule,

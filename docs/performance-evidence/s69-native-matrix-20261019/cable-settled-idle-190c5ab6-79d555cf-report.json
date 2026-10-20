@@ -1,0 +1,124 @@
+{
+  "schema": "gev-cable-settled-idle-summary/v1",
+  "status": "passed",
+  "applicationCommits": {
+    "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "producerCommit": "79d555cfb262fe3357ac575fdf45da1c7cfd1e16",
+  "consumerCommit": "0c5c4608e12f5976e6dc2a32f4538b4708b1aa2c",
+  "consumerSha256": "df0d2bcfea5b53e199e975846f0ae818dd49e27e1e562b6009c54abc2aa9e5ae",
+  "rawHashes": {
+    "baseline": "b3f668f01aaf25208c70c0372e575a121d2d8b5cd3610fc345d97d5d1faf39a4",
+    "candidate": "20ca3f00ee083a7a8403c254f1126fe40dde9eb1f1c883c36f049c7a002e97de",
+    "plan": "02978acd38b0d98293a70cf75900e149f17cf7e8a025cd31c99d68058e614db5",
+    "process": "964486c9c698ca89eefa7232638399e5643cc925bd6545424913744b122b71a1"
+  },
+  "originalSymmetricEvaluation": {
+    "status": "failed",
+    "sha256": "ac6e845d2ef7ea3238b427841e59c5534ececbfc908de225c09552ec56d0f8fa"
+  },
+  "evaluation": {
+    "policy": {
+      "id": "settled-static-completed-frames-v1",
+      "windowMs": 10000,
+      "maximumFrames": 2,
+      "minimumDurationMs": 60000,
+      "minimumSettledBeforeMs": 2000
+    },
+    "status": "passed",
+    "baselineStatus": "failed",
+    "candidateStatus": "passed",
+    "baselineComplete": true,
+    "candidateComplete": true,
+    "frameIntervalComparisonRequired": false,
+    "samples": {
+      "baseline": [
+        {
+          "run": 1,
+          "status": "failed",
+          "reason": "completed-frame-budget-exceeded",
+          "renderedFrames": 13,
+          "maximumFramesInWindow": 13,
+          "durationMs": 60001.60000000894
+        },
+        {
+          "run": 2,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60005.60000000894
+        },
+        {
+          "run": 3,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60000.70000000298
+        },
+        {
+          "run": 4,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60002.70000000298
+        },
+        {
+          "run": 5,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60001.70000000298
+        }
+      ],
+      "candidate": [
+        {
+          "run": 1,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60003.10000000894
+        },
+        {
+          "run": 2,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60000.29999999702
+        },
+        {
+          "run": 3,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60004.09999999404
+        },
+        {
+          "run": 4,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60011.40000000596
+        },
+        {
+          "run": 5,
+          "status": "passed",
+          "reason": null,
+          "renderedFrames": 0,
+          "maximumFramesInWindow": 0,
+          "durationMs": 60002.70000000298
+        }
+      ]
+    }
+  },
+  "independentSourceAndPairReview": "pending",
+  "interpretation": "All five candidate windows meet the unchanged two-frames-per-ten-seconds requirement. A complete settled baseline exceeded that budget in its first window. The corrected candidate-facing evaluator preserves that baseline failure separately. Historical candidate bursts and original symmetric review remain unchanged; this does not assess motion, startup or explain the intermittent old burst."
+}
