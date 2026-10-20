@@ -2,6 +2,37 @@
 
 ## Current qualification checkpoint
 
+The completed `a18c6a76` / QA `3fdbcf42`
+[formal capture](formal-native20-a18c6a76-3fdbcf42-result.json) remains
+**failed**. Both builds supply 20 local-control actions, 20 replay actions
+and 84 heap samples. All identities, full before/after asset inventories,
+126 foreground observations per build and normal browser closures verify.
+The [readback](formal-native20-a18c6a76-3fdbcf42-readback.json) binds all
+21 archived evidence files, totaling 4,666,637 bytes, to their VM hashes.
+
+The frozen local-feedback consumer rejects mixed known/unknown layout
+changes without timely owned post-layout proof. Recorded geometry observations
+never report a hidden or unfocused control under their sampled center/clip
+predicate; some position changes are visible panel motion with unchanged
+scroll offsets. They do not prove continuous visibility. Independent native
+duration diagnostics still show p95 of 160 ms, with candidate outliers of
+328, 136 and 160 ms. Logical-ready p95 rises from 89.1 to 135 ms (+51.52%);
+rendered-frame p95 falls from 235.7 to 188.2 ms (−20.15%). Both gates remain
+independent. Source inspection confirms the same logical-ready predicate in
+both builds; it does not measure physical presentation or complete GPU work.
+
+Replay independently passes at 31.2 ms p95 versus 97.3 ms for the control.
+Non-GC sampled peak heap is 75,646,576 versus 75,829,256 bytes (−0.24%).
+Neither is retained-heap or final-soak evidence. The next separate diagnostic
+traces only the same materialized first three ON/OFF pairs to identify
+post-handler delay; its timing cannot substitute for a formal capture.
+The [source/spec review](interaction-feedback-semantics-review.json)
+recommends separating native latency, semantic feedback attribution and exact
+restoration diagnostics. Exact position equality is sufficient restoration
+evidence, but legitimate visible movement is not itself visibility loss.
+Late or uncertain proof remains unavailable, the frozen failure is preserved,
+and the 100 ms and independent 10% regression limits remain unchanged.
+
 Runtime candidate `a18c6a76` removes the second animation-frame wait from
 user-triggered layer preparation. The lifecycle's loading presentation is
 already reconciled synchronously; one callback followed by its owned task
@@ -16,8 +47,8 @@ The initial sparse-source formatting setup failure remains recorded, and its
 successful Node 24 focused results are reused only with identical source bytes.
 The [private build and Windows inputs](single-raf-feedback-build-preflight.json)
 verify all 886 candidate assets and 443 control assets, locally and as served,
-against their exact source and build receipts. Hardware qualification remains
-pending; production is unchanged.
+against their exact source and build receipts. The first hardware result is
+the failed capture above; production is unchanged.
 
 The `b5e596ff` checkpoint passes all seven selected CI jobs and release
 verification, including Windows, macOS and Linux recovery. Its

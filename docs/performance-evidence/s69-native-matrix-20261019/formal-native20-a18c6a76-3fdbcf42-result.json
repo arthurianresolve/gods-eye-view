@@ -1,0 +1,534 @@
+{
+  "schema": "gev-formal-native-qualification-result/v2",
+  "status": "failed",
+  "acceptanceEligible": false,
+  "application": {
+    "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+    "baselineRole": "correctness control; not original e7 performance baseline",
+    "candidate": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f"
+  },
+  "qaCommit": "3fdbcf420c4bf5e4995503ef033b828221116698",
+  "capture": {
+    "status": "completed",
+    "startedAt": "2026-10-20T12:26:16.197Z",
+    "completedAt": "2026-10-20T12:33:22.271Z",
+    "measurementSpan": {
+      "startedAt": "2026-10-20T12:26:53.788Z",
+      "completedAt": "2026-10-20T12:32:44.484Z"
+    },
+    "attempts": 1,
+    "retries": 0,
+    "exitCode": 0,
+    "failureReason": null
+  },
+  "environment": {
+    "browserVersion": "Chrome/155.0.8059.84",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "platform": "Win32",
+    "viewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "settings": {
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "detectionMode": "DENSE",
+      "resolutionScale": 1,
+      "antialias": true,
+      "msaaSamples": 4,
+      "fxaa": false,
+      "bloom": false,
+      "bloomIntensity": 0,
+      "sharpen": false,
+      "sharpenIntensity": 49,
+      "visual": {
+        "style": "normal",
+        "bloomEnabled": false,
+        "bloomIntensity": 0,
+        "sharpenEnabled": false,
+        "sharpenIntensity": 49,
+        "detectionMode": "DENSE",
+        "detectionDensityPct": 75,
+        "detectionAllocation": "ELASTIC",
+        "detectionFadePct": 7,
+        "detectionOutsideOpacityPct": 1,
+        "scopeEnabled": true,
+        "scopeFeatherPct": 11,
+        "mapStack": "osm"
+      }
+    },
+    "measurementEnvironment": "native-window-viewport-v1"
+  },
+  "metrics": {
+    "coldStartup": {
+      "status": "unavailable",
+      "reason": "Identity-only build proof supplies no cold-startup observations."
+    },
+    "localControl": {
+      "status": "failed",
+      "reason": "Source-owned measurement needs an eligible post-layout proof before rendering",
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "loadedReplaySeek": {
+      "status": "measured",
+      "protocolVersion": 4,
+      "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+      "baseline": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 78,
+        "inputToRenderedFrameP95Ms": 97.30000001192093
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 24.399999991059303,
+        "inputToRenderedFrameP95Ms": 31.19999998807907
+      },
+      "limitMs": 250,
+      "failures": [],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "sampledPeakHeap": {
+      "status": "measured",
+      "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+      "baselinePeakHeapBytes": 75829256,
+      "candidatePeakHeapBytes": 75646576,
+      "sampleCountByBuild": {
+        "baseline": 84,
+        "candidate": 84
+      },
+      "actualDurationMsByBuild": {
+        "baseline": 87702.0771,
+        "candidate": 86891.59169999999
+      },
+      "changePct": -0.24090965629413535,
+      "regressionOver10Pct": false,
+      "sourceSoakStatus": null,
+      "sourceSoakFailurePreserved": false,
+      "thresholdPct": 10,
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    }
+  },
+  "roles": {
+    "baseline": {
+      "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+      "normalCloseMs": 750.1970999999903,
+      "foregroundObservations": 126,
+      "allForeground": true,
+      "viewport": {
+        "width": 1280,
+        "height": 537,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2560,
+        "height": 1074
+      },
+      "sourceAssets": {
+        "before": {
+          "schema": "gev-served-assets-verification/v1",
+          "status": "served-assets-match",
+          "receiptSha256": "24211852d088712eb5dc571aefdc5bb4062175cc572bd4b9118d73e3dca75dcf",
+          "assetCount": 443,
+          "totalAssetBytes": 44858168
+        },
+        "after": {
+          "schema": "gev-served-assets-verification/v1",
+          "status": "served-assets-match",
+          "receiptSha256": "24211852d088712eb5dc571aefdc5bb4062175cc572bd4b9118d73e3dca75dcf",
+          "assetCount": 443,
+          "totalAssetBytes": 44858168
+        }
+      },
+      "counts": {
+        "local": 20,
+        "replay": 20,
+        "heap": 84,
+        "recognizedBatchesWithinEndpoint": 17,
+        "actionsWithSourceCoverageFailure": 8,
+        "actionsWithMeasuredNegativeProofWithinEndpoint": 0,
+        "geometryProofs": 95,
+        "measuredVisibleFalse": 0,
+        "measuredUnfocused": 0,
+        "restoredGeometryFalseIncludingAfterEndpoint": 10,
+        "actionsWithInvalidMutationAfterLatestEligibleProof": 11
+      },
+      "roleValidation": {
+        "status": "failed",
+        "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+      },
+      "work": {
+        "mutationCallbacks": 393,
+        "mutationRecords": 20712,
+        "continuityChecks": 244,
+        "geometryChecks": 95,
+        "restoredMeasurementTransactions": 133,
+        "renderBoundaryArms": 55,
+        "renderBoundaryCallbacks": 55,
+        "overhead": {
+          "status": "unavailable",
+          "reason": "not-measured"
+        }
+      },
+      "causeCountsOverlapping": {
+        "mixed-unknown": {
+          "actionCount": 8,
+          "batchCount": 8,
+          "sampleIds": [
+            "baseline-local-04",
+            "baseline-local-06",
+            "baseline-local-08",
+            "baseline-local-10",
+            "baseline-local-14",
+            "baseline-local-16",
+            "baseline-local-18",
+            "baseline-local-20"
+          ]
+        },
+        "no-owned-arm": {
+          "actionCount": 8,
+          "batchCount": 8,
+          "sampleIds": [
+            "baseline-local-04",
+            "baseline-local-06",
+            "baseline-local-08",
+            "baseline-local-10",
+            "baseline-local-14",
+            "baseline-local-16",
+            "baseline-local-18",
+            "baseline-local-20"
+          ]
+        },
+        "late-completion": {
+          "actionCount": 0,
+          "batchCount": 0,
+          "sampleIds": []
+        },
+        "negative-geometry": {
+          "actionCount": 0,
+          "batchCount": 0,
+          "sampleIds": []
+        }
+      },
+      "rawDiagnosticsOnly": {
+        "eventTimingP95Ms": 160,
+        "durationsMs": [
+          304,
+          96,
+          128,
+          96,
+          160,
+          112,
+          144,
+          96,
+          128,
+          112,
+          144,
+          144,
+          128,
+          96,
+          128,
+          96,
+          128,
+          96,
+          128,
+          96
+        ],
+        "over100ms": [
+          {
+            "sampleId": "baseline-local-01",
+            "durationMs": 304
+          },
+          {
+            "sampleId": "baseline-local-03",
+            "durationMs": 128
+          },
+          {
+            "sampleId": "baseline-local-05",
+            "durationMs": 160
+          },
+          {
+            "sampleId": "baseline-local-06",
+            "durationMs": 112
+          },
+          {
+            "sampleId": "baseline-local-07",
+            "durationMs": 144
+          },
+          {
+            "sampleId": "baseline-local-09",
+            "durationMs": 128
+          },
+          {
+            "sampleId": "baseline-local-10",
+            "durationMs": 112
+          },
+          {
+            "sampleId": "baseline-local-11",
+            "durationMs": 144
+          },
+          {
+            "sampleId": "baseline-local-12",
+            "durationMs": 144
+          },
+          {
+            "sampleId": "baseline-local-13",
+            "durationMs": 128
+          },
+          {
+            "sampleId": "baseline-local-15",
+            "durationMs": 128
+          },
+          {
+            "sampleId": "baseline-local-17",
+            "durationMs": 128
+          },
+          {
+            "sampleId": "baseline-local-19",
+            "durationMs": 128
+          }
+        ],
+        "stateP95Ms": 89.1000000089407,
+        "renderedFrameP95Ms": 235.70000000298023,
+        "recordedRoGeometryReadElapsedMs": 21.899999976158142
+      }
+    },
+    "candidate": {
+      "applicationCommit": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "normalCloseMs": 659.702500000014,
+      "foregroundObservations": 126,
+      "allForeground": true,
+      "viewport": {
+        "width": 1280,
+        "height": 537,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2560,
+        "height": 1074
+      },
+      "sourceAssets": {
+        "before": {
+          "schema": "gev-served-assets-verification/v1",
+          "status": "served-assets-match",
+          "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+          "assetCount": 886,
+          "totalAssetBytes": 68599376
+        },
+        "after": {
+          "schema": "gev-served-assets-verification/v1",
+          "status": "served-assets-match",
+          "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+          "assetCount": 886,
+          "totalAssetBytes": 68599376
+        }
+      },
+      "counts": {
+        "local": 20,
+        "replay": 20,
+        "heap": 84,
+        "recognizedBatchesWithinEndpoint": 34,
+        "actionsWithSourceCoverageFailure": 19,
+        "actionsWithMeasuredNegativeProofWithinEndpoint": 1,
+        "geometryProofs": 63,
+        "measuredVisibleFalse": 0,
+        "measuredUnfocused": 0,
+        "restoredGeometryFalseIncludingAfterEndpoint": 20,
+        "actionsWithInvalidMutationAfterLatestEligibleProof": 18
+      },
+      "roleValidation": {
+        "status": "failed",
+        "reason": "Visible feedback or intent changed before rendering\n\ntrue !== false\n"
+      },
+      "work": {
+        "mutationCallbacks": 385,
+        "mutationRecords": 3770,
+        "continuityChecks": 211,
+        "geometryChecks": 63,
+        "restoredMeasurementTransactions": 157,
+        "renderBoundaryArms": 23,
+        "renderBoundaryCallbacks": 23,
+        "overhead": {
+          "status": "unavailable",
+          "reason": "not-measured"
+        }
+      },
+      "causeCountsOverlapping": {
+        "mixed-unknown": {
+          "actionCount": 19,
+          "batchCount": 27,
+          "sampleIds": [
+            "candidate-local-02",
+            "candidate-local-03",
+            "candidate-local-04",
+            "candidate-local-05",
+            "candidate-local-06",
+            "candidate-local-07",
+            "candidate-local-08",
+            "candidate-local-09",
+            "candidate-local-10",
+            "candidate-local-11",
+            "candidate-local-12",
+            "candidate-local-13",
+            "candidate-local-14",
+            "candidate-local-15",
+            "candidate-local-16",
+            "candidate-local-17",
+            "candidate-local-18",
+            "candidate-local-19",
+            "candidate-local-20"
+          ]
+        },
+        "no-owned-arm": {
+          "actionCount": 19,
+          "batchCount": 27,
+          "sampleIds": [
+            "candidate-local-02",
+            "candidate-local-03",
+            "candidate-local-04",
+            "candidate-local-05",
+            "candidate-local-06",
+            "candidate-local-07",
+            "candidate-local-08",
+            "candidate-local-09",
+            "candidate-local-10",
+            "candidate-local-11",
+            "candidate-local-12",
+            "candidate-local-13",
+            "candidate-local-14",
+            "candidate-local-15",
+            "candidate-local-16",
+            "candidate-local-17",
+            "candidate-local-18",
+            "candidate-local-19",
+            "candidate-local-20"
+          ]
+        },
+        "late-completion": {
+          "actionCount": 4,
+          "batchCount": 4,
+          "sampleIds": [
+            "candidate-local-08",
+            "candidate-local-10",
+            "candidate-local-16",
+            "candidate-local-18"
+          ]
+        },
+        "negative-geometry": {
+          "actionCount": 4,
+          "batchCount": 4,
+          "sampleIds": [
+            "candidate-local-08",
+            "candidate-local-10",
+            "candidate-local-16",
+            "candidate-local-18"
+          ]
+        }
+      },
+      "rawDiagnosticsOnly": {
+        "eventTimingP95Ms": 160,
+        "durationsMs": [
+          328,
+          136,
+          48,
+          96,
+          64,
+          160,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96
+        ],
+        "over100ms": [
+          {
+            "sampleId": "candidate-local-01",
+            "durationMs": 328
+          },
+          {
+            "sampleId": "candidate-local-02",
+            "durationMs": 136
+          },
+          {
+            "sampleId": "candidate-local-06",
+            "durationMs": 160
+          }
+        ],
+        "stateP95Ms": 135,
+        "renderedFrameP95Ms": 188.19999998807907,
+        "recordedRoGeometryReadElapsedMs": 12.600000008940697
+      }
+    }
+  },
+  "diagnosticReadinessChangePct": {
+    "state": 51.515151499947805,
+    "renderedFrame": -20.152736535553906
+  },
+  "interpretation": [
+    "Frozen v3 local-control evaluation fails; this report does not rerate it.",
+    "Recognized measurements mixed with unknown layout mutations lack eligible owned recovery. Some later proofs are late or differ geometrically.",
+    "No recorded geometry proof reports visible:false or unfocused. This refers only to the sampled center/clip predicate, not continuous visibility or full-control visibility.",
+    "Observed geometry changes include visible panel translations with unchanged ancestor scroll offsets; these are not evidence of residual scroll clamping or a hidden control.",
+    "Native click durations and logical-readiness values are retained as diagnostics. Candidate durations include 328,136,160 ms; p95 is 160 ms, above the unchanged 100 ms target.",
+    "Both application versions share the logical-ready-at-natural-frame predicate. State readiness and rendered-frame gates remain separate; one improvement cannot offset another regression.",
+    "Replay and non-GC sampled peak heap pass their independent checks. No retained-heap, final-soak, cold-startup or global acceptance claim follows."
+  ],
+  "nextAction": "Bounded separate runtime trace of the same materialized first three ON/OFF pairs; diagnose post-handler delay without another identical formal run. Review geometry-restoration versus semantic-feedback reporting prospectively, preserving this failure.",
+  "limits": {
+    "observationOverhead": "unmeasured; raw geometry-read elapsed counters are not total observer overhead",
+    "productionChanged": false,
+    "performanceAccepted": false
+  }
+}

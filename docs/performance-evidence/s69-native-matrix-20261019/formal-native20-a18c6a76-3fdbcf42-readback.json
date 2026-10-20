@@ -1,0 +1,43 @@
+{
+  "schema": "gev-formal-native-qualification-readback/v1",
+  "status": "all-raw-files-stream-verified",
+  "result": {
+    "file": "formal-native20-a18c6a76-3fdbcf42-result.json",
+    "bytes": 16554,
+    "sha256": "a4284fb8daafb8f789304880cc5b675e3e260d92e4824bce5c25a620962a5966"
+  },
+  "localDirectory": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\qualification-metrics-a18c6a76-3fdbcf42-native-window",
+  "vmDirectory": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-a18c6a76-3fdbcf42-native-window-complete-20261020",
+  "transferredFiles": 21,
+  "transferredBytes": 4666637,
+  "transferReceipt": {
+    "file": "qa-artifacts/formal-native20-a18c6a76-3fdbcf42-transfer-20261020.json",
+    "bytes": 3530,
+    "sha256": "500ed4a9c828c63038399bfd7b27a86f438dfa185ee75f73e01d78a3e343752a"
+  },
+  "evidence": [
+    {
+      "file": "capture.json",
+      "bytes": 4147853,
+      "sha256": "02aad9c28228c1cf8525395e60c3f7e64201e450a460474e8378de83abb2eae9"
+    },
+    {
+      "file": "review.json",
+      "bytes": 3057,
+      "sha256": "6d4bbaa6bfbbee2eaa9de5a4718443dd1a4563bca97256deac6f40007ca637ea"
+    },
+    {
+      "file": "independent-readback-r2.json",
+      "bytes": 255149,
+      "sha256": "20535e269a9fec820310888cdb3fe4a567ebaa4e939e221fadea969e4c7f2a80"
+    },
+    {
+      "file": "process.json",
+      "bytes": 3424,
+      "sha256": "5600683ba44e5805cb0de6bc76cebceb0bda592834b952b845086ff1b042900f"
+    }
+  ],
+  "checksumMethod": "Local and independent remote streaming SHA256, exact regular-file inventory and sizes; bounded fresh destination.",
+  "productionChanged": false,
+  "gpuLeaseReleased": true
+}

@@ -7,6 +7,23 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The fresh `a18c6a76` / QA `3fdbcf42`
+[native Windows capture](performance-evidence/s69-native-matrix-20261019/formal-native20-a18c6a76-3fdbcf42-result.json)
+completes both builds and all asset, foreground and cleanup checks, but
+**fails local-control acceptance**. Mixed layout changes lack timely
+same-intent visibility proof. Separately retained native duration diagnostics
+show candidate p95 at 160 ms against the unchanged 100 ms target.
+Logical state readiness is 51.52% slower; the 20.15% improvement in the
+rendered-frame endpoint cannot offset that independent regression.
+Replay passes at 31.2 ms p95 and sampled peak heap changes by −0.24%.
+These are not a final soak or performance acceptance.
+The next diagnostic traces the same first three ON/OFF pairs to locate
+post-handler delay. The [independent semantics review](performance-evidence/s69-native-matrix-20261019/interaction-feedback-semantics-review.json)
+separates native latency, semantic feedback and exact layout-restoration
+evidence: a visible moving control is not necessarily hidden, but late
+observations still cannot prove earlier feedback. This rationale does not
+change the failed result or any threshold. Production remains unchanged.
+
 The current runtime candidate is `a18c6a76`. User-triggered layer activation
 now waits for one animation-frame callback followed by its owned task,
 instead of waiting for two callbacks. The real lifecycle already publishes
@@ -18,7 +35,8 @@ passes 146 tests on each Node version and all required static checks.
 Earlier sparse-source setup failure is retained. The
 [private VM build and Windows inputs](performance-evidence/s69-native-matrix-20261019/single-raf-feedback-build-preflight.json)
 verify all 886 candidate assets against the exact source and build receipt.
-Its hardware comparison, final soak and deployment remain pending.
+Its first hardware comparison is the failed result above; final qualification,
+soak and deployment remain pending.
 
 A proposed QA exemption for restored measurement attributes was rejected
 before capture. The [actual-CSS browser reproduction](performance-evidence/s69-native-matrix-20261019/left-measurement-restoration-review.json)
