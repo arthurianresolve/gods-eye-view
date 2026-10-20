@@ -668,7 +668,6 @@ export class LayerLifecycle {
       intentEpoch = null,
       suppressWillChangeNotification = false,
       beforeEnableParams = null,
-      deferUserDisable = true,
     } = {},
   ) {
     const desiredState = Boolean(targetEnabled);
@@ -740,10 +739,11 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
-    // Direct user transitions publish honest busy presentation before the
-    // owned rendering opportunity. Settled visibility and live resources stay
-    // unchanged until the following task. Bulk clear keeps immediate teardown.
-    if (origin === 'user' && (desiredState || deferUserDisable)) {
+    // Enabling can schedule expensive first-frame geometry/depth work. Give
+    // its busy presentation an owned rendering opportunity first. Disabling
+    // instead releases live sources and frame listeners without another RAF;
+    // the busy state above remains truthful until teardown actually succeeds.
+    if (origin === 'user' && desiredState) {
       this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
       await waitForVisibilityPaint({
         signal,
@@ -1131,7 +1131,6 @@ export class LayerLifecycle {
       notificationToken = null,
       notifyWillChangeBeforeEffective = false,
       beforeEnableParams = null,
-      deferUserDisable = true,
     } = {},
   ) {
     const entry = this.layers.get(layerId);
@@ -1438,7 +1437,6 @@ export class LayerLifecycle {
           intentEpoch,
           suppressWillChangeNotification: notifyWillChangeBeforeEffective,
           beforeEnableParams,
-          deferUserDisable,
         });
       } finally {
         signal?.removeEventListener('abort', forwardCallerAbort);
@@ -1638,7 +1636,6 @@ export class LayerLifecycle {
           const clearIntentEpoch = entry.visibilityIntentEpoch + 1;
           const result = await this._setEnabledWithIntent(layerId, false, {
             origin,
-            deferUserDisable: false,
             ...(notificationToken ? { notificationToken } : {}),
           }).promise;
           attempts.set(layerId, {

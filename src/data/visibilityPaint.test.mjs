@@ -144,10 +144,9 @@ test('layer work waits for one RAF update and the following owned task', async (
   page.assertReleased(controller.signal);
 });
 
-test('real lifecycle ON and OFF presentation precedes the RAF and work waits for its task', async (t) => {
+test('real presentation yields before ON work but publishes and completes OFF before another frame', async (t) => {
   const f = fixture();
   const trace = [];
-  let expectedTransition = 'enabling';
   const presentation = new LayerPresentation(f.manager, {
     requestRender() {},
     invalidateDetection() {},
@@ -163,7 +162,7 @@ test('real lifecycle ON and OFF presentation precedes the RAF and work waits for
   };
   const requestFrame = f.documentRef.defaultView.requestAnimationFrame;
   f.documentRef.defaultView.requestAnimationFrame = (callback) => {
-    assert.equal(trace.at(-1), expectedTransition);
+    assert.equal(trace.at(-1), 'enabling');
     trace.push('raf-scheduled');
     return requestFrame(callback);
   };
@@ -194,25 +193,19 @@ test('real lifecycle ON and OFF presentation precedes the RAF and work waits for
   assert.equal(f.calls.enable, 1);
   f.assertReleased();
 
-  expectedTransition = 'disabling';
   f.layer.disable = () => {
     f.calls.disable++;
     trace.push('disable');
   };
   const disabling = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
-  assert.equal(f.manager.isEnabled(f.layer.id), true);
-  assert.equal(f.calls.disable, 0);
-  assert.ok(
-    trace.lastIndexOf('disabling') < trace.lastIndexOf('raf-scheduled'),
-  );
-  f.frame();
-  await Promise.resolve();
-  assert.equal(f.calls.disable, 0);
-  trace.push('off-owned-task');
-  f.task();
   assert.equal(await disabling, true);
-  assert.ok(trace.indexOf('disable') > trace.indexOf('off-owned-task'));
+  assert.ok(trace.indexOf('disable') > trace.lastIndexOf('disabling'));
+  assert.equal(trace.at(-1), 'disabled');
+  assert.equal(
+    trace.filter((event) => event === 'raf-scheduled').length,
+    1,
+    'Only the ON request acquires a rendering opportunity',
+  );
   assert.equal(f.calls.disable, 1);
   assert.equal(f.manager.isEnabled(f.layer.id), false);
   f.assertReleased();
@@ -316,7 +309,7 @@ test('RAF or task scheduling errors resume lifecycle without leaking listeners',
   taskPage.assertReleased();
 });
 
-test('direct user ON and OFF publish transitions before their owned rendering opportunity', async () => {
+test('ON waits for its rendering opportunity while asynchronous OFF stays busy until teardown succeeds', async () => {
   const f = fixture();
   const enabling = f.manager.setEnabled(f.layer.id, true, { origin: 'user' });
   await until(() => f.frames.size === 1);
@@ -357,8 +350,9 @@ test('direct user ON and OFF publish transitions before their owned rendering op
     });
   };
   const disabling = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
-  assert.equal(f.calls.disable, 0, 'The layer remains live during DISABLING');
+  await until(() => f.calls.disable === 1);
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.tasks.size, 0);
   assert.deepEqual(f.manager.getLayerLifecycleState(f.layer.id), {
     enabled: true,
     lifecycleState: 'disabling',
@@ -371,12 +365,6 @@ test('direct user ON and OFF publish transitions before their owned rendering op
     false,
     'OFF is not published before resource teardown succeeds',
   );
-  f.frame();
-  await Promise.resolve();
-  assert.equal(f.calls.disable, 0, 'The RAF microtask cannot start teardown');
-  assert.equal(f.tasks.size, 1);
-  f.task();
-  await until(() => f.calls.disable === 1);
   finishDisable();
   assert.equal(await disabling, true);
   assert.equal(f.manager.isEnabled(f.layer.id), false);
@@ -484,7 +472,7 @@ test('a same-target successor gets its own paint wait and sole settled publicati
   f.assertReleased();
 });
 
-test('an OFF superseded after deferred teardown starts still compensates before the newer ON settles', async () => {
+test('an OFF superseded during immediate teardown compensates before the newer ON settles', async () => {
   const f = fixture();
   let visible = false;
   let finishDisable;
@@ -501,21 +489,14 @@ test('an OFF superseded after deferred teardown starts still compensates before 
   };
   await f.manager.setEnabled(f.layer.id, true);
   const off = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
-  assert.equal(
-    visible,
-    true,
-    'Busy presentation retains truthful live visibility',
-  );
-  f.frame();
-  f.task();
   await until(() => f.calls.disable === 1);
   assert.equal(
     visible,
     false,
-    'The owned task starts the real resource teardown',
+    'The accepted OFF begins resource teardown without a rendering wait',
   );
   assert.equal(f.frames.size, 0);
+  assert.equal(f.tasks.size, 0);
   const on = f.manager.setEnabled(f.layer.id, true);
   finishDisable();
   assert.equal(await off, false);
@@ -534,23 +515,34 @@ test('an OFF superseded after deferred teardown starts still compensates before 
   f.assertReleased();
 });
 
-test('aborted deferred OFF leaves live resources untouched before either owned boundary', async () => {
-  for (const completedFrames of [0, 1]) {
+test('OFF cancelled at its guard or synchronous transition leaves live resources untouched', async () => {
+  for (const boundary of ['guard', 'transition']) {
     const f = fixture();
     await f.manager.setEnabled(f.layer.id, true);
     const controller = new AbortController();
+    let releaseGuard;
+    if (boundary === 'guard') {
+      f.manager.addVisibilityGuard(
+        () =>
+          new Promise((resolve) => {
+            releaseGuard = resolve;
+          }),
+      );
+    } else {
+      f.manager.subscribe(({ type, enabled }) => {
+        if (type === 'visibility-transition' && !enabled) controller.abort();
+      });
+    }
     const off = f.manager.setEnabled(f.layer.id, false, {
       origin: 'user',
       signal: controller.signal,
     });
-    await until(() => f.frames.size === 1);
-    const [frameId] = f.frames.keys();
-    if (completedFrames) f.frame();
-    const [taskId] = f.tasks.keys();
-    controller.abort();
+    if (boundary === 'guard') {
+      await until(() => typeof releaseGuard === 'function');
+      controller.abort();
+      releaseGuard(null);
+    }
     assert.equal(await off, false);
-    f.invokeStaleFrame(frameId);
-    f.invokeStaleTask(taskId);
     assert.equal(f.calls.disable, 0);
     assert.equal(f.calls.enable, 1, 'Untouched ON requires no compensation');
     assert.deepEqual(f.manager.getLayerLifecycleState(f.layer.id), {
@@ -562,23 +554,30 @@ test('aborted deferred OFF leaves live resources untouched before either owned b
       ({ type }) => type === 'visibility-cancelled',
     );
     assert.equal(cancelled.length, 1);
-    assert.equal(cancelled[0].phase, 'presentation');
+    assert.equal(
+      cancelled[0].phase,
+      boundary === 'guard' ? 'guard' : 'presentation',
+    );
     assert.equal(cancelled[0].cancellationReason, 'caller-abort');
     f.assertReleased(controller.signal);
   }
 });
 
-test('newer ON cancels deferred OFF without teardown or a stale OFF publication', async () => {
+test('newer ON at the OFF transition prevents teardown and owns the sole settled publication', async () => {
   const f = fixture();
   await f.manager.setEnabled(f.layer.id, true);
+  let on;
+  f.manager.subscribe(({ type, enabled }) => {
+    if (type === 'visibility-transition' && !enabled) {
+      on = f.manager._setEnabledWithIntent(f.layer.id, true, {
+        origin: 'user',
+      });
+    }
+  });
   const off = f.manager._setEnabledWithIntent(f.layer.id, false, {
     origin: 'user',
   });
-  await until(() => f.frames.size === 1);
-  f.frame();
-  const on = f.manager._setEnabledWithIntent(f.layer.id, true, {
-    origin: 'user',
-  });
+  await until(() => Boolean(on));
   assert.deepEqual(await Promise.all([off.promise, on.promise]), [false, true]);
   assert.equal(f.calls.disable, 0);
   assert.equal(f.calls.enable, 1);
@@ -598,14 +597,17 @@ test('newer ON cancels deferred OFF without teardown or a stale OFF publication'
   f.assertReleased();
 });
 
-test('destroy revokes deferred OFF and tears down immediately without a second presentation wait', async () => {
+test('destroy at the OFF transition revokes its intent and tears down without a rendering wait', async () => {
   const f = fixture();
   await f.manager.setEnabled(f.layer.id, true);
+  let teardown;
+  f.manager.subscribe(({ type, enabled }) => {
+    if (type === 'visibility-transition' && !enabled) {
+      teardown = f.manager.destroyLayer(f.layer.id);
+    }
+  });
   const off = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
-  f.frame();
-  assert.equal(f.calls.disable, 0);
-  const teardown = f.manager.destroyLayer(f.layer.id);
+  await until(() => Boolean(teardown));
   assert.deepEqual(await Promise.all([off, teardown]), [false, true]);
   assert.equal(f.calls.disable, 1);
   assert.equal(f.calls.destroy, 1);
@@ -613,7 +615,80 @@ test('destroy revokes deferred OFF and tears down immediately without a second p
   f.assertReleased();
 });
 
-test('bulk clear bypasses user OFF presentation waits and retains its settled lifecycle result', async () => {
+test('caller abort during immediate OFF teardown compensates once and never publishes false settlement', async () => {
+  const f = fixture();
+  await f.manager.setEnabled(f.layer.id, true);
+  let finishDisable;
+  f.layer.disable = () => {
+    f.calls.disable++;
+    return new Promise((resolve) => {
+      finishDisable = resolve;
+    });
+  };
+  const controller = new AbortController();
+  const off = f.manager.setEnabled(f.layer.id, false, {
+    origin: 'user',
+    signal: controller.signal,
+  });
+  await until(() => f.calls.disable === 1);
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.tasks.size, 0);
+  controller.abort();
+  finishDisable();
+  assert.equal(await off, false);
+  assert.equal(f.calls.enable, 2);
+  assert.equal(f.calls.disable, 1);
+  assert.deepEqual(f.manager.getLayerLifecycleState(f.layer.id), {
+    enabled: true,
+    lifecycleState: 'enabled',
+    uncertain: false,
+  });
+  assert.equal(
+    f.events.some(({ type, enabled }) => type === 'visibility' && !enabled),
+    false,
+  );
+  const cancelled = f.events.filter(
+    ({ type }) => type === 'visibility-cancelled',
+  );
+  assert.equal(cancelled.length, 1);
+  assert.equal(cancelled[0].phase, 'disable');
+  assert.equal(cancelled[0].cancellationReason, 'caller-abort');
+  f.assertReleased(controller.signal);
+});
+
+test('immediate user OFF rejection preserves truthful enabled failure without a frame wait', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  for (const outcome of ['reject', 'throw']) {
+    const f = fixture();
+    await f.manager.setEnabled(f.layer.id, true);
+    f.layer.disable = () => {
+      f.calls.disable++;
+      if (outcome === 'throw') throw new Error('teardown failed');
+      return false;
+    };
+    assert.equal(
+      await f.manager.setEnabled(f.layer.id, false, { origin: 'user' }),
+      false,
+    );
+    assert.equal(f.calls.disable, 1);
+    assert.deepEqual(f.manager.getLayerLifecycleState(f.layer.id), {
+      enabled: true,
+      lifecycleState: 'enabled',
+      uncertain: true,
+    });
+    assert.equal(
+      f.events.some(({ type, enabled }) => type === 'visibility' && !enabled),
+      false,
+    );
+    assert.equal(
+      f.events.find(({ type }) => type === 'visibility-failed').phase,
+      'disable',
+    );
+    f.assertReleased();
+  }
+});
+
+test('bulk clear retains immediate teardown and its owned settled lifecycle result', async () => {
   const f = fixture();
   await f.manager.setEnabled(f.layer.id, true);
   const clearing = f.manager.clearSelectedLayers({ origin: 'user' });
