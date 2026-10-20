@@ -10,6 +10,7 @@ import {
   getCaptureReadinessReasons,
   isSupportedStartupOnlyFixture,
   resolveStartupOnlyFixtureIdentity,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
@@ -704,6 +705,84 @@ test('infrastructure comparison exports observed workloads without dense objecti
       scenarios: ['idle', 'scripted-motion'],
       workload: observed.workload,
     }),
+  );
+});
+
+test('settled idle-only contract is explicit, cable-scoped and retains unrelated readiness failures', () => {
+  const report = makeInfrastructureReport(
+    'a'.repeat(40),
+    'infrastructure-cables',
+  );
+  report.workload.scenarios = ['idle'];
+  report.workload.settledIdleOnly = true;
+  report.captures = report.captures.filter(
+    (sample) => sample.scenario === 'idle',
+  );
+  const options = {
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+    workload: report.workload,
+    settledIdleOnly: true,
+  };
+  const contract = createObservedInfrastructureComparisonContract(options);
+  assert.equal(contract.qualificationMode, 'settled-idle-only');
+  assert.deepEqual(Object.keys(contract.routes), ['idle']);
+  assert.deepEqual(contract.objectiveScenarios, []);
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract({
+      ...options,
+      settledIdleOnly: false,
+    }),
+  );
+  for (const [field, value] of [
+    ['runsPerScenario', 1],
+    ['durationPerSampleMs', 10_000],
+    ['warmupMs', 0],
+  ])
+    assert.throws(() =>
+      createObservedInfrastructureComparisonContract({
+        ...options,
+        workload: { ...options.workload, [field]: value },
+      }),
+    );
+  const foreign = makeInfrastructureReport(
+    'a'.repeat(40),
+    'infrastructure-dams',
+  );
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract({
+      ...options,
+      fixture: foreign.workload.fixture,
+    }),
+  );
+  const readiness = getCaptureComparisonIneligibilityReasons({
+    ...options,
+    contract,
+    source: report.source,
+  });
+  assert.ok(readiness.includes(SETTLED_IDLE_ONLY_INELIGIBLE_REASON));
+  assert.ok(
+    readiness.includes(
+      'hardware-performance-acceptance-was-not-requested-or-verified',
+    ),
+  );
+  assert.ok(
+    !readiness.includes(
+      'required-infrastructure-objective-workloads-are-incomplete',
+    ),
+  );
+  const unmarked = getCaptureComparisonIneligibilityReasons({
+    ...options,
+    contract,
+    workload: { ...report.workload, settledIdleOnly: false },
+  });
+  assert.ok(
+    unmarked.includes(
+      'required-infrastructure-objective-workloads-are-incomplete',
+    ),
   );
 });
 

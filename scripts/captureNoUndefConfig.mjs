@@ -1,6 +1,19 @@
 import globals from 'globals';
 
 export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
+  'scripts/performance/settledIdleObservation.mjs',
+  'scripts/performance/settledIdleObservation.test.mjs',
+  'scripts/performance/settledIdleQualification.mjs',
+  'scripts/performance/settledIdleQualification.test.mjs',
+  'scripts/performance/repeatedFullImageControls.mjs',
+  'scripts/performance/repeatedFullImageControls.test.mjs',
+  'scripts/performance/repeatedVisualQualification.mjs',
+  'scripts/performance/runRepeatedVisualQualification.mjs',
+  'scripts/performance/runRepeatedVisualQualification.test.mjs',
+  'scripts/performance/visualPaintSignature.mjs',
+  'scripts/performance/visualPaintSignature.test.mjs',
+  'scripts/performance/startupOperatingContract.mjs',
+  'scripts/performance/startupOperatingContract.test.mjs',
   'scripts/capture-scene-performance.mjs',
   'scripts/review-balanced-startup-confirmation.mjs',
   'scripts/performance/balancedStartupConfirmation.mjs',

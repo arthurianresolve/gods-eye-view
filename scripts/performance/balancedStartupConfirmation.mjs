@@ -8,6 +8,10 @@ import {
   PAGE_OBSERVED_STARTUP_SEMANTICS,
   validatePageObservedStartupTiming,
 } from './startupObservationMethod.mjs';
+import {
+  assertStartupOperatingContract,
+  validateStartupOperatingEvidence,
+} from './startupOperatingContract.mjs';
 
 export const BALANCED_STARTUP_ORDER = Object.freeze([
   'control',
@@ -74,6 +78,12 @@ export function assertBalancedStartupPlan(plan) {
       method,
       'Startup method identity is malformed',
     );
+  if (plan.startupOperatingContract != null) {
+    assertStartupOperatingContract(plan.startupOperatingContract);
+    assert.equal(method, PAGE_OBSERVED_STARTUP_METHOD);
+    assert.equal(plan.fixture.workloadId, 'infrastructure-dams');
+    assert.equal(plan.expectedSettings?.map, 'esri-imagery');
+  }
   assert.equal(plan?.thresholdPct, STARTUP_REGRESSION_THRESHOLD_PCT);
   assert.ok(plan?.expectedEnvironment);
   assert.ok(plan?.expectedSettings);
@@ -281,6 +291,18 @@ function assertShard(shard, slot, plan) {
       'Startup page observations must finish before process cleanup completes',
     );
   }
+  if (plan.startupOperatingContract != null)
+    validateStartupOperatingEvidence({
+      contract: plan.startupOperatingContract,
+      startup: shard.startup,
+      expectedSettings: plan.expectedSettings,
+    });
+  else
+    assert.equal(
+      shard.startup.operatingContract,
+      undefined,
+      'Startup operating conditions were not declared before capture',
+    );
   return observation;
 }
 
@@ -343,6 +365,9 @@ export function evaluateBalancedStartupConfirmation({ plan, shards }) {
     order: BALANCED_STARTUP_ORDER,
     ...(effectiveStartupMethod(plan) === PAGE_OBSERVED_STARTUP_METHOD
       ? { startupMethod: effectiveStartupMethod(plan) }
+      : {}),
+    ...(plan.startupOperatingContract
+      ? { startupOperatingContract: plan.startupOperatingContract }
       : {}),
     appReady: {
       semantic:

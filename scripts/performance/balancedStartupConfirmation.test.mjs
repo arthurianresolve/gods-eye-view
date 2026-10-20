@@ -18,6 +18,11 @@ import {
   PAGE_OBSERVED_STARTUP_SCHEMA,
   PAGE_OBSERVED_STARTUP_SEMANTICS,
 } from './startupObservationMethod.mjs';
+import {
+  createStartupOperatingContract,
+  STARTUP_BOOTSTRAP_SOURCE_PATHS,
+  STARTUP_FIXED_TIME_MS,
+} from './startupOperatingContract.mjs';
 
 const controlCommit = 'a'.repeat(40);
 const candidateCommit = 'b'.repeat(40);
@@ -213,7 +218,7 @@ function makeReport(plan, slot, index, values = {}) {
     fixture: structuredClone(plan.fixture),
     graphics: { browserVersion: environment.browserVersion },
     environment: structuredClone(environment),
-    settings: structuredClone(settings),
+    settings: structuredClone(plan.expectedSettings),
     startup,
     browserClose: {
       closeApiCompleted: true,
@@ -239,6 +244,67 @@ function makeInput({ mutatePlan, mutateReports, valuesForRole } = {}) {
   });
   mutateReports?.(shards, plan);
   return { plan, shards };
+}
+
+function makeOperatingInput() {
+  const input = makeInput({
+    mutatePlan(plan) {
+      plan.startupMethod = PAGE_OBSERVED_STARTUP_METHOD;
+      plan.measurement = PAGE_OBSERVED_STARTUP_MEASUREMENT;
+      plan.expectedSettings.map = 'esri-imagery';
+      plan.expectedSettings.style = 'normal';
+      plan.startupOperatingContract = createStartupOperatingContract(
+        STARTUP_BOOTSTRAP_SOURCE_PATHS.map((sourcePath) => ({
+          path: sourcePath,
+          sha256: 'f'.repeat(64),
+        })),
+      );
+    },
+  });
+  for (const { report } of input.shards) {
+    report.startup.operatingContract = structuredClone(
+      input.plan.startupOperatingContract,
+    );
+    const observed = report.startup.timingEvidence.pageObserved;
+    for (const [index, key] of [
+      'viewerForeground',
+      'loaderHiddenForeground',
+    ].entries())
+      observed[key].operatingState = {
+        boot: {
+          schema: 'gev-default-startup-document-receipt/v1',
+          pathname: '/',
+          search: '?welcome=0&lang=en',
+          hash: '',
+          wallClockEpochMs: STARTUP_FIXED_TIME_MS,
+        },
+        locale: 'en',
+        wallClockEpochMs: STARTUP_FIXED_TIME_MS,
+        cesiumClock: {
+          currentTime: { dayNumber: 2461322, secondsOfDay: 37 },
+          shouldAnimate: false,
+          multiplier: 1,
+        },
+        camera: {
+          position: { x: 100 + index, y: 200, z: 300 },
+          direction: { x: 0, y: 0, z: -1 },
+          up: { x: 0, y: 1, z: 0 },
+          transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        },
+        map: {
+          activeId: 'esri-imagery',
+          status: 'ready',
+          globeShown: true,
+          hasCesiumIonToken: false,
+          terrainMode: 'keyless',
+          terrainFallback: false,
+          photorealTilesetPresent: false,
+        },
+        enabledLayerIds: [],
+        settings: structuredClone(input.plan.expectedSettings),
+      };
+  }
+  return input;
 }
 
 test('balanced startup confirmation preserves the predeclared order and gates both semantics', () => {
@@ -281,6 +347,53 @@ test('page-observed confirmation accepts matching page upper bounds and preserve
   assert.equal(result.status, 'passed');
   assert.equal(result.startupMethod, PAGE_OBSERVED_STARTUP_METHOD);
   assert.equal(result.appReady.semantic, PAGE_OBSERVED_STARTUP_SEMANTICS);
+});
+
+test('default-boot confirmation pins future operating inputs and keeps the original ten-percent gates', () => {
+  const input = makeOperatingInput();
+  const passed = evaluateBalancedStartupConfirmation(input);
+  assert.equal(passed.status, 'passed');
+  assert.deepEqual(
+    passed.startupOperatingContract,
+    input.plan.startupOperatingContract,
+  );
+  for (const { report, slot } of input.shards)
+    if (slot.role === 'candidate') {
+      const observation = report.startup.observations[0];
+      const extraMs = 1000;
+      observation.appReadyMs += extraMs;
+      const timing = report.startup.timingEvidence;
+      timing.pageObserved.viewerExistenceMsFromNavigationStart += extraMs;
+      timing.pageObserved.viewerForeground.observedMsFromNavigationStart +=
+        extraMs;
+      timing.hostBoundaries.viewerObservedAtMs += extraMs;
+      timing.hostObserved.viewerExistenceMsFromNavigationStart += extraMs;
+      timing.hostBoundaries.diagnosticsDisableStartedAtMs += extraMs;
+      timing.hostBoundaries.diagnosticsDisableCompletedAtMs += extraMs;
+    }
+  const failed = evaluateBalancedStartupConfirmation(input);
+  assert.equal(failed.status, 'failed');
+  assert.equal(failed.appReady.regressionOver10Pct, true);
+});
+
+test('default-boot confirmation rejects old shards, undeclared conditions, changed bootstrap sources, and missing boundary state', () => {
+  for (const mutate of [
+    (input) => delete input.shards[0].report.startup.operatingContract,
+    (input) => delete input.plan.startupOperatingContract,
+    (input) =>
+      (input.shards[1].report.startup.operatingContract.bootstrapSources[0].sha256 =
+        '1'.repeat(64)),
+    (input) =>
+      delete input.shards[1].report.startup.timingEvidence.pageObserved
+        .viewerForeground.operatingState,
+    (input) =>
+      (input.shards[1].report.startup.timingEvidence.pageObserved.loaderHiddenForeground.operatingState.wallClockEpochMs += 1),
+    (input) => (input.plan.thresholdPct = 20),
+  ]) {
+    const input = makeOperatingInput();
+    mutate(input);
+    assert.throws(() => evaluateBalancedStartupConfirmation(input));
+  }
 });
 
 test('page and host elapsed startup clocks are validated independently', () => {

@@ -25,6 +25,8 @@ import {
 } from './mapStreamingWorkloadContract.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+export const SETTLED_IDLE_ONLY_INELIGIBLE_REASON =
+  'settled-idle-only-evidence-is-not-full-paired-performance';
 const STARTUP_ONLY_FIXTURES = Object.freeze({
   'infrastructure-datacenters': Object.freeze({
     matrixRowId: 'infrastructure-datacenters',
@@ -446,6 +448,7 @@ export function createObservedInfrastructureComparisonContract({
   captures,
   scenarios,
   workload,
+  settledIdleOnly = false,
 } = {}) {
   assertInfrastructureFixtureIdentity(fixture, 'infrastructure fixture');
   assert.ok(
@@ -502,7 +505,17 @@ export function createObservedInfrastructureComparisonContract({
   );
   assert.ok(browserMatch, 'browser identity was not observed');
   assert.ok(Array.isArray(captures) && captures.length > 0);
-  assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+  assert.equal(typeof settledIdleOnly, 'boolean');
+  if (settledIdleOnly) {
+    assert.equal(fixture.workloadId, 'infrastructure-cables');
+    assert.equal(workload?.warmupMs, 30_000);
+    assert.equal(workload?.durationPerSampleMs, 60_000);
+    assert.equal(workload?.runsPerScenario, 5);
+  }
+  assert.deepEqual(
+    scenarios,
+    settledIdleOnly ? ['idle'] : ['idle', 'scripted-motion'],
+  );
   assert.ok(
     Number.isSafeInteger(workload?.durationPerSampleMs) &&
       workload.durationPerSampleMs > 0,
@@ -665,6 +678,7 @@ export function createObservedInfrastructureComparisonContract({
   return {
     schema: 'gev-performance-comparison-contract/v1',
     workloadId: fixture.workloadId,
+    ...(settledIdleOnly ? { qualificationMode: 'settled-idle-only' } : {}),
     fixture: {
       id: fixture.id,
       sha256: fixture.sha256,
@@ -2005,6 +2019,8 @@ export function getCaptureComparisonIneligibilityReasons({
   hardwareRequired = false,
 } = {}) {
   const reasons = [];
+  if (workload?.settledIdleOnly === true)
+    reasons.push(SETTLED_IDLE_ONLY_INELIGIBLE_REASON);
   if (!fixture) reasons.push('production-provider-fixture-not-used');
   if (fixture && !contract)
     reasons.push('observed-comparison-contract-incomplete');
@@ -2172,9 +2188,16 @@ export function getCaptureComparisonIneligibilityReasons({
   )
     reasons.push('foreground-continuity-is-incomplete');
   if (sharedDocumentFixture) {
+    const scopedIdle =
+      infrastructureFixture &&
+      fixture.workloadId === 'infrastructure-cables' &&
+      workload?.settledIdleOnly === true &&
+      contract?.qualificationMode === 'settled-idle-only' &&
+      JSON.stringify(workload?.scenarios) === '["idle"]';
     if (
-      !workload?.scenarios?.includes('idle') ||
-      !workload?.scenarios?.includes('scripted-motion')
+      !scopedIdle &&
+      (!workload?.scenarios?.includes('idle') ||
+        !workload?.scenarios?.includes('scripted-motion'))
     )
       reasons.push(
         infrastructureFixture

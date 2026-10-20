@@ -1425,5 +1425,18 @@
   "src/ui/flyToDataSource.test.mjs",
   "scripts/assemble-changelog.mjs",
   "src/tooling/changelogFragments.test.mjs",
-  "src/data/gbfsProxyRateLimit.test.mjs"
+  "src/data/gbfsProxyRateLimit.test.mjs",
+  "scripts/performance/settledIdleObservation.mjs",
+  "scripts/performance/settledIdleObservation.test.mjs",
+  "scripts/performance/settledIdleQualification.mjs",
+  "scripts/performance/settledIdleQualification.test.mjs",
+  "scripts/performance/repeatedFullImageControls.mjs",
+  "scripts/performance/repeatedFullImageControls.test.mjs",
+  "scripts/performance/repeatedVisualQualification.mjs",
+  "scripts/performance/runRepeatedVisualQualification.mjs",
+  "scripts/performance/runRepeatedVisualQualification.test.mjs",
+  "scripts/performance/visualPaintSignature.mjs",
+  "scripts/performance/visualPaintSignature.test.mjs",
+  "scripts/performance/startupOperatingContract.mjs",
+  "scripts/performance/startupOperatingContract.test.mjs"
 ]

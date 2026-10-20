@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedSettledIdleReports,
+} from './pairedReport.mjs';
 import { evaluateMotionFrameBudget } from './motionBudget.mjs';
-import { createObservedInfrastructureComparisonContract } from './captureComparisonContract.mjs';
+import {
+  createObservedInfrastructureComparisonContract,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
+} from './captureComparisonContract.mjs';
 
 import {
   baselineCommit,
@@ -895,6 +901,243 @@ test('idle zero-frame windows remain explicitly unavailable', () => {
     changePct: null,
     regressionOver10Pct: false,
   });
+});
+
+test('infrastructure keeps undefined intervals separate from measured settled frame budgets', () => {
+  const pair = [baselineCommit, candidateCommit].map((commit) =>
+    makeInfrastructureReport(commit, 'infrastructure-datacenters'),
+  );
+  const unknown = validate(...pair).scenarios.idle;
+  assert.equal(unknown.status, 'unavailable');
+  assert.equal(unknown.settledFrameBudget.status, 'unavailable');
+  for (const report of pair) {
+    for (const sample of report.captures.filter(
+      (capture) => capture.scenario === 'idle',
+    )) {
+      sample.renderedFrameCount = 0;
+      sample.settledIdleObservation = {
+        schema: 'gev-settled-idle-observation/v1',
+        diagnosticOnly: false,
+        durationMs: 60_000,
+        completedFrameOffsetsMs: [],
+        framesOmitted: 0,
+        cleanupConfirmed: true,
+        settlement: {
+          tileProgressObserved: true,
+          settledBeforeMs: 2_000,
+          initialTilesLoaded: true,
+          finalTilesLoaded: true,
+          tilesLoadedThroughout: true,
+          requestRenderModeThroughout: true,
+          cameraUnchanged: true,
+          nonzeroTileProgressEvents: 0,
+        },
+      };
+    }
+  }
+  const qualified = validate(...pair).scenarios.idle;
+  assert.equal(
+    qualified.status,
+    'unavailable',
+    'An absent interval is never invented',
+  );
+  assert.equal(qualified.settledFrameBudget.status, 'passed');
+  pair[1].captures.find(
+    (sample) => sample.scenario === 'idle',
+  ).settledIdleObservation.diagnosticOnly = true;
+  assert.throws(
+    () => validate(...pair),
+    /Diagnostic idle evidence cannot qualify/,
+  );
+});
+
+function makeScopedIdlePair() {
+  return [baselineCommit, candidateCommit].map((commit) => {
+    const report = makeInfrastructureReport(commit, 'infrastructure-cables');
+    report.workload.scenarios = ['idle'];
+    report.workload.settledIdleOnly = true;
+    report.captures = report.captures.filter(
+      (sample) => sample.scenario === 'idle',
+    );
+    report.comparisonEligible = false;
+    report.comparisonReadiness = {
+      status: 'not-ready',
+      reasons: [SETTLED_IDLE_ONLY_INELIGIBLE_REASON],
+    };
+    report.comparisonProfile = 'native-sharpness-v1';
+    report.environment.hardwareEligible = true;
+    const profile = {
+      id: 'native-sharpness-v1',
+      useBrowserRecommendedResolution: false,
+      resolutionScale: 1,
+      maximumScreenSpaceError: 1,
+      viewport: structuredClone(report.environment.viewport),
+      drawingBuffer: structuredClone(report.environment.drawingBuffer),
+    };
+    report.environment.nativeSharpnessProfile = structuredClone(profile);
+    for (const sample of report.captures) {
+      for (const phase of ['before', 'after'])
+        sample.conditions[phase].environment.nativeSharpnessProfile =
+          structuredClone(profile);
+      sample.renderedFrameCount = 0;
+      sample.settledIdleObservation = {
+        schema: 'gev-settled-idle-observation/v1',
+        diagnosticOnly: false,
+        durationMs: 60_000,
+        completedFrameOffsetsMs: [],
+        framesOmitted: 0,
+        cleanupConfirmed: true,
+        settlement: {
+          tileProgressObserved: true,
+          settledBeforeMs: 2_000,
+          initialTilesLoaded: true,
+          finalTilesLoaded: true,
+          tilesLoadedThroughout: true,
+          requestRenderModeThroughout: true,
+          cameraUnchanged: true,
+          nonzeroTileProgressEvents: 0,
+        },
+      };
+    }
+    report.comparisonContract = createObservedInfrastructureComparisonContract({
+      fixture: report.workload.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+      workload: report.workload,
+      settledIdleOnly: true,
+    });
+    return report;
+  });
+}
+
+function validateScopedIdle([baseline, candidate] = makeScopedIdlePair()) {
+  return validatePairedSettledIdleReports({
+    baseline,
+    candidate,
+    expectedAppCommits: {
+      baseline: baselineCommit,
+      candidate: candidateCommit,
+    },
+    expectedComparisonProfile: 'native-sharpness-v1',
+  });
+}
+
+test('scoped native cable idle passes without inventing motion, startup or interval evidence', () => {
+  const result = validateScopedIdle();
+  assert.equal(result.status, 'passed');
+  assert.deepEqual(result.resolvedScenarios, ['idle']);
+  assert.equal(result.motionAssessed, false);
+  assert.equal(result.startupAssessed, false);
+  assert.equal(result.fullPairedPerformanceAssessed, false);
+  assert.equal(Object.hasOwn(result, 'scenarios'), false);
+  const pair = makeScopedIdlePair();
+  assert.throws(() => validate(...pair), /scoped idle evidence/);
+  for (const report of pair) report.comparisonEligible = true;
+  assert.throws(() => validate(...pair), /scoped idle evidence/);
+  assert.throws(() => validateScopedIdle(pair));
+});
+
+test('scoped cable idle refuses incomplete, diagnostic, foreign or altered native evidence', () => {
+  const mutations = [
+    (report) => {
+      report.workload.settledIdleOnly = false;
+    },
+    (report) => {
+      report.comparisonContract.qualificationMode = null;
+    },
+    (report) => {
+      report.comparisonContract.workloadId = 'infrastructure-dams';
+    },
+    (report) => {
+      report.comparisonReadiness.reasons.push(
+        'diagnostic-frame-trace-instrumentation-is-ineligible-for-comparison',
+      );
+    },
+    (report) => {
+      report.captures.pop();
+    },
+    (report) => {
+      report.captures[1].run = 1;
+    },
+    (report) => {
+      report.workload.warmupMs = 0;
+    },
+    (report) => {
+      report.workload.durationPerSampleMs = 10_000;
+    },
+    (report) => {
+      report.captures[0].durationMs = 59_999;
+    },
+    (report) => {
+      report.captures[0].foregroundThroughout = false;
+    },
+    (report) => {
+      report.captures[0].conditions.after.focused = false;
+    },
+    (report) => {
+      report.environment.hardwareEligible = false;
+    },
+    (report) => {
+      delete report.captures[0].conditions.after.environment
+        .nativeSharpnessProfile;
+    },
+    (report) => {
+      report.environment.nativeSharpnessProfile.resolutionScale = 0.5;
+    },
+    (report) => {
+      report.fixtureDelivery.assets[0].sha256 = '0'.repeat(64);
+    },
+    (report) => {
+      report.source.appCommit = 'f'.repeat(40);
+    },
+    (report) => {
+      report.source.harnessDirtyWorktree = true;
+    },
+    (report) => {
+      report.source.buildProvenance.after.receiptSha256 = 'f'.repeat(64);
+    },
+    (report) => {
+      report.captures[0].settledIdleObservation.diagnosticOnly = true;
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const pair = makeScopedIdlePair();
+    mutate(pair[1]);
+    assert.throws(
+      () => validateScopedIdle(pair),
+      `mutation ${index} must be rejected`,
+    );
+  }
+  const pair = makeScopedIdlePair();
+  assert.throws(
+    () =>
+      validatePairedSettledIdleReports({
+        baseline: pair[0],
+        candidate: pair[1],
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /native sharpness/,
+  );
+});
+
+test('scoped idle preserves loading unavailability and fails a completed render burst', () => {
+  const loading = makeScopedIdlePair();
+  loading[1].captures[0].settledIdleObservation.settlement.initialTilesLoaded = false;
+  assert.equal(validateScopedIdle(loading).status, 'unavailable');
+  const burst = makeScopedIdlePair();
+  const sample = burst[1].captures[0];
+  sample.renderedFrameCount = 3;
+  sample.frameCount = 2;
+  sample.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 2 };
+  sample.settledIdleObservation.completedFrameOffsetsMs = [100, 200, 300];
+  const result = validateScopedIdle(burst);
+  assert.equal(result.status, 'failed');
+  assert.deepEqual(result.resolvedScenarios, []);
 });
 
 test('native map comparison requires profile evidence at every journey boundary', () => {

@@ -13,6 +13,7 @@ import {
   createObservedMapStreamingComparisonContract,
   createObservedInfrastructureComparisonContract,
   createObservedWeatherEffectsComparisonContract,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
 } from './captureComparisonContract.mjs';
 import {
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -34,6 +35,7 @@ import {
   NATIVE_SHARPNESS_PROFILE_ID,
 } from './nativeSharpnessProfile.mjs';
 import { WEATHER_BALANCED_SHARD_INELIGIBLE_REASON } from './weatherInterleavedDiagnosticContract.mjs';
+import { assessSettledIdlePair } from './settledIdleQualification.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -451,11 +453,11 @@ function validateFixtureDelivery(
   report,
   contract,
   label,
-  { weatherQualificationShard = false } = {},
+  { weatherQualificationShard = false, settledIdleOnly = false } = {},
 ) {
   assert.equal(
     report.comparisonEligible,
-    weatherQualificationShard ? false : true,
+    weatherQualificationShard || settledIdleOnly ? false : true,
     `${label}: capture is not marked comparison-eligible`,
   );
   const delivery = report.fixtureDelivery;
@@ -1217,7 +1219,7 @@ function validateReport(
   report,
   side,
   expectedAppCommit,
-  { weatherQualificationShard = false } = {},
+  { weatherQualificationShard = false, settledIdleOnly = false } = {},
 ) {
   assert.equal(
     report?.schema,
@@ -1270,8 +1272,21 @@ function validateReport(
     );
 
   const contract = validateContract(report, side);
+  if (!settledIdleOnly) {
+    assert.notEqual(
+      report.workload?.settledIdleOnly,
+      true,
+      `${side}: scoped idle evidence cannot qualify as full paired performance`,
+    );
+    assert.notEqual(
+      contract.qualificationMode,
+      'settled-idle-only',
+      `${side}: scoped idle contract cannot qualify as full paired performance`,
+    );
+  }
   validateFixtureDelivery(report, contract, side, {
     weatherQualificationShard,
+    settledIdleOnly,
   });
   const { workload, environment, captures } = report;
   const austin = isAustinContract(contract);
@@ -1338,6 +1353,7 @@ function validateReport(
         durationPerSampleMs: workload?.durationPerSampleMs,
         runsPerScenario: workload?.runsPerScenario,
       },
+      settledIdleOnly,
     });
     equal(
       rebuilt,
@@ -1352,7 +1368,7 @@ function validateReport(
       side,
       expectedAppCommit,
       contract,
-      { austin, weatherQualificationShard },
+      { austin, weatherQualificationShard, settledIdleOnly },
     ),
     buildRecipe,
   };
@@ -1475,7 +1491,11 @@ function validateFrameCaptures(
   side,
   expectedAppCommit,
   contract,
-  { austin = false, weatherQualificationShard = false } = {},
+  {
+    austin = false,
+    weatherQualificationShard = false,
+    settledIdleOnly = false,
+  } = {},
 ) {
   const { workload, environment, captures } = report;
   assert.equal(
@@ -1570,10 +1590,12 @@ function validateFrameCaptures(
     workload.scenarios.length,
     `${side}: duplicate declared scenario`,
   );
-  assert.ok(
-    workload.scenarios.includes('scripted-motion'),
-    `${side}: scripted-motion scenario is required`,
-  );
+  if (settledIdleOnly) assert.deepEqual(workload.scenarios, ['idle']);
+  else
+    assert.ok(
+      workload.scenarios.includes('scripted-motion'),
+      `${side}: scripted-motion scenario is required`,
+    );
   assert.deepEqual(
     Object.keys(contract.routes).sort(),
     [...workload.scenarios].sort(),
@@ -1897,6 +1919,63 @@ export function validatePairedPerformanceReports(options = {}) {
   return validatePairedReports(options);
 }
 
+/** Qualify only five settled cable-idle samples per build; no motion/startup claim. */
+export function validatePairedSettledIdleReports(options = {}) {
+  assert.equal(
+    options.expectedComparisonProfile,
+    NATIVE_SHARPNESS_PROFILE_ID,
+    'Settled idle qualification requires the native sharpness profile',
+  );
+  for (const [side, report] of [
+    ['baseline', options.baseline],
+    ['candidate', options.candidate],
+  ]) {
+    assert.equal(
+      report?.workload?.settledIdleOnly,
+      true,
+      `${side}: idle scope missing`,
+    );
+    assert.equal(
+      report.comparisonContract?.workloadId,
+      'infrastructure-cables',
+    );
+    assert.equal(
+      report.comparisonContract?.qualificationMode,
+      'settled-idle-only',
+    );
+    assert.equal(report.comparisonEligible, false);
+    assert.equal(report.comparisonReadiness?.status, 'not-ready');
+    assert.deepEqual(
+      report.comparisonReadiness?.reasons,
+      [SETTLED_IDLE_ONLY_INELIGIBLE_REASON],
+      `${side}: scoped idle evidence has additional ineligibility reasons`,
+    );
+    assert.deepEqual(report.workload.scenarios, ['idle']);
+    assert.equal(
+      report.environment?.hardwareEligible,
+      true,
+      `${side}: native hardware required`,
+    );
+    const derivedProfile = deriveNativeSharpnessProfile(report.captures);
+    equal(
+      report.environment.nativeSharpnessProfile,
+      derivedProfile,
+      `${side}: aggregate native profile differs`,
+    );
+    equal(
+      report.environment.viewport,
+      derivedProfile.viewport,
+      `${side}: aggregate viewport differs`,
+    );
+    equal(
+      report.environment.drawingBuffer,
+      derivedProfile.drawingBuffer,
+      `${side}: aggregate drawing buffer differs`,
+    );
+  }
+  return validatePairedReports(options, false, true);
+}
+
 /**
  * Native map request inventories vary with frame delivery and tile prefetch.
  * Permit that variation only after independently rebuilding the pinned corpus
@@ -1934,6 +2013,7 @@ function validatePairedReports(
     expectedComparisonProfile = null,
   } = {},
   mapManifestValidated = false,
+  settledIdleOnly = false,
 ) {
   assert.ok(
     expectedAppCommits,
@@ -2000,11 +2080,13 @@ function validatePairedReports(
     baseline,
     'baseline',
     expectedAppCommits.baseline,
+    { settledIdleOnly },
   );
   const next = validateReport(
     candidate,
     'candidate',
     expectedAppCommits.candidate,
+    { settledIdleOnly },
   );
   assert.equal(
     baseline.source.harnessCommit,
@@ -2284,11 +2366,36 @@ function validatePairedReports(
       'Native sharpness profile differs',
     );
 
+  if (settledIdleOnly) {
+    const evaluation = assessSettledIdlePair(
+      base.byScenario.get('idle'),
+      next.byScenario.get('idle'),
+    );
+    return {
+      status: evaluation.status,
+      evidenceScope:
+        'settled-static-idle-only; hardware provenance requires independent verification',
+      workloadId: 'infrastructure-cables',
+      resolvedScenarios: evaluation.status === 'passed' ? ['idle'] : [],
+      evaluation,
+      fullPairedPerformanceAssessed: false,
+      motionAssessed: false,
+      startupAssessed: false,
+    };
+  }
+
   const scenarios = compareFrameCaptures(
     base,
     next,
     baseline.workload.scenarios,
   );
+  // Static infrastructure acceptance is a completed-frame budget, not a ratio
+  // of inter-render gaps. Preserve the historical interval result alongside it.
+  if (isInfrastructureContract(base.contract) && scenarios.idle)
+    scenarios.idle.settledFrameBudget = assessSettledIdlePair(
+      base.byScenario.get('idle'),
+      next.byScenario.get('idle'),
+    );
 
   const workloadObjectiveScenarios =
     baseline.comparisonContract.objectiveScenarios;

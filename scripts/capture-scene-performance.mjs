@@ -42,6 +42,8 @@ import {
   prepareRenderBoundaryProgressBinding,
 } from './performance/renderBoundaryObservation.mjs';
 import { runSceneMeasurementWithHostDeadline } from './performance/sceneMeasurementDeadline.mjs';
+import { installSettledIdleObservation } from './performance/settledIdleObservation.mjs';
+import { withHostTimeout } from './performance/startupDiagnostics.mjs';
 import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
   appendAustinOperatingReadinessHistory,
@@ -133,6 +135,15 @@ import {
   PAGE_OBSERVED_STARTUP_SCHEMA,
   PAGE_OBSERVED_STARTUP_SEMANTICS,
 } from './performance/startupObservationMethod.mjs';
+import {
+  assertStartupOperatingMode,
+  createStartupOperatingContract,
+  createStartupOperatingUrl,
+  installStartupOperatingReceiptInPage,
+  observeStartupBoundaryInPage,
+  readStartupBootstrapSources,
+  validateStartupOperatingEvidence,
+} from './performance/startupOperatingContract.mjs';
 import {
   assertStartupCpuAttributionMode,
   beginStartupCpuAttribution,
@@ -259,6 +270,15 @@ const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const providerFixtureMode = option('--provider-fixture', null);
+const startupOperatingContractEnabled = assertStartupOperatingMode({
+  enabled: args.includes('--startup-default-boot-v1'),
+  startupOnlyShard,
+  startupPageObservedEnabled,
+  providerFixtureMode,
+  startupAttributionEnabled,
+  startupCpuProfileEnabled,
+  startupProviderFixtureDiagnosticEnabled,
+});
 const infrastructureWorkloadSelected =
   INFRASTRUCTURE_WORKLOAD_IDS.includes(providerFixtureMode);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
@@ -547,6 +567,34 @@ if (browserReadyFile) {
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
 const hostedFixture = args.includes('--hosted-fixture');
+const settledIdleOnly = args.includes('--settled-idle-only');
+if (
+  settledIdleOnly &&
+  (providerFixtureMode !== 'infrastructure-cables' ||
+    runs !== 5 ||
+    startupRuns !== 5 ||
+    warmupMs !== 30_000 ||
+    seconds !== 60 ||
+    !hardwareRequired ||
+    softwareRendering ||
+    hostedFixture ||
+    comparisonProfile !== 'native-sharpness-v1' ||
+    delayMs !== 0 ||
+    startupOnlyShard ||
+    frameTraceEnabled ||
+    browserTraceEnabled ||
+    args.includes('--headless') ||
+    args.some(
+      (arg) =>
+        arg.startsWith('--') &&
+        (arg.includes('diagnostic') ||
+          arg.includes('attribution') ||
+          arg.includes('cpu-profile')),
+    ))
+)
+  throw new Error(
+    '--settled-idle-only requires five headed native-sharpness hardware cable runs with 30s warmup and 60s measurement, without diagnostic instrumentation.',
+  );
 if (
   cableIdleEventTraceEnabled &&
   (!frameTraceEnabled ||
@@ -933,6 +981,14 @@ if (infrastructureWorkloadSelected) {
       providerFixtureTime,
     );
 }
+const startupOperatingContract = startupOperatingContractEnabled
+  ? createStartupOperatingContract(
+      readStartupBootstrapSources({
+        checkoutRoot: buildProvenanceOptions.checkoutRoot,
+        appCommit: buildProvenanceOptions.expectedAppCommit,
+      }),
+    )
+  : null;
 const source = {
   harnessCommit:
     captureProvenance?.source.captureProducerCommit || harnessSource.commit,
@@ -1084,6 +1140,7 @@ const failureProgress = {
   fixtureDelivery: null,
   fixtureInterceptionErrors: [],
   workload: {
+    ...(settledIdleOnly ? { settledIdleOnly: true } : {}),
     rendererProbeCleanup: [],
     rendererProbeCleanupOmittedCount: 0,
     rendererLoopRetirements: [],
@@ -2753,7 +2810,9 @@ try {
     }
   }
   failureProgress.phase = 'startup-navigation';
-  const startupUrl = new URL(url);
+  const startupUrl = new URL(
+    startupOperatingContractEnabled ? createStartupOperatingUrl(url) : url,
+  );
   startupUrl.searchParams.set('welcome', '0');
   const startupSamples = [];
   if (startupOnlyShard) startupOnlySamples = startupSamples;
@@ -3312,6 +3371,16 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
+    if (startupOperatingContract) {
+      await installFixtureWallClockOnPage(
+        startupPage,
+        startupOperatingContract.fixedTimeMs,
+        { infrastructure: true },
+      );
+      await startupPage.evaluateOnNewDocument(
+        installStartupOperatingReceiptInPage,
+      );
+    }
     earlyRendererProbeScripts.set(
       startupPage,
       await installEarlyCesiumRendererProbe(startupPage, {
@@ -3405,10 +3474,15 @@ try {
     let viewerPageObservation = null;
     let loaderPageObservation = null;
     if (startupPageObservedEnabled) {
-      const observePageTiming = async (predicate) => {
-        const handle = await startupPage.waitForFunction(predicate, {
-          timeout: 90_000,
-        });
+      const observePageTiming = async (boundary) => {
+        const handle = await startupPage.waitForFunction(
+          observeStartupBoundaryInPage,
+          { timeout: 90_000 },
+          {
+            boundary,
+            includeOperatingState: startupOperatingContractEnabled,
+          },
+        );
         const hostObservedAtMs = Date.now();
         try {
           return {
@@ -3422,34 +3496,8 @@ try {
       viewerWaitStartedAtMs = Date.now();
       loaderWaitStartedAtMs = Date.now();
       const [viewerResult, loaderResult] = await Promise.allSettled([
-        observePageTiming(() => {
-          const navigation = performance.getEntriesByType('navigation')[0];
-          if (!window.__godsEyeView?.viewer || !navigation) return false;
-          return {
-            observedMsFromNavigationStart:
-              performance.now() - navigation.startTime,
-            visible: document.visibilityState === 'visible',
-            focused: document.hasFocus(),
-            visibilityState: document.visibilityState,
-          };
-        }),
-        observePageTiming(() => {
-          const navigation = performance.getEntriesByType('navigation')[0];
-          if (
-            !document
-              .getElementById('loading-screen')
-              ?.classList.contains('hidden') ||
-            !navigation
-          )
-            return false;
-          return {
-            observedMsFromNavigationStart:
-              performance.now() - navigation.startTime,
-            visible: document.visibilityState === 'visible',
-            focused: document.hasFocus(),
-            visibilityState: document.visibilityState,
-          };
-        }),
+        observePageTiming('viewer'),
+        observePageTiming('loader-hidden'),
       ]);
       const failedWait = [viewerResult, loaderResult].find(
         (result) => result.status === 'rejected',
@@ -4840,9 +4888,11 @@ try {
       );
     }
 
-    const scenarios = weatherCaptureContract
-      ? [...weatherCaptureContract.scenarios]
-      : ['idle', 'scripted-motion'];
+    const scenarios = settledIdleOnly
+      ? ['idle']
+      : weatherCaptureContract
+        ? [...weatherCaptureContract.scenarios]
+        : ['idle', 'scripted-motion'];
     if (fixture) scenarios.push('selected-aircraft-tracking');
     const captureDocumentTopology = createCaptureDocumentTopology({
       infrastructure: Boolean(infrastructureWorkload || weatherEffectsWorkload),
@@ -5429,6 +5479,8 @@ try {
             nativeSharpnessProfile;
         }
         // Each workload/run receives the declared warmup, including tracking.
+        if (infrastructureWorkload && scenario === 'idle')
+          await page.evaluate(installSettledIdleObservation);
         failureProgress.phase = 'warmup';
         failureProgress.current.phase = failureProgress.phase;
         if (warmupMs)
@@ -5705,6 +5757,10 @@ try {
           }) => {
             const viewer = window.__godsEyeView.viewer;
             const scene = viewer.scene;
+            const settledIdleObserver =
+              scenarioName === 'idle'
+                ? (window.__gevSettledIdleObservationV1 ?? null)
+                : null;
             const stagedClock = window.__gevPhasedMonotonicWallClockV1;
             const focusedAtStart = document.hasFocus();
             const visibleAtStart = !document.hidden;
@@ -6371,6 +6427,7 @@ try {
               }
               if (longTaskTrace) longTaskTrace.length = 0;
               startedAt = performance.now();
+              settledIdleObserver?.start(startedAt);
               if (cableProviderTraceActive) {
                 cableIdleEventTrace.status = 'partial';
                 cableIdleEventTrace.tileProgress.initialTilesLoaded =
@@ -6511,6 +6568,8 @@ try {
               }
               await measurementWait;
               cableSampleEndedAt = performance.now();
+              const settledIdleObservation =
+                settledIdleObserver?.stop(cableSampleEndedAt) ?? null;
               if (cableProviderTraceActive) {
                 cableIdleEventTrace.tileProgress.finalTilesLoaded =
                   typeof scene.globe?.tilesLoaded === 'boolean'
@@ -6629,6 +6688,7 @@ try {
               return {
                 durationMs: performance.now() - startedAt,
                 renderedFrameCount,
+                ...(settledIdleObservation ? { settledIdleObservation } : {}),
                 frameCount: renderCount,
                 frameIntervalMs: {
                   p50: pick(0.5),
@@ -6733,6 +6793,10 @@ try {
               };
             } finally {
               active = false;
+              // stop() owns successful cleanup; failures still release the
+              // warmup observer before the document is closed.
+              if (window.__gevSettledIdleObservationV1 === settledIdleObserver)
+                settledIdleObserver?.dispose();
               clearTimeout(measurementTimer);
               clearInterval(delayTimer);
               clearTimeout(initialDelayTimer);
@@ -7881,6 +7945,7 @@ try {
         })
       : infrastructureWorkload
         ? createObservedInfrastructureComparisonContract({
+            settledIdleOnly,
             fixture: infrastructureWorkload,
             fixtureDelivery,
             environment,
@@ -7999,6 +8064,7 @@ try {
       finalizeReceiptOnlyDocumentAudit = null;
     }
     const workload = {
+      ...(settledIdleOnly ? { settledIdleOnly: true } : {}),
       warmupMs,
       durationPerSampleMs: seconds * 1000,
       runsPerScenario: runs,
@@ -8611,6 +8677,22 @@ try {
     failureProgress.current?.measurement ?? null,
   );
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
+  if (activePage && infrastructureWorkload && !activePage.isClosed()) {
+    const idleCleanup = await withHostTimeout(
+      () =>
+        activePage.evaluate(() => {
+          const observer = window.__gevSettledIdleObservationV1;
+          return observer ? observer.dispose() : true;
+        }),
+      2_000,
+    );
+    if (idleCleanup !== true) {
+      captureFailure ||= new Error(
+        'Idle settlement observer cleanup unconfirmed.',
+      );
+      process.exitCode = 1;
+    }
+  }
   if (activePage && activeDepthPickAttribution) {
     try {
       await disposeDepthPickAttributionForPage(
@@ -8828,6 +8910,9 @@ if (startupOnlyShard && !captureFailure) {
       settings,
       startup: {
         runCount: 1,
+        ...(startupOperatingContract
+          ? { operatingContract: startupOperatingContract }
+          : {}),
         ...(startupPageObservedEnabled
           ? {
               method: PAGE_OBSERVED_STARTUP_METHOD,
@@ -8883,6 +8968,12 @@ if (startupOnlyShard && !captureFailure) {
       },
       integrity: { status: 'passed' },
     };
+    if (startupOperatingContract)
+      validateStartupOperatingEvidence({
+        contract: startupOperatingContract,
+        startup: shard.startup,
+        expectedSettings: settings,
+      });
     await fs.writeFile(
       path.resolve(out),
       `${JSON.stringify(shard, null, 2)}\n`,
