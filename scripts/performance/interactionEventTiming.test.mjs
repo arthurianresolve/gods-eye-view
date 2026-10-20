@@ -7,6 +7,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V2,
   INTERACTION_EVENT_TIMING_PLAN_V4,
+  INTERACTION_EVENT_TIMING_PLAN_V5,
   assertInteractionEventTimingPlan,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
@@ -168,6 +169,329 @@ function addBoundaryRecovery(capture) {
 function useFreshReproofPlan(capture) {
   Object.assign(capture, INTERACTION_EVENT_TIMING_PLAN_V4);
 }
+
+function useCurrentGeometryPlan(capture) {
+  Object.assign(capture, INTERACTION_EVENT_TIMING_PLAN_V5);
+}
+
+function childListRecords(env) {
+  return [
+    {
+      type: 'childList',
+      target: env.ancestor,
+      addedNodes: [{ nodeType: 1 }],
+      removedNodes: [],
+    },
+  ];
+}
+
+test('v5 unknown child-list mutation needs its timely owned proof even with a later positive RAF', () => {
+  for (const missing of [false, true]) {
+    const { samples, capture } = fixture();
+    addBoundaryRecovery(capture);
+    useCurrentGeometryPlan(capture);
+    capture.work.restoredMeasurementTransactions = 0;
+    Object.assign(capture.observations[0].mutation, {
+      restoredMeasurementTransactions: 0,
+      recordCount: 1,
+      reasons: [
+        { target: 'layout-root', attribute: 'none', reason: 'child-list' },
+      ],
+    });
+    // This RAF follows the invalidation and could establish current state,
+    // but cannot substitute for the owned post-layout obligation.
+    Object.assign(capture.actions[0].witnesses[1], {
+      atMs: 1058,
+      completedAtMs: 1059,
+    });
+    samples[0].buttonFeedbackAtMs = 1058;
+    capture.actions[0].renderBoundaryProofs[0].baseline.ordinal = 1;
+    validateInteractionEventTiming(capture, samples);
+    if (missing) {
+      capture.actions[0].renderBoundaryProofs = [];
+      capture.actions[0].renderBoundaryArms = 0;
+      capture.work.renderBoundaryArms = 0;
+      capture.work.renderBoundaryCallbacks = 0;
+      capture.work.geometryChecks--;
+    } else
+      Object.assign(capture.actions[0].renderBoundaryProofs[0], {
+        atMs: 1090,
+        completedAtMs: 1091,
+      });
+    assert.throws(
+      () => validateInteractionEventTiming(capture, samples),
+      /eligible post-layout proof/,
+    );
+  }
+});
+
+test('v5 changes only the declared feedback proof, retaining all acquisition bounds', () => {
+  assertInteractionEventTimingPlan(INTERACTION_EVENT_TIMING_PLAN_V5);
+  const { policy, feedbackReproof, ...bounds } =
+    INTERACTION_EVENT_TIMING_PLAN_V5;
+  const {
+    policy: previousPolicy,
+    feedbackReproof: previousProof,
+    ...previousBounds
+  } = INTERACTION_EVENT_TIMING_PLAN_V4;
+  assert.notEqual(policy, previousPolicy);
+  assert.notEqual(feedbackReproof, previousProof);
+  assert.deepEqual(bounds, previousBounds);
+  assert.equal(
+    INTERACTION_EVENT_TIMING_PLAN.policy,
+    'trusted-click-event-timing-visible-intent-v3',
+  );
+});
+
+test('v5 serialized producer proves all 20 moved controls after bounded child-list or measurement uncertainty', async () => {
+  for (const records of [
+    childListRecords,
+    measurementRecords,
+    mixedMeasurementRecords,
+  ]) {
+    const { samples } = fixture();
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V5.policy },
+    });
+    for (const sample of samples) {
+      const transition = sample.expectedLayerEnabled ? 'enabling' : 'disabling';
+      env.button.attributes.class = `data-toggle-btn transitioning ${transition}`;
+      env.button.dataset.feedState = transition;
+      const layer =
+        env.window.__godsEyeView.dataManager.layers.get('local-datacenters');
+      layer.visibilityIntentEpoch = sample.acceptedIntentEpoch;
+      layer.visibilityIntentEnabled = sample.expectedLayerEnabled;
+      env.setNow(sample.clickAtMs);
+      env.api.registerClick(
+        {
+          generation: sample.generation,
+          clickAtMs: sample.clickAtMs,
+          expected: sample.expectedLayerEnabled,
+        },
+        {
+          isTrusted: true,
+          type: 'click',
+          timeStamp: sample.clickAtMs,
+          target: env.button,
+        },
+      );
+      const witnessSample = {
+        generation: sample.generation,
+        acceptedIntentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+      };
+      for (const [atMs, raf] of [
+        [
+          sample.buttonFeedbackFirstFrameAtMs,
+          sample.buttonFeedbackFirstRafTimestampMs,
+        ],
+        [sample.buttonFeedbackAtMs, sample.buttonFeedbackSecondRafTimestampMs],
+      ]) {
+        env.setNow(atMs);
+        env.api.witness(witnessSample, raf, 'transition', atMs);
+      }
+      env.setNow(sample.clickAtMs + 45);
+      const before = env.geometryReads();
+      env.mutate(records(env));
+      assert.equal(
+        env.geometryReads(),
+        before,
+        'MO must never force geometry/style reads',
+      );
+      env.button.rect.top += 1 / 64;
+      env.button.rect.bottom += 1 / 64;
+      env.setNow(sample.clickAtMs + 50);
+      env.render();
+      const proof = env.api.read().actions.at(-1).renderBoundaryProofs[0];
+      assert.equal(proof.visible, true);
+      assert.equal(
+        proof.restoredGeometry,
+        false,
+        'movement remains honestly recorded',
+      );
+      env.setNow(sample.clickAtMs + 80);
+      env.deliver([
+        {
+          entryType: 'event',
+          name: 'click',
+          startTime: sample.clickAtMs,
+          duration: 64,
+          processingStart: sample.clickAtMs + 0.5,
+          processingEnd: sample.clickAtMs + 3,
+          interactionId: sample.generation * 7,
+          target: env.button,
+        },
+      ]);
+      env.setNow(sample.clickAtMs + 200);
+      const drain = env.api.drain(sample.generation);
+      env.setNow(sample.clickAtMs + 1200);
+      env.timers.get(1)();
+      env.timers.delete(1);
+      await drain;
+    }
+    const capture = structuredClone(env.api.read());
+    assert.equal(capture.work.renderBoundaryArms, 20);
+    assert.equal(capture.work.renderBoundaryCallbacks, 20);
+    assert.deepEqual(
+      validateInteractionEventTiming(capture, samples),
+      Array(20).fill(64),
+    );
+    useFreshReproofPlan(capture);
+    assert.throws(
+      () => validateInteractionEventTiming(capture, samples),
+      undefined,
+      'V4 never acquires V5 movement or child-only recovery semantics',
+    );
+    env.api.dispose();
+    assert.equal(env.renderState().renderObserved, false);
+    assert.equal(env.listeners.size, 0);
+    assert.equal(env.timers.size, 0);
+  }
+});
+
+test('v5 current geometry never excuses late, missing, forged, hidden or contradicted feedback', () => {
+  for (const corrupt of [
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].completedAtMs = 1061;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].visible = false;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].focused = false;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].intentEpoch++;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].generation++;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].expected = false;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].restoredGeometry = true;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].sourceMutationCallback++;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs[0].observedThroughMutationCallback = 0;
+    },
+    (c) => {
+      c.actions[0].renderBoundaryProofs = [];
+    },
+    (c) => {
+      c.overflow = true;
+    },
+    (c) => {
+      c.actions[0].witnesses[0].visible = false;
+    },
+    (c) => {
+      c.observations.push({
+        atMs: 1058,
+        kind: 'unproven-geometry',
+        generation: 1,
+        invalid: true,
+        reason: 'window-scroll',
+      });
+    },
+    (c) => {
+      c.observations.push({
+        atMs: 1048,
+        kind: 'contrary-intent',
+        generation: 1,
+        invalid: true,
+      });
+    },
+    (c) => {
+      c.observations.push({
+        atMs: 1048,
+        kind: 'contrary-button-state',
+        generation: 1,
+        invalid: true,
+      });
+    },
+    (c) => {
+      c.observations.push({
+        atMs: 1048,
+        kind: 'foreground',
+        visible: false,
+        focused: false,
+        invalid: true,
+      });
+    },
+  ]) {
+    const { samples, capture } = fixture();
+    addBoundaryRecovery(capture);
+    useCurrentGeometryPlan(capture);
+    const proof = capture.actions[0].renderBoundaryProofs[0];
+    proof.geometry.controlRect.top += 1 / 64;
+    proof.geometry.controlRect.bottom += 1 / 64;
+    proof.geometry.clipRect.top += 1 / 64;
+    proof.geometry.clipRect.bottom += 1 / 64;
+    proof.restoredGeometry = false;
+    validateInteractionEventTiming(capture, samples);
+    corrupt(capture);
+    assert.throws(() => validateInteractionEventTiming(capture, samples));
+  }
+});
+
+test('v5 child-list recovery refuses known negatives and keeps its eight-arm bound', () => {
+  for (const mode of [
+    'departed',
+    'replaced',
+    'intent',
+    'state',
+    'hidden',
+    'unfocused',
+    'limit',
+  ]) {
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V5.policy },
+    });
+    witness(env);
+    if (mode === 'departed') env.button.isConnected = false;
+    if (mode === 'replaced') env.document.querySelector = () => ({});
+    if (mode === 'intent')
+      env.window.__godsEyeView.dataManager.layers.get('local-datacenters')
+        .visibilityIntentEpoch++;
+    if (mode === 'state') env.button.attributes.class = 'data-toggle-btn';
+    if (mode === 'hidden' || mode === 'unfocused') {
+      if (mode === 'hidden') env.ancestor.style.opacity = '0';
+      else env.document.hasFocus = () => false;
+      env.setNow(25);
+      env.api.witness(
+        { generation: 1, acceptedIntentEpoch: 1, expected: true },
+        24,
+        'transition',
+        25,
+      );
+      env.ancestor.style.opacity = '1';
+      env.document.hasFocus = () => true;
+    }
+    if (mode === 'limit') {
+      for (let i = 0; i < 8; i++) {
+        env.setNow(30 + i * 2);
+        env.mutate(childListRecords(env));
+        env.setNow(31 + i * 2);
+        env.render();
+      }
+      env.setNow(50);
+      env.mutate(childListRecords(env));
+      assert.equal(env.api.read().overflow, true);
+      assert.equal(env.api.read().actions[0].renderBoundaryArms, 8);
+    } else {
+      env.setNow(30);
+      env.mutate(childListRecords(env));
+      assert.equal(env.renderState().renderObserveCalls, 0, mode);
+    }
+    env.api.dispose();
+    assert.equal(env.renderState().renderObserved, false);
+    assert.equal(env.listeners.size, 0);
+    assert.equal(env.timers.size, 0);
+  }
+});
 
 function mixedBoundaryFixture() {
   const value = fixture();

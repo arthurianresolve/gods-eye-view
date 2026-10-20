@@ -37,6 +37,7 @@ import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V2,
   INTERACTION_EVENT_TIMING_PLAN_V4,
+  INTERACTION_EVENT_TIMING_PLAN_V5,
 } from './interactionEventTiming.mjs';
 import {
   createQualificationBuildIdentityPlan,
@@ -1827,7 +1828,7 @@ test('v7 readiness proof is prospective, intent-bound and independent of Event T
   assert.equal(evaluate(slowReady).status, 'failed', '10% remains unchanged');
 });
 
-test('producer selects only predeclared v3/v4 Event Timing plans before acquisition', async () => {
+test('producer selects only predeclared v3/v4/v5 Event Timing plans before acquisition', async () => {
   assert.equal(
     resolveQualificationEventTimingPlan(),
     INTERACTION_EVENT_TIMING_PLAN,
@@ -1842,7 +1843,17 @@ test('producer selects only predeclared v3/v4 Event Timing plans before acquisit
     () => resolveQualificationEventTimingPlan('unknown'),
     /Unsupported/,
   );
-  for (const plan of [undefined, INTERACTION_EVENT_TIMING_PLAN_V4]) {
+  assert.equal(
+    resolveQualificationEventTimingPlan(
+      INTERACTION_EVENT_TIMING_PLAN_V5.policy,
+    ),
+    INTERACTION_EVENT_TIMING_PLAN_V5,
+  );
+  for (const plan of [
+    undefined,
+    INTERACTION_EVENT_TIMING_PLAN_V4,
+    INTERACTION_EVENT_TIMING_PLAN_V5,
+  ]) {
     const calls = [];
     await installInteractionObserver(
       {
@@ -1902,6 +1913,7 @@ test('producer selects only predeclared v3/v4 Event Timing plans before acquisit
   for (const policy of [
     undefined,
     INTERACTION_EVENT_TIMING_PLAN_V4.policy,
+    INTERACTION_EVENT_TIMING_PLAN_V5.policy,
     'unknown',
   ]) {
     let received;

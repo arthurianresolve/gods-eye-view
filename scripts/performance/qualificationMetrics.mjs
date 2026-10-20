@@ -1503,8 +1503,9 @@ function compareInteractionMetric(
       return {
         status: failures.length ? 'failed' : 'measured',
         protocolVersion,
+        feedbackPolicy: evidence.eventTimingPlan.policy,
         semantic:
-          'v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
+          'Interaction schema v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback under the separately declared feedback policy before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
         baseline: {
           ...observed.baseline,
           absoluteAcknowledgementFailures: absoluteFailures(observed.baseline),

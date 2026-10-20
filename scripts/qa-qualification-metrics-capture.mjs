@@ -29,6 +29,7 @@ import {
   installInteractionEventTimingInPage,
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V4,
+  INTERACTION_EVENT_TIMING_PLAN_V5,
   assertInteractionEventTimingPlan,
 } from './performance/interactionEventTiming.mjs';
 
@@ -69,6 +70,7 @@ export function resolveQualificationEventTimingPlan(policy) {
   const plan = [
     INTERACTION_EVENT_TIMING_PLAN,
     INTERACTION_EVENT_TIMING_PLAN_V4,
+    INTERACTION_EVENT_TIMING_PLAN_V5,
   ].find(
     (candidate) =>
       candidate.policy === (policy ?? INTERACTION_EVENT_TIMING_PLAN.policy),

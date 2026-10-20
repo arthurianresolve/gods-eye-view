@@ -32,12 +32,24 @@ export const INTERACTION_EVENT_TIMING_PLAN_V4 = Object.freeze({
   feedbackReproof: 'same-intent-current-geometry-raf-or-owned-ro-v1',
 });
 
+// A current visible control may move during legitimate panel allocation. V5
+// proves current visibility after every uncertainty; it does not claim exact
+// restoration, stationary pixels, or an unobserved physical presentation.
+// V2–V4 remain immutable acquisition/interpretation contracts.
+export const INTERACTION_EVENT_TIMING_PLAN_V5 = Object.freeze({
+  ...INTERACTION_EVENT_TIMING_PLAN_V4,
+  policy: 'trusted-click-event-timing-visible-intent-v5',
+  feedbackReproof: 'same-intent-current-visible-geometry-owned-ro-v2',
+});
+
 function eventTimingPlan(policy) {
   return policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
     ? INTERACTION_EVENT_TIMING_PLAN_V2
     : policy === INTERACTION_EVENT_TIMING_PLAN_V4.policy
       ? INTERACTION_EVENT_TIMING_PLAN_V4
-      : INTERACTION_EVENT_TIMING_PLAN;
+      : policy === INTERACTION_EVENT_TIMING_PLAN_V5.policy
+        ? INTERACTION_EVENT_TIMING_PLAN_V5
+        : INTERACTION_EVENT_TIMING_PLAN;
 }
 
 /** Old evidence retains the original strict continuity policy. */
@@ -61,8 +73,11 @@ export function installInteractionEventTimingInPage(options = {}) {
   const policy = Object.hasOwn(options, 'policy')
     ? options.policy
     : 'trusted-click-event-timing-visible-intent-v3';
+  const currentGeometryPolicy =
+    policy === 'trusted-click-event-timing-visible-intent-v5';
   const freshReproofPolicy =
-    policy === 'trusted-click-event-timing-visible-intent-v4';
+    policy === 'trusted-click-event-timing-visible-intent-v4' ||
+    currentGeometryPolicy;
   if (
     policy !== 'trusted-click-event-timing-visible-intent-v3' &&
     !freshReproofPolicy
@@ -320,14 +335,15 @@ export function installInteractionEventTimingInPage(options = {}) {
       return;
     if (
       freshReproofPolicy &&
-      observation.mutation.reasonCount !==
-        observation.mutation.restoredMeasurementTransactions &&
+      (currentGeometryPolicy ||
+        observation.mutation.reasonCount !==
+          observation.mutation.restoredMeasurementTransactions) &&
       (action.witnesses.some((proof) => !proof.visible || !proof.focused) ||
         action.renderBoundaryProofs.some(
           (proof) =>
             !proof.visible ||
             !proof.focused ||
-            proof.restoredGeometry === false,
+            (!currentGeometryPolicy && proof.restoredGeometry === false),
         ) ||
         observations.some(
           (prior) =>
@@ -369,7 +385,7 @@ export function installInteractionEventTimingInPage(options = {}) {
       !prior?.proof.visible ||
       !prior.proof.focused ||
       !prior.proof.geometry ||
-      prior.proof.restoredGeometry === false
+      (!currentGeometryPolicy && prior.proof.restoredGeometry === false)
     )
       return;
     action.renderBoundaryArms++;
@@ -571,7 +587,10 @@ export function installInteractionEventTimingInPage(options = {}) {
     // V4 may arm an owned post-layout proof for a mixed measurement batch.
     // Check only live identity/intent/state here, never geometry or style.
     // V3 retains its unsafe-batch short circuit and original acquisition work.
-    const mixedMeasurement = freshReproofPolicy && uncertain && restored > 0;
+    const mixedMeasurement =
+      freshReproofPolicy &&
+      uncertain &&
+      (restored > 0 || currentGeometryPolicy);
     const stateMatches =
       (uncertain && !mixedMeasurement) || buttonIntentStateMatches(action);
     if (!stateMatches) note(button, null, 'control-state');
@@ -591,7 +610,11 @@ export function installInteractionEventTimingInPage(options = {}) {
           reasonsTruncated: reasonCount > reasons.length,
         },
       });
-      if ((!uncertain || mixedMeasurement) && stateMatches && restored > 0)
+      if (
+        (!uncertain || mixedMeasurement) &&
+        stateMatches &&
+        (restored > 0 || (currentGeometryPolicy && uncertain))
+      )
         requestRenderBoundary(action, observation);
     }
   }
@@ -719,8 +742,9 @@ export function installInteractionEventTimingInPage(options = {}) {
         policy,
         ...(freshReproofPolicy
           ? {
-              feedbackReproof:
-                'same-intent-current-geometry-raf-or-owned-ro-v1',
+              feedbackReproof: currentGeometryPolicy
+                ? 'same-intent-current-visible-geometry-owned-ro-v2'
+                : 'same-intent-current-geometry-raf-or-owned-ro-v1',
             }
           : {}),
         status: supported ? 'observed' : 'unavailable',
@@ -868,17 +892,23 @@ function sourceMeasurementOnly(observation) {
   );
 }
 
-function recoverableSourceMeasurement(observation, freshReproofPolicy) {
+function recoverableSourceMeasurement(
+  observation,
+  freshReproofPolicy,
+  currentGeometryPolicy = false,
+) {
   return (
     sourceMeasurementOnly(observation) ||
     Boolean(
       freshReproofPolicy &&
       observation.kind === 'unproven-geometry' &&
       observation.invalid === true &&
-      observation.mutation?.restoredMeasurementTransactions > 0 &&
-      observation.mutation.reasons.some(
-        (reason) => reason.reason === 'restored-measurement',
-      ) &&
+      observation.mutation &&
+      (currentGeometryPolicy ||
+        (observation.mutation.restoredMeasurementTransactions > 0 &&
+          observation.mutation.reasons.some(
+            (reason) => reason.reason === 'restored-measurement',
+          ))) &&
       !observation.mutation.reasons.some(
         (reason) => reason.reason === 'control-state',
       ),
@@ -934,7 +964,9 @@ export function validateInteractionEventTiming(capture, samples) {
   const plan = eventTimingPlan(capture?.policy);
   assert.equal(capture?.policy, plan.policy);
   const restoredPolicy = plan !== INTERACTION_EVENT_TIMING_PLAN_V2;
-  const freshReproofPolicy = plan === INTERACTION_EVENT_TIMING_PLAN_V4;
+  const currentGeometryPolicy = plan === INTERACTION_EVENT_TIMING_PLAN_V5;
+  const freshReproofPolicy =
+    plan === INTERACTION_EVENT_TIMING_PLAN_V4 || currentGeometryPolicy;
   assert.equal(capture.status, 'observed', 'Browser Event Timing unavailable');
   for (const key of [
     'durationThresholdMs',
@@ -1277,7 +1309,11 @@ export function validateInteractionEventTiming(capture, samples) {
         for (const observation of [armedBy, source]) {
           assert.ok(
             observation &&
-              recoverableSourceMeasurement(observation, freshReproofPolicy),
+              recoverableSourceMeasurement(
+                observation,
+                freshReproofPolicy,
+                currentGeometryPolicy,
+              ),
           );
           assert.equal(observation.generation, sample.generation);
           assert.ok(observation.atMs <= proof.atMs);
@@ -1291,7 +1327,11 @@ export function validateInteractionEventTiming(capture, samples) {
             capture.observations.some(
               (observation) =>
                 observation.generation === sample.generation &&
-                recoverableSourceMeasurement(observation, true) &&
+                recoverableSourceMeasurement(
+                  observation,
+                  true,
+                  currentGeometryPolicy,
+                ) &&
                 observation.mutation.callback > armedBy.mutation.callback &&
                 observation.atMs < proof.armedAtMs,
             ),
@@ -1301,7 +1341,11 @@ export function validateInteractionEventTiming(capture, samples) {
         const coalesced = capture.observations.filter(
           (observation) =>
             observation.generation === sample.generation &&
-            recoverableSourceMeasurement(observation, freshReproofPolicy) &&
+            recoverableSourceMeasurement(
+              observation,
+              freshReproofPolicy,
+              currentGeometryPolicy,
+            ) &&
             observation.mutation.callback >= armedBy.mutation.callback &&
             observation.mutation.callback <=
               proof.observedThroughMutationCallback &&
@@ -1333,11 +1377,17 @@ export function validateInteractionEventTiming(capture, samples) {
           observation.generation === sample.generation &&
           observation.atMs >= sample.clickAtMs &&
           observation.atMs <= latestEnd &&
-          observation.mutation?.restoredMeasurementTransactions > 0
+          (observation.mutation?.restoredMeasurementTransactions > 0 ||
+            (currentGeometryPolicy &&
+              observation.kind === 'unproven-geometry' &&
+              observation.invalid &&
+              observation.mutation))
         )
           // v4 reproof concerns the complete current read, not which batch
           // armed it. A recognized measurement still needs a timely owned RO;
           // a later RAF alone never discharges that post-layout obligation.
+          // V5 gives every uncertain mutation batch the same owned-RO duty,
+          // including child-list-only changes without a recognized transaction.
           assert.ok(
             (freshReproofPolicy
               ? observation.kind === 'unproven-geometry'
@@ -1355,7 +1405,7 @@ export function validateInteractionEventTiming(capture, samples) {
                   proof.completedAtMs <= earliestEnd &&
                   proof.visible &&
                   proof.focused &&
-                  proof.restoredGeometry,
+                  (currentGeometryPolicy || proof.restoredGeometry),
               ),
             'Source-owned measurement needs an eligible post-layout proof before rendering',
           );
@@ -1378,7 +1428,7 @@ export function validateInteractionEventTiming(capture, samples) {
           prior?.proof.visible &&
             prior.proof.focused &&
             prior.proof.geometry &&
-            prior.proof.restoredGeometry !== false,
+            (currentGeometryPolicy || prior.proof.restoredGeometry !== false),
           'Render-boundary recovery needs its latest positive premeasurement proof',
         );
         assert.deepEqual(proof.baseline, {
@@ -1401,7 +1451,9 @@ export function validateInteractionEventTiming(capture, samples) {
       'Same-intent visible feedback must precede the earliest quantized rendering endpoint',
     );
     assert.ok(
-      witness.visible && witness.focused && witness.restoredGeometry !== false,
+      witness.visible &&
+        witness.focused &&
+        (currentGeometryPolicy || witness.restoredGeometry !== false),
       'Latest eligible geometry proof does not establish visible feedback',
     );
     for (const { proof } of proofs)
@@ -1411,7 +1463,9 @@ export function validateInteractionEventTiming(capture, samples) {
         proof.atMs <= latestEnd
       )
         assert.ok(
-          proof.visible && proof.focused && proof.restoredGeometry !== false,
+          proof.visible &&
+            proof.focused &&
+            (currentGeometryPolicy || proof.restoredGeometry !== false),
           'A later geometry proof contradicts visible feedback before rendering',
         );
     for (const observation of capture.observations) {

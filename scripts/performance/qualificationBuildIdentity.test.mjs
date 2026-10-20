@@ -9,6 +9,7 @@ import path from 'node:path';
 import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V4,
+  INTERACTION_EVENT_TIMING_PLAN_V5,
   assertInteractionEventTimingPlan,
 } from './interactionEventTiming.mjs';
 import {
@@ -899,12 +900,14 @@ test('actual producer brackets all captures with source checks and retains prima
       assert,
       INTERACTION_EVENT_TIMING_PLAN,
       INTERACTION_EVENT_TIMING_PLAN_V4,
+      INTERACTION_EVENT_TIMING_PLAN_V5,
       assertInteractionEventTimingPlan,
     },
   );
   const scenarios = [
     INTERACTION_EVENT_TIMING_PLAN,
     INTERACTION_EVENT_TIMING_PLAN_V4,
+    INTERACTION_EVENT_TIMING_PLAN_V5,
   ].flatMap((eventTimingPlan) =>
     [false, true].map((failBefore) => ({ eventTimingPlan, failBefore })),
   );
