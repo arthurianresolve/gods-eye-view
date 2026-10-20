@@ -34,6 +34,10 @@ const INTERACTION_PROTOCOL_V3 =
   'trusted-click-activation-prerender-postrender-witness-v5';
 const INTERACTION_PROTOCOL_V4 =
   'trusted-click-event-timing-prerender-postrender-witness-v6';
+const INTERACTION_PROTOCOL_LATE_READINESS =
+  'trusted-click-event-timing-prerender-postrender-witness-v7';
+const LOCAL_READINESS_REGISTRATION_POLICY =
+  'settled-intent-after-layer-prerender-v1';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const SAMPLED_HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -857,6 +861,7 @@ function validateInteractionSide(
   label,
   expectedMaterializedCount,
   protocolVersion,
+  lateLocalReadiness = false,
 ) {
   assert.ok(Array.isArray(side), `${label} samples must be an array`);
   assert.equal(
@@ -889,6 +894,26 @@ function validateInteractionSide(
       `${label} sample ${index + 1} must observe a completed rendered frame`,
     );
     const isLocalControl = label.startsWith('localControl');
+    if (lateLocalReadiness && isLocalControl) {
+      const registration = sample.localReadinessRegistration;
+      assert.equal(
+        registration?.policy,
+        LOCAL_READINESS_REGISTRATION_POLICY,
+        `${label} needs the prospective local readiness registration proof`,
+      );
+      assert.equal(registration.generation, sample.generation);
+      assert.equal(registration.intentEpoch, sample.acceptedIntentEpoch);
+      assert.equal(registration.expected, index % 2 === 0);
+      assert.equal(registration.expected, sample.expectedLayerEnabled);
+      assert.ok(
+        Number.isFinite(registration.completedAtMs) &&
+          Number.isFinite(registration.registeredAtMs) &&
+          registration.completedAtMs >= sample.acceptedIntentAtMs &&
+          registration.registeredAtMs >= registration.completedAtMs &&
+          sample.stateAtMs >= registration.registeredAtMs,
+        `${label} readiness registration must follow its settled intent and precede state`,
+      );
+    }
     assert.equal(
       sample?.renderWitnessType,
       isLocalControl ? LOCAL_RENDER_WITNESS : REPLAY_RENDER_WITNESS,
@@ -1304,15 +1329,32 @@ function compareInteractionMetric(
             height: side.identity.viewport.height,
           });
       }
-    for (const role of ['baseline', 'candidate'])
+    const lateLocalReadiness =
+      protocolVersion === 4 &&
+      evidence.builds.baseline.interactionProtocol ===
+        INTERACTION_PROTOCOL_LATE_READINESS;
+    for (const role of ['baseline', 'candidate']) {
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
         protocolVersion === 4
-          ? INTERACTION_PROTOCOL_V4
+          ? lateLocalReadiness
+            ? INTERACTION_PROTOCOL_LATE_READINESS
+            : INTERACTION_PROTOCOL_V4
           : protocolVersion === 3
             ? INTERACTION_PROTOCOL_V3
             : INTERACTION_PROTOCOL_V2,
         `${role} interaction protocol is missing or unsupported`,
+      );
+      if (lateLocalReadiness)
+        assert.equal(
+          evidence.builds[role].localReadinessRegistrationPolicy,
+          LOCAL_READINESS_REGISTRATION_POLICY,
+        );
+    }
+    if (lateLocalReadiness)
+      assert.equal(
+        evidence.localReadinessRegistrationPolicy,
+        LOCAL_READINESS_REGISTRATION_POLICY,
       );
     assert.ok(
       evidence.pairing && typeof evidence.pairing === 'object',
@@ -1358,12 +1400,14 @@ function compareInteractionMetric(
       `${name} baseline`,
       expectedMaterializedCount,
       protocolVersion,
+      lateLocalReadiness,
     );
     const candidateSamples = validateInteractionSide(
       evidence.builds?.candidate?.[name],
       `${name} candidate`,
       expectedMaterializedCount,
       protocolVersion,
+      lateLocalReadiness,
     );
     for (const [role, localSamples, replaySamples] of [
       [

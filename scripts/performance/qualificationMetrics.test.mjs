@@ -28,10 +28,15 @@ import {
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
   collectQualificationMetricsForBuild,
+  runQualificationMetricsCapture,
+  installInteractionObserver,
+  resolveQualificationEventTimingPlan,
+  LOCAL_READINESS_REGISTRATION_POLICY,
 } from '../qa-qualification-metrics-capture.mjs';
 import {
   INTERACTION_EVENT_TIMING_PLAN,
   INTERACTION_EVENT_TIMING_PLAN_V2,
+  INTERACTION_EVENT_TIMING_PLAN_V4,
 } from './interactionEventTiming.mjs';
 import {
   createQualificationBuildIdentityPlan,
@@ -1734,6 +1739,196 @@ test('versioned continuity preserves v2 failures and requires matching v3 plan a
   assert.equal(evaluate(metadata).status, 'failed');
 });
 
+test('v7 readiness proof is prospective, intent-bound and independent of Event Timing policy selection', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const legacy = eventTimingInteractionEvidence();
+  const evaluate = (value) =>
+    evaluateQualificationMetrics({
+      ...args,
+      interactionEvidence: value,
+    }).metrics.localControl;
+  const legacyResult = evaluate(legacy);
+  assert.equal(legacyResult.status, 'measured');
+  const current = structuredClone(legacy);
+  current.localReadinessRegistrationPolicy =
+    LOCAL_READINESS_REGISTRATION_POLICY;
+  current.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V4;
+  for (const build of Object.values(current.builds)) {
+    build.interactionProtocol =
+      'trusted-click-event-timing-prerender-postrender-witness-v7';
+    build.localReadinessRegistrationPolicy =
+      LOCAL_READINESS_REGISTRATION_POLICY;
+    Object.assign(build.eventTimingCapture, INTERACTION_EVENT_TIMING_PLAN_V4);
+    for (const sample of build.localControl)
+      sample.localReadinessRegistration = {
+        policy: LOCAL_READINESS_REGISTRATION_POLICY,
+        generation: sample.generation,
+        intentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+        completedAtMs: sample.acceptedIntentAtMs + 1,
+        registeredAtMs: sample.acceptedIntentAtMs + 2,
+      };
+  }
+  assert.equal(evaluate(current).status, 'measured');
+  const badMutations = [
+    (value) => {
+      delete value.localReadinessRegistrationPolicy;
+    },
+    (value) => {
+      delete value.builds.baseline.localReadinessRegistrationPolicy;
+    },
+    (value) => {
+      value.builds.candidate.interactionProtocol =
+        legacy.builds.candidate.interactionProtocol;
+    },
+    (value) => {
+      delete value.builds.candidate.localControl[0].localReadinessRegistration;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].localReadinessRegistration
+        .intentEpoch++;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].localReadinessRegistration
+        .generation++;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].localReadinessRegistration.expected = false;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].localReadinessRegistration.completedAtMs = 0;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].localReadinessRegistration.registeredAtMs =
+        Infinity;
+    },
+    (value) => {
+      const sample = value.builds.candidate.localControl[0];
+      sample.localReadinessRegistration.registeredAtMs = sample.stateAtMs + 1;
+    },
+  ];
+  for (const mutate of badMutations) {
+    const bad = structuredClone(current);
+    mutate(bad);
+    assert.notEqual(evaluate(bad).status, 'measured');
+  }
+  assert.deepEqual(
+    evaluate(legacy),
+    legacyResult,
+    'old evidence is not reinterpreted',
+  );
+  const slow = structuredClone(current);
+  for (const entry of slow.builds.candidate.eventTimingCapture.entries)
+    entry.duration = 136;
+  assert.equal(evaluate(slow).status, 'failed', '100ms remains unchanged');
+  const slowReady = structuredClone(current);
+  for (const sample of slowReady.builds.candidate.localControl)
+    sample.stateAtMs = sample.inputAtMs + 70;
+  assert.equal(evaluate(slowReady).status, 'failed', '10% remains unchanged');
+});
+
+test('producer selects only predeclared v3/v4 Event Timing plans before acquisition', async () => {
+  assert.equal(
+    resolveQualificationEventTimingPlan(),
+    INTERACTION_EVENT_TIMING_PLAN,
+  );
+  assert.equal(
+    resolveQualificationEventTimingPlan(
+      INTERACTION_EVENT_TIMING_PLAN_V4.policy,
+    ),
+    INTERACTION_EVENT_TIMING_PLAN_V4,
+  );
+  assert.throws(
+    () => resolveQualificationEventTimingPlan('unknown'),
+    /Unsupported/,
+  );
+  for (const plan of [undefined, INTERACTION_EVENT_TIMING_PLAN_V4]) {
+    const calls = [];
+    await installInteractionObserver(
+      {
+        async evaluate(fn, options) {
+          calls.push({ name: fn.name, options });
+        },
+      },
+      QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+      plan,
+    );
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].name, 'installInteractionEventTimingInPage');
+    assert.deepEqual(calls[0].options, {
+      policy: (plan || INTERACTION_EVENT_TIMING_PLAN).policy,
+    });
+    assert.equal(
+      calls[1].options.localReadinessRegistrationPolicy,
+      LOCAL_READINESS_REGISTRATION_POLICY,
+    );
+  }
+  for (const plan of [
+    INTERACTION_EVENT_TIMING_PLAN_V2,
+    { ...INTERACTION_EVENT_TIMING_PLAN_V4, observationDrainMs: 0 },
+  ]) {
+    let acquisitions = 0;
+    await assert.rejects(() =>
+      installInteractionObserver(
+        {
+          async evaluate() {
+            acquisitions++;
+          },
+        },
+        {},
+        plan,
+      ),
+    );
+    await assert.rejects(() =>
+      collectQualificationMetricsForBuild({
+        eventTimingPlan: plan,
+        createDriver() {
+          acquisitions++;
+        },
+      }),
+    );
+    await assert.rejects(() =>
+      runQualificationMetricsCapture({
+        eventTimingPlan: plan,
+      }),
+    );
+    assert.equal(acquisitions, 0);
+  }
+  const source = readFileSync(
+    new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
+    'utf8',
+  );
+  const cli = source.slice(source.lastIndexOf('if (isMain()) {'));
+  for (const policy of [
+    undefined,
+    INTERACTION_EVENT_TIMING_PLAN_V4.policy,
+    'unknown',
+  ]) {
+    let received;
+    const invocation = runInNewContext(`(async () => { ${cli} })()`, {
+      isMain: () => true,
+      cliArgs: () => ({ 'event-timing-policy': policy }),
+      resolveQualificationEventTimingPlan,
+      process: { argv: [] },
+      console: { log() {} },
+      runQualificationMetricsCapture: async (options) => {
+        received = options;
+        return { status: 'completed' };
+      },
+    });
+    if (policy === 'unknown') {
+      await assert.rejects(invocation, /Unsupported/);
+      assert.equal(received, undefined);
+    } else {
+      await invocation;
+      assert.equal(
+        received.eventTimingPlan,
+        resolveQualificationEventTimingPlan(policy),
+      );
+    }
+  }
+});
+
 test('v4 actual producer action awaits its owned drain after full readiness before returning', async () => {
   const source = readFileSync(
     new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
@@ -2967,6 +3162,405 @@ test('interaction measures the first naturally produced matching frame without r
   } finally {
     globalWindow.__qualificationMetricsObserver?.dispose();
     restoreGlobals();
+  }
+});
+
+async function lateReadinessHarness() {
+  // Use Cesium's actual ordered Event implementation, including dynamic
+  // registration/removal, rather than a one-listener fake that hides ordering.
+  const { Event: CesiumEvent } = await import('cesium');
+  const preRender = new CesiumEvent();
+  const postRender = new CesiumEvent();
+  const raf = createRafHarness();
+  const state = {
+    enabled: false,
+    lod: { computed: false, total: 0, active: 0 },
+    renderRequests: 0,
+  };
+  const local = inputControl({
+    classList: { contains: (name) => name === 'active' && state.enabled },
+  });
+  const slider = inputControl();
+  const entry = {
+    visibilityIntentEpoch: 0,
+    visibilityIntentEnabled: false,
+    module: { getLodDiagnostics: () => state.lod },
+  };
+  const lifecycle = new Set();
+  const requests = new Set();
+  const scene = {
+    preRender,
+    postRender,
+    frameState: { frameNumber: 50 },
+    requestRender() {
+      state.renderRequests++;
+    },
+  };
+  const window = {
+    __godsEyeView: {
+      viewer: { scene },
+      dataManager: {
+        layers: new Map([['local-datacenters', entry]]),
+        isEnabled: () => state.enabled,
+        subscribe(listener) {
+          lifecycle.add(listener);
+          return () => lifecycle.delete(listener);
+        },
+        subscribeVisibilityRequests(listener) {
+          requests.add(listener);
+          return () => requests.delete(listener);
+        },
+      },
+    },
+  };
+  const restore = replacePageGlobals({
+    window,
+    document: {
+      querySelector: (selector) =>
+        selector.includes('data-layer-id') ? local : slider,
+    },
+    requestAnimationFrame: raf.requestAnimationFrame,
+    cancelAnimationFrame: raf.cancelAnimationFrame,
+    setInterval: () => 1,
+    clearInterval() {},
+  });
+  installInteractionObserverInPage({
+    ...QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+    localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
+  });
+  const observer = window.__qualificationMetricsObserver;
+  return {
+    state,
+    entry,
+    scene,
+    observer,
+    lifecycle,
+    requests,
+    raf,
+    local,
+    arm(expected) {
+      observer.arm('localControl', expected);
+      dispatchLocalClick(local);
+      entry.visibilityIntentEpoch++;
+      entry.visibilityIntentEnabled = expected;
+      for (const listener of requests)
+        listener({
+          type: 'visibility-requested',
+          layerId: 'local-datacenters',
+          origin: 'user',
+          enabled: expected,
+          intentEpoch: entry.visibilityIntentEpoch,
+        });
+      return observer.pending;
+    },
+    complete(overrides = {}) {
+      for (const listener of lifecycle)
+        listener({
+          type: 'visibility',
+          layerId: 'local-datacenters',
+          origin: 'user',
+          enabled: entry.visibilityIntentEnabled,
+          intentEpoch: entry.visibilityIntentEpoch,
+          ...overrides,
+        });
+    },
+    finish(sample) {
+      // This harness tests scene ordering; consume the separately tested button
+      // feedback callback before supplying its completed observation.
+      if (observer.feedbackAnimationFrame != null)
+        raf.cancelAnimationFrame(observer.feedbackAnimationFrame);
+      observer.feedbackAnimationFrame = null;
+      sample.buttonFeedbackAtMs = performance.now();
+      observer.finalizeSampleIfReady(sample);
+      return observer.take();
+    },
+    close() {
+      try {
+        observer.dispose();
+      } finally {
+        restore();
+      }
+    },
+  };
+}
+
+test('late readiness accepts the first natural frame after the dynamically installed owned update', async () => {
+  const f = await lateReadinessHarness();
+  const originalReplayListener = [...f.scene.preRender._listeners.keys()][0];
+  try {
+    const sample = f.arm(true);
+    await f.observer.pollPromise;
+    const order = [];
+    let ownedPassFinished = false;
+    const removeLayer = f.scene.preRender.addEventListener(() => {
+      order.push('owned-update');
+      f.state.lod = { computed: true, total: 8, active: 67 };
+      ownedPassFinished = true;
+    });
+    f.state.enabled = true;
+    f.entry.module.getLodDiagnostics = () => {
+      assert.equal(
+        ownedPassFinished,
+        true,
+        'readiness cannot run before owned update',
+      );
+      order.push('readiness');
+      return f.state.lod;
+    };
+    assert.equal(f.scene.preRender.numberOfListeners, 2);
+    f.complete();
+    assert.equal(f.scene.preRender.numberOfListeners, 3);
+    const oldLocalListener = [...f.scene.preRender._listeners.keys()][2];
+    const registration = structuredClone(sample.localReadinessRegistration);
+    f.complete();
+    assert.equal(
+      f.scene.preRender.numberOfListeners,
+      3,
+      'duplicate success never appends another listener',
+    );
+    assert.deepEqual(sample.localReadinessRegistration, registration);
+    f.scene.preRender.raiseEvent(f.scene);
+    assert.deepEqual(order, ['owned-update', 'readiness']);
+    assert.equal(sample.frameNumberAtState, 50);
+    f.scene.postRender.raiseEvent(f.scene);
+    assert.equal(sample.fullReadyFrameObserved, true);
+    assert.equal(
+      sample.frameNumberAtRendered,
+      50,
+      'no extra observation frame',
+    );
+    assert.equal(f.finish(sample).localReadinessRegistration.intentEpoch, 1);
+
+    removeLayer();
+    f.entry.module.getLodDiagnostics = () => f.state.lod;
+    const off = f.arm(false);
+    assert.equal(
+      f.scene.preRender.numberOfListeners,
+      1,
+      'old local callback removed before next intent',
+    );
+    f.state.enabled = false;
+    f.state.lod = { computed: false, total: 0, active: 0 };
+    f.complete();
+    assert.equal(f.scene.preRender.numberOfListeners, 2);
+    oldLocalListener();
+    assert.equal(
+      off.stateAtMs,
+      null,
+      'a retained old callback cannot supply a new intent witness',
+    );
+    f.scene.frameState.frameNumber++;
+    f.scene.preRender.raiseEvent(f.scene);
+    f.scene.postRender.raiseEvent(f.scene);
+    assert.equal(off.fullReadyFrameObserved, true);
+    f.finish(off);
+    assert.equal(
+      [...f.scene.preRender._listeners.keys()][0],
+      originalReplayListener,
+      'replay listener was never removed/reordered',
+    );
+    assert.equal(f.state.renderRequests, 0);
+    f.observer.dispose();
+    assert.equal(f.scene.preRender.numberOfListeners, 0);
+    assert.equal(f.scene.postRender.numberOfListeners, 0);
+    assert.equal(f.requests.size, 0);
+    assert.equal(f.lifecycle.size, 0);
+    assert.equal(f.raf.pendingCount, 0);
+    assert.equal(f.local.listeners.size, 0);
+  } finally {
+    f.close();
+  }
+});
+
+test('late readiness rejects afterRender-only changes and superseded completion bindings', async () => {
+  const f = await lateReadinessHarness();
+  try {
+    const sample = f.arm(true);
+    await f.observer.pollPromise;
+    f.state.enabled = true;
+    f.complete();
+    f.scene.preRender.raiseEvent(f.scene);
+    assert.equal(sample.stateAtMs, null);
+    // Scene.callAfterRenderFunctions runs after drawing and before postRender.
+    f.state.lod = { computed: true, total: 8, active: 67 };
+    f.scene.postRender.raiseEvent(f.scene);
+    assert.equal(sample.fullReadyFrameObserved, undefined);
+    assert.equal(sample.stateAtMs, null);
+    f.entry.visibilityIntentEpoch++;
+    f.complete();
+    f.scene.frameState.frameNumber++;
+    f.scene.preRender.raiseEvent(f.scene);
+    f.scene.postRender.raiseEvent(f.scene);
+    assert.equal(
+      sample.stateAtMs,
+      null,
+      'superseding intent cannot reuse prior registration',
+    );
+    assert.equal(f.scene.preRender.numberOfListeners, 2);
+  } finally {
+    f.close();
+  }
+});
+
+test('late readiness rejects missing, stale, mismatched and failed lifecycle completions', async () => {
+  for (const failure of [
+    'visibility-failed',
+    'visibility-cancelled',
+    'visibility-blocked',
+  ]) {
+    const f = await lateReadinessHarness();
+    try {
+      const sample = f.arm(true);
+      await f.observer.pollPromise;
+      f.state.enabled = true;
+      f.state.lod = { computed: true, total: 8, active: 67 };
+      for (const wrong of [
+        { type: 'visibility-transition' },
+        { layerId: 'flights' },
+        { origin: 'programmatic' },
+        { enabled: false },
+        { intentEpoch: 0 },
+        { intentEpoch: 2 },
+      ])
+        f.complete(wrong);
+      f.scene.preRender.raiseEvent(f.scene);
+      f.scene.postRender.raiseEvent(f.scene);
+      assert.equal(sample.stateAtMs, null);
+      assert.equal(f.scene.preRender.numberOfListeners, 1);
+      f.complete({ type: failure });
+      f.complete();
+      assert.match(
+        f.observer.error,
+        /Local readiness lifecycle completion was/,
+      );
+      assert.equal(
+        f.scene.preRender.numberOfListeners,
+        1,
+        'failure cannot rearm via a later event',
+      );
+      assert.equal(sample.localReadinessRegistration, undefined);
+    } finally {
+      f.close();
+    }
+  }
+});
+
+test('late readiness owns failed acquisition and refuses re-registration when prior cleanup fails', async () => {
+  {
+    const f = await lateReadinessHarness();
+    try {
+      const add = f.scene.preRender.addEventListener.bind(f.scene.preRender);
+      f.scene.preRender.addEventListener = (listener) => {
+        add(listener);
+        throw new Error('attached then failed');
+      };
+      f.arm(true);
+      f.state.enabled = true;
+      f.complete();
+      assert.equal(f.scene.preRender.numberOfListeners, 2);
+      assert.match(f.observer.error, /attached then failed/);
+      f.observer.dispose();
+      assert.equal(
+        f.scene.preRender.numberOfListeners,
+        0,
+        'fallback remover owns partial acquisition',
+      );
+      assert.equal(f.scene.postRender.numberOfListeners, 0);
+    } finally {
+      f.close();
+    }
+  }
+  {
+    const f = await lateReadinessHarness();
+    try {
+      const sample = f.arm(true);
+      f.state.enabled = true;
+      f.state.lod = { computed: true, total: 8, active: 67 };
+      f.complete();
+      f.scene.preRender.raiseEvent(f.scene);
+      f.scene.postRender.raiseEvent(f.scene);
+      f.finish(sample);
+      const remove = f.observer.removeLocalPreRender;
+      let removals = 0;
+      f.observer.removeLocalPreRender = () => {
+        if (++removals === 1) throw new Error('first cleanup failed');
+        remove();
+      };
+      assert.throws(() => f.arm(false), /first cleanup failed/);
+      assert.equal(
+        f.scene.preRender.numberOfListeners,
+        2,
+        'no replacement after failed removal',
+      );
+      f.observer.dispose();
+      assert.equal(removals, 2);
+      assert.equal(f.scene.preRender.numberOfListeners, 0);
+      assert.equal(f.scene.postRender.numberOfListeners, 0);
+      assert.equal(f.lifecycle.size, 0);
+    } finally {
+      f.close();
+    }
+  }
+});
+
+test('late readiness final disposal uses one fallback and retains double-failure evidence', async () => {
+  for (const failFallback of [false, true]) {
+    const f = await lateReadinessHarness();
+    try {
+      f.arm(true);
+      f.state.enabled = true;
+      f.complete();
+      let removerCalls = 0;
+      let fallbackCalls = 0;
+      const fallback = f.observer.removeLocalPreRenderFallback;
+      f.observer.removeLocalPreRender = () => {
+        removerCalls++;
+        throw new Error('final remover failed');
+      };
+      f.observer.removeLocalPreRenderFallback = () => {
+        fallbackCalls++;
+        if (failFallback) throw new Error('direct fallback failed');
+        fallback();
+      };
+      if (failFallback) {
+        assert.throws(
+          () => f.observer.dispose(),
+          /Local readiness cleanup failed: final remover failed; fallback: direct fallback failed/,
+        );
+        assert.match(f.observer.error, /direct fallback failed/);
+        assert.equal(typeof f.observer.removeLocalPreRender, 'function');
+        assert.equal(
+          typeof f.observer.removeLocalPreRenderFallback,
+          'function',
+        );
+        assert.equal(
+          f.scene.preRender.numberOfListeners,
+          1,
+          'remaining owned listener is not reported removed',
+        );
+      } else {
+        f.observer.dispose();
+        assert.equal(f.scene.preRender.numberOfListeners, 0);
+        assert.equal(f.observer.removeLocalPreRender, null);
+        assert.equal(f.observer.removeLocalPreRenderFallback, null);
+      }
+      assert.equal(removerCalls, 1);
+      assert.equal(fallbackCalls, 1);
+      assert.equal(f.scene.postRender.numberOfListeners, 0);
+      assert.equal(f.lifecycle.size, 0);
+      assert.equal(f.requests.size, 0);
+      assert.equal(f.local.listeners.size, 0);
+      assert.equal(f.raf.pendingCount, 0);
+      f.observer.dispose();
+      assert.equal(
+        removerCalls,
+        1,
+        'no unbounded retries from terminal dispose',
+      );
+      assert.equal(fallbackCalls, 1);
+    } finally {
+      f.close();
+    }
   }
 });
 

@@ -28,12 +28,16 @@ import {
 import {
   installInteractionEventTimingInPage,
   INTERACTION_EVENT_TIMING_PLAN,
+  INTERACTION_EVENT_TIMING_PLAN_V4,
+  assertInteractionEventTimingPlan,
 } from './performance/interactionEventTiming.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
 const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v4';
 const INTERACTION_PROTOCOL =
-  'trusted-click-event-timing-prerender-postrender-witness-v6';
+  'trusted-click-event-timing-prerender-postrender-witness-v7';
+export const LOCAL_READINESS_REGISTRATION_POLICY =
+  'settled-intent-after-layer-prerender-v1';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -60,6 +64,24 @@ const LOCAL_CONTROL_CAMERA_LOCATION = Object.freeze({
   longitude: -73.9,
   altitude: 1000,
 });
+
+export function resolveQualificationEventTimingPlan(policy) {
+  const plan = [
+    INTERACTION_EVENT_TIMING_PLAN,
+    INTERACTION_EVENT_TIMING_PLAN_V4,
+  ].find(
+    (candidate) =>
+      candidate.policy === (policy ?? INTERACTION_EVENT_TIMING_PLAN.policy),
+  );
+  assert.ok(plan, 'Unsupported qualification Event Timing policy');
+  assertInteractionEventTimingPlan(plan);
+  return plan;
+}
+
+function assertCaptureEventTimingPlan(plan) {
+  assertInteractionEventTimingPlan(plan);
+  assert.deepEqual(plan, resolveQualificationEventTimingPlan(plan.policy));
+}
 
 function circularAngleDifference(left, right) {
   return Math.atan2(Math.sin(left - right), Math.cos(left - right));
@@ -422,6 +444,16 @@ export function installInteractionObserverInPage(fixtureContract) {
   // keep its witness identifiers local so it has no module-scope closures.
   const localRenderWitnessType = 'natural-prerender-postrender-pair-v1';
   const replayRenderWitnessType = 'natural-replay-prerender-postrender-v1';
+  const localReadinessRegistrationPolicy =
+    'settled-intent-after-layer-prerender-v1';
+  const lateLocalReadiness =
+    fixtureContract?.localReadinessRegistrationPolicy ===
+    localReadinessRegistrationPolicy;
+  if (
+    fixtureContract?.localReadinessRegistrationPolicy != null &&
+    !lateLocalReadiness
+  )
+    throw new Error('Unsupported local readiness registration policy');
   const eventTiming =
     fixtureContract?.interactionProtocolVersion === 4
       ? window.__qualificationEventTiming
@@ -430,6 +462,15 @@ export function installInteractionObserverInPage(fixtureContract) {
     throw new Error('Qualification Event Timing observer is missing');
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
+  if (
+    lateLocalReadiness &&
+    (typeof app?.dataManager?.subscribe !== 'function' ||
+      typeof app?.dataManager?.subscribeVisibilityRequests !== 'function' ||
+      typeof scene?.preRender?.removeEventListener !== 'function')
+  )
+    throw new Error(
+      'Local readiness needs settled lifecycle and intent subscriptions',
+    );
   if (
     !scene?.preRender?.addEventListener ||
     !scene?.postRender?.addEventListener
@@ -447,6 +488,9 @@ export function installInteractionObserverInPage(fixtureContract) {
     removeInput: [],
     removeRender: null,
     removePreRender: null,
+    removeLocalPreRender: null,
+    removeLocalPreRenderFallback: null,
+    localReadinessRegistration: null,
     removeVisibilityRequest: null,
     removeLifecycleEvent: null,
     preRenderWitness: null,
@@ -619,6 +663,112 @@ export function installInteractionObserverInPage(fixtureContract) {
         return;
       sample.transitionAtMs = performance.now();
       sample.transitionIntentEpoch = change.intentEpoch;
+    },
+    releaseLocalReadinessRegistration() {
+      const remove = observer.removeLocalPreRender;
+      observer.localReadinessRegistration = null;
+      observer.preRenderWitness = null;
+      if (remove) {
+        // Retain the remover on failure so outer disposal can retry it.
+        remove();
+        observer.removeLocalPreRender = null;
+        observer.removeLocalPreRenderFallback = null;
+      }
+    },
+    hasCurrentLocalReadinessRegistration(sample) {
+      const registration = observer.localReadinessRegistration;
+      const manager = window.__godsEyeView?.dataManager;
+      const entry = manager?.layers?.get?.('local-datacenters');
+      return Boolean(
+        registration &&
+        !observer.disposed &&
+        !observer.error &&
+        observer.pending === sample &&
+        registration.generation === sample.generation &&
+        sample.generation === observer.generation &&
+        registration.intentEpoch === sample.acceptedIntentEpoch &&
+        entry?.visibilityIntentEpoch === registration.intentEpoch &&
+        entry.visibilityIntentEnabled === sample.expected &&
+        manager.isEnabled('local-datacenters') === sample.expected,
+      );
+    },
+    onVisibilityCompletion(change) {
+      if (!lateLocalReadiness) return;
+      const sample = observer.pending;
+      const manager = window.__godsEyeView?.dataManager;
+      const entry = manager?.layers?.get?.('local-datacenters');
+      if (
+        !observer.disposed &&
+        sample?.kind === 'localControl' &&
+        sample.generation === observer.generation &&
+        sample.acceptedIntentEpoch != null &&
+        change?.layerId === 'local-datacenters' &&
+        change.origin === 'user' &&
+        change.intentEpoch === sample.acceptedIntentEpoch &&
+        [
+          'visibility-failed',
+          'visibility-cancelled',
+          'visibility-blocked',
+        ].includes(change.type)
+      ) {
+        observer.error = `Local readiness lifecycle completion was ${change.type}`;
+        try {
+          observer.releaseLocalReadinessRegistration();
+        } catch (error) {
+          observer.error += `; cleanup: ${error?.message || String(error)}`;
+        }
+        return;
+      }
+      if (
+        observer.disposed ||
+        observer.error ||
+        sample?.kind !== 'localControl' ||
+        sample.generation !== observer.generation ||
+        sample.inputAtMs == null ||
+        sample.acceptedIntentEpoch == null ||
+        change?.type !== 'visibility' ||
+        change.layerId !== 'local-datacenters' ||
+        change.origin !== 'user' ||
+        change.enabled !== sample.expected ||
+        change.intentEpoch !== sample.acceptedIntentEpoch ||
+        entry?.visibilityIntentEpoch !== change.intentEpoch ||
+        entry.visibilityIntentEnabled !== sample.expected ||
+        manager.isEnabled('local-datacenters') !== sample.expected
+      )
+        return;
+      if (observer.hasCurrentLocalReadinessRegistration(sample)) return;
+      try {
+        observer.releaseLocalReadinessRegistration();
+        const completedAtMs = performance.now();
+        // enable() installs the layer callback before the manager publishes
+        // settled visibility. Append only this QA listener after that callback;
+        // replay retains its original listener and no render is requested.
+        const registration = {
+          generation: sample.generation,
+          intentEpoch: change.intentEpoch,
+          expected: sample.expected,
+          completedAtMs,
+          registeredAtMs: null,
+          policy: localReadinessRegistrationPolicy,
+        };
+        const listener = () => observer.onLocalPreRender(registration);
+        // Own fallback removal before acquisition, including an add that throws
+        // after attaching. Cesium's normal add returns the equivalent remover.
+        observer.removeLocalPreRenderFallback = () =>
+          scene.preRender.removeEventListener(listener);
+        observer.removeLocalPreRender = observer.removeLocalPreRenderFallback;
+        const remove = scene.preRender.addEventListener(listener);
+        if (typeof remove !== 'function')
+          throw new Error('Local readiness listener needs owned removal');
+        observer.removeLocalPreRender = remove;
+        registration.registeredAtMs = performance.now();
+        observer.localReadinessRegistration = registration;
+        sample.localReadinessRegistration = {
+          ...observer.localReadinessRegistration,
+        };
+      } catch (error) {
+        observer.error = error?.message || String(error);
+      }
     },
     finalizeSampleIfReady(sample) {
       if (
@@ -892,6 +1042,21 @@ export function installInteractionObserverInPage(fixtureContract) {
       return;
     },
     onPreRender() {
+      if (lateLocalReadiness && observer.pending?.kind === 'localControl')
+        return;
+      observer.capturePreRenderWitness();
+    },
+    onLocalPreRender(registration) {
+      const sample = observer.pending;
+      if (
+        registration !== observer.localReadinessRegistration ||
+        sample?.kind !== 'localControl' ||
+        !observer.hasCurrentLocalReadinessRegistration(sample)
+      )
+        return;
+      observer.capturePreRenderWitness();
+    },
+    capturePreRenderWitness() {
       try {
         const sample = observer.pending;
         const frameNumber = scene.frameState.frameNumber;
@@ -982,6 +1147,8 @@ export function installInteractionObserverInPage(fixtureContract) {
         return;
       if (sample.kind === 'localControl') {
         if (
+          (lateLocalReadiness &&
+            !observer.hasCurrentLocalReadinessRegistration(sample)) ||
           sample.inputAtMs == null ||
           !preRenderWitness ||
           preRenderWitness.generation !== sample.generation ||
@@ -1108,6 +1275,7 @@ export function installInteractionObserverInPage(fixtureContract) {
         throw new Error('Interaction observer has been disposed.');
       if (observer.pending)
         throw new Error('Previous interaction sample is still pending.');
+      if (lateLocalReadiness) observer.releaseLocalReadinessRegistration();
       const selector =
         kind === 'localControl'
           ? '[data-layer-id="local-datacenters"] .data-toggle-btn'
@@ -1171,6 +1339,24 @@ export function installInteractionObserverInPage(fixtureContract) {
       observer.removeRender = null;
       observer.removePreRender?.();
       observer.removePreRender = null;
+      let localReadinessCleanupError;
+      try {
+        observer.releaseLocalReadinessRegistration();
+      } catch (error) {
+        // dispose is terminal, so a later call cannot be relied on to retry.
+        // Make one bounded removal attempt using the exact owned callback.
+        try {
+          if (!observer.removeLocalPreRenderFallback) throw error;
+          observer.removeLocalPreRenderFallback();
+          observer.removeLocalPreRender = null;
+          observer.removeLocalPreRenderFallback = null;
+        } catch (fallbackError) {
+          localReadinessCleanupError = new Error(
+            `Local readiness cleanup failed: ${error?.message || String(error)}; fallback: ${fallbackError?.message || String(fallbackError)}`,
+          );
+          observer.error ||= localReadinessCleanupError.message;
+        }
+      }
       observer.removeVisibilityRequest?.();
       observer.removeVisibilityRequest = null;
       observer.removeLifecycleEvent?.();
@@ -1188,6 +1374,7 @@ export function installInteractionObserverInPage(fixtureContract) {
       observer.armedTarget = null;
       observer.pollPromise = null;
       eventTiming?.dispose();
+      if (localReadinessCleanupError) throw localReadinessCleanupError;
     },
   };
   for (const [selector, name] of [
@@ -1213,9 +1400,10 @@ export function installInteractionObserverInPage(fixtureContract) {
       (change) => observer.onVisibilityRequest(change),
     );
   if (typeof dataManager?.subscribe === 'function')
-    observer.removeLifecycleEvent = dataManager.subscribe((change) =>
-      observer.onVisibilityTransition(change),
-    );
+    observer.removeLifecycleEvent = dataManager.subscribe((change) => {
+      observer.onVisibilityTransition(change);
+      observer.onVisibilityCompletion(change);
+    });
   window.__qualificationMetricsObserver = observer;
 }
 
@@ -1410,11 +1598,19 @@ async function setUnmeasuredCameraPose(page, location, routeId) {
   };
 }
 
-async function installInteractionObserver(page, fixture) {
-  await page.evaluate(installInteractionEventTimingInPage);
+export async function installInteractionObserver(
+  page,
+  fixture,
+  eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN,
+) {
+  assertCaptureEventTimingPlan(eventTimingPlan);
+  await page.evaluate(installInteractionEventTimingInPage, {
+    policy: eventTimingPlan.policy,
+  });
   await page.evaluate(installInteractionObserverInPage, {
     ...fixture,
     interactionProtocolVersion: 4,
+    localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
   });
 }
 
@@ -1581,7 +1777,9 @@ export async function collectQualificationMetricsForBuild({
   nativeWindowViewport = false,
   buildIdentityContext = null,
   createDriver = createRenderedSoakDriver,
+  eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN,
 }) {
+  assertCaptureEventTimingPlan(eventTimingPlan);
   const expectedDpr =
     expected.nativeDpr ?? expected.sourceProfile?.viewport?.dpr;
   if (buildIdentityContext) assert.equal(nativeWindowViewport, true);
@@ -1727,7 +1925,7 @@ export async function collectQualificationMetricsForBuild({
         );
       });
       await page.evaluate(installRenderedFlightWitnessReaderInPage);
-      await installInteractionObserver(page, fixture);
+      await installInteractionObserver(page, fixture, eventTimingPlan);
       for (let index = 0; index < 20; index++) {
         const desired = index % 2 === 0;
         const enabled = await page.evaluate(() =>
@@ -2019,6 +2217,7 @@ export async function collectQualificationMetricsForBuild({
   return {
     status: operationFailure ? 'failed' : 'completed',
     interactionProtocol: INTERACTION_PROTOCOL,
+    localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
     interactionStatus,
     heapStatus,
     failureReason: operationFailure?.message || null,
@@ -2064,7 +2263,9 @@ export async function runQualificationMetricsCapture({
   buildIdentityPlanSha256,
   outputPath,
   nativeWindowViewport = false,
+  eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN,
 }) {
+  assertCaptureEventTimingPlan(eventTimingPlan);
   assert.equal(typeof nativeWindowViewport, 'boolean');
   const sourceKind = resolveQualificationIdentitySource({
     baselineCapturePath,
@@ -2206,7 +2407,8 @@ export async function runQualificationMetricsCapture({
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
       interactionProtocol: INTERACTION_PROTOCOL,
-      eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
+      eventTimingPlan,
+      localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
       controls: ['local-datacenters-toggle', 'loaded-replay-slider-home-end'],
       datacenterFixture: {
         schema: 'gev-soak-datacenter-fixture/v2',
@@ -2217,7 +2419,7 @@ export async function runQualificationMetricsCapture({
           'the prepared same-origin response is acknowledged after successful Fetch.fulfillRequest; its delivered bytes/hash/count and exactly eight materialized features are verified by an unmeasured enable-disable preflight before interaction timing',
       },
       interactionSemantics:
-        'v4 local controls use an exact trusted-click Event Timing entry for next-rendering latency, guarded by same-intent visible feedback before its earliest quantized endpoint. Every unchanged primary action has a fixed one-second delivery drain; no missing entry is imputed. Accepted intent and full active-LOD/same-frame readiness remain separate. Two-RAF observations remain diagnostic. Replay seeks retain their trusted input and same-frame rendered-aircraft witness.',
+        'v4 local controls use an exact trusted-click Event Timing entry for next-rendering latency, guarded by same-intent visible feedback before its earliest quantized endpoint. Every unchanged primary action has a fixed one-second delivery drain; no missing entry is imputed. Accepted intent and full active-LOD/same-frame readiness remain separate. Acquisition v7 registers local readiness after the exact settled lifecycle intent, behind the layer-owned preRender callback; its state timestamp is the natural before-render observation, not the internal transition instant. Completion still requires the matching postRender state. Two-RAF observations remain diagnostic. Replay seeks retain their trusted input and same-frame rendered-aircraft witness.',
       inputClockSource:
         'trusted-click-event-timeStamp for local controls; trusted-event-timeStamp for replay',
       renderWitnessTypes: {
@@ -2306,6 +2508,7 @@ export async function runQualificationMetricsCapture({
       captureSpan = { startedAt: new Date().toISOString(), completedAt: null };
     }
     report.builds.baseline = await collectQualificationMetricsForBuild({
+      eventTimingPlan,
       role: 'baseline',
       url: baselineUrl,
       expected: expectedIdentities.baseline,
@@ -2315,6 +2518,7 @@ export async function runQualificationMetricsCapture({
     });
     await persistProgress();
     report.builds.candidate = await collectQualificationMetricsForBuild({
+      eventTimingPlan,
       role: 'candidate',
       url: candidateUrl,
       expected: expectedIdentities.candidate,
@@ -2436,7 +2640,8 @@ export async function runQualificationMetricsCapture({
           }
         : {}),
       ...(measurementEnvironment ? { measurementEnvironment } : {}),
-      eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
+      eventTimingPlan,
+      localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
       eventTimingProducerSha256:
         report.captureProducer.eventTimingObserverSha256,
       status:
@@ -2453,6 +2658,8 @@ export async function runQualificationMetricsCapture({
           {
             applicationCommit: report.builds[role]?.identity?.applicationCommit,
             interactionProtocol: report.builds[role]?.interactionProtocol,
+            localReadinessRegistrationPolicy:
+              report.builds[role]?.localReadinessRegistrationPolicy,
             identity: report.builds[role]?.identity,
             status: report.builds[role]?.status,
             interactionStatus: report.builds[role]?.interactionStatus,
@@ -2543,6 +2750,9 @@ if (isMain()) {
     buildIdentityPlanSha256: args['build-identity-plan-sha256'],
     outputPath: args.out,
     nativeWindowViewport: args['native-window-viewport'] === 'true',
+    eventTimingPlan: resolveQualificationEventTimingPlan(
+      args['event-timing-policy'],
+    ),
   });
   if (report.status !== 'completed') process.exitCode = 1;
   console.log(
