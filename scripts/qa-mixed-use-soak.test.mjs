@@ -8,6 +8,7 @@ import * as Cesium from 'cesium';
 import {
   resolveExpectedApplicationCommit,
   resolveNativeResolutionFlag,
+  resolveNativeWindowViewportFlag,
   runMixedUseSoak,
 } from './qa-mixed-use-soak.mjs';
 import {
@@ -53,6 +54,7 @@ import {
   evaluateSoakStability,
   FULL_SOAK_MS,
 } from './performance/soakStability.mjs';
+import { resolveNativeWindowBrowserOptions } from './performance/nativeWindowViewport.mjs';
 
 const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
   JSHeapUsedSize: heap,
@@ -995,6 +997,14 @@ test('native soak viewport is opt-in and validates the observed DPR/buffer', () 
     resolveNativeResolutionFlag(['node', 'soak', '--native-resolution']),
     true,
   );
+  assert.equal(resolveNativeWindowViewportFlag(['node', 'soak']), false);
+  assert.equal(
+    resolveNativeWindowViewportFlag(['node', 'soak', '--native-resolution']),
+    false,
+  );
+  const windowOnly = ['node', 'soak', '--native-window-viewport'];
+  assert.equal(resolveNativeWindowViewportFlag(windowOnly), true);
+  assert.equal(resolveNativeResolutionFlag(windowOnly), false);
   assert.deepEqual(resolveNativeSoakViewport(2), {
     width: 1440,
     height: 1000,
@@ -1721,12 +1731,15 @@ test('setup failure reports retain owned browser cleanup evidence', () => {
   assert.equal(report.fullSoak, false);
   assert.equal(report.stability.status, 'pending');
   assert.deepEqual(report.browserClose, error.browserClose);
+  assert.equal(Object.hasOwn(report, 'nativeWindowViewport'), false);
 
   error.cleanupError = 'Application soak browser did not close normally.';
   error.browserClose.closeCompleted = false;
+  error.nativeWindowViewport = { status: 'failed', label: 'startup' };
   const incomplete = createSoakSetupFailureReport(error);
   assert.equal(incomplete.browserClose.closeCompleted, false);
   assert.equal(incomplete.cleanupError, error.cleanupError);
+  assert.deepEqual(incomplete.nativeWindowViewport, error.nativeWindowViewport);
 });
 
 test('stability accepts a complete plateau and leaves short/missing evidence pending', () => {
@@ -1952,6 +1965,210 @@ test('worker preflight rejects unexpected errors, missing rejection and unsettle
     );
     assert.equal(destroyed, true);
   }
+});
+
+// Execute the actual orchestrator with browser acquisition replaced at its
+// module boundary; these ownership tests must never launch Chrome.
+async function soakWithOwnedDriver(createRenderedSoakDriver) {
+  const source = await readFile(
+    new URL('./qa-mixed-use-soak.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('function assertSoakDatacenterFixtureReceipt(');
+  const end = source.indexOf('\n/** No counters advance', start);
+  assert.ok(start >= 0 && end > start);
+  return vm.runInNewContext(
+    `${source.slice(start, end)}\n(${runMixedUseSoak.toString()})`,
+    {
+      createRenderedSoakDriver,
+      createSoakSetupFailureReport,
+      evaluateSoakStability,
+      FULL_SOAK_MS,
+      DEFAULT_DURATION_MS: FULL_SOAK_MS,
+      RETENTION_ANCHOR_MS: 30 * 60_000,
+      MAX_RETENTION_ANCHORED_EXTENSION_MS: 24 * 60_000,
+    },
+  );
+}
+
+test('soak CLI forwards native-window opt-in without changing native-resolution defaults', async () => {
+  const source = await readFile(
+    new URL('./qa-mixed-use-soak.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('  const value = (name, fallback) => {');
+  assert.ok(start >= 0);
+  const entrypoint = source.slice(start, source.lastIndexOf('\n}'));
+  for (const flags of [
+    [],
+    ['--native-window-viewport'],
+    [
+      '--native-window-viewport',
+      '--native-resolution',
+      '--headed',
+      '--hardware',
+    ],
+  ]) {
+    let options;
+    const fakeProcess = { argv: ['node', 'soak', ...flags] };
+    await vm.runInNewContext(
+      `(async () => {
+        const resolveNativeResolutionFlag = ${resolveNativeResolutionFlag.toString()};
+        const resolveNativeWindowViewportFlag = ${resolveNativeWindowViewportFlag.toString()};
+        ${entrypoint}
+      })()`,
+      {
+        process: fakeProcess,
+        console: { log() {} },
+        DEFAULT_DURATION_MS: FULL_SOAK_MS,
+        resolveExpectedApplicationCommit,
+        execFileSync: (_command, args) =>
+          args[0] === 'rev-parse' ? 'a'.repeat(40) : '',
+        runMixedUseSoak: async (value) => {
+          options = value;
+          return { fullSoak: false, stability: { status: 'pending' } };
+        },
+      },
+    );
+    assert.equal(
+      options.nativeWindowViewport,
+      flags.includes('--native-window-viewport'),
+    );
+    assert.equal(
+      options.nativeResolution,
+      flags.includes('--native-resolution'),
+    );
+    assert.equal(
+      options.browserOptions.headless,
+      flags.includes('--headed') ? false : undefined,
+    );
+    assert.equal(fakeProcess.exitCode, undefined);
+  }
+});
+
+test('owned soak forwards native-window options and retains checkpoint evidence through normal cleanup', async () => {
+  for (const optedIn of [false, true]) {
+    let now = 0;
+    let closes = 0;
+    let reads = 0;
+    const proof = { configured: { label: 'configured' } };
+    const run = await soakWithOwnedDriver(async (url, options) => {
+      assert.equal(url, 'http://127.0.0.1:4174');
+      assert.equal(options.nativeWindowViewport, optedIn);
+      assert.equal(options.nativeResolution, optedIn);
+      assert.equal(options.expectedCommit, 'a'.repeat(40));
+      resolveNativeWindowBrowserOptions(options.browserOptions, options);
+      return {
+        ...(optedIn ? { nativeWindowViewport: proof } : {}),
+        validateDatacenterSoakFixture: async () =>
+          testDatacenterFixtureReceipt(),
+        retainedMetrics: async () => {
+          const checkpoint = { label: `retained-${++reads}` };
+          proof.latestCheckpoint = checkpoint;
+          return {
+            ...metrics(),
+            ...(optedIn ? { nativeWindowViewport: checkpoint } : {}),
+          };
+        },
+        runCycle: async () => {
+          now += 10;
+          return {
+            sourceToggles: 1,
+            replaySeeks: 1,
+            imports: 1,
+            workspaceReloads: 1,
+            archiveFailures: 1,
+            cameraRecoveries: 1,
+          };
+        },
+        close: async () => {
+          closes++;
+          return { closeCompleted: true };
+        },
+      };
+    });
+    const report = await run({
+      durationMs: 10,
+      intervalMs: 0,
+      now: () => now,
+      url: 'http://127.0.0.1:4174',
+      expectedCommit: 'a'.repeat(40),
+      ...(optedIn
+        ? {
+            nativeWindowViewport: true,
+            nativeResolution: true,
+            browserOptions: { headless: false },
+          }
+        : {}),
+    });
+    assert.equal(report.operationStatus, 'passed');
+    assert.equal(closes, 1);
+    assert.equal(report.browserClose.closeCompleted, true);
+    assert.equal(Object.hasOwn(report, 'nativeWindowViewport'), optedIn);
+    if (optedIn) {
+      assert.equal(report.nativeWindowViewport, proof);
+      assert.equal(
+        report.firstRetainedMetrics.nativeWindowViewport.label,
+        'retained-1',
+      );
+      assert.equal(
+        report.lastRetainedMetrics.nativeWindowViewport,
+        proof.latestCheckpoint,
+      );
+      assert.equal(
+        report.checkpoints.at(-1).metrics.nativeWindowViewport,
+        proof.latestCheckpoint,
+      );
+    }
+  }
+});
+
+test('owned native-window soak preserves setup failure and closes exactly once even if cleanup fails', async () => {
+  const proof = { configured: { label: 'configured' } };
+  for (const failedCleanup of [false, true]) {
+    let closes = 0;
+    const failure = new Error('fixture preflight failed');
+    const run = await soakWithOwnedDriver(async () => ({
+      nativeWindowViewport: proof,
+      validateDatacenterSoakFixture: async () => {
+        throw failure;
+      },
+      close: async () => {
+        closes++;
+        if (failedCleanup) {
+          const error = new Error('close failed');
+          error.browserClose = { closeCompleted: false };
+          throw error;
+        }
+        return { closeCompleted: true };
+      },
+    }));
+    await assert.rejects(run({ nativeWindowViewport: true }), (error) => {
+      assert.equal(error, failure);
+      assert.equal(error.soakReport.nativeWindowViewport, proof);
+      assert.equal(error.soakReport.operationStatus, 'failed');
+      assert.equal(
+        error.soakReport.browserClose.closeCompleted,
+        !failedCleanup,
+      );
+      assert.equal(Boolean(error.soakReport.cleanupError), failedCleanup);
+      return true;
+    });
+    assert.equal(closes, 1);
+  }
+});
+
+test('native-window soak does not silently enable native resolution or acquire a browser for an invalid combination', async () => {
+  const run = await soakWithOwnedDriver(async (_url, options) => {
+    resolveNativeWindowBrowserOptions(options.browserOptions, options);
+    assert.fail(
+      'invalid native-window options must fail before browser acquisition',
+    );
+  });
+  await assert.rejects(
+    run({ nativeWindowViewport: true, browserOptions: { headless: false } }),
+    /Native window requires nativeResolution/,
+  );
 });
 
 test('soak reports completed driver operations and labels short runs as smoke', async () => {

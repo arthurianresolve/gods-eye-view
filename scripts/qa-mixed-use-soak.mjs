@@ -18,6 +18,10 @@ export function resolveNativeResolutionFlag(args = process.argv) {
   return args.includes('--native-resolution');
 }
 
+export function resolveNativeWindowViewportFlag(args = process.argv) {
+  return args.includes('--native-window-viewport');
+}
+
 export function resolveExpectedApplicationCommit(value, harnessCommit) {
   const commit = String(value || harnessCommit || '').trim();
   if (!/^[a-f0-9]{40}$/.test(commit))
@@ -40,6 +44,8 @@ export function createSoakSetupFailureReport(error) {
   };
   if (error?.browserClose) report.browserClose = error.browserClose;
   if (error?.cleanupError) report.cleanupError = error.cleanupError;
+  if (error?.nativeWindowViewport)
+    report.nativeWindowViewport = error.nativeWindowViewport;
   return report;
 }
 
@@ -100,6 +106,7 @@ export async function runMixedUseSoak({
   recordingBundleOut = null,
   location = null,
   nativeResolution = false,
+  nativeWindowViewport = false,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
@@ -112,6 +119,7 @@ export async function runMixedUseSoak({
     prewarmApplication,
     location,
     nativeResolution,
+    nativeWindowViewport,
   });
   let report, runFailure;
   let datacenterFixtureReceipt = null;
@@ -182,6 +190,9 @@ export async function runMixedUseSoak({
       renderingEvidence: driver.renderingEvidence || null,
       environment: driver.environment || null,
       nativeResolution: driver.nativeResolution || null,
+      ...(driver.nativeWindowViewport
+        ? { nativeWindowViewport: driver.nativeWindowViewport }
+        : {}),
       location: driver.location || null,
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
@@ -341,6 +352,8 @@ export async function runMixedUseSoak({
     runFailure = error;
     if (!report) {
       report = createSoakSetupFailureReport(error);
+      if (!report.nativeWindowViewport && driver.nativeWindowViewport)
+        report.nativeWindowViewport = driver.nativeWindowViewport;
       report.datacenterFixtureReceipt =
         datacenterFixtureReceipt ||
         driver.readDatacenterSoakFixtureReceipt?.() ||
@@ -398,6 +411,7 @@ if (
       expectedCommit: expectedApplicationCommit,
       prewarmApplication: hasFlag('--prewarm-application'),
       nativeResolution: resolveNativeResolutionFlag(),
+      nativeWindowViewport: resolveNativeWindowViewportFlag(),
       durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
       url: value('--url', 'http://localhost:4174'),
       recordingBundleOut: value('--recording-bundle-out', null),
