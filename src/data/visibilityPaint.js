@@ -4,10 +4,7 @@
  * across the preceding rendering update. This does not measure physical paint.
  * The calling visibility intent owns both callbacks through its AbortSignal.
  */
-export function waitForVisibilityPaint({
-  signal,
-  documentRef = null,
-} = {}) {
+export function waitForVisibilityPaint({ signal, documentRef = null } = {}) {
   const view = documentRef?.defaultView;
   if (
     signal?.aborted ||

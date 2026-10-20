@@ -739,7 +739,9 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
-    if (origin === 'user') {
+    // Enabling can schedule expensive first-frame geometry/depth work. Let its
+    // acknowledgment paint first; disabling must instead hide that work now.
+    if (origin === 'user' && desiredState) {
       this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
       await waitForVisibilityPaint({
         signal,

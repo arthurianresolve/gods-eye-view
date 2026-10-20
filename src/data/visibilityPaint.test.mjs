@@ -143,7 +143,7 @@ test('paint wait releases hidden, aborted and unavailable browser paths without 
   page.assertReleased(controller.signal);
 });
 
-test('user enable and disable preserve truthful transition presentation before work', async () => {
+test('user enable can paint before work while disable starts without waiting for a frame', async () => {
   const f = fixture();
   const enabling = f.manager.setEnabled(f.layer.id, true, { origin: 'user' });
   await until(() => f.frames.size === 1);
@@ -173,17 +173,26 @@ test('user enable and disable preserve truthful transition presentation before w
   assert.equal(f.calls.enable, 1);
   f.assertReleased();
 
+  let finishDisable;
+  f.layer.disable = () => {
+    f.calls.disable++;
+    return new Promise((resolve) => {
+      finishDisable = resolve;
+    });
+  };
   const disabling = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
-  f.frame();
-  await Promise.resolve();
+  await until(() => f.calls.disable === 1);
+  assert.equal(
+    f.frames.size,
+    0,
+    'Unwanted layer work is hidden before another rendering update',
+  );
   assert.deepEqual(f.manager.getLayerLifecycleState(f.layer.id), {
     enabled: true,
     lifecycleState: 'disabling',
     uncertain: false,
   });
-  assert.equal(f.calls.disable, 0);
-  f.frame();
+  finishDisable();
   assert.equal(await disabling, true);
   assert.equal(f.manager.isEnabled(f.layer.id), false);
   assert.equal(f.calls.disable, 1);
@@ -287,16 +296,41 @@ test('a same-target successor gets its own paint wait and sole settled publicati
   f.assertReleased();
 });
 
-test('an unstarted OFF superseded by ON does not disable or re-enable live resources', async () => {
+test('a prompt OFF superseded during teardown compensates before the newer ON settles', async () => {
   const f = fixture();
+  let visible = false;
+  let finishDisable;
+  f.layer.enable = () => {
+    f.calls.enable++;
+    visible = true;
+  };
+  f.layer.disable = () => {
+    f.calls.disable++;
+    visible = false;
+    return new Promise((resolve) => {
+      finishDisable = resolve;
+    });
+  };
   await f.manager.setEnabled(f.layer.id, true);
   const off = f.manager.setEnabled(f.layer.id, false, { origin: 'user' });
-  await until(() => f.frames.size === 1);
+  await until(() => f.calls.disable === 1);
+  assert.equal(
+    visible,
+    false,
+    'Disable hides resources without waiting for paint',
+  );
+  assert.equal(f.frames.size, 0);
   const on = f.manager.setEnabled(f.layer.id, true);
+  finishDisable();
   assert.equal(await off, false);
   assert.equal(await on, true);
-  assert.equal(f.calls.disable, 0);
-  assert.equal(f.calls.enable, 1);
+  assert.equal(visible, true);
+  assert.equal(f.calls.disable, 1);
+  assert.equal(
+    f.calls.enable,
+    2,
+    'The cancelled disable compensates exactly once',
+  );
   assert.equal(
     f.manager.getLayerLifecycleState(f.layer.id).lifecycleState,
     'enabled',
