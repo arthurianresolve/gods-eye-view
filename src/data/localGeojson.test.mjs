@@ -80,7 +80,7 @@ async function createRealLocalLayerHarness({
   const originalHtmlImageElement = globalThis.HTMLImageElement;
   const originalImageBitmap = globalThis.ImageBitmap;
   const originalOffscreenCanvas = globalThis.OffscreenCanvas;
-  if (surfaceRenderer === 'primitive-collections') {
+  if (surfaceRenderer !== 'entities') {
     globalThis.HTMLCanvasElement ??= class HTMLCanvasElement {};
     globalThis.HTMLImageElement ??= class HTMLImageElement {};
     globalThis.ImageBitmap ??= class ImageBitmap {};
@@ -308,7 +308,11 @@ async function createRealLocalLayerHarness({
   return environment;
 }
 
-for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
   for (const [terrainHeight, sampledHeight, expectedHeight, globeShown] of [
     [117, -2238, 117, true],
     [-400, -410, -400, true],
@@ -442,7 +446,11 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
   });
 }
 
-for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
   test(`${surfaceRenderer} attachment observes completed graphics without setup notifications`, async (t) => {
     installFakeClock(t);
     const env = await createRealLocalLayerHarness({
@@ -475,9 +483,11 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
         assert.ok(entity.__localBaseCarto);
         assert.ok(entity.__localBaseCartesian);
         assert.ok(entity.position instanceof Cesium.ConstantPositionProperty);
-        if (surfaceRenderer === 'entities') {
+        if (surfaceRenderer !== 'primitive-collections') {
           assert.ok(entity.point instanceof Cesium.PointGraphics);
-          assert.ok(entity.polyline instanceof Cesium.PolylineGraphics);
+          if (surfaceRenderer === 'entities')
+            assert.ok(entity.polyline instanceof Cesium.PolylineGraphics);
+          else assert.equal(entity.polyline, undefined);
         } else {
           assert.equal(entity.point, undefined);
           assert.equal(entity.polyline, undefined);
@@ -755,7 +765,11 @@ test('first normal-frame failure releases owned resources and permits a clean re
   assert.equal(env.layer.getStats().error, null);
 });
 
-for (const surfaceRenderer of ['entities', 'primitive-collections']) {
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
   test(`fresh and cached ${surfaceRenderer} rebuilds preserve the same first normal-frame domain`, async (t) => {
     installFakeClock(t);
     const snapshot = (env) => ({
@@ -1517,6 +1531,410 @@ test('default Entity mode retains native point and stem Graphics', async (t) => 
       (entity) => entity.polyline instanceof Cesium.PolylineGraphics,
     ),
   );
+});
+
+test('opt-in stem collection preserves Entity points, other Graphics and native selection through grounding and teardown', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 8,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 180,
+    initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const otherGraphics = new Map();
+  const addSource = env.viewer.dataSources.add;
+  env.viewer.dataSources.add = (source) => {
+    for (const entity of source.entities.values) {
+      entity.billboard = new Cesium.BillboardGraphics({
+        image: 'retained-marker.png',
+      });
+      otherGraphics.set(entity, {
+        polygon: entity.polygon,
+        billboard: entity.billboard,
+      });
+    }
+    return addSource(source);
+  };
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'stem-collection',
+    owners: 1,
+    points: 0,
+    stems: 8,
+    attached: true,
+  });
+  assert.equal(env.layer.getPerformanceDiagnostics().surfacePoints, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().surfaceStems, 8);
+  const owner = env.primitiveOwners[0];
+  assert.equal(owner.length, 1, 'no replacement point collection is allocated');
+  const stems = owner.get(0);
+  assert.ok(stems instanceof Cesium.PolylineCollection);
+  const entities = env.dataSources[0].entities.values;
+  const points = entities.map((entity) => entity.point);
+  const color = Cesium.Color.fromBytes(
+    ...Cesium.ColorGeometryInstanceAttribute.toValue(
+      Cesium.Color.fromCssColorString('#0088ff'),
+    ),
+  );
+  for (const [index, entity] of entities.entries()) {
+    const stem = stems.get(index);
+    assert.ok(entity.point instanceof Cesium.PointGraphics);
+    assert.equal(
+      entity.position.isConstant,
+      true,
+      'the point keeps its bounded constant-property update path',
+    );
+    assert.equal(
+      entity.polyline,
+      undefined,
+      'Entity updater cannot start a duplicate static stem build',
+    );
+    assert.equal(entity.polygon, otherGraphics.get(entity).polygon);
+    assert.equal(entity.billboard, otherGraphics.get(entity).billboard);
+    assert.equal(stem.id, entity);
+    assert.equal(stem.width, 3.5);
+    assert.ok(Cesium.Color.equals(stem.material.uniforms.color, color));
+    assert.equal(entity.point.pixelSize.getValue(), 10);
+    assert.equal(entity.point.outlineWidth.getValue(), 2);
+    assert.equal(
+      entity.point.disableDepthTestDistance.getValue(),
+      Number.POSITIVE_INFINITY,
+    );
+  }
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 8);
+  for (const [index, entity] of entities.entries()) {
+    const stem = stems.get(index);
+    assert.equal(entity.point, points[index]);
+    assert.ok(
+      Cesium.Cartesian3.equals(stem.positions[0], entity.__localBaseCartesian),
+    );
+    assert.ok(
+      Cesium.Cartesian3.equals(
+        stem.positions[1],
+        entity.position.getValue(Cesium.JulianDate.now()),
+      ),
+    );
+    assert.equal(stem.show, entity.show);
+    assert.deepEqual(env.sampleCalls.records[index].exclusions, [entity]);
+  }
+  const entity = entities[0];
+  env.setPicked({ id: entity });
+  env.click({ x: 4, y: 9 });
+  assert.equal(env.viewer.selectedEntity, entity);
+  assert.equal(
+    env.flyToCalls.length,
+    1,
+    'stem pick still flies to its original Entity base',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(entity.point, points[0]);
+  assert.ok(
+    Cesium.Cartesian3.equals(
+      stems.get(0).positions[1],
+      entity.position.getValue(Cesium.JulianDate.now()),
+    ),
+  );
+  env.layer.disable(env.viewer);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  await env.enable();
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.notEqual(
+    env.primitiveOwners[0],
+    owner,
+    'parsed features are reused, destroyed render owners are not',
+  );
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().points, 0);
+});
+
+test('stem collection rollback destroys the exact partially attached owner', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    primitiveAddThrowsAfterAttach: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 0);
+  assert.equal(env.layer.getStats().count, 0);
+});
+
+test('stem collection cancellation during a depth query cannot mutate the released source or continue sampling', async (t) => {
+  installFakeClock(t);
+  let env;
+  let queriedEntity;
+  let originalBase;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      queriedEntity = entity;
+      originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+      env.layer.disable(env.viewer);
+      return 180;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  const owner = env.primitiveOwners[0];
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.deepEqual(queriedEntity.__localBaseCartesian, originalBase);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('stem collection and retained Entity points follow the same LOD and horizon eligibility', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'stem-collection',
+    featureCount: 100,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = env.dataSources[0].entities.values;
+  const stems = env.primitiveOwners[0].get(0);
+  const points = entities.map((entity) => entity.point);
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    50_000_000,
+  );
+  env.viewer.camera.positionCartographic = Cesium.Cartographic.fromCartesian(
+    env.viewer.camera.positionWC,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  const lod = env.layer.getLodDiagnostics();
+  assert.ok(lod.active < lod.total);
+  assert.ok(entities.some((entity) => !entity.show));
+  for (const [index, entity] of entities.entries()) {
+    assert.equal(entity.point, points[index]);
+    assert.equal(stems.get(index).show, entity.show);
+  }
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.viewer.camera.positionCartographic = Cesium.Cartographic.fromCartesian(
+    env.viewer.camera.positionWC,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.ok(env.layer.getLodDiagnostics().active > lod.active);
+  for (const [index, entity] of entities.entries()) {
+    assert.equal(stems.get(index).show, entity.show);
+    assert.equal(entity.point, points[index]);
+  }
+});
+
+test('stem collection changes positions only on the existing geometry cadence despite Cesium dirtying equal assignments', async (t) => {
+  const clock = installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  const entity = env.dataSources[0].entities.values[0];
+  const stem = env.primitiveOwners[0].get(0).get(0);
+  const positions = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(stem),
+    'positions',
+  );
+  assert.equal(
+    typeof positions?.set,
+    'function',
+    'exercise the real Cesium Polyline setter',
+  );
+  const dirtyBefore = stem._propertiesChanged[0];
+  positions.set.call(stem, positions.get.call(stem));
+  assert.equal(
+    stem._propertiesChanged[0],
+    dirtyBefore + 1,
+    'Cesium itself marks even an equal positions assignment dirty',
+  );
+  let positionWrites = 0;
+  const writtenArrays = [];
+  Object.defineProperty(stem, 'positions', {
+    configurable: true,
+    get: () => positions.get.call(stem),
+    set(value) {
+      positionWrites++;
+      writtenArrays.push(value);
+      positions.set.call(stem, value);
+    },
+  });
+  env.preRender.raise();
+  assert.equal(positionWrites, 1);
+  for (let index = 0; index < 4; index++) {
+    clock.advance(1000);
+    env.preRender.raise();
+  }
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    positionWrites,
+    1,
+    'unchanged walks and moveEnd do not dirty the collection',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    positionWrites,
+    2,
+    'a genuine camera-derived tip change writes once',
+  );
+  assert.notEqual(
+    writtenArrays[0],
+    writtenArrays[1],
+    'existing two position buffers alternate',
+  );
+  assert.ok(writtenArrays.every((array) => array.length === 2));
+  assert.equal(entity.position.isConstant, true);
+  assert.equal(entity.polyline, undefined);
+});
+
+test('stem-only Entity materialization avoids the real Cesium asynchronous static polyline batch', async (t) => {
+  for (const surfaceRenderer of ['entities', 'stem-collection']) {
+    const env = await createRealLocalLayerHarness({
+      surfaceRenderer,
+      featureCount: 3,
+    });
+    const scene = {
+      primitives: new Cesium.PrimitiveCollection(),
+      groundPrimitives: new Cesium.PrimitiveCollection(),
+      ellipsoid: Cesium.Ellipsoid.WGS84,
+      frameState: { context: { depthTexture: false } },
+    };
+    const visualizer = new Cesium.PolylineVisualizer(
+      scene,
+      env.dataSources[0].entities,
+    );
+    try {
+      const ready = visualizer.update(Cesium.JulianDate.now());
+      if (surfaceRenderer === 'entities') {
+        assert.equal(ready, false);
+        assert.equal(scene.primitives.length, 1);
+        assert.ok(scene.primitives.get(0) instanceof Cesium.Primitive);
+        assert.equal(scene.primitives.get(0).asynchronous, true);
+      } else {
+        assert.equal(ready, true);
+        assert.equal(
+          scene.primitives.length,
+          0,
+          'no Entity polyline exists to start a static worker build',
+        );
+        assert.equal(
+          env.primitiveOwners[0].get(0).length,
+          3,
+          'all owned stems still exist',
+        );
+      }
+    } finally {
+      visualizer.destroy();
+      scene.primitives.destroy();
+      scene.groundPrimitives.destroy();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    }
+  }
+});
+
+test('stem collection respects real point definitionChanged cancellation before any following stem write', async (t) => {
+  installFakeClock(t);
+  let env;
+  let releasedOwner;
+  let positionEvents = 0;
+  let stemWrites = 0;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (_cartographic, [entity]) => {
+      releasedOwner = env.primitiveOwners[0];
+      const stem = releasedOwner.get(0).get(0);
+      const positions = Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(stem),
+        'positions',
+      );
+      Object.defineProperty(stem, 'positions', {
+        configurable: true,
+        get: () => positions.get.call(stem),
+        set(value) {
+          stemWrites++;
+          positions.set.call(stem, value);
+        },
+      });
+      entity.position.definitionChanged.addEventListener(() => {
+        positionEvents++;
+        env.layer.disable(env.viewer);
+      });
+      return 117;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  env.preRender.raise();
+  assert.equal(positionEvents, 1);
+  assert.equal(
+    stemWrites,
+    0,
+    'reentrant teardown prevents a write to the released line',
+  );
+  assert.equal(env.sampleCalls.count, 1);
+  assert.equal(releasedOwner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
 });
 
 test('surface collection mode rejects stale or unsupported ownership and destroy releases it', async (t) => {

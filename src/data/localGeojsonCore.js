@@ -41,6 +41,7 @@ export const GROUND_SAMPLE_MAX_ARMED_RETRIES = 30;
 export const LOCAL_INFRASTRUCTURE_SURFACE_RENDERERS = Object.freeze([
   'entities',
   'primitive-collections',
+  'stem-collection',
 ]);
 /** Ignore sub-metre camera-derived stem-tip noise at camera settle. */
 export const LOCAL_STEM_TIP_EPSILON_M = 0.5;
@@ -297,7 +298,12 @@ export function localDatasetError(error) {
   return message ? `dataset unavailable (${message})` : 'dataset unavailable';
 }
 
-function createLocalSurfaceCollections(records, baseColor, layerId) {
+function createLocalSurfaceCollections(
+  records,
+  baseColor,
+  layerId,
+  { includePoints = true } = {},
+) {
   const owner = new Cesium.PrimitiveCollection({ destroyPrimitives: true });
   Object.defineProperty(owner, '__gevLocalInfrastructureLayerId', {
     value: layerId,
@@ -305,7 +311,7 @@ function createLocalSurfaceCollections(records, baseColor, layerId) {
     enumerable: false,
   });
   owner.show = false;
-  const points = new Cesium.PointPrimitiveCollection();
+  const points = includePoints ? new Cesium.PointPrimitiveCollection() : null;
   const stems = new Cesium.PolylineCollection();
   const encodedStemBytes =
     Cesium.ColorGeometryInstanceAttribute.toValue(baseColor);
@@ -317,20 +323,22 @@ function createLocalSurfaceCollections(records, baseColor, layerId) {
   );
 
   try {
-    owner.add(points);
+    if (points) owner.add(points);
     owner.add(stems);
     for (const record of records) {
       const entity = record.entity;
-      record.pointPrimitive = points.add({
-        id: entity,
-        position: record.tip,
-        pixelSize: 10,
-        color: baseColor,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        show: true,
-      });
+      if (points) {
+        record.pointPrimitive = points.add({
+          id: entity,
+          position: record.tip,
+          pixelSize: 10,
+          color: baseColor,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          show: true,
+        });
+      }
       record.stemPrimitive = stems.add({
         id: entity,
         positions: record.stemPositionBuffers[record.stemPositionBufferIndex],
@@ -344,10 +352,11 @@ function createLocalSurfaceCollections(records, baseColor, layerId) {
     throw error;
   }
 
-  // Metadata and polygon graphics stay on each Entity. Collection picks carry
-  // that same Entity so the existing context and selection path stays intact.
+  // Metadata, billboards and polygon graphics stay on each Entity. The stem-only
+  // option also retains Entity points. Collection picks carry the same Entity
+  // so the existing context and selection path stays intact.
   for (const record of records) {
-    record.entity.point = undefined;
+    if (includePoints) record.entity.point = undefined;
     record.entity.polyline = undefined;
   }
 
@@ -632,7 +641,7 @@ export function createLocalGeoJsonLayer(
       dataSources: Number(Boolean(_dataSource)),
       cacheEntries: Number(Boolean(_cachedFeatures)),
       surfaceCollectionOwners: Number(Boolean(_surfaceCollections)),
-      surfacePoints: _surfaceCollections?.points.length ?? 0,
+      surfacePoints: _surfaceCollections?.points?.length ?? 0,
       surfaceStems: _surfaceCollections?.stems.length ?? 0,
     }),
 
@@ -640,7 +649,7 @@ export function createLocalGeoJsonLayer(
     getSurfaceRendererDiagnostics: () => ({
       mode: surfaceRenderer,
       owners: Number(Boolean(_surfaceCollections)),
-      points: _surfaceCollections?.points.length ?? 0,
+      points: _surfaceCollections?.points?.length ?? 0,
       stems: _surfaceCollections?.stems.length ?? 0,
       attached: _surfaceCollections?.attached ?? false,
     }),
@@ -875,20 +884,23 @@ export function createLocalGeoJsonLayer(
                   return;
                 }
 
-                // Constant properties are refreshed on the existing 450 ms source
-                // cadence. Cesium no longer evaluates 2-3 callbacks per entity on
-                // every frame, while the point/stem pick surface stays native.
+                // Constant properties and opt-in collection positions share the
+                // existing 450 ms source cadence. Neither representation adds
+                // per-frame geometry callbacks; both keep native Entity picks.
                 feature.position = tip;
                 const stemPositionBuffers = [
                   [base, tip],
                   [base, tip],
                 ];
-                if (surfaceRenderer === 'entities') {
-                  feature.polyline = new Cesium.PolylineGraphics({
-                    positions: stemPositionBuffers[0],
-                    width: 3.5,
-                    material: new Cesium.ColorMaterialProperty(baseColor),
-                  });
+                if (surfaceRenderer !== 'primitive-collections') {
+                  feature.polyline =
+                    surfaceRenderer === 'entities'
+                      ? new Cesium.PolylineGraphics({
+                          positions: stemPositionBuffers[0],
+                          width: 3.5,
+                          material: new Cesium.ColorMaterialProperty(baseColor),
+                        })
+                      : undefined;
                   feature.point = new Cesium.PointGraphics({
                     pixelSize: 10,
                     color: baseColor,
@@ -949,11 +961,14 @@ export function createLocalGeoJsonLayer(
                 disposeLoaded();
                 return;
               }
-              if (surfaceRenderer === 'primitive-collections') {
+              if (surfaceRenderer !== 'entities') {
                 buildingSurfaceCollections = createLocalSurfaceCollections(
                   _stemRecords,
                   baseColor,
                   id,
+                  {
+                    includePoints: surfaceRenderer === 'primitive-collections',
+                  },
                 );
                 _surfaceCollections = buildingSurfaceCollections;
                 // Mark ownership before add(): if the scene implementation
