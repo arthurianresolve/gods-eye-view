@@ -201,6 +201,9 @@ export function layoutRightPanelRail({
     .map((node) => [node, node.scrollTop || 0])
     .filter(([, top]) => top > 0);
   const naturalHeights = new Map();
+  // Measuring does not change the gap. Read it before lifting allocations,
+  // avoiding a style/layout read after the constrained presentation returns.
+  const gap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   // Remove live height allocations through a synchronous CSS override. Keeping
   // the stored properties intact avoids REMOVE/SET churn on unchanged panels.
   // Do not toggle layout classes here: the class observer schedules new passes.
@@ -221,7 +224,6 @@ export function layoutRightPanelRail({
     for (const [node, top] of scrollers)
       if (node.scrollTop !== top) node.scrollTop = top;
   }
-  const gap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   const naturalHeight =
     measuredPanels.reduce(
       (total, panel) => total + naturalHeights.get(panel),

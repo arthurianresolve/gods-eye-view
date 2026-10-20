@@ -153,6 +153,15 @@ export function layoutLeftPanelRail({
         ),
       ]
     : expandedPanelsInDomOrder;
+  // The measurement override changes expanded allocations only. Read the gap
+  // and collapsed siblings while the constrained layout is already current,
+  // so restoring that override does not force another synchronous layout.
+  const rowGap = parseFloat(getComputedStyle(stack).rowGap) || 0;
+  const siblingHeight = panels.reduce((total, panel) => {
+    if (!panel.classList.contains('collapsed')) return total;
+    const measured = collapsedHeights.get(panel.id);
+    return total + (measured || panel.getBoundingClientRect().height || 0);
+  }, 0);
   // Lift allocations only for this synchronous measurement. Keep the stored
   // properties intact: removing and restoring an unchanged allocation wakes
   // the world-overlay chrome observer and schedules unnecessary rendering.
@@ -172,14 +181,8 @@ export function layoutLeftPanelRail({
     (sum, height) => sum + height,
     0,
   );
-  const siblingHeight = panels.reduce((total, panel) => {
-    if (!panel.classList.contains('collapsed')) return total;
-    const measured = collapsedHeights.get(panel.id);
-    return total + (measured || panel.getBoundingClientRect().height || 0);
-  }, 0);
   let requiredHeight = siblingHeight;
 
-  const rowGap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   if (expandedPanels.length) {
     requiredHeight += naturalExpandedHeight;
     requiredHeight += rowGap * Math.max(0, panels.length - 1);

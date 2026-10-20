@@ -274,6 +274,141 @@ test('left intrinsic measurement preserves stored allocations and always release
   );
 });
 
+for (const side of ['left', 'right']) {
+  test(`${side} intrinsic pass snapshots invariant geometry before lifting allocations`, () => {
+    const f = fixture(side, { hud: { visible: true, variant: 'operator' } });
+    f.expand(f.first, 200);
+    let phase = 'constrained';
+    const reads = [];
+    const setAttribute = f.stack.setAttribute;
+    const removeAttribute = f.stack.removeAttribute;
+    f.stack.setAttribute = (name, value) => {
+      if (name === 'data-rail-measuring') phase = 'measuring';
+      setAttribute(name, value);
+    };
+    f.stack.removeAttribute = (name) => {
+      removeAttribute(name);
+      if (name === 'data-rail-measuring') phase = 'restored';
+    };
+    Object.defineProperty(f.stack.computed, 'rowGap', {
+      get() {
+        reads.push(['gap', phase]);
+        assert.equal(
+          phase,
+          'constrained',
+          'gap read would flush restored layout',
+        );
+        return '12px';
+      },
+    });
+    const collapsedRect = f.second.getBoundingClientRect.bind(f.second);
+    f.second.getBoundingClientRect = () => {
+      reads.push(['collapsed', phase]);
+      assert.notEqual(
+        phase,
+        'restored',
+        'collapsed read would flush restored layout',
+      );
+      return collapsedRect();
+    };
+    if (side === 'left') {
+      // Exercise the original rect fallback as well as the first cache read.
+      f.options.collapsedHeights.get = () => undefined;
+    }
+    f.run();
+    assert.equal(phase, 'restored');
+    assert.equal(reads.filter(([kind]) => kind === 'gap').length, 1);
+    assert.equal(f.first.classList.contains('collapsed'), false);
+    assert.equal(f.second.classList.contains('collapsed'), true);
+    assert.equal(
+      f.first.style.getPropertyValue(`--${side}-panel-allocated-height`),
+      '200.0px',
+    );
+    if (side === 'left') {
+      assert.equal(f.stack.dataset.layoutMode, 'tail');
+      assert.equal(
+        f.stack.style.getPropertyValue('--left-stack-safe-top'),
+        '26.000vh',
+      );
+      assert.equal(
+        f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+        '45.778vh',
+      );
+      assert.equal(f.stack.dataset.requiredHeightPct, '28.22');
+      assert.equal(reads.filter(([kind]) => kind === 'collapsed').length, 2);
+    } else {
+      assert.equal(f.stack.dataset.layoutMode, 'normal');
+      assert.equal(
+        f.stack.style.getPropertyValue('--right-stack-safe-top'),
+        '234.0px',
+      );
+      assert.equal(
+        f.stack.style.getPropertyValue('--right-stack-max-height'),
+        '630.0px',
+      );
+      assert.equal(f.stack.dataset.requiredHeight, '254.0');
+    }
+  });
+}
+
+test('left premeasurement sibling snapshot preserves hidden cache and zero fallbacks', () => {
+  for (const cached of [undefined, 0, 37]) {
+    const f = fixture('left', { hud: { visible: true, variant: 'operator' } });
+    f.expand(f.first, 200);
+    f.second.rect.height = 0;
+    if (cached !== undefined)
+      f.options.collapsedHeights.set(f.second.id, cached);
+    f.run();
+    assert.equal(f.options.collapsedHeights.get(f.second.id), cached);
+    assert.equal(
+      f.first.style.getPropertyValue('--left-panel-allocated-height'),
+      '200.0px',
+    );
+    assert.equal(
+      f.stack.dataset.requiredHeightPct,
+      (((200 + (cached || 0) + 12) / 900) * 100).toFixed(2),
+    );
+    assert.equal(
+      f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+      (((900 - 234 - 200 - (cached || 0) - 12) / 900) * 100).toFixed(3) + 'vh',
+    );
+    assert.equal(f.second.classList.contains('collapsed'), true);
+  }
+});
+
+test('intrinsic CSS overrides preserve row gaps and left collapsed sibling geometry', () => {
+  const css = readStylesheet(
+    new URL('../../style.css', import.meta.url),
+  ).replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
+    ([, selector]) => selector.includes('[data-rail-measuring]'),
+  );
+  assert.ok(rules.length > 0);
+  for (const [, selector, declarations] of rules) {
+    const properties = declarations
+      .split(';')
+      .map((declaration) => declaration.split(':')[0].trim())
+      .filter(Boolean);
+    const allowed = selector.includes('#left-panel-stack')
+      ? ['--left-panel-allocated-height']
+      : [
+          'height',
+          'max-height',
+          'transition',
+          '--right-panel-allocated-height',
+          'flex',
+          'display',
+        ];
+    for (const property of properties)
+      assert.ok(
+        allowed.includes(property),
+        `measurement can change snapshotted geometry: ${property}`,
+      );
+    if (selector.includes('#left-panel-stack'))
+      assert.match(selector, /\[data-panel-id\]:not\(\.collapsed\)/);
+  }
+});
+
 test('left content growth recomputes allocations inside an unchanged corridor and preserves disclosure geometry', () => {
   const f = fixture('left', { hud: { visible: true, variant: 'operator' } });
   const positions = [];
