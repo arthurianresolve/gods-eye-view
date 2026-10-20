@@ -836,6 +836,21 @@ function measurementRecords(env) {
   ];
 }
 
+function mixedMeasurementRecords(env) {
+  const name = 'data-available-height-pct';
+  const previous = env.ancestor.attributes[name] ?? null;
+  env.ancestor.attributes[name] = previous === '80' ? '81' : '80';
+  return [
+    ...measurementRecords(env),
+    {
+      type: 'attributes',
+      target: env.ancestor,
+      attributeName: name,
+      oldValue: previous,
+    },
+  ];
+}
+
 test('mutation continuity permits paint-only active changes without any synchronous geometry reads', () => {
   const env = browserFixture();
   witness(env);
@@ -1600,6 +1615,253 @@ test('explicit v4 installer selection changes only declared metadata, not observ
   assert.deepEqual(newCapture, oldCapture);
 });
 
+test('v4 mixed source measurement arms a real owned post-layout proof and its produced twenty-action capture validates', async () => {
+  const { samples } = fixture();
+  const env = browserFixture({
+    installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V4.policy },
+  });
+  for (const sample of samples) {
+    const desired = sample.expectedLayerEnabled;
+    const transition = desired ? 'enabling' : 'disabling';
+    env.button.attributes.class = `data-toggle-btn transitioning ${transition}`;
+    env.button.dataset.feedState = transition;
+    const layer =
+      env.window.__godsEyeView.dataManager.layers.get('local-datacenters');
+    layer.visibilityIntentEpoch = sample.acceptedIntentEpoch;
+    layer.visibilityIntentEnabled = desired;
+    env.setNow(sample.clickAtMs);
+    env.api.registerClick(
+      {
+        generation: sample.generation,
+        clickAtMs: sample.clickAtMs,
+        expected: desired,
+      },
+      {
+        isTrusted: true,
+        type: 'click',
+        timeStamp: sample.clickAtMs,
+        target: env.button,
+      },
+    );
+    const witnessSample = {
+      generation: sample.generation,
+      acceptedIntentEpoch: sample.acceptedIntentEpoch,
+      expected: desired,
+    };
+    env.setNow(sample.buttonFeedbackFirstFrameAtMs);
+    env.api.witness(
+      witnessSample,
+      sample.buttonFeedbackFirstRafTimestampMs,
+      'transition',
+      sample.buttonFeedbackFirstFrameAtMs,
+    );
+    env.setNow(sample.clickAtMs + 30);
+    const reads = env.geometryReads();
+    env.mutate(mixedMeasurementRecords(env));
+    assert.equal(
+      env.geometryReads(),
+      reads,
+      'Mixed arming must not read geometry/style/visibility inside MO',
+    );
+    assert.equal(env.renderState().renderObserved, true);
+    env.setNow(sample.buttonFeedbackAtMs);
+    env.api.witness(
+      witnessSample,
+      sample.buttonFeedbackSecondRafTimestampMs,
+      'transition',
+      sample.buttonFeedbackAtMs,
+    );
+    env.setNow(sample.clickAtMs + 50);
+    env.render();
+    const action = env.api.read().actions.at(-1);
+    assert.equal(action.renderBoundaryArms, 1);
+    assert.equal(action.renderBoundaryProofs[0].visible, true);
+    assert.equal(action.renderBoundaryProofs[0].restoredGeometry, true);
+    assert.equal(
+      action.renderBoundaryProofs[0].armedByMutationCallback,
+      action.renderBoundaryProofs[0].sourceMutationCallback,
+    );
+    env.setNow(sample.clickAtMs + 80);
+    env.deliver([
+      {
+        entryType: 'event',
+        name: 'click',
+        startTime: sample.clickAtMs,
+        duration: 64,
+        processingStart: sample.clickAtMs + 0.5,
+        processingEnd: sample.clickAtMs + 3,
+        interactionId: sample.generation * 7,
+        target: env.button,
+      },
+    ]);
+    env.setNow(sample.clickAtMs + 200);
+    const drain = env.api.drain(sample.generation);
+    env.setNow(sample.clickAtMs + 1200);
+    env.timers.get(1)();
+    env.timers.delete(1);
+    await drain;
+  }
+  const capture = structuredClone(env.api.read());
+  assert.equal(capture.work.renderBoundaryArms, 20);
+  assert.equal(capture.work.renderBoundaryCallbacks, 20);
+  assert.deepEqual(
+    validateInteractionEventTiming(capture, samples),
+    Array(20).fill(64),
+  );
+  const strict = structuredClone(capture);
+  Object.assign(strict, INTERACTION_EVENT_TIMING_PLAN);
+  delete strict.feedbackReproof;
+  assert.throws(() => validateInteractionEventTiming(strict, samples));
+  env.api.dispose();
+  assert.equal(env.renderState().renderObserved, false);
+  assert.equal(env.listeners.size, 0);
+  assert.equal(env.timers.size, 0);
+
+  const legacy = browserFixture();
+  witness(legacy);
+  legacy.mutate(mixedMeasurementRecords(legacy));
+  assert.equal(
+    legacy.renderState().renderObserveCalls,
+    0,
+    'V3 acquisition retains the pure-source-only arm',
+  );
+  legacy.api.dispose();
+});
+
+test('v4 mixed recovery does not arm for departed controls, wrong intent/state or an already observed negative', () => {
+  for (const mode of [
+    'departed',
+    'replaced',
+    'intent',
+    'state',
+    'negative-raf',
+    'negative-ro',
+    'known-contrary',
+  ]) {
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V4.policy },
+    });
+    witness(env);
+    if (mode === 'negative-raf') {
+      env.ancestor.style.opacity = '0';
+      env.setNow(25);
+      env.api.witness(
+        { generation: 1, acceptedIntentEpoch: 1, expected: true },
+        24,
+        'transition',
+        25,
+      );
+      env.ancestor.style.opacity = '1';
+    }
+    if (mode === 'negative-ro') {
+      env.mutate(measurementRecords(env));
+      env.button.rect.top++;
+      env.button.rect.bottom++;
+      env.setNow(35);
+      env.render();
+      env.button.rect.top--;
+      env.button.rect.bottom--;
+      env.setNow(40);
+      env.api.witness(
+        { generation: 1, acceptedIntentEpoch: 1, expected: true },
+        36,
+        'transition',
+        40,
+      );
+    }
+    if (mode === 'known-contrary') {
+      env.button.attributes.class = 'data-toggle-btn';
+      env.mutate(mixedMeasurementRecords(env));
+      assert.equal(
+        env.api.read().observations.at(-1).kind,
+        'contrary-button-state',
+      );
+      env.button.attributes.class = 'data-toggle-btn transitioning enabling';
+    }
+    if (mode === 'departed') env.button.isConnected = false;
+    if (mode === 'replaced') env.document.querySelector = () => ({});
+    if (mode === 'intent')
+      env.window.__godsEyeView.dataManager.layers.get('local-datacenters')
+        .visibilityIntentEpoch++;
+    if (mode === 'state') env.button.attributes.class = 'data-toggle-btn';
+    const before = env.renderState().renderObserveCalls;
+    const reads = env.geometryReads();
+    env.setNow(45);
+    env.mutate(mixedMeasurementRecords(env));
+    assert.equal(env.geometryReads(), reads, mode);
+    assert.equal(env.renderState().renderObserveCalls, before, mode);
+    assert.equal(env.renderState().renderObserved, false, mode);
+    env.api.dispose();
+  }
+  const rightOnly = browserFixture({
+    installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V4.policy },
+  });
+  witness(rightOnly);
+  const right = { id: 'right-context-rail', getAttribute: () => null };
+  rightOnly.mutate([
+    {
+      type: 'attributes',
+      target: right,
+      attributeName: 'data-rail-measuring',
+      oldValue: null,
+    },
+    {
+      type: 'attributes',
+      target: right,
+      attributeName: 'data-rail-measuring',
+      oldValue: '',
+    },
+  ]);
+  assert.equal(
+    rightOnly.api.read().work.restoredMeasurementTransactions,
+    0,
+    'No right-rail transaction is silently recognized',
+  );
+  assert.equal(rightOnly.renderState().renderObserveCalls, 0);
+  rightOnly.api.dispose();
+});
+
+test('v4 mixed recovery retains the eight-arm limit and owned pending cleanup', async () => {
+  for (const end of ['drain', 'dispose', 'arm-failure', 'eight-arm-limit']) {
+    const env = browserFixture({
+      installerOptions: { policy: INTERACTION_EVENT_TIMING_PLAN_V4.policy },
+      throwAt: end === 'arm-failure' ? 'render-observe' : null,
+    });
+    witness(env);
+    if (end === 'eight-arm-limit') {
+      for (let index = 0; index < 8; index++) {
+        env.setNow(30 + index * 2);
+        env.mutate(mixedMeasurementRecords(env));
+        env.setNow(31 + index * 2);
+        env.render();
+      }
+      env.setNow(50);
+      env.mutate(mixedMeasurementRecords(env));
+      assert.equal(env.api.read().overflow, true);
+      assert.equal(env.api.read().actions[0].renderBoundaryArms, 8);
+    } else {
+      env.mutate(mixedMeasurementRecords(env));
+      if (end === 'drain') {
+        env.setNow(200);
+        const drain = env.api.drain(1);
+        env.setNow(1200);
+        env.timers.get(1)();
+        env.timers.delete(1);
+        await drain;
+        assert.equal(
+          env.api.read().actions[0].renderBoundaryPendingAtDrainEnd,
+          true,
+        );
+      } else if (end === 'dispose') env.api.dispose();
+      else assert.equal(env.api.read().overflow, true);
+    }
+    assert.equal(env.renderState().renderObserved, false);
+    env.api.dispose();
+    assert.equal(env.listeners.size, 0);
+    assert.equal(env.timers.size, 0);
+  }
+});
+
 test('unsupported installer policy or extra options fail before acquiring observers or callbacks', () => {
   for (const installerOptions of [
     null,
@@ -1748,6 +2010,17 @@ test('fresh reproof keeps earliest-end, later-invalidation, identity and ownersh
       },
     ],
     [
+      'unowned-mixed-source',
+      (x) => {
+        Object.assign(x.actions[0].renderBoundaryProofs[0], {
+          armedAtMs: 1051,
+          armedByMutationCallback: 1,
+        });
+        x.observations[0].mutation.reasons[0].reason =
+          'unrecognized-restoration';
+      },
+    ],
+    [
       'observed-through',
       (x) => {
         const mixed = x.observations[0],
@@ -1777,6 +2050,12 @@ test('fresh reproof keeps earliest-end, later-invalidation, identity and ownersh
   const boundary = mixedBoundaryFixture();
   useFreshReproofPlan(boundary.capture);
   boundary.capture.actions[0].renderBoundaryProofs[0].completedAtMs = 1060;
+  validateInteractionEventTiming(boundary.capture, boundary.samples);
+  // A genuine mixed arm precedes the later pure callback that coalesces into it.
+  Object.assign(boundary.capture.actions[0].renderBoundaryProofs[0], {
+    armedAtMs: 1051,
+    armedByMutationCallback: 1,
+  });
   validateInteractionEventTiming(boundary.capture, boundary.samples);
 });
 

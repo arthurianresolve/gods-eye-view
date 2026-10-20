@@ -318,6 +318,27 @@ export function installInteractionEventTimingInPage(options = {}) {
   function requestRenderBoundary(action, observation) {
     if (!observation || disposed || overflow || action.drainEndedAtMs !== null)
       return;
+    if (
+      freshReproofPolicy &&
+      observation.mutation.reasonCount !==
+        observation.mutation.restoredMeasurementTransactions &&
+      (action.witnesses.some((proof) => !proof.visible || !proof.focused) ||
+        action.renderBoundaryProofs.some(
+          (proof) =>
+            !proof.visible ||
+            !proof.focused ||
+            proof.restoredGeometry === false,
+        ) ||
+        observations.some(
+          (prior) =>
+            prior.generation === action.generation &&
+            prior.invalid &&
+            ['foreground', 'contrary-intent', 'contrary-button-state'].includes(
+              prior.kind,
+            ),
+        ))
+    )
+      return;
     if (pendingRenderBoundary) {
       pendingRenderBoundary.sourceMutationCallback =
         observation.mutation.callback;
@@ -374,7 +395,8 @@ export function installInteractionEventTimingInPage(options = {}) {
   function observeRenderBoundary(entries) {
     if (disposed || overflow) return;
     // An earlier rendering observer may have changed the DOM. Classify all
-    // pending records first; RO cannot erase unknown mutations in this batch.
+    // pending records first; v4 needs a complete positive current-state read
+    // to reprove uncertainty, while v3 retains its source-only recovery.
     const pendingMutations = mutationObserver?.takeRecords() || [];
     if (pendingMutations.length) observeMutations(pendingMutations);
     const pending = pendingRenderBoundary;
@@ -546,17 +568,17 @@ export function installInteractionEventTimingInPage(options = {}) {
           );
         }
       }
-    // As in v2, a batch already known unsafe needs no further DOM reads.
-    const stateMatches = uncertain || buttonIntentStateMatches(action);
+    // V4 may arm an owned post-layout proof for a mixed measurement batch.
+    // Check only live identity/intent/state here, never geometry or style.
+    // V3 retains its unsafe-batch short circuit and original acquisition work.
+    const mixedMeasurement = freshReproofPolicy && uncertain && restored > 0;
+    const stateMatches =
+      (uncertain && !mixedMeasurement) || buttonIntentStateMatches(action);
     if (!stateMatches) note(button, null, 'control-state');
     work.restoredMeasurementTransactions += restored;
     if (uncertain || !stateMatches || restored > 0) {
       const observation = observe({
-        kind: uncertain
-          ? 'unproven-geometry'
-          : !stateMatches
-            ? 'contrary-button-state'
-            : 'unproven-geometry',
+        kind: !stateMatches ? 'contrary-button-state' : 'unproven-geometry',
         generation: action.generation,
         invalid: true,
         reason: 'mutation-batch',
@@ -569,7 +591,7 @@ export function installInteractionEventTimingInPage(options = {}) {
           reasonsTruncated: reasonCount > reasons.length,
         },
       });
-      if (!uncertain && stateMatches && restored > 0)
+      if ((!uncertain || mixedMeasurement) && stateMatches && restored > 0)
         requestRenderBoundary(action, observation);
     }
   }
@@ -843,6 +865,24 @@ function sourceMeasurementOnly(observation) {
     detail?.restoredMeasurementTransactions > 0 &&
     detail.reasonCount === detail.restoredMeasurementTransactions &&
     detail.reasons.every((reason) => reason.reason === 'restored-measurement'),
+  );
+}
+
+function recoverableSourceMeasurement(observation, freshReproofPolicy) {
+  return (
+    sourceMeasurementOnly(observation) ||
+    Boolean(
+      freshReproofPolicy &&
+      observation.kind === 'unproven-geometry' &&
+      observation.invalid === true &&
+      observation.mutation?.restoredMeasurementTransactions > 0 &&
+      observation.mutation.reasons.some(
+        (reason) => reason.reason === 'restored-measurement',
+      ) &&
+      !observation.mutation.reasons.some(
+        (reason) => reason.reason === 'control-state',
+      ),
+    )
   );
 }
 
@@ -1235,7 +1275,10 @@ export function validateInteractionEventTiming(capture, samples) {
               capture.work.mutationCallbacks,
         );
         for (const observation of [armedBy, source]) {
-          assert.ok(observation && sourceMeasurementOnly(observation));
+          assert.ok(
+            observation &&
+              recoverableSourceMeasurement(observation, freshReproofPolicy),
+          );
           assert.equal(observation.generation, sample.generation);
           assert.ok(observation.atMs <= proof.atMs);
         }
@@ -1243,10 +1286,22 @@ export function validateInteractionEventTiming(capture, samples) {
           armedBy.atMs <= proof.armedAtMs &&
             source.mutation.callback >= armedBy.mutation.callback,
         );
+        if (freshReproofPolicy)
+          assert.equal(
+            capture.observations.some(
+              (observation) =>
+                observation.generation === sample.generation &&
+                recoverableSourceMeasurement(observation, true) &&
+                observation.mutation.callback > armedBy.mutation.callback &&
+                observation.atMs < proof.armedAtMs,
+            ),
+            false,
+            'Render-boundary arm must bind its current measurement callback',
+          );
         const coalesced = capture.observations.filter(
           (observation) =>
             observation.generation === sample.generation &&
-            sourceMeasurementOnly(observation) &&
+            recoverableSourceMeasurement(observation, freshReproofPolicy) &&
             observation.mutation.callback >= armedBy.mutation.callback &&
             observation.mutation.callback <=
               proof.observedThroughMutationCallback &&
