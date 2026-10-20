@@ -8,7 +8,7 @@ import {
   qualificationBuildIdentityEvidenceReference,
 } from './qualificationBuildIdentity.mjs';
 import {
-  INTERACTION_EVENT_TIMING_PLAN,
+  assertInteractionEventTimingPlan,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
 import {
@@ -1214,7 +1214,12 @@ function compareInteractionMetric(
     const nativeWindowViewport = validateMeasurementEnvironment(evidence);
     if (identitySource) assert.equal(nativeWindowViewport, true);
     if (protocolVersion === 4) {
-      assert.deepEqual(evidence.eventTimingPlan, INTERACTION_EVENT_TIMING_PLAN);
+      assertInteractionEventTimingPlan(evidence.eventTimingPlan);
+      for (const role of ['baseline', 'candidate'])
+        assert.equal(
+          evidence.builds?.[role]?.eventTimingCapture?.policy,
+          evidence.eventTimingPlan.policy,
+        );
       assert.match(evidence.eventTimingProducerSha256 || '', /^[a-f0-9]{64}$/);
     }
     assert.ok(evidence.pairing && typeof evidence.pairing === 'object');

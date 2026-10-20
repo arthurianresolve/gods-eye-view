@@ -1,9 +1,8 @@
 import assert from 'node:assert/strict';
+import { isDeepStrictEqual } from 'node:util';
 
-export const INTERACTION_EVENT_TIMING_PROTOCOL =
-  'trusted-click-event-timing-visible-intent-v2';
-export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
-  policy: INTERACTION_EVENT_TIMING_PROTOCOL,
+export const INTERACTION_EVENT_TIMING_PLAN_V2 = Object.freeze({
+  policy: 'trusted-click-event-timing-visible-intent-v2',
   sampleCount: 20,
   durationThresholdMs: 16,
   durationQuantumMs: 8,
@@ -15,6 +14,25 @@ export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
   maximumMutationRecords: 65536,
   maximumGeometryProofsPerAction: 2,
 });
+export const INTERACTION_EVENT_TIMING_PROTOCOL =
+  'trusted-click-event-timing-visible-intent-v3';
+export const INTERACTION_EVENT_TIMING_PLAN = Object.freeze({
+  ...INTERACTION_EVENT_TIMING_PLAN_V2,
+  policy: INTERACTION_EVENT_TIMING_PROTOCOL,
+  measurementRestoration: 'source-owned-left-rail-render-boundary-v1',
+  maximumMutationReasonsPerObservation: 8,
+  maximumRenderBoundaryProofsPerAction: 8,
+});
+
+/** Old evidence retains the original strict continuity policy. */
+export function assertInteractionEventTimingPlan(plan) {
+  const expected =
+    plan?.policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
+      ? INTERACTION_EVENT_TIMING_PLAN_V2
+      : INTERACTION_EVENT_TIMING_PLAN;
+  assert.deepEqual(plan, expected);
+  return expected;
+}
 
 /** Serialized into the page. It observes native input; it never creates input. */
 export function installInteractionEventTimingInPage() {
@@ -29,10 +47,11 @@ export function installInteractionEventTimingInPage() {
   const manager = window.__godsEyeView?.dataManager;
   if (
     typeof MutationObserver !== 'function' ||
+    typeof ResizeObserver !== 'function' ||
     typeof manager?.subscribeVisibilityRequests !== 'function'
   )
     throw new Error(
-      'Event Timing needs owned button and intent continuity observers',
+      'Event Timing needs owned geometry and intent continuity observers',
     );
   const supported =
     typeof PerformanceObserver === 'function' &&
@@ -47,6 +66,8 @@ export function installInteractionEventTimingInPage() {
   let settleDrain = null;
   let performanceObserver = null;
   let mutationObserver = null;
+  let renderBoundaryObserver = null;
+  let pendingRenderBoundary = null;
   let removeIntent = null;
   const removers = [];
   const work = {
@@ -54,15 +75,25 @@ export function installInteractionEventTimingInPage() {
     mutationRecords: 0,
     continuityChecks: 0,
     geometryChecks: 0,
+    restoredMeasurementTransactions: 0,
+    renderBoundaryArms: 0,
+    renderBoundaryCallbacks: 0,
     overhead: { status: 'unavailable', reason: 'not-measured' },
   };
   const active = () => actions.at(-1);
+  function failOverflow() {
+    overflow = true;
+    renderBoundaryObserver?.disconnect();
+    pendingRenderBoundary = null;
+  }
   function observe(value) {
     if (observations.length >= 1024) {
-      overflow = true;
+      failOverflow();
       return;
     }
-    observations.push({ atMs: performance.now(), ...value });
+    const observation = { atMs: performance.now(), ...value };
+    observations.push(observation);
+    return observation;
   }
   // These are the exact presentation classes owned by LayerPanel. Unknown
   // styling cannot inherit the first RAF's visibility proof.
@@ -122,7 +153,7 @@ export function installInteractionEventTimingInPage() {
           !button.classList.contains('transitioning'))),
     );
   }
-  function buttonGeometryMatches(action) {
+  function buttonGeometryMatches(action, result) {
     work.geometryChecks++;
     if (
       !buttonIntentStateMatches(action) ||
@@ -138,12 +169,20 @@ export function installInteractionEventTimingInPage() {
       right: Math.min(window.innerWidth, rect.right),
       bottom: Math.min(window.innerHeight, rect.bottom),
     };
+    const scrollOffsets = [];
     for (
       let ancestor = button.parentElement;
       ancestor;
       ancestor = ancestor.parentElement
     ) {
       const ancestorStyle = window.getComputedStyle(ancestor);
+      if (scrollOffsets.length >= 64) return false;
+      const offset = {
+        left: ancestor.scrollLeft,
+        top: ancestor.scrollTop,
+      };
+      if (!Object.values(offset).every(Number.isFinite)) return false;
+      scrollOffsets.push(offset);
       if (
         ancestorStyle.display === 'none' ||
         ['hidden', 'collapse'].includes(ancestorStyle.visibility) ||
@@ -187,7 +226,164 @@ export function installInteractionEventTimingInPage() {
       center.x < clip.right &&
       center.y >= clip.top &&
       center.y < clip.bottom;
+    result.geometry = {
+      controlRect: Object.fromEntries(
+        ['left', 'top', 'right', 'bottom', 'width', 'height'].map((key) => [
+          key,
+          rect[key],
+        ]),
+      ),
+      clipRect: clip,
+      scrollOffsets,
+    };
     return Boolean(visible);
+  }
+  function mutationTarget(target) {
+    if (target === button) return 'control';
+    if (target === layoutRoot) return 'layout-root';
+    if (
+      target?.parentElement === layoutRoot &&
+      ['data-panel', 'cctv-panel', 'scene-panel'].includes(target.id) &&
+      target.getAttribute('data-panel-id') === target.id
+    )
+      return 'left-panel';
+    return 'other';
+  }
+  function restoredMeasurement(target, name, changes) {
+    const changed = changes.filter(({ before, after }) => before !== after);
+    if (changed.length < 2) return false;
+    const initial = changed.at(-1).before,
+      final = changed[0].after;
+    if (initial !== final) return false;
+    // Recognize only the two source-owned intrinsic-height measurements.
+    // Even a complete restoration can clamp scroll offsets, so recognition
+    // requests a post-layout proof; it never proves geometry by itself.
+    if (target === layoutRoot && name === 'data-rail-measuring')
+      return (
+        initial === null &&
+        changed.every(({ before, after }) =>
+          [before, after].every((value) => value === null || value === ''),
+        )
+      );
+    if (
+      name !== 'style' ||
+      mutationTarget(target) !== 'left-panel' ||
+      !target.classList ||
+      target.classList.contains('collapsed') ||
+      target.classList.contains('panel-floating')
+    )
+      return false;
+    const allocationOnly = (value) =>
+      value === null ||
+      value === '' ||
+      (typeof value === 'string' &&
+        value.length <= 256 &&
+        /^\s*--left-panel-allocated-height\s*:\s*\d+(?:\.\d+)?px\s*;?\s*$/.test(
+          value,
+        ));
+    return changed.every(
+      ({ before, after }) => allocationOnly(before) && allocationOnly(after),
+    );
+  }
+  function requestRenderBoundary(action, observation) {
+    if (!observation || disposed || overflow || action.drainEndedAtMs !== null)
+      return;
+    if (pendingRenderBoundary) {
+      pendingRenderBoundary.sourceMutationCallback =
+        observation.mutation.callback;
+      return;
+    }
+    if (action.renderBoundaryArms >= 8) {
+      failOverflow();
+      return;
+    }
+    const prior = [
+      ...action.witnesses.map((proof, index) => ({
+        proof,
+        kind: 'raf',
+        ordinal: index + 1,
+      })),
+      ...action.renderBoundaryProofs.map((proof) => ({
+        proof,
+        kind: 'resize-observer-initial',
+        ordinal: proof.ordinal,
+      })),
+    ]
+      .filter(({ proof }) => proof.completedAtMs <= observation.atMs)
+      .sort((a, b) => a.proof.completedAtMs - b.proof.completedAtMs)
+      .at(-1);
+    // A negative or incomplete prior proof cannot be skipped to obtain a
+    // convenient baseline. Its geometry remains unproven.
+    if (
+      !prior?.proof.visible ||
+      !prior.proof.focused ||
+      !prior.proof.geometry ||
+      prior.proof.restoredGeometry === false
+    )
+      return;
+    action.renderBoundaryArms++;
+    work.renderBoundaryArms++;
+    pendingRenderBoundary = {
+      generation: action.generation,
+      ordinal: action.renderBoundaryArms,
+      armedAtMs: performance.now(),
+      armedByMutationCallback: observation.mutation.callback,
+      sourceMutationCallback: observation.mutation.callback,
+      baseline: { kind: prior.kind, ordinal: prior.ordinal },
+      baselineGeometry: prior.proof.geometry,
+    };
+    try {
+      // A new observation has no reported size, so its initial notification
+      // follows natural style/layout even if the button's size is unchanged.
+      // No RAF, task, render request or geometry read occurs in this microtask.
+      renderBoundaryObserver.observe(button, { box: 'border-box' });
+    } catch {
+      failOverflow();
+    }
+  }
+  function observeRenderBoundary(entries) {
+    if (disposed || overflow) return;
+    // An earlier rendering observer may have changed the DOM. Classify all
+    // pending records first; RO cannot erase unknown mutations in this batch.
+    const pendingMutations = mutationObserver?.takeRecords() || [];
+    if (pendingMutations.length) observeMutations(pendingMutations);
+    const pending = pendingRenderBoundary;
+    pendingRenderBoundary = null;
+    renderBoundaryObserver.unobserve(button);
+    const action = active();
+    work.renderBoundaryCallbacks++;
+    if (
+      !pending ||
+      !action ||
+      pending.generation !== action.generation ||
+      action.drainEndedAtMs !== null ||
+      entries.length !== 1 ||
+      entries[0].target !== button ||
+      work.renderBoundaryCallbacks > 160
+    ) {
+      failOverflow();
+      return;
+    }
+    const { baselineGeometry, ...identity } = pending;
+    const proof = {
+      ...identity,
+      kind: 'resize-observer-initial',
+      observedThroughMutationCallback: work.mutationCallbacks,
+      atMs: performance.now(),
+      intentEpoch: action.witness.intentEpoch,
+      expected: action.expected,
+      state: button.classList.contains('transitioning')
+        ? 'transition'
+        : 'settled',
+      focused: document.hasFocus(),
+      geometry: null,
+    };
+    proof.visible = buttonGeometryMatches(action, proof);
+    proof.restoredGeometry =
+      proof.geometry !== null &&
+      JSON.stringify(proof.geometry) === JSON.stringify(baselineGeometry);
+    proof.completedAtMs = performance.now();
+    action.renderBoundaryProofs.push(proof);
   }
   function observeMutations(records) {
     if (disposed || overflow) return;
@@ -196,7 +392,7 @@ export function installInteractionEventTimingInPage() {
       work.mutationCallbacks > 4096 ||
       records.length > 65536 - work.mutationRecords
     ) {
-      overflow = true;
+      failOverflow();
       mutationObserver?.disconnect();
       return;
     }
@@ -205,8 +401,34 @@ export function installInteractionEventTimingInPage() {
     if (!action?.witness) return;
     // Mutation delivery is a microtask. No geometry/style/visibility API may
     // run here: that would force layout inside the measured click interval.
-    let uncertain = false;
+    let uncertain = false,
+      restored = 0,
+      reasonCount = 0;
+    const reasons = [];
+    const note = (target, name, reason) => {
+      reasonCount++;
+      if (reasons.length < 8)
+        reasons.push({
+          target: mutationTarget(target),
+          attribute: [
+            'class',
+            'style',
+            'data-rail-measuring',
+            'data-feed-state',
+            'aria-busy',
+            'aria-disabled',
+            'aria-label',
+            'title',
+          ].includes(name)
+            ? name
+            : name == null
+              ? 'none'
+              : 'other',
+          reason,
+        });
+    };
     const afterByNode = new Map();
+    const attributeChanges = new Map();
     for (let index = records.length - 1; index >= 0; index--) {
       const record = records[index];
       if (record.type === 'attributes') {
@@ -220,22 +442,17 @@ export function installInteractionEventTimingInPage() {
           ? afterByName.get(name)
           : record.target.getAttribute(name);
         afterByName.set(name, record.oldValue);
-        if (record.oldValue === after) continue;
-        if (record.target !== button) uncertain = true;
-        else if (name === 'class')
-          uncertain ||=
-            !knownClasses(after) ||
-            geometryClasses(record.oldValue) !== geometryClasses(after);
-        else if (
-          ![
-            'data-feed-state',
-            'aria-busy',
-            'aria-disabled',
-            'aria-label',
-            'title',
-          ].includes(name)
-        )
-          uncertain = true;
+        let groups = attributeChanges.get(record.target);
+        if (!groups) {
+          groups = new Map();
+          attributeChanges.set(record.target, groups);
+        }
+        let changes = groups.get(name);
+        if (!changes) {
+          changes = [];
+          groups.set(name, changes);
+        }
+        changes.push({ before: record.oldValue, after });
       } else if (record.type === 'childList') {
         // Only identical plain text replacement preserves layout inputs.
         // Even a known status transition can change width or clipping.
@@ -246,28 +463,92 @@ export function installInteractionEventTimingInPage() {
           plainText &&
           [...record.addedNodes].map((node) => node.data).join('') ===
             [...record.removedNodes].map((node) => node.data).join('');
-        if (!unchangedText) uncertain = true;
+        if (!unchangedText) {
+          uncertain = true;
+          note(record.target, null, 'child-list');
+        }
       } else if (record.type === 'characterData') {
         const after = afterByNode.has(record.target)
           ? afterByNode.get(record.target)
           : record.target.data;
         afterByNode.set(record.target, record.oldValue);
-        if (record.oldValue !== after) uncertain = true;
-      } else uncertain = true;
+        if (record.oldValue !== after) {
+          uncertain = true;
+          note(record.target, null, 'text-changed');
+        }
+      } else {
+        uncertain = true;
+        note(record.target, null, 'unknown-record');
+      }
     }
-    if (uncertain || !buttonIntentStateMatches(action))
-      observe({
-        kind: uncertain ? 'unproven-geometry' : 'contrary-button-state',
+    for (const [target, groups] of attributeChanges)
+      for (const [name, changes] of groups) {
+        if (changes.every(({ before, after }) => before === after)) continue;
+        if (restoredMeasurement(target, name, changes)) {
+          restored++;
+          note(target, name, 'restored-measurement');
+          continue;
+        }
+        const unsafe =
+          target !== button ||
+          changes.some(
+            ({ before, after }) =>
+              before !== after &&
+              (name === 'class'
+                ? !knownClasses(after) ||
+                  geometryClasses(before) !== geometryClasses(after)
+                : ![
+                    'data-feed-state',
+                    'aria-busy',
+                    'aria-disabled',
+                    'aria-label',
+                    'title',
+                  ].includes(name)),
+          );
+        if (unsafe) {
+          uncertain = true;
+          note(
+            target,
+            name,
+            changes.at(-1).before === changes[0].after
+              ? 'unrecognized-restoration'
+              : 'changed-attribute',
+          );
+        }
+      }
+    // As in v2, a batch already known unsafe needs no further DOM reads.
+    const stateMatches = uncertain || buttonIntentStateMatches(action);
+    if (!stateMatches) note(button, null, 'control-state');
+    work.restoredMeasurementTransactions += restored;
+    if (uncertain || !stateMatches || restored > 0) {
+      const observation = observe({
+        kind: uncertain
+          ? 'unproven-geometry'
+          : !stateMatches
+            ? 'contrary-button-state'
+            : 'unproven-geometry',
         generation: action.generation,
         invalid: true,
+        reason: 'mutation-batch',
+        mutation: {
+          callback: work.mutationCallbacks,
+          recordCount: records.length,
+          restoredMeasurementTransactions: restored,
+          reasonCount,
+          reasons,
+          reasonsTruncated: reasonCount > reasons.length,
+        },
       });
+      if (!uncertain && stateMatches && restored > 0)
+        requestRenderBoundary(action, observation);
+    }
   }
   function collect(list) {
     if (disposed) return;
     for (const entry of list) {
       if (entry.entryType !== 'event' || entry.name !== 'click') continue;
       if (entries.length >= 128) {
-        overflow = true;
+        failOverflow();
         continue;
       }
       const matches = actions.filter(
@@ -295,6 +576,9 @@ export function installInteractionEventTimingInPage() {
         throw new Error('Event Timing action ownership exceeded');
       if (active() && active().drainEndedAtMs == null)
         throw new Error('Previous Event Timing action drain is incomplete');
+      if (pendingRenderBoundary) {
+        failOverflow();
+      }
       if (
         event.isTrusted !== true ||
         event.type !== 'click' ||
@@ -315,6 +599,9 @@ export function installInteractionEventTimingInPage() {
         focused: document.hasFocus(),
         witness: null,
         witnesses: [],
+        renderBoundaryArms: 0,
+        renderBoundaryProofs: [],
+        renderBoundaryPendingAtDrainEnd: false,
         drainStartedAtMs: null,
         drainEndedAtMs: null,
       });
@@ -336,10 +623,11 @@ export function installInteractionEventTimingInPage() {
         generation: sample.generation,
         visible: true,
         focused: document.hasFocus(),
+        geometry: null,
       };
       action.witness ??= witness;
       action.witnesses.push(witness);
-      if (!buttonGeometryMatches(action)) witness.visible = false;
+      if (!buttonGeometryMatches(action, witness)) witness.visible = false;
       witness.completedAtMs = performance.now();
     },
     drain(generation) {
@@ -358,7 +646,14 @@ export function installInteractionEventTimingInPage() {
         timer = setTimeout(() => {
           timer = null;
           settleDrain = null;
+          const pendingMutations = mutationObserver?.takeRecords() || [];
+          if (pendingMutations.length) observeMutations(pendingMutations);
           collect(performanceObserver?.takeRecords() || []);
+          if (pendingRenderBoundary) {
+            action.renderBoundaryPendingAtDrainEnd = true;
+            renderBoundaryObserver.unobserve(button);
+            pendingRenderBoundary = null;
+          }
           action.drainEndedAtMs = performance.now();
           resolve();
         }, 1000);
@@ -369,7 +664,7 @@ export function installInteractionEventTimingInPage() {
       if (pendingMutations.length) observeMutations(pendingMutations);
       collect(performanceObserver?.takeRecords() || []);
       return {
-        policy: 'trusted-click-event-timing-visible-intent-v2',
+        policy: 'trusted-click-event-timing-visible-intent-v3',
         status: supported ? 'observed' : 'unavailable',
         installedAtMs,
         durationThresholdMs: 16,
@@ -380,6 +675,9 @@ export function installInteractionEventTimingInPage() {
         maximumMutationCallbacks: 4096,
         maximumMutationRecords: 65536,
         maximumGeometryProofsPerAction: 2,
+        measurementRestoration: 'source-owned-left-rail-render-boundary-v1',
+        maximumMutationReasonsPerObservation: 8,
+        maximumRenderBoundaryProofsPerAction: 8,
         work: { ...work, overhead: { ...work.overhead } },
         overflow,
         actions: actions.map(({ target, ...action }) => ({ ...action })),
@@ -392,6 +690,8 @@ export function installInteractionEventTimingInPage() {
       collect(performanceObserver?.takeRecords() || []);
       performanceObserver?.disconnect();
       mutationObserver?.disconnect();
+      renderBoundaryObserver?.disconnect();
+      pendingRenderBoundary = null;
       removeIntent?.();
       for (const remove of removers) remove();
       if (timer != null) clearTimeout(timer);
@@ -404,6 +704,7 @@ export function installInteractionEventTimingInPage() {
     },
   };
   try {
+    renderBoundaryObserver = new ResizeObserver(observeRenderBoundary);
     if (supported) {
       performanceObserver = new PerformanceObserver((list) =>
         collect(list.getEntries()),
@@ -449,6 +750,7 @@ export function installInteractionEventTimingInPage() {
             kind: 'unproven-geometry',
             generation: action.generation,
             invalid: true,
+            reason: name === 'scroll' ? 'window-scroll' : 'window-resize',
           });
       };
       window.addEventListener(name, listener, true);
@@ -497,9 +799,68 @@ export function installInteractionEventTimingInPage() {
   }
 }
 
+function sourceMeasurementOnly(observation) {
+  const detail = observation.mutation;
+  return Boolean(
+    observation.kind === 'unproven-geometry' &&
+    observation.invalid === true &&
+    detail?.restoredMeasurementTransactions > 0 &&
+    detail.reasonCount === detail.restoredMeasurementTransactions &&
+    detail.reasons.every((reason) => reason.reason === 'restored-measurement'),
+  );
+}
+
+function assertGeometrySnapshot(proof) {
+  if (proof.geometry === null) {
+    assert.equal(proof.visible, false);
+    return;
+  }
+  const geometry = proof.geometry;
+  assert.deepEqual(
+    Object.keys(geometry).sort(),
+    ['controlRect', 'clipRect', 'scrollOffsets'].sort(),
+  );
+  for (const [key, fields] of [
+    ['controlRect', ['left', 'top', 'right', 'bottom', 'width', 'height']],
+    ['clipRect', ['left', 'top', 'right', 'bottom']],
+  ]) {
+    assert.deepEqual(Object.keys(geometry[key]).sort(), fields.sort());
+    assert.ok(Object.values(geometry[key]).every(Number.isFinite));
+  }
+  assert.ok(
+    Array.isArray(geometry.scrollOffsets) &&
+      geometry.scrollOffsets.length > 0 &&
+      geometry.scrollOffsets.length <= 64,
+  );
+  for (const offset of geometry.scrollOffsets) {
+    assert.deepEqual(Object.keys(offset).sort(), ['left', 'top']);
+    assert.ok(Object.values(offset).every(Number.isFinite));
+  }
+  if (proof.visible) {
+    assert.ok(
+      geometry.controlRect.width > 0 && geometry.controlRect.height > 0,
+    );
+    const center = {
+      x: (geometry.controlRect.left + geometry.controlRect.right) / 2,
+      y: (geometry.controlRect.top + geometry.controlRect.bottom) / 2,
+    };
+    assert.ok(
+      center.x >= geometry.clipRect.left &&
+        center.x < geometry.clipRect.right &&
+        center.y >= geometry.clipRect.top &&
+        center.y < geometry.clipRect.bottom,
+    );
+  }
+}
+
 /** All entries, including late old entries, are evaluated after the fixed cohort. */
 export function validateInteractionEventTiming(capture, samples) {
-  assert.equal(capture?.policy, INTERACTION_EVENT_TIMING_PROTOCOL);
+  const plan =
+    capture?.policy === INTERACTION_EVENT_TIMING_PLAN_V2.policy
+      ? INTERACTION_EVENT_TIMING_PLAN_V2
+      : INTERACTION_EVENT_TIMING_PLAN;
+  assert.equal(capture?.policy, plan.policy);
+  const restoredPolicy = plan === INTERACTION_EVENT_TIMING_PLAN;
   assert.equal(capture.status, 'observed', 'Browser Event Timing unavailable');
   for (const key of [
     'durationThresholdMs',
@@ -511,7 +872,14 @@ export function validateInteractionEventTiming(capture, samples) {
     'maximumMutationRecords',
     'maximumGeometryProofsPerAction',
   ])
-    assert.equal(capture[key], INTERACTION_EVENT_TIMING_PLAN[key]);
+    assert.equal(capture[key], plan[key]);
+  if (restoredPolicy)
+    for (const key of [
+      'measurementRestoration',
+      'maximumMutationReasonsPerObservation',
+      'maximumRenderBoundaryProofsPerAction',
+    ])
+      assert.equal(capture[key], plan[key]);
   assert.equal(capture.overflow, false);
   assert.equal(capture.actions?.length, 20);
   assert.equal(samples?.length, 20);
@@ -523,17 +891,157 @@ export function validateInteractionEventTiming(capture, samples) {
     status: 'unavailable',
     reason: 'not-measured',
   });
-  assert.equal(capture.work.geometryChecks, 40);
+  const boundaryCallbacks = restoredPolicy
+    ? capture.work.renderBoundaryCallbacks
+    : 0;
+  assert.equal(capture.work.geometryChecks, 40 + boundaryCallbacks);
   for (const [key, maximum] of [
     ['mutationCallbacks', 4096],
     ['mutationRecords', 65536],
-    ['continuityChecks', 4136],
+    ['continuityChecks', 4136 + (restoredPolicy ? 160 : 0)],
   ])
     assert.ok(
       Number.isSafeInteger(capture.work[key]) &&
         capture.work[key] >= (key === 'continuityChecks' ? 40 : 0) &&
         capture.work[key] <= maximum,
     );
+  const mutationByCallback = new Map();
+  if (restoredPolicy) {
+    for (const key of ['renderBoundaryArms', 'renderBoundaryCallbacks'])
+      assert.ok(
+        Number.isSafeInteger(capture.work[key]) &&
+          capture.work[key] >= 0 &&
+          capture.work[key] <= 160,
+      );
+    assert.equal(
+      capture.work.renderBoundaryCallbacks,
+      capture.work.renderBoundaryArms,
+      'Every armed render-boundary proof must finish within its action drain',
+    );
+    assert.equal(
+      capture.actions.reduce(
+        (sum, action) => sum + action.renderBoundaryProofs?.length,
+        0,
+      ),
+      boundaryCallbacks,
+    );
+    assert.equal(
+      capture.actions.reduce(
+        (sum, action) => sum + action.renderBoundaryArms,
+        0,
+      ),
+      capture.work.renderBoundaryArms,
+    );
+    assert.ok(
+      Number.isSafeInteger(capture.work.restoredMeasurementTransactions) &&
+        capture.work.restoredMeasurementTransactions >= 0 &&
+        capture.work.restoredMeasurementTransactions <=
+          capture.work.mutationRecords / 2,
+    );
+    let restored = 0;
+    for (const observation of capture.observations) {
+      if (observation.mutation !== undefined) {
+        const detail = observation.mutation;
+        assert.equal(observation.reason, 'mutation-batch');
+        assert.ok(
+          ['unproven-geometry', 'contrary-button-state'].includes(
+            observation.kind,
+          ),
+        );
+        assert.equal(observation.invalid, true);
+        assert.deepEqual(
+          Object.keys(detail).sort(),
+          [
+            'recordCount',
+            'callback',
+            'restoredMeasurementTransactions',
+            'reasonCount',
+            'reasons',
+            'reasonsTruncated',
+          ].sort(),
+        );
+        assert.ok(
+          Number.isSafeInteger(detail.callback) &&
+            detail.callback > 0 &&
+            detail.callback <= capture.work.mutationCallbacks &&
+            !mutationByCallback.has(detail.callback),
+        );
+        mutationByCallback.set(detail.callback, observation);
+        assert.ok(
+          Number.isSafeInteger(detail.recordCount) &&
+            detail.recordCount > 0 &&
+            detail.recordCount <= 65536,
+        );
+        assert.ok(
+          Number.isSafeInteger(detail.restoredMeasurementTransactions) &&
+            detail.restoredMeasurementTransactions >= 0 &&
+            detail.restoredMeasurementTransactions <= detail.recordCount / 2,
+        );
+        assert.ok(
+          Number.isSafeInteger(detail.reasonCount) &&
+            detail.reasonCount > 0 &&
+            detail.reasonCount <= detail.recordCount + 1,
+        );
+        assert.ok(
+          Array.isArray(detail.reasons) &&
+            detail.reasons.length === Math.min(detail.reasonCount, 8),
+        );
+        assert.equal(
+          detail.reasonsTruncated,
+          detail.reasonCount > detail.reasons.length,
+        );
+        for (const reason of detail.reasons) {
+          assert.deepEqual(
+            Object.keys(reason).sort(),
+            ['target', 'attribute', 'reason'].sort(),
+          );
+          assert.ok(
+            ['control', 'layout-root', 'left-panel', 'other'].includes(
+              reason.target,
+            ),
+          );
+          assert.ok(
+            [
+              'class',
+              'style',
+              'data-rail-measuring',
+              'data-feed-state',
+              'aria-busy',
+              'aria-disabled',
+              'aria-label',
+              'title',
+              'none',
+              'other',
+            ].includes(reason.attribute),
+          );
+          assert.ok(
+            [
+              'restored-measurement',
+              'unrecognized-restoration',
+              'changed-attribute',
+              'child-list',
+              'text-changed',
+              'unknown-record',
+              'control-state',
+            ].includes(reason.reason),
+          );
+          if (reason.reason === 'restored-measurement')
+            assert.ok(
+              (reason.target === 'layout-root' &&
+                reason.attribute === 'data-rail-measuring') ||
+                (reason.target === 'left-panel' &&
+                  reason.attribute === 'style'),
+            );
+        }
+        restored += detail.restoredMeasurementTransactions;
+      } else if (observation.kind === 'unproven-geometry')
+        assert.ok(
+          ['window-scroll', 'window-resize'].includes(observation.reason),
+          'Geometry invalidation reason is missing',
+        );
+    }
+    assert.equal(capture.work.restoredMeasurementTransactions, restored);
+  }
   const interactionIds = new Set();
   return samples.map((sample, index) => {
     const action = capture.actions[index];
@@ -625,6 +1133,7 @@ export function validateInteractionEventTiming(capture, samples) {
       assert.equal(proof.expected, sample.expectedLayerEnabled);
       assert.equal(typeof proof.visible, 'boolean');
       assert.equal(typeof proof.focused, 'boolean');
+      if (restoredPolicy) assertGeometrySnapshot(proof);
       assert.deepEqual(
         [proof.atMs, proof.rafTimestampMs, proof.state],
         expectedFrames[index],
@@ -647,21 +1156,163 @@ export function validateInteractionEventTiming(capture, samples) {
           'The two existing natural RAF proofs must advance',
         );
     }
-    const witness = action.witnesses.findLast(
-      (proof) => proof.completedAtMs <= earliestEnd,
+    const proofs = action.witnesses.map((proof, index) => ({
+      proof,
+      kind: 'raf',
+      ordinal: index + 1,
+    }));
+    if (restoredPolicy) {
+      assert.ok(
+        Number.isSafeInteger(action.renderBoundaryArms) &&
+          action.renderBoundaryArms >= 0 &&
+          action.renderBoundaryArms <= 8,
+      );
+      assert.equal(action.renderBoundaryPendingAtDrainEnd, false);
+      assert.equal(
+        action.renderBoundaryProofs?.length,
+        action.renderBoundaryArms,
+      );
+      for (const [index, proof] of action.renderBoundaryProofs.entries()) {
+        assert.equal(proof.kind, 'resize-observer-initial');
+        assert.equal(proof.ordinal, index + 1);
+        assert.equal(proof.generation, sample.generation);
+        assert.equal(proof.intentEpoch, sample.acceptedIntentEpoch);
+        assert.equal(proof.expected, sample.expectedLayerEnabled);
+        assert.ok(['transition', 'settled'].includes(proof.state));
+        for (const field of ['visible', 'focused', 'restoredGeometry'])
+          assert.equal(typeof proof[field], 'boolean');
+        for (const field of ['armedAtMs', 'atMs', 'completedAtMs'])
+          assert.ok(Number.isFinite(proof[field]));
+        assert.ok(
+          proof.armedAtMs >= action.witnesses[0].completedAtMs &&
+            proof.atMs >= proof.armedAtMs &&
+            proof.completedAtMs >= proof.atMs &&
+            proof.completedAtMs <= action.drainEndedAtMs,
+        );
+        const armedBy = mutationByCallback.get(proof.armedByMutationCallback);
+        const source = mutationByCallback.get(proof.sourceMutationCallback);
+        assert.ok(
+          Number.isSafeInteger(proof.observedThroughMutationCallback) &&
+            proof.observedThroughMutationCallback >=
+              proof.sourceMutationCallback &&
+            proof.observedThroughMutationCallback <=
+              capture.work.mutationCallbacks,
+        );
+        for (const observation of [armedBy, source]) {
+          assert.ok(observation && sourceMeasurementOnly(observation));
+          assert.equal(observation.generation, sample.generation);
+          assert.ok(observation.atMs <= proof.atMs);
+        }
+        assert.ok(
+          armedBy.atMs <= proof.armedAtMs &&
+            source.mutation.callback >= armedBy.mutation.callback,
+        );
+        const coalesced = capture.observations.filter(
+          (observation) =>
+            observation.generation === sample.generation &&
+            sourceMeasurementOnly(observation) &&
+            observation.mutation.callback >= armedBy.mutation.callback &&
+            observation.mutation.callback <=
+              proof.observedThroughMutationCallback &&
+            observation.atMs <= proof.atMs,
+        );
+        assert.equal(
+          proof.sourceMutationCallback,
+          Math.max(
+            ...coalesced.map((observation) => observation.mutation.callback),
+          ),
+          'Render-boundary proof must bind the latest coalesced measurement',
+        );
+        if (index > 0)
+          assert.ok(
+            proof.armedAtMs >=
+              action.renderBoundaryProofs[index - 1].completedAtMs &&
+              proof.armedByMutationCallback >
+                action.renderBoundaryProofs[index - 1].sourceMutationCallback,
+          );
+        assertGeometrySnapshot(proof);
+        proofs.push({
+          proof,
+          kind: 'resize-observer-initial',
+          ordinal: proof.ordinal,
+        });
+      }
+      for (const observation of capture.observations)
+        if (
+          observation.generation === sample.generation &&
+          observation.atMs >= sample.clickAtMs &&
+          observation.atMs <= latestEnd &&
+          observation.mutation?.restoredMeasurementTransactions > 0
+        )
+          assert.ok(
+            sourceMeasurementOnly(observation) &&
+              action.renderBoundaryProofs.some(
+                (proof) =>
+                  proof.armedByMutationCallback <=
+                    observation.mutation.callback &&
+                  proof.sourceMutationCallback >=
+                    observation.mutation.callback &&
+                  proof.atMs >= observation.atMs &&
+                  proof.completedAtMs <= earliestEnd &&
+                  proof.visible &&
+                  proof.focused &&
+                  proof.restoredGeometry,
+              ),
+            'Source-owned measurement needs an eligible post-layout proof before rendering',
+          );
+      proofs.sort((a, b) => a.proof.atMs - b.proof.atMs);
+      for (const [index, descriptor] of proofs.entries()) {
+        const proof = descriptor.proof;
+        if (index > 0)
+          assert.ok(
+            proof.atMs >= proofs[index - 1].proof.completedAtMs,
+            'Geometry proof intervals overlap',
+          );
+        if (descriptor.kind !== 'resize-observer-initial') continue;
+        const armedBy = mutationByCallback.get(proof.armedByMutationCallback);
+        const prior = proofs.findLast(
+          (candidate) =>
+            candidate !== descriptor &&
+            candidate.proof.completedAtMs <= armedBy.atMs,
+        );
+        assert.ok(
+          prior?.proof.visible &&
+            prior.proof.focused &&
+            prior.proof.geometry &&
+            prior.proof.restoredGeometry !== false,
+          'Render-boundary recovery needs its latest positive premeasurement proof',
+        );
+        assert.deepEqual(proof.baseline, {
+          kind: prior.kind,
+          ordinal: prior.ordinal,
+        });
+        assert.equal(
+          proof.restoredGeometry,
+          isDeepStrictEqual(proof.geometry, prior.proof.geometry),
+          'Restoration must preserve the control rect, clip and scroll offsets',
+        );
+      }
+    }
+    const selected = proofs.findLast(
+      ({ proof }) => proof.completedAtMs <= earliestEnd,
     );
+    const witness = selected?.proof;
     assert.ok(
       witness,
       'Same-intent visible feedback must precede the earliest quantized rendering endpoint',
     );
     assert.ok(
-      witness.visible && witness.focused,
+      witness.visible && witness.focused && witness.restoredGeometry !== false,
       'Latest eligible geometry proof does not establish visible feedback',
     );
-    for (const proof of action.witnesses)
-      if (proof.atMs >= witness.completedAtMs && proof.atMs <= latestEnd)
+    for (const { proof } of proofs)
+      if (
+        proof.atMs >=
+          (restoredPolicy ? sample.clickReceivedAtMs : witness.completedAtMs) &&
+        proof.atMs <= latestEnd
+      )
         assert.ok(
-          proof.visible && proof.focused,
+          proof.visible && proof.focused && proof.restoredGeometry !== false,
           'A later geometry proof contradicts visible feedback before rendering',
         );
     for (const observation of capture.observations) {
@@ -680,6 +1331,22 @@ export function validateInteractionEventTiming(capture, samples) {
         assert.ok(
           observation.visible && observation.focused && !observation.invalid,
           'Foreground was lost during click-to-render interval',
+        );
+      else if (
+        selected.kind === 'resize-observer-initial' &&
+        observation.atMs >=
+          action.witnesses.findLast(
+            (proof) => proof.completedAtMs <= witness.armedAtMs,
+          ).completedAtMs &&
+        observation.atMs < witness.completedAtMs &&
+        observation.invalid
+      )
+        assert.ok(
+          sourceMeasurementOnly(observation) &&
+            observation.atMs <= witness.atMs &&
+            observation.mutation.callback <=
+              witness.observedThroughMutationCallback,
+          'Render-boundary recovery cannot erase an unknown or contrary change',
         );
       else if (observation.atMs >= witness.completedAtMs)
         assert.equal(

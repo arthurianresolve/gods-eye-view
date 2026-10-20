@@ -29,7 +29,10 @@ import {
   readAndAssertPageForeground,
   collectQualificationMetricsForBuild,
 } from '../qa-qualification-metrics-capture.mjs';
-import { INTERACTION_EVENT_TIMING_PLAN } from './interactionEventTiming.mjs';
+import {
+  INTERACTION_EVENT_TIMING_PLAN,
+  INTERACTION_EVENT_TIMING_PLAN_V2,
+} from './interactionEventTiming.mjs';
 import {
   createQualificationBuildIdentityPlan,
   inspectQualificationBuildIdentityPlan,
@@ -1516,6 +1519,9 @@ function eventTimingInteractionEvidence() {
         mutationRecords: 100,
         continuityChecks: 40,
         geometryChecks: 40,
+        restoredMeasurementTransactions: 0,
+        renderBoundaryArms: 0,
+        renderBoundaryCallbacks: 0,
         overhead: { status: 'unavailable', reason: 'not-measured' },
       },
       actions: build.localControl.map((sample) => ({
@@ -1536,7 +1542,22 @@ function eventTimingInteractionEvidence() {
           generation: sample.generation,
           visible: true,
           focused: true,
+          geometry: {
+            controlRect: {
+              left: 5,
+              top: 5,
+              right: 55,
+              bottom: 25,
+              width: 50,
+              height: 20,
+            },
+            clipRect: { left: 5, top: 5, right: 55, bottom: 25 },
+            scrollOffsets: [{ left: 0, top: 0 }],
+          },
         },
+        renderBoundaryArms: 0,
+        renderBoundaryProofs: [],
+        renderBoundaryPendingAtDrainEnd: false,
         drainStartedAtMs: sample.renderedFrameAtMs + 10,
         drainEndedAtMs: sample.renderedFrameAtMs + 1010,
       })),
@@ -1618,6 +1639,99 @@ test('v4 gates candidate Event Timing, preserves baseline absolute failure and v
   const relabelled = structuredClone(legacy);
   relabelled.schema = 'gev-interaction-latency-evidence/v4';
   assert.notEqual(evaluate(relabelled).status, 'measured');
+});
+
+test('versioned continuity preserves v2 failures and requires matching v3 plan and bounded proof metadata', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const evaluate = (evidence) =>
+    evaluateQualificationMetrics({ ...args, interactionEvidence: evidence })
+      .metrics.localControl;
+  const legacy = eventTimingInteractionEvidence();
+  legacy.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V2;
+  for (const role of ['baseline', 'candidate']) {
+    const observation = legacy.builds[role].eventTimingCapture;
+    observation.policy = INTERACTION_EVENT_TIMING_PLAN_V2.policy;
+    delete observation.measurementRestoration;
+    delete observation.maximumMutationReasonsPerObservation;
+    delete observation.maximumRenderBoundaryProofsPerAction;
+    delete observation.work.restoredMeasurementTransactions;
+    delete observation.work.renderBoundaryArms;
+    delete observation.work.renderBoundaryCallbacks;
+  }
+  assert.equal(evaluate(legacy).status, 'measured');
+  const sample = legacy.builds.baseline.localControl[0];
+  legacy.builds.baseline.eventTimingCapture.observations.push({
+    atMs: sample.buttonFeedbackAtMs + 5,
+    kind: 'unproven-geometry',
+    generation: sample.generation,
+    invalid: true,
+  });
+  assert.equal(evaluate(legacy).status, 'failed');
+  assert.match(evaluate(legacy).reason, /Visible feedback or intent changed/);
+  const current = eventTimingInteractionEvidence();
+  const timing = current.builds.candidate.eventTimingCapture;
+  timing.work.restoredMeasurementTransactions = 1;
+  timing.work.renderBoundaryArms = 1;
+  timing.work.renderBoundaryCallbacks = 1;
+  timing.work.geometryChecks++;
+  timing.work.continuityChecks++;
+  const action = timing.actions[0];
+  action.renderBoundaryArms = 1;
+  const batchAt =
+    current.builds.candidate.localControl[0].buttonFeedbackAtMs + 5;
+  action.renderBoundaryProofs.push({
+    kind: 'resize-observer-initial',
+    generation: action.generation,
+    ordinal: 1,
+    armedAtMs: batchAt + 1,
+    armedByMutationCallback: 1,
+    sourceMutationCallback: 1,
+    observedThroughMutationCallback: 1,
+    baseline: { kind: 'raf', ordinal: 2 },
+    atMs: batchAt + 2,
+    completedAtMs: batchAt + 3,
+    intentEpoch: action.witness.intentEpoch,
+    expected: action.expected,
+    state: 'transition',
+    visible: true,
+    focused: true,
+    restoredGeometry: true,
+    geometry: structuredClone(action.witness.geometry),
+  });
+  timing.observations.push({
+    atMs: batchAt,
+    kind: 'unproven-geometry',
+    generation: current.builds.candidate.localControl[0].generation,
+    invalid: true,
+    reason: 'mutation-batch',
+    mutation: {
+      callback: 1,
+      recordCount: 2,
+      restoredMeasurementTransactions: 1,
+      reasonCount: 1,
+      reasonsTruncated: false,
+      reasons: [
+        {
+          target: 'left-panel',
+          attribute: 'style',
+          reason: 'restored-measurement',
+        },
+      ],
+    },
+  });
+  assert.equal(evaluate(current).status, 'measured');
+  const late = structuredClone(current);
+  for (const entry of late.builds.candidate.eventTimingCapture.entries)
+    entry.duration = 104;
+  assert.equal(evaluate(late).status, 'failed');
+  assert.match(evaluate(late).failures.join(';'), /next-rendering/);
+  const mismatched = structuredClone(current);
+  mismatched.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V2;
+  assert.equal(evaluate(mismatched).status, 'failed');
+  const metadata = structuredClone(current);
+  metadata.builds.candidate.eventTimingCapture.observations[0].mutation.reasons[0].value =
+    'private';
+  assert.equal(evaluate(metadata).status, 'failed');
 });
 
 test('v4 actual producer action awaits its owned drain after full readiness before returning', async () => {
