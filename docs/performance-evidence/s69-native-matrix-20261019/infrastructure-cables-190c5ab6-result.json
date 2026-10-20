@@ -1,0 +1,117 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-20T01:16:00.894Z",
+  "row": "infrastructure-cables",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 332.80000000074506,
+        "candidateMedianP95Ms": 311.70000000298023,
+        "changePct": -6.34014423008341,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 4122,
+    "candidateMedianMs": 3441,
+    "baselineInitialSettleMedianMs": 4714,
+    "candidateInitialSettleMedianMs": 4268,
+    "initialSettleChangePct": -9.461179465422147,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [6456, 4122, 3716, 4187, 3504],
+    "candidateRunsMs": [4586, 3033, 3441, 3532, 3107],
+    "changePct": -16.521106259097525,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6745,
+      "sha256": "71d82e3a206876579393d6048a589fa4765c37cc30458f903ff278b14b1082ee"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3237,
+      "sha256": "550012fe50401580d0a32806dee8ae2f1cf0ebf980888e0a4d511e83115a5b92"
+    },
+    {
+      "name": "retry-reuse-protocol.json",
+      "bytes": 7207,
+      "sha256": "5444de0ae27676d71f6bbc75823958649cebe479f20bd7355bb09c6291fb9c02"
+    },
+    {
+      "name": "infrastructure-cables-baseline.json",
+      "bytes": 374875,
+      "sha256": "f61e8fbae614bd6d83870aca89847c1c981898c9ec8ea831f9f43204c0c06a0d"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json",
+      "bytes": 375756,
+      "sha256": "1f5118932cb969f13b4c9e4f385e122d55dab6058e9319af96c6ded9ffdccc93"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json.log",
+      "bytes": 699,
+      "sha256": "021bc54e7d0b0d3d89fa66a43c67d42e0384fe4c8d3578d84819172319c40584"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json.invocation.json",
+      "bytes": 2498,
+      "sha256": "b0db699b8b3d31a32ff3de2e74afacd983640617b936627b736b7e8cbc5e086a"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-cables-190c5ab6-native155-foreground-ready-2",
+  "productionChanged": false
+}

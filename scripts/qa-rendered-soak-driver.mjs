@@ -33,6 +33,32 @@ const DEFAULT_SOAK_LOCATION = Object.freeze({
   altitude: 1000,
 });
 
+// The rendered soak starts its controlled view on the OSM map with DENSE 75.
+// Keep those fixture settings explicit while using the share codec to suppress
+// the default Austin fly-in at both measured-page navigations.
+export function createSoakFixtureShareHash(location) {
+  const resolved = resolveRenderedSoakLocation(location);
+  const params = new URLSearchParams({
+    v: '2',
+    lat: String(resolved.latitude),
+    lon: String(resolved.longitude),
+    alt: String(resolved.altitude),
+    heading: '0',
+    pitch: '-90',
+    roll: '0',
+    map: 'osm',
+    dm: 'DENSE',
+    dd: '75',
+    // Absent fields use legacy link defaults, not fresh-profile defaults.
+    bi: '0',
+    bv: '2',
+    kf: '7',
+    ko: '1',
+    scf: '11',
+  });
+  return `#${params.toString()}`;
+}
+
 export function isSoakDatacenterAssetRequest(requestUrl, appBase) {
   let request;
   let base;
@@ -90,41 +116,162 @@ export function createSoakDatacenterFixture(location) {
   };
 }
 
-/** Put the camera over the synthetic fixture before enabling its layer. */
-export function prepareSoakDatacenterFixtureViewInPage(location) {
+/** Put the camera over the synthetic fixture and witness two fresh frames. */
+export async function prepareSoakDatacenterFixtureViewInPage(location) {
   const app = window.__godsEyeView;
   const viewer = app?.viewer;
   const camera = viewer?.camera;
-  if (!camera?.position?.constructor?.fromDegrees || !viewer?.scene)
+  const scene = viewer?.scene;
+  const runImmediateNavigation =
+    app?.styleManager?.runImmediateLocationNavigation;
+  if (
+    !camera?.position?.constructor?.fromDegrees ||
+    !scene?.postRender?.addEventListener ||
+    typeof runImmediateNavigation !== 'function'
+  )
     throw new Error('Datacenter fixture camera is unavailable.');
-  const destination = camera.position.constructor.fromDegrees(
-    location.longitude,
-    location.latitude,
-    location.altitude,
+  const applyPose = () => {
+    const destination = camera.position.constructor.fromDegrees(
+      location.longitude,
+      location.latitude,
+      location.altitude,
+    );
+    camera.setView({
+      destination,
+      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+    });
+    return true;
+  };
+  const firstNavigationAccepted = runImmediateNavigation.call(
+    app.styleManager,
+    applyPose,
   );
-  camera.setView({
-    destination,
-    orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+  if (firstNavigationAccepted !== true)
+    throw new Error('Datacenter fixture camera did not acquire navigation.');
+
+  const frameBefore = scene.frameState?.frameNumber;
+  if (!Number.isFinite(frameBefore))
+    throw new Error('Datacenter fixture camera frame counter is unavailable.');
+  const poseMatches = () => {
+    const cartographic = camera.positionCartographic;
+    const frameNumber = scene.frameState?.frameNumber;
+    return cartographic && Number.isFinite(frameNumber)
+      ? {
+          frameNumber,
+          latitude: (cartographic.latitude * 180) / Math.PI,
+          longitude: (cartographic.longitude * 180) / Math.PI,
+          altitude: cartographic.height,
+          heading: camera.heading,
+          pitch: camera.pitch,
+          roll: camera.roll,
+        }
+      : null;
+  };
+  const poseMatchesTarget = (pose) =>
+    pose &&
+    pose.frameNumber > frameBefore &&
+    Math.abs(pose.latitude - location.latitude) <= 1e-6 &&
+    Math.abs(pose.longitude - location.longitude) <= 1e-6 &&
+    Math.abs(pose.altitude - location.altitude) <= 1 &&
+    Math.abs(Math.atan2(Math.sin(pose.heading), Math.cos(pose.heading))) <=
+      1e-6 &&
+    Math.abs(
+      Math.atan2(
+        Math.sin(pose.pitch + Math.PI / 2),
+        Math.cos(pose.pitch + Math.PI / 2),
+      ),
+    ) <= 1e-6 &&
+    Math.abs(Math.atan2(Math.sin(pose.roll), Math.cos(pose.roll))) <= 1e-6;
+  let lastObservedPose = null;
+  const observedPose = await new Promise((resolve, reject) => {
+    let settled = false;
+    let matchingFrames = 0;
+    let lastMatchingFrameNumber = null;
+    let removePostRender = () => {};
+    const timer = setTimeout(() => {
+      const error = new Error(
+        'Datacenter fixture camera pose did not settle; last observed pose: ' +
+          JSON.stringify(lastObservedPose),
+      );
+      error.cameraPose = lastObservedPose || poseMatches();
+      finish(error);
+    }, 15_000);
+    const finish = (error, pose = null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      removePostRender();
+      if (error) reject(error);
+      else resolve(pose);
+    };
+    const onPostRender = () => {
+      if (settled) return;
+      const pose = poseMatches();
+      lastObservedPose = pose;
+      if (!poseMatchesTarget(pose)) {
+        matchingFrames = 0;
+        lastMatchingFrameNumber = null;
+      } else if (pose.frameNumber !== lastMatchingFrameNumber) {
+        matchingFrames++;
+        lastMatchingFrameNumber = pose.frameNumber;
+      }
+      if (matchingFrames >= 2) {
+        finish(null, pose);
+        return;
+      }
+      try {
+        scene.requestRender?.();
+      } catch (error) {
+        const failure =
+          error instanceof Error ? error : new Error(String(error));
+        failure.cameraPose = lastObservedPose || poseMatches();
+        finish(failure);
+      }
+    };
+    try {
+      removePostRender =
+        scene.postRender.addEventListener(onPostRender) || (() => {});
+      scene.requestRender?.();
+    } catch (error) {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      failure.cameraPose = lastObservedPose || poseMatches();
+      finish(failure);
+    }
   });
-  viewer.scene.requestRender?.();
-  const cartographic = camera.positionCartographic;
   return {
     requested: {
       latitude: location.latitude,
       longitude: location.longitude,
       altitude: location.altitude,
     },
-    observed: cartographic
-      ? {
-          latitude: (cartographic.latitude * 180) / Math.PI,
-          longitude: (cartographic.longitude * 180) / Math.PI,
-          altitude: cartographic.height,
-        }
-      : null,
+    observed: {
+      latitude: observedPose.latitude,
+      longitude: observedPose.longitude,
+      altitude: observedPose.altitude,
+    },
+    heading: observedPose.heading,
+    pitch: observedPose.pitch,
+    roll: observedPose.roll,
+    frameNumber: observedPose.frameNumber,
+  };
+}
+
+export function readSoakDatacenterCameraPoseInPage() {
+  const camera = window.__godsEyeView?.viewer?.camera;
+  const cartographic = camera?.positionCartographic;
+  const frameNumber =
+    window.__godsEyeView?.viewer?.scene?.frameState?.frameNumber;
+  if (!cartographic || !Number.isFinite(frameNumber)) return null;
+  const pose = {
+    latitude: (cartographic.latitude * 180) / Math.PI,
+    longitude: (cartographic.longitude * 180) / Math.PI,
+    altitude: cartographic.height,
     heading: camera.heading,
     pitch: camera.pitch,
     roll: camera.roll,
+    frameNumber,
   };
+  return Object.values(pose).every(Number.isFinite) ? pose : null;
 }
 
 export function installSoakDatacenterPostRenderWitnessInPage() {
@@ -407,6 +554,7 @@ export async function createRenderedSoakDriver(
   } = {},
 ) {
   const soakLocation = resolveRenderedSoakLocation(location);
+  const soakShareHash = createSoakFixtureShareHash(soakLocation);
   const browser = await launchFixtureBrowser({
     ...browserOptions,
     ...(nativeResolution ? { defaultViewport: null } : {}),
@@ -475,6 +623,7 @@ export async function createRenderedSoakDriver(
     preloadEnabledObserved: false,
     preloadEnabledState: null,
     preloadCameraPose: null,
+    preloadFailureCameraPose: null,
     preloadRenderedFrameStart: null,
     preloadRenderedFrameEnd: null,
     preloadRenderWitness: null,
@@ -672,6 +821,7 @@ export async function createRenderedSoakDriver(
       // activation allowance outside the measured soak interval; ordinary
       // browser gates retain the stricter shared default.
       applicationReadyTimeoutMs: 180_000,
+      hash: soakShareHash,
     });
     const initialNativeResolution = nativeResolution
       ? assertNativeResolutionEvidence(
@@ -721,7 +871,7 @@ export async function createRenderedSoakDriver(
       await app.aircraftRecording.stop('fixture-ready');
     }, recordingFrames);
     console.log('SOAK boot application');
-    await bootFixturePage(page, base);
+    await bootFixturePage(page, base, { hash: soakShareHash });
     console.log('SOAK application ready');
     const soakPhase = (phase, operation, diagnosticContext) =>
       runWorkspaceFixturePhase(page, phase, operation, {
@@ -1337,8 +1487,14 @@ export async function createRenderedSoakDriver(
                     };
                   })
                   .catch(() => null);
+                if (lastState)
+                  lastState.cameraPose = await page
+                    .evaluate(readSoakDatacenterCameraPoseInPage)
+                    .catch(() => null);
                 datacenterFixtureValidation.preloadRenderedFrameEnd =
                   lastState?.renderedFrames ?? null;
+                datacenterFixtureValidation.preloadFailureCameraPose =
+                  lastState?.cameraPose ?? null;
                 datacenterFixtureValidation.preloadRenderWitness =
                   lastState?.renderWitness ?? null;
                 datacenterFixtureValidation.preloadRenderedFrameObserved =
@@ -1367,6 +1523,8 @@ export async function createRenderedSoakDriver(
                   '; bounded datacenter preflight state: ' +
                   JSON.stringify({
                     cameraPose: datacenterFixtureValidation.preloadCameraPose,
+                    failureCameraPose:
+                      datacenterFixtureValidation.preloadFailureCameraPose,
                     frameStart:
                       datacenterFixtureValidation.preloadRenderedFrameStart,
                     frameEnd:
@@ -1509,8 +1667,10 @@ export async function createRenderedSoakDriver(
               datacenterFixtureValidation.status = 'validated';
             } catch (error) {
               datacenterFixtureValidation.status = 'failed';
-              datacenterFixtureValidation.failureReason =
-                error?.message || String(error);
+              datacenterFixtureValidation.preloadFailureCameraPose = await page
+                .evaluate(readSoakDatacenterCameraPoseInPage)
+                .catch(() => null);
+              datacenterFixtureValidation.failureReason = `${error?.message || String(error)}; final fixture camera pose: ${JSON.stringify(datacenterFixtureValidation.preloadFailureCameraPose)}`;
               throw error;
             } finally {
               await stopSoakDatacenterPreflightWitness(

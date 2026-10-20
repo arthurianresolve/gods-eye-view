@@ -1,0 +1,94 @@
+{
+  "schema": "gev-final-visual-preservation-review/v1",
+  "reviewedAt": "2026-10-20T00:43:39.014Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "producerCommit": "25cab4fd4db58e2432c8845131578c9df7dff526",
+  "processExit": {
+    "code": 1,
+    "signal": null
+  },
+  "stage": "pixel-validation",
+  "error": {
+    "name": "AssertionError",
+    "message": "hud-visible decoded rendered pixels changed\n+ actual - expected\n\n+ '83af16fd283ac5f3198267c598c0a46d07bc4e0d93d28e26e60c15f67d589c08'\n- 'f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5'\n"
+  },
+  "imagesCaptured": 8,
+  "producerValidation": null,
+  "captures": [],
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-190c5ab6-25cab4fd",
+  "files": [
+    {
+      "name": "baseline-observations.json",
+      "bytes": 302830,
+      "sha256": "d1e64574e36cfc383f3ca0dec601ba09f3642b5e47957cfc0ea08493a3cfe8a4"
+    },
+    {
+      "name": "candidate-observations.json",
+      "bytes": 278958,
+      "sha256": "32c8e1fde861f18258e437474b3eddf1fc807c4da03cda9f6e1d57a5a78614e6"
+    },
+    {
+      "name": "final-visual-qualification-partial.json",
+      "bytes": 617500,
+      "sha256": "5db96aac6e21ab16301488c2d8cc376f2f48f33f4170f82019ad1f1212e8c383"
+    },
+    {
+      "name": "final-visual-qualification.json",
+      "bytes": 563245,
+      "sha256": "1e7cc4cfefb760eaf340bcfb2237dcef2f28e64a708119aac515ea983ba89bba"
+    },
+    {
+      "name": "hud-hidden-baseline-attempt-1.png",
+      "bytes": 1431281,
+      "sha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5"
+    },
+    {
+      "name": "hud-hidden-candidate-attempt-1.png",
+      "bytes": 1431281,
+      "sha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5"
+    },
+    {
+      "name": "hud-restored-baseline-attempt-1.png",
+      "bytes": 1522413,
+      "sha256": "3eac28f874e1d5a55af2a08262c6e9085380ff67da35ba3b0a34beeb1802bbb8"
+    },
+    {
+      "name": "hud-restored-candidate-attempt-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "hud-visible-baseline-attempt-1.png",
+      "bytes": 1522762,
+      "sha256": "7972b0d373cf5e04b4962fc7cde9b425d3f5bc5ca8b7de9284e7bb4b1a2e0f69"
+    },
+    {
+      "name": "hud-visible-candidate-attempt-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "still-settled-baseline-attempt-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "still-settled-candidate-attempt-1.png",
+      "bytes": 1522852,
+      "sha256": "7dd2b2a80afce3c03b6b2287a0cebce3e44b8d08fcbd16d4c2bd6284864baf21"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2017,
+      "sha256": "d210ef599097dc43e5dfb4e5a30d4d18e03ba50aa6770eae18fbf90cf2c5eb59"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 2911,
+      "sha256": "76778d0cf99c2906552e94a2de70ff3e8df70f6aa9d5d4ee61430ea5fb2752d8"
+    }
+  ],
+  "scope": "All original capture files independently hash verified. This preservation review does not grant pixel equivalence or timing acceptance and changes no report, mask, deadline or threshold."
+}

@@ -12,15 +12,36 @@ and identifies context-probe instrumentation. Neither report is timing acceptanc
 
 The [fresh visible-wind probe](weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready-review.json)
 passes flow, pause and resume for both current candidate and correctness control;
-the original camera and pause state are restored. The full current-candidate
-ten-shard weather timing comparison is separate and still running.
+the original camera and pause state are restored. The
+[full ten-shard comparison](weather-balanced-190c5ab6-review.json) completes and
+passes independent hash/identity verification for all 57 files. Median motion
+p95 changes from 242.9 to 234.1 ms (-3.62%). Its
+[startup review](weather-balanced-190c5ab6-startup-review.json) stays within the
+10% limits: app readiness +1.94%, loading completion -1.84%.
+Idle frame spacing changes +85.68%; the raw flag remains recorded separately.
+The [original consumer rejection](weather-balanced-190c5ab6-idle-disposition-review.json)
+is retained: it incorrectly compares `workload.fixtureId` with the workload ID.
+The correction uses the fixture's own ID and
+[passes 36 focused checks on each Node version](weather-fixture-identity-validation-20261020.json).
+The updated positive case fails against the old source, and swapped identities
+remain rejected. The [exact committed `ae74be8b` consumer](weather-balanced-190c5ab6-idle-disposition-ae74be8b-review.json)
+validates the unchanged real probe and resolves only the idle frame-interval
+interpretation. It does not claim CPU/GPU savings or establish another
+workload's acceptance. Capture-producer identities remain unchanged.
 
 The [full visual attempt with producer `97c82fca`](final-visual-190c5ab6-97c82fca-failure-review.json)
 stops before any screenshot. Its guard observes phase 2 nine times, then phase 0
 while REC and summary are unsettled; eleven calls started and ten returned before
 the five-second deadline. The complete failed reports and normal browser and
-interception cleanup are independently verified on VM105. Capture coordination
-remains under investigation; no mask or threshold has changed.
+interception cleanup are independently verified on VM105. The
+[subsequent `25cab4fd` attempt](final-visual-190c5ab6-25cab4fd-preservation-review.json)
+captures all four states for both builds, then fails pixel validation for
+`hud-visible`. All eight PNGs and the complete reports are preserved and
+independently hash-verified on VM105. [Pixel localization](final-visual-190c5ab6-25cab4fd-pixel-localization-review.json)
+finds 78 changed pixels in still-settled (maximum channel delta 103), eight in
+HUD-visible (maximum 7), exact HUD-hidden output, and 764 in HUD-restored
+(maximum 103, around the logo). Recorded presentation state agrees. The
+restored-state discrepancy remains unresolved; no mask or threshold changed.
 
 The follow-up capture diagnostic separates debugger initialization, host command
 latency, page snapshot time, and pixel readback time, and records the observed
@@ -30,6 +51,49 @@ passes 46 focused tests on each of Node 24 and 26, formatting, and the current
 77-file capture lint inventory. VM105 cannot load the installed Sharp binary
 because its CPU lacks x86-64-v2; the image suite remains in the required hosted
 unit-test inventory. No new hardware visual acceptance is claimed by these tests.
+
+The hosted Node 24 and 26 suites, including the image tests, pass for QA commit
+`25cab4fd`. Its [Windows recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39346101215/job/118378956242)
+[fails during browser shutdown](windows-recovery-25cab4fd-failure.json) after the
+interrupted-update workspace and settings checks pass. Chrome acknowledges
+`Browser.close` and disconnects within 12 ms, but the owned browser and Crashpad
+process remain at the ten-second exit bound; forced cleanup is confirmed. No
+page, renderer or GPU process remains in that final process-tree observation.
+The original failure is retained. The [single same-revision Windows repeat](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39346101215/job/118387237373)
+passes without source, browser-selection or deadline changes. All seven required
+CI jobs are now green at `25cab4fd`; Linux/macOS recovery, Windows onboarding
+and release packaging pass. This hosted software-renderer result does not replace
+physical GPU evidence. The tested PR merge `177463db` has the same source tree
+as `25cab4fd`.
+
+The later QA revision `ae74be8b` fails its
+[mixed-use soak preflight](street-level-ae74be8b-failure.json) within the Street
+Level browser job. Fixture delivery, content hashes and all eight materialized
+datacenters are verified, but no feature becomes renderable during 75 completed
+frames. The recorded camera pose is an initial observation, not the pose at
+failure. The other six required CI jobs and release packaging pass. VM105 retains
+the original failed log and metadata; the tested merge `4a155da5` has the same
+tree as `ae74be8b`. A possible startup-navigation race is being investigated.
+The failure is not classified as a runtime regression without further evidence.
+
+The QA-only correction pins the fixture view through the production share-link
+decoder at both navigations, preserving the declared OSM/DENSE 75 settings and
+explicit current visual defaults. It requires two distinct completed frames
+after acquiring camera ownership and captures the actual failure-time pose.
+[All 54 focused checks](soak-camera-ownership-validation-20261020-r3.json) pass on
+Node 24 and 26 on VM105. Replacing only the corrected camera helper with its
+original source makes the frame-ownership regression fail with an assertion.
+The initial [formatter configuration failure](soak-camera-ownership-validation-20261020.json)
+and [test-fixture failures](soak-camera-ownership-validation-20261020-r2.json)
+remain available. Hosted browser confirmation is pending; no runtime or
+acceptance threshold changes are included.
+
+The corrected candidate's [cable pair](infrastructure-cables-190c5ab6-result.json)
+has now passed independent VM validation. Its five-run motion median p95 is
+311.7 ms versus the recorded baseline's 332.8 ms (-6.34%); startup changes
+-16.52% for app readiness and -9.46% for loading completion. The original
+baseline reuse is explicitly declared and is not a new interleaved speedup
+experiment. All seven raw/report/protocol files were hash-verified on VM105.
 
 The preceding complete workload matrix applies to `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes

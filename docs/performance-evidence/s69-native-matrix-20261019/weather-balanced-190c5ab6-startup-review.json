@@ -1,0 +1,440 @@
+{
+  "schema": "gev-balanced-weather-startup-review/v2",
+  "reviewedAt": "2026-10-20T00:40:17.598Z",
+  "status": "measured",
+  "pins": {
+    "control": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+    "matrixConsumer": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+    "metricsConsumer": "14201a7f0c8cc7989877a4c7d8ced929ca03ed87"
+  },
+  "envelope": {
+    "path": "qualification-envelope.json",
+    "sha256": "2afe87373bb090946e212dd209619db6b67c6c138f082bf8ce7289599a5036d8"
+  },
+  "identity": {
+    "browserVersion": "Chrome/155.0.8059.84",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 1800
+    },
+    "nativeSharpnessProfile": {
+      "id": "native-sharpness-v1",
+      "useBrowserRecommendedResolution": false,
+      "resolutionScale": 1,
+      "maximumScreenSpaceError": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    },
+    "measurement": "cache-disabled fresh browser contexts",
+    "runCount": 1
+  },
+  "metrics": {
+    "appReadyMs": {
+      "baselineMedianMs": 4078,
+      "candidateMedianMs": 4157,
+      "changePct": 1.9372241294752346,
+      "thresholdPct": 10,
+      "regressionOver10Pct": false
+    },
+    "initialSettleMs": {
+      "baselineMedianMs": 5160,
+      "candidateMedianMs": 5065,
+      "changePct": -1.8410852713178327,
+      "thresholdPct": 10,
+      "regressionOver10Pct": false
+    }
+  },
+  "rows": {
+    "control": [
+      {
+        "sequence": 1,
+        "path": "sample-01-control.json",
+        "sha256": "9e8654cba43efb6cf3280e304f4e7613e22c3cd7d365675a0b8b0b8764c85470",
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "run": 1,
+        "appReadyMs": 3083,
+        "initialSettleMs": 4274,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 37728,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 37728,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 4,
+        "path": "sample-04-control.json",
+        "sha256": "48bcc2d55f2c2ac525f5c2f8271fb20d04e00f2e0deecea20b9439bc7e5d9ebc",
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "run": 1,
+        "appReadyMs": 4234,
+        "initialSettleMs": 5160,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 12356,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 12356,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 5,
+        "path": "sample-05-control.json",
+        "sha256": "94328cff2b7a8a530cb204d05c55d9ce7f2d45ce3c368f24724d67c9668e0fa6",
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "run": 1,
+        "appReadyMs": 4068,
+        "initialSettleMs": 5283,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 43292,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 43292,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 8,
+        "path": "sample-08-control.json",
+        "sha256": "41b97d339e28f265c257a50fc783157661ee1ed46c72e321d6cfffb4ddd952f6",
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "run": 1,
+        "appReadyMs": 5085,
+        "initialSettleMs": 6344,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 3052,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 3052,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 9,
+        "path": "sample-09-control.json",
+        "sha256": "1d2e96abf73d3df77c3c83bc05bdf639351c6d07777d54094e88ad699cc34ad7",
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "run": 1,
+        "appReadyMs": 4078,
+        "initialSettleMs": 5048,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 18656,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 18656,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      }
+    ],
+    "candidate": [
+      {
+        "sequence": 2,
+        "path": "sample-02-candidate.json",
+        "sha256": "bf45cd6c605fa11dedfe5a38d5c7b0419cfeb1ce3a09792ebcfc7baadfa54db8",
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "run": 1,
+        "appReadyMs": 4250,
+        "initialSettleMs": 5326,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 43516,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 43516,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 3,
+        "path": "sample-03-candidate.json",
+        "sha256": "694a037d2436aacabad37cb30588823e527cd80dcea80808d49984ea63bd5829",
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "run": 1,
+        "appReadyMs": 3712,
+        "initialSettleMs": 4959,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 38384,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 38384,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 6,
+        "path": "sample-06-candidate.json",
+        "sha256": "d5be5c8a2f972c95a5438e646f05b829078afea25912182efd928da58619fbdc",
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "run": 1,
+        "appReadyMs": 4186,
+        "initialSettleMs": 5065,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 12088,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 12088,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 7,
+        "path": "sample-07-candidate.json",
+        "sha256": "6a0cda60b07de344644fd31c7154abb0345662575727fef28ed0ac9c3a906e49",
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "run": 1,
+        "appReadyMs": 4157,
+        "initialSettleMs": 5323,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 43684,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 43684,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      },
+      {
+        "sequence": 10,
+        "path": "sample-10-candidate.json",
+        "sha256": "9ef2457fa035bf2ee7f8e9b01445a9d63f5de4c965e97df27a3a9142b7048dfd",
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "run": 1,
+        "appReadyMs": 3642,
+        "initialSettleMs": 4727,
+        "cacheDisabled": true,
+        "foregroundActivation": {
+          "schema": "gev-performance-foreground-activation/v1",
+          "visible": true,
+          "focused": true,
+          "visibilityState": "visible",
+          "timeoutMs": 5000,
+          "pollingMs": 50,
+          "waitOutcome": "condition-resolved",
+          "hostWindowActivation": {
+            "requestId": 1,
+            "schema": "gev-windows-owned-browser-foreground-activation/v1",
+            "status": "foreground-confirmed",
+            "browserPid": 38032,
+            "windowHandleAvailable": true,
+            "windowHandleSource": "process-main-window",
+            "handlePollAttempts": 1,
+            "inputAttached": false,
+            "mutationSkipped": true,
+            "showWindowAccepted": null,
+            "bringWindowToTopAccepted": null,
+            "setForegroundAccepted": null,
+            "foregroundConfirmed": true,
+            "foregroundPid": 38032,
+            "foregroundProcessName": "chrome",
+            "desktopState": "interactive"
+          }
+        }
+      }
+    ]
+  },
+  "scope": "All ten original startup observations, after independent validation of the balanced envelope and child hashes. Existing 10% median limits; no retries, sample substitution, subtraction, or raw-report mutation. This is startup evidence only; motion, visual fidelity, interaction and retention remain independent gates."
+}

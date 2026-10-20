@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import test from 'node:test';
+import * as Cesium from 'cesium';
 import {
   resolveExpectedApplicationCommit,
   resolveNativeResolutionFlag,
@@ -17,8 +18,10 @@ import {
   resolveNativeSoakViewport,
   createSoakDatacenterFixture,
   createSoakDatacenterFixtureReceipt,
+  createSoakFixtureShareHash,
   isSoakDatacenterAssetRequest,
   prepareSoakDatacenterFixtureViewInPage,
+  readSoakDatacenterCameraPoseInPage,
   evaluateSoakDatacenterEnabledState,
   installSoakDatacenterPostRenderWitnessInPage,
   startSoakDatacenterPreflightWitnessInPage,
@@ -26,6 +29,8 @@ import {
   SOAK_DATACENTER_FEATURE_COUNT,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
+import { flyToAustin } from '../src/camera.js';
+import { ShareLinkManager } from '../src/sharelink.js';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
 import {
@@ -211,12 +216,136 @@ test('rendered soak location accepts Ampfing coordinates and rejects invalid vie
   );
 });
 
-test('datacenter preflight positions the camera over the fixture and requests an unmeasured render', () => {
+function parseInitialShareHash(hash) {
+  const hadWindow = Object.hasOwn(globalThis, 'window');
+  const previousWindow = globalThis.window;
+  globalThis.window = { location: { hash } };
+  const manager = new ShareLinkManager({
+    camera: { changed: { addEventListener: () => () => {} } },
+  });
+  try {
+    return manager.parseInitialHash();
+  } finally {
+    manager.destroy();
+    if (hadWindow) globalThis.window = previousWindow;
+    else delete globalThis.window;
+  }
+}
+
+test('validated share boot suppresses the actual startup flight and preserves soak map/density', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const location = {
+    latitude: 40.71234567,
+    longitude: -73.91234567,
+    altitude: 1000.5,
+  };
+  const hash = createSoakFixtureShareHash(location);
+  const runStartupCameraCondition = (value) => {
+    const calls = { setView: [], flyTo: [] };
+    const viewer = {
+      isDestroyed: () => false,
+      camera: {
+        setView: (pose) => calls.setView.push(pose),
+        flyTo: (pose) => calls.flyTo.push(pose),
+        cancelFlight() {},
+      },
+    };
+    if (!parseInitialShareHash(value)) flyToAustin(viewer);
+    return calls;
+  };
+
+  const emptyHashBoot = runStartupCameraCondition('');
+  assert.equal(emptyHashBoot.setView.length, 1);
+  assert.equal(emptyHashBoot.flyTo.length, 0);
+  t.mock.timers.tick(500);
+  assert.equal(
+    emptyHashBoot.flyTo.length,
+    1,
+    'empty hash schedules the Austin takeover',
+  );
+  assert.ok(
+    Cesium.Cartesian3.distance(
+      emptyHashBoot.flyTo[0].destination,
+      Cesium.Cartesian3.fromDegrees(-97.7431, 30.2672, 600),
+    ) < 1e-6,
+    'the pending startup flight targets Austin',
+  );
+  const shareState = parseInitialShareHash(hash);
+  const pinnedBoot = runStartupCameraCondition(hash);
+  assert.ok(shareState, 'the production share decoder must accept this hash');
+  assert.equal(pinnedBoot.setView.length, 0);
+  assert.equal(pinnedBoot.flyTo.length, 0);
+  assert.equal(shareState.lat, location.latitude);
+  assert.equal(shareState.lon, location.longitude);
+  assert.equal(shareState.alt, location.altitude);
+  assert.equal(shareState.mapStack, 'osm');
+  assert.equal(shareState.detectionMode, 'DENSE');
+  assert.equal(shareState.detectionDensity, 75);
+  assert.equal(shareState.bloomIntensity, 0);
+  assert.equal(shareState.bloomVersion, 2);
+  assert.equal(shareState.detectionFadePct, 7);
+  assert.equal(shareState.detectionOutsideOpacityPct, 1);
+  assert.equal(shareState.scopeFeatherPct, 11);
+  const params = new URLSearchParams(hash.slice(1));
+  assert.equal(params.get('v'), '2');
+  assert.equal(params.get('lat'), String(location.latitude));
+  assert.equal(params.get('lon'), String(location.longitude));
+  assert.equal(params.get('alt'), String(location.altitude));
+  assert.equal(params.get('map'), 'osm');
+  assert.equal(params.get('dm'), 'DENSE');
+  assert.equal(params.get('dd'), '75');
+  assert.equal(params.has('l'), false);
+});
+
+test('failure-time camera pose reader returns finite evidence or unavailable', () => {
+  const scope = {
+    window: {
+      __godsEyeView: {
+        viewer: {
+          camera: {
+            positionCartographic: {
+              latitude: (40.7 * Math.PI) / 180,
+              longitude: (-73.9 * Math.PI) / 180,
+              height: 1000,
+            },
+            heading: 0,
+            pitch: -Math.PI / 2,
+            roll: 0,
+          },
+          scene: { frameState: { frameNumber: 42 } },
+        },
+      },
+    },
+    Math,
+    Number,
+    Object,
+  };
+  const observed = vm.runInNewContext(
+    `(${readSoakDatacenterCameraPoseInPage.toString()})()`,
+    scope,
+  );
+  assert.ok(Math.abs(observed.latitude - 40.7) < 1e-12);
+  assert.ok(Math.abs(observed.longitude + 73.9) < 1e-12);
+  assert.equal(observed.altitude, 1000);
+  assert.equal(observed.frameNumber, 42);
+  scope.window.__godsEyeView.viewer.camera.positionCartographic.height = NaN;
+  assert.equal(
+    vm.runInNewContext(
+      `(${readSoakDatacenterCameraPoseInPage.toString()})()`,
+      scope,
+    ),
+    null,
+  );
+});
+
+function createDatacenterCameraPageHarness({ onRequestRender } = {}) {
   const calls = [];
+  const renderListeners = new Set();
+  let frameNumber = 10;
   class Cartesian3 {
     static fromDegrees(longitude, latitude, altitude) {
       calls.push(['fromDegrees', longitude, latitude, altitude]);
-      return { longitude, latitude, altitude };
+      return { latitude, longitude, altitude };
     }
   }
   const camera = {
@@ -231,40 +360,189 @@ test('datacenter preflight positions the camera over the fixture and requests an
     roll: 0,
     setView(view) {
       calls.push(['setView', view]);
+      camera.positionCartographic = {
+        latitude: (view.destination.latitude * Math.PI) / 180,
+        longitude: (view.destination.longitude * Math.PI) / 180,
+        height: view.destination.altitude,
+      };
+      Object.assign(camera, view.orientation);
+    },
+    flyTo(view) {
+      calls.push(['startup-flyTo', view]);
+      camera.positionCartographic = {
+        latitude: (view.destination.latitude * Math.PI) / 180,
+        longitude: (view.destination.longitude * Math.PI) / 180,
+        height: view.destination.altitude,
+      };
+      Object.assign(camera, view.orientation);
+    },
+    cancelFlight() {
+      calls.push(['cancelFlight']);
+    },
+  };
+  const scene = {
+    frameState: {
+      get frameNumber() {
+        return frameNumber;
+      },
+    },
+    postRender: {
+      addEventListener(listener) {
+        renderListeners.add(listener);
+        return () => renderListeners.delete(listener);
+      },
+    },
+    requestRender() {
+      calls.push(['requestRender']);
+      onRequestRender?.({ frameNumber, renderListeners });
     },
   };
   const window = {
     __godsEyeView: {
-      viewer: {
-        camera,
-        scene: {
-          requestRender() {
-            calls.push(['requestRender']);
-          },
+      viewer: { camera, scene },
+      styleManager: {
+        runImmediateLocationNavigation(navigate) {
+          calls.push(['runImmediateLocationNavigation']);
+          camera.cancelFlight();
+          return navigate();
         },
       },
     },
   };
+  return {
+    calls,
+    camera,
+    renderListeners,
+    setFrameNumber(value) {
+      frameNumber = value;
+    },
+    emitPostRender() {
+      for (const listener of [...renderListeners]) listener();
+    },
+    window,
+  };
+}
+
+test('datacenter camera preflight requires two fresh distinct matching frames', async () => {
+  const harness = createDatacenterCameraPageHarness();
   const location = { latitude: 40.7, longitude: -73.9, altitude: 1000 };
-  const result = vm.runInNewContext(
+  let timerCallback;
+  const timerIds = new Set();
+  let nextTimerId = 0;
+  const context = {
+    window: harness.window,
+    location,
+    Math,
+    Promise,
+    JSON,
+    Number,
+    Error,
+    setTimeout(callback) {
+      timerCallback = callback;
+      const id = ++nextTimerId;
+      timerIds.add(id);
+      return id;
+    },
+    clearTimeout(id) {
+      timerIds.delete(id);
+    },
+  };
+  const resultPromise = vm.runInNewContext(
     `(${prepareSoakDatacenterFixtureViewInPage.toString()})(location)`,
-    { window, location, Math },
+    context,
   );
-  assert.deepEqual(
-    calls.map(([name]) => name),
-    ['fromDegrees', 'setView', 'requestRender'],
-  );
-  assert.equal(
-    JSON.stringify(calls[1][1].orientation),
-    JSON.stringify({ heading: 0, pitch: -Math.PI / 2, roll: 0 }),
-  );
-  assert.equal(JSON.stringify(result.requested), JSON.stringify(location));
+  assert.equal(harness.renderListeners.size, 1);
+  harness.setFrameNumber(11);
+  harness.emitPostRender();
+  harness.emitPostRender();
+  let settled = false;
+  resultPromise.then(() => (settled = true));
+  await Promise.resolve();
+  assert.equal(settled, false, 'duplicate callbacks in one frame count once');
+  harness.setFrameNumber(12);
+  harness.emitPostRender();
+  const result = await resultPromise;
+  assert.equal(result.frameNumber, 12);
   assert.ok(Math.abs(result.observed.latitude - location.latitude) < 1e-12);
   assert.ok(Math.abs(result.observed.longitude - location.longitude) < 1e-12);
   assert.equal(result.observed.altitude, location.altitude);
-  assert.equal(result.heading, 0);
-  assert.equal(result.pitch, -Math.PI / 2);
-  assert.equal(result.roll, 0);
+  assert.deepEqual(
+    harness.calls.filter(([name]) => name === 'runImmediateLocationNavigation')
+      .length,
+    1,
+  );
+  assert.equal(harness.renderListeners.size, 0);
+  assert.equal(timerIds.size, 0);
+  assert.equal(typeof timerCallback, 'function');
+});
+
+test('datacenter camera preflight cleans its observer and reports pose on render errors', async () => {
+  let renderRequests = 0;
+  const harness = createDatacenterCameraPageHarness({
+    onRequestRender() {
+      if (++renderRequests > 1) throw new Error('render request failed');
+    },
+  });
+  const location = { latitude: 40.7, longitude: -73.9, altitude: 1000 };
+  const context = {
+    window: harness.window,
+    location,
+    Math,
+    Promise,
+    JSON,
+    Number,
+    Error,
+    setTimeout: () => 1,
+    clearTimeout() {},
+  };
+  const resultPromise = vm.runInNewContext(
+    `(${prepareSoakDatacenterFixtureViewInPage.toString()})(location)`,
+    context,
+  );
+  harness.setFrameNumber(11);
+  harness.emitPostRender();
+  await assert.rejects(
+    resultPromise,
+    (error) =>
+      error.message.includes('render request failed') &&
+      Math.abs(error.cameraPose?.latitude - location.latitude) < 1e-12,
+  );
+  assert.equal(harness.renderListeners.size, 0);
+});
+
+test('datacenter camera preflight timeout retains final pose and cleans listener', async () => {
+  const harness = createDatacenterCameraPageHarness();
+  const location = { latitude: 40.7, longitude: -73.9, altitude: 1000 };
+  const context = {
+    window: harness.window,
+    location,
+    Math,
+    Promise,
+    JSON,
+    Number,
+    Error,
+    setTimeout(callback) {
+      context.timeoutCallback = callback;
+      return 1;
+    },
+    clearTimeout() {},
+  };
+  const resultPromise = vm.runInNewContext(
+    `(${prepareSoakDatacenterFixtureViewInPage.toString()})(location)`,
+    context,
+  );
+  harness.camera.flyTo({
+    destination: { latitude: 30.2672, longitude: -97.7431, altitude: 600 },
+    orientation: { heading: 0.26, pitch: -0.52, roll: 0 },
+  });
+  context.timeoutCallback();
+  await assert.rejects(
+    resultPromise,
+    (error) =>
+      Math.abs(error.cameraPose?.latitude - 30.2672) < 1e-12 &&
+      Math.abs(error.cameraPose?.longitude + 97.7431) < 1e-12,
+  );
+  assert.equal(harness.renderListeners.size, 0);
 });
 
 test('datacenter postRender witness inspects LOD only during bounded preflight and stops in cleanup', async () => {

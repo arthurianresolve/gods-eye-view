@@ -1,0 +1,266 @@
+{
+  "schema": "gev-soak-camera-ownership-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-20T01:15:28.491Z",
+  "baseCommit": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4",
+  "files": [
+    {
+      "name": "scripts/qa-mixed-use-soak.test.mjs",
+      "bytes": 67062,
+      "sha256": "cf7ead985194c4f81a56e8919ac60d89359236ffba035e83c6c366a4e6837426",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/qa-mixed-use-soak.mjs",
+      "bytes": 16507,
+      "sha256": "8dff78b370559f56dd4cef9deb904896240f1f747d84575e35ae301473c378a9",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/qa-rendered-soak-driver.mjs",
+      "bytes": 67983,
+      "sha256": "a46584e8ad7157c9208661028678807665b62717bafb5607bc4d373f816409a8",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/rendererEvidence.mjs",
+      "bytes": 3209,
+      "sha256": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/workerDiagnostics.mjs",
+      "bytes": 2915,
+      "sha256": "e06dcbd2a951ea35b36e56a8d5e6140abf2ce98f25cbaa9d82c1a4fde12cae81",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/hostedSoakSession.mjs",
+      "bytes": 2590,
+      "sha256": "1ee8172bd9b7626c92ea3e670d415722a9cf7e01a9b0707e23edb3bbf5cb7d47",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryPageOwnership.mjs",
+      "bytes": 34736,
+      "sha256": "6179c78cf5ee652f169786bec32652b9a1fa044e74f90856452ba7af348afaa2",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/startupDiagnostics.mjs",
+      "bytes": 8814,
+      "sha256": "9aad3887b5dc32355d7f191fdf64a597e42f1e98bfa4ddc9c77e8c868c2f9efe",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.mjs",
+      "bytes": 27769,
+      "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/fixtureInterception.mjs",
+      "bytes": 13174,
+      "sha256": "b7a095598c501154e2cca8e2d8d442a2a5f3983c6cff7401bb94bb6615f1c946",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/fixtureNetworkProbe.mjs",
+      "bytes": 2308,
+      "sha256": "05ecd4a985b465bb8388370356eac3338af560d55f0d664a6dad23661e97837a",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryFixtureContract.mjs",
+      "bytes": 292,
+      "sha256": "87a1e78394f0f63dd4f91937be152a7c5df9e49c09a624032d5e295b94706aa2",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/workspaceOpenProbe.mjs",
+      "bytes": 2606,
+      "sha256": "62b2bef8b007274b7f4828ad7ced8e4d56e567464d64d7ce56c425fddbcca32f",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/consoleMessageOwnership.mjs",
+      "bytes": 3224,
+      "sha256": "30377088596290eb87562de03eafe42dfda65e4422c01dd8fe97e09d26a2041f",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/cesiumWorkerProbeInPage.mjs",
+      "bytes": 3717,
+      "sha256": "453cb05945d1fba93232499d6297420d5248b0b2a615506672563f9f5aff9737",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/recording/syntheticFixture.js",
+      "bytes": 1227,
+      "sha256": "f436c640456e319b2055d17ecc5deb82fedd0145170eeb7a45242a4f6c382433",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/recording/bundle.js",
+      "bytes": 10990,
+      "sha256": "c62fd997eca99f372d742bceb8c14cea311288dced036ebaa79ca6090a425639",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/storage/codec.js",
+      "bytes": 4065,
+      "sha256": "10825ceeae7cc6fec0e884bdb6a791fa3f0773b2dfcbbf9f7175db0e8c915c40",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/i18n/marker.js",
+      "bytes": 399,
+      "sha256": "8b9c5d7a233d59205e7e74428bf5c8a6bd8e916a45737e44b199c02593199c41",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/soakStability.mjs",
+      "bytes": 5521,
+      "sha256": "996efb1f0bb20654bfcd41f7107524afe7b7a089237459f06f221ef979c1d634",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/camera.js",
+      "bytes": 2202,
+      "sha256": "44a93bc244a0f438b874a1606c4fbd2de5df82b03e88e5d3793cf253f0884649",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/sharelink.js",
+      "bytes": 34737,
+      "sha256": "964a92252609980bb05d5a62e18fdab6e3f70b8b1bc137b05d7ed8ade5cab636",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/view/styleParams.js",
+      "bytes": 3814,
+      "sha256": "cb5fae4cf6820f62aaf899d9acfd24abc964e6467e9fc4b88860358c0d93f501",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/view/visual.js",
+      "bytes": 5231,
+      "sha256": "53e8f449f116e0d25ec17af1a7b64a50a88e4381110b127034f3d37523ab409c",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/bloom.js",
+      "bytes": 2995,
+      "sha256": "7d67152d956e2658c1de9262c337d086eb46031bb79c6d211acce5b8bfc2de1b",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/data/detectionPolicy.js",
+      "bytes": 10509,
+      "sha256": "1a2346b27f0182050f5ed7bc2a71ec3a64b6717f130a281c2a0f3593d97a3edf",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/scopeMask.js",
+      "bytes": 21708,
+      "sha256": "be86c787a23187bc42844cde877e3455a48c60253fdbd9d0ee57fb81680253d5",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/celestialRing.js",
+      "bytes": 29380,
+      "sha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/renderGovernor.js",
+      "bytes": 9028,
+      "sha256": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/data/layerState.js",
+      "bytes": 36278,
+      "sha256": "5cc06c6a1d9fcef5e20dc76b3f43c3b17365015fbef5c206c3b2a74776b5b891",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/data/idSwitches.js",
+      "bytes": 2160,
+      "sha256": "42e78e28517958cf3c5b2bd207e733c074d9167c09cf73b5cf8c9ba51951f155",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/data/layerStateTokenReservations.json",
+      "bytes": 803,
+      "sha256": "3fbca2de9c0a5779e756f5612962f41a0dc729ee7638b414bbeec7b42073af4a",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "src/view/index.js",
+      "bytes": 17481,
+      "sha256": "2ae8ca241deefd045219a388aac8057636aadf236f3831807a57af5c892ccf43",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "scripts/performance/workerProbe.mjs",
+      "bytes": 1772,
+      "sha256": "a9d36f9f41a800f046b0b1bcd964ef7aedb9df4efa263224b198f84877fb0fe7",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    },
+    {
+      "name": ".prettierrc.json",
+      "bytes": 80,
+      "sha256": "d77193f01dffa58f3e766b73873a6d3d5b2291ee59916ddcc53c2e04a88a232d",
+      "source": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "expectedCode": 0,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "summary": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "expectedCode": 0,
+      "sha256": "09d8efce83a451a940e1b6b05e7352d6911012fdb5e9f3ee3d2721b499412ac4",
+      "summary": "ined checkpoints (0.45694ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.470327ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (5.830466ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.691895ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.415782ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.266525ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.806946ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.322641ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.359863ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.299969ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.837235ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.361567ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.317673ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.366737ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (5.003851ms)\n✔ software renderer detection rejects known fallback strings (0.43592ms)\n✔ soak fails when an operation is missing or fails (0.443185ms)\n✔ a committed harness may validate a separately frozen application commit (0.196268ms)\nℹ tests 54\nℹ suites 0\nℹ pass 54\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 915.318881\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "expectedCode": 0,
+      "sha256": "c11a51dd9359a90a1481f29b764646f38049cf685697f6edaa291a2fe2b83259",
+      "summary": "ined checkpoints (0.353382ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.432835ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (5.258822ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.766208ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.391576ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.214523ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.724328ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.286974ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.314336ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.26414ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.381175ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.316712ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.261144ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.447742ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (3.998662ms)\n✔ software renderer detection rejects known fallback strings (0.621118ms)\n✔ soak fails when an operation is missing or fails (0.432545ms)\n✔ a committed harness may validate a separately frozen application commit (0.16567ms)\nℹ tests 54\nℹ suites 0\nℹ pass 54\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 843.358761\n"
+    },
+    {
+      "label": "original-camera-ownership-negative-control",
+      "code": 1,
+      "signal": null,
+      "expectedCode": 1,
+      "sha256": "2b713e6f0d1f1b5933aca6df2d354a5caea6db8b7b95a27809e85b7479a18fa9",
+      "summary": "✖ datacenter camera preflight requires two fresh distinct matching frames (3.08478ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 811.899365\n\n✖ failing tests:\n\ntest at scripts/qa-mixed-use-soak.test.mjs:426:1\n✖ datacenter camera preflight requires two fresh distinct matching frames (3.08478ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  0 !== 1\n  \n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/soak-camera-ownership-validation-20261020-r3/scripts/qa-mixed-use-soak.test.mjs:454:10)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.start (node:internal/test_runner/test:1262:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 0,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "completedAt": "2026-10-20T01:15:31.557Z"
+}

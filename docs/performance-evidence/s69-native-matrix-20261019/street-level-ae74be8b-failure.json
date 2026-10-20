@@ -1,0 +1,281 @@
+{
+  "schema": "gev-hosted-preflight-failure-review/v1",
+  "reviewedAt": "2026-10-20T01:08:37.591Z",
+  "status": "failed-before-measurement",
+  "workflowRun": 39349807408,
+  "job": 118391068026,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068026",
+  "pullRequestHeadCommit": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4",
+  "testedCommit": "4a155da535cb9384878f79353fdadc773744e375",
+  "headTree": "32dde98d91b268a7bc463a592eed1f9c0d1b9da8",
+  "testedTree": "32dde98d91b268a7bc463a592eed1f9c0d1b9da8",
+  "raw": {
+    "operationStatus": "failed",
+    "error": "Waiting failed: 30000ms exceeded; bounded datacenter preflight state: {\"cameraPose\":{\"requested\":{\"latitude\":40.7,\"longitude\":-73.9,\"altitude\":1000},\"observed\":{\"latitude\":40.699999999999996,\"longitude\":-73.9,\"altitude\":1000.0000000010535},\"heading\":6.283185307179586,\"pitch\":-1.5707963267948966,\"roll\":0},\"frameStart\":0,\"frameEnd\":75,\"enabledState\":{\"enabled\":true,\"computed\":true,\"total\":8,\"active\":0,\"populationObserved\":true,\"renderableObserved\":false,\"renderedFrameObserved\":false,\"observed\":false,\"failureReason\":\"no-renderable-feature-in-view\"}}",
+    "datacenterFixtureProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+    "fullSoak": false,
+    "hardwareRenderingValidated": false,
+    "stability": {
+      "status": "pending",
+      "pending": ["Run failed before measurement."]
+    },
+    "datacenterFixtureReceipt": {
+      "schema": "gev-soak-datacenter-fixture/v2",
+      "fulfillmentProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+      "status": "failed",
+      "requestCount": 1,
+      "preparedRequestCount": 1,
+      "fulfilledRequestCount": 1,
+      "applicationOrigin": "http://localhost:4174",
+      "assetOrigin": "http://localhost:4174",
+      "assetPath": "/src/data/local_data/datacenters/datacenters.geojsonl",
+      "responseStatus": 200,
+      "expectedBodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "expectedFeatureCount": 8,
+      "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "deliveredFeatureCount": 8,
+      "materializedFeatureCount": 8,
+      "disabledMaterializedFeatureCount": null,
+      "disabledRenderableCount": null,
+      "setupTiming": "unmeasured-before-interaction-samples",
+      "preloadEnabledObserved": false,
+      "preloadEnabledState": {
+        "enabled": true,
+        "computed": true,
+        "total": 8,
+        "active": 0,
+        "populationObserved": true,
+        "renderableObserved": false,
+        "renderedFrameObserved": false,
+        "observed": false,
+        "failureReason": "no-renderable-feature-in-view"
+      },
+      "preloadCameraPose": {
+        "requested": {
+          "latitude": 40.7,
+          "longitude": -73.9,
+          "altitude": 1000
+        },
+        "observed": {
+          "latitude": 40.699999999999996,
+          "longitude": -73.9,
+          "altitude": 1000.0000000010535
+        },
+        "heading": 6.283185307179586,
+        "pitch": -1.5707963267948966,
+        "roll": 0
+      },
+      "preloadRenderedFrameStart": 0,
+      "preloadRenderedFrameEnd": 75,
+      "preloadRenderWitness": {
+        "renderedFrames": 75,
+        "frameNumber": 92,
+        "enabled": true,
+        "computed": true,
+        "total": 8,
+        "active": 0
+      },
+      "preloadRenderedFrameObserved": false,
+      "preloadWitnessCollectionStopped": true,
+      "preloadDisabledObserved": false,
+      "failureReason": "Waiting failed: 30000ms exceeded; bounded datacenter preflight state: {\"cameraPose\":{\"requested\":{\"latitude\":40.7,\"longitude\":-73.9,\"altitude\":1000},\"observed\":{\"latitude\":40.699999999999996,\"longitude\":-73.9,\"altitude\":1000.0000000010535},\"heading\":6.283185307179586,\"pitch\":-1.5707963267948966,\"roll\":0},\"frameStart\":0,\"frameEnd\":75,\"enabledState\":{\"enabled\":true,\"computed\":true,\"total\":8,\"active\":0,\"populationObserved\":true,\"renderableObserved\":false,\"renderedFrameObserved\":false,\"observed\":false,\"failureReason\":\"no-renderable-feature-in-view\"}}",
+      "requests": [
+        {
+          "origin": "http://localhost:4174",
+          "pathname": "/src/data/local_data/datacenters/datacenters.geojsonl",
+          "prepared": true,
+          "fulfilled": true,
+          "responseStatus": 200,
+          "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+          "deliveredFeatureCount": 8
+        }
+      ]
+    },
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 44124.283133,
+        "closeSettledHostMs": 44255.42344,
+        "closeElapsedMs": 131.14030700000148,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 110.85288500000024
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "candidateCommit": "4a155da535cb9384878f79353fdadc773744e375",
+    "harnessCommit": "4a155da535cb9384878f79353fdadc773744e375",
+    "sourceDirtyAtStart": false,
+    "harnessDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "harnessChangedDuringRun": false
+  },
+  "hardwareAcceptance": false,
+  "interpretation": "The eight synthetic datacenters were delivered and materialized, but none became renderable during 75 completed frames. The recorded camera pose was sampled before the failure; it is not evidence of the failure-time pose. A possible startup-navigation race is under investigation. No timeout or acceptance criterion is relaxed, and no retry has been requested.",
+  "jobs": [
+    {
+      "id": 118391068026,
+      "name": "Street Level browser gate",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068026"
+    },
+    {
+      "id": 118391068293,
+      "name": "Windows onboarding",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068293"
+    },
+    {
+      "id": 118391068443,
+      "name": "Install and update recovery (ubuntu-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068443"
+    },
+    {
+      "id": 118391068446,
+      "name": "Node 24.14.0",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068446"
+    },
+    {
+      "id": 118391068481,
+      "name": "Install and update recovery (macos-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068481"
+    },
+    {
+      "id": 118391068529,
+      "name": "Install and update recovery (windows-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068529"
+    },
+    {
+      "id": 118391068585,
+      "name": "Node 26.x",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391068585"
+    },
+    {
+      "id": 118391069341,
+      "name": "Isolated CCTV lifecycle",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069341"
+    },
+    {
+      "id": 118391069407,
+      "name": "Isolated mission render-demand correctness",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069407"
+    },
+    {
+      "id": 118391069573,
+      "name": "60-minute rendered application soak",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069573"
+    },
+    {
+      "id": 118391069712,
+      "name": "Free hosted Mac rendering diagnostic",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069712"
+    },
+    {
+      "id": 118391069780,
+      "name": "Native WebGL probe (${{ matrix.os }})",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069780"
+    },
+    {
+      "id": 118391069986,
+      "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391069986"
+    },
+    {
+      "id": 118391070347,
+      "name": "Isolated import and workspace lifecycle",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391070347"
+    },
+    {
+      "id": 118391070393,
+      "name": "Free hosted Mac accelerated retention diagnostic",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391070393"
+    },
+    {
+      "id": 118391070404,
+      "name": "Isolated terrain and picking lifecycle",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391070404"
+    },
+    {
+      "id": 118391070407,
+      "name": "Aircraft tracking regression",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391070407"
+    },
+    {
+      "id": 118391100699,
+      "name": "Baseline-compatible performance build smoke",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391100699"
+    },
+    {
+      "id": 118391120469,
+      "name": "Isolated rendered mixed-use smoke",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39349807408/job/118391120469"
+    }
+  ],
+  "files": [
+    {
+      "name": "job.log",
+      "bytes": 71656,
+      "sha256": "c1a4095bf3f4e9d1fd0e4e8173610f9b73e3f3a789e45b4a6fadc2b932eb4968"
+    },
+    {
+      "name": "job.json",
+      "bytes": 4758,
+      "sha256": "d7d30dd7db5cb3605b813e4023e21f15fd3cf10ec0324238a1fc2ab60add8290"
+    },
+    {
+      "name": "run.json",
+      "bytes": 14188,
+      "sha256": "01371ba5971d3951ebc711568db1f6e6c59b9a730208d1ab25a920afc5d25445"
+    },
+    {
+      "name": "jobs.json",
+      "bytes": 37153,
+      "sha256": "2d92db12c8a7bc10d87cf7ef138ddc9ad0990de43ac77e6893a926f84486d71c"
+    },
+    {
+      "name": "head-commit.json",
+      "bytes": 1275,
+      "sha256": "6f2fe9c52d8676116020aa9dce8997fcbb548af3ace9947a46a549f4111a2501"
+    },
+    {
+      "name": "tested-commit.json",
+      "bytes": 2767,
+      "sha256": "4ed8b141b54bbb42dee93221f5c8c032480148366836114d83d89072cb2f42d1"
+    }
+  ]
+}
