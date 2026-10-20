@@ -777,6 +777,7 @@ export async function createRenderedSoakDriver(
     if (closePromise) return closePromise;
     closePromise = (async () => {
       let diagnosticsError = null;
+      let nativeWindowGeometryHelper = null;
       try {
         if (diagnosticsPage)
           await cleanupFixturePageDiagnostics(diagnosticsPage);
@@ -784,9 +785,12 @@ export async function createRenderedSoakDriver(
         diagnosticsError = error;
       }
       try {
-        await nativeWindowOwner?.dispose();
+        nativeWindowGeometryHelper =
+          (await nativeWindowOwner?.dispose())?.hostQueryCleanup || null;
       } catch (error) {
         diagnosticsError ||= error;
+        nativeWindowGeometryHelper =
+          error.nativeWindowGeometryHelperCleanup || null;
       }
       let browserClose;
       let browserCloseError = null;
@@ -796,6 +800,8 @@ export async function createRenderedSoakDriver(
         browserCloseError = error;
         browserClose = error.browserClose || { closeCompleted: false };
       }
+      if (nativeWindowGeometryHelper)
+        browserClose.nativeWindowGeometryHelper = nativeWindowGeometryHelper;
       if (diagnosticsError) {
         diagnosticsError.browserClose = browserClose;
         if (browserCloseError)

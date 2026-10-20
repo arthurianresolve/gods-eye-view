@@ -11,6 +11,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/decorationCaptureProof.test.mjs',
   'scripts/performance/decorationQuantization.test.mjs',
   'scripts/performance/nativeWindowViewport.test.mjs',
+  'scripts/performance/nativeWindowGeometrySession.test.mjs',
   'scripts/performance/settledIdleObservation.test.mjs',
   'scripts/performance/settledIdleQualification.test.mjs',
   'scripts/performance/repeatedFullImageControls.test.mjs',

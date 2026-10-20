@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { isDeepStrictEqual, promisify } from 'node:util';
+import {
+  createNativeWindowGeometrySession,
+  nativeWindowHostQueryError,
+} from './nativeWindowGeometrySession.mjs';
 
 export const NATIVE_WINDOW_VIEWPORT_SCHEMA = 'gev-native-window-viewport/v1';
 const executeFile = promisify(execFile);
@@ -131,6 +135,10 @@ try {
 }
 `;
 
+export function getWindowsNativeWindowGeometryScript() {
+  return WINDOWS_GEOMETRY_SCRIPT;
+}
+
 /** Read the one owned Chrome window; never activate, resize or inspect other apps. */
 export async function readOwnedWindowsNativeWindowGeometry(
   browserPid,
@@ -140,25 +148,45 @@ export async function readOwnedWindowsNativeWindowGeometry(
     throw new Error('Native-window geometry requires the Windows desktop');
   if (!Number.isSafeInteger(browserPid) || browserPid < 1)
     throw new TypeError('Native-window browser PID is invalid');
-  const result = await run(
-    'powershell.exe',
-    [
-      '-NoProfile',
-      '-NonInteractive',
-      '-EncodedCommand',
-      Buffer.from(WINDOWS_GEOMETRY_SCRIPT, 'utf16le').toString('base64'),
-    ],
-    {
-      env: {
-        ...process.env,
-        GEV_NATIVE_WINDOW_BROWSER_PID: String(browserPid),
+  const startedAtMs = performance.now();
+  const startedAtUtc = new Date().toISOString();
+  let result;
+  try {
+    result = await run(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-EncodedCommand',
+        Buffer.from(WINDOWS_GEOMETRY_SCRIPT, 'utf16le').toString('base64'),
+      ],
+      {
+        env: {
+          ...process.env,
+          GEV_NATIVE_WINDOW_BROWSER_PID: String(browserPid),
+        },
+        timeout: 5000,
+        maxBuffer: 64 * 1024,
+        windowsHide: true,
+        ...(signal ? { signal } : {}),
       },
-      timeout: 5000,
-      maxBuffer: 64 * 1024,
-      windowsHide: true,
-      ...(signal ? { signal } : {}),
-    },
-  );
+    );
+  } catch (error) {
+    if (
+      error?.killed === true &&
+      error?.signal === 'SIGTERM' &&
+      error?.code == null &&
+      !signal?.aborted
+    )
+      error.gevTimeout = true;
+    throw nativeWindowHostQueryError(error, {
+      browserPid,
+      phase: 'query',
+      startedAtUtc,
+      completedAtUtc: new Date().toISOString(),
+      elapsedMs: performance.now() - startedAtMs,
+    });
+  }
   const evidence = JSON.parse(String(result.stdout).trim());
   if (
     evidence?.schema !== 'gev-owned-windows-window-geometry/v1' ||
@@ -703,7 +731,8 @@ export async function createNativeWindowViewportOwner({
   page,
   browserPid,
   browserOptions,
-  readHostWindow = readOwnedWindowsNativeWindowGeometry,
+  readHostWindow = null,
+  hostSessionFactory = createNativeWindowGeometrySession,
   settleAttempts = 40,
   settleTimeoutMs = 15_000,
   preparationCleanupTimeoutMs = 1000,
@@ -741,6 +770,8 @@ export async function createNativeWindowViewportOwner({
   let reference = null;
   let configuredGeometry = null;
   let captureCount = 0;
+  let hostSession = null;
+  let disposePromise = null;
   const preparationStarted = performance.now();
   const preparation = {
     schema: 'gev-native-window-preparation/v1',
@@ -812,36 +843,60 @@ export async function createNativeWindowViewportOwner({
     assertActive();
     return value;
   };
-  const dispose = async () => {
-    if (disposed) return;
+  const dispose = () => {
+    if (disposePromise) return disposePromise;
     disposed = true;
     if (preparing && !preparationAbort.signal.aborted)
       preparationAbort.abort(new Error('Native window preparation disposed'));
-    try {
-      if (preparing) {
-        let timer;
-        try {
-          await Promise.race([
-            Promise.resolve().then(() => session.detach()),
-            new Promise((resolve, reject) => {
-              timer = setTimeout(
-                () =>
-                  reject(new Error('Native preparation CDP cleanup timed out')),
-                preparationCleanupTimeoutMs,
-              );
-            }),
-          ]);
-        } finally {
-          clearTimeout(timer);
-        }
-      } else await session.detach();
-    } catch (error) {
-      if (!/Target closed|Session closed/i.test(String(error?.message)))
-        throw error;
-    }
+    disposePromise = (async () => {
+      let failure = null;
+      let hostQueryCleanup = null;
+      try {
+        hostQueryCleanup = (await hostSession?.dispose()) || null;
+      } catch (error) {
+        failure = error;
+        error.nativeWindowGeometryHelperCleanup =
+          hostSession?.read()?.cleanup || null;
+      }
+      try {
+        if (preparing) {
+          let timer;
+          try {
+            await Promise.race([
+              Promise.resolve().then(() => session.detach()),
+              new Promise((resolve, reject) => {
+                timer = setTimeout(
+                  () =>
+                    reject(
+                      new Error('Native preparation CDP cleanup timed out'),
+                    ),
+                  preparationCleanupTimeoutMs,
+                );
+              }),
+            ]);
+          } finally {
+            clearTimeout(timer);
+          }
+        } else await session.detach();
+      } catch (error) {
+        if (!/Target closed|Session closed/i.test(String(error?.message)))
+          failure ||= error;
+      }
+      if (failure) throw failure;
+      return { status: 'disposed', hostQueryCleanup };
+    })();
+    return disposePromise;
   };
   let lastEvidence = null;
   try {
+    if (readHostWindow === null) {
+      hostSession = hostSessionFactory({
+        browserPid,
+        geometryScript: WINDOWS_GEOMETRY_SCRIPT,
+      });
+      await read(() => hostSession.start({ signal: preparationAbort.signal }));
+      readHostWindow = hostSession.query;
+    }
     const before = await read(() =>
       page.evaluate(readNativeWindowViewportInPage),
     );
@@ -917,6 +972,10 @@ export async function createNativeWindowViewportOwner({
         );
         return evidence;
       } catch (error) {
+        if (error.nativeWindowHostQueryFailure)
+          evidence.hostQueryFailure = structuredClone(
+            error.nativeWindowHostQueryFailure,
+          );
         error.nativeWindowViewport = evidence;
         throw error;
       }
@@ -1003,6 +1062,7 @@ export async function createNativeWindowViewportOwner({
       dispose,
     };
   } catch (error) {
+    error.nativeWindowHostQueryFailure ||= hostSession?.read()?.failure || null;
     preparation.status = 'failed';
     preparation.elapsedMs = performance.now() - preparationStarted;
     const failedEvidence = error.nativeWindowViewport || lastEvidence;
@@ -1015,6 +1075,13 @@ export async function createNativeWindowViewportOwner({
     }
     error.nativeWindowViewport = {
       ...failedEvidence,
+      ...(error.nativeWindowHostQueryFailure
+        ? {
+            hostQueryFailure: structuredClone(
+              error.nativeWindowHostQueryFailure,
+            ),
+          }
+        : {}),
       preparation: structuredClone(preparation),
     };
     throw error;

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
+import { nativeWindowHostQueryError } from './nativeWindowGeometrySession.mjs';
 import {
   NATIVE_WINDOW_VIEWPORT_SCHEMA,
   assertMatchingNativeWindowViewport,
   assertNativeWindowViewportEvidence,
   createNativeWindowViewportOwner,
+  getWindowsNativeWindowGeometryScript,
   readNativeWindowViewportInPage,
   readOwnedWindowsNativeWindowGeometry,
   physicalRectToEnclosingDips,
@@ -657,6 +660,248 @@ function staleLayout(layout) {
     Object.assign(viewport, { clientWidth: 1037, clientHeight: 511 });
   return layout;
 }
+
+test('the native owner starts one geometry session before preparation reads and disposes it with CDP', async () => {
+  const h = ownerHarness();
+  delete h.options.readHostWindow;
+  let factories = 0,
+    starts = 0,
+    queries = 0,
+    disposals = 0;
+  const cleanup = {
+    status: 'closed',
+    helperPid: 9001,
+    exitCode: 0,
+    signal: null,
+    requests: 3,
+  };
+  h.options.hostSessionFactory = ({ browserPid, geometryScript }) => {
+    factories++;
+    assert.equal(browserPid, 1122);
+    assert.equal(geometryScript, getWindowsNativeWindowGeometryScript());
+    return {
+      start: async ({ signal }) => {
+        starts++;
+        assert.equal(signal.aborted, false);
+        assert.equal(h.state.pageReads, 0);
+      },
+      query: async (pid) => {
+        assert.equal(pid, 1122);
+        return {
+          ...clone(h.state.evidence.host),
+          query: { requestId: ++queries, helperPid: 9001 },
+        };
+      },
+      dispose: async () => {
+        disposals++;
+        return cleanup;
+      },
+      read: () => ({ cleanup }),
+    };
+  };
+  const owner = await createNativeWindowViewportOwner(h.options);
+  h.state.evidence = fixture();
+  const after = await owner.capture('fresh-checkpoint');
+  assert.equal(factories, 1);
+  assert.equal(starts, 1);
+  assert.equal(queries, 3);
+  assert.ok(after.host.query.requestId > owner.configured.host.query.requestId);
+  assert.deepEqual(await owner.dispose(), {
+    status: 'disposed',
+    hostQueryCleanup: cleanup,
+  });
+  await owner.dispose();
+  assert.equal(disposals, 1);
+  assert.equal(h.state.detached, 1);
+});
+
+test('session startup, query and cleanup failures preserve structured host cause and release CDP without retry', async () => {
+  for (const phase of ['startup', 'query', 'cleanup']) {
+    const h = ownerHarness();
+    delete h.options.readHostWindow;
+    let queries = 0,
+      disposals = 0;
+    const cause = nativeWindowHostQueryError(
+      Object.assign(new Error('timeout'), {
+        code: 'ETIMEDOUT',
+        gevTimeout: true,
+        killed: true,
+        signal: 'SIGTERM',
+        stderr: '#< CLIXML\r\n',
+      }),
+      { phase, browserPid: 1122, helperPid: 9001, elapsedMs: 5000 },
+    );
+    const cleanup = {
+      status: 'closed',
+      exitCode: null,
+      signal: 'SIGTERM',
+      forcedTermination: true,
+    };
+    h.options.hostSessionFactory = () => ({
+      start: async () => {
+        if (phase === 'startup') throw cause;
+      },
+      query: async () => {
+        if (++queries === 3 && phase === 'query') throw cause;
+        return clone(h.state.evidence.host);
+      },
+      dispose: async () => {
+        disposals++;
+        if (phase === 'cleanup') throw cause;
+        return cleanup;
+      },
+      read: () => ({ cleanup, failure: cause.nativeWindowHostQueryFailure }),
+    });
+    if (phase === 'startup')
+      await assert.rejects(
+        createNativeWindowViewportOwner(h.options),
+        (error) => {
+          assert.equal(
+            error.nativeWindowViewport.hostQueryFailure.phase,
+            'startup',
+          );
+          return true;
+        },
+      );
+    else {
+      const owner = await createNativeWindowViewportOwner(h.options);
+      h.state.evidence = fixture();
+      if (phase === 'query')
+        await assert.rejects(owner.capture('failed-fresh-query'), (error) => {
+          assert.deepEqual(
+            error.nativeWindowViewport.hostQueryFailure,
+            cause.nativeWindowHostQueryFailure,
+          );
+          assert.equal(error.nativeWindowViewport.host, undefined);
+          return true;
+        });
+      if (phase === 'cleanup')
+        await assert.rejects(owner.dispose(), (error) => {
+          assert.deepEqual(error.nativeWindowGeometryHelperCleanup, cleanup);
+          return true;
+        });
+      else await owner.dispose();
+    }
+    assert.equal(disposals, 1, phase);
+    assert.equal(h.state.detached, 1, phase);
+    assert.equal(
+      queries,
+      phase === 'startup' ? 0 : phase === 'query' ? 3 : 2,
+      phase,
+    );
+  }
+});
+
+test('preparation cancellation owns a pending helper startup and still disposes both resources', async () => {
+  const h = ownerHarness();
+  delete h.options.readHostWindow;
+  const controller = new AbortController();
+  h.options.preparationSignal = controller.signal;
+  let started = false,
+    disposed = 0;
+  h.options.hostSessionFactory = () => ({
+    start: ({ signal }) =>
+      new Promise((resolve, reject) => {
+        started = true;
+        signal.addEventListener('abort', () => reject(signal.reason), {
+          once: true,
+        });
+      }),
+    query: () => assert.fail('No read before ready'),
+    dispose: async () => {
+      disposed++;
+    },
+    read: () => ({}),
+  });
+  const pending = createNativeWindowViewportOwner(h.options);
+  while (!started) await new Promise((resolve) => setImmediate(resolve));
+  controller.abort(new Error('cancel helper startup'));
+  await assert.rejects(pending, /cancel helper startup/);
+  assert.equal(disposed, 1);
+  assert.equal(h.state.detached, 1);
+  assert.equal(h.state.pageReads, 0);
+});
+
+test('the actual driver close closure retains helper exit proof and closes the browser after helper failure', async () => {
+  const source = readFileSync(
+    new URL('../qa-rendered-soak-driver.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('  let closePromise = null;'),
+    end = source.indexOf('  let startupPrewarm = null;', start);
+  assert.ok(start >= 0 && end > start);
+  for (const fail of [false, true]) {
+    const order = [],
+      helper = {
+        status: 'closed',
+        exitCode: fail ? null : 0,
+        signal: fail ? 'SIGTERM' : null,
+      };
+    const cause = Object.assign(new Error('helper failed'), {
+      nativeWindowGeometryHelperCleanup: helper,
+    });
+    const close = vm.runInNewContext(`${source.slice(start, end)}; closeSoak`, {
+      diagnosticsPage: null,
+      nativeWindowOwner: {
+        dispose: async () => {
+          order.push('helper');
+          if (fail) throw cause;
+          return { hostQueryCleanup: helper };
+        },
+      },
+      closeBrowser: async () => {
+        order.push('browser');
+        return { closeCompleted: true, forcedProcessTermination: false };
+      },
+    });
+    if (fail)
+      await assert.rejects(close(), (error) => {
+        assert.equal(error, cause);
+        assert.equal(error.browserClose.closeCompleted, true);
+        assert.deepEqual(error.browserClose.nativeWindowGeometryHelper, helper);
+        return true;
+      });
+    else {
+      const result = await close();
+      assert.deepEqual(result.nativeWindowGeometryHelper, helper);
+      await close();
+    }
+    assert.deepEqual(order, ['helper', 'browser']);
+  }
+});
+
+test('one-shot compatibility errors preserve execFile timeout facts without serializing its command', async () => {
+  const encoded = 'A'.repeat(20000);
+  const cause = Object.assign(
+    new Error(`Command failed: powershell.exe -EncodedCommand ${encoded}`),
+    {
+      code: null,
+      signal: 'SIGTERM',
+      killed: true,
+      stdout: '',
+      stderr: '#< CLIXML\r\n',
+    },
+  );
+  await assert.rejects(
+    readOwnedWindowsNativeWindowGeometry(1122, {
+      platform: 'win32',
+      run: async () => {
+        throw cause;
+      },
+    }),
+    (error) => {
+      const failure = error.nativeWindowHostQueryFailure;
+      assert.equal(failure.code, null);
+      assert.equal(failure.signal, 'SIGTERM');
+      assert.equal(failure.killed, true);
+      assert.equal(failure.timedOut, true);
+      assert.equal(failure.stderr.text, '#< CLIXML\r\n');
+      assert.ok(JSON.stringify(error).length < 2000);
+      assert.ok(!error.message.includes(encoded));
+      return true;
+    },
+  );
+});
 
 test('already cancelled preparation allocates no CDP session or native reads', async () => {
   const h = ownerHarness(),

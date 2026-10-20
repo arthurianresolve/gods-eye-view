@@ -5,6 +5,8 @@
   "scripts/performance/decorationQuantization.test.mjs",
   "scripts/performance/nativeWindowViewport.mjs",
   "scripts/performance/nativeWindowViewport.test.mjs",
+  "scripts/performance/nativeWindowGeometrySession.mjs",
+  "scripts/performance/nativeWindowGeometrySession.test.mjs",
   ".prettierrc.json",
   "package.json",
   "scripts/format-scope.json",

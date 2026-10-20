@@ -7,6 +7,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/decorationQuantization.test.mjs',
   'scripts/performance/nativeWindowViewport.mjs',
   'scripts/performance/nativeWindowViewport.test.mjs',
+  'scripts/performance/nativeWindowGeometrySession.mjs',
+  'scripts/performance/nativeWindowGeometrySession.test.mjs',
   'scripts/performance/settledIdleObservation.mjs',
   'scripts/performance/settledIdleObservation.test.mjs',
   'scripts/performance/settledIdleQualification.mjs',
