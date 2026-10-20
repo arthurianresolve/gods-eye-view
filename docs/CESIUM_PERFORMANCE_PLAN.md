@@ -223,6 +223,13 @@ passes 55 focused checks on each Node version, formatting and 79 capture lint
 files. The [initial assertion failure](performance-evidence/s69-native-matrix-20261019/startup-provider-validation-20261020.json)
 is retained: a new CLI test expected the wrong existing argument guard. Only
 that expectation changed; no runtime guard or acceptance threshold changed.
+Before running the diagnostic, source review found that whole-document fixture
+interception would also block web fonts. The diagnostic now intercepts only
+the five declared native map-provider origins; font and application requests
+retain their normal path. Existing fixtures keep whole-document interception.
+[82 focused and interception-lifecycle checks](performance-evidence/s69-native-matrix-20261019/startup-provider-scope-validation-20261020.json)
+pass on each VM Node version, with formatting and all 79 capture lint files.
+No native observation was taken with the superseded broad scope.
 The first attribution attempt stopped before navigation because
 the owned Chrome window was not in front. Its failure is preserved, and the
 corrected handoff observes the actual foreground process before releasing the

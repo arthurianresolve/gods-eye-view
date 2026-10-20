@@ -1,3 +1,11 @@
+export const STARTUP_PROVIDER_URL_PATTERNS = Object.freeze([
+  'https://services.arcgisonline.com/*',
+  'https://terrain.reearth.land/*',
+  'https://tile.openstreetmap.org/*',
+  'https://tile.googleapis.com/*',
+  'https://assets.ion.cesium.com/*',
+]);
+
 const safeError = (error) => ({
   name: String(error?.name || 'Error').slice(0, 48),
 });

@@ -72,6 +72,86 @@ function contextFor(state) {
   });
 }
 
+test('default fixture interception retains whole-document isolation', async () => {
+  const client = new FakeClient();
+  const owner = await interceptFixtureSession(client, 'https://fixture.test/');
+  assert.deepEqual(client.commands[0], {
+    method: 'Fetch.enable',
+    params: { patterns: [{ urlPattern: '*' }] },
+  });
+  await owner.releaseSession({ targetClosed: true });
+});
+
+test('scoped interception pauses only declared provider origins and owns cleanup', async () => {
+  const client = new FakeClient();
+  const urlPatterns = [
+    'https://services.arcgisonline.com/*',
+    'https://terrain.reearth.land/*',
+  ];
+  const owner = await interceptFixtureSession(
+    client,
+    'https://fixture.test/',
+    undefined,
+    undefined,
+    { urlPatterns },
+  );
+  const enabled = client.commands.find(
+    (command) => command.method === 'Fetch.enable',
+  );
+  assert.deepEqual(
+    enabled.params.patterns,
+    urlPatterns.map((urlPattern) => ({ urlPattern })),
+  );
+  const matches = (url) =>
+    enabled.params.patterns.some(({ urlPattern }) =>
+      url.startsWith(urlPattern.slice(0, -1)),
+    );
+  assert.equal(
+    matches('https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json'),
+    true,
+  );
+  for (const url of [
+    'https://fonts.googleapis.com/css2?family=Inter',
+    'https://fonts.gstatic.com/font.woff2',
+    'https://fixture.test/assets/app.js',
+  ])
+    assert.equal(matches(url), false);
+  urlPatterns.push('https://unexpected.example/*');
+  assert.equal(enabled.params.patterns.length, 2);
+  const released = await owner.releaseSession({ targetClosed: true });
+  assert.equal(released.confirmed, true);
+  assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+});
+
+test('invalid provider URL scopes fail before a listener or protocol side effect', async () => {
+  for (const urlPatterns of [
+    [],
+    null,
+    '*',
+    ['*'],
+    ['http://fixture.test/*'],
+    ['https://*.example/*'],
+    ['https://u:p@example.test/*'],
+    ['https://example.test/path/*'],
+    ['https://example.test/*', 'https://example.test/*'],
+    Array.from({ length: 9 }, (_, i) => `https://provider${i}.test/*`),
+  ]) {
+    const client = new FakeClient();
+    await assert.rejects(
+      interceptFixtureSession(
+        client,
+        'https://fixture.test/',
+        undefined,
+        undefined,
+        { urlPatterns },
+      ),
+      TypeError,
+    );
+    assert.equal(client.commands.length, 0);
+    assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+  }
+});
+
 test('interception callback evidence survives failure-report creation and smoke compaction', async () => {
   const client = new FakeClient();
   const state = { lifecycleStage: 'active' };

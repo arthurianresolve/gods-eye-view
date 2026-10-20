@@ -205,7 +205,10 @@ import {
   installWeatherGovernorModeTraceInPage,
 } from './performance/weatherIdleDiagnostic.mjs';
 import { probeWeatherVisibleWind } from './performance/weatherVisibleWindProbe.mjs';
-import { summarizeStartupProviderFixtureDiagnostic } from './performance/startupProviderFixtureDiagnostic.mjs';
+import {
+  STARTUP_PROVIDER_URL_PATTERNS,
+  summarizeStartupProviderFixtureDiagnostic,
+} from './performance/startupProviderFixtureDiagnostic.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -1738,6 +1741,8 @@ if (mapStreamingWorkloadSelected || startupProviderFixtureDiagnosticEnabled) {
       totalPayloadBytes: mapStreamingFixture.manifest.totalBytes,
       generatorSourceSha256: mapStreamingFixture.manifest.generatorSourceSha256,
       responseScope: 'allowlisted-native-map-and-terrain-provider-responses',
+      requestUrlPatterns: [...STARTUP_PROVIDER_URL_PATTERNS],
+      otherNetworkTraffic: 'not-intercepted-by-this-diagnostic',
     };
     failureProgress.startupProviderFixtureDiagnostic = {
       schema: 'gev-startup-provider-fixture-diagnostic/v1',
@@ -2090,6 +2095,9 @@ async function configureMapStreamingFixturePage(
     respond,
     fixtureInterceptionErrorRecorder.onError,
     {
+      ...(startupProviderFixtureDiagnosticEnabled
+        ? { urlPatterns: STARTUP_PROVIDER_URL_PATTERNS }
+        : {}),
       onFulfilled: delivery.onFulfilled,
       getErrorContext: () => ({ ...sessionContext }),
     },

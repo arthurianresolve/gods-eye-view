@@ -2,8 +2,20 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   classifyStartupProviderFixtureDocument,
+  STARTUP_PROVIDER_URL_PATTERNS,
   summarizeStartupProviderFixtureDiagnostic,
 } from './startupProviderFixtureDiagnostic.mjs';
+
+test('startup diagnostic scope contains only the five native map provider origins', () => {
+  assert.deepEqual(STARTUP_PROVIDER_URL_PATTERNS, [
+    'https://services.arcgisonline.com/*',
+    'https://terrain.reearth.land/*',
+    'https://tile.openstreetmap.org/*',
+    'https://tile.googleapis.com/*',
+    'https://assets.ion.cesium.com/*',
+  ]);
+  assert.equal(Object.isFrozen(STARTUP_PROVIDER_URL_PATTERNS), true);
+});
 
 function makeOwner(overrides = {}) {
   const owner = {

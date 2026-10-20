@@ -152,6 +152,14 @@ terrain change decoding/rendering work, so the report explicitly rejects
 acceptance use. [55 focused checks per Node version and 79 lint files pass](startup-provider-validation-20261020-r2.json)
 on VM105. The [initial test-message failure](startup-provider-validation-20261020.json)
 is preserved; its correction changes only the new CLI test expectation.
+Source review then identified an additional confound before any hardware run:
+the default whole-document interceptor would also block web fonts. The scoped
+option now pauses only the five declared native map-provider origins. Fonts
+and application assets are not intercepted by this diagnostic; other fixtures
+retain their original whole-document isolation. [All 82 focused checks](startup-provider-scope-validation-20261020.json)
+pass on each VM Node version, including scope rejection and lifecycle cleanup;
+formatting and all 79 capture lint files pass. The earlier broad-scope runner
+was prepared but never executed.
 
 The corrected candidate's [cable pair](infrastructure-cables-190c5ab6-result.json)
 has now passed independent VM validation. Its five-run motion median p95 is
