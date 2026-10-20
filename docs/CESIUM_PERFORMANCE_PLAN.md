@@ -31,6 +31,29 @@ and [release verification](https://github.com/arthurianresolve/gods-eye-view/act
 Twelve optional jobs were skipped. This validates that head's software checks;
 it does not close the hardware gates below.
 
+The latest private child, `3a16f8de`, corrects a source-owned demand mismatch:
+known hidden-source fade states retained scene demand even though the existing
+paint gate rejected their owner. Its active-lane behavior checks pass **95
+Node 24 tests**; the staged broader suite passes **192 tests on each Node
+version**, with import/package checks and an isolated standard build.
+
+The single six-action comparison against `ec0f1b2b` nevertheless shows
+**no demonstrated native latency benefit**. Control native durations are
+**168/136/56/112/56/112 ms**; child durations are
+**224/128/56/112/64/112 ms**. Warm OFF remains **112/112 ms** in both roles.
+Warm ON readiness is descriptively lower, but first ON native latency and
+readiness, and first OFF readiness, are worse. Both roles complete all six
+trusted actions with matching assets, foreground observations and normal
+browser/helper closure. The source fix remains private and is not adopted;
+there is no formal twenty-sample or final-soak credit.
+
+The [hidden-source fade disposition](performance-evidence/s69-native-matrix-20261019/hidden-source-fade-3a16f8de-rejected.json)
+binds the complete raw attempt and independent review to **115 files,
+4,360,007 bytes**, plus 39 existing QA source references, verified through
+two independent VM105 readbacks. Original resource/transport failures and
+all samples remain preserved. The existing formal native, readiness and
+completed-render failures below remain failed.
+
 The separate S56 private experiment `2979530e`, a direct child of `ec0f1b2b`,
 changes only the viewer default from `preserveDrawingBuffer=true` to `false`.
 It passes **222 focused tests on each Node version**, import/package checks

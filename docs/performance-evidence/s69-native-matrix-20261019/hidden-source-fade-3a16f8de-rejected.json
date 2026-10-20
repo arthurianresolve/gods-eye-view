@@ -1,0 +1,142 @@
+{
+  "schema": "gev-hidden-source-fade-rejected-experiment-summary/v1",
+  "status": "source-fix-tested-no-demonstrated-native-benefit-not-adopted",
+  "application": {
+    "baseline": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+    "candidate": "3a16f8deac0cfb47c9cd12ddf92526d56adea355"
+  },
+  "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "browser": {
+    "product": "Chrome/155.0.8059.85",
+    "executableSha256": "de999bce6a1c954df71a8f15bf751b336172f55ac1a0325bb0580cbc2121268c",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "sourceChange": {
+    "files": [
+      "src/overlays/worldOverlay.js",
+      "src/overlays/worldOverlay.test.mjs"
+    ],
+    "scope": "Only known hidden-source fade states excluded by the existing sourceCanPaint gate stop retaining scene demand. Unknown source ownership continues to retain demand; no painted geometry, camera, query or lifecycle change.",
+    "adopted": false,
+    "productionChanged": false
+  },
+  "validation": {
+    "activeCustomPaintLaneNode24Tests": 95,
+    "stagedBroaderNode24Tests": 192,
+    "stagedBroaderNode26Tests": 192,
+    "imports": {
+      "files": 1077,
+      "groups": 82
+    },
+    "packages": "passed",
+    "standardBuild": "passed",
+    "scope": "Focused behavior/import/package checks and exact isolated standard artifact; hardware qualification remains failed."
+  },
+  "diagnostic": {
+    "actionsPerRole": 6,
+    "firstPairRetained": true,
+    "outcomeRetries": 0,
+    "extraObservers": false,
+    "allActionsTrustedAndGenerationTimestampMatched": true,
+    "allFourAssetInventoriesMatch": true,
+    "bothRolesForegroundAndNormalBrowserHelperClosure": true,
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\hidden-source-fade-comparison-ec0-3a16f8de-chrome85-20261020\\process.json",
+      "bytes": 1369260,
+      "sha256": "1df86258c58bf6af3ddadfe22d852540f71190b01353d78b62e69e80470e8105"
+    },
+    "plan": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\hidden-source-fade-comparison-ec0-3a16f8de-chrome85-20261020\\plan.json",
+      "bytes": 20227,
+      "sha256": "9c6d0d070ac34e93a18838537cb55840c3d0c6805dfd308b683376b26c4bda09"
+    },
+    "review": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\hidden-source-fade-3a16f8de-independent-review-20261020.json",
+      "bytes": 23349,
+      "sha256": "b311411bb55ad96029150097b5f6b11274637e4c72f7fc65492045fff85ef0a1"
+    },
+    "reader": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\review-hidden-source-fade-comparison-20261020.mjs",
+      "bytes": 7441,
+      "sha256": "52fe943f6dd9b5a78b23627e5142a9c727a6d91518e2c1cf291e69875a2b57cc"
+    },
+    "roles": {
+      "baseline": {
+        "applicationCommit": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+        "nativeMs": [168, 136, 56, 112, 56, 112],
+        "readinessMs": [
+          465.2000000178814, 17.5, 136.59999999403954, 11.199999988079071,
+          136.09999999403954, 10.099999994039536
+        ],
+        "completedRenderMs": [
+          469, 21.5, 139.69999998807907, 16, 138.5, 14.699999988079071
+        ]
+      },
+      "candidate": {
+        "applicationCommit": "3a16f8deac0cfb47c9cd12ddf92526d56adea355",
+        "nativeMs": [224, 128, 56, 112, 64, 112],
+        "readinessMs": [
+          538.6999999880791, 34.39999997615814, 126.2999999821186,
+          10.099999994039536, 127.40000000596046, 10.700000017881393
+        ],
+        "completedRenderMs": [
+          546.7999999821186, 39.5, 132.59999999403954, 14.800000011920929,
+          132.90000000596046, 15.100000023841858
+        ]
+      }
+    }
+  },
+  "disposition": {
+    "finding": "No demonstrated native benefit. Warm OFF remains112/112ms in both roles. Warm ON readiness is descriptively lower, while first ON native/readiness and first OFF readiness are worse.",
+    "formal20Started": false,
+    "finalAmpfingSoakStarted": false,
+    "acceptanceEligible": false,
+    "oldFailuresReclassified": false,
+    "sourceCorrectnessIsNotPerformanceAcceptance": true,
+    "wholeGateVerdict": "Unavailable: six actions per role are a diagnostic, not the twenty-sample formal cohort.",
+    "primaryGatesUnchanged": {
+      "nativeMs": 100,
+      "replayMs": 250,
+      "readinessFullRenderHeapMaximumRegressionPercent": 10
+    }
+  },
+  "provenance": {
+    "disposition": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\hidden-source-fade-3a16f8de-disposition-20261020.json",
+      "bytes": 5563,
+      "sha256": "841f88626e991e020ea04dd6cd3cb9777ce1ae1715e54d7dc677487b485c8869"
+    },
+    "inputPreflight": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\hidden-source-fade-3a16f8de-vm\\windows-input-preflight.json",
+      "bytes": 6703,
+      "sha256": "d7a37dc3c801cc05f08cbc4a80af643d2fab8b1fa0fc1681b33d623a9e2e3b5e"
+    },
+    "activeLaneValidation": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-hidden-source-fade-experiment-20261020\\qa-artifacts\\hidden-source-fade-validation-20261020\\validation-active-lane.json",
+      "bytes": 4310,
+      "sha256": "4c79987ccd2057ca8dc8be2876b37d33a1205698ea9df0eed1057d0260eea782"
+    },
+    "precedingWarmOwnerReview": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\warm-scene-owner-ec0-native-ownership-review-20261020.json",
+      "bytes": 68247,
+      "sha256": "1ae70b1a001b9ce25bdc1f7e5509760dafe91f45c44cf4609f390322d5f8973f"
+    }
+  },
+  "archive": {
+    "receipt": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\hidden-source-fade-3a16f8de-transfer-20261020.json",
+      "bytes": 22038,
+      "sha256": "9eb83f0854cf66af2dd188e8dba35938599dd489bbf756d6d4e4eb4ee03eb4ec"
+    },
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/hidden-source-fade-ec0-3a16f8de-complete-rejected-diagnostic-20261020",
+    "fileCount": 115,
+    "totalBytes": 4360007,
+    "manifestSha256": "64b83ad9a9c30496e06a76392065c0e8b1b2ddb21d6e222d081d57b701df9285",
+    "exactExistingSourceReferencesVerifiedTwice": 39,
+    "independentSecondSshReadback": true,
+    "rawChanged": false,
+    "resourceAndTransportFailureAttemptsPreserved": true,
+    "compiledAssetBinariesCopied": false
+  },
+  "remaining": "Current public ec0 versus original76 Chrome.85 formal native/readiness/full-render failures remain failed. Final qualification and one frozen-runtime Ampfing soak remain pending; no private-child acceptance or deployment credit."
+}
