@@ -85,6 +85,15 @@ function createRawSampleHarness({
   throwOnRender = false,
   framesPerRender = 1,
   globeTilesLoaded = false,
+  tileProgressAvailable = false,
+  throwOnTileProgressRemove = false,
+  tileAddReturnsNoRemove = false,
+  tileRemoveReturnsFalse = false,
+  resourceEntries = null,
+  resourceObserverAvailable = false,
+  resourceObserverObserveThrows = false,
+  resourceObserverTakeRecordsThrows = false,
+  resourceObserverDisconnectThrows = false,
 } = {}) {
   let clock = 1000;
   let manualStarted = false;
@@ -103,8 +112,8 @@ function createRawSampleHarness({
       removeEventListener(listener) {
         listeners.delete(listener);
       },
-      emit() {
-        for (const listener of [...listeners]) listener();
+      emit(...args) {
+        for (const listener of [...listeners]) listener(...args);
       },
       get size() {
         return listeners.size;
@@ -116,6 +125,52 @@ function createRawSampleHarness({
   };
   const preRender = makeEvent();
   const postRender = makeEvent();
+  const tileLoadProgressEvent = tileProgressAvailable ? makeEvent() : null;
+  const resourceObservers = [];
+  class FakePerformanceObserver {
+    constructor(callback) {
+      this.callback = callback;
+      this.observedType = null;
+      this.disconnected = false;
+      resourceObservers.push(this);
+    }
+    observe(options) {
+      this.observedType = options.type;
+      if (options.type === 'resource' && resourceObserverObserveThrows)
+        throw new Error('fake resource observer setup failure');
+      if (options.type === 'resource' && Array.isArray(resourceEntries))
+        this.callback({ getEntries: () => resourceEntries });
+    }
+    takeRecords() {
+      if (this.observedType === 'resource' && resourceObserverTakeRecordsThrows)
+        throw new Error('fake resource observer drain failure');
+      return [];
+    }
+    disconnect() {
+      this.disconnected = true;
+      if (this.observedType === 'resource' && resourceObserverDisconnectThrows)
+        throw new Error('fake resource observer cleanup failure');
+    }
+  }
+  const makeTileProgressEvent = () => {
+    if (!tileLoadProgressEvent) return null;
+    return {
+      addEventListener(listener) {
+        tileLoadProgressEvent.addEventListener(listener);
+        if (tileAddReturnsNoRemove) return undefined;
+        return () => {
+          if (throwOnTileProgressRemove)
+            throw new Error('fake tile progress cleanup failure');
+          tileLoadProgressEvent.removeEventListener(listener);
+        };
+      },
+      removeEventListener(listener) {
+        if (tileRemoveReturnsFalse) return false;
+        tileLoadProgressEvent.removeEventListener(listener);
+        return true;
+      },
+    };
+  };
   const windowListeners = new Map();
   const documentListeners = new Map();
   const camera = {
@@ -128,7 +183,15 @@ function createRawSampleHarness({
   const scene = {
     preRender,
     postRender,
-    globe: globeTilesLoaded === null ? null : { tilesLoaded: globeTilesLoaded },
+    globe:
+      globeTilesLoaded === null
+        ? null
+        : {
+            tilesLoaded: globeTilesLoaded,
+            ...(tileProgressAvailable
+              ? { tileLoadProgressEvent: makeTileProgressEvent() }
+              : {}),
+          },
     requestRenderMode: true,
     requestRender() {},
   };
@@ -148,6 +211,10 @@ function createRawSampleHarness({
     },
   };
   const windowRef = {
+    location: {
+      href: 'http://localhost:4173/',
+      origin: 'http://localhost:4173',
+    },
     __godsEyeView: {
       viewer,
       getRenderGovernorDiagnostics: () => ({
@@ -188,6 +255,7 @@ function createRawSampleHarness({
     window: windowRef,
     document: documentRef,
     performance: { now: () => clock, timeOrigin: 1_000_000 },
+    URL,
     setTimeout,
     clearTimeout,
     setInterval,
@@ -206,13 +274,17 @@ function createRawSampleHarness({
         callback(clock);
       }, 0),
     cancelAnimationFrame: clearTimeout,
-    PerformanceObserver: undefined,
+    PerformanceObserver: resourceObserverAvailable
+      ? FakePerformanceObserver
+      : undefined,
   };
   return {
     context,
     scene,
     preRender,
     postRender,
+    tileLoadProgressEvent,
+    resourceObservers,
     windowListeners,
     documentListeners,
     renderedPhases,
@@ -224,7 +296,18 @@ function createRawSampleHarness({
 
 function runRawSample(callbackSource, harness, parameters) {
   const callback = vm.runInNewContext(`(${callbackSource})`, harness.context);
-  return callback(parameters);
+  return callback(parameters).then((result) => {
+    if (result?.__gevSceneMeasurementFailure) {
+      throw Object.assign(
+        new Error(result.__gevSceneMeasurementFailure.message),
+        {
+          name: result.__gevSceneMeasurementFailure.name,
+          cableIdleEventTrace: result.cableIdleEventTrace,
+        },
+      );
+    }
+    return result;
+  });
 }
 
 test('raw map frame samples use the bounded fixture speed without altering other routes', async () => {
@@ -317,6 +400,7 @@ test('raw sample tracing disabled adds no pre-render listener or trace data', as
   });
   assert.equal('frameTrace' in sample, false);
   assert.equal('longTaskTrace' in sample, false);
+  assert.equal('cableIdleEventTrace' in sample, false);
   assert.equal(
     sample.frameTrace,
     undefined,
@@ -417,6 +501,296 @@ test('raw sample cleanup removes listeners when rendering throws', async () => {
   assert.equal(harness.postRender.size, 0);
   assert.equal(harness.windowListeners.size, 0);
   assert.equal(harness.documentListeners.size, 0);
+});
+
+test('cable idle event trace correlates URL-free provider entries and tile progress', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({
+    globeTilesLoaded: false,
+    tileProgressAvailable: true,
+    resourceObserverAvailable: true,
+    resourceEntries: [
+      {
+        name: 'https://services.arcgisonline.com/secret/path?token=do-not-retain',
+        startTime: 1000,
+        responseEnd: 1000,
+        duration: 0,
+      },
+      {
+        name: 'https://terrain.reearth.land/private?key=do-not-retain',
+        startTime: 990,
+        responseEnd: 1000,
+        duration: 10,
+      },
+      {
+        name: 'https://unrecognized.example/private?token=do-not-retain',
+        startTime: 1000,
+        responseEnd: 1000,
+        duration: 0,
+      },
+      {
+        name: 'http://localhost:4173/static/app.js?secret=ignored',
+        startTime: 1000,
+        responseEnd: 1000,
+        duration: 0,
+      },
+    ],
+  });
+  const originalSetTimeout = harness.context.setTimeout;
+  harness.context.setTimeout = (handler, delay, ...args) =>
+    originalSetTimeout(() => {
+      if (delay === 10) {
+        harness.tileLoadProgressEvent.emit(7);
+        harness.tileLoadProgressEvent.emit(0);
+      }
+      handler(...args);
+    }, delay);
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 10,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+    cableIdleEventTraceEnabled: true,
+  });
+  const trace = sample.cableIdleEventTrace;
+  assert.equal(trace.schema, 'gev-cable-idle-provider-events/v1');
+  assert.equal(trace.status, 'observed');
+  assert.equal(trace.tileProgress.status, 'observed');
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        trace.tileProgress.events.map((event) => event.queuedTileCount),
+      ),
+    ),
+    [7, 0],
+  );
+  assert.deepEqual(trace.tileProgress.initialTilesLoaded, false);
+  assert.equal(trace.providerRequests.status, 'observed');
+  assert.equal(trace.providerRequests.providers.esriImagery.started, 1);
+  assert.equal(trace.providerRequests.providers.esriImagery.ended, 1);
+  assert.equal(trace.providerRequests.providers.reearthTerrain.ended, 1);
+  assert.equal(trace.providerRequests.providers.otherExternal.ended, 1);
+  assert.equal(
+    trace.providerRequests.events.some(
+      (event) => event.provider === 'sameOrigin',
+    ),
+    false,
+  );
+  assert.equal(trace.cleanup.confirmed, true);
+  assert.equal(trace.tileProgress.cleanup.confirmed, true);
+  assert.equal(trace.providerRequests.cleanup.confirmed, true);
+  const serialized = JSON.stringify(trace);
+  assert.doesNotMatch(
+    serialized,
+    /services\.arcgisonline|terrain\.reearth|unrecognized\.example/,
+  );
+  assert.doesNotMatch(serialized, /secret|token=|private|do-not-retain/);
+  assert.ok(
+    harness.resourceObservers.every((observer) => observer.disconnected),
+  );
+  assert.equal(harness.tileLoadProgressEvent.size, 0);
+});
+
+test('cable idle event traces bound tile and resource entries while preserving omitted counts', async () => {
+  const callback = await extractRawSampleCallback();
+  const resourceEntries = Array.from({ length: 520 }, (_, index) => ({
+    name: `https://services.arcgisonline.com/tile/${index}?private=1`,
+    startTime: 1000,
+    responseEnd: 1000,
+    duration: 0,
+  }));
+  const harness = createRawSampleHarness({
+    tileProgressAvailable: true,
+    resourceObserverAvailable: true,
+    resourceEntries,
+  });
+  const originalSetTimeout = harness.context.setTimeout;
+  harness.context.setTimeout = (handler, delay, ...args) =>
+    originalSetTimeout(() => {
+      if (delay === 10)
+        for (let index = 0; index < 300; index++)
+          harness.tileLoadProgressEvent.emit(index);
+      handler(...args);
+    }, delay);
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 10,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+    cableIdleEventTraceEnabled: true,
+  });
+  const trace = sample.cableIdleEventTrace;
+  assert.equal(trace.tileProgress.eventsObserved, 300);
+  assert.equal(trace.tileProgress.events.length, 256);
+  assert.equal(trace.tileProgress.eventsOmitted, 44);
+  assert.equal(trace.providerRequests.eventsObserved, 520);
+  assert.equal(trace.providerRequests.events.length, 512);
+  assert.equal(trace.providerRequests.eventsOmitted, 8);
+  assert.equal(trace.providerRequests.providers.esriImagery.started, 520);
+  assert.doesNotMatch(JSON.stringify(trace), /arcgisonline|private=1/);
+});
+
+test('cable idle event trace distinguishes absent APIs and observer setup failures', async () => {
+  const callback = await extractRawSampleCallback();
+  const absent = await runRawSample(
+    callback,
+    createRawSampleHarness({ globeTilesLoaded: null }),
+    {
+      durationMs: 1,
+      scenarioName: 'idle',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: true,
+      cableIdleEventTraceEnabled: true,
+    },
+  );
+  assert.equal(absent.cableIdleEventTrace.tileProgress.status, 'unavailable');
+  assert.equal(
+    absent.cableIdleEventTrace.providerRequests.status,
+    'unavailable',
+  );
+  assert.equal(absent.cableIdleEventTrace.status, 'partial');
+  assert.equal(absent.cableIdleEventTrace.cleanup.confirmed, true);
+
+  const setupFailureHarness = createRawSampleHarness({
+    tileProgressAvailable: true,
+    resourceObserverAvailable: true,
+    resourceObserverObserveThrows: true,
+  });
+  const setupFailure = await runRawSample(callback, setupFailureHarness, {
+    durationMs: 1,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+    cableIdleEventTraceEnabled: true,
+  });
+  assert.equal(
+    setupFailure.cableIdleEventTrace.providerRequests.status,
+    'observe-failed',
+  );
+  assert.equal(
+    setupFailure.cableIdleEventTrace.providerRequests.observerErrors,
+    1,
+  );
+  assert.equal(setupFailure.cableIdleEventTrace.status, 'partial');
+  assert.equal(setupFailure.cableIdleEventTrace.cleanup.confirmed, true);
+  assert.equal(setupFailureHarness.tileLoadProgressEvent.size, 0);
+});
+
+test('cable idle trace keeps partial diagnostics when resource drain fails but disconnects', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({
+    tileProgressAvailable: true,
+    resourceObserverAvailable: true,
+    resourceObserverTakeRecordsThrows: true,
+    resourceEntries: [],
+  });
+  const sample = await runRawSample(callback, harness, {
+    durationMs: 1,
+    scenarioName: 'idle',
+    delay: 0,
+    recordFrameWindow: false,
+    expectedRunOrdinal: 1,
+    frameTraceEnabled: true,
+    cableIdleEventTraceEnabled: true,
+  });
+  const trace = sample.cableIdleEventTrace;
+  assert.equal(trace.providerRequests.status, 'observer-error');
+  assert.equal(trace.providerRequests.observerErrors, 1);
+  assert.equal(trace.providerRequests.cleanup.attempted, true);
+  assert.equal(trace.providerRequests.cleanup.confirmed, true);
+  assert.equal(trace.cleanup.confirmed, true);
+  assert.equal(trace.status, 'partial');
+  assert.ok(harness.resourceObservers[0].disconnected);
+});
+
+test('cable idle event trace fails the sample if observer cleanup cannot be confirmed', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({
+    tileProgressAvailable: true,
+    throwOnTileProgressRemove: true,
+    resourceObserverAvailable: true,
+    resourceObserverDisconnectThrows: true,
+    resourceEntries: [],
+  });
+  const originalSetTimeout = harness.context.setTimeout;
+  harness.context.setTimeout = (handler, delay, ...args) =>
+    originalSetTimeout(() => {
+      if (delay === 1) harness.tileLoadProgressEvent.emit(3);
+      handler(...args);
+    }, delay);
+  await assert.rejects(
+    runRawSample(callback, harness, {
+      durationMs: 1,
+      scenarioName: 'idle',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: true,
+      cableIdleEventTraceEnabled: true,
+    }),
+    (error) => {
+      assert.match(error.message, /observer cleanup was not confirmed/);
+      assert.equal(error.cableIdleEventTrace.status, 'cleanup-failed');
+      assert.equal(error.cableIdleEventTrace.cleanup.attempted, true);
+      assert.equal(error.cableIdleEventTrace.cleanup.confirmed, false);
+      assert.equal(error.cableIdleEventTrace.tileProgress.eventsObserved, 1);
+      assert.equal(
+        error.cableIdleEventTrace.tileProgress.events[0].queuedTileCount,
+        3,
+      );
+      return true;
+    },
+  );
+  assert.ok(
+    harness.resourceObservers.some((observer) => observer.disconnected),
+  );
+  assert.equal(harness.tileLoadProgressEvent.size, 1);
+});
+
+test('cable idle trace rejects an unconfirmed fallback tile-listener removal', async () => {
+  const callback = await extractRawSampleCallback();
+  const harness = createRawSampleHarness({
+    tileProgressAvailable: true,
+    tileAddReturnsNoRemove: true,
+    tileRemoveReturnsFalse: true,
+    resourceObserverAvailable: true,
+    resourceEntries: [],
+  });
+  await assert.rejects(
+    runRawSample(callback, harness, {
+      durationMs: 1,
+      scenarioName: 'idle',
+      delay: 0,
+      recordFrameWindow: false,
+      expectedRunOrdinal: 1,
+      frameTraceEnabled: true,
+      cableIdleEventTraceEnabled: true,
+    }),
+    (error) => {
+      assert.match(error.message, /cleanup was not confirmed/);
+      assert.equal(
+        error.cableIdleEventTrace.tileProgress.cleanup.attempted,
+        true,
+      );
+      assert.equal(
+        error.cableIdleEventTrace.tileProgress.cleanup.confirmed,
+        false,
+      );
+      assert.equal(error.cableIdleEventTrace.cleanup.confirmed, false);
+      assert.equal(error.cableIdleEventTrace.status, 'cleanup-failed');
+      return true;
+    },
+  );
+  assert.equal(harness.tileLoadProgressEvent.size, 1);
+  assert.equal(harness.resourceObservers[0].disconnected, true);
 });
 
 test('startup and main documents are foregrounded before viewer readiness', async () => {
@@ -724,6 +1098,57 @@ test('capture CLI recognizes an infrastructure workload before browser startup',
   assert.doesNotMatch(
     result.stderr,
     /Browser was not found|Could not find Chrome/,
+  );
+});
+
+test('cable idle event trace CLI is limited to a standard ineligible trace capture', () => {
+  const missingFrameTrace = invoke(['--cable-idle-event-trace']);
+  assert.notEqual(missingFrameTrace.status, 0);
+  assert.match(missingFrameTrace.stderr, /requires --frame-trace-out/);
+
+  const wrongWindow = invoke([
+    '--cable-idle-event-trace',
+    '--frame-trace-out',
+    path.join(os.tmpdir(), 'cable-idle-trace.json'),
+    '--provider-fixture',
+    'infrastructure-cables',
+    '--hardware-required',
+    '--runs',
+    '1',
+    '--startup-runs',
+    '5',
+    '--warmup-ms',
+    '0',
+    '--seconds',
+    '60',
+  ]);
+  assert.notEqual(wrongWindow.status, 0);
+  assert.match(wrongWindow.stderr, /requires one headed native-sharpness/);
+
+  const standardWindow = invoke([
+    '--cable-idle-event-trace',
+    '--frame-trace-out',
+    path.join(os.tmpdir(), 'cable-idle-trace.json'),
+    '--provider-fixture',
+    'infrastructure-cables',
+    '--hardware-required',
+    '--runs',
+    '1',
+    '--startup-runs',
+    '5',
+    '--warmup-ms',
+    '30000',
+    '--seconds',
+    '60',
+  ]);
+  assert.notEqual(standardWindow.status, 0);
+  assert.match(
+    standardWindow.stderr,
+    /Comparison fixtures require verified build provenance options/,
+  );
+  assert.doesNotMatch(
+    standardWindow.stderr,
+    /Could not find Chrome|Browser was not found/,
   );
 });
 

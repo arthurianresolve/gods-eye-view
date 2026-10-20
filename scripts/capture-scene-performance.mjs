@@ -496,6 +496,7 @@ if (
 if (frameTraceOut && out && path.resolve(frameTraceOut) === path.resolve(out))
   throw new Error('--frame-trace-out must differ from --out.');
 const frameTraceEnabled = Boolean(frameTraceOut);
+const cableIdleEventTraceEnabled = args.includes('--cable-idle-event-trace');
 const browserTraceOut = option('--browser-trace-out', null);
 if (
   args.includes('--browser-trace-out') &&
@@ -521,6 +522,8 @@ if (browserTraceEnabled && !frameTraceEnabled)
   throw new Error(
     '--browser-trace-out requires --frame-trace-out so the diagnostic trace is paired with frame evidence.',
   );
+if (cableIdleEventTraceEnabled && !frameTraceEnabled)
+  throw new Error('--cable-idle-event-trace requires --frame-trace-out.');
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const browserReadyFile = option('--browser-ready-file', null);
 if (browserReadyFile) {
@@ -544,6 +547,38 @@ if (browserReadyFile) {
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
 const hostedFixture = args.includes('--hosted-fixture');
+if (
+  cableIdleEventTraceEnabled &&
+  (!frameTraceEnabled ||
+    providerFixtureMode !== 'infrastructure-cables' ||
+    warmupMs !== 30_000 ||
+    seconds !== 60 ||
+    runs !== 1 ||
+    startupRuns !== 5 ||
+    !hardwareRequired ||
+    softwareRendering ||
+    hostedFixture ||
+    comparisonProfile !== 'native-sharpness-v1' ||
+    delayMs !== 0 ||
+    startupOnlyShard ||
+    args.includes('--headless') ||
+    args.includes('--browser-trace-out') ||
+    args.includes('--weather-idle-diagnostic') ||
+    args.includes('--weather-phase-diagnostic') ||
+    args.includes('--startup-provider-fixture-diagnostic') ||
+    args.includes('--weather-balanced-qualification-shard') ||
+    args.includes('--weather-visible-wind-probe') ||
+    args.includes('--startup-cpu-profile') ||
+    args.includes('--scene-frame-diagnostics') ||
+    args.includes('--first-motion-cpu-profile') ||
+    args.includes('--depth-pick-attribution') ||
+    args.includes('--shader-program-attribution') ||
+    args.includes('--startup-attribution') ||
+    args.includes('--startup-page-observed-v1'))
+)
+  throw new TypeError(
+    '--cable-idle-event-trace requires one headed native-sharpness infrastructure-cables run with five startup documents, a 30s warmup, 60s sample, no delay, and frame-trace output.',
+  );
 const windowsCompositionDiagnostic = args.includes(
   '--windows-no-direct-composition-diagnostic',
 );
@@ -5664,6 +5699,7 @@ try {
             recordFrameWindow,
             expectedRunOrdinal,
             frameTraceEnabled,
+            cableIdleEventTraceEnabled,
             weatherIdleDiagnosticEnabled,
             motionMetersPerSecond = 320,
           }) => {
@@ -5709,6 +5745,75 @@ try {
                   governorModeTrace: null,
                 }
               : null;
+            const cableIdleEventTrace =
+              cableIdleEventTraceEnabled && scenarioName === 'idle'
+                ? {
+                    schema: 'gev-cable-idle-provider-events/v1',
+                    diagnosticOnly: true,
+                    status: 'running',
+                    scope: 'first measured idle sample only',
+                    tileProgress: {
+                      status: 'unavailable',
+                      initialTilesLoaded: null,
+                      finalTilesLoaded: null,
+                      events: [],
+                      eventsObserved: 0,
+                      eventsOmitted: 0,
+                      cleanup: { attempted: false, confirmed: false },
+                    },
+                    providerRequests: {
+                      status: 'unavailable',
+                      timingSource:
+                        'PerformanceResourceTiming completed entries only',
+                      providers: {
+                        esriImagery: {
+                          entries: 0,
+                          started: 0,
+                          ended: 0,
+                          timingUnavailable: 0,
+                        },
+                        reearthTerrain: {
+                          entries: 0,
+                          started: 0,
+                          ended: 0,
+                          timingUnavailable: 0,
+                        },
+                        cesiumIon: {
+                          entries: 0,
+                          started: 0,
+                          ended: 0,
+                          timingUnavailable: 0,
+                        },
+                        openStreetMap: {
+                          entries: 0,
+                          started: 0,
+                          ended: 0,
+                          timingUnavailable: 0,
+                        },
+                        otherExternal: {
+                          entries: 0,
+                          started: 0,
+                          ended: 0,
+                          timingUnavailable: 0,
+                        },
+                      },
+                      events: [],
+                      eventsObserved: 0,
+                      eventsOmitted: 0,
+                      observerErrors: 0,
+                      cleanup: { attempted: false, confirmed: false },
+                      limitation:
+                        'In-flight requests at the sample boundary are not exposed by completed resource entries; resource timing buffer loss is not observable here.',
+                    },
+                    cleanup: { attempted: false, confirmed: false },
+                  }
+                : null;
+            let cableTileLoadEvent = null;
+            let cableTileLoadListener = null;
+            let cableTileLoadRemove = null;
+            let cableResourceObserver = null;
+            let cableSampleEndedAt = null;
+            let cableEventCleanupAttempted = false;
             let weatherIdleSampleTimer = null;
             let weatherIdleLastSampleAtMs = null;
             const readWeatherIdleGovernor = () => {
@@ -5992,6 +6097,224 @@ try {
             let resolveMeasurement = null;
             let motionFrameRequest = null;
             let finishMotion = () => {};
+            const cableProviderTraceActive = Boolean(cableIdleEventTrace);
+            const cableTileEventLimit = 256;
+            const cableResourceEventLimit = 512;
+            const cableProviderForResourceName = (name) => {
+              if (typeof name !== 'string' || name.length > 8192) return null;
+              let requestUrl;
+              try {
+                requestUrl = new URL(name, window.location.href);
+              } catch {
+                return null;
+              }
+              if (requestUrl.origin === window.location.origin) return null;
+              const host = requestUrl.hostname.toLowerCase();
+              if (
+                host === 'services.arcgisonline.com' ||
+                host === 'server.arcgisonline.com'
+              )
+                return 'esriImagery';
+              if (host === 'terrain.reearth.land') return 'reearthTerrain';
+              if (host === 'assets.ion.cesium.com') return 'cesiumIon';
+              if (host === 'tile.openstreetmap.org') return 'openStreetMap';
+              return 'otherExternal';
+            };
+            const recordCableResourceEntries = (entries) => {
+              if (!cableProviderTraceActive) return;
+              for (const entry of entries || []) {
+                try {
+                  const provider = cableProviderForResourceName(entry?.name);
+                  if (!provider) continue;
+                  const providerCounts =
+                    cableIdleEventTrace.providerRequests.providers[provider];
+                  const endBoundary = cableSampleEndedAt ?? performance.now();
+                  const startAt = Number.isFinite(entry.startTime)
+                    ? entry.startTime
+                    : null;
+                  const responseEndAt = Number.isFinite(entry.responseEnd)
+                    ? entry.responseEnd
+                    : null;
+                  const startedInWindow =
+                    startAt !== null &&
+                    startedAt !== null &&
+                    startAt >= startedAt &&
+                    startAt <= endBoundary;
+                  const endedInWindow =
+                    responseEndAt !== null &&
+                    responseEndAt > 0 &&
+                    startedAt !== null &&
+                    responseEndAt >= startedAt &&
+                    responseEndAt <= endBoundary;
+                  if (!startedInWindow && !endedInWindow) continue;
+                  providerCounts.entries += 1;
+                  if (startedInWindow) providerCounts.started += 1;
+                  if (endedInWindow) providerCounts.ended += 1;
+                  const durationMs = Number.isFinite(entry.duration)
+                    ? entry.duration
+                    : null;
+                  const timingUnavailable =
+                    startAt === null ||
+                    responseEndAt === null ||
+                    responseEndAt < startAt;
+                  if (timingUnavailable) providerCounts.timingUnavailable += 1;
+                  cableIdleEventTrace.providerRequests.eventsObserved += 1;
+                  if (
+                    cableIdleEventTrace.providerRequests.events.length <
+                    cableResourceEventLimit
+                  )
+                    cableIdleEventTrace.providerRequests.events.push({
+                      provider,
+                      startOffsetMs:
+                        startAt === null || startedAt === null
+                          ? null
+                          : startAt - startedAt,
+                      responseEndOffsetMs:
+                        responseEndAt === null ||
+                        responseEndAt <= 0 ||
+                        startedAt === null
+                          ? null
+                          : responseEndAt - startedAt,
+                      durationMs,
+                    });
+                  else cableIdleEventTrace.providerRequests.eventsOmitted += 1;
+                } catch {
+                  cableIdleEventTrace.providerRequests.observerErrors += 1;
+                  cableIdleEventTrace.providerRequests.status =
+                    'observer-error';
+                }
+              }
+            };
+            const recordCableTileProgress = (queuedTileCount) => {
+              if (!cableProviderTraceActive || startedAt === null) return;
+              const at = performance.now();
+              if (cableSampleEndedAt !== null || at < startedAt) return;
+              const trace = cableIdleEventTrace.tileProgress;
+              trace.eventsObserved += 1;
+              if (trace.events.length < cableTileEventLimit)
+                trace.events.push({
+                  atMs: at - startedAt,
+                  queuedTileCount:
+                    Number.isSafeInteger(queuedTileCount) &&
+                    queuedTileCount >= 0 &&
+                    queuedTileCount <= 1_000_000
+                      ? queuedTileCount
+                      : null,
+                  tilesLoaded:
+                    typeof scene.globe?.tilesLoaded === 'boolean'
+                      ? scene.globe.tilesLoaded
+                      : null,
+                });
+              else trace.eventsOmitted += 1;
+            };
+            const disposeCableEventTrace = () => {
+              if (!cableProviderTraceActive || cableEventCleanupAttempted)
+                return cableIdleEventTrace?.cleanup?.confirmed === true;
+              cableEventCleanupAttempted = true;
+              let tileCleanupConfirmed = cableTileLoadRemove === null;
+              let resourceCleanupConfirmed = cableResourceObserver === null;
+              if (cableResourceObserver) {
+                cableIdleEventTrace.providerRequests.cleanup.attempted = true;
+                try {
+                  recordCableResourceEntries(
+                    cableResourceObserver.takeRecords?.() || [],
+                  );
+                } catch {
+                  cableIdleEventTrace.providerRequests.observerErrors += 1;
+                  cableIdleEventTrace.providerRequests.status =
+                    'observer-error';
+                }
+                try {
+                  cableResourceObserver.disconnect();
+                  resourceCleanupConfirmed = true;
+                } catch {
+                  cableIdleEventTrace.providerRequests.observerErrors += 1;
+                  cableIdleEventTrace.providerRequests.status =
+                    'observer-error';
+                }
+                cableIdleEventTrace.providerRequests.cleanup.confirmed =
+                  resourceCleanupConfirmed;
+              }
+              if (cableTileLoadRemove) {
+                cableIdleEventTrace.tileProgress.cleanup.attempted = true;
+                try {
+                  cableTileLoadRemove();
+                  tileCleanupConfirmed = true;
+                } catch {
+                  tileCleanupConfirmed = false;
+                }
+                cableIdleEventTrace.tileProgress.cleanup.confirmed =
+                  tileCleanupConfirmed;
+              }
+              cableIdleEventTrace.cleanup = {
+                attempted: true,
+                confirmed: tileCleanupConfirmed && resourceCleanupConfirmed,
+              };
+              cableIdleEventTrace.status = !cableIdleEventTrace.cleanup
+                .confirmed
+                ? 'cleanup-failed'
+                : cableIdleEventTrace.tileProgress.status === 'observed' &&
+                    cableIdleEventTrace.providerRequests.status === 'observed'
+                  ? 'observed'
+                  : 'partial';
+              return cableIdleEventTrace.cleanup.confirmed;
+            };
+            const publishCableEventTrace = () => {
+              if (!cableProviderTraceActive) return;
+              window.__gevCableIdleEventTraceV1 = {
+                stop() {
+                  cableSampleEndedAt ??= performance.now();
+                  try {
+                    cableIdleEventTrace.tileProgress.finalTilesLoaded =
+                      typeof scene.globe?.tilesLoaded === 'boolean'
+                        ? scene.globe.tilesLoaded
+                        : null;
+                  } catch {
+                    cableIdleEventTrace.tileProgress.finalTilesLoaded = null;
+                  }
+                  disposeCableEventTrace();
+                  return JSON.parse(JSON.stringify(cableIdleEventTrace));
+                },
+              };
+            };
+            if (cableProviderTraceActive) {
+              try {
+                cableTileLoadEvent = scene.globe?.tileLoadProgressEvent;
+                if (
+                  typeof cableTileLoadEvent?.addEventListener === 'function'
+                ) {
+                  cableTileLoadListener = recordCableTileProgress;
+                  const remove = cableTileLoadEvent.addEventListener(
+                    cableTileLoadListener,
+                  );
+                  if (typeof remove === 'function')
+                    cableTileLoadRemove = remove;
+                  else if (
+                    typeof cableTileLoadEvent.removeEventListener === 'function'
+                  )
+                    cableTileLoadRemove = () => {
+                      const removed = cableTileLoadEvent.removeEventListener(
+                        cableTileLoadListener,
+                      );
+                      if (removed === false)
+                        throw new Error(
+                          'tileLoadProgressEvent removal was not confirmed',
+                        );
+                    };
+                  else
+                    cableTileLoadRemove = () => {
+                      throw new Error(
+                        'tileLoadProgressEvent has no cleanup API',
+                      );
+                    };
+                  cableIdleEventTrace.tileProgress.status = 'observed';
+                } else {
+                  cableIdleEventTrace.tileProgress.status = 'unavailable';
+                }
+              } catch {
+                cableIdleEventTrace.tileProgress.status = 'setup-failed';
+              }
+            }
             const renderDemandOwnership = {
               requested: scenarioName !== 'idle',
               beforeRequestRenderMode: Boolean(scene.requestRenderMode),
@@ -6048,6 +6371,32 @@ try {
               }
               if (longTaskTrace) longTaskTrace.length = 0;
               startedAt = performance.now();
+              if (cableProviderTraceActive) {
+                cableIdleEventTrace.status = 'partial';
+                cableIdleEventTrace.tileProgress.initialTilesLoaded =
+                  typeof scene.globe?.tilesLoaded === 'boolean'
+                    ? scene.globe.tilesLoaded
+                    : null;
+                if (typeof PerformanceObserver === 'undefined') {
+                  cableIdleEventTrace.providerRequests.status = 'unavailable';
+                } else {
+                  try {
+                    cableResourceObserver = new PerformanceObserver((list) =>
+                      recordCableResourceEntries(list.getEntries()),
+                    );
+                    cableResourceObserver.observe({
+                      type: 'resource',
+                      buffered: true,
+                    });
+                    cableIdleEventTrace.providerRequests.status = 'observed';
+                  } catch {
+                    cableIdleEventTrace.providerRequests.status =
+                      'observe-failed';
+                    cableIdleEventTrace.providerRequests.observerErrors += 1;
+                  }
+                }
+                publishCableEventTrace();
+              }
               window.__gevWeatherMeasurementStartedAt = startedAt;
               if (weatherIdleTrace) {
                 if (
@@ -6161,6 +6510,17 @@ try {
                 delayTimer = setInterval(runInjectedDelay, 1000);
               }
               await measurementWait;
+              cableSampleEndedAt = performance.now();
+              if (cableProviderTraceActive) {
+                cableIdleEventTrace.tileProgress.finalTilesLoaded =
+                  typeof scene.globe?.tilesLoaded === 'boolean'
+                    ? scene.globe.tilesLoaded
+                    : null;
+                if (!disposeCableEventTrace())
+                  throw new Error(
+                    'Cable-idle tile/resource observer cleanup was not confirmed.',
+                  );
+              }
               window.__gevWeatherGovernorModeWriteTraceV1?.stop?.(
                 performance.now(),
               );
@@ -6242,6 +6602,11 @@ try {
                 delete window.__gevWeatherMeasurementStartedAt;
                 delete window.__gevWeatherMeasurementAbort;
               }
+              if (
+                cableProviderTraceActive &&
+                window.__gevCableIdleEventTraceV1?.stop
+              )
+                delete window.__gevCableIdleEventTraceV1;
               observer?.takeRecords?.().forEach((entry) => {
                 longTasks.push(entry.duration);
                 if (
@@ -6290,6 +6655,7 @@ try {
                       },
                     }
                   : {}),
+                ...(cableProviderTraceActive ? { cableIdleEventTrace } : {}),
                 ...(weatherIdleTrace
                   ? { weatherIdleDiagnosticRaw: weatherIdleTrace }
                   : {}),
@@ -6344,6 +6710,27 @@ try {
                     }
                   : {}),
               };
+            } catch (error) {
+              if (!cableProviderTraceActive) throw error;
+              cableSampleEndedAt ??= performance.now();
+              try {
+                cableIdleEventTrace.tileProgress.finalTilesLoaded =
+                  typeof scene.globe?.tilesLoaded === 'boolean'
+                    ? scene.globe.tilesLoaded
+                    : null;
+              } catch {
+                cableIdleEventTrace.tileProgress.finalTilesLoaded = null;
+              }
+              disposeCableEventTrace();
+              return {
+                __gevSceneMeasurementFailure: {
+                  name: String(error?.name || 'Error').slice(0, 64),
+                  message: String(
+                    error?.message || error || 'measurement failed',
+                  ).slice(0, 240),
+                },
+                cableIdleEventTrace,
+              };
             } finally {
               active = false;
               clearTimeout(measurementTimer);
@@ -6381,6 +6768,7 @@ try {
                 }
               }
               observer?.disconnect();
+              disposeCableEventTrace();
               scene.postRender.removeEventListener(onRender);
               if (frameTrace)
                 scene.preRender?.removeEventListener?.(onPreRender);
@@ -6390,6 +6778,11 @@ try {
                 delete window.__gevWeatherMeasurementStartedAt;
                 delete window.__gevWeatherMeasurementAbort;
               }
+              if (
+                cableProviderTraceActive &&
+                window.__gevCableIdleEventTraceV1?.stop
+              )
+                delete window.__gevCableIdleEventTraceV1;
             }
           },
           {
@@ -6399,6 +6792,7 @@ try {
             recordFrameWindow: collectSceneFrameAttribution,
             expectedRunOrdinal: phaseRunOrdinal,
             frameTraceEnabled,
+            cableIdleEventTraceEnabled,
             weatherIdleDiagnosticEnabled,
             motionMetersPerSecond: mapStreamingWorkloadSelected
               ? mapStreamingModule.MAP_STREAMING_ROUTE.moveRightMetersPerSecond
@@ -6415,6 +6809,24 @@ try {
               status: 'cleanup-evaluation-failed',
               errorName: String(error?.name || 'Error').slice(0, 64),
             };
+          }
+        };
+        const readCableEventTraceAfterFailure = async () => {
+          if (!cableIdleEventTraceEnabled) return null;
+          let timeout;
+          try {
+            return await Promise.race([
+              page.evaluate(
+                () => window.__gevCableIdleEventTraceV1?.stop?.() ?? null,
+              ),
+              new Promise((resolve) => {
+                timeout = setTimeout(() => resolve(null), 500);
+              }),
+            ]);
+          } catch {
+            return null;
+          } finally {
+            clearTimeout(timeout);
           }
         };
         if (weatherIdleDiagnosticEnabled) {
@@ -6489,6 +6901,13 @@ try {
               });
           }
           sample = await samplePromise;
+          if (sample?.__gevSceneMeasurementFailure) {
+            const measurementFailure = sample.__gevSceneMeasurementFailure;
+            throw Object.assign(new Error(measurementFailure.message), {
+              name: measurementFailure.name,
+              cableIdleEventTrace: sample.cableIdleEventTrace,
+            });
+          }
           if (browserTraceController) {
             sample = {
               ...sample,
@@ -6526,6 +6945,15 @@ try {
             }
             browserTraceController = null;
           }
+          const partialCableTrace =
+            error?.cableIdleEventTrace ||
+            (await readCableEventTraceAfterFailure());
+          if (partialCableTrace) {
+            error.cableIdleEventTrace = partialCableTrace;
+          }
+          if (error?.cableIdleEventTrace && failureProgress.current)
+            failureProgress.current.cableIdleEventTrace =
+              error.cableIdleEventTrace;
           throw error;
         }
         const foregroundContinuity = evaluateForegroundSampleContinuity(sample);
@@ -8073,8 +8501,17 @@ try {
           renderDemandOwnership: sample.renderDemandOwnership || null,
           foregroundContinuity: sample.foregroundContinuity || null,
           cameraPath: sample.cameraPath || null,
+          ...(cableIdleEventTraceEnabled
+            ? { cableIdleEventTrace: sample.cableIdleEventTrace || null }
+            : {}),
         })),
         limits: { maxFramesPerCapture: 4096, maxCaptures: captures.length },
+        ...(cableIdleEventTraceEnabled
+          ? {
+              cableIdleEventTraceProtocol:
+                'gev-cable-idle-provider-events/v1; first 60s idle sample only; completed PerformanceResourceTiming entries and public Globe.tileLoadProgressEvent transitions are bounded and URL-free; in-flight requests and resource timing buffer loss are unavailable; diagnostic-only',
+            }
+          : {}),
         note: 'Diagnostic-only preRender/postRender wall times and bounded public governor snapshots; sceneRenderWallMs is not GPU execution time. Each frame keeps the latest 16 governor recentRequests and reports the omitted count. Their atWallClockMs comes from app Date.now and may be frozen by a fixture, so it cannot establish request-to-frame timing or every direct Cesium scene.requestRender cause.',
       };
       await fs.mkdir(path.dirname(path.resolve(frameTraceOut)), {
