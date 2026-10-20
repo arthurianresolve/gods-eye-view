@@ -127,7 +127,21 @@ export function assessSettledIdleSample(sample) {
   };
 }
 
-/** All five samples on each side must be settled and meet the original limit. */
+function aggregateIdleStatus(samples) {
+  // Preserve known budget failures even if another sample is unavailable.
+  // Completeness is reported separately so a baseline failure remains
+  // informative without making incomplete baseline evidence look complete.
+  if (samples.some((sample) => sample.status === 'failed')) return 'failed';
+  if (samples.some((sample) => sample.status === 'unavailable'))
+    return 'unavailable';
+  return 'passed';
+}
+
+function samplesComplete(samples) {
+  return samples.every((sample) => sample.status !== 'unavailable');
+}
+
+/** All five candidate samples must meet the budget; baseline is an informative control. */
 export function assessSettledIdlePair(baseline, candidate) {
   assert.equal(baseline.length, 5);
   assert.equal(candidate.length, 5);
@@ -146,14 +160,26 @@ export function assessSettledIdlePair(baseline, candidate) {
       })),
     ]),
   );
-  const all = [...samples.baseline, ...samples.candidate];
+  const baselineStatus = aggregateIdleStatus(samples.baseline);
+  const candidateStatus = aggregateIdleStatus(samples.candidate);
+  const baselineComplete = samplesComplete(samples.baseline);
+  const candidateComplete = samplesComplete(samples.candidate);
+  // A baseline budget failure is meaningful control data, not an invalid
+  // comparison. Missing or unsettled evidence on either side still prevents
+  // acceptance because it cannot establish matched conditions.
+  const status =
+    candidateStatus === 'failed'
+      ? 'failed'
+      : !baselineComplete || !candidateComplete
+        ? 'unavailable'
+        : candidateStatus;
   return {
     policy: SETTLED_IDLE_POLICY,
-    status: all.some((sample) => sample.status === 'failed')
-      ? 'failed'
-      : all.every((sample) => sample.status === 'passed')
-        ? 'passed'
-        : 'unavailable',
+    status,
+    baselineStatus,
+    candidateStatus,
+    baselineComplete,
+    candidateComplete,
     frameIntervalComparisonRequired: false,
     samples,
   };

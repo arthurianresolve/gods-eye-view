@@ -126,16 +126,68 @@ test('rejects diagnostic relabeling, truncation, missing settlement and inconsis
   assert.throws(() => assessSettledIdleSample(sample([2, 1])));
 });
 
-test('every one of five samples per build is required; a single passing pair cannot qualify', () => {
+test('candidate alone must meet the budget while both sides remain complete and settled', () => {
   const runs = () =>
     Array.from({ length: 5 }, (_, index) => ({ ...sample(), run: index + 1 }));
-  assert.equal(assessSettledIdlePair(runs(), runs()).status, 'passed');
-  const missing = runs();
-  delete missing[0].settledIdleObservation;
-  assert.equal(assessSettledIdlePair(runs(), missing).status, 'unavailable');
-  const failed = runs();
-  failed[0] = sample([1, 2, 3]);
-  assert.equal(assessSettledIdlePair(runs(), failed).status, 'failed');
+  const baselineBurst = runs();
+  baselineBurst[0] = { ...sample([1, 2, 3]), run: 1 };
+  const candidatePass = assessSettledIdlePair(baselineBurst, runs());
+  assert.equal(candidatePass.status, 'passed');
+  assert.equal(candidatePass.baselineStatus, 'failed');
+  assert.equal(candidatePass.candidateStatus, 'passed');
+  assert.equal(candidatePass.samples.baseline[0].maximumFramesInWindow, 3);
+  assert.equal(candidatePass.samples.candidate.length, 5);
+
+  const candidateBurst = runs();
+  candidateBurst[0] = { ...sample([1, 2, 3]), run: 1 };
+  const candidateFailure = assessSettledIdlePair(runs(), candidateBurst);
+  assert.equal(candidateFailure.status, 'failed');
+  assert.equal(candidateFailure.baselineStatus, 'passed');
+  assert.equal(candidateFailure.candidateStatus, 'failed');
+
+  const missingCandidate = runs();
+  delete missingCandidate[0].settledIdleObservation;
+  const candidateUnavailable = assessSettledIdlePair(runs(), missingCandidate);
+  assert.equal(candidateUnavailable.status, 'unavailable');
+  assert.equal(candidateUnavailable.candidateStatus, 'unavailable');
+
+  const missingBaseline = runs();
+  delete missingBaseline[0].settledIdleObservation;
+  const baselineUnavailable = assessSettledIdlePair(missingBaseline, runs());
+  assert.equal(baselineUnavailable.status, 'unavailable');
+  assert.equal(baselineUnavailable.baselineStatus, 'unavailable');
+  assert.equal(baselineUnavailable.baselineComplete, false);
+
+  const failedAndMissingCandidate = runs();
+  failedAndMissingCandidate[0] = { ...sample([1, 2, 3]), run: 1 };
+  delete failedAndMissingCandidate[1].settledIdleObservation;
+  const knownCandidateFailure = assessSettledIdlePair(
+    runs(),
+    failedAndMissingCandidate,
+  );
+  assert.equal(knownCandidateFailure.status, 'failed');
+  assert.equal(knownCandidateFailure.candidateStatus, 'failed');
+  assert.equal(knownCandidateFailure.candidateComplete, false);
+
+  const failedCandidateMissingBaseline = runs();
+  failedCandidateMissingBaseline[0] = { ...sample([1, 2, 3]), run: 1 };
+  const unavailableBaseline = runs();
+  delete unavailableBaseline[0].settledIdleObservation;
+  const preservedFailure = assessSettledIdlePair(
+    unavailableBaseline,
+    failedCandidateMissingBaseline,
+  );
+  assert.equal(preservedFailure.status, 'failed');
+  assert.equal(preservedFailure.baselineStatus, 'unavailable');
+  assert.equal(preservedFailure.baselineComplete, false);
+
+  const failedAndMissingBaseline = runs();
+  failedAndMissingBaseline[0] = { ...sample([1, 2, 3]), run: 1 };
+  delete failedAndMissingBaseline[1].settledIdleObservation;
+  const mixedBaseline = assessSettledIdlePair(failedAndMissingBaseline, runs());
+  assert.equal(mixedBaseline.status, 'unavailable');
+  assert.equal(mixedBaseline.baselineStatus, 'failed');
+  assert.equal(mixedBaseline.baselineComplete, false);
   assert.throws(() => assessSettledIdlePair([sample()], [sample()]));
   assert.throws(
     () =>
