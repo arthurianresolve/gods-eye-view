@@ -1104,6 +1104,43 @@ test('narrow-screen rails pin every hosted panel glow inside its panel box', () 
   }
 });
 
+test('desktop Display owns Tactical exclusivity while mobile Display leaves sibling launchers accessible', () => {
+  for (const mobile of [false, true]) {
+    const f = fixture('right', { mobile });
+    f.first.id = 'pp-toggles';
+    f.expand(f.first, 250);
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), !mobile);
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(
+      f.second.getAttribute('aria-hidden'),
+      mobile ? undefined : 'true',
+    );
+    f.first.attributeWrites.length = 0;
+    f.second.attributeWrites.length = 0;
+    f.run();
+    assert.deepEqual(
+      f.first.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+      [],
+    );
+    assert.deepEqual(
+      f.second.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+      [],
+    );
+
+    f.first.classList.add('collapsed');
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), false);
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
+
+    f.expand(f.second, 250);
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), true);
+    assert.equal(f.first.getAttribute('aria-hidden'), 'true');
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
+  }
+});
+
 test('right layout ignores a CSS-hidden expanded panel when deciding exclusivity', () => {
   const f = fixture('right');
   const weather = element('weather-panel', { height: 300 });
