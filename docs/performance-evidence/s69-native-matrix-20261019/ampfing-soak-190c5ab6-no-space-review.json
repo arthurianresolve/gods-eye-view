@@ -1,0 +1,161 @@
+{
+  "schema": "gev-ampfing-soak-disk-failure-review/v1",
+  "reviewedAt": "2026-10-20T04:33:51.540Z",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "harnessCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "status": "failed",
+  "reason": "Windows host storage exhausted during an IndexedDB import write.",
+  "failedPhase": "import-apply-status-wait",
+  "browserErrorCode": "FILE_ERROR_NO_SPACE",
+  "hostEvidence": "Windows C: independently reported zero free bytes; an unrelated ledger write also failed. The ledger was restored from the verified HEAD blob and preserved pending edits.",
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 1648208.9582,
+      "closeSettledHostMs": 1649253.7077,
+      "closeElapsedMs": 1044.749499999918,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 938.3803999999072
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "recordingBundle": {
+    "present": false,
+    "reason": "Export failed with browser storage quota error."
+  },
+  "operations": {
+    "durationMs": 1592837,
+    "fullSoak": false,
+    "iterations": 108,
+    "sourceToggles": 864,
+    "replaySeeks": 108,
+    "imports": 108,
+    "workspaceReloads": 216,
+    "archiveFailures": 108,
+    "cameraRecoveries": 108,
+    "peakHeapBytes": 72880440
+  },
+  "retention": {
+    "status": "pending",
+    "reasons": [
+      "Requires a 60-minute run.",
+      "Final 30-minute post-GC heap checkpoints are unavailable.",
+      "Final 30-minute browser listener checkpoints are unavailable."
+    ],
+    "heapGrowthRatio": null
+  },
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "heapBytes": 37956748,
+      "listeners": 666,
+      "pendingWorkers": 0
+    },
+    {
+      "elapsedMs": 304232,
+      "heapBytes": 41242896,
+      "listeners": 666,
+      "pendingWorkers": 0
+    },
+    {
+      "elapsedMs": 609432,
+      "heapBytes": 41914396,
+      "listeners": 666,
+      "pendingWorkers": 0
+    },
+    {
+      "elapsedMs": 911902,
+      "heapBytes": 43303388,
+      "listeners": 668,
+      "pendingWorkers": 0
+    },
+    {
+      "elapsedMs": 1215943,
+      "heapBytes": 43596408,
+      "listeners": 666,
+      "pendingWorkers": 0
+    },
+    {
+      "elapsedMs": 1518981,
+      "heapBytes": 44424204,
+      "listeners": 666,
+      "pendingWorkers": 0
+    }
+  ],
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "logicalCpus": 8,
+    "memoryBytes": 16907538432,
+    "hosted": false,
+    "runnerImage": null,
+    "runnerImageVersion": null
+  },
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "browserVersion": "Chrome/155.0.8059.84",
+  "nativeResolution": {
+    "observedDpr": 2,
+    "initial": {
+      "devicePixelRatio": 2,
+      "canvas": {
+        "clientWidth": 1440,
+        "clientHeight": 1000,
+        "width": 2880,
+        "height": 2000
+      },
+      "sceneDrawingBuffer": {
+        "width": 2880,
+        "height": 2000
+      },
+      "resolutionScale": 1,
+      "useBrowserRecommendedResolution": false,
+      "maximumScreenSpaceError": 1
+    }
+  },
+  "location": {
+    "latitude": 48.2582,
+    "longitude": 12.421,
+    "altitude": 731
+  },
+  "artifacts": {
+    "raw": {
+      "name": "staged-final-ampfing-soak-20261020T035353310Z.json",
+      "sha256": "22202557cce3e0f83d7b7b5c83969876e0653e794ebdc97fb99b10074cfcc668"
+    },
+    "independentReview": {
+      "sha256": "94f4d61d02366bfb138b68265bd83921bc19c305393a364319ebd8a705c482e7",
+      "status": "failed"
+    },
+    "transferManifest": {
+      "sha256": "8caa9ed3f5d87f83b59e87aab2c26b6e0ba8f3e74558f6eca4ba62f8d2bb84d3"
+    },
+    "vmArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-soak-190c5ab6-b843cac5-staged-final-ampfing-soak-20261020T035353310Z"
+  },
+  "disposition": "Preserve this attempt as failed. It establishes native rendering and completed operations up to failure, but neither a complete 60-minute soak nor retained-heap stability. Browser process cleanup succeeded; aggregate failed cleanup/foreground fields do not prove a browser leak.",
+  "recovery": "Reversible NTFS compression of task files; no file deletion. A separate QA-wrapper guard will require a 6 GiB launch reserve and stop below 2 GiB before another cycle. The application, workload, duration and acceptance limits remain unchanged."
+}

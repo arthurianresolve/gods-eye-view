@@ -7,6 +7,48 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain in progress for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The [signed-package Ampfing soak attempt](performance-evidence/s69-native-matrix-20261019/ampfing-soak-190c5ab6-no-space-review.json)
+stopped after 26.5 minutes and 108 measured cycles when the Windows drive ran
+out of space. IndexedDB reported `FILE_ERROR_NO_SPACE`; recording export also
+failed. The raw report and independent failed review are preserved on VM105.
+The browser closed normally. This attempt cannot establish the required
+60-minute run or final 30-minute retained-heap plateau. Space recovery and a
+QA-only reserve guard precede a new run; application settings and acceptance
+limits are unchanged.
+
+The [fresh interaction and sampled-heap capture](performance-evidence/s69-native-matrix-20261019/interaction-heap-190c5ab6-b843cac5-review.json)
+completes on both builds and passes independent identity, transfer and source
+verification. Loaded replay reaches a completed matching frame at 90.9 ms p95,
+within the 250 ms limit; sampled peak heap changes -0.56%. The local-control
+target fails: pointerdown through layer readiness and completed rendering takes
+625.4 ms p95 on the candidate and 704.2 ms on the control, above 100 ms. Most
+of the enable delay precedes the first matching pre-render; click delivery and
+layer preparation were not separately timed. This failure remains open and is
+not overridden by successful operations or lower total latency.
+
+A [six-toggle timing diagnostic](performance-evidence/s69-native-matrix-20261019/local-datacenter-toggle-190c5ab6-review.json)
+separates trusted input, UI updates, module work and rendering. The three
+enable calls take 2.7–8.5 ms and the active button class changes in 6.8–20.7 ms;
+the first matching post-render arrives in 176.6–312.4 ms. That first frame does
+not require the qualification capture's completed LOD state, so these figures
+cannot replace its failed latency result. All six actions complete and the
+diagnostic restores its listeners and method wrappers.
+
+The [four-page visual diagnostic](performance-evidence/s69-native-matrix-20261019/visual-transition-path-b843cac5-20261020-review.json)
+completes all captures. Candidate initial/restored images match exactly;
+baseline initial/restored images differ by four pixels at one channel level.
+Cross-build differences remain confined to the header/logo region. This narrows
+the investigation to paint inputs or rendering, but does not establish a cause
+or clear the existing visual gate.
+
+The subsequent [paint-signature diagnostic](performance-evidence/s69-native-matrix-20261019/visual-paint-signature-b843-20261020-review.json)
+finds the same candidate build differs from its earlier capture by 7,751 pixels,
+while its new image exactly matches the earlier baseline's restored image.
+The new baseline/candidate pair differs by eight pixels at a maximum channel
+delta of seven. Recorded logo/SVG styles match, but radio pseudo-element styles
+and the compositor's paint state were not fully observed. This establishes
+within-build variation without proving its cause or changing the visual gate.
+
 The [fixed-provider startup diagnostic](performance-evidence/s69-native-matrix-20261019/startup-provider-fixture-dams-190c5ab6-4567b9a8-fixtures-ready-review.json)
 completes four declared observations, with app readiness between 2.58 and 3.13
 seconds across both builds. It does not reproduce the earlier 28.53% gap, but
@@ -14,11 +56,17 @@ its synthetic map payloads make it diagnostic-only. The failed live-provider
 startup comparison remains recorded and unresolved; this is not a replacement
 acceptance run.
 
+The startup timer ends before the dam layer is enabled. It measures empty-layer
+application boot under that workload's startup protocol. The startup shard does
+not record a camera pose, so it cannot establish a dam-view camera or dam-layer
+activation cost. The failed app-startup result remains separate from the dam
+motion result.
+
 The [fresh operating-view idle diagnostic](performance-evidence/s69-native-matrix-20261019/idle-cadence-190c5ab6-b843cac5-review.json)
 now passes independent source, identity, and behavior checks. It resolves the
 longer idle frame interval as intentional render-demand cadence; active motion
 and visual acceptance stay separate. Cable idle attribution, strict visual
-equivalence, fresh interaction/heap measurements and the final soak remain open.
+equivalence, local-control responsiveness and the final soak remain open.
 
 The current candidate's [dense investigation comparison](performance-evidence/s69-native-matrix-20261019/dense-investigation-190c5ab6-result.json)
 now completes all five samples per scenario. Motion p95 changes from 518.1 to
@@ -35,8 +83,10 @@ also completes: motion p95 changes 320.9 to 316.9 ms (-1.25%), app startup
 -40.45%, and loading completion -28.82%. Its idle interval is unavailable in
 both builds. All requested matrix captures are now archived; baseline reuse
 remains explicitly recorded.
-All seven required [QA CI jobs and release packaging at `4567b9a8`](performance-evidence/s69-native-matrix-20261019/qa-ci-4567b9a8.json)
+All seven required [QA CI jobs and release packaging at `abc6dd91`](performance-evidence/s69-native-matrix-20261019/qa-ci-abc6dd91.json)
 pass, including Windows recovery and the rendered mixed-use browser gate.
+The [previous `4567b9a8` checks](performance-evidence/s69-native-matrix-20261019/qa-ci-4567b9a8.json)
+remain preserved.
 The [earlier `975a7f24` checks](performance-evidence/s69-native-matrix-20261019/qa-ci-975a7f24.json)
 also pass. These are QA producer checks; the application remains `190c5ab6`.
 

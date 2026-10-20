@@ -1,0 +1,281 @@
+{
+  "schema": "gev-local-datacenter-toggle-independent-review/v1",
+  "status": "diagnostic-complete",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "producerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "diagnosticOnly": true,
+  "comparisonEligible": false,
+  "acceptanceEligible": false,
+  "sourceProof": {
+    "schema": "gev-local-datacenter-toggle-source-proof/v1",
+    "status": "content-hashes-verified-against-clean-pinned-checkout",
+    "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+    "producerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+    "harnessCleanBeforeArchive": true,
+    "harnessCleanAfterArchive": true,
+    "packageLockSha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f",
+    "packageJsonSha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f",
+    "diagnosticHarnessSha256": "ec55ebed6828ccbfb915d02d980a92e996333b3530c5de387febeb5415b5dd46",
+    "qaFiles": [
+      {
+        "name": "scripts/qa-rendered-soak-driver.mjs",
+        "sha256": "7c6c27c788d03d0ce565652b9168bb96aaf965bd619fdc2f98cf71b5f6c71778",
+        "gitBlob": "4ce6682e769664733926eb7d0870a11266531aec"
+      },
+      {
+        "name": "scripts/qa-application-fixtures.mjs",
+        "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37",
+        "gitBlob": "8f638bdcf8c6d17c1b3fcf2817735285481b23b3"
+      },
+      {
+        "name": "scripts/qa-qualification-metrics-capture.mjs",
+        "sha256": "b0b727257d7b06ab1d83c9fbb6ddb291de8d97b302852f980b2c71ea1a70e87f",
+        "gitBlob": "da85d92e95eaa60002d9191eb840b11255c76120"
+      },
+      {
+        "name": "scripts/performance/windowsForegroundWindow.mjs",
+        "sha256": "7ad97316378b0d219fea4cf65ea7633d79f6ad87a589533e34f908af28fc6031",
+        "gitBlob": "7267abba13e723c263b2a7d39ce9d36e55a45ac7"
+      },
+      {
+        "name": "package.json",
+        "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f",
+        "gitBlob": "39fc43daa437842ebb4b5b077d609d6464ce0946"
+      },
+      {
+        "name": "package-lock.json",
+        "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f",
+        "gitBlob": "3bcc77f2151424fbbd1636cc0074720a1ba741d3"
+      }
+    ],
+    "historicalFailure": "historical-prebrowser-failure.json",
+    "runtimeScope": "dynamic imports resolve from the clean pinned b843 harness checkout"
+  },
+  "environment": {
+    "browserVersion": "Chrome/155.0.8059.84",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 2000
+    },
+    "browserExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "browserArgs": ["--no-sandbox", "--disable-dev-shm-usage"],
+    "headless": false
+  },
+  "fixture": {
+    "status": "validated",
+    "featureCount": 8,
+    "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+    "requestCount": 1,
+    "fulfilledRequestCount": 1,
+    "disabledAfterPreparation": true,
+    "cameraPose": {
+      "requested": {
+        "latitude": 40.7,
+        "longitude": -73.9,
+        "altitude": 1000
+      },
+      "observed": {
+        "latitude": 40.699999999999996,
+        "longitude": -73.9,
+        "altitude": 1000.0000000010535
+      },
+      "heading": 6.283185307179586,
+      "pitch": -1.5707963267948966,
+      "roll": 0,
+      "frameNumber": 60
+    }
+  },
+  "baseline": {
+    "enabled": false,
+    "buttonActive": false,
+    "managerListenerCounts": {
+      "visibility": 5,
+      "activity": 1,
+      "visibilityRequest": 4
+    }
+  },
+  "sampleCount": 6,
+  "timings": [
+    {
+      "sampleId": "toggle-01",
+      "enabled": true,
+      "clickToModuleMs": 2.2999999970197678,
+      "moduleMs": 2.7000000029802322,
+      "clickToPreRenderMs": 11.899999991059303,
+      "clickToPostRenderMs": 195.09999999403954,
+      "moduleSettledToPostRenderMs": 190.09999999403954
+    },
+    {
+      "sampleId": "toggle-02",
+      "enabled": false,
+      "clickToModuleMs": 2.5,
+      "moduleMs": 2.3999999910593033,
+      "clickToPreRenderMs": 23.19999998807907,
+      "clickToPostRenderMs": 28.399999991059303,
+      "moduleSettledToPostRenderMs": 23.5
+    },
+    {
+      "sampleId": "toggle-03",
+      "enabled": true,
+      "clickToModuleMs": 2,
+      "moduleMs": 3.2999999970197678,
+      "clickToPreRenderMs": 105.29999999701977,
+      "clickToPostRenderMs": 312.3999999910593,
+      "moduleSettledToPostRenderMs": 307.09999999403954
+    },
+    {
+      "sampleId": "toggle-04",
+      "enabled": false,
+      "clickToModuleMs": 16.600000008940697,
+      "moduleMs": 5,
+      "clickToPreRenderMs": 90.30000001192093,
+      "clickToPostRenderMs": 97.6000000089407,
+      "moduleSettledToPostRenderMs": 76
+    },
+    {
+      "sampleId": "toggle-05",
+      "enabled": true,
+      "clickToModuleMs": 7,
+      "moduleMs": 8.5,
+      "clickToPreRenderMs": 53.79999999701977,
+      "clickToPostRenderMs": 176.6000000089407,
+      "moduleSettledToPostRenderMs": 161.1000000089407
+    },
+    {
+      "sampleId": "toggle-06",
+      "enabled": false,
+      "clickToModuleMs": 5.600000008940697,
+      "moduleMs": 5.199999988079071,
+      "clickToPreRenderMs": 84.6000000089407,
+      "clickToPostRenderMs": 89.6000000089407,
+      "moduleSettledToPostRenderMs": 78.80000001192093
+    }
+  ],
+  "frameWitnessScope": "first matching preRender/postRender only; this is not the official LOD-computed or fully-ready boundary",
+  "cleanup": {
+    "mutationObserverDisconnected": true,
+    "domListenersRemoved": true,
+    "sceneListenerCountsBefore": {
+      "preRender": 3,
+      "postRender": 8
+    },
+    "sceneListenerCountsAfter": {
+      "preRender": 3,
+      "postRender": 8
+    },
+    "sceneListenersRemoved": true,
+    "managerListenerCountsBefore": {
+      "visibility": 5,
+      "activity": 1,
+      "visibilityRequest": 4
+    },
+    "managerListenerCountsAfter": {
+      "visibility": 5,
+      "activity": 1,
+      "visibilityRequest": 4
+    },
+    "managerSubscriptionsRemoved": true,
+    "methodsRestored": true,
+    "sampleCount": 6,
+    "overflowed": false,
+    "foregroundHelperDisposed": true,
+    "browser": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 26499.7697,
+        "closeSettledHostMs": 28088.1276,
+        "closeElapsedMs": 1588.357899999999,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 1558.0390000000007
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    }
+  },
+  "interpretation": "The report separates trusted pointer input, module lifecycle resolution, and first matching Cesium frames. The frame witness is not equivalent to the official LOD-computed/fully-ready gate. Values are bounded observations from six alternating actions, not paired workload evidence, a latency gate, or a performance acceptance result.",
+  "historicalPrebrowserFailure": {
+    "schema": "gev-local-datacenter-toggle-historical-attempt/v1",
+    "status": "failed-before-browser-import",
+    "source": "operator note from the first invocation; no browser was launched",
+    "error": "createRequire could not resolve Puppeteer through the external ESM resolver",
+    "resolution": "the later runner dynamically imports Puppeteer from the frozen harness checkout",
+    "supersededBy": "the separately captured completed diagnostic in diagnostic-report.json",
+    "performanceEvidence": false
+  },
+  "files": [
+    {
+      "name": "diagnostic-report.json",
+      "bytes": 52888,
+      "sha256": "f5393f23f9eb8a63cd02c380f5c2f0fa44b3447522bc30a58bc74a7dcbb985ab"
+    },
+    {
+      "name": "diagnostic-runner.mjs",
+      "bytes": 35292,
+      "sha256": "ec55ebed6828ccbfb915d02d980a92e996333b3530c5de387febeb5415b5dd46"
+    },
+    {
+      "name": "scripts__qa-rendered-soak-driver.mjs",
+      "bytes": 76530,
+      "sha256": "7c6c27c788d03d0ce565652b9168bb96aaf965bd619fdc2f98cf71b5f6c71778"
+    },
+    {
+      "name": "scripts__qa-application-fixtures.mjs",
+      "bytes": 27769,
+      "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37"
+    },
+    {
+      "name": "scripts__qa-qualification-metrics-capture.mjs",
+      "bytes": 67974,
+      "sha256": "b0b727257d7b06ab1d83c9fbb6ddb291de8d97b302852f980b2c71ea1a70e87f"
+    },
+    {
+      "name": "scripts__performance__windowsForegroundWindow.mjs",
+      "bytes": 21986,
+      "sha256": "7ad97316378b0d219fea4cf65ea7633d79f6ad87a589533e34f908af28fc6031"
+    },
+    {
+      "name": "historical-prebrowser-failure.json",
+      "bytes": 505,
+      "sha256": "03a5c70265853f1ec067a83a1f48282d3789fdd03a80ce0cfa54cdb1b22e852f"
+    },
+    {
+      "name": "b843-package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f"
+    },
+    {
+      "name": "b843-package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f"
+    },
+    {
+      "name": "source-proof.json",
+      "bytes": 2021,
+      "sha256": "a8d6f06a2ba7621dd1ff442df7b38f8184a78f9523507b48292cbed70401ff07"
+    }
+  ]
+}

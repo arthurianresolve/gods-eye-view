@@ -1,0 +1,48 @@
+{
+  "schema": "gev-final-evidence-review-execution/v1",
+  "reviewedAt": "2026-10-20T04:35:11.924Z",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/current190-final-review-20261020-r9",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/current190-reviewer-validation-20261020-r5/review-final-qualification-190c5ab6-on-vm.mjs",
+  "reviewerSha256": "7ed081fbbec6b4b5b84c32ae702bb4e9384b73bc1f14ca6b5a272461144b7d4f",
+  "configSha256": "82ead93d3798d9ebd8f9aa2e58e0b3dfe1a36f035260704d0a5a574da4c1b30b",
+  "code": 0,
+  "signal": null,
+  "error": null,
+  "reviewSha256": "445f5d87a5faf9249fd3cfbec00325e724cd9db19dadf18ec49c4d61e282003a",
+  "overall": "NOT_ACCEPTED",
+  "summary": {
+    "measured": [
+      "operating-view-idle-cadence-disposition",
+      "weather-balanced",
+      "weather-idle-cadence-disposition",
+      "private-workspace",
+      "exact-current190-ci",
+      "signed-release-artifact"
+    ],
+    "pending": [
+      {
+        "gate": "matrix-motion-and-route",
+        "reason": "infrastructure-cables: Scenarios unavailable: idle"
+      }
+    ],
+    "failed": [
+      {
+        "gate": "cold-startup",
+        "reason": "infrastructure-dams: startup regression remains unresolved"
+      },
+      {
+        "gate": "interaction-replay-and-sampled-heap",
+        "reason": "localControl failed its existing frozen consumer gate"
+      },
+      {
+        "gate": "visual-equivalence",
+        "reason": "Hash-bound current-190 visual capture failed during pixel-validation: hud-visible decoded rendered pixels changed\n+ actual - expected\n\n+ '83af16fd283ac5f3198267c598c0a46d07bc4e0d93d28e26e60c15f67d589c08'\n- 'f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5'\n"
+      },
+      {
+        "gate": "full-retention-soak",
+        "reason": "Expected values to be strictly equal:\n\n'failed' !== 'passed'\n"
+      }
+    ]
+  },
+  "scope": "Integration of preserved evidence through the unchanged r5 reviewer. Does not create measurements or override failed gates."
+}

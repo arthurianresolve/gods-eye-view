@@ -1,4 +1,37 @@
-# S69 native Windows matrix checkpoint — 19 October 2026
+# S69 native Windows matrix checkpoint — 20 October 2026
+
+The [completed interaction and sampled-heap capture](interaction-heap-190c5ab6-b843cac5-review.json)
+passes source, identity and transfer verification. Candidate loaded-replay
+response is 90.9 ms p95, within 250 ms; sampled peak heap changes -0.56%.
+Local controls remain above the original 100 ms target: 625.4 ms p95 through
+completed layer readiness and rendering, versus 704.2 ms on the control.
+The [six-toggle timing diagnostic](local-datacenter-toggle-190c5ab6-review.json)
+finds enable calls take 2.7–8.5 ms and active-button updates 6.8–20.7 ms. Its
+first matching frame does not require completed LOD, so it cannot replace the
+failed qualification result. All diagnostic listeners and wrappers are restored.
+
+The [four-page transition diagnostic](visual-transition-path-b843cac5-20261020-review.json)
+and [paint-signature comparison](visual-paint-signature-b843-20261020-review.json)
+establish variation within an unchanged build. The later candidate image is
+identical to an earlier baseline image, despite a 7,751-pixel difference from
+its own earlier capture. The new cross-build pair differs by eight pixels at
+maximum channel delta seven. These observations narrow the investigation but
+do not replace the failed full visual comparison or relax its policy.
+
+All seven required [CI jobs and release packaging at `abc6dd91`](qa-ci-abc6dd91.json)
+pass. This revision changes QA only; the application candidate remains
+`190c5ab6`. The [signed-package Ampfing soak attempt](ampfing-soak-190c5ab6-no-space-review.json)
+failed after 26.5 minutes and 108 measured cycles when the Windows drive filled
+up. IndexedDB returned `FILE_ERROR_NO_SPACE`, and recording export failed with
+a storage quota error. Browser cleanup succeeded. The failed evidence is
+archived; a complete 60-minute run and final 30-minute retention assessment
+remain pending while space is recovered and a QA-only reserve guard is added.
+Production remains at `e7a878e`; no stable release has been promoted.
+
+The failed dam-labelled startup comparison measures empty-layer application
+boot before the dam layer is enabled. Its startup shard records no camera pose.
+It therefore remains an app-startup failure, separate from dam activation and
+the passing dam motion comparison.
 
 The [current dense investigation comparison](dense-investigation-190c5ab6-result.json)
 completes five observations per scenario. Motion p95 changes 518.1 to 405.1 ms
