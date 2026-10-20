@@ -21,6 +21,7 @@ import {
   assertFullExtentCanonicalContinuity,
   readFullExtentPointerSweepMutationSequence,
 } from './fullExtentPointerSweep.mjs';
+import { DECORATION_QUANTIZATION_POLICY } from './decorationQuantization.mjs';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -502,7 +503,8 @@ async function inspectFinalVisualQualification(
     report.rasterPolicy == null ||
       report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY ||
       (!comparePixels &&
-        report.rasterPolicy === 'repeated-full-image-controls-v1'),
+        (report.rasterPolicy === 'repeated-full-image-controls-v1' ||
+          report.rasterPolicy === DECORATION_QUANTIZATION_POLICY)),
     'Unsupported visual raster policy',
   );
   const decoded = new Map();

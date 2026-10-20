@@ -11,7 +11,6 @@ import {
   createRepeatedVisualPlan,
   validateRepeatedVisualQualification,
 } from './repeatedVisualQualification.mjs';
-import { REPEATED_VISUAL_POLICY } from './repeatedFullImageControls.mjs';
 
 const json = (value) => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -44,6 +43,7 @@ export async function runRepeatedVisualQualification(options) {
     'Prepared visual plan differs from requested application or producer identity',
   );
   const planSha256 = digest(planBytes);
+  const plan = JSON.parse(planBytes.toString('utf8'));
   const pairs = [];
   const completed = [];
   let stage = 'capture';
@@ -56,7 +56,7 @@ export async function runRepeatedVisualQualification(options) {
         ...options,
         out: pairRoot,
         repeatedControlPlan: {
-          policy: REPEATED_VISUAL_POLICY,
+          policy: plan.policy,
           planSha256,
           pairOrdinal: ordinal,
         },

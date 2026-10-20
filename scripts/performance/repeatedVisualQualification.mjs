@@ -22,6 +22,13 @@ import {
   createFullExtentPointerSweepPlan,
   readFullExtentPointerSweepMutationSequence,
 } from './fullExtentPointerSweep.mjs';
+import {
+  DECORATION_QUANTIZATION_POLICY,
+  DECORATION_SOURCE_FILES,
+  createDecorationQuantizationPlan,
+  assertDecorationBoundaryPair,
+  validateDecorationImageControls,
+} from './decorationQuantization.mjs';
 
 export const REPEATED_VISUAL_SCHEMA = 'gev-repeated-visual-qualification/v1';
 export const REPEATED_VISUAL_ORDER = Object.freeze([
@@ -46,9 +53,23 @@ export function createRepeatedVisualPlan(
     assert.match(sha || '', /^[a-f0-9]{40}$/);
   assert.notEqual(application.baselineSha, application.candidateSha);
   assert.match(options['visual-harness-sha'] || '', /^[a-f0-9]{40}$/);
+  const decoration =
+    options['raster-policy'] === DECORATION_QUANTIZATION_POLICY;
+  assert.ok(
+    options['raster-policy'] === undefined ||
+      options['raster-policy'] === REPEATED_VISUAL_POLICY ||
+      decoration,
+    'Unsupported prospective raster policy',
+  );
+  assert.ok(
+    !decoration || !legacyAcquisition,
+    'Decoration policy requires full pointer acquisition',
+  );
   return {
     schema: REPEATED_VISUAL_SCHEMA,
-    policy: REPEATED_VISUAL_POLICY,
+    policy: decoration
+      ? DECORATION_QUANTIZATION_POLICY
+      : REPEATED_VISUAL_POLICY,
     application,
     visualHarnessCommit: options['visual-harness-sha'],
     ...(!legacyAcquisition
@@ -59,14 +80,21 @@ export function createRepeatedVisualPlan(
     freshDocumentsPerBuild: 3,
     pngCount: 24,
     masks: [],
-    imageSelection:
-      'all-declared-controls-required-bidirectional-whole-image-support',
-    smallVariance: {
-      maximumPixels: 10,
-      maximumRgbChannelDelta: 10,
-      alphaChangesAllowed: false,
-      bothValuesMustOccurInBothBuilds: true,
-    },
+    imageSelection: decoration
+      ? 'all-six-images-all-unordered-pairs-no-fallback'
+      : 'all-declared-controls-required-bidirectional-whole-image-support',
+    ...(decoration
+      ? {
+          decorationQuantization: createDecorationQuantizationPlan(),
+        }
+      : {
+          smallVariance: {
+            maximumPixels: 10,
+            maximumRgbChannelDelta: 10,
+            alphaChangesAllowed: false,
+            bothValuesMustOccurInBothBuilds: true,
+          },
+        }),
   };
 }
 
@@ -85,6 +113,9 @@ export async function validateRepeatedVisualQualification({
         'baseline-app-sha': plan.application?.baselineSha,
         'candidate-app-sha': plan.application?.candidateSha,
         'visual-harness-sha': plan.visualHarnessCommit,
+        ...(plan.policy === DECORATION_QUANTIZATION_POLICY
+          ? { 'raster-policy': plan.policy }
+          : {}),
       },
       { legacyAcquisition: plan.fullExtentPointerSweep === undefined },
     ),
@@ -106,7 +137,25 @@ export async function validateRepeatedVisualQualification({
       'Pair report exceeds bound',
     );
     const report = JSON.parse(pair.bytes.toString('utf8'));
-    assert.equal(report.rasterPolicy, REPEATED_VISUAL_POLICY);
+    assert.equal(report.rasterPolicy, plan.policy);
+    if (plan.policy === DECORATION_QUANTIZATION_POLICY) {
+      assert.deepEqual(
+        report.decorationQuantization,
+        plan.decorationQuantization,
+      );
+      for (const side of ['baseline', 'candidate'])
+        assert.deepEqual(
+          report.decorationSourceFiles?.[side],
+          DECORATION_SOURCE_FILES,
+          'Decoration source closure changed',
+        );
+    } else {
+      assert.equal(
+        report.decorationQuantization,
+        undefined,
+        'Legacy reports cannot acquire a decoration allowance',
+      );
+    }
     assert.equal(
       report.fullExtentPointerSweepPolicy,
       plan.fullExtentPointerSweep?.policy,
@@ -117,7 +166,7 @@ export async function validateRepeatedVisualQualification({
     assert.deepEqual(
       report.repeatedControlPlan,
       {
-        policy: REPEATED_VISUAL_POLICY,
+        policy: plan.policy,
         planSha256,
         pairOrdinal: index + 1,
       },
@@ -154,6 +203,7 @@ export async function validateRepeatedVisualQualification({
   for (const [stateIndex, id] of FINAL_VISUAL_STATES.entries()) {
     let semantic;
     let paint;
+    let decoration;
     const images = { baseline: [], candidate: [] };
     for (const [pairIndex, report] of reports.entries()) {
       const state = report.states[stateIndex];
@@ -181,6 +231,21 @@ export async function validateRepeatedVisualQualification({
           paint,
           `${id} paint differs between controls`,
         );
+        if (plan.policy === DECORATION_QUANTIZATION_POLICY) {
+          const proof = state.decoration?.[side];
+          assert.deepEqual(
+            capturedAttempts[0].decoration,
+            proof,
+            'Decoration proof is not bound to the retained screenshot attempt',
+          );
+          assertDecorationBoundaryPair(proof, signature);
+          decoration ??= proof;
+          assert.deepEqual(
+            proof,
+            decoration,
+            `${id} decoration inputs/fonts differ between controls`,
+          );
+        }
         // Event sequence counters prove that each document received fresh input;
         // their numeric values are not paint inputs and may differ by document.
         const gaze = { ...state.presentation[side].before.gaze };
@@ -226,15 +291,17 @@ export async function validateRepeatedVisualQualification({
     }
     comparisons.push({
       id,
-      ...validateRepeatedFullImageControls(images, {
-        exact: id === 'hud-hidden',
-      }),
+      ...(plan.policy === DECORATION_QUANTIZATION_POLICY
+        ? validateDecorationImageControls(images, decoration.before)
+        : validateRepeatedFullImageControls(images, {
+            exact: id === 'hud-hidden',
+          })),
     });
   }
   return {
     schema: REPEATED_VISUAL_SCHEMA,
     status: 'passed',
-    policy: REPEATED_VISUAL_POLICY,
+    policy: plan.policy,
     planSha256,
     pairReportSha256: hashes,
     pngCount: 24,

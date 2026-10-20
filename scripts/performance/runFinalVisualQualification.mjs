@@ -79,6 +79,17 @@ import {
   createFullExtentPointerSweepSnapshotReader,
   disposeFullExtentPointerSweepInPage,
 } from './fullExtentPointerSweep.mjs';
+import {
+  DECORATION_QUANTIZATION_POLICY,
+  DECORATION_SOURCE_FILES,
+  createDecorationQuantizationPlan,
+  assertDecorationCaptureProof,
+  assertDecorationBoundaryPair,
+} from './decorationQuantization.mjs';
+import {
+  createDecorationSnapshotReader,
+  createDecorationFontReader,
+} from './decorationCaptureProof.mjs';
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -317,13 +328,21 @@ async function savePartial(out, name, report, primaryError) {
   }
 }
 
-async function captureRevision({ label, url, appSha, receipt, out }) {
+async function captureRevision({
+  label,
+  url,
+  appSha,
+  receipt,
+  out,
+  decoration = false,
+}) {
   const fixture = createCctvLifecycleFixture();
   let browser;
   let context;
   let page;
   let prepared;
   let foregroundSession;
+  let decorationFontReader;
   let failure = null;
   let stage = 'launch';
   let states = [];
@@ -430,6 +449,8 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
     );
     if (!frameDelivery.matchesFixture)
       throw new Error('Decoded camera has no verified fixture-frame delivery.');
+    if (decoration)
+      decorationFontReader = await createDecorationFontReader(page);
     await page.evaluate(installVisualPresentationBoundaryInPage);
     for (const id of STATES) {
       stage = id;
@@ -563,20 +584,25 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         }
         const expectedHudVisible = id !== 'hud-hidden';
         let pausedCapture;
+        let decorationFontsBefore;
+        let decorationFontsAfter;
+        let snapshotReader = createFullExtentPointerSweepSnapshotReader(
+          createCanonicalPointerSnapshotReader(
+            createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
+          ),
+        );
+        if (decoration)
+          snapshotReader = createDecorationSnapshotReader(snapshotReader);
         const pngCountBeforeCapture = pngCount;
         try {
           pausedCapture = await captureWithDebuggerPause({
             page,
-            readCallback: createFullExtentPointerSweepSnapshotReader(
-              createCanonicalPointerSnapshotReader(
-                createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
-              ),
-            ),
+            readCallback: snapshotReader,
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
             describeGuardFailure: describeVisualPauseReadiness,
             requestNextGuardFrame: requestVisualGuardFrame,
-            screenshot: (readBefore) => {
+            screenshot: async (readBefore) => {
               assertCanonicalPointerHistory(readBefore?.pointerHistory);
               assertFullExtentCanonicalContinuity(
                 readBefore?.fullExtentPointerSweep,
@@ -606,11 +632,32 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
                 )
               )
                 return null;
+              if (decoration) {
+                decorationFontsBefore = await decorationFontReader.read(
+                  readBefore.decoration,
+                );
+                assertDecorationCaptureProof(
+                  readBefore.decoration,
+                  decorationFontsBefore,
+                  readBefore.paint,
+                );
+              }
               pngCount++;
-              return captureQualificationPng(
+              const image = await captureQualificationPng(
                 page,
                 path.join(out, `${id}-${label}-attempt-${pngCount}.png`),
               );
+              if (decoration) {
+                decorationFontsAfter = await decorationFontReader.read(
+                  readBefore.decoration,
+                );
+                assert.deepEqual(
+                  decorationFontsAfter,
+                  decorationFontsBefore,
+                  'Actual platform fonts changed across screenshot',
+                );
+              }
+              return image;
             },
           });
         } catch (error) {
@@ -659,6 +706,19 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             pausedCapture.readAfter.paint,
             'Header paint inputs changed during the paused screenshot',
           );
+          if (decoration && pausedCapture.screenshot)
+            assertDecorationBoundaryPair(
+              {
+                before: pausedCapture.readBefore.decoration,
+                after: pausedCapture.readAfter.decoration,
+                fontsBefore: decorationFontsBefore,
+                fontsAfter: decorationFontsAfter,
+              },
+              {
+                before: pausedCapture.readBefore.paint,
+                after: pausedCapture.readAfter.paint,
+              },
+            );
         } catch (error) {
           attempts.push({
             attempt,
@@ -716,6 +776,16 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             before: pausedCapture.readBefore.paint,
             after: pausedCapture.readAfter.paint,
           },
+          ...(decoration
+            ? {
+                decoration: {
+                  before: pausedCapture.readBefore.decoration,
+                  after: pausedCapture.readAfter.decoration,
+                  fontsBefore: decorationFontsBefore,
+                  fontsAfter: decorationFontsAfter,
+                },
+              }
+            : {}),
           phaseDimensions: {
             before: pausedCapture.readBefore?.dimensions,
             after: pausedCapture.readAfter?.dimensions,
@@ -778,6 +848,16 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             before: pausedCapture.readBefore.paint,
             after: pausedCapture.readAfter.paint,
           },
+          ...(decoration
+            ? {
+                decoration: {
+                  before: pausedCapture.readBefore.decoration,
+                  after: pausedCapture.readAfter.decoration,
+                  fontsBefore: decorationFontsBefore,
+                  fontsAfter: decorationFontsAfter,
+                },
+              }
+            : {}),
           frameDelivery: { ...frameDelivery },
           [label]: pausedCapture.screenshot,
         };
@@ -820,6 +900,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         teardown.errors.push({ stage: name, ...boundedError(error) });
       }
     };
+    if (decorationFontReader)
+      await clean('decoration-font-session', () =>
+        decorationFontReader.dispose(),
+      );
     if (page && !page.isClosed())
       await clean('canonical-pointer-observer', () =>
         page.evaluate(disposeCanonicalPointerHistoryInPage),
@@ -916,6 +1000,12 @@ async function produceFinalVisualQualificationInternal(
   progress,
   captureOnly = false,
 ) {
+  const decoration =
+    options['raster-policy'] === DECORATION_QUANTIZATION_POLICY;
+  assert.ok(
+    !decoration || captureOnly,
+    'Decoration qualification requires the predeclared six-document batch',
+  );
   if (captureOnly) {
     assert.match(
       options.repeatedControlPlan?.planSha256 || '',
@@ -923,7 +1013,9 @@ async function produceFinalVisualQualificationInternal(
     );
     assert.equal(
       options.repeatedControlPlan.policy,
-      'repeated-full-image-controls-v1',
+      decoration
+        ? DECORATION_QUANTIZATION_POLICY
+        : 'repeated-full-image-controls-v1',
     );
     assert.ok([1, 2, 3].includes(options.repeatedControlPlan.pairOrdinal));
   }
@@ -992,6 +1084,33 @@ async function produceFinalVisualQualificationInternal(
     appSha: options['candidate-app-sha'],
     baseUrl: options['candidate-url'],
   });
+  const readDecorationSources = () =>
+    Object.fromEntries(
+      ['baseline', 'candidate'].map((side) => {
+        const files = Object.fromEntries(
+          Object.keys(DECORATION_SOURCE_FILES).map((file) => {
+            const bytes = execFileSync(
+              'git',
+              [
+                '-C',
+                options[`${side}-checkout`],
+                'show',
+                `${options[`${side}-app-sha`]}:${file}`,
+              ],
+              { windowsHide: true },
+            );
+            return [file, createHash('sha256').update(bytes).digest('hex')];
+          }),
+        );
+        assert.deepEqual(
+          files,
+          DECORATION_SOURCE_FILES,
+          `${side} decoration source changed`,
+        );
+        return [side, files];
+      }),
+    );
+  const decorationSourceFiles = decoration ? readDecorationSources() : null;
   progress.stage = 'baseline-capture';
   const baseline = await captureRevision({
     label: 'baseline',
@@ -999,6 +1118,7 @@ async function produceFinalVisualQualificationInternal(
     appSha: options['baseline-app-sha'],
     receipt: baselineReceipt,
     out,
+    decoration,
   });
   progress.baseline = baseline;
   await fs.writeFile(
@@ -1013,6 +1133,7 @@ async function produceFinalVisualQualificationInternal(
     appSha: options['candidate-app-sha'],
     receipt: candidateReceipt,
     out,
+    decoration,
   });
   progress.candidate = candidate;
   await fs.writeFile(
@@ -1039,6 +1160,8 @@ async function produceFinalVisualQualificationInternal(
     appSha: options['candidate-app-sha'],
     baseUrl: options['candidate-url'],
   });
+  if (decoration)
+    assert.deepEqual(readDecorationSources(), decorationSourceFiles);
   const fixture = createCctvLifecycleFixture();
   if (
     execFileSync('git', ['-C', visualHarnessRoot, 'rev-parse', 'HEAD'], {
@@ -1137,8 +1260,16 @@ async function produceFinalVisualQualificationInternal(
     },
     masks: [],
     rasterPolicy: captureOnly
-      ? 'repeated-full-image-controls-v1'
+      ? decoration
+        ? DECORATION_QUANTIZATION_POLICY
+        : 'repeated-full-image-controls-v1'
       : VISIBLE_CONTROL_VARIANCE_POLICY,
+    ...(decoration
+      ? {
+          decorationQuantization: createDecorationQuantizationPlan(),
+          decorationSourceFiles,
+        }
+      : {}),
     pointerHistoryPolicy: CANONICAL_POINTER_HISTORY,
     fullExtentPointerSweepPolicy: FULL_EXTENT_POINTER_SWEEP_POLICY,
     states: STATES.map((id, index) => ({
@@ -1190,6 +1321,14 @@ async function produceFinalVisualQualificationInternal(
         baseline: baseline.states[index].paint,
         candidate: candidate.states[index].paint,
       },
+      ...(decoration
+        ? {
+            decoration: {
+              baseline: baseline.states[index].decoration,
+              candidate: candidate.states[index].decoration,
+            },
+          }
+        : {}),
       captureMethod: {
         baseline: baseline.states[index].captureMethod,
         candidate: candidate.states[index].captureMethod,

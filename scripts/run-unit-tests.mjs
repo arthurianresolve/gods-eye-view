@@ -8,6 +8,8 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/overlays/worldOverlayAllocation.test.mjs',
 ]);
 export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+  'scripts/performance/decorationCaptureProof.test.mjs',
+  'scripts/performance/decorationQuantization.test.mjs',
   'scripts/performance/nativeWindowViewport.test.mjs',
   'scripts/performance/settledIdleObservation.test.mjs',
   'scripts/performance/settledIdleQualification.test.mjs',
