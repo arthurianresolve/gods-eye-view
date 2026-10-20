@@ -25,7 +25,40 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
-The latest formal attempt is frozen application and QA `6de65358`, with
+The latest formal attempt compares the default Entity application
+`ec0f1b2b` with correctness control `76cc760b`, using unchanged frozen QA
+`6de65358`, acknowledgement v6 and readiness v7. Both roles use the newly
+observed **Chrome 155.0.8059.85** executable after the authorized closure of
+unrelated Chrome windows. Acquisition completes normally with twenty local
+actions, twenty replay seeks and eight mixed-use cycles per role. Both V6
+acknowledgement validators pass; compositor-content attribution remains
+unavailable. Acceptance still **fails three independent numeric gates**:
+
+- Candidate native local-control p95 is **208 ms**, above 100 ms. The
+  control's 256 ms result is retained separately and does not waive the
+  candidate's absolute limit.
+- Pre-render readiness p95 is **200.7 versus 122.5 ms**, a **63.84%**
+  regression; completed-frame p95 is **205.2 versus 126.9 ms**, a
+  **61.70%** regression. Both exceed their independent 10% limits.
+- Replay completed-frame p95 is **108.2 ms**, below 250 ms; sampled peak
+  heap is **18.71% below control**, within its 10% regression limit. This
+  sampled non-GC peak is not retained-heap or final-soak evidence.
+
+The raw acquisition remains completed and the canonical acceptance review
+remains failed. Raw SHA-256 is
+`0d86b44f4cdb663f0bfb9f7f62c3d48d59ab39f6badaab04fc4786362eebf2b3`;
+the frozen review SHA-256 is
+`21ea2f9412880f29be48a692b55b064d443825725d510f65a903114110fbcabb`.
+The complete attempt, review and supporting inputs are retained as **91
+independently verified files, 6,799,683 bytes**, on VM105 under
+`formal-ec0-chrome85-v6-v7-failed-complete-20261020`, bound by transfer receipt
+SHA-256
+`e6180a9e0186b0ba7004d6c37784b1907f18fc18f28234d1b1ee182869a6ccd5`.
+No runtime fix, browser-update benefit or causal explanation is inferred from
+comparison with earlier host conditions. No final Ampfing soak is commissioned
+while the primary gates fail.
+
+The earlier formal attempt is frozen application and QA `6de65358`, with
 explicit acknowledgement v6/readiness v7. Acquisition completed with all
 20 local actions, 20 replay seeks and eight mixed-use cycles per role.
 Both V6 acknowledgement validators pass, with zero owned ResizeObservers;
@@ -53,14 +86,191 @@ This closes the acknowledgement-measurement defect, not performance
 acceptance. Qualification and the final Ampfing soak remain uncommissioned
 while these primary gates fail.
 
-The next bounded investigation separates first-OFF presentation scheduling
-from warm-ON activation/materialization. The existing static Entity stem
-pipeline can build geometry before grounding and rebuild after the first
-height update. An earlier stem-only collection prototype was deferred,
-not measured or rejected; it may now be evaluated while retaining exact
-ground queries, Entity points/polygons, identities and current visual cadence.
-No cache, skipped height query, renderer-mode adoption or default change is
-accepted without functional, visual and performance evidence.
+The subsequent pushed head `ec0f1b2b` includes the immediate user-OFF
+correction `1ffa8543`: publish the honest DISABLING transition, then start
+teardown immediately, retaining the existing ON rendering opportunity,
+intent cancellation and private Clear Selected queue. The new stem collection
+implementation remains opt-in; the application default still uses Entity
+stems. Private, unpushed experiment `5e302dd9` adds only the datacenter selector
+to that head and compares it with `6de65358`, using unchanged QA v6/v7.
+
+That four-action-per-role diagnostic completed normally, but **does not
+qualify the experiment or justify adopting the stem renderer**:
+
+- Native durations are **400/112/72/56 ms** on `6de65358` and
+  **440/120/56/96 ms** on `5e302dd9`. Both builds' first ON/OFF pair
+  exceeds 100 ms; four observations cannot establish the twenty-sample gate.
+- Observed OFF readiness improves from **82.6 to 15.6 ms** and **43.5 to
+  10.2 ms**, consistent with the immediate teardown correction. This is a
+  logical-readiness improvement in a combined experiment, not proof of a
+  native latency improvement: candidate OFF durations remain **120/96 ms**.
+- Warm ON readiness changes from **148.4 to 156.5 ms**, providing no
+  activation-readiness benefit. Removing the asynchronous Entity stem batch
+  does not remove the existing ON yield or synchronous grounding work.
+- All eight feature identities, point styles, stem colors, camera and Entity
+  pick bindings match. Five grounded endpoint pairs are exact; three differ
+  by **18–87 micrometres**. These differences and the diagnostic screenshots
+  do not establish visual or query-domain equivalence. Identical height-query
+  arguments do not prove identical first-frame offscreen command/frustum sets.
+
+The exact private source passes **267/267 focused Node 26 tests**, with no
+skips. Both functional phases release their source/collection owners and both
+browsers close normally. The complete diagnostic, build receipts, asset
+inventories and test evidence are retained as **41 independently verified
+files, 3,887,939 bytes**, on VM105 under
+`stem-off-comparison-6de65358-5e302dd9-complete-diagnostic-20261020`;
+raw SHA-256 is
+`c76b0dc2baae3528c3bedde81331117fe0ac4e60799135e035f83e0e3c5649e5`.
+The stem selector remains private and disabled by default. Native latency and
+ON activation/readiness remain separate open blockers; no new formal capture
+or final Ampfing soak has started for this experiment.
+
+The separate default-Entity comparison removes only the user-ON wait in
+private child `cad0ee0e`, against its exact `ec0f1b2b` parent. All six native
+clicks per role match the trusted target, generation and timestamp. Native
+durations are **352/144/56/96/40/112 ms** on the parent and
+**648/144/176/96/176/112 ms** on the child. The two warm ON readiness
+observations improve from **142.9/109.5 to 83.4/86.6 ms**, but their native
+durations worsen from **56/40 to 176/176 ms**; the first ON worsens from
+**352 to 648 ms**. OFF native durations are unchanged. The no-wait child is
+**rejected and not adopted**; the default ON rendering opportunity remains.
+This single sequential pair is diagnostic, not twenty-sample qualification
+or proof of a unique rendering cause. Both browsers close normally, with
+visible/focused observations, disposed qualification observers and all four
+886-asset before/after checks passing. The complete raw, source, build and
+derived evidence is retained as **100 independently verified files,
+4,595,073 bytes**, on VM105 under
+`on-wait-comparison-ec0-cad0ee0e-complete-rejected-diagnostic-20261020`;
+raw SHA-256 is
+`775368c473beff4f781bd1164d111b926e21df2fbea07a36f781eb4315dab1af`.
+No formal qualification or final soak has started for this rejected child.
+
+Private child `db7dbe47` next races a one-shot natural Cesium `postUpdate`
+against the existing owned RAF-to-task fallback, leaving default Entity
+rendering, grounding queries and immediate OFF unchanged. The first diagnostic
+completed, but a broad local file search could have overlapped its baseline
+actions. That complete pair is **invalid for causal performance inference**,
+regardless of its outcome; its raw record is preserved and no timing endpoint
+from it is used here. One clean replacement was declared with identical
+sources, inputs, six-action cohorts, drains and QA v6/v7 before reviewing
+outcomes. This is an acquisition-integrity correction, not an outcome retry.
+
+The clean replacement also **rejects adoption of the postUpdate wait**:
+
+- Native durations are **384/312/56/112/56/112 ms** on `ec0f1b2b` and
+  **544/272/88/192/72/112 ms** on `db7dbe47`.
+- The two warm ON readiness observations worsen from **135/124.1 to
+  406.6/341.4 ms**. First ON readiness worsens from **636.2 to 804.8 ms**;
+  both warm ON native durations also increase. OFF results are mixed.
+- All twelve native events match the exact trusted target, generation and
+  timestamp. Foreground, paired native geometry/settings and all four
+  886-asset checks pass; both browsers close normally. The unchanged formal
+  validator rejects the six-action cohort because it requires twenty.
+
+Clean replacement raw SHA-256 is
+`a863fa86f4dff87ee283990c342b8f026d50fd1a68b8a61df17edf984dc56c40`.
+The contaminated attempt, integrity decision and clean replacement retain
+separate records. Both attempts and their source, build, input and test
+receipts are preserved as **128 independently verified files, 6,597,072 bytes**
+on VM105 under
+`post-update-wait-ec0-db7dbe47-both-attempts-rejected-20261020`.
+Transfer-receipt SHA-256 is
+`34b7c39ad5650c7e64810bd44bbfd634a66490306777760f9bdaa42051e6dde9`.
+The private source passes 181 focused Node 26 tests; that functional evidence
+does not override the hardware rejection. Neither private wait variant is
+adopted. The default user-ON RAF-to-task opportunity remains. The next bounded
+investigation concerns
+actual grounding-query and compositor work, with no speculative query cache,
+quality reduction or acceptance-limit change. These diagnostics do not
+replace the failed twenty-sample comparison with control `76cc760b`, and no
+formal qualification or final soak is commissioned from them.
+
+Private CSS-only child `b05daee3` then registers the two panel-allocation
+variables with universal syntax and `inherits: false`, preserving their
+invalid initial values and existing fallback/reset rules. A separate
+functional browser check passes **48 exact computed-layout pairs**, including
+the intended difference in descendant inheritance. That result is neither
+pixel-equivalence nor performance evidence. The fixed six-action comparison
+against the exact `ec0f1b2b` parent supplies **no demonstrated overall benefit**:
+
+- Native durations are **240/216/72/112/56/88 ms** on the parent and
+  **544/312/72/112/40/96 ms** on the child. First ON/OFF worsen; warm results
+  are mixed.
+- ON readiness is **644.2/209.7/126.3 ms** versus
+  **835.8/215.6/137.7 ms**; OFF readiness is **23.1/10/8.2 ms** versus
+  **32.9/10.3/10.4 ms**. The clean functional parity result does not remove
+  these independent timing observations.
+- All twelve trusted native entries match their exact generation and click
+  timestamp. Both builds retain the declared settings/native geometry,
+  visible/focused foreground, complete before/after asset checks and normal
+  closure. The unchanged formal validator still rejects six actions where
+  twenty are required.
+
+The CSS child is **rejected for adoption**; default allocation inheritance
+remains unchanged. Raw SHA-256 is
+`5625446acd3213bd121fad07f057635941b47cab4b08151379804d861249ec92`;
+the functional parity result is separately bound by SHA-256
+`d78a6e717e4c8c7d86c8515dd6167bd9e48c1e99a3c92298a0c56808a4fb9ef1`.
+The complete fixed diagnostic, functional evidence and supporting receipts
+are retained as **120 independently verified files, 12,225,830 bytes**, on
+VM105 under
+`allocation-property-ec0-b05daee3-complete-rejected-diagnostic-20261020`.
+Transfer-receipt SHA-256 is
+`724e073ec5eb4600b3dd735639b757e7cfe591fc7befa78ca0dc20993c61ffd3`.
+This single pair does not establish a permanent renderer limit or a causal
+per-flush cost reduction. No formal twenty-sample capture or final soak is
+commissioned from this rejected experiment.
+
+At 18:16 UTC on 20 October,
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39469181331)
+at exact head `ec0f1b2b1d0972c5d731e8694952a21b6a7b2267` completes successfully:
+both full Node suites, Windows onboarding, Windows/Ubuntu/Intel macOS
+recovery and the browser gate all pass. The
+[release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39469181659)
+also passes. Twelve optional jobs are skipped and are not passes. These are
+default-application CI results, not qualification of private `5e302dd9`'s stem
+selector, either wait variant or a final delivery artifact.
+
+Separate pushed QA commit `97c67ff0` retains rasterization status from the
+existing bounded browser-graphics query and carries the driver's existing
+graphics snapshot into qualification identity/report evidence. Missing
+graphics or feature status remains unavailable; no query, renderer
+classification or acceptance gate is added. Its 73 focused Node 24 tests,
+scoped formatting, undefined-variable and whitespace checks pass, with
+11 source/support inputs and six raw logs independently rehashed. Validation
+receipt SHA-256 is
+`b6aa1e3ff9ae668b05048c91b387f17f40990524b9867599a9ed5bc37e9df5df`.
+Application runtime and frozen QA `6de65358` are unchanged. At exact head
+`97c67ff037c3466251ef1e8a411051b24cdc4d7a`,
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39476857054)
+now passes all seven selected regular jobs: both full Node suites, Windows
+onboarding, Windows/Ubuntu/Intel macOS recovery and the browser gate.
+[Release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39476857098)
+also passes; twelve optional jobs are skipped and are not passes. These checks
+do not establish hardware performance or qualification of a final artifact.
+
+At 18:56 UTC, closing unrelated user-authorized Chrome windows allowed a
+pending browser update to activate. The actual executable changed from
+**155.0.8059.84** (SHA-256
+`6aa5d599bbc3a0b3842af9f44b18fd29989eb3cc21b4b3ec7489e12f36e9962e`)
+to **155.0.8059.85** (SHA-256
+`de999bce6a1c954df71a8f15bf751b336172f55ac1a0325bb0580cbc2121268c`).
+The old executable is no longer installed. Existing .84 observations retain
+their original environment and outcomes; they cannot serve as .85 matched
+controls. The fresh formal comparison above pins .85 independently on both
+roles. Reduced user-agent strings alone cannot distinguish those patch
+versions.
+
+Follow-up QA commit `92d03b58` requires the existing full observed
+`graphics.browserVersion` in generic paired performance reports. Chrome patch
+versions with an identical reduced UA cannot be paired; missing or reduced-only
+full identity is unavailable rather than a zero-cost or comparable result.
+Five source/test paths pass **190/190 Node 24 tests** across all nine importing
+suites, plus scoped formatting, undefined-variable and whitespace checks.
+The final validation receipt is bound by SHA-256
+`a4183310084484d77818e3833b4e0ff4014ffda477a20aa435f50a6cec997f0e`.
+No browser observation, runtime, acceptance gate or frozen QA6de byte changes,
+and no historical report is rerated by this guard.
 
 The preceding frozen application and QA `278c7854` attempt used
 feedback v5/readiness v7. Acquisition completed on the Windows UHD 620 at
@@ -104,9 +314,9 @@ queries without valid surface/visibility invalidation could change grounding,
 so no speculative shortcut is adopted. Prepared visual/startup captures remain
 unrun until the fresh interaction comparison passes.
 
-### Prospective interaction measurement correction — v6
+### Current interaction measurement contract — v6
 
-The next capture explicitly uses
+The completed `6de65358` capture explicitly used
 `trusted-click-event-timing-observed-acknowledgement-v6` with readiness v7.
 This is a correction of the claim the observations can support, not a
 reinterpretation of the failed v5 capture. The original v2–v5 policies and
@@ -146,8 +356,11 @@ late/missing/wrong-intent acknowledgement, known negative observations,
 malformed evidence and unchanged legacy policies. Independent review added a
 diagnostic-record ownership/chronology guard; the affected suite then passed
 50/50 against final QA commit `f42effc9`. Legitimate post-drain diagnostic
-records remain supported. Integration validation and fresh hardware evidence
-for the combined candidate remain pending.
+records remain supported. Exact-source Node 26 validation then passes
+119/119 focused tests plus formatting, undefined-variable, import and package
+checks. The `6de65358` hardware result above establishes valid acknowledgement
+proof but still fails the independent numerical gates; it is not an acceptance
+pass.
 
 The preceding `fbe839ea` attempt with feedback v4/readiness v7 remains
 **failed**, not accepted: candidate native local-control p95 was 208 ms versus
@@ -236,7 +449,8 @@ The completed hardware attempt and remaining failures are recorded above.
    verifies all 11 evidence files and eight source inputs. The protocol retains
    separate before-render readiness and completed-frame observations, and
    rejects readiness first created after rendering. Full integration and
-   fresh browser acquisition for the combined corrections remain pending.
+   fresh browser acquisition for the current v6/v7 combination are recorded
+   above; the completed acquisition still fails the independent numeric gates.
 3. **Freeze the runtime and acquire fresh affected comparisons.** Declare the
    application, harness, fixtures, settings and prospective policies before
    capture. Run both sides with the same corrected protocol. Preserve old
@@ -282,10 +496,39 @@ documentation or QA commit alone is not a reason for a full rerun. Conversely,
 never rewrite an old result as an exact-commit test of a new artifact.
 Release checksums, attestations and deployment identity still verify the actual
 final artifact and source commit. Evidence affected by a corrected measurement
-bug cannot be reused merely because the application is unchanged. For the
-current v6 acknowledgement policy and readiness-order correction, both application
-roles need fresh acquisition: the old capture cannot reconstruct the missed
-first eligible frame or be relabeled with a prospective policy.
+bug cannot be reused merely because the application is unchanged. The
+v6 acknowledgement policy and readiness-order correction required fresh
+acquisition on both application roles: an old capture cannot reconstruct the
+missed first eligible frame or be relabeled with a prospective policy. The
+completed current v6/v7 comparison above supplies that acquisition and retains
+its numeric failures; a QA-only edit does not automatically require another
+hardware capture.
+
+The Chrome .84-to-.85 change also prevents reusing the seven earlier matrix
+controls or scoped cable-idle control as matched performance controls for a
+new .85 candidate. Retain their results; acquire both roles with the same full
+observed browser product and prospective environment pins. Unchanged
+application builds, build receipts, asset inventories, fixtures, source-bound
+calibration rules and applicable functional checks remain reusable within
+their recorded scope. A browser-only update does not require rebuilding an
+otherwise identical application artifact. Fresh visual images and default
+startup observations still need current matched controls; old pixels and
+timings are not relabeled.
+
+Once the primary gates pass on the frozen runtime, the existing durations
+require **240 timed minutes** for both roles of the seven non-weather matrix
+rows, **30 minutes** for the balanced weather envelope, and **at least 60
+minutes** for one final candidate Ampfing soak: **at least 330 timed minutes**,
+plus formal, default-startup, visual and setup work. Weather startup is derived
+from the same balanced envelope rather than a second weather campaign. The
+full infrastructure producer already retains settlement observations for its
+idle samples. If the fresh cable pair supplies all five complete settlement
+observations per role and passes the existing settled-idle gate, those same
+raw samples can satisfy the idle requirement without another capture.
+Otherwise run only the missing scoped cable-idle pair, adding 15 minutes
+(345 timed minutes total). This is evidence reuse under existing contracts,
+not a sample-count, threshold or workload waiver. No long campaign is started
+solely because documentation or QA-only files change.
 
 ### Current evidence and blockers
 
@@ -316,8 +559,8 @@ performance improvement. The recovery matrix now selects the supported
 `macos-15-intel` standard runner, retaining the software-renderer recovery
 checks and recording the different architecture. [GitHub documents this runner
 as free for public repositories](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
-Its new run must pass before claiming current macOS recovery coverage; it
-cannot supply missing physical-GPU evidence.
+The successful later runs recorded above now include that Intel macOS
+recovery job; they cannot supply missing physical-GPU evidence.
 
 The [bounded ownership follow-up](performance-evidence/s69-native-matrix-20261019/render-ownership-r3-summary.json)
 maps the viewport-sized empty `.gev-screen-whiteboard` surface in the same
@@ -327,13 +570,14 @@ GPU-service delay to the overlay. Commit `f0af795f` suppresses this surface
 while empty, reveals it before adding a mark, retains all departing marks for
 the existing 360 ms fade, and cancels owned removal timers on destruction.
 [Fourteen focused screen/hybrid tests pass on Node 24](performance-evidence/s69-native-matrix-20261019/empty-whiteboard-f0af795f-validation.json).
-The candidate is isolated on VM105; hardware comparison remains pending.
+This component's focused validation is not a hardware-performance pass;
+subsequent default-runtime qualification and its failures are recorded above.
 All three diagnostic attempts, including the missing-tunnel failure and
 32 MiB trace-export failure, are [preserved with verified VM hashes](performance-evidence/s69-native-matrix-20261019/render-ownership-transfer-20261020.json).
 The separate stem-collection prototype remains archived and unqualified;
 the shader queries finish before OFF and cannot explain its measured latency.
 
-The latest hardware-tested runtime is `fb389928`. Its
+An earlier hardware-tested runtime is `fb389928`. Its
 [six-action comparison with `a18c6a76`](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)
 completes all twelve native clicks, matching geometry, asset checks and normal
 browser cleanup. First activation Event Timing changes from 288 to 192 ms in
