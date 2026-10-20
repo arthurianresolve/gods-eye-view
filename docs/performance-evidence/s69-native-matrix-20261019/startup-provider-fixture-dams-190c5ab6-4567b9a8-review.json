@@ -1,0 +1,44 @@
+{
+  "schema": "gev-startup-provider-fixture-independent-review/v1",
+  "reviewedAt": "2026-10-20T03:09:59.886Z",
+  "status": "diagnostic-failed",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "comparisonEligible": false,
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "producerCommit": "4567b9a8ea0e2493fbabb7bc6cc8d4e05722b221",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-provider-fixture-dams-190c5ab6-4567b9a8",
+  "files": [
+    {
+      "name": "infrastructure-dams-01.json.invocation.json",
+      "bytes": 2681,
+      "sha256": "57a6a2001b88d9f6e871d92fab2c3ad25b068f1c588b98c43c1dc90edafdced8"
+    },
+    {
+      "name": "infrastructure-dams-01.json.log",
+      "bytes": 1048,
+      "sha256": "32e271c260763fdd8a011ed6ad9ad4b7c6341c75e174280ced96bde4cf16674c"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 2216,
+      "sha256": "14070698f293dc7ec2e5a85582adc2f193ed807290fb1c811a4c7fbf6b2f221f"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1072,
+      "sha256": "6be34054bfebf6a093e1d864911774ea3c3d7d879b6ee8de04068667c6c5546c"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 9785,
+      "sha256": "0975ba45aee3a2f67e03407be617f7c1261e500589d978ca0599033f2c660f84"
+    }
+  ],
+  "fixture": null,
+  "observations": [],
+  "failure": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'failed'\n- 'diagnostics-complete'\n",
+  "scope": "Four fixed ABBA synthetic-provider observations only. Does not replace the failed live-provider startup comparison, qualify timing or claim a speedup.",
+  "productionChanged": false
+}

@@ -1,0 +1,244 @@
+{
+  "schema": "gev-startup-provider-fixture-independent-review/v1",
+  "reviewedAt": "2026-10-20T03:14:43.410Z",
+  "status": "diagnostic-complete",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "comparisonEligible": false,
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "producerCommit": "4567b9a8ea0e2493fbabb7bc6cc8d4e05722b221",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-provider-fixture-dams-190c5ab6-4567b9a8-fixtures-ready",
+  "files": [
+    {
+      "name": "infrastructure-dams-01.json",
+      "bytes": 19815,
+      "sha256": "03a6354df50293f8c3997ada9e305b26d384792454cbb586114a0afad6a723e7"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "a9c3b6999c083444a538ba0186b0abc6beee6e429f2789cd42ae375dae7a5673"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "d4cb4cacf3360765e11519ff7dd69cdad726925fddebf21a8c5da24fbacfa4a6"
+    },
+    {
+      "name": "infrastructure-dams-01.json.invocation.json",
+      "bytes": 2726,
+      "sha256": "06dc76e69d2c086d3a60ab1ff393e0eeef24d0706e8e90ec9e6dec558f9520c2"
+    },
+    {
+      "name": "infrastructure-dams-01.json.log",
+      "bytes": 299,
+      "sha256": "65db91441f9830ae836da7d587bc95eb6a51bf52fe38909d5db86137d773516f"
+    },
+    {
+      "name": "infrastructure-dams-02.json",
+      "bytes": 20459,
+      "sha256": "c29dd2982627b27f4a8ad64461ddd423758878a9a672e242b9f995b2b7377405"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "aefe565b0ab32c09457e500abafb72cdda54b445a12ae024af655f5c4488683b"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "c12126746f07a872df31f06594caa73c02beeef4e2490af11d0b5e4809d6a562"
+    },
+    {
+      "name": "infrastructure-dams-02.json.invocation.json",
+      "bytes": 2737,
+      "sha256": "165b11e1c7f1c5be6499dd016215af02e1ed887e67f4b615d50a2df008fd1ed1"
+    },
+    {
+      "name": "infrastructure-dams-02.json.log",
+      "bytes": 299,
+      "sha256": "08a35337cd70adc98127f6f2f1cc4a05096a98127a67e8240d88c727591afbb9"
+    },
+    {
+      "name": "infrastructure-dams-03.json",
+      "bytes": 18885,
+      "sha256": "2f2269e4e3ef985d4c6b56649fa5f3e6e235d6514ff81b8b7654b56f3d5eb471"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "069496d5e5bca7b65eb2e39bb8a73f6bb2c4ad2baf328e9c353e3f024c226c61"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "fa29648dcba15d32d25b8a9ff78e3375f7a1bf9d40e8f98fa3dde8b3942bc69c"
+    },
+    {
+      "name": "infrastructure-dams-03.json.invocation.json",
+      "bytes": 2737,
+      "sha256": "2fcc7b7f158705d6e03e22f18dfd5cbfa0ca3222cbdf1bbaff506d98233d5250"
+    },
+    {
+      "name": "infrastructure-dams-03.json.log",
+      "bytes": 299,
+      "sha256": "e94f5b4d75e1d77779c147af5b60795f6ff52aba8180bbed58b5322c96bcbaf6"
+    },
+    {
+      "name": "infrastructure-dams-04.json",
+      "bytes": 19795,
+      "sha256": "a9ddfda82f3dd0ea27334e8154bd3921c9708334c7867357b6730e2d41751deb"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "a446aebfb69a58fcf6592bc5b8065f96df017743ee59093e6aaf21ec20bbb39b"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "28f79b40a03ffd825a0f75d3f3213b293b179270d4bb403bb54cb3d9c949d3e4"
+    },
+    {
+      "name": "infrastructure-dams-04.json.invocation.json",
+      "bytes": 2726,
+      "sha256": "f011906762153d8cede814d4eb33fc1dd21b4fc74c9e754e55d362d8b66ef703"
+    },
+    {
+      "name": "infrastructure-dams-04.json.log",
+      "bytes": 299,
+      "sha256": "9790ebba0d61849e1e1b84dfe7382cf6b894a601fbc9031eee66860144a06d26"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 2579,
+      "sha256": "e4dd5ba8613d6690890feb78b21daee9be04e7fb5d0049e1481c20792dad68bc"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2888,
+      "sha256": "32c0bd55a4073ad8a9d8505d511f0837bc658ca46b8e6a54726d6e05771794c7"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 10130,
+      "sha256": "958ae41fd33bd375587c9e0fe5d92ff817f3df290505bde083fc95d7cf4472ab"
+    }
+  ],
+  "fixture": {
+    "schema": "gev-startup-provider-fixture/v1",
+    "fixtureId": "austin-map-streaming-synthetic-v5",
+    "manifestSha256": "96c0023d391fd0d3fd96140e718a18a7c49a2f92f44c1c09c513ca0959d38200",
+    "manifestByteLength": 490854,
+    "assetCount": 1994,
+    "totalPayloadBytes": 5886509,
+    "generatorSourceSha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a",
+    "responseScope": "allowlisted-native-map-and-terrain-provider-responses",
+    "requestUrlPatterns": [
+      "https://services.arcgisonline.com/*",
+      "https://terrain.reearth.land/*",
+      "https://tile.openstreetmap.org/*",
+      "https://tile.googleapis.com/*",
+      "https://assets.ion.cesium.com/*"
+    ],
+    "otherNetworkTraffic": "not-intercepted-by-this-diagnostic"
+  },
+  "observations": [
+    {
+      "slot": "infrastructure-dams-01",
+      "role": "control",
+      "sourceCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "method": "page-observed-after-foreground-v1",
+      "appReadyMs": 3047.7000000029802,
+      "initialSettleMs": 4294,
+      "finalPageState": {
+        "visible": true,
+        "focused": true
+      },
+      "acknowledgedResponses": 18,
+      "assets": 18,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    },
+    {
+      "slot": "infrastructure-dams-02",
+      "role": "candidate",
+      "sourceCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "method": "page-observed-after-foreground-v1",
+      "appReadyMs": 3127.7000000029802,
+      "initialSettleMs": 4092.2000000029802,
+      "finalPageState": {
+        "visible": true,
+        "focused": true
+      },
+      "acknowledgedResponses": 20,
+      "assets": 20,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    },
+    {
+      "slot": "infrastructure-dams-03",
+      "role": "candidate",
+      "sourceCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "method": "page-observed-after-foreground-v1",
+      "appReadyMs": 2582.6000000089407,
+      "initialSettleMs": 3570,
+      "finalPageState": {
+        "visible": true,
+        "focused": true
+      },
+      "acknowledgedResponses": 15,
+      "assets": 15,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    },
+    {
+      "slot": "infrastructure-dams-04",
+      "role": "control",
+      "sourceCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "method": "page-observed-after-foreground-v1",
+      "appReadyMs": 2582.2000000029802,
+      "initialSettleMs": 3887.5,
+      "finalPageState": {
+        "visible": true,
+        "focused": true
+      },
+      "acknowledgedResponses": 18,
+      "assets": 18,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    }
+  ],
+  "failure": null,
+  "scope": "Four fixed ABBA synthetic-provider observations only. Does not replace the failed live-provider startup comparison, qualify timing or claim a speedup.",
+  "productionChanged": false
+}

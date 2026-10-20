@@ -7,6 +7,39 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain in progress for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The [fixed-provider startup diagnostic](performance-evidence/s69-native-matrix-20261019/startup-provider-fixture-dams-190c5ab6-4567b9a8-fixtures-ready-review.json)
+completes four declared observations, with app readiness between 2.58 and 3.13
+seconds across both builds. It does not reproduce the earlier 28.53% gap, but
+its synthetic map payloads make it diagnostic-only. The failed live-provider
+startup comparison remains recorded and unresolved; this is not a replacement
+acceptance run.
+
+The [fresh operating-view idle diagnostic](performance-evidence/s69-native-matrix-20261019/idle-cadence-190c5ab6-b843cac5-review.json)
+now passes independent source, identity, and behavior checks. It resolves the
+longer idle frame interval as intentional render-demand cadence; active motion
+and visual acceptance stay separate. Cable idle attribution, strict visual
+equivalence, fresh interaction/heap measurements and the final soak remain open.
+
+The current candidate's [dense investigation comparison](performance-evidence/s69-native-matrix-20261019/dense-investigation-190c5ab6-result.json)
+now completes all five samples per scenario. Motion p95 changes from 518.1 to
+405.1 ms (-21.81%); tracking changes from 1,122.4 to 1,113.4 ms (-0.80%).
+Startup remains within both 10% limits. VM105 independently verified all seven
+raw files. The declared baseline is reused; these results are not a new
+interleaved repeatability study, and the combined dense/tracking 20% objective
+is not achieved. The [datacenter comparison](performance-evidence/s69-native-matrix-20261019/infrastructure-datacenters-190c5ab6-result.json)
+also completes: motion p95 changes 288.1 to 259.2 ms (-10.03%), app startup
+-10.69%, and loading completion -11.49%. Both builds lack an eligible idle
+frame-interval measurement; that metric remains unavailable. The [combined
+infrastructure comparison](performance-evidence/s69-native-matrix-20261019/infrastructure-190c5ab6-result.json)
+also completes: motion p95 changes 320.9 to 316.9 ms (-1.25%), app startup
+-40.45%, and loading completion -28.82%. Its idle interval is unavailable in
+both builds. All requested matrix captures are now archived; baseline reuse
+remains explicitly recorded.
+All seven required [QA CI jobs and release packaging at `4567b9a8`](performance-evidence/s69-native-matrix-20261019/qa-ci-4567b9a8.json)
+pass, including Windows recovery and the rendered mixed-use browser gate.
+The [earlier `975a7f24` checks](performance-evidence/s69-native-matrix-20261019/qa-ci-975a7f24.json)
+also pass. These are QA producer checks; the application remains `190c5ab6`.
+
 The corrected runtime candidate is `190c5ab6`; production remains at
 `e7a878e`. The complete historical workload results below apply to `b3c49b19`.
 Recorded-aircraft position ownership passes 158/158 focused tests

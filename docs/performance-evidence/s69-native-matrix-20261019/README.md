@@ -1,5 +1,31 @@
 # S69 native Windows matrix checkpoint — 19 October 2026
 
+The [current dense investigation comparison](dense-investigation-190c5ab6-result.json)
+completes five observations per scenario. Motion p95 changes 518.1 to 405.1 ms
+(-21.81%), tracking 1,122.4 to 1,113.4 ms (-0.80%), and idle -9.10%; no scenario
+exceeds the 10% regression limit. App startup changes -19.49% and loading
+completion -10.45%. VM105 independently verified all seven raw files. Baseline
+reuse remains declared, so this does not establish interleaved repeatability or
+the combined dense/tracking 20% objective. The [datacenter comparison](infrastructure-datacenters-190c5ab6-result.json)
+also completes: motion p95 changes 288.1 to 259.2 ms (-10.03%), app startup
+-10.69%, and loading completion -11.49%. Its idle interval is unavailable in
+both builds and remains unscored. The [combined infrastructure comparison](infrastructure-190c5ab6-result.json)
+also completes: motion p95 changes 320.9 to 316.9 ms (-1.25%), app startup
+-40.45%, and loading completion -28.82%. Its idle interval is unavailable in
+both builds. All requested matrix captures are archived, with baseline reuse
+explicitly recorded.
+All seven required [QA CI jobs at `4567b9a8`](qa-ci-4567b9a8.json) and release
+packaging pass, as do the [earlier `975a7f24` checks](qa-ci-975a7f24.json).
+The tested application remains `190c5ab6`.
+
+The [fresh operating-view idle review](idle-cadence-190c5ab6-b843cac5-review.json)
+validates the exact current candidate, original baseline, browser, fixture,
+native profile, and diagnostic source. It classifies the longer rendered-frame
+interval as an intentional change in render demand. The original numeric flag
+is preserved; this resolves only its interpretation, not motion performance or
+visual equivalence. Cable idle still has an unexplained first-sample burst of
+ten frames; the other four candidate samples and all baseline samples are idle.
+
 The current runtime candidate is `190c5ab6`; public production remains at
 `e7a878e`. Its fresh dam motion comparison is within the regression limit,
 but the independently confirmed startup regression remains unresolved. The
@@ -9,6 +35,18 @@ candidate-only cause. Their
 [supplemental interpretation](startup-cpu-attribution-dams-190c5ab6-97c82fca-source-interpretation.json)
 corrects the initial grouping of a minified Cesium function as garbage collection
 and identifies context-probe instrumentation. Neither report is timing acceptance.
+
+The [four fixed-provider startup observations](startup-provider-fixture-dams-190c5ab6-4567b9a8-fixtures-ready-review.json)
+complete in the declared control/candidate/candidate/control order. App readiness
+is 3,047.7 / 3,127.7 / 2,582.6 / 2,582.2 ms. All responses from the five declared
+map-provider origins match the diagnostic fixture, with no unmatched requests
+and normal cleanup. The earlier 28.53% gap does not recur in this small diagnostic,
+but changed synthetic payloads prevent timing acceptance or attribution to a
+specific provider. The live-provider failure remains unresolved. The
+[preceding setup failure](startup-provider-fixture-dams-190c5ab6-4567b9a8-review.json)
+occurred before browser creation because the sparse producer checkout omitted
+the dam data file; it contains no timing observations. The restarted run uses
+the same producer after materializing and hash-checking the committed fixtures.
 
 The [candidate CI review](exact-ci-190c5ab6.json) now includes the explicit
 tracking run at `190c5ab6`, alongside its passing standard CI and signed-package
