@@ -422,8 +422,8 @@ function assertIdleSample(
       'weather-idle-render-demand-diagnostic-is-diagnostic-only' ||
     report.workload?.weatherEffectsCaptureMode !==
       'idle-render-demand-diagnostic' ||
-    report.workload?.providerFixture !== FIXTURE_ID ||
-    report.workload?.fixtureId !== FIXTURE_ID ||
+    report.workload?.providerFixture !== fixture.workloadId ||
+    report.workload?.fixtureId !== fixture.id ||
     report.workload?.warmupMs !== 30_000 ||
     report.workload?.durationPerSampleMs !== 60_000 ||
     report.workload?.runsPerScenario !== 1 ||

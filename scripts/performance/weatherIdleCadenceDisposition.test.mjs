@@ -597,7 +597,7 @@ function makeDiagnosticReport(appCommit, balancedReport) {
     durationPerSampleMs: 60_000,
     runsPerScenario: 1,
     providerFixture: 'austin-weather-effects-phased-v2',
-    fixtureId: 'austin-weather-effects-phased-v2',
+    fixtureId: 'weather-effects-austin-phased-v2',
     weatherEffectsCaptureMode: 'idle-render-demand-diagnostic',
     diagnosticOnly: true,
     performanceAcceptanceEligible: false,
@@ -728,6 +728,28 @@ test('weather idle disposition resolves only the named idle metric with complete
   assert.equal(result.gpuCostClaim, false);
   assert.equal(result.samplingLimitations.maximumGapAcceptanceBound, null);
   assert.equal(result.samplingLimitations.controlMaximumGapMs, 30_000);
+});
+
+test('weather idle disposition rejects swapped workload and fixture identities', () => {
+  const balanced = makeBalancedReview();
+  const artifacts = makeDisposition(
+    makeDiagnosticReport(baselineCommit, balanced.controlReport),
+    makeDiagnosticReport(candidateCommit, balanced.candidateReport),
+  );
+  const report = JSON.parse(artifacts.baselineDiagnostic.bytes);
+  report.workload.providerFixture = fixture.id;
+  report.workload.fixtureId = fixture.workloadId;
+  const bytes = Buffer.from(JSON.stringify(report));
+  artifacts.baselineDiagnostic.bytes = bytes;
+  artifacts.disposition.controlDiagnostic.sha256 = HASH(bytes);
+  assert.throws(
+    () =>
+      validateWeatherIdleCadenceDisposition({
+        ...artifacts,
+        balancedReview: balanced,
+      }),
+    /not one exact diagnostic-only idle capture/,
+  );
 });
 
 test('weather idle disposition requires the declared visible-wind phase durations and whole-probe frame clock', () => {
