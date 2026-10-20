@@ -1,0 +1,192 @@
+{
+  "schema": "gev-rail-dom-controller-validation/v1",
+  "status": "passed",
+  "baseCommit": "fb38992850a0e082e8c9147904f87846cc8e2520",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-dom-controller-validation-20261020/source",
+  "inputs": [
+    {
+      "file": "src/ui/leftPanelRail.js",
+      "bytes": 13263,
+      "sha256": "75b03a726d124e5ef3f993ed2c961a2e9aaa7192aa76b3f6ff10d292ea2b24c4"
+    },
+    {
+      "file": "src/ui/rightPanelRail.js",
+      "bytes": 13969,
+      "sha256": "d6b521ca6cb0049a0ccf4f0b05aa00d1e4536b9034ddbdbd23bd42211712fa3e"
+    },
+    {
+      "file": "src/ui/layerPanel.js",
+      "bytes": 31647,
+      "sha256": "3cdc1bde982b0a42944e86ea6dc08aeddec8a7598ac63b7a1e52dec62f114b97"
+    },
+    {
+      "file": "src/ui/panelRails.test.mjs",
+      "bytes": 41186,
+      "sha256": "aae03754caabb57070892facbf78b1ebd673827594f40fd09a4516fa6054b6f2"
+    },
+    {
+      "file": "src/ui/layerPanel.test.mjs",
+      "bytes": 23996,
+      "sha256": "9d3d99de28cccffb607bc6bc7cbf0e90cde6a9573116459b6d0dc2a1e56ac569"
+    },
+    {
+      "file": "src/ui/panelLayoutController.js",
+      "bytes": 19821,
+      "sha256": "c394deb2c375176e2f6b351d9dab8f77e96ef064a05b7736c56be9c6fa7c2460"
+    },
+    {
+      "file": "src/ui/shellLifecycle.test.mjs",
+      "bytes": 19925,
+      "sha256": "0a7a5e9a62a2e0fd4ddfe64a5dea0a84ee04f67bda47031eacf7dd5edc2f1f3b"
+    }
+  ],
+  "bundle": {
+    "bytes": 60185,
+    "sha256": "c595c453b1f49f1d141ab5c1d4586c93af7463d246d2bddd66fed11c2e489ff6"
+  },
+  "docs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "src/ui/panelRails.test.mjs",
+        "src/ui/layerPanel.test.mjs",
+        "src/ui/shellLifecycle.test.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 7487,
+      "sha256": "203c3e833c8cf15848b70a73240739c79429cf57158818f7cc73987ecd98a5e7",
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "tail": " rail enters focus only above available height and leaves below the full deadband (0.208492ms)\n✔ right rail auto-collapse requests only one retry and settles within two passes (0.359272ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.165029ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.20235ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.256474ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.306962ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.18635ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (4.210268ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.158605ms)\n✔ right layout still restores panels that exclusive presentation hides (0.783782ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.753332ms)\n✔ UI lifetime revokes listeners and nested presentation work synchronously (1.251793ms)\n✔ one-time UI listeners and cancelled notice timers release their registrations (0.246976ms)\n✔ panel layout coalesces each rail and cannot rearm after destruction (0.484774ms)\n✔ left rail ignores only a subsequent positive root height change (1.517596ms)\n✔ left rail keeps child, obstacle, mixed and ambiguous resize invalidations (0.529162ms)\n✔ left rail uses physical content width and preserves independent invalidations (0.550622ms)\n✔ left rail cockpit events and HUD theme mutations independently invalidate layout (0.506366ms)\n✔ panel disposal cancels a live drag without saving or accepting later pointer movement (0.812717ms)\n✔ feedback disposal clears toast and polling work and rejects retained notices (0.398529ms)\n✔ recording restores the original HUD after repeated entry and revokes retained controls (1.251172ms)\n✔ weather rail orders between CCTV and Context, resets positions, observes and syncs chrome (1.232395ms)\n✔ busy traffic completion is polled promptly without accelerating idle or global reads (1.092556ms)\nℹ tests 77\nℹ suites 0\nℹ pass 77\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 254.09693\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "src/ui/panelRails.test.mjs",
+        "src/ui/layerPanel.test.mjs",
+        "src/ui/shellLifecycle.test.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 7670,
+      "sha256": "a78b0d1e9a24ddb2a3f2e5273676752e0f59109eef9e5ade78abeee65ebb2270",
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "55ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.171421ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.308856ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.256123ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.24407ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.20759ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (3.681066ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.803649ms)\n✔ right layout still restores panels that exclusive presentation hides (0.177141ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.185677ms)\n(node:323685) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✔ UI lifetime revokes listeners and nested presentation work synchronously (1.384579ms)\n✔ one-time UI listeners and cancelled notice timers release their registrations (0.251515ms)\n✔ panel layout coalesces each rail and cannot rearm after destruction (0.495546ms)\n✔ left rail ignores only a subsequent positive root height change (1.553766ms)\n✔ left rail keeps child, obstacle, mixed and ambiguous resize invalidations (0.530764ms)\n✔ left rail uses physical content width and preserves independent invalidations (0.625716ms)\n✔ left rail cockpit events and HUD theme mutations independently invalidate layout (0.496607ms)\n✔ panel disposal cancels a live drag without saving or accepting later pointer movement (0.843196ms)\n✔ feedback disposal clears toast and polling work and rejects retained notices (1.006991ms)\n✔ recording restores the original HUD after repeated entry and revokes retained controls (0.49282ms)\n✔ weather rail orders between CCTV and Context, resets positions, observes and syncs chrome (1.241202ms)\n✔ busy traffic completion is polled promptly without accelerating idle or global reads (1.067087ms)\nℹ tests 77\nℹ suites 0\nℹ pass 77\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 243.158361\n"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-import-directions.mjs"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    }
+  ],
+  "changedFiles": [],
+  "completedAt": "2026-10-20T13:02:40.908Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "dependenciesInstalled": false,
+  "productionChanged": false,
+  "scope": "Exact committed fb389928, including five live DOM guard/test files from65bcbb9d and the two reviewed controller/test files. Pure behavior/static checks only; no hardware or performance credit."
+}

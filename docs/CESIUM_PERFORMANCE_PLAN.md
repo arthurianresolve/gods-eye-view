@@ -13,18 +13,46 @@ completes both builds and all asset, foreground and cleanup checks, but
 **fails local-control acceptance**. Mixed layout changes lack timely
 same-intent visibility proof. Separately retained native duration diagnostics
 show candidate p95 at 160 ms against the unchanged 100 ms target.
-Logical state readiness is 51.52% slower; the 20.15% improvement in the
+The pre-render readiness observation is 51.52% slower; the 20.15% improvement in the
 rendered-frame endpoint cannot offset that independent regression.
 Replay passes at 31.2 ms p95 and sampled peak heap changes by −0.24%.
 These are not a final soak or performance acceptance.
-The next diagnostic traces the same first three ON/OFF pairs to locate
-post-handler delay. The [independent semantics review](performance-evidence/s69-native-matrix-20261019/interaction-feedback-semantics-review.json)
+The completed separate [trace diagnostic](performance-evidence/s69-native-matrix-20261019/formal-render-phase-trace-76-a18c6a76-3fdbcf42-r3-analysis.json)
+covers the same first three ON/OFF pairs.
+On the first OFF action, the candidate's first paint commit is 13.29 ms later
+than the control; left/right rail callbacks account for measured CPU and
+style-recalculation work. The subsequent presentation interval is about 85 ms
+in both builds and cannot be uniquely assigned to the application or GPU.
+On warm ON actions, the owned preparation task delays the first source render
+by roughly one frame. The readiness observer runs before the newly installed
+layer callback and requires a later stable pre/post-render pair, so this
+metric is not the instant that logical state first changes. These findings
+do not change the frozen failure or thresholds. The [independent semantics review](performance-evidence/s69-native-matrix-20261019/interaction-feedback-semantics-review.json)
 separates native latency, semantic feedback and exact layout-restoration
 evidence: a visible moving control is not necessarily hidden, but late
 observations still cannot prove earlier feedback. This rationale does not
 change the failed result or any threshold. Production remains unchanged.
 
-The current runtime candidate is `a18c6a76`. User-triggered layer activation
+The `f8876c80` [integration checkpoint](performance-evidence/s69-native-matrix-20261019/qualification-f8876c80-ci.json)
+passes all seven selected CI jobs and release verification, including the
+Node 24/26 suites, browser journeys and Windows/macOS/Linux recovery. The
+receipt verifies equal trees for the PR head and tested merge. It includes
+the `3fdbcf42` observer change; later rail optimizations require their own
+validation. Twelve optional jobs remain explicitly skipped.
+
+The next runtime candidate, `fb389928`, contains two reversible rail changes:
+`65bcbb9d` compares live DOM values before writing unchanged rail metadata,
+ARIA state and row visibility; `fb389928` skips a subsequent left-root-only
+positive height resize when its reported physical width is unchanged.
+Initial, mixed, uncertain, width, child and obstacle notifications still
+schedule layout. Existing viewport, HUD and cockpit changes independently
+invalidate the root's horizontal position. The [combined VM validation](performance-evidence/s69-native-matrix-20261019/rail-dom-controller-validation.json)
+passes 77 tests on each Node version plus full formatting, import-boundary
+and undefined-reference checks. An independent readback verifies the exact
+commit, seven source hashes and five logs. Hardware comparison remains
+pending; no performance gain is claimed yet.
+
+The latest hardware-tested runtime is `a18c6a76`. User-triggered layer activation
 now waits for one animation-frame callback followed by its owned task,
 instead of waiting for two callbacks. The real lifecycle already publishes
 the loading presentation synchronously. This preserves a rendering opportunity

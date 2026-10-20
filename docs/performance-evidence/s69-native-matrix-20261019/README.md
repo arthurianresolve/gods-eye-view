@@ -16,16 +16,26 @@ never report a hidden or unfocused control under their sampled center/clip
 predicate; some position changes are visible panel motion with unchanged
 scroll offsets. They do not prove continuous visibility. Independent native
 duration diagnostics still show p95 of 160 ms, with candidate outliers of
-328, 136 and 160 ms. Logical-ready p95 rises from 89.1 to 135 ms (+51.52%);
+328, 136 and 160 ms. Pre-render readiness p95 rises from 89.1 to 135 ms (+51.52%);
 rendered-frame p95 falls from 235.7 to 188.2 ms (−20.15%). Both gates remain
 independent. Source inspection confirms the same logical-ready predicate in
 both builds; it does not measure physical presentation or complete GPU work.
 
 Replay independently passes at 31.2 ms p95 versus 97.3 ms for the control.
 Non-GC sampled peak heap is 75,646,576 versus 75,829,256 bytes (−0.24%).
-Neither is retained-heap or final-soak evidence. The next separate diagnostic
-traces only the same materialized first three ON/OFF pairs to identify
-post-handler delay; its timing cannot substitute for a formal capture.
+Neither is retained-heap or final-soak evidence. The separate [trace diagnostic](formal-render-phase-trace-76-a18c6a76-3fdbcf42-r3-analysis.json)
+completes the same materialized first three ON/OFF pairs. It attributes
+measured CPU/style cost to left and right rail callbacks: the first OFF
+paint commit moves from 28.22 to 41.51 ms after input, while the subsequent
+presentation interval stays near 85 ms in both builds. This does not isolate
+the remaining interval to a GPU or driver defect. Warm ON's preparation task
+defers the first source-render pass by roughly one frame. The readiness
+observer precedes the layer's own pre-render callback and only accepts a
+later stable pre/post-render pair; it does not timestamp the exact logical
+state transition. No acceptance metric or threshold changes. All 32 trace
+cohort files, totaling 37,226,382 bytes, have matching local/VM hashes.
+The deliberately shortened collector result remains failed at its planned
+boundary, and diagnostic timings cannot substitute for a formal capture.
 The [source/spec review](interaction-feedback-semantics-review.json)
 recommends separating native latency, semantic feedback attribution and exact
 restoration diagnostics. Exact position equality is sufficient restoration
@@ -33,7 +43,21 @@ evidence, but legitimate visible movement is not itself visibility loss.
 Late or uncertain proof remains unavailable, the frozen failure is preserved,
 and the 100 ms and independent 10% regression limits remain unchanged.
 
-Runtime candidate `a18c6a76` removes the second animation-frame wait from
+The next runtime candidate `fb389928` contains two separate commits:
+`65bcbb9d` avoids unchanged live dataset/ARIA/row-visibility writes, and
+`fb389928` skips qualifying root-only height notifications without suppressing
+actual child, obstacle, width, viewport, HUD or cockpit invalidations.
+Unknown or mixed observer deliveries retain the existing full layout pass.
+The source review establishes independent invalidations for every current
+CSS change to the root's horizontal position; equal width alone is not a
+general proof of equal position. The [combined VM validation](rail-dom-controller-validation.json)
+passes 77/77 on both Node versions, full formatting, import boundaries and
+undefined-reference checks. The [independent readback](rail-dom-controller-validation-readback.json)
+verifies the clean exact commit, all seven source hashes and five logs.
+A controlled parent/candidate hardware comparison remains pending, with
+no accepted timing benefit.
+
+Hardware-tested runtime `a18c6a76` removes the second animation-frame wait from
 user-triggered layer preparation. The lifecycle's loading presentation is
 already reconciled synchronously; one callback followed by its owned task
 preserves a rendering opportunity before preparation. This follows the
@@ -50,12 +74,13 @@ verify all 886 candidate assets and 443 control assets, locally and as served,
 against their exact source and build receipts. The first hardware result is
 the failed capture above; production is unchanged.
 
-The `b5e596ff` checkpoint passes all seven selected CI jobs and release
+The `f8876c80` checkpoint passes all seven selected CI jobs and release
 verification, including Windows, macOS and Linux recovery. Its
-[integration receipt](qualification-b5e596ff-ci.json) independently verifies
-equal trees for the PR head and tested merge and includes runtime `a18c6a76`.
-Twelve optional jobs remain skipped. This receipt does not cover the later
-`3fdbcf42` QA observer change. The preceding
+[integration receipt](qualification-f8876c80-ci.json) independently verifies
+equal trees for the PR head and tested merge and includes runtime `a18c6a76`
+and QA `3fdbcf42`. Twelve optional jobs remain skipped. Later rail changes
+require separate validation. The preceding
+[b5e596ff receipt](qualification-b5e596ff-ci.json) and
 [9d355c29 receipt](qualification-9d355c29-ci.json) remains historical evidence.
 
 The [bounded actual-CSS reproduction](left-measurement-restoration-review.json)
