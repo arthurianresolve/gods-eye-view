@@ -176,6 +176,12 @@ on VM105. Motion median p95 changes 299.6 to 254.5 ms (-15.05%), app readiness
 -17.19% and loading completion -12.06%. It declares the saved baseline reuse.
 Its raw idle frame-spacing flag (+282.67%) remains open pending a fresh,
 candidate-bound render-demand diagnostic; frame spacing is not execution time.
+The [current-candidate consumer checks](idle-current-candidate-validation-20261020-r2.json)
+pass 34/34 on each VM Node version. They require new raw and diagnostic hashes,
+producer `b843cac5`, its immutable diagnostic script hash, and the exact Chrome
+155.0.8059.84 build. Historical 190/B3 observations and altered producer/browser
+identities are rejected. The [initial assertion-message failure](idle-current-candidate-validation-20261020.json)
+is retained. These tests do not substitute for the pending physical diagnostic.
 
 The preceding complete workload matrix applies to `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes

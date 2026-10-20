@@ -1,0 +1,38 @@
+{
+  "schema": "gev-current-idle-consumer-validation/v1",
+  "status": "failed",
+  "startedAt": "2026-10-20T02:11:28.247Z",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "diagnosticProducerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "diagnosticScriptSha256": "378d018a4842468efb741bae89b63ff59d129f7d6049b476d6e66ceacfdf3f24",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020",
+  "files": [
+    {
+      "name": "scripts/performance/idleCadenceDisposition.mjs",
+      "sha256": "ddbc3a93c322e2d2d72ee756055fa57a69c7f538ac60a650dc0656c4874118f4"
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+      "sha256": "de7b94af2bee46646c037f84c89a40da26bac50298bc73aee018cfa28fa4f1a8"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "code": 1,
+      "signal": null,
+      "sha256": "02845858103fed78ab569b9490020b147e278bbbc3faa68eb7dfa40f773a2fbb",
+      "summary": "stRun (node:internal/test_runner/test:1447:19)\n      at Test.run (node:internal/test_runner/test:1372:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: Error: Idle cadence disposition rejected: current raw full browser version is missing.\n        at fail (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.mjs:65:9)\n        at validateIdleCadenceDisposition (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.mjs:411:7)\n        at file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.test.mjs:284:13\n        at getActual (node:assert:611:5)\n        at strict.throws (node:assert:759:24)\n        at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.test.mjs:283:12)\n        at Test.runInAsyncScope (node:async_hooks:227:14)\n        at Test.run (node:internal/test_runner/test:1306:25)\n        at Test.processPendingSubtests (node:internal/test_runner/test:897:18)\n        at Test.postRun (node:internal/test_runner/test:1447:19),\n    expected: /full Chrome version/,\n    operator: 'throws',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "label": "node26",
+      "code": 1,
+      "signal": null,
+      "sha256": "d5691f0b342b4f768d0456166cb57ef11f3771356dc41fc842c6a028ffbfa6f2",
+      "summary": "stRun (node:internal/test_runner/test:1542:19)\n      at Test.run (node:internal/test_runner/test:1467:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: Error: Idle cadence disposition rejected: current raw full browser version is missing.\n        at fail (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.mjs:65:9)\n        at validateIdleCadenceDisposition (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.mjs:411:7)\n        at file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.test.mjs:284:13\n        at getActual (node:assert:580:5)\n        at strict.throws (node:assert:728:24)\n        at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/idle-current-candidate-validation-20261020/scripts/performance/idleCadenceDisposition.test.mjs:283:12)\n        at Test.runInAsyncScope (node:async_hooks:226:14)\n        at Test.run (node:internal/test_runner/test:1402:25)\n        at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n        at Test.postRun (node:internal/test_runner/test:1542:19),\n    expected: /full Chrome version/,\n    operator: 'throws',\n    diff: 'simple'\n  }\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "hardwareValidated": false,
+  "completedAt": "2026-10-20T02:11:28.512Z"
+}

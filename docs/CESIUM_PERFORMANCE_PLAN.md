@@ -141,6 +141,13 @@ idle frame-interval flag remains unresolved (+282.67%); the wider spacing can
 only be interpreted after a fresh diagnostic at this exact candidate. It is
 not a CPU/GPU execution-time measurement. The comparison declares saved
 baseline reuse and does not establish a repeatable speedup.
+The [current-candidate idle consumer](performance-evidence/s69-native-matrix-20261019/idle-current-candidate-validation-20261020-r2.json)
+passes 34 focused checks on each VM Node version. It requires a fresh raw pair,
+diagnostic producer `b843cac5`, the exact diagnostic script hash and Chrome
+155.0.8059.84. Historical candidate observations remain inadmissible for this
+revision. This implements the evidence check; it does not resolve the flag
+before fresh physical observations arrive. The initial test-message mismatch
+is retained separately, with the existing runtime rejection unchanged.
 
 The corrected interaction/heap run exposed a workspace persistence defect:
 saved canonical views omit visual settings, and reopening them disables

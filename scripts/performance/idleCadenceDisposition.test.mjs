@@ -5,7 +5,11 @@ import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
 
 const BASELINE = 'e7a878e168bc97ffedddc27e13bf3e69b7ee6256';
 const CANDIDATE = '19065997a3f6360d68cb9ed5b389c4754856b596';
+const CURRENT_190_CANDIDATE = '190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841';
 const B3_CANDIDATE = 'b3c49b19fea88ca82d801f7a86c62a9f827da874';
+const CURRENT_190_HARNESS = 'b843cac5d243246b6df56a020c3dd4d0db7dace8';
+const CURRENT_190_SCRIPT_SHA256 =
+  '378d018a4842468efb741bae89b63ff59d129f7d6049b476d6e66ceacfdf3f24';
 const profile = {
   id: 'native-sharpness-v1',
   useBrowserRecommendedResolution: false,
@@ -181,6 +185,14 @@ function currentCandidateEvidence(
   candidate.appCommit = current;
   diagnostic.identities.candidateCommit = current;
   diagnostic.sides[1].appSha = current;
+  if (current === CURRENT_190_CANDIDATE) {
+    diagnostic.identities.diagnosticHarnessCommit = CURRENT_190_HARNESS;
+    diagnostic.identities.scriptSha256 = CURRENT_190_SCRIPT_SHA256;
+    Object.assign(input.disposition, {
+      diagnosticHarnessCommit: CURRENT_190_HARNESS,
+      diagnosticScriptSha256: CURRENT_190_SCRIPT_SHA256,
+    });
+  }
   for (const side of diagnostic.sides) side.graphics = graphics;
   input.baseline = pack(baseline);
   input.candidate = pack(candidate);
@@ -193,6 +205,89 @@ function currentCandidateEvidence(
   });
   return input;
 }
+
+test('current 190 requires fresh evidence bound to its exact diagnostic producer', () => {
+  const input = currentCandidateEvidence(CURRENT_190_CANDIDATE);
+  assert.deepEqual(validateIdleCadenceDisposition(input).resolvedScenarios, [
+    'idle',
+  ]);
+});
+
+for (const [name, target, value] of [
+  ['disposition producer', 'disposition', 'a'.repeat(40)],
+  ['report producer', 'report', 'a'.repeat(40)],
+  ['disposition script hash', 'dispositionScript', '0'.repeat(64)],
+  ['report script hash', 'reportScript', '0'.repeat(64)],
+  ['missing disposition producer', 'missingDispositionProducer', null],
+  ['missing report producer', 'missingReportProducer', null],
+  ['missing disposition script hash', 'missingDispositionScript', null],
+  ['missing report script hash', 'missingReportScript', null],
+]) {
+  test(`current 190 rejects ${name} mismatch`, () => {
+    const input = currentCandidateEvidence(CURRENT_190_CANDIDATE);
+    const diagnostic = JSON.parse(input.diagnostic.bytes);
+    if (target === 'disposition')
+      input.disposition.diagnosticHarnessCommit = value;
+    else if (target === 'report')
+      diagnostic.identities.diagnosticHarnessCommit = value;
+    else if (target === 'dispositionScript')
+      input.disposition.diagnosticScriptSha256 = value;
+    else if (target === 'reportScript')
+      diagnostic.identities.scriptSha256 = value;
+    else if (target === 'missingDispositionProducer')
+      delete input.disposition.diagnosticHarnessCommit;
+    else if (target === 'missingReportProducer')
+      delete diagnostic.identities.diagnosticHarnessCommit;
+    else if (target === 'missingDispositionScript')
+      delete input.disposition.diagnosticScriptSha256;
+    else delete diagnostic.identities.scriptSha256;
+    input.diagnostic = pack(diagnostic);
+    input.disposition.diagnosticSha256 = digest(input.diagnostic.bytes);
+    assert.throws(
+      () => validateIdleCadenceDisposition(input),
+      /producer\/script bindings/,
+    );
+  });
+}
+
+for (const substituted of [CANDIDATE, B3_CANDIDATE]) {
+  test(`current 190 rejects ${substituted} diagnostic substitution`, () => {
+    const input = currentCandidateEvidence(CURRENT_190_CANDIDATE);
+    const diagnostic = JSON.parse(input.diagnostic.bytes);
+    diagnostic.identities.candidateCommit = substituted;
+    diagnostic.sides[1].appSha = substituted;
+    input.diagnostic = pack(diagnostic);
+    input.disposition.diagnosticSha256 = digest(input.diagnostic.bytes);
+    assert.throws(
+      () => validateIdleCadenceDisposition(input),
+      /diagnostic identities/,
+    );
+  });
+}
+
+test('current 190 requires the pinned full Chrome 155 build version', () => {
+  for (const version of ['Chrome/155', 'Chrome/155.0.8059.85']) {
+    const input = currentCandidateEvidence(CURRENT_190_CANDIDATE);
+    const baseline = JSON.parse(input.baseline.bytes);
+    const candidate = JSON.parse(input.candidate.bytes);
+    const diagnostic = JSON.parse(input.diagnostic.bytes);
+    baseline.graphics.browserVersion = version;
+    candidate.graphics.browserVersion = version;
+    for (const side of diagnostic.sides) side.graphics.browserVersion = version;
+    input.baseline = pack(baseline);
+    input.candidate = pack(candidate);
+    input.diagnostic = pack(diagnostic);
+    input.disposition.baselineRawSha256 = digest(input.baseline.bytes);
+    input.disposition.candidateRawSha256 = digest(input.candidate.bytes);
+    input.disposition.diagnosticSha256 = digest(input.diagnostic.bytes);
+    assert.throws(
+      () => validateIdleCadenceDisposition(input),
+      version === 'Chrome/155'
+        ? /current raw full browser version is missing/
+        : /full Chrome version/,
+    );
+  }
+});
 
 test('b3 Austin disposition requires fresh b3 raw pair and diagnostic hashes', () => {
   const input = currentCandidateEvidence(B3_CANDIDATE);

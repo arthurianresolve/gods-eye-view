@@ -4,12 +4,19 @@ const SHA256 = /^[a-f0-9]{64}$/i;
 const SHA1 = /^[a-f0-9]{40}$/i;
 const BASELINE_SHA = 'e7a878e168bc97ffedddc27e13bf3e69b7ee6256';
 const CANDIDATE_SHA = '19065997a3f6360d68cb9ed5b389c4754856b596';
+const CURRENT_190_CANDIDATE_SHA = '190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841';
 const CURRENT_CANDIDATE_SHA = 'd8ef90024db6e6f1c96b5645c24b85586f9e337a';
 const B3_CANDIDATE_SHA = 'b3c49b19fea88ca82d801f7a86c62a9f827da874';
+const CURRENT_190_DIAGNOSTIC_HARNESS_SHA =
+  'b843cac5d243246b6df56a020c3dd4d0db7dace8';
+// SHA-256 of the immutable `git show` bytes at the pinned harness commit.
+const CURRENT_190_DIAGNOSTIC_SCRIPT_SHA256 =
+  '378d018a4842468efb741bae89b63ff59d129f7d6049b476d6e66ceacfdf3f24';
 // Each candidate needs its own complete diagnostic and original raw pair.
 // Admitting the current revision never reuses or relabels the historical one.
 const DIAGNOSTIC_CANDIDATES = new Set([
   CANDIDATE_SHA,
+  CURRENT_190_CANDIDATE_SHA,
   CURRENT_CANDIDATE_SHA,
   B3_CANDIDATE_SHA,
 ]);
@@ -282,6 +289,18 @@ export function validateIdleCadenceDisposition({
     report.identities?.candidateCommit !== candidateSha
   )
     fail('diagnostic identities are invalid.');
+  if (candidateSha === CURRENT_190_CANDIDATE_SHA) {
+    if (
+      disposition.diagnosticHarnessCommit !==
+        CURRENT_190_DIAGNOSTIC_HARNESS_SHA ||
+      disposition.diagnosticScriptSha256 !==
+        CURRENT_190_DIAGNOSTIC_SCRIPT_SHA256 ||
+      report.identities?.diagnosticHarnessCommit !==
+        CURRENT_190_DIAGNOSTIC_HARNESS_SHA ||
+      report.identities?.scriptSha256 !== CURRENT_190_DIAGNOSTIC_SCRIPT_SHA256
+    )
+      fail('current 190 diagnostic producer/script bindings are invalid.');
+  }
   if (
     !Array.isArray(report.sides) ||
     report.sides.length !== 2 ||
@@ -383,6 +402,7 @@ export function validateIdleCadenceDisposition({
   const rb = assertRaw(rbRaw, 'baseline', BASELINE_SHA);
   const rc = assertRaw(rcRaw, 'candidate', candidateSha);
   if (
+    candidateSha === CURRENT_190_CANDIDATE_SHA ||
     candidateSha === CURRENT_CANDIDATE_SHA ||
     candidateSha === B3_CANDIDATE_SHA
   ) {
@@ -395,6 +415,11 @@ export function validateIdleCadenceDisposition({
       sides.candidate.graphics?.browserVersion !== browserVersion
     )
       fail('current diagnostic and raw full browser versions differ.');
+    if (
+      candidateSha === CURRENT_190_CANDIDATE_SHA &&
+      browserVersion !== 'Chrome/155.0.8059.84'
+    )
+      fail('current 190 raw evidence is not the pinned full Chrome version.');
   }
   equal(rb, rc, 'renderer/browser/native dimensions differ.');
   equal(
