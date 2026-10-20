@@ -336,7 +336,7 @@ jobs:
 
   install-recovery:
     if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke' && inputs.validation_mode != 'terrain-picking-lifecycle'
-    name: Install and update recovery (${{ matrix.os }})
+    name: Prior seed import ledger diagnostic (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     strategy:
@@ -349,6 +349,8 @@ jobs:
         os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && format('["{0}"]', inputs.shutdown_runner || 'windows-latest') || '["windows-latest","macos-15-intel","ubuntu-latest"]') }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
+      # Isolated diagnostic branch only; existing dispatch selects one macOS job.
+      GEV_QA_PRIOR_SEED_IMPORT_LEDGER: '1'
       # Exercise recovery with a deterministic software renderer on GPU-less bots.
       # This job does not contribute hardware/performance acceptance evidence.
       GEV_QA_SOFTWARE_RENDERING: '1'
@@ -392,6 +394,9 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: node --test scripts/performance/profileRecoveryPageOwnership.test.mjs scripts/performance/browserShutdownControls.test.mjs
 
+      - name: Validate exact prior ledger producer and unchanged async boundaries
+        run: node --test scripts/performance/priorWorkspaceApplyLedger.test.mjs
+
       - name: Install fixture browser
         if: ${{ !inputs.shutdown_browser_version }}
         run: npx puppeteer browsers install chrome
@@ -405,7 +410,7 @@ jobs:
         run: node scripts/install-profile-recovery-browser.mjs
 
       - name: Upgrade and recover a real installation and browser profile
-        run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
+        run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery-prior-seed-ledger.json
 
       - name: Preserve recovery evidence
         if: always() && inputs.upload_artifacts == true
@@ -416,7 +421,7 @@ jobs:
           retention-days: 30
       - name: Recovery evidence in job logs
         if: always()
-        run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery-prior-seed-ledger.json
 
   windows-browser-shutdown:
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'windows-browser-shutdown'

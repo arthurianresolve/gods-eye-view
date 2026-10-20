@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /** Real prior checkout -> interrupted installer -> rollback -> upgrade, one Chrome profile. */
 import assert from 'node:assert/strict';
+import {
+  instrumentPriorWorkspaceLibrary,
+  readPriorWorkspaceApplyLedgerInPage,
+} from './performance/priorWorkspaceApplyLedger.mjs';
 import { spawn, execFileSync } from 'node:child_process';
 import {
   mkdtemp,
@@ -53,6 +57,15 @@ import { assertSelectedChromeVersion } from './performance/profileRecoveryBrowse
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
+const priorSeedLedgerDiagnostic =
+  process.env.GEV_QA_PRIOR_SEED_IMPORT_LEDGER === '1';
+if (priorSeedLedgerDiagnostic) assert.equal(process.platform, 'darwin');
+// Unique identity: only this deliberate scope boundary is caught as completion.
+const priorSeedScopeComplete = Object.freeze({
+  scope: 'prior-seed-ledger-complete',
+});
+let priorSeedInstrumentation = null;
+let priorSeedApplyLedger = null;
 // Recovery checks storage/update behavior on GPU-less runners, not performance.
 // Bound software raster work without changing resolution scale, effects or data.
 // Other browser/performance fixtures retain their declared viewports.
@@ -393,7 +406,24 @@ async function reopen(label, { seed = false } = {}) {
       );
     if (seed) {
       timedProgress('seed-workspace');
-      expected = await seedPersistentWorkspace(page);
+      try {
+        expected = await seedPersistentWorkspace(page);
+      } finally {
+        if (priorSeedLedgerDiagnostic) {
+          try {
+            priorSeedApplyLedger = await page.evaluate(
+              readPriorWorkspaceApplyLedgerInPage,
+            );
+          } catch (error) {
+            priorSeedApplyLedger = {
+              status: 'unavailable',
+              errorName: error?.name || null,
+            };
+          }
+        }
+      }
+      if (priorSeedLedgerDiagnostic)
+        assert.equal(priorSeedApplyLedger?.status, 'complete-bounded-ledger');
     }
     timedProgress('verify-persisted-workspace');
     const result = await assertPersistentWorkspace(page, expected);
@@ -608,6 +638,11 @@ try {
     '+' + candidateCommit + ':refs/remotes/origin/recovery-candidate',
   ]);
   await install();
+  if (priorSeedLedgerDiagnostic)
+    priorSeedInstrumentation = await instrumentPriorWorkspaceLibrary({
+      installation,
+      priorCommit,
+    });
   await build();
   await stageRelease({
     root: installation,
@@ -618,6 +653,7 @@ try {
   assert.equal((await verifyReleaseDirectory(previous)).commit, priorCommit);
   serving = path.join(previous, 'dist');
   await reopen('prior-install-saves-browser-workspace', { seed: true });
+  if (priorSeedLedgerDiagnostic) throw priorSeedScopeComplete;
   await command(
     installation,
     process.execPath,
@@ -677,13 +713,22 @@ try {
   serving = path.join(previous, 'dist');
   await reopen('failed-verification-rolls-back-and-reopens-assets');
 } catch (error) {
-  failure = { check: activeCheck, step: activeStep, error: error.message };
-  if (error.recoveryDiagnostics)
-    failure.diagnostics = error.recoveryDiagnostics;
-  throw error;
+  if (error !== priorSeedScopeComplete) {
+    failure = { check: activeCheck, step: activeStep, error: error.message };
+    if (error.recoveryDiagnostics)
+      failure.diagnostics = error.recoveryDiagnostics;
+    throw error;
+  }
 } finally {
   const report = {
-    scope: 'prior-install-browser-profile-recovery',
+    scope: priorSeedLedgerDiagnostic
+      ? 'macos-prior-seed-import-ledger-diagnostic-only'
+      : 'prior-install-browser-profile-recovery',
+    priorSeedLedgerDiagnostic,
+    priorSeedInstrumentation,
+    priorSeedApplyLedger,
+    candidateRuntimeExercised: !priorSeedLedgerDiagnostic,
+    diagnosticAcceptanceEligible: false,
     candidateCommit,
     priorCommit,
     platform: process.platform,
@@ -723,7 +768,11 @@ try {
         encoding: 'utf8',
       }).trim() !== candidateCommit,
     checks,
-    status: failure ? 'failed' : 'passed',
+    status: failure
+      ? 'failed'
+      : priorSeedLedgerDiagnostic
+        ? 'completed-diagnostic-only'
+        : 'passed',
     failure,
   };
   await writeFile(out, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
