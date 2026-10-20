@@ -585,11 +585,13 @@ export function createLocalGeoJsonLayer(
     }
   };
 
-  const failActivation = (viewer, error) => {
-    _error = localDatasetError(error);
-    _count = 0;
-    _lastUpdate = null;
-    disableLayer(viewer);
+  const failActivation = (viewer, error, expectedEpoch) => {
+    if (expectedEpoch === _activationEpoch) {
+      _error = localDatasetError(error);
+      _count = 0;
+      _lastUpdate = null;
+      disableLayer(viewer);
+    }
     throw error;
   };
 
@@ -701,7 +703,7 @@ export function createLocalGeoJsonLayer(
       try {
         _overlayPublisher.show();
       } catch (error) {
-        failActivation(viewer, error);
+        failActivation(viewer, error, activationEpoch);
       }
 
       // 1. Initialize data source
@@ -1074,9 +1076,8 @@ export function createLocalGeoJsonLayer(
       try {
         if (_enabled && _count > 0 && osmDerived) showOsmCredit?.(viewer, id);
       } catch (error) {
-        failActivation(viewer, error);
+        failActivation(viewer, error, activationEpoch);
       }
-      let preparedOverlayCohort = null;
       // 3. Add an incredibly fast pre-render occluder to hide points behind the globe
       if (_enabled && !_preRenderRemover) {
         const updateLocalVisibility = () => {
@@ -1277,38 +1278,24 @@ export function createLocalGeoJsonLayer(
             },
           );
           if (!ownsPass() || !_dataSource) return;
-          if (_dataSource.show === false) return cohort;
           _overlayPublisher.publish(cohort);
         };
         try {
-          // Prepare exact nearby heights before publishing this source. Its
-          // hidden entities/owned collection cannot enter the offscreen pick
-          // passes, and the first visible visualizer update sees final tips.
-          // Far, unsupported and streaming scenes retain the existing first
-          // preRender pass and bounded retry behavior.
-          if (
-            _dataSource?.show === false &&
-            viewer.camera.positionWC &&
-            viewer.scene.sampleHeightSupported === true &&
-            !(
-              viewer.scene.globe?.show &&
-              viewer.scene.globe.tilesLoaded === false
-            ) &&
-            _stemRecords.some(
-              (record) =>
-                Cesium.Cartesian3.distance(
-                  viewer.camera.positionWC,
-                  record.base,
-                ) < GROUND_SAMPLE_MAX_DISTANCE_M,
-            )
-          )
-            preparedOverlayCohort = updateLocalVisibility();
+          // Keep grounding in the first natural preRender, after the normal
+          // visible DataSourceDisplay update. Hiding this whole source during
+          // sampleHeight changes its offscreen pick command/frustum set even
+          // when the public per-entity exclusion remains identical.
           if (_enabled && activationEpoch === _activationEpoch)
-            _preRenderRemover = viewer.scene.preRender.addEventListener(
-              updateLocalVisibility,
-            );
+            _preRenderRemover = viewer.scene.preRender.addEventListener(() => {
+              const passEpoch = _activationEpoch;
+              try {
+                updateLocalVisibility();
+              } catch (error) {
+                failActivation(viewer, error, passEpoch);
+              }
+            });
         } catch (error) {
-          failActivation(viewer, error);
+          failActivation(viewer, error, activationEpoch);
         }
       }
       if (activationEpoch !== _activationEpoch) return;
@@ -1350,12 +1337,10 @@ export function createLocalGeoJsonLayer(
           _surfaceCollections !== collectionsToPublish
         )
           return;
-        if (preparedOverlayCohort)
-          _overlayPublisher.publish(preparedOverlayCohort);
         if (!_enabled || activationEpoch !== _activationEpoch) return;
         viewer.scene.requestRender?.();
       } catch (error) {
-        failActivation(viewer, error);
+        failActivation(viewer, error, activationEpoch);
       }
     },
 

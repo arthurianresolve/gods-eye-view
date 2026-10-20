@@ -220,6 +220,8 @@ async function createRealLocalLayerHarness({
           primitiveOwnersHidden: primitiveOwners.every(
             (owner) => owner.show === false,
           ),
+          dataSourcesShown: dataSources.every(source => source.show === true),
+          primitiveOwnersShown: primitiveOwners.every(owner => owner.show === true),
         });
         return sampleHeightImpl(...args);
       },
@@ -313,7 +315,7 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
     [117, 180, 180, true],
     [117, -20, -20, false],
   ]) {
-    test(`initial ${surfaceRenderer} grounding stays hidden and first publication preserves exact surface ${expectedHeight}`, async (t) => {
+    test(`first natural ${surfaceRenderer} preRender keeps visible query semantics and exact surface ${expectedHeight}`, async (t) => {
       installFakeClock(t);
       const env = await createRealLocalLayerHarness({
         autoEnable: false,
@@ -333,10 +335,15 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
         env.cleanup();
       });
       await env.enable();
+      assert.equal(env.sampleCalls.count, 0, 'Enable must not sample before the normal visualizer/render update');
+      assert.equal(env.layer.getLodDiagnostics().computed, false);
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(env.primitiveOwners.every(owner => owner.show === true));
+      env.preRender.raise();
       assert.equal(env.sampleCalls.count, 3);
       assert.ok(
         env.sampleCalls.records.every(
-          (record) => record.dataSourcesHidden && record.primitiveOwnersHidden,
+          (record) => record.dataSourcesShown && record.primitiveOwnersShown,
         ),
       );
       assert.equal(env.dataSources.length, 1);
@@ -345,7 +352,12 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
       assert.equal(env.layer.getLodDiagnostics().active, 3);
       assert.equal(env.layer.getLodDiagnostics().computed, true);
       assert.equal(env.layer.getAnalystRecords().length, 3);
-      const published = env.publications.at(-1)[0];
+      const published = { show: env.dataSources[0].show,
+        entities: env.dataSources[0].entities.values.map(entity => ({ id: entity.id,
+          base: Cesium.Cartesian3.clone(entity.__localBaseCartesian),
+          tip: Cesium.Cartesian3.clone(entity.position.getValue(Cesium.JulianDate.now())),
+        })),
+      };
       assert.equal(published.show, true);
       assert.equal(published.entities.length, 3);
       for (const [
@@ -384,7 +396,7 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
             published.entities[index].tip,
             expectedTip,
           ) < 1e-6,
-          'first published tip matches unchanged ground and screen-size equation',
+          'first normal-frame tip matches unchanged ground and screen-size equation',
         );
         assert.ok(
           Math.abs(
@@ -398,7 +410,7 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
       assert.equal(
         env.sampleCalls.count,
         3,
-        'first visible frame does not repeat the initial readbacks',
+        'a repeated unchanged frame does not repeat successful readbacks',
       );
     });
   }
@@ -410,6 +422,8 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
     });
     t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
     await env.enable();
+    assert.equal(env.sampleCalls.count, 0);
+    env.preRender.raise();
     const entities = env.dataSources[0].entities.values;
     assert.equal(entities.length, 3);
     assert.equal(new Set(entities.map(entity => entity.id)).size, 3);
@@ -422,13 +436,13 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
       assert.deepEqual(record.cartographic, first.cartographic);
       assert.equal(record.cartographic, entities[index].__localBaseCarto);
       assert.deepEqual(record.exclusions, [entities[index]]);
-      assert.equal(record.dataSourcesHidden, true);
-      assert.equal(record.primitiveOwnersHidden, true);
+      assert.equal(record.dataSourcesShown, true);
+      assert.equal(record.primitiveOwnersShown, true);
     }
   });
 }
 
-test('aborted activation never samples or publishes its completed hidden load', async (t) => {
+test('aborted activation never samples or publishes its completed load', async (t) => {
   installFakeClock(t);
   const env = await createRealLocalLayerHarness({
     autoEnable: false,
@@ -467,6 +481,8 @@ test('only the latest activation samples and publishes a shared pending load', a
   const stale = env.enable();
   const latest = env.layer.enable(env.viewer);
   await Promise.all([stale, latest]);
+  assert.equal(env.sampleCalls.count, 0);
+  env.preRender.raise();
   assert.equal(
     env.sampleCalls.count,
     1,
@@ -477,6 +493,22 @@ test('only the latest activation samples and publishes a shared pending load', a
   assert.equal(env.preRender.listeners.size, 1);
   assert.equal(env.moveEnd.listeners.size, 1);
   assert.equal(env.dataSources[0].show, true);
+});
+
+test('disable after publication cancels the first normal frame without any query', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({ autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117 });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.sampleCalls.count, 0);
+  env.layer.disable(env.viewer);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
 });
 
 test('destroy during asynchronous scene insertion removes the exact late owner without sampling', async (t) => {
@@ -516,7 +548,7 @@ test('destroy during asynchronous scene insertion removes the exact late owner w
   assert.equal(env.moveEnd.listeners.size, 0);
 });
 
-test('initial preparation failure releases hidden resources and permits a clean retry', async (t) => {
+test('first normal-frame failure releases owned resources and permits a clean retry', async (t) => {
   installFakeClock(t);
   let failProjection = true;
   const credits = [];
@@ -540,12 +572,14 @@ test('initial preparation failure releases hidden resources and permits a clean 
     env.layer.destroy(env.viewer);
     env.cleanup();
   });
-  await assert.rejects(env.enable(), /initial projection failed/);
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.throws(() => env.preRender.raise(), /initial projection failed/);
   assert.equal(env.dataSources.length, 0);
   assert.equal(env.primitiveOwners.length, 0);
   assert.equal(env.preRender.listeners.size, 0);
   assert.equal(env.moveEnd.listeners.size, 0);
-  assert.equal(env.publications.length, 0);
+  assert.equal(env.publications.length, 1, 'Only the original enable requested a frame');
   assert.equal(env.layer.getStats().count, 0);
   assert.equal(env.layer.getStats().lastUpdate, null);
   assert.match(env.layer.getStats().error, /initial projection failed/);
@@ -553,7 +587,7 @@ test('initial preparation failure releases hidden resources and permits a clean 
   assert.equal(
     env.hostCalls.some((call) => call[0] === 'entries'),
     false,
-    'hidden preparation cannot publish an overlay cohort',
+    'failed projection cannot publish an overlay cohort',
   );
   assert.deepEqual(
     env.hostCalls
@@ -563,6 +597,7 @@ test('initial preparation failure releases hidden resources and permits a clean 
   );
   failProjection = false;
   await env.enable();
+  env.preRender.raise();
   assert.equal(env.dataSources.length, 1);
   assert.equal(env.primitiveOwners.length, 1);
   assert.equal(env.dataSources[0].show, true);
@@ -571,7 +606,7 @@ test('initial preparation failure releases hidden resources and permits a clean 
 });
 
 for (const surfaceRenderer of ['entities', 'primitive-collections']) {
-  test(`hidden preparation matches the normal first visible ${surfaceRenderer} pass`, async (t) => {
+  test(`fresh and cached ${surfaceRenderer} rebuilds preserve the same first normal-frame domain`, async (t) => {
     installFakeClock(t);
     const snapshot = (env) => ({
       lod: env.layer.getLodDiagnostics(),
@@ -621,26 +656,24 @@ for (const surfaceRenderer of ['entities', 'primitive-collections']) {
       ...common,
       sampleHeightSupported: true,
     });
+    t.after(() => { prepared.layer.destroy(prepared.viewer); prepared.cleanup(); });
     await prepared.enable();
+    assert.equal(prepared.sampleCalls.count, 0);
+    prepared.preRender.raise();
     const expected = snapshot(prepared);
-    prepared.layer.destroy(prepared.viewer);
-    prepared.cleanup();
-    const normal = await createRealLocalLayerHarness({
-      ...common,
-      sampleHeightSupported: false,
-    });
-    t.after(() => {
-      normal.layer.destroy(normal.viewer);
-      normal.cleanup();
-    });
-    await normal.enable();
-    assert.equal(normal.layer.getLodDiagnostics().computed, false);
-    normal.viewer.scene.sampleHeightSupported = true;
-    normal.preRender.raise();
+    const firstEntities = [...prepared.dataSources[0].entities.values];
+    prepared.layer.disable(prepared.viewer);
+    prepared.sampleCalls.records.length = 0;
+    prepared.sampleCalls.count = 0;
+    await prepared.enable();
+    assert.equal(prepared.sampleCalls.count, 0);
+    assert.equal(prepared.layer.getLodDiagnostics().computed, false);
+    assert.ok(prepared.dataSources[0].entities.values.every((entity, index) => entity !== firstEntities[index]), 'Cached source data still rebuilds its owned render entities');
+    prepared.preRender.raise();
     assert.deepEqual(
-      snapshot(normal),
+      snapshot(prepared),
       expected,
-      'same exact geometry, selection, evidence, exclusions and cohort as the existing visible pass',
+      'same exact geometry, selection, evidence, query order, exclusions and cohort on the first normal pass',
     );
   });
 }
@@ -669,6 +702,8 @@ test('overlay publication sees visible owners and a reentrant disable cannot res
     env.cleanup();
   });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  env.preRender.raise();
   assert.deepEqual(published, []);
   assert.equal(env.dataSources.length, 0);
   assert.equal(env.primitiveOwners.length, 0);
@@ -676,8 +711,8 @@ test('overlay publication sees visible owners and a reentrant disable cannot res
   assert.equal(env.moveEnd.listeners.size, 0);
   assert.equal(
     env.publications.length,
-    0,
-    'cancelled activation must not request a publication render',
+    1,
+    'reentrant disable must not request another publication render',
   );
 });
 
@@ -701,7 +736,8 @@ test('a partially successful overlay host write is cleared when publication fail
     env.layer.destroy(env.viewer);
     env.cleanup();
   });
-  await assert.rejects(env.enable(), /host write failed/);
+  await env.enable();
+  assert.throws(() => env.preRender.raise(), /host write failed/);
   assert.deepEqual(published, []);
   assert.equal(env.dataSources.length, 0);
   assert.equal(env.primitiveOwners.length, 0);
@@ -732,6 +768,8 @@ test('reentrant cancellation during a query prevents later queries and stale pri
     env.cleanup();
   });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
   assert.equal(
     env.sampleCalls.count,
     1,
@@ -739,7 +777,7 @@ test('reentrant cancellation during a query prevents later queries and stale pri
   );
   assert.equal(env.dataSources.length, 0);
   assert.equal(env.primitiveOwners.length, 0);
-  assert.equal(env.publications.length, 0);
+  assert.equal(env.publications.length, 1);
   assert.deepEqual(queriedEntity.__localBaseCartesian, originalBase, 'cancelled readback must not mutate its released Entity');
 });
 
@@ -760,10 +798,12 @@ test('terrain-floor callback cancellation does not write the released ground rec
   });
   t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
   assert.equal(env.sampleCalls.count, 1);
   assert.deepEqual(releasedEntity.__localBaseCartesian, originalBase);
   assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
-  assert.equal(env.publications.length, 0); assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.publications.length, 1); assert.equal(env.preRender.listeners.size, 0);
 });
 
 test('real position definitionChanged cancellation prevents every following primitive write', async (t) => {
@@ -787,7 +827,7 @@ test('real position definitionChanged cancellation prevents every following prim
       }
       entity.position.definitionChanged.addEventListener(() => {
         positionEvents += 1;
-        assert.equal(releasedOwner.show, false, 'callback occurs during hidden preparation');
+        assert.equal(releasedOwner.show, true, 'callback occurs during the visible normal pass');
         env.layer.disable(env.viewer);
       });
       return 117;
@@ -795,11 +835,13 @@ test('real position definitionChanged cancellation prevents every following prim
   });
   t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
   assert.equal(positionEvents, 1, 'real ConstantPositionProperty raised the synchronous callback');
   assert.equal(releasedOwner.isDestroyed(), true);
   assert.equal(primitiveWrites, 0, 'no attempted point or stem writes after callback teardown');
   assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
-  assert.equal(env.publications.length, 0); assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.publications.length, 1); assert.equal(env.preRender.listeners.size, 0);
 });
 
 test('projection callback cancellation cannot publish or dereference a released source', async (t) => {
@@ -811,10 +853,41 @@ test('projection callback cancellation cannot publish or dereference a released 
   });
   t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
   assert.equal(env.layer.getStats().error, null);
-  assert.equal(env.dataSources.length, 0); assert.equal(env.publications.length, 0);
+  assert.equal(env.dataSources.length, 0); assert.equal(env.publications.length, 1);
   assert.equal(env.hostCalls.some(call => call[0] === 'entries'), false);
   assert.equal(env.preRender.listeners.size, 0); assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('an older normal-pass failure cannot release a reentrant newer activation', async (t) => {
+  installFakeClock(t);
+  let env;
+  let successor;
+  let firstProjection = true;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    projectToWindow: () => {
+      if (firstProjection) {
+        firstProjection = false;
+        successor = env.layer.enable(env.viewer);
+        throw new Error('superseded projection failed');
+      }
+      return { x: 400, y: 300 };
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.throws(() => env.preRender.raise(), /superseded projection failed/);
+  await successor;
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.preRender.listeners.size, 1);
+  assert.equal(env.moveEnd.listeners.size, 1);
+  env.preRender.raise();
+  assert.equal(env.layer.getLodDiagnostics().computed, true);
 });
 
 test('an unavailable camera preserves the existing deferred visibility path', async (t) => {
@@ -848,6 +921,8 @@ test('an initial depth miss keeps the existing visible fallback and bounded retr
     env.cleanup();
   });
   await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
   assert.equal(env.sampleCalls.count, 1);
   assert.equal(env.dataSources[0].show, true);
   assert.equal(env.layer.getStats().error, null);
