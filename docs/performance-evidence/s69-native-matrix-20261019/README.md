@@ -98,8 +98,33 @@ Node 24 and 26 on VM105. Replacing only the corrected camera helper with its
 original source makes the frame-ownership regression fail with an assertion.
 The initial [formatter configuration failure](soak-camera-ownership-validation-20261020.json)
 and [test-fixture failures](soak-camera-ownership-validation-20261020-r2.json)
-remain available. Hosted browser confirmation is pending; no runtime or
-acceptance threshold changes are included.
+remain available. Hosted QA `7ff9736a` now passes the datacenter preflight:
+eight features are active at the correct New York pose, three completed frames
+are witnessed and disabling the layer releases its materialized/renderable
+population. The run then [fails at replay in cycle 0](street-level-7ff9736a-failure.json)
+after successful workspace/import and archive recovery steps. All six original
+failure/log/metadata files are hash-verified on VM105. The other six required
+CI jobs, including Windows recovery, and release packaging pass. Replay remains
+under investigation; no runtime or acceptance threshold changes are included.
+
+The follow-up replay patch starts a fresh document after programmatic recording
+seeding, checks the expected select option, and commits the timeline control
+before refreshing Flights. Option selection and recording loading share one
+30-second deadline. The stale-document path is concrete, but is not proven to
+be the historical CI timeout's cause. Bounded diagnostics retain failed replay
+states without recorded payloads.
+
+Two fixed four-page visual diagnostics stopped before images: the
+[first](visual-transition-path-20261020-review.json) failed readiness, and the
+[observed follow-up](visual-transition-path-observed-20261020-review.json)
+retains the missing readiness details and its later atomic-guard timeout.
+Eleven completed observations never find REC visible together with phase zero;
+pixel reads take 111–355 ms. A QA-only correction avoids reads while REC is
+hidden and reads the same two edges in one shallow strip. The five-second
+deadline and all image masks/tolerances remain unchanged. The original reports
+and normal cleanup receipts are hash-verified on VM105. The combined replay,
+capture and production timeline/source tests [pass 122/122 on Node 24 and 26](replay-capture-validation-20261020.json).
+Fresh browser evidence is still required.
 
 The corrected candidate's [cable pair](infrastructure-cables-190c5ab6-result.json)
 has now passed independent VM validation. Its five-run motion median p95 is
@@ -107,6 +132,16 @@ has now passed independent VM validation. Its five-run motion median p95 is
 -16.52% for app readiness and -9.46% for loading completion. The original
 baseline reuse is explicitly declared and is not a new interleaved speedup
 experiment. All seven raw/report/protocol files were hash-verified on VM105.
+
+The current [map comparison](map-streaming-190c5ab6-result.json) also passes
+independent VM verification of seven raw/report/protocol files. Motion median
+p95 changes 392.3 to 312.8 ms (-20.27%); transition-readiness p95 changes -37.01%,
+idle rendered-frame spacing +0.95%, app readiness -29.56% and loading completion
+-19.43%. Each scenario meets the existing regression limit. The complete
+cable/map orchestration receipt is separately preserved on VM105 with SHA-256
+`459c329d1f650b54daffa266c98a2e4e9dbe4824b8b0859063f4dc0c0d5a2bfc`.
+The comparison explicitly reuses the saved five-run baseline. It does not prove
+a repeatable speedup or satisfy the distinct dense/tracking 20% objective.
 
 The preceding complete workload matrix applies to `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes

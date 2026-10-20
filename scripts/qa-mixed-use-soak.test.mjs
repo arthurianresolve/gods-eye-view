@@ -19,6 +19,8 @@ import {
   createSoakDatacenterFixture,
   createSoakDatacenterFixtureReceipt,
   createSoakFixtureShareHash,
+  bootSoakFixtureFromFreshDocument,
+  hasSoakRecordingOptionInPage,
   isSoakDatacenterAssetRequest,
   prepareSoakDatacenterFixtureViewInPage,
   readSoakDatacenterCameraPoseInPage,
@@ -26,6 +28,8 @@ import {
   installSoakDatacenterPostRenderWitnessInPage,
   startSoakDatacenterPreflightWitnessInPage,
   stopSoakDatacenterPreflightWitness,
+  readSoakReplayDiagnosticInPage,
+  seekRenderedSoakRecordingInPage,
   SOAK_DATACENTER_FEATURE_COUNT,
 } from './qa-rendered-soak-driver.mjs';
 import { createSoakSetupFailureReport } from './qa-mixed-use-soak.mjs';
@@ -295,6 +299,49 @@ test('validated share boot suppresses the actual startup flight and preserves so
   assert.equal(params.get('dm'), 'DENSE');
   assert.equal(params.get('dd'), '75');
   assert.equal(params.has('l'), false);
+});
+
+test('seeded soak recording boots in a new document with the same controlled share hash', async () => {
+  const calls = [];
+  const page = {
+    async goto(url, options) {
+      calls.push(['navigate', url, options.waitUntil]);
+    },
+  };
+  const options = {
+    hash: createSoakFixtureShareHash({
+      latitude: 40.7,
+      longitude: -73.9,
+      altitude: 1000,
+    }),
+  };
+  const boot = async (bootPage, base, bootOptions) => {
+    calls.push(['boot', bootPage === page, base, bootOptions.hash]);
+    return 'ready';
+  };
+  const result = await bootSoakFixtureFromFreshDocument(
+    page,
+    'http://127.0.0.1:4291',
+    options,
+    boot,
+  );
+  assert.equal(result, 'ready');
+  assert.deepEqual(calls, [
+    ['navigate', 'about:blank', 'load'],
+    ['boot', true, 'http://127.0.0.1:4291', options.hash],
+  ]);
+});
+
+test('soak replay selection requires the seeded recording option', () => {
+  const evaluate = (options) =>
+    vm.runInNewContext(`(${hasSoakRecordingOptionInPage.toString()})()`, {
+      document: {
+        querySelector: () => (options ? { options } : null),
+      },
+      Array,
+    });
+  assert.equal(evaluate([{ value: 'other' }]), false);
+  assert.equal(evaluate([{ value: 'recording-rendered-soak' }]), true);
 });
 
 test('failure-time camera pose reader returns finite evidence or unavailable', () => {
@@ -649,6 +696,239 @@ test('datacenter postRender witness inspects LOD only during bounded preflight a
     existingFailure,
   );
   assert.match(existingFailure.failureReason, /preflight timeout.*page closed/);
+});
+
+test('soak replay commits the selected endpoint before enabling and refreshing Flights', async () => {
+  const ticks = [1000, 2000, 3000];
+  const state = {
+    mode: 'recorded',
+    recordingId: 'recording-rendered-soak',
+    targetMs: ticks[0],
+  };
+  const calls = [];
+  const slider = {
+    min: '0',
+    max: '2',
+    value: '0',
+    disabled: false,
+    dispatchEvent(event) {
+      calls.push(event.type);
+      if (event.type === 'change') state.targetMs = ticks[Number(this.value)];
+      return true;
+    },
+  };
+  const source = {
+    getState: () => state,
+    getTimeline: () => ({ ticks }),
+    getSnapshot: async () => ({
+      selectedTimeMs: state.targetMs,
+      records: [{ id: 'SYNTH-001' }],
+    }),
+  };
+  const app = {
+    aircraftSource: source,
+    dataManager: {
+      async setEnabled(id, enabled) {
+        assert.equal(id, 'flights');
+        assert.equal(enabled, true);
+        assert.equal(state.targetMs, ticks[2]);
+        calls.push('enable');
+      },
+      async refreshLayer(id) {
+        assert.equal(id, 'flights');
+        assert.equal(state.targetMs, ticks[2]);
+        calls.push('refresh');
+      },
+    },
+  };
+  const context = {
+    window: { __godsEyeView: app },
+    document: {
+      querySelector: () => slider,
+    },
+    Event: class {
+      constructor(type, options) {
+        this.type = type;
+        this.bubbles = options?.bubbles;
+      }
+    },
+    Number,
+    Array,
+    Error,
+  };
+  const result = await vm.runInNewContext(
+    `(${seekRenderedSoakRecordingInPage.toString()})(0)`,
+    context,
+  );
+  assert.deepEqual(calls, ['input', 'change', 'enable', 'refresh']);
+  assert.equal(result.recordingId, 'recording-rendered-soak');
+  assert.equal(result.selectedTimeMs, 3000);
+  assert.equal(result.targetIndex, 2);
+  assert.equal(result.recordCount, 1);
+});
+
+test('soak replay rejects a noncommitted endpoint or empty recorded sample', async () => {
+  for (const mode of ['no-commit', 'empty-sample']) {
+    const state = {
+      mode: 'recorded',
+      recordingId: 'recording-rendered-soak',
+      targetMs: 1000,
+    };
+    const slider = {
+      min: '0',
+      max: '1',
+      value: '0',
+      disabled: false,
+      dispatchEvent(event) {
+        if (mode !== 'no-commit' && event.type === 'change')
+          state.targetMs = 2000;
+      },
+    };
+    const app = {
+      aircraftSource: {
+        getState: () => state,
+        getTimeline: () => ({ ticks: [1000, 2000] }),
+        getSnapshot: async () => ({
+          selectedTimeMs: state.targetMs,
+          records: mode === 'empty-sample' ? [] : [{ id: 'SYNTH-001' }],
+        }),
+      },
+      dataManager: {
+        setEnabled: async () => assert.fail('must fail before layer enable'),
+        refreshLayer: async () => assert.fail('must fail before layer refresh'),
+      },
+    };
+    const context = {
+      window: { __godsEyeView: app },
+      document: { querySelector: () => slider },
+      Event: class {
+        constructor(type) {
+          this.type = type;
+        }
+      },
+      Number,
+      Array,
+      Error,
+    };
+    await assert.rejects(
+      vm.runInNewContext(
+        `(${seekRenderedSoakRecordingInPage.toString()})(0)`,
+        context,
+      ),
+      mode === 'no-commit'
+        ? /endpoint was not committed/
+        : /endpoint has no recorded observations/,
+    );
+  }
+});
+
+test('replay failure diagnostics preserve bounded source, selection, and layer state', () => {
+  const app = {
+    aircraftSource: {
+      getState: () => ({
+        mode: 'recorded-mode-value-is-truncated',
+        recordingId: 'r'.repeat(120),
+        targetMs: 2000,
+        recordCount: 5,
+        truncated: false,
+        coverage: { from: 1000, to: 3000 },
+        rows: Array.from({ length: 500 }, () => ({ sensitive: 'omitted' })),
+      }),
+      getTimeline: () => ({ ticks: [1000, 2000, 3000] }),
+    },
+    dataManager: {
+      isEnabled: () => false,
+      layers: new Map([
+        [
+          'flights',
+          { module: { getStats: () => ({ count: 0, rows: ['omitted'] }) } },
+        ],
+      ]),
+    },
+  };
+  const context = {
+    window: { __godsEyeView: app },
+    document: {
+      querySelector(selector) {
+        if (selector.includes('aircraft-select'))
+          return {
+            value: 'recording-rendered-soak',
+            options: [{ value: 'recording-rendered-soak' }],
+          };
+        if (selector.includes('slider-control'))
+          return { disabled: false, min: '0', max: '2', value: '1' };
+        return null;
+      },
+    },
+    Number,
+    Array,
+    String,
+  };
+  const result = vm.runInNewContext(
+    `(${readSoakReplayDiagnosticInPage.toString()})(phaseName)`,
+    { ...context, phaseName: 'recording-load' },
+  );
+  assert.equal(result.phase, 'recording-load');
+  assert.equal(result.source.mode, 'recorded-mode-va');
+  assert.equal(result.source.recordingId.length, 80);
+  assert.equal(result.source.targetMs, 2000);
+  assert.equal(result.source.recordCount, 5);
+  assert.equal(result.source.coverage.from, 1000);
+  assert.equal(result.source.coverage.to, 3000);
+  assert.equal(result.timeline.tickCount, 3);
+  assert.equal(result.timeline.firstTickMs, 1000);
+  assert.equal(result.timeline.lastTickMs, 3000);
+  assert.equal(result.selection.value, 'recording-rendered-soak');
+  assert.equal(result.selection.targetOptionPresent, true);
+  assert.equal(result.flights.enabled, false);
+  assert.equal(result.flights.stats.count, 0);
+  assert.equal(JSON.stringify(result).includes('omitted'), false);
+});
+
+test('replay failure diagnostics survive a throwing options getter and retain the first bounded error', () => {
+  const selection = { value: 'recording-rendered-soak' };
+  Object.defineProperty(selection, 'options', {
+    get() {
+      const error = new Error('must not leak detail');
+      error.name = 'OptionsGetterFailure';
+      throw error;
+    },
+  });
+  const source = {
+    getState() {
+      const error = new Error('second failure');
+      error.name = 'StateGetterFailure';
+      throw error;
+    },
+    getTimeline: () => ({ ticks: [] }),
+  };
+  const result = vm.runInNewContext(
+    `(${readSoakReplayDiagnosticInPage.toString()})(phaseName)`,
+    {
+      phaseName: 'recording-load',
+      window: {
+        __godsEyeView: {
+          aircraftSource: source,
+          dataManager: {
+            isEnabled: () => false,
+            layers: new Map(),
+          },
+        },
+      },
+      document: {
+        querySelector(selector) {
+          return selector.includes('aircraft-select') ? selection : null;
+        },
+      },
+      Number,
+      Array,
+      String,
+    },
+  );
+  assert.equal(result.selection.targetOptionPresent, null);
+  assert.equal(result.sourceReadError, 'OptionsGetterFailure');
+  assert.equal(result.source, null);
+  assert.equal(JSON.stringify(result).includes('must not leak detail'), false);
 });
 
 test('datacenter enabled preflight distinguishes materialized data from visible renderables', () => {

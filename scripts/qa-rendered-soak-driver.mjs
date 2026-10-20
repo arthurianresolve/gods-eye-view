@@ -59,6 +59,27 @@ export function createSoakFixtureShareHash(location) {
   return `#${params.toString()}`;
 }
 
+/** Force a new application document before booting with the fixture view. */
+export async function bootSoakFixtureFromFreshDocument(
+  page,
+  base,
+  options,
+  boot = bootFixturePage,
+) {
+  await page.goto('about:blank', { waitUntil: 'load' });
+  return boot(page, base, options);
+}
+
+/** Wait predicate shared by setup and replay selection. */
+export function hasSoakRecordingOptionInPage() {
+  const selection = document.querySelector(
+    '.investigation-timeline-aircraft-select',
+  );
+  return Array.from(selection?.options || []).some(
+    (option) => option.value === 'recording-rendered-soak',
+  );
+}
+
 export function isSoakDatacenterAssetRequest(requestUrl, appBase) {
   let request;
   let base;
@@ -113,6 +134,170 @@ export function createSoakDatacenterFixture(location) {
     body,
     featureCount: SOAK_DATACENTER_FEATURE_COUNT,
     bodySha256: createHash('sha256').update(body).digest('hex'),
+  };
+}
+
+/** Select and commit one endpoint through the actual recorded timeline control. */
+export async function seekRenderedSoakRecordingInPage(iteration) {
+  const app = window.__godsEyeView;
+  const source = app?.aircraftSource;
+  const state = source?.getState?.();
+  if (
+    !app?.dataManager ||
+    state?.mode !== 'recorded' ||
+    state?.recordingId !== 'recording-rendered-soak'
+  )
+    throw new Error('Soak replay recording was not selected');
+  const ticks = source.getTimeline?.()?.ticks;
+  const slider = document.querySelector(
+    '.investigation-timeline-slider-control',
+  );
+  if (!Array.isArray(ticks) || ticks.length < 2 || !slider || slider.disabled)
+    throw new Error('Soak replay timeline is unavailable');
+  const index = iteration % 2 ? Number(slider.min) : Number(slider.max);
+  const selectedTimeMs = ticks[index];
+  if (
+    !Number.isSafeInteger(index) ||
+    index < 0 ||
+    index >= ticks.length ||
+    !Number.isFinite(selectedTimeMs)
+  )
+    throw new Error('Soak replay endpoint is invalid');
+
+  slider.value = String(index);
+  slider.dispatchEvent(new Event('input', { bubbles: true }));
+  // The production slider coalesces `input` for drag preview and commits on
+  // `change`. Explicitly finish this harness selection so a pending 150 ms
+  // drag timer cannot race layer enable/refresh.
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+  const committedState = source.getState();
+  if (committedState.targetMs !== selectedTimeMs)
+    throw new Error('Soak replay endpoint was not committed');
+
+  const snapshot = await source.getSnapshot();
+  if (
+    snapshot?.selectedTimeMs !== selectedTimeMs ||
+    !Array.isArray(snapshot.records) ||
+    snapshot.records.length === 0
+  )
+    throw new Error('Soak replay endpoint has no recorded observations');
+  await app.dataManager.setEnabled('flights', true);
+  await app.dataManager.refreshLayer('flights');
+  return {
+    recordingId: committedState.recordingId,
+    selectedTimeMs,
+    targetIndex: index,
+    recordCount: snapshot.records.length,
+  };
+}
+
+/** Return only bounded replay identity/readiness fields for failure receipts. */
+export function readSoakReplayDiagnosticInPage(phase) {
+  const boundedErrorName = (error) => {
+    const name = typeof error?.name === 'string' ? error.name : '';
+    return /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/.test(name) ? name : 'Error';
+  };
+  const app = window.__godsEyeView;
+  const source = app?.aircraftSource;
+  const slider = document.querySelector(
+    '.investigation-timeline-slider-control',
+  );
+  const selection = document.querySelector(
+    '.investigation-timeline-aircraft-select',
+  );
+  let sourceReadError = null;
+  let targetOptionPresent = null;
+  try {
+    targetOptionPresent = Boolean(
+      selection &&
+      Array.from(selection.options || []).some(
+        (option) => option.value === 'recording-rendered-soak',
+      ),
+    );
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  const flights = app?.dataManager?.layers?.get('flights');
+  let state = null;
+  let timeline = null;
+  try {
+    const value = source?.getState?.();
+    if (value) {
+      const coverage = value.coverage;
+      state = {
+        mode: typeof value.mode === 'string' ? value.mode.slice(0, 16) : null,
+        recordingId:
+          typeof value.recordingId === 'string'
+            ? value.recordingId.slice(0, 80)
+            : null,
+        targetMs: Number.isFinite(value.targetMs) ? value.targetMs : null,
+        recordCount: Number.isFinite(value.recordCount)
+          ? value.recordCount
+          : null,
+        truncated:
+          typeof value.truncated === 'boolean' ? value.truncated : null,
+        coverage:
+          coverage &&
+          Number.isFinite(coverage.from) &&
+          Number.isFinite(coverage.to)
+            ? { from: coverage.from, to: coverage.to }
+            : null,
+      };
+    }
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  try {
+    const value = source?.getTimeline?.();
+    const ticks = value?.ticks;
+    if (Array.isArray(ticks)) {
+      timeline = {
+        tickCount: ticks.length,
+        firstTickMs: Number.isFinite(ticks[0]) ? ticks[0] : null,
+        lastTickMs: Number.isFinite(ticks.at(-1)) ? ticks.at(-1) : null,
+      };
+    }
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  let stats = null;
+  try {
+    const value = flights?.module?.getStats?.();
+    if (value && Number.isFinite(value.count)) stats = { count: value.count };
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  let flightsEnabled = null;
+  try {
+    if (typeof app?.dataManager?.isEnabled === 'function')
+      flightsEnabled = Boolean(app.dataManager.isEnabled('flights'));
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  return {
+    phase: typeof phase === 'string' ? phase.slice(0, 48) : 'unknown',
+    source: state,
+    timeline,
+    sourceReadError,
+    selection: {
+      value:
+        typeof selection?.value === 'string'
+          ? selection.value.slice(0, 80)
+          : null,
+      targetOptionPresent,
+      slider: slider
+        ? {
+            disabled: Boolean(slider.disabled),
+            min: String(slider.min).slice(0, 16),
+            max: String(slider.max).slice(0, 16),
+            value: String(slider.value).slice(0, 16),
+          }
+        : null,
+    },
+    flights: {
+      enabled: flightsEnabled,
+      stats,
+    },
   };
 }
 
@@ -871,8 +1056,20 @@ export async function createRenderedSoakDriver(
       await app.aircraftRecording.stop('fixture-ready');
     }, recordingFrames);
     console.log('SOAK boot application');
-    await bootFixturePage(page, base, { hash: soakShareHash });
+    // Seeded recordings are read when the application initializes. The
+    // share-link restore can canonicalize its fragment, so the second
+    // bootFixturePage navigation must start from a fresh document instead of
+    // relying on a same-document hash navigation to reload the app.
+    await bootSoakFixtureFromFreshDocument(page, base, {
+      hash: soakShareHash,
+    });
     console.log('SOAK application ready');
+    const recordingOptionDeadlineAt = Date.now() + 30_000;
+    await waitForReplayState(
+      'seeded-recording-option',
+      hasSoakRecordingOptionInPage,
+      recordingOptionDeadlineAt,
+    );
     const soakPhase = (phase, operation, diagnosticContext) =>
       runWorkspaceFixturePhase(page, phase, operation, {
         diagnosticContext,
@@ -980,6 +1177,34 @@ export async function createRenderedSoakDriver(
             state,
           });
         throw error;
+      }
+    }
+    async function replayStateFailure(phase, error) {
+      const state = await page
+        .evaluate(readSoakReplayDiagnosticInPage, phase)
+        .catch((stateError) => ({
+          phase,
+          observationError:
+            typeof stateError?.name === 'string' &&
+            /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/.test(stateError.name)
+              ? stateError.name
+              : 'Error',
+        }));
+      error.message += '; replay ' + phase + ' state: ' + JSON.stringify(state);
+      throw error;
+    }
+    async function waitForReplayState(
+      phase,
+      predicate,
+      deadlineAt = Date.now() + 30_000,
+    ) {
+      try {
+        await page.waitForFunction(predicate, {
+          polling: 100,
+          timeout: Math.max(1, deadlineAt - Date.now()),
+        });
+      } catch (error) {
+        await replayStateFailure(phase, error);
       }
     }
     async function waitForCameraState(phase, predicate, timeout = 30_000) {
@@ -1192,32 +1417,65 @@ export async function createRenderedSoakDriver(
       // can open a fresh, unpinned camera evidence view.
       await clickControl(page, '#evidence-panel-close');
       console.log('SOAK replay');
-      await page.select(
-        '.investigation-timeline-aircraft-select',
-        'recording-rendered-soak',
+      const replaySelectionDeadlineAt = Date.now() + 30_000;
+      await waitForReplayState(
+        'recording-option',
+        hasSoakRecordingOptionInPage,
+        replaySelectionDeadlineAt,
       );
-      await page.waitForFunction(
-        () =>
-          window.__godsEyeView.aircraftSource.getState().mode === 'recorded',
-      );
-      await page.evaluate(async (index) => {
-        const app = window.__godsEyeView;
-        const slider = document.querySelector(
-          '.investigation-timeline-slider-control',
+      let selectedRecordingValues;
+      try {
+        selectedRecordingValues = await page.select(
+          '.investigation-timeline-aircraft-select',
+          'recording-rendered-soak',
         );
-        slider.value = index % 2 ? slider.min : slider.max;
-        slider.dispatchEvent(new Event('input', { bubbles: true }));
-        await app.dataManager.setEnabled('flights', true);
-        await app.dataManager.refreshLayer('flights');
-        if (!(await app.aircraftSource.getSnapshot()).records.length)
-          throw new Error('Replay lost observations');
-      }, iteration);
-      await page.waitForFunction(
+      } catch (error) {
+        await replayStateFailure('recording-selection', error);
+      }
+      if (!selectedRecordingValues?.includes('recording-rendered-soak'))
+        await replayStateFailure(
+          'recording-selection',
+          new Error('Soak recording option was not selected'),
+        );
+      await waitForReplayState(
+        'recording-selection',
+        () =>
+          document.querySelector('.investigation-timeline-aircraft-select')
+            ?.value === 'recording-rendered-soak',
+        replaySelectionDeadlineAt,
+      );
+      await waitForReplayState(
+        'recording-load',
+        () => {
+          const source = window.__godsEyeView?.aircraftSource;
+          const state = source?.getState?.();
+          const timeline = source?.getTimeline?.();
+          return (
+            state?.mode === 'recorded' &&
+            state.recordingId === 'recording-rendered-soak' &&
+            Number.isFinite(state.recordCount) &&
+            state.recordCount > 0 &&
+            Array.isArray(timeline?.ticks) &&
+            timeline.ticks.length >= 2
+          );
+        },
+        replaySelectionDeadlineAt,
+      );
+      console.log('SOAK replay source loaded');
+      try {
+        await page.evaluate(seekRenderedSoakRecordingInPage, iteration);
+      } catch (error) {
+        await replayStateFailure('seek-source-readiness', error);
+      }
+      console.log('SOAK replay endpoint committed');
+      await waitForReplayState(
+        'seek-display-readiness',
         () =>
           window.__godsEyeView.dataManager.layers
             .get('flights')
             .module.getStats().count > 0,
       );
+      console.log('SOAK replay materialized');
       // Real proxy-shaped health, image delivery/decoding and automatic alternative.
       console.log('SOAK camera outage');
       cameraFailure = true;

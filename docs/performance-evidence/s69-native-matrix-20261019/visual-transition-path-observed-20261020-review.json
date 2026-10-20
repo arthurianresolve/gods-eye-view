@@ -1,0 +1,1642 @@
+{
+  "schema": "gev-visual-transition-path-independent-review/v1",
+  "reviewedAt": "2026-10-20T01:45:02.159Z",
+  "status": "failed",
+  "acceptanceEligible": false,
+  "diagnosticOnly": true,
+  "scope": "All original files independently hash verified. Unmasked pixel comparisons of fixed fresh-page state paths; this is diagnostic evidence only.",
+  "producerCommit": "25cab4fd4db58e2432c8845131578c9df7dff526",
+  "helper": {
+    "path": "run-visual-transition-path-diagnostic-20261020-observed.mjs",
+    "sha256": "046416c36edd7a69819c87ce0790ae6c4b625f234752a9bc6de6b0c73aeab0ba"
+  },
+  "images": [],
+  "comparisons": [],
+  "slots": [
+    {
+      "id": "slot-01-baseline-initial-on",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Debugger pause deadline exceeded.",
+        "pauseDiagnostics": {
+          "guardChecks": 12,
+          "guardSamples": [
+            {
+              "check": 1,
+              "elapsedMs": 1105.0074000000022,
+              "hostEvaluationStartedAtMs": 983.0021000000052,
+              "hostEvaluationCompletedAtMs": 1105.0074000000022,
+              "hostEvaluationDurationMs": 122.00529999999708,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 150,
+                "observation": {
+                  "pageReadStartedAtMs": 22760.89999999106,
+                  "pageReadCompletedAtMs": 22873.59999999404,
+                  "pageReadDurationMs": 112.70000000298023,
+                  "pixelReadDurationMs": 111.29999999701977
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 2,
+              "elapsedMs": 1342.6498000000065,
+              "hostEvaluationStartedAtMs": 1157.5450000000055,
+              "hostEvaluationCompletedAtMs": 1342.6498000000065,
+              "hostEvaluationDurationMs": 185.10480000000098,
+              "detail": {
+                "phase": 0,
+                "frameNumber": 152,
+                "observation": {
+                  "pageReadStartedAtMs": 22945.5,
+                  "pageReadCompletedAtMs": 23111.29999999702,
+                  "pageReadDurationMs": 165.79999999701977,
+                  "pixelReadDurationMs": 164.80000001192093
+                },
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 3,
+              "elapsedMs": 1750.2969000000012,
+              "hostEvaluationStartedAtMs": 1407.6008000000074,
+              "hostEvaluationCompletedAtMs": 1750.2969000000012,
+              "hostEvaluationDurationMs": 342.69609999999375,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 156,
+                "observation": {
+                  "pageReadStartedAtMs": 23179.39999999106,
+                  "pageReadCompletedAtMs": 23519,
+                  "pageReadDurationMs": 339.6000000089407,
+                  "pixelReadDurationMs": 338.09999999403954
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 4,
+              "elapsedMs": 2092.413800000002,
+              "hostEvaluationStartedAtMs": 1806.769100000005,
+              "hostEvaluationCompletedAtMs": 2092.413800000002,
+              "hostEvaluationDurationMs": 285.6446999999971,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 159,
+                "observation": {
+                  "pageReadStartedAtMs": 23579.29999999702,
+                  "pageReadCompletedAtMs": 23861.09999999404,
+                  "pageReadDurationMs": 281.79999999701977,
+                  "pixelReadDurationMs": 279.69999998807907
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 5,
+              "elapsedMs": 2518.334600000002,
+              "hostEvaluationStartedAtMs": 2156.665200000003,
+              "hostEvaluationCompletedAtMs": 2518.334600000002,
+              "hostEvaluationDurationMs": 361.66939999999886,
+              "detail": {
+                "phase": 0,
+                "frameNumber": 163,
+                "observation": {
+                  "pageReadStartedAtMs": 23929.09999999404,
+                  "pageReadCompletedAtMs": 24286.89999999106,
+                  "pageReadDurationMs": 357.79999999701977,
+                  "pixelReadDurationMs": 355.40000000596046
+                },
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 6,
+              "elapsedMs": 2862.7553000000044,
+              "hostEvaluationStartedAtMs": 2579.0615000000034,
+              "hostEvaluationCompletedAtMs": 2862.7553000000044,
+              "hostEvaluationDurationMs": 283.6938000000009,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 166,
+                "observation": {
+                  "pageReadStartedAtMs": 24351,
+                  "pageReadCompletedAtMs": 24631.39999999106,
+                  "pageReadDurationMs": 280.3999999910593,
+                  "pixelReadDurationMs": 279.09999999403954
+                },
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 7,
+              "elapsedMs": 3281.066200000001,
+              "hostEvaluationStartedAtMs": 2924.1834000000017,
+              "hostEvaluationCompletedAtMs": 3281.066200000001,
+              "hostEvaluationDurationMs": 356.8827999999994,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 170,
+                "observation": {
+                  "pageReadStartedAtMs": 24695.79999999702,
+                  "pageReadCompletedAtMs": 25049.70000000298,
+                  "pageReadDurationMs": 353.90000000596046,
+                  "pixelReadDurationMs": 353
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 8,
+              "elapsedMs": 3693.8332999999984,
+              "hostEvaluationStartedAtMs": 3337.1572000000015,
+              "hostEvaluationCompletedAtMs": 3693.8332999999984,
+              "hostEvaluationDurationMs": 356.67609999999695,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 174,
+                "observation": {
+                  "pageReadStartedAtMs": 25110.5,
+                  "pageReadCompletedAtMs": 25462.39999999106,
+                  "pageReadDurationMs": 351.8999999910593,
+                  "pixelReadDurationMs": 350
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 9,
+              "elapsedMs": 4101.279600000009,
+              "hostEvaluationStartedAtMs": 3748.0678000000044,
+              "hostEvaluationCompletedAtMs": 4101.279600000009,
+              "hostEvaluationDurationMs": 353.2118000000046,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 178,
+                "observation": {
+                  "pageReadStartedAtMs": 25532.29999999702,
+                  "pageReadCompletedAtMs": 25869.89999999106,
+                  "pageReadDurationMs": 337.59999999403954,
+                  "pixelReadDurationMs": 335.90000000596046
+                },
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 10,
+              "elapsedMs": 4408.627099999998,
+              "hostEvaluationStartedAtMs": 4159.2427000000025,
+              "hostEvaluationCompletedAtMs": 4408.627099999998,
+              "hostEvaluationDurationMs": 249.38439999999537,
+              "detail": {
+                "phase": 0,
+                "frameNumber": 181,
+                "observation": {
+                  "pageReadStartedAtMs": 25932.89999999106,
+                  "pageReadCompletedAtMs": 26177.29999999702,
+                  "pageReadDurationMs": 244.40000000596046,
+                  "pixelReadDurationMs": 241.70000000298023
+                },
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 11,
+              "elapsedMs": 4719.841,
+              "hostEvaluationStartedAtMs": 4472.267099999997,
+              "hostEvaluationCompletedAtMs": 4719.841,
+              "hostEvaluationDurationMs": 247.57390000000305,
+              "detail": {
+                "phase": 2,
+                "frameNumber": 184,
+                "observation": {
+                  "pageReadStartedAtMs": 26245.5,
+                  "pageReadCompletedAtMs": 26488.39999999106,
+                  "pageReadDurationMs": 242.8999999910593,
+                  "pixelReadDurationMs": 241.79999999701977
+                },
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            }
+          ],
+          "guardSamplesOmitted": 0,
+          "debuggerEnableDurationMs": 982.347299999994,
+          "guardFinalEvaluation": null,
+          "pauseTimeoutMs": 5000,
+          "pauseObserved": false
+        },
+        "pauseCleanup": {
+          "resumed": false,
+          "disabled": true,
+          "detached": true
+        }
+      },
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 67505.9851,
+            "closeSettledHostMs": 68121.722,
+            "closeElapsedMs": 615.736899999989,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 568.2649999999994
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "readinessAttempts": [
+        {
+          "index": 0,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T01:41:16.519Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 19,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 134,
+              "elapsedMs": 4018.9000000059605
+            },
+            "proof": {
+              "revision": 79,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 2,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 1,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T01:41:18.166Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 4,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 148,
+              "elapsedMs": 692
+            },
+            "proof": {
+              "revision": 81,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 4,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "initial-on",
+          "status": "failed",
+          "error": {
+            "name": "Error",
+            "message": "Debugger pause deadline exceeded.",
+            "pauseDiagnostics": {
+              "guardChecks": 12,
+              "guardSamples": [
+                {
+                  "check": 1,
+                  "elapsedMs": 1105.0074000000022,
+                  "hostEvaluationStartedAtMs": 983.0021000000052,
+                  "hostEvaluationCompletedAtMs": 1105.0074000000022,
+                  "hostEvaluationDurationMs": 122.00529999999708,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 150,
+                    "observation": {
+                      "pageReadStartedAtMs": 22760.89999999106,
+                      "pageReadCompletedAtMs": 22873.59999999404,
+                      "pageReadDurationMs": 112.70000000298023,
+                      "pixelReadDurationMs": 111.29999999701977
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 2,
+                  "elapsedMs": 1342.6498000000065,
+                  "hostEvaluationStartedAtMs": 1157.5450000000055,
+                  "hostEvaluationCompletedAtMs": 1342.6498000000065,
+                  "hostEvaluationDurationMs": 185.10480000000098,
+                  "detail": {
+                    "phase": 0,
+                    "frameNumber": 152,
+                    "observation": {
+                      "pageReadStartedAtMs": 22945.5,
+                      "pageReadCompletedAtMs": 23111.29999999702,
+                      "pageReadDurationMs": 165.79999999701977,
+                      "pixelReadDurationMs": 164.80000001192093
+                    },
+                    "reason": null,
+                    "recordingVisible": false,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 3,
+                  "elapsedMs": 1750.2969000000012,
+                  "hostEvaluationStartedAtMs": 1407.6008000000074,
+                  "hostEvaluationCompletedAtMs": 1750.2969000000012,
+                  "hostEvaluationDurationMs": 342.69609999999375,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 156,
+                    "observation": {
+                      "pageReadStartedAtMs": 23179.39999999106,
+                      "pageReadCompletedAtMs": 23519,
+                      "pageReadDurationMs": 339.6000000089407,
+                      "pixelReadDurationMs": 338.09999999403954
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 4,
+                  "elapsedMs": 2092.413800000002,
+                  "hostEvaluationStartedAtMs": 1806.769100000005,
+                  "hostEvaluationCompletedAtMs": 2092.413800000002,
+                  "hostEvaluationDurationMs": 285.6446999999971,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 159,
+                    "observation": {
+                      "pageReadStartedAtMs": 23579.29999999702,
+                      "pageReadCompletedAtMs": 23861.09999999404,
+                      "pageReadDurationMs": 281.79999999701977,
+                      "pixelReadDurationMs": 279.69999998807907
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 5,
+                  "elapsedMs": 2518.334600000002,
+                  "hostEvaluationStartedAtMs": 2156.665200000003,
+                  "hostEvaluationCompletedAtMs": 2518.334600000002,
+                  "hostEvaluationDurationMs": 361.66939999999886,
+                  "detail": {
+                    "phase": 0,
+                    "frameNumber": 163,
+                    "observation": {
+                      "pageReadStartedAtMs": 23929.09999999404,
+                      "pageReadCompletedAtMs": 24286.89999999106,
+                      "pageReadDurationMs": 357.79999999701977,
+                      "pixelReadDurationMs": 355.40000000596046
+                    },
+                    "reason": null,
+                    "recordingVisible": false,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 6,
+                  "elapsedMs": 2862.7553000000044,
+                  "hostEvaluationStartedAtMs": 2579.0615000000034,
+                  "hostEvaluationCompletedAtMs": 2862.7553000000044,
+                  "hostEvaluationDurationMs": 283.6938000000009,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 166,
+                    "observation": {
+                      "pageReadStartedAtMs": 24351,
+                      "pageReadCompletedAtMs": 24631.39999999106,
+                      "pageReadDurationMs": 280.3999999910593,
+                      "pixelReadDurationMs": 279.09999999403954
+                    },
+                    "reason": null,
+                    "recordingVisible": false,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 7,
+                  "elapsedMs": 3281.066200000001,
+                  "hostEvaluationStartedAtMs": 2924.1834000000017,
+                  "hostEvaluationCompletedAtMs": 3281.066200000001,
+                  "hostEvaluationDurationMs": 356.8827999999994,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 170,
+                    "observation": {
+                      "pageReadStartedAtMs": 24695.79999999702,
+                      "pageReadCompletedAtMs": 25049.70000000298,
+                      "pageReadDurationMs": 353.90000000596046,
+                      "pixelReadDurationMs": 353
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 8,
+                  "elapsedMs": 3693.8332999999984,
+                  "hostEvaluationStartedAtMs": 3337.1572000000015,
+                  "hostEvaluationCompletedAtMs": 3693.8332999999984,
+                  "hostEvaluationDurationMs": 356.67609999999695,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 174,
+                    "observation": {
+                      "pageReadStartedAtMs": 25110.5,
+                      "pageReadCompletedAtMs": 25462.39999999106,
+                      "pageReadDurationMs": 351.8999999910593,
+                      "pixelReadDurationMs": 350
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 9,
+                  "elapsedMs": 4101.279600000009,
+                  "hostEvaluationStartedAtMs": 3748.0678000000044,
+                  "hostEvaluationCompletedAtMs": 4101.279600000009,
+                  "hostEvaluationDurationMs": 353.2118000000046,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 178,
+                    "observation": {
+                      "pageReadStartedAtMs": 25532.29999999702,
+                      "pageReadCompletedAtMs": 25869.89999999106,
+                      "pageReadDurationMs": 337.59999999403954,
+                      "pixelReadDurationMs": 335.90000000596046
+                    },
+                    "reason": null,
+                    "recordingVisible": false,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 10,
+                  "elapsedMs": 4408.627099999998,
+                  "hostEvaluationStartedAtMs": 4159.2427000000025,
+                  "hostEvaluationCompletedAtMs": 4408.627099999998,
+                  "hostEvaluationDurationMs": 249.38439999999537,
+                  "detail": {
+                    "phase": 0,
+                    "frameNumber": 181,
+                    "observation": {
+                      "pageReadStartedAtMs": 25932.89999999106,
+                      "pageReadCompletedAtMs": 26177.29999999702,
+                      "pageReadDurationMs": 244.40000000596046,
+                      "pixelReadDurationMs": 241.70000000298023
+                    },
+                    "reason": null,
+                    "recordingVisible": false,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                },
+                {
+                  "check": 11,
+                  "elapsedMs": 4719.841,
+                  "hostEvaluationStartedAtMs": 4472.267099999997,
+                  "hostEvaluationCompletedAtMs": 4719.841,
+                  "hostEvaluationDurationMs": 247.57390000000305,
+                  "detail": {
+                    "phase": 2,
+                    "frameNumber": 184,
+                    "observation": {
+                      "pageReadStartedAtMs": 26245.5,
+                      "pageReadCompletedAtMs": 26488.39999999106,
+                      "pageReadDurationMs": 242.8999999910593,
+                      "pixelReadDurationMs": 241.79999999701977
+                    },
+                    "reason": null,
+                    "recordingVisible": true,
+                    "summaryTypingComplete": true,
+                    "summaryPresent": true,
+                    "documentVisible": true,
+                    "documentFocused": true,
+                    "gazeReady": true,
+                    "hudVisible": true,
+                    "hudVisibility": "visible",
+                    "hudDisplay": "block",
+                    "hudOpacity": 1
+                  }
+                }
+              ],
+              "guardSamplesOmitted": 0,
+              "debuggerEnableDurationMs": 982.347299999994,
+              "guardFinalEvaluation": null,
+              "pauseTimeoutMs": 5000,
+              "pauseObserved": false
+            },
+            "pauseCleanup": {
+              "resumed": false,
+              "disabled": true,
+              "detached": true
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "error": {
+    "name": "Error",
+    "message": "Debugger pause deadline exceeded.",
+    "pauseDiagnostics": {
+      "guardChecks": 12,
+      "guardSamples": [
+        {
+          "check": 1,
+          "elapsedMs": 1105.0074000000022,
+          "hostEvaluationStartedAtMs": 983.0021000000052,
+          "hostEvaluationCompletedAtMs": 1105.0074000000022,
+          "hostEvaluationDurationMs": 122.00529999999708,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 150,
+            "observation": {
+              "pageReadStartedAtMs": 22760.89999999106,
+              "pageReadCompletedAtMs": 22873.59999999404,
+              "pageReadDurationMs": 112.70000000298023,
+              "pixelReadDurationMs": 111.29999999701977
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 2,
+          "elapsedMs": 1342.6498000000065,
+          "hostEvaluationStartedAtMs": 1157.5450000000055,
+          "hostEvaluationCompletedAtMs": 1342.6498000000065,
+          "hostEvaluationDurationMs": 185.10480000000098,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 152,
+            "observation": {
+              "pageReadStartedAtMs": 22945.5,
+              "pageReadCompletedAtMs": 23111.29999999702,
+              "pageReadDurationMs": 165.79999999701977,
+              "pixelReadDurationMs": 164.80000001192093
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 3,
+          "elapsedMs": 1750.2969000000012,
+          "hostEvaluationStartedAtMs": 1407.6008000000074,
+          "hostEvaluationCompletedAtMs": 1750.2969000000012,
+          "hostEvaluationDurationMs": 342.69609999999375,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 156,
+            "observation": {
+              "pageReadStartedAtMs": 23179.39999999106,
+              "pageReadCompletedAtMs": 23519,
+              "pageReadDurationMs": 339.6000000089407,
+              "pixelReadDurationMs": 338.09999999403954
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 4,
+          "elapsedMs": 2092.413800000002,
+          "hostEvaluationStartedAtMs": 1806.769100000005,
+          "hostEvaluationCompletedAtMs": 2092.413800000002,
+          "hostEvaluationDurationMs": 285.6446999999971,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 159,
+            "observation": {
+              "pageReadStartedAtMs": 23579.29999999702,
+              "pageReadCompletedAtMs": 23861.09999999404,
+              "pageReadDurationMs": 281.79999999701977,
+              "pixelReadDurationMs": 279.69999998807907
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 5,
+          "elapsedMs": 2518.334600000002,
+          "hostEvaluationStartedAtMs": 2156.665200000003,
+          "hostEvaluationCompletedAtMs": 2518.334600000002,
+          "hostEvaluationDurationMs": 361.66939999999886,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 163,
+            "observation": {
+              "pageReadStartedAtMs": 23929.09999999404,
+              "pageReadCompletedAtMs": 24286.89999999106,
+              "pageReadDurationMs": 357.79999999701977,
+              "pixelReadDurationMs": 355.40000000596046
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 6,
+          "elapsedMs": 2862.7553000000044,
+          "hostEvaluationStartedAtMs": 2579.0615000000034,
+          "hostEvaluationCompletedAtMs": 2862.7553000000044,
+          "hostEvaluationDurationMs": 283.6938000000009,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 166,
+            "observation": {
+              "pageReadStartedAtMs": 24351,
+              "pageReadCompletedAtMs": 24631.39999999106,
+              "pageReadDurationMs": 280.3999999910593,
+              "pixelReadDurationMs": 279.09999999403954
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 7,
+          "elapsedMs": 3281.066200000001,
+          "hostEvaluationStartedAtMs": 2924.1834000000017,
+          "hostEvaluationCompletedAtMs": 3281.066200000001,
+          "hostEvaluationDurationMs": 356.8827999999994,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 170,
+            "observation": {
+              "pageReadStartedAtMs": 24695.79999999702,
+              "pageReadCompletedAtMs": 25049.70000000298,
+              "pageReadDurationMs": 353.90000000596046,
+              "pixelReadDurationMs": 353
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 8,
+          "elapsedMs": 3693.8332999999984,
+          "hostEvaluationStartedAtMs": 3337.1572000000015,
+          "hostEvaluationCompletedAtMs": 3693.8332999999984,
+          "hostEvaluationDurationMs": 356.67609999999695,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 174,
+            "observation": {
+              "pageReadStartedAtMs": 25110.5,
+              "pageReadCompletedAtMs": 25462.39999999106,
+              "pageReadDurationMs": 351.8999999910593,
+              "pixelReadDurationMs": 350
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 9,
+          "elapsedMs": 4101.279600000009,
+          "hostEvaluationStartedAtMs": 3748.0678000000044,
+          "hostEvaluationCompletedAtMs": 4101.279600000009,
+          "hostEvaluationDurationMs": 353.2118000000046,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 178,
+            "observation": {
+              "pageReadStartedAtMs": 25532.29999999702,
+              "pageReadCompletedAtMs": 25869.89999999106,
+              "pageReadDurationMs": 337.59999999403954,
+              "pixelReadDurationMs": 335.90000000596046
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 10,
+          "elapsedMs": 4408.627099999998,
+          "hostEvaluationStartedAtMs": 4159.2427000000025,
+          "hostEvaluationCompletedAtMs": 4408.627099999998,
+          "hostEvaluationDurationMs": 249.38439999999537,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 181,
+            "observation": {
+              "pageReadStartedAtMs": 25932.89999999106,
+              "pageReadCompletedAtMs": 26177.29999999702,
+              "pageReadDurationMs": 244.40000000596046,
+              "pixelReadDurationMs": 241.70000000298023
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 11,
+          "elapsedMs": 4719.841,
+          "hostEvaluationStartedAtMs": 4472.267099999997,
+          "hostEvaluationCompletedAtMs": 4719.841,
+          "hostEvaluationDurationMs": 247.57390000000305,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 184,
+            "observation": {
+              "pageReadStartedAtMs": 26245.5,
+              "pageReadCompletedAtMs": 26488.39999999106,
+              "pageReadDurationMs": 242.8999999910593,
+              "pixelReadDurationMs": 241.79999999701977
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "guardSamplesOmitted": 0,
+      "debuggerEnableDurationMs": 982.347299999994,
+      "guardFinalEvaluation": null,
+      "pauseTimeoutMs": 5000,
+      "pauseObserved": false
+    },
+    "pauseCleanup": {
+      "resumed": false,
+      "disabled": true,
+      "detached": true
+    }
+  },
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+    "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+  },
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-transition-path-observed-e7-190c5ab6",
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 82875,
+      "sha256": "5c1de6e524d9bcfdfda012a7989101fab7a36a7fd816097cc6522a0f25745e84"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-transition-path-diagnostic-20261020-observed.mjs",
+      "bytes": 34993,
+      "sha256": "046416c36edd7a69819c87ce0790ae6c4b625f234752a9bc6de6b0c73aeab0ba"
+    },
+    {
+      "name": "predeclared-plan.json",
+      "bytes": 4531,
+      "sha256": "7ce58a08e5c61f187f61d345325dee07a2999d9ed20c2c4aae367d571165faa6"
+    }
+  ]
+}

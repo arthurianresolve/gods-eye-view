@@ -1,0 +1,442 @@
+{
+  "schema": "gev-replay-capture-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-20T01:46:56.564Z",
+  "baseCommit": "1020268f50fd0428ed0a317b5f8de266585b49c7",
+  "files": [
+    {
+      "name": "scripts/qa-mixed-use-soak.test.mjs",
+      "bytes": 75299,
+      "sha256": "dedd2bd1a7e048ebebb380d5e7c074fcfd15216f16d4ca4bcdbe9d4277d3d7f5",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/qa-mixed-use-soak.mjs",
+      "bytes": 16507,
+      "sha256": "8dff78b370559f56dd4cef9deb904896240f1f747d84575e35ae301473c378a9",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/qa-rendered-soak-driver.mjs",
+      "bytes": 76530,
+      "sha256": "7c6c27c788d03d0ce565652b9168bb96aaf965bd619fdc2f98cf71b5f6c71778",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/rendererEvidence.mjs",
+      "bytes": 3209,
+      "sha256": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/workerDiagnostics.mjs",
+      "bytes": 2915,
+      "sha256": "e06dcbd2a951ea35b36e56a8d5e6140abf2ce98f25cbaa9d82c1a4fde12cae81",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/hostedSoakSession.mjs",
+      "bytes": 2590,
+      "sha256": "1ee8172bd9b7626c92ea3e670d415722a9cf7e01a9b0707e23edb3bbf5cb7d47",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryPageOwnership.mjs",
+      "bytes": 34736,
+      "sha256": "6179c78cf5ee652f169786bec32652b9a1fa044e74f90856452ba7af348afaa2",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/startupDiagnostics.mjs",
+      "bytes": 8814,
+      "sha256": "9aad3887b5dc32355d7f191fdf64a597e42f1e98bfa4ddc9c77e8c868c2f9efe",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.mjs",
+      "bytes": 27769,
+      "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/fixtureInterception.mjs",
+      "bytes": 13174,
+      "sha256": "b7a095598c501154e2cca8e2d8d442a2a5f3983c6cff7401bb94bb6615f1c946",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/fixtureNetworkProbe.mjs",
+      "bytes": 2308,
+      "sha256": "05ecd4a985b465bb8388370356eac3338af560d55f0d664a6dad23661e97837a",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryFixtureContract.mjs",
+      "bytes": 292,
+      "sha256": "87a1e78394f0f63dd4f91937be152a7c5df9e49c09a624032d5e295b94706aa2",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/workspaceOpenProbe.mjs",
+      "bytes": 2606,
+      "sha256": "62b2bef8b007274b7f4828ad7ced8e4d56e567464d64d7ce56c425fddbcca32f",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/consoleMessageOwnership.mjs",
+      "bytes": 3224,
+      "sha256": "30377088596290eb87562de03eafe42dfda65e4422c01dd8fe97e09d26a2041f",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/cesiumWorkerProbeInPage.mjs",
+      "bytes": 3717,
+      "sha256": "453cb05945d1fba93232499d6297420d5248b0b2a615506672563f9f5aff9737",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/syntheticFixture.js",
+      "bytes": 1227,
+      "sha256": "f436c640456e319b2055d17ecc5deb82fedd0145170eeb7a45242a4f6c382433",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/bundle.js",
+      "bytes": 10990,
+      "sha256": "c62fd997eca99f372d742bceb8c14cea311288dced036ebaa79ca6090a425639",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/storage/codec.js",
+      "bytes": 4065,
+      "sha256": "10825ceeae7cc6fec0e884bdb6a791fa3f0773b2dfcbbf9f7175db0e8c915c40",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/i18n/marker.js",
+      "bytes": 399,
+      "sha256": "8b9c5d7a233d59205e7e74428bf5c8a6bd8e916a45737e44b199c02593199c41",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/soakStability.mjs",
+      "bytes": 5521,
+      "sha256": "996efb1f0bb20654bfcd41f7107524afe7b7a089237459f06f221ef979c1d634",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/camera.js",
+      "bytes": 2202,
+      "sha256": "44a93bc244a0f438b874a1606c4fbd2de5df82b03e88e5d3793cf253f0884649",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/sharelink.js",
+      "bytes": 34737,
+      "sha256": "964a92252609980bb05d5a62e18fdab6e3f70b8b1bc137b05d7ed8ade5cab636",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/view/styleParams.js",
+      "bytes": 3814,
+      "sha256": "cb5fae4cf6820f62aaf899d9acfd24abc964e6467e9fc4b88860358c0d93f501",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/view/visual.js",
+      "bytes": 5231,
+      "sha256": "53e8f449f116e0d25ec17af1a7b64a50a88e4381110b127034f3d37523ab409c",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/bloom.js",
+      "bytes": 2995,
+      "sha256": "7d67152d956e2658c1de9262c337d086eb46031bb79c6d211acce5b8bfc2de1b",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/data/detectionPolicy.js",
+      "bytes": 10509,
+      "sha256": "1a2346b27f0182050f5ed7bc2a71ec3a64b6717f130a281c2a0f3593d97a3edf",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/scopeMask.js",
+      "bytes": 21708,
+      "sha256": "be86c787a23187bc42844cde877e3455a48c60253fdbd9d0ee57fb81680253d5",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/celestialRing.js",
+      "bytes": 29380,
+      "sha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/renderGovernor.js",
+      "bytes": 9028,
+      "sha256": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/data/layerState.js",
+      "bytes": 36278,
+      "sha256": "5cc06c6a1d9fcef5e20dc76b3f43c3b17365015fbef5c206c3b2a74776b5b891",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/data/idSwitches.js",
+      "bytes": 2160,
+      "sha256": "42e78e28517958cf3c5b2bd207e733c074d9167c09cf73b5cf8c9ba51951f155",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/data/layerStateTokenReservations.json",
+      "bytes": 803,
+      "sha256": "3fbca2de9c0a5779e756f5612962f41a0dc729ee7638b414bbeec7b42073af4a",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/view/index.js",
+      "bytes": 17481,
+      "sha256": "2ae8ca241deefd045219a388aac8057636aadf236f3831807a57af5c892ccf43",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/workerProbe.mjs",
+      "bytes": 1772,
+      "sha256": "a9d36f9f41a800f046b0b1bcd964ef7aedb9df4efa263224b198f84877fb0fe7",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "bytes": 23332,
+      "sha256": "87bb4bd18527ecf26444a50be60d777a39cf360002175484297eed4b57b337f2",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "bytes": 17271,
+      "sha256": "96c406f57347ad37ab30652dde0ee52ec6721a234a7d6b0e6496bbcd98a0ef0f",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+      "bytes": 18832,
+      "sha256": "acdb60555db0b9417a171938fa2dbc3eba389bf741d47b5ad94ce5d0f0e1c233",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.mjs",
+      "bytes": 13871,
+      "sha256": "9e6ad46483762595459db8d3960655a090140416800ccbc15b82d44780fb3e5a",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/ui/railTimeline.test.mjs",
+      "bytes": 3848,
+      "sha256": "9211677503ab74e03cb7f84f4310ca9388a9815677626d62d04ee055ec45e4d4",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/ui/railTimeline.js",
+      "bytes": 6512,
+      "sha256": "18b8fa4811421459799cbd33d85e409e7c6e6783b0f341fbdc921768a0307563",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/i18n/index.js",
+      "bytes": 13509,
+      "sha256": "695e596e29d2c79050432c28841909044a8c56259c7b8ef2e65dcb317fa32a79",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/i18n/locale.js",
+      "bytes": 2740,
+      "sha256": "bafaeb98296093ac8676dc07eeeaa83fb416673c5d0782a80101b91b5ebc11c3",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/i18n/locales/es.json",
+      "bytes": 200211,
+      "sha256": "030dfb2b08898b386cbc317f73e6d1e717c3b9a415a373d88d621bc3d2238aec",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/i18n/locales/ru.json",
+      "bytes": 259074,
+      "sha256": "bcac1af4ab59e920bc9ed8ab9e2927f1d40053ae8e5f97b5cde5ab65612e9a9f",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/ui/railTestFixture.mjs",
+      "bytes": 3641,
+      "sha256": "c83cb81170b133199ba8d4122441870a1105767d5e845ede234e50e06798ca07",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/ui/investigationTimelineController.test.mjs",
+      "bytes": 10866,
+      "sha256": "8be48744b8c230c16bfd85d3e4b681b59d0483c4d41853c4f5367e3fab4a3e55",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/time/index.js",
+      "bytes": 291,
+      "sha256": "3f0f60d459eac7241880a3e560dfda755df1950b1eb5b8aed548235afaabc3a8",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/time/clock.js",
+      "bytes": 5737,
+      "sha256": "171e5d0b60e5b76484f44123ee155cf7dae60ed432cc00d11c07d20856837eba",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/time/capabilities.js",
+      "bytes": 7679,
+      "sha256": "2e94e83b263ab674bf1e3e9b8d009836c7b26e3c8b97ec0ea6742933a13ff3d8",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/time/timelineArbiter.js",
+      "bytes": 2858,
+      "sha256": "73141e83b90859d824b143b86ce1cdcf5e964830bc13ff5642168ba48ba4e573",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/time/weatherAdapter.js",
+      "bytes": 3537,
+      "sha256": "8d682ae639e88b92f79d20e3230473da32e5ccef267a90372e878c83bc792cef",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/ui/investigationTimelineController.js",
+      "bytes": 18808,
+      "sha256": "6063780b8303f397bf18cc297978680021a9238182f5e2a8cea2c1fba7d8fd66",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/sourceRouter.test.mjs",
+      "bytes": 5083,
+      "sha256": "24583ae18f8fad027404d1743eea82dd99f5d7ed62a2d38e36d6f43d2e2f644e",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/storage/index.js",
+      "bytes": 193,
+      "sha256": "367ee69d9cc5d97a88ec3b7a7ade537e150de516e5abe4264fe7f7ccab73dbab",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/storage/indexedDb.js",
+      "bytes": 29024,
+      "sha256": "f251f4167a3556764be9dc522179cfb224569857f314eb88932b5b2d7169cf10",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/aircraft.js",
+      "bytes": 18597,
+      "sha256": "e66a2b0bd8c3935dc27a18c9d17b309d83d1a75f5696e0e7e57eb26e30a4798d",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/regions.js",
+      "bytes": 1882,
+      "sha256": "142ca18c9304aef15505f7ce2e2d7e62433fa0aa3390ff9179024064aeebfece",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/replaySource.js",
+      "bytes": 8814,
+      "sha256": "95939ba44f2e96d2e812ef49b973c2bb170f4ca850c8c05c7e79dcb15b2b4c86",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/sourceRouter.js",
+      "bytes": 4331,
+      "sha256": "a04ab294d6bd19687124ea1097bb10ae3bd688314468a13a2325eacc2f05b657",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/aircraft.test.mjs",
+      "bytes": 10847,
+      "sha256": "188cf13f90c0a72422024a2a731541594b6b7d44e24a82f20edfa32acbeaec51",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/index.js",
+      "bytes": 1113,
+      "sha256": "10b513cfc8fe3017384c7a0f461eaa3aa2d82dd00b0260ad21b5ef51fbcc6b0e",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/vessels.js",
+      "bytes": 16819,
+      "sha256": "de0a0a2e9c87f3f3d124c8a0d237dbaab401dfb42e85f40045becc98ac136dba",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/vesselReplaySource.js",
+      "bytes": 10403,
+      "sha256": "6c7bde4bdaf06d33c3a595311dad9c7bfe22b705e855e1834c440a4b0f04fa81",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/vesselSourceRouter.js",
+      "bytes": 4857,
+      "sha256": "4924d9972c31a3ca8419fef0ad074b5856af566e9b5f9af0ad62ac7818a91314",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "src/recording/capture.js",
+      "bytes": 2580,
+      "sha256": "0de490f653c88a8661bd8f0a324b0d623efb1df31a8cd1c0062c5d1f8cc6d555",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    },
+    {
+      "name": ".prettierrc.json",
+      "bytes": 80,
+      "sha256": "d77193f01dffa58f3e766b73873a6d3d5b2291ee59916ddcc53c2e04a88a232d",
+      "source": "1020268f50fd0428ed0a317b5f8de266585b49c7"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "summary": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "0d6490f2fde8b6ae4c4e3ff461ec40e87e5719f5096a408ffd6e4004e7354dfd",
+      "summary": "recording deduplicates, preserves corrections and marks provider gaps (22.665834ms)\n✔ recordings stop at 60 logical minutes with an explicit limit reason (42.835635ms)\n✔ recording byte ceiling stops cleanly before storing the over-limit report (3.02896ms)\n✔ memory-only storage refuses to start an unsaved recording (0.416634ms)\n✔ a failed durable append keeps the last committed revision and reports interruption (2.222526ms)\n✔ an active persisted session becomes an explicit interrupted interval after reload (1.879193ms)\n✔ recorded aircraft source selects actual prior observations and never falls forward (3.078015ms)\n✔ router switches live and recorded feeds without a live fallthrough (10.602073ms)\n✔ a live result that resolves after replay takes ownership is discarded (5.470327ms)\n✔ a recorded result resolving after return-live is discarded (0.363551ms)\n✔ timeline requires a handoff, exposes actual samples and shows coverage gaps (3.115828ms)\n✔ timeline playback follows event ticks and export/delete target only the selected recording (4.544072ms)\n✔ timeline exports a portable bundle and verifies it before importing a new recording (29.862852ms)\n✔ a stale recording load cannot replace a newer selection (1.377216ms)\n✔ returning live invalidates a recording load that has not finished (2.410628ms)\n✔ aircraft and vessel recordings seek to one shared investigation instant (0.808529ms)\n✔ preview is immediate, commits are coalesced and the drag DOM and tick mapping stay stable (3.295695ms)\n✔ identical updates write nothing; controls call actions and destruction cancels commits (1.158534ms)\n✔ observed history label and endpoint times track the advertised tick range (0.369271ms)\nℹ tests 122\nℹ suites 0\nℹ pass 122\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1815.386824\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "3328740377f10cb392d5beb1984ad4156ee3e53214145ae173207deb660b28bb",
+      "summary": "ecording deduplicates, preserves corrections and marks provider gaps (31.545075ms)\n✔ recordings stop at 60 logical minutes with an explicit limit reason (35.228918ms)\n✔ recording byte ceiling stops cleanly before storing the over-limit report (3.012208ms)\n✔ memory-only storage refuses to start an unsaved recording (0.545162ms)\n✔ a failed durable append keeps the last committed revision and reports interruption (2.169503ms)\n✔ an active persisted session becomes an explicit interrupted interval after reload (1.806963ms)\n✔ recorded aircraft source selects actual prior observations and never falls forward (3.274625ms)\n✔ router switches live and recorded feeds without a live fallthrough (13.527263ms)\n✔ a live result that resolves after replay takes ownership is discarded (4.308036ms)\n✔ a recorded result resolving after return-live is discarded (0.374513ms)\n✔ timeline requires a handoff, exposes actual samples and shows coverage gaps (3.097342ms)\n✔ timeline playback follows event ticks and export/delete target only the selected recording (3.851206ms)\n✔ timeline exports a portable bundle and verifies it before importing a new recording (35.031847ms)\n✔ a stale recording load cannot replace a newer selection (0.914423ms)\n✔ returning live invalidates a recording load that has not finished (0.730779ms)\n✔ aircraft and vessel recordings seek to one shared investigation instant (0.794202ms)\n✔ preview is immediate, commits are coalesced and the drag DOM and tick mapping stay stable (3.498986ms)\n✔ identical updates write nothing; controls call actions and destruction cancels commits (1.267605ms)\n✔ observed history label and endpoint times track the advertised tick range (0.899585ms)\nℹ tests 122\nℹ suites 0\nℹ pass 122\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1775.035319\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "hardwareValidated": false,
+  "completedAt": "2026-10-20T01:47:00.738Z"
+}

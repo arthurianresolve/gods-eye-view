@@ -270,15 +270,19 @@ function phaseFixture({
       return {
         getImageData: (x, y, width, height) => {
           reads.push({ x, y, width, height });
-          assert.equal(width, 1);
+          assert.equal(width, canvas.width);
           assert.ok(height > 0 && y + height <= canvas.height);
-          const edgePhase = mismatchedEdges && x > 0 ? (phase + 2) % 4 : phase;
-          const paintedRows = [edgePhase, edgePhase + 4].map((row) =>
-            Math.floor(row * dpr),
-          );
           const data = new Uint8ClampedArray(width * height * 4);
-          for (let row = 0; row < height; row++)
-            data[row * 4 + 3] = !empty && paintedRows.includes(y + row) ? 8 : 0;
+          for (const column of [0, width - 1]) {
+            const edgePhase =
+              mismatchedEdges && column > 0 ? (phase + 2) % 4 : phase;
+            const paintedRows = [edgePhase, edgePhase + 4].map((row) =>
+              Math.floor(row * dpr),
+            );
+            for (let row = 0; row < height; row++)
+              data[(row * width + column) * 4 + 3] =
+                !empty && paintedRows.includes(y + row) ? 8 : 0;
+          }
           return { data };
         },
       };
@@ -340,17 +344,32 @@ test('serialized snapshot phase reads actual edge pixels at native DPR', () => {
       assert.deepEqual(
         fixture.reads,
         [
-          { x: 0, y: 0, width: 1, height: Math.floor(7 * dpr) + 1 },
           {
-            x: fixture.canvas.width - 1,
+            x: 0,
             y: 0,
-            width: 1,
+            width: fixture.canvas.width,
             height: Math.floor(7 * dpr) + 1,
           },
         ],
-        'phase observation performs two bounded readbacks without changing sampled pixels',
+        'phase observation performs one shallow readback without changing sampled pixels',
       );
     }
+});
+
+test('hidden REC eligibility avoids GPU readback without inventing a phase', () => {
+  const fixture = phaseFixture();
+  fixture.scope.window.__gevVisualPresentationBoundary.read = () => ({
+    hudVisible: true,
+    recordingVisible: false,
+    revision: 1,
+  });
+  const result = fixture.read();
+  assert.equal(result.phase, null);
+  assert.equal(result.reason, 'recording-indicator-hidden');
+  assert.equal(result.observation.pixelReadDurationMs, null);
+  assert.deepEqual(result.alphaRows, []);
+  assert.deepEqual(fixture.reads, []);
+  assert.equal(isVisualSnapshotReadyToPause(result), false);
 });
 
 test('pause readiness diagnostics keep page timing and frame evidence bounded', () => {

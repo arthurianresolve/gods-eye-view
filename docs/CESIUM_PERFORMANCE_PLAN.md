@@ -90,16 +90,41 @@ actual failure-time camera. [VM validation](performance-evidence/s69-native-matr
 passes all 54 focused tests on Node 24 and 26; the original camera helper fails
 the new frame-ownership regression. The production decoder and actual delayed
 startup-flight function are exercised with mocked timers. The earlier formatter
-configuration and test-fixture failures remain recorded. Hosted browser
-confirmation is pending; the missing final pose in the original CI log still
-prevents conclusive attribution of that particular failure.
+configuration and test-fixture failures remain recorded. The hosted browser
+run at `7ff9736a` now validates all eight datacenters as active across three
+completed frames at the correct fixture location, including disabled-state
+cleanup. Its [later replay timeout](performance-evidence/s69-native-matrix-20261019/street-level-7ff9736a-failure.json)
+occurs during cycle 0 after workspace restore, import and archive recovery.
+The other six required CI jobs and release packaging pass. The failed smoke
+still blocks its gate; the camera result does not convert the whole run to a pass.
+
+The next QA correction forces the post-seed navigation through a fresh document,
+checks that the exact recording option exists, and commits the production slider
+with its `change` event before refreshing Flights. Selection and loading share
+the existing 30-second budget. Bounded failure diagnostics identify the replay
+phase without including recorded rows. This removes a concrete stale-document
+path; the historical timeout's exact cause is not proven.
+The [observed capture diagnostic](performance-evidence/s69-native-matrix-20261019/visual-transition-path-observed-20261020-review.json)
+also preserves a five-second guard timeout: the sampled REC/scanline phases never
+jointly qualify, with 111–355 ms spent reading pixels per observation. The phase
+observer now skips readback while REC is hidden and reads both original edge
+samples in one shallow strip. It changes no pixels, clocks, deadlines or
+comparison thresholds. [All 122 focused and production-contract tests](performance-evidence/s69-native-matrix-20261019/replay-capture-validation-20261020.json)
+pass on each of VM105 Node 24 and 26. Browser confirmation remains required;
+neither change clears the prior visual or mixed-use failures by itself.
 
 The current [cable comparison](performance-evidence/s69-native-matrix-20261019/infrastructure-cables-190c5ab6-result.json)
 passes independent VM hash/identity review: motion median p95 is 332.8 versus
 311.7 ms (-6.34%), app readiness changes -16.52%, and loading completion -9.46%.
 It reuses the unchanged, declared five-run baseline; this is not a fresh
 interleaved comparison or proof of a repeatable speedup. The prior attempt
-failed before navigation and is preserved separately. Map capture is in progress.
+failed before navigation and is preserved separately. The corrected candidate's
+[map comparison](performance-evidence/s69-native-matrix-20261019/map-streaming-190c5ab6-result.json)
+also completes and passes independent VM verification: motion median p95 changes
+392.3 to 312.8 ms (-20.27%), transition-readiness p95 changes -37.01%, and the
+idle frame-interval comparison changes +0.95%. App readiness changes -29.56%
+and loading completion -19.43%. These are separate metrics, using the declared
+saved baseline; they do not establish the dense/tracking improvement objective.
 
 The corrected interaction/heap run exposed a workspace persistence defect:
 saved canonical views omit visual settings, and reopening them disables

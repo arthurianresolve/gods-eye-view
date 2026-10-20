@@ -177,6 +177,31 @@ export function requestVisualGuardFrame(snapshot) {
 export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   const pageReadStartedAtMs = performance.now();
   const boundary = window.__gevVisualPresentationBoundary?.read?.();
+  // This presentation can never pass the existing atomic guard. Avoid flushing
+  // the GPU-backed canvas while waiting for the real REC timer to make it
+  // eligible; no phase is inferred and no application clock is changed.
+  if (boundary?.recordingVisible === false) {
+    const pageReadCompletedAtMs = performance.now();
+    const frameNumber =
+      window.__godsEyeView?.viewer?.scene?.frameState?.frameNumber;
+    return {
+      hud: boundary,
+      phase: null,
+      reason: 'recording-indicator-hidden',
+      alphaRows: [],
+      dimensions: null,
+      observation: {
+        pageReadStartedAtMs,
+        pageReadCompletedAtMs,
+        pageReadDurationMs: Math.max(
+          0,
+          pageReadCompletedAtMs - pageReadStartedAtMs,
+        ),
+        pixelReadDurationMs: null,
+        frameNumber: Number.isSafeInteger(frameNumber) ? frameNumber : null,
+      },
+    };
+  }
   const canvas = document.getElementById('world-overlay-detection-surface');
   const rect = canvas?.getBoundingClientRect?.();
   const context = canvas?.getContext?.('2d');
@@ -193,18 +218,12 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
   )
     throw new Error('Visual snapshot phase dimensions are unavailable.');
   const dpr = dprX;
-  // Read each edge once. Sixteen single-pixel reads can each flush a GPU-backed
-  // canvas and make the observation itself miss the short animation phase.
-  // The same eight pixel coordinates and alpha values remain authoritative.
+  // Read one shallow strip containing both edges. Separate edge reads may each
+  // flush the GPU-backed canvas. Only the original eight coordinates per edge
+  // determine eligibility; intermediate pixels do not affect the comparison.
   const stripHeight = Math.min(canvas.height, Math.floor(7 * dpr) + 1);
   const pixelReadStartedAtMs = performance.now();
-  const leftEdge = context.getImageData(0, 0, 1, stripHeight).data;
-  const rightEdge = context.getImageData(
-    Math.max(0, canvas.width - 1),
-    0,
-    1,
-    stripHeight,
-  ).data;
+  const strip = context.getImageData(0, 0, canvas.width, stripHeight).data;
   const pixelReadDurationMs = Math.max(
     0,
     performance.now() - pixelReadStartedAtMs,
@@ -216,8 +235,8 @@ export function readVisualSnapshotPhaseInPage({ expectedHudVisible } = {}) {
     rows.push({
       cssRow,
       pixelRow,
-      leftAlpha: leftEdge[pixelRow * 4 + 3],
-      rightAlpha: rightEdge[pixelRow * 4 + 3],
+      leftAlpha: strip[pixelRow * canvas.width * 4 + 3],
+      rightAlpha: strip[(pixelRow * canvas.width + canvas.width - 1) * 4 + 3],
     });
   }
   const leftRows = rows
