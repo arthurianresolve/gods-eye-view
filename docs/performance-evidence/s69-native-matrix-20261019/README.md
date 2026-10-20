@@ -2,6 +2,37 @@
 
 ## Current qualification checkpoint
 
+The completed [native-window diagnostic](native-window-c373d91b-diagnostic.json)
+and [independent VM readback](native-window-c373d91b-readback.json) retain all
+six raw files (1,712,120 bytes), twenty owned-window checkpoints and sixteen
+isolated trusted actions. Driver `3360f672` proves the actual 1280 × 537 CSS
+viewport / 2560 × 1074 drawing buffer fits the physical Windows display at
+native DPR 2, 100% page/pinch zoom and unchanged rendering settings.
+All enabled geometry, disabled geometry and ordered height-query tuples match
+between control `8c14b106` and candidate `c373d91b`.
+
+Candidate native Event Timing observations are 40, 128, 48, 96, 56, 144, 48
+and 128 ms: three exceed 100 ms, compared with two of eight control actions.
+Candidate OFF scene completion takes 14.7–27.8 ms, but next rendering takes
+96–144 ms. One left-panel callback contributes 32.4 ms of forced layout;
+the remaining delay has no established unique cause. Cold/order-first ON
+readiness remains variable and slower in this small candidate cohort.
+The eight actions per build, verbose attribution and distinct viewport make
+this diagnostic ineligible for the twenty-sample qualification gate.
+There is no performance pass or claim that viewport fit resolves the latency.
+
+The first native-window preparation stopped before application navigation,
+with no samples, because the driver used scalar coordinate rounding instead
+of Chromium's enclosing-edge rectangle conversion. That failure remains at
+VM task `native-window-diagnostic-c373d91b-087677c0-preparation-failed-20261020`.
+The corrected driver rejects one-pixel boundary mismatches and passes 111
+focused tests on both Node 24 and 26, plus formatting, package boundaries and
+capture checks. Its completed diagnostic is preserved at
+`native-window-diagnostic-c373d91b-3360f672-complete-20261020`; all four browsers
+closed normally without forced termination. The preceding
+[CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39407063407)
+passes all seven selected jobs. Production remains `e7a878e`.
+
 The subsequent [frame-phase trace](render-phase-c373d91b-diagnostic.json) retains
 four actions and both complete browser traces. The earlier 95.3–107.2 ms
 first-disable full-render delay does not recur; the candidate completes its
@@ -14,9 +45,9 @@ this diagnostic does not qualify latency or replace the earlier failures.
 The [independent display audit](native-display-viewport-audit.json) confirms
 that the fixed 1440 × 1000 CSS fixture preserves native DPR, but its 2880 × 2000
 canvas exceeds the currently observed 2560 × 1440 physical display. Historical
-evidence lacks owned-window fit measurements. An additive visible-window mode
-will establish that separate condition without changing the old fixtures or
-lowering native pixel density and visual quality.
+evidence lacks owned-window fit measurements. The additive visible-window mode
+above now establishes that separate condition without changing the old fixtures
+or lowering native pixel density and visual quality.
 
 Runtime `c373d91b` passes [CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609327)
 and [release-artifact verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609275).

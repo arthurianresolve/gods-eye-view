@@ -7,6 +7,29 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The completed [native-window diagnostic](performance-evidence/s69-native-matrix-20261019/native-window-c373d91b-diagnostic.json)
+uses driver `3360f672`, unchanged runtime `c373d91b` and control `8c14b106`.
+All twenty owned-window checkpoints prove that the 1280 × 537 CSS viewport and
+2560 × 1074 drawing buffer fit the physical display at native DPR 2 and 100%
+zoom. All sixteen trusted actions have isolated native Event Timing entries;
+three of eight candidate observations and two of eight control observations
+still exceed 100 ms. This is a separate diagnostic workload, not a replacement
+for the fixed-size failures or the required twenty-sample qualification.
+Candidate OFF scene completion takes 14.7–27.8 ms, while its browser
+next-rendering durations are 96–144 ms. One left-panel callback contributes
+32.4 ms of forced layout, but this does not establish the cause of the entire
+presentation delay. A narrow panel measurement-order correction is being
+tested. The latency gate and public deployment remain unchanged.
+
+The initial native-window preparation failed before application navigation:
+the driver compared independently rounded rectangle sizes instead of Chromium's
+enclosing-edge conversion to device-independent coordinates. Its empty-sample
+failure is retained. Commit `3360f672` implements the exact conversion and
+rejects one-pixel boundary mismatches; 111 focused checks pass on both VM Node
+24 and 26. The complete preceding [CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39407063407)
+also passes its seven selected jobs. These checks do not clear the remaining
+interaction or visual failures.
+
 The subsequent [four-action frame trace](performance-evidence/s69-native-matrix-20261019/render-phase-c373d91b-diagnostic.json)
 separates scene completion from browser presentation. The earlier slow first
 disable does not recur: candidate full rendering takes 30.3 ms, but its matched
@@ -21,8 +44,9 @@ also identifies the need for an explicit visible-window mode: the harness's curr
 “native resolution” option preserves real DPR while emulating 1440 × 1000 CSS
 pixels. At DPR 2 that canvas exceeds the currently observed 2560 × 1440 display.
 The old fixed-size tests remain preserved; they do not establish full
-visible-window coverage. A separate matched native-window diagnostic is being
-prepared without lowering pixel density, renderer settings or quality.
+visible-window coverage. A separate matched native-window diagnostic, reported
+above, now supplies that evidence without lowering pixel density, renderer
+settings or quality.
 
 The runtime commit `c373d91b` passes [CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609327)
 and [release-artifact verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609275):
