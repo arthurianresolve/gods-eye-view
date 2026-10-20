@@ -32,9 +32,10 @@ completion is separate from performance acceptance.
    this rules out an unavoidable Windows/Chrome presentation floor under that
    control's conditions, but does not identify the application's cause.
    The two-action application GPU-service trace and bounded attribution are
-   complete. Investigate a safe change at the demonstrated repaint and
-   WebGL program-information boundaries; exact CSS or shader ownership is
-   not yet established. Keep activation and deactivation findings separate,
+   complete. A subsequent same-document trace identifies an empty whiteboard
+   compositor surface, and source matching identifies the late polyline shader
+   pipeline. The whiteboard-only candidate at `f0af795f` is built privately;
+   its performance benefit remains unproved. Keep activation and deactivation findings separate,
    and require evidence before changing runtime behavior. Do not repeat a
    broad cohort merely to obtain a better result.
 2. **Validate the prospective measurement corrections.** Explicit Event Timing
@@ -122,9 +123,34 @@ fails one test because its source-evaluated capture producer does not bind the
 new real protocol guard. The test repair binds the actual v3/v4 declarations
 and validation functions, verifies both policies and v7 metadata, and retains
 the preflight/postflight failure checks. Its [VM validation](performance-evidence/s69-native-matrix-20261019/build-identity-producer-binding-validation.json)
-passes 93 focused tests on each Node version plus scoped formatting. Full CI
-on that repair remains pending; this is a test-harness repair, not a runtime
-performance improvement.
+passes 93 focused tests on each Node version plus scoped formatting.
+[CI at `589aa093`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603)
+now passes both full Node suites, Windows onboarding, Windows/Linux recovery
+and the browser gate; [all selected and skipped jobs are recorded](performance-evidence/s69-native-matrix-20261019/ci-589aa093-selected-jobs.json).
+The [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101596)
+also passes. macOS recovery twice failed to acquire an arm64 runner, without
+starting its tests; the [terminal capacity receipt](performance-evidence/s69-native-matrix-20261019/ci-589aa093-macos-capacity.json)
+preserves that limitation. This is a test-harness repair, not a runtime
+performance improvement. The recovery matrix now selects the supported
+`macos-15-intel` standard runner, retaining the software-renderer recovery
+checks and recording the different architecture. [GitHub documents this runner
+as free for public repositories](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+Its new run must pass before claiming current macOS recovery coverage; it
+cannot supply missing physical-GPU evidence.
+
+The [bounded ownership follow-up](performance-evidence/s69-native-matrix-20261019/render-ownership-r3-summary.json)
+maps the viewport-sized empty `.gev-screen-whiteboard` surface in the same
+document as its trace. The four observed OFF raster tasks on that surface
+total only 0.303 ms of worker wall spans; this does not attribute the entire
+GPU-service delay to the overlay. Commit `f0af795f` suppresses this surface
+while empty, reveals it before adding a mark, retains all departing marks for
+the existing 360 ms fade, and cancels owned removal timers on destruction.
+[Fourteen focused screen/hybrid tests pass on Node 24](performance-evidence/s69-native-matrix-20261019/empty-whiteboard-f0af795f-validation.json).
+The candidate is isolated on VM105; hardware comparison remains pending.
+All three diagnostic attempts, including the missing-tunnel failure and
+32 MiB trace-export failure, are [preserved with verified VM hashes](performance-evidence/s69-native-matrix-20261019/render-ownership-transfer-20261020.json).
+The separate stem-collection prototype remains archived and unqualified;
+the shader queries finish before OFF and cannot explain its measured latency.
 
 The latest hardware-tested runtime is `fb389928`. Its
 [six-action comparison with `a18c6a76`](performance-evidence/s69-native-matrix-20261019/rail-reconcile-short-r2-readback.json)

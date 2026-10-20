@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Install and update recovery (macos-latest)",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705728906",
+    "runner_name": ""
+  },
+  {
+    "name": "Isolated mission render-demand correctness",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705729511",
+    "runner_name": null
+  },
+  {
+    "name": "Aircraft tracking regression",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705730610",
+    "runner_name": null
+  },
+  {
+    "name": "Node 24.14.0",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705730795",
+    "runner_name": "GitHub Actions 1000027109"
+  },
+  {
+    "name": "Free hosted Mac accelerated retention diagnostic",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705730919",
+    "runner_name": null
+  },
+  {
+    "name": "Isolated CCTV lifecycle",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705730990",
+    "runner_name": null
+  },
+  {
+    "name": "Baseline-compatible performance build smoke",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705731042",
+    "runner_name": null
+  },
+  {
+    "name": "60-minute rendered application soak",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705731067",
+    "runner_name": null
+  },
+  {
+    "name": "Isolated rendered mixed-use smoke",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705731213",
+    "runner_name": null
+  },
+  {
+    "name": "Isolated import and workspace lifecycle",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705731242",
+    "runner_name": null
+  },
+  {
+    "name": "Node 26.x",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705731593",
+    "runner_name": "GitHub Actions 1000027105"
+  },
+  {
+    "name": "Street Level browser gate",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705774915",
+    "runner_name": "GitHub Actions 1000027110"
+  },
+  {
+    "name": "Windows onboarding",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705777424",
+    "runner_name": "GitHub Actions 1000027107"
+  },
+  {
+    "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705788450",
+    "runner_name": null
+  },
+  {
+    "name": "Free hosted Mac rendering diagnostic",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705801532",
+    "runner_name": null
+  },
+  {
+    "name": "Install and update recovery (ubuntu-latest)",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705802601",
+    "runner_name": "GitHub Actions 1000027108"
+  },
+  {
+    "name": "Isolated terrain and picking lifecycle",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705804341",
+    "runner_name": null
+  },
+  {
+    "name": "Native WebGL probe (${{ matrix.os }})",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705807359",
+    "runner_name": null
+  },
+  {
+    "name": "Install and update recovery (windows-latest)",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39439101603/job/118705817894",
+    "runner_name": "GitHub Actions 1000027106"
+  }
+]

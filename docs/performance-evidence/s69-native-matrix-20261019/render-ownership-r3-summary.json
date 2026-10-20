@@ -1,0 +1,127 @@
+{
+  "schema": "gev-render-ownership-compact-readback/v1",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "raw": {
+    "root": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020-r3",
+    "processSha256": "b0120897ccdacfc1020448493896f679b1f3e801a633c41c2fd9970a946aa4c2",
+    "traceSha256": "e55ad26945d657c48b5ed0b508ce5d1f53be101a225744314bad144a63e9038b",
+    "traceBytes": 28754196,
+    "events": 139906,
+    "planSha256": "a9d0826d84b731b1cf08c7345159207b3f46457285b202385c2c8aae85608643"
+  },
+  "reader": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\analyze-render-ownership-r3-20261020.mjs",
+    "sha256": "f325549dd4efa947fbd29c31f3586cb266c773ed44a67147dd6ad40f40996767",
+    "unsafeIntegerLexemesPreserved": 6954,
+    "maxOldSpaceMiB": 384
+  },
+  "applicationCommit": "fb38992850a0e082e8c9147904f87846cc8e2520",
+  "qaCommit": "3fdbcf420c4bf5e4995503ef033b828221116698",
+  "acquisition": {
+    "treeEvents": 35,
+    "paintEvents": 0,
+    "backendCount": 39,
+    "availableBackends": 39,
+    "captureComplete": true,
+    "resolutionComplete": false,
+    "cleanupComplete": true
+  },
+  "sourceHashes": [
+    {
+      "path": "src/annotations/screenAnnotationRenderer.js",
+      "sha256": "28b3576b1c016aa9c43acafc6b25d836b25ac82b7f5dad95bf5a68ea77272138"
+    },
+    {
+      "path": "src/annotations/hybridAnnotationRenderer.js",
+      "sha256": "f5a43207c6091b088df2e6dd21cc27d37819b992f2259270ba26591d8c954bc3"
+    },
+    {
+      "path": "src/ui/styles/layers.css",
+      "sha256": "4e903d76ceaebd252b12127a19f3ea0e299caf1b0968290a012d9da106ed48c8"
+    },
+    {
+      "path": "scripts/qa-qualification-metrics-capture.mjs",
+      "sha256": "06c3e8cd75760420926da99ca2b6100cd3dea08f0b57946f95761cd104bf5468"
+    }
+  ],
+  "limits": [
+    "Two instrumented actions only; not an acceptance or matched performance result.",
+    "LayerTree times are Node receipt times. They are not aligned to trace timestamps; no exact event-to-tree epoch assignment is claimed.",
+    "A raster layer is attributed only when all recorded epochs for its exact layer ID agree on a resolved backend identity. Gaps between recorded trees remain unobserved.",
+    "Late compositing reasons describe the post-drain layer, not necessarily its state during the click.",
+    "RasterTask duration is renderer worker wall/CPU time, not GPU device time. Parallel sums and nested service spans do not establish critical-path exclusive cost.",
+    "No layerPainted events were delivered. RasterTask identity joins use retained tree snapshots and backend node queries; no inference from Paint.layerId=0.",
+    "Paint clip arrays are not damage rectangles.",
+    "LayerTree.enable may schedule an inspector animation. Instrument overhead is unmeasured."
+  ],
+  "analysisSha256": "28628b18d3fd0a5e5581735b63a2cda6a63db3a21b473653fec59a30122f21d4",
+  "actions": [
+    {
+      "enabled": true,
+      "exactMatch": {
+        "interactionId": 1913,
+        "timestampDifferenceMs": -0.083
+      },
+      "nativeEventTimingMs": 304,
+      "tracedEventTiming": {
+        "durationMs": 306.211,
+        "processingStartMs": 14.696,
+        "processingEndMs": 26.222,
+        "commitMs": 84.633,
+        "postCommitMs": 221.578,
+        "rendererPid": 39688,
+        "rendererTid": 44324,
+        "clickTraceUs": 138453545579
+      },
+      "readPixels": [
+        {
+          "name": "GLES2::ReadPixels",
+          "pid": 39688,
+          "tid": 44324,
+          "thread": "CrRendererMain",
+          "atMs": 190.235,
+          "wallMs": 74.618,
+          "cpuMs": 0.113,
+          "args": {}
+        },
+        {
+          "name": "GLES2::ReadPixels",
+          "pid": 39688,
+          "tid": 44324,
+          "thread": "CrRendererMain",
+          "atMs": 265.029,
+          "wallMs": 57.451,
+          "cpuMs": 0.087,
+          "args": {}
+        }
+      ]
+    },
+    {
+      "enabled": false,
+      "exactMatch": {
+        "interactionId": 1920,
+        "timestampDifferenceMs": -0.065
+      },
+      "nativeEventTimingMs": 136,
+      "tracedEventTiming": {
+        "durationMs": 134.3,
+        "processingStartMs": 2.397,
+        "processingEndMs": 12.669,
+        "commitMs": 61.702,
+        "postCommitMs": 72.598,
+        "rendererPid": 39688,
+        "rendererTid": 44324,
+        "clickTraceUs": 138455482997
+      },
+      "readPixels": []
+    }
+  ],
+  "observedOwner": {
+    "layerId": "67",
+    "backendNodeId": 4599,
+    "class": "gev-screen-whiteboard",
+    "scope": "Same-document mapping in R3; four raster tasks at OFF sourceFrame284 total0.303ms worker CPU/wall span, not GPU time or proof of dominant cost."
+  },
+  "interpretation": "Bounded source-backed empty-overlay experiment, not latency acceptance. Preserve first tunnel failure and second trace export-cap failure. The complete third trace includes diagnostic observer overhead; timings cannot be substituted for uninstrumented qualification."
+}

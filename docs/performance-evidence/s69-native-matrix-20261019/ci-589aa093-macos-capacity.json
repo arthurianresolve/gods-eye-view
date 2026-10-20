@@ -1,0 +1,27 @@
+{
+  "schema": "gev-single-job-rerun-terminal-readback/v1",
+  "recordedAt": "2026-10-20T15:27:18.8892301Z",
+  "source": "Earlier single authorized GitHub status read and exact check-run annotations; no additional retry or status poll",
+  "repository": "arthurianresolve/gods-eye-view",
+  "headSha": "589aa093ce352016e9bca70cc9ed8430b802d980",
+  "runId": 39439101603,
+  "runAttempt": 2,
+  "runStatus": "completed",
+  "runConclusion": "failure",
+  "runUpdatedAt": "2026-10-20T15:21:35Z",
+  "job": {
+    "completedAt": "2026-10-20T15:21:33Z",
+    "conclusion": "cancelled",
+    "startedAt": "2026-10-20T15:06:30Z",
+    "failureAnnotation": "The job was not acquired by Runner of type hosted even after multiple attempts",
+    "capacityNotice": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+    "status": "completed",
+    "name": "Install and update recovery (macos-latest)",
+    "id": 118705728906,
+    "runnerName": ""
+  },
+  "interpretation": "Unavailable on this exact head; no recovery test started or failed. Earlier passing macOS coverage retains its recorded revision scope.",
+  "dispatchReceiptSha256": "b4bc60428dc344b11fc045c050c45996f13278a4df03fbf17da1f079fd055cec",
+  "earlierQueuedReadbackSha256": "3fb12d03203e044791b7378ab881759df4369126e3913a5809cc8fae3244530a",
+  "furtherRetries": 0
+}
