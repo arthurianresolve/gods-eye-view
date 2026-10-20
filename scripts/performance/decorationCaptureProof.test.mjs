@@ -6,6 +6,7 @@ import {
   readDecorationCaptureProofInPage,
   createDecorationSnapshotReader,
   createDecorationFontReader,
+  retainDecorationFailureEvidence,
 } from './decorationCaptureProof.mjs';
 
 function pageFixture() {
@@ -127,6 +128,58 @@ test('reader marks missing roots and excessive text unavailable without changing
     ).overflow,
     true,
   );
+});
+
+test('failed decoration inputs preserve exact boxless ancestor geometry with a bounded diagnostic envelope', () => {
+  const context = pageFixture();
+  const badge = context.document.querySelector('#cctv-source-badge');
+  const computed = context.getComputedStyle();
+  const wrapper = {
+    tagName: 'DIV',
+    id: '',
+    className: 'cyber-panel-body',
+    parentElement: null,
+    getBoundingClientRect: () => ({ x: 0, y: 0, width: 0, height: 0 }),
+  };
+  badge.parentElement = wrapper;
+  context.getComputedStyle = (element) =>
+    element === wrapper ? { ...computed, display: 'contents' } : computed;
+  const before = JSON.parse(
+    JSON.stringify(
+      vm.runInNewContext(
+        `(${readDecorationCaptureProofInPage.toString()})()`,
+        context,
+      ),
+    ),
+  );
+  assert.deepEqual(before.surfaces[1].ancestors[1].rect, {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+  assert.equal(before.surfaces[1].ancestors[1].style.display, 'contents');
+  const input = {
+    before,
+    fontsBefore: [{ selector: '#cctv-source-badge', fonts: [] }],
+  };
+  const retained = retainDecorationFailureEvidence(input);
+  assert.equal(retained.acceptanceEligible, false);
+  assert.equal(retained.status, 'retained');
+  assert.deepEqual(retained.evidence, input);
+  before.surfaces[1].ancestors[1].rect.width = 1;
+  assert.equal(retained.evidence.before.surfaces[1].ancestors[1].rect.width, 0);
+  assert.equal(
+    retainDecorationFailureEvidence({ before: 'x'.repeat(524289) }).status,
+    'omitted-size-bound',
+  );
+  const cycle = {};
+  cycle.self = cycle;
+  assert.equal(
+    retainDecorationFailureEvidence({ before: cycle }).status,
+    'unserializable',
+  );
+  assert.equal(retainDecorationFailureEvidence({ before: null }), null);
 });
 
 function fontSession({ fail = null, fonts = null } = {}) {

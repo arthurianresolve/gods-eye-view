@@ -89,6 +89,7 @@ import {
 import {
   createDecorationSnapshotReader,
   createDecorationFontReader,
+  retainDecorationFailureEvidence,
 } from './decorationCaptureProof.mjs';
 
 const ROOT = path.resolve(
@@ -586,6 +587,8 @@ async function captureRevision({
         let pausedCapture;
         let decorationFontsBefore;
         let decorationFontsAfter;
+        let decorationReadBefore;
+        let decorationPaintBefore;
         let snapshotReader = createFullExtentPointerSweepSnapshotReader(
           createCanonicalPointerSnapshotReader(
             createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
@@ -603,6 +606,8 @@ async function captureRevision({
             describeGuardFailure: describeVisualPauseReadiness,
             requestNextGuardFrame: requestVisualGuardFrame,
             screenshot: async (readBefore) => {
+              decorationReadBefore = readBefore?.decoration;
+              decorationPaintBefore = readBefore?.paint;
               assertCanonicalPointerHistory(readBefore?.pointerHistory);
               assertFullExtentCanonicalContinuity(
                 readBefore?.fullExtentPointerSweep,
@@ -673,6 +678,16 @@ async function captureRevision({
               ? 'visual-pause-readiness-timeout'
               : null,
             error: boundedError(error),
+            ...(decorationReadBefore
+              ? {
+                  decorationFailure: retainDecorationFailureEvidence({
+                    before: decorationReadBefore,
+                    fontsBefore: decorationFontsBefore,
+                    fontsAfter: decorationFontsAfter,
+                    paintBefore: decorationPaintBefore,
+                  }),
+                }
+              : {}),
           });
           if (readinessUnavailable) continue;
           states.push({ id, captureFailed: true, presentation: { attempts } });
@@ -725,6 +740,18 @@ async function captureRevision({
             accepted: false,
             error: boundedError(error),
             image: pausedCapture.screenshot,
+            ...(decoration
+              ? {
+                  decorationFailure: retainDecorationFailureEvidence({
+                    before: pausedCapture.readBefore?.decoration,
+                    after: pausedCapture.readAfter?.decoration,
+                    fontsBefore: decorationFontsBefore,
+                    fontsAfter: decorationFontsAfter,
+                    paintBefore: pausedCapture.readBefore?.paint,
+                    paintAfter: pausedCapture.readAfter?.paint,
+                  }),
+                }
+              : {}),
             cleanup: pausedCapture.cleanup,
             paint: {
               before: pausedCapture.readBefore?.paint,

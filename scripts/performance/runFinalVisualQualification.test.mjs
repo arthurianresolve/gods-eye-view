@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { retainDecorationFailureEvidence } from './decorationCaptureProof.mjs';
 import {
   activateQualificationCctvInPage,
   readQualificationStateInPage,
@@ -514,6 +515,7 @@ test('actual producer catch consumes the existing attempt bound without resettin
   const execute = vm.runInNewContext(
     `(error, pngCount) => {
       const attempts = [], states = [], id = 'hud-visible';
+      let decorationReadBefore, decorationFontsBefore, decorationFontsAfter, decorationPaintBefore;
       const pngCountBeforeCapture = pngCount;
       ${loop[0]}
         try { throw error;
@@ -524,6 +526,7 @@ test('actual producer catch consumes the existing attempt bound without resettin
     {
       isReleasedVisualGuardTimeout,
       boundedError: (error) => ({ message: error.message }),
+      retainDecorationFailureEvidence,
     },
   );
   const result = execute(releasedGuardTimeout(), 1);
@@ -540,6 +543,72 @@ test('actual producer catch consumes the existing attempt bound without resettin
   const afterPause = releasedGuardTimeout();
   afterPause.pauseDiagnostics.pauseObserved = true;
   assert.throws(() => execute(afterPause, 1), /Debugger pause deadline/);
+});
+
+test('actual producer fatal eligibility catch retains boxless geometry and never retries it', () => {
+  const source = readFileSync(
+    new URL('./runFinalVisualQualification.mjs', import.meta.url),
+    'utf8',
+  );
+  const pauseStart = source.indexOf(
+    'pausedCapture = await captureWithDebuggerPause(',
+  );
+  const catchStart = source.indexOf('} catch (error) {', pauseStart);
+  const catchEnd = source.indexOf(
+    'const before = pausedCapture.readBefore',
+    catchStart,
+  );
+  assert.ok(pauseStart > 0 && catchStart > pauseStart && catchEnd > catchStart);
+  const execute = vm.runInNewContext(
+    `(error, decorationReadBefore) => {
+      const attempts = [], states = [], id = 'still-settled';
+      const pngCount = 0, pngCountBeforeCapture = 0;
+      const decorationFontsBefore = [{ selector: '#cctv-source-badge', fonts: [] }];
+      const decorationPaintBefore = { svgMarkup: 'retained original header input' };
+      let decorationFontsAfter;
+      try {
+        for (let attempt = 1; attempt <= 12 && pngCount < 3; attempt++) {
+          try { throw error;
+          ${source.slice(catchStart, catchEnd)}
+        }
+      } catch (failure) { return { attempts, states, pngCount, sameError: failure === error }; }
+      throw new Error('Fatal eligibility failure was retried');
+    }`,
+    {
+      isReleasedVisualGuardTimeout,
+      boundedError: (error) => ({ message: error.message }),
+      retainDecorationFailureEvidence,
+    },
+  );
+  const proof = {
+    surfaces: [
+      {
+        selector: '#cctv-source-badge',
+        ancestors: [
+          {
+            tag: 'DIV',
+            className: 'cyber-panel-body',
+            rect: { x: 0, y: 0, width: 0, height: 0 },
+            style: { display: 'contents' },
+          },
+        ],
+      },
+    ],
+  };
+  const result = execute(
+    new Error('Nonempty decoration rectangle required'),
+    proof,
+  );
+  assert.equal(result.sameError, true);
+  assert.equal(result.pngCount, 0);
+  assert.equal(result.attempts.length, 1);
+  assert.equal(result.states[0].captureFailed, true);
+  assert.equal(result.attempts[0].decorationFailure.acceptanceEligible, false);
+  assert.deepEqual(result.attempts[0].decorationFailure.evidence.before, proof);
+  assert.equal(
+    result.attempts[0].decorationFailure.evidence.paintBefore.svgMarkup,
+    'retained original header input',
+  );
 });
 
 test('pause readiness diagnostics keep page timing and frame evidence bounded', () => {

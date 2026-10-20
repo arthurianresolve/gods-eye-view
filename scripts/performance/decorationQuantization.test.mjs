@@ -314,6 +314,92 @@ test('source-bound text, fonts, badge paint and complete boundary proof are mand
   }
 });
 
+test('boxless DOM ancestors retain exact proof while painted surface and text boxes stay nonempty', () => {
+  // The unchanged application places this wrapper directly above the badge.
+  // CSS display: contents generates no principal box; this is a source-based
+  // reproduction, not a recovered snapshot from the failed native attempt.
+  const markup = readFileSync(
+    new URL('../../src/ui/templates/layer-panels.html', import.meta.url),
+    'utf8',
+  );
+  const css = readFileSync(
+    new URL('../../src/ui/styles/controls.css', import.meta.url),
+    'utf8',
+  );
+  assert.match(markup, /class="cyber-panel-body" data-rail-scroller>/);
+  assert.match(css, /\.cyber-panel-body\s*\{\s*display: contents;/);
+  const { proof, fonts } = fixture();
+  const wrapper = {
+    tag: 'DIV',
+    id: '',
+    className: 'cyber-panel-body',
+    rect: { x: 0, y: 0, width: 0, height: 0 },
+    style: { ...style(), display: 'contents' },
+    before: style(),
+    after: style(),
+  };
+  proof.surfaces[1].ancestors.splice(1, 0, wrapper);
+  assertDecorationCaptureProof(proof, fonts, paint);
+  const boundary = {
+    before: proof,
+    after: structuredClone(proof),
+    fontsBefore: fonts,
+    fontsAfter: structuredClone(fonts),
+  };
+  assertDecorationBoundaryPair(boundary, { before: paint, after: paint });
+  boundary.after.surfaces[1].ancestors[1].rect.x = 1;
+  assert.throws(
+    () =>
+      assertDecorationBoundaryPair(boundary, { before: paint, after: paint }),
+    /Decoration inputs changed/,
+  );
+  for (const corrupt of [
+    (p) => {
+      p.surfaces[1].ancestors[1].rect.width = -1;
+    },
+    (p) => {
+      p.surfaces[1].ancestors[1].rect.height = Infinity;
+    },
+    (p) => {
+      p.surfaces[1].ancestors[0].rect.height = 0;
+    },
+    (p) => {
+      p.surfaces[0].ancestors[0].rect.width = 0;
+    },
+    (p) => {
+      p.texts[0].rects[0].width = 0;
+    },
+    (p) => {
+      p.texts[3].rects[0].height = 0;
+    },
+    (p) => {
+      p.surfaces[1].ancestors[1].style.display = 'none';
+    },
+    (p) => {
+      p.surfaces[1].ancestors[1].style.visibility = 'hidden';
+    },
+    (p) => {
+      p.surfaces[1].ancestors[1].style.opacity = '0';
+    },
+    (p) => {
+      p.surfaces[1].ancestors[1].style.transform = 'scale(2)';
+    },
+  ]) {
+    const invalid = structuredClone(proof);
+    corrupt(invalid);
+    assert.throws(() => assertDecorationCaptureProof(invalid, fonts, paint));
+  }
+  const zeroHeight = structuredClone(proof);
+  zeroHeight.surfaces[0].ancestors.splice(1, 0, {
+    ...structuredClone(wrapper),
+    tag: 'BODY',
+    className: '',
+    rect: { x: 0, y: 0, width: 1440, height: 0 },
+    style: style(),
+  });
+  assertDecorationCaptureProof(zeroHeight, fonts, paint);
+});
+
 test('source curve protects 2026 opaque pixels and mathematical badge excludes interior/text/exterior', () => {
   const { proof } = fixture();
   const limits = createDecorationPixelLimits(proof);

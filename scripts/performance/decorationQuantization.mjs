@@ -81,15 +81,22 @@ export function createDecorationQuantizationPlan() {
   };
 }
 
-const finiteRect = (rect) => {
+const finiteRect = (
+  rect,
+  { allowEmpty = false, label = 'decoration' } = {},
+) => {
   assert.ok(
     rect &&
       ['x', 'y', 'width', 'height'].every((key) => Number.isFinite(rect[key])),
-    'Finite decoration rectangle required',
+    `Finite ${label} rectangle required`,
   );
   assert.ok(
-    rect.width > 0 && rect.height > 0,
-    'Nonempty decoration rectangle required',
+    rect.width >= 0 && rect.height >= 0,
+    `Nonnegative ${label} rectangle required: ${JSON.stringify(rect)}`,
+  );
+  assert.ok(
+    allowEmpty || (rect.width > 0 && rect.height > 0),
+    `Nonempty ${label} rectangle required: ${JSON.stringify(rect)}`,
   );
 };
 const px = (value) => {
@@ -190,8 +197,14 @@ export function assertDecorationCaptureProof(proof, fonts, paint) {
       'HTML',
       'Complete ancestor chain required',
     );
-    for (const ancestor of surface.ancestors) {
-      finiteRect(ancestor.rect);
+    for (const [index, ancestor] of surface.ancestors.entries()) {
+      // A DOM ancestor need not generate a CSS box (display: contents), and
+      // out-of-flow children need not give their containing element height.
+      // Only the measured decoration surface itself must have a painted box.
+      finiteRect(ancestor.rect, {
+        allowEmpty: index > 0,
+        label: `${surface.selector} ancestor[${index}] ${String(ancestor.tag).slice(0, 16)}#${String(ancestor.id).slice(0, 64)}`,
+      });
       for (const style of [ancestor.style, ancestor.before, ancestor.after])
         completeStyle(style);
       assert.equal(ancestor.style.visibility, 'visible');
@@ -218,7 +231,8 @@ export function assertDecorationCaptureProof(proof, fonts, paint) {
       Number.isSafeInteger(text.textNodeIndex) && text.textNodeIndex >= 0,
     );
     assert.ok(text.rects.length > 0 && text.rects.length <= 8);
-    text.rects.forEach(finiteRect);
+    for (const rect of text.rects)
+      finiteRect(rect, { label: `${text.parentSelector} text` });
     completeStyle(text.style);
     assert.equal(text.fontCheck, true, 'Text font availability failed');
     assert.equal(text.style.visibility, 'visible');

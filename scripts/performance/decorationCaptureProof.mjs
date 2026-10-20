@@ -324,6 +324,27 @@ export function createDecorationSnapshotReader(reader) {
   );
 }
 
+/** Preserve failed eligibility inputs without retaining an unbounded payload. */
+export function retainDecorationFailureEvidence(evidence) {
+  if (!evidence?.before && !evidence?.after) return null;
+  const envelope = {
+    schema: 'gev-decoration-failure-evidence/v1',
+    acceptanceEligible: false,
+  };
+  try {
+    const serialized = JSON.stringify(evidence);
+    if (Buffer.byteLength(serialized, 'utf8') > 512 * 1024)
+      return { ...envelope, status: 'omitted-size-bound' };
+    return {
+      ...envelope,
+      status: 'retained',
+      evidence: JSON.parse(serialized),
+    };
+  } catch {
+    return { ...envelope, status: 'unserializable' };
+  }
+}
+
 /**
  * A separate owned CDP session queries the fonts actually used by each text
  * parent while the screenshot session is paused. Resolve nodes AFTER navigation
