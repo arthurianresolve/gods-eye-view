@@ -7,6 +7,10 @@ import test from 'node:test';
 import sharp from 'sharp';
 import { VISIBLE_CONTROL_VARIANCE_POLICY } from './visibleControlVariance.mjs';
 import {
+  createRepeatedVisualPlan,
+  validateRepeatedVisualQualification,
+} from './repeatedVisualQualification.mjs';
+import {
   FINAL_VISUAL_QUALIFICATION_SCHEMA,
   FINAL_VISUAL_STATES,
   FINAL_VISUAL_TIME_MS,
@@ -342,6 +346,173 @@ test('accepts complete matched hardware observations and decoded PNGs', async (t
     await validateFinalVisualQualification(report, { evidenceRoot: root }),
     { schema: report.schema, status: 'passed', states: 4 },
   );
+});
+
+test('portable decoder seam retains RGBA and PNG metadata validation', async (t) => {
+  const { root, report } = await fixture(t);
+  const decodePng = async (bytes) => {
+    const { data, info } = await sharp(bytes)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return {
+      data,
+      info: {
+        format: 'raw',
+        width: info.width,
+        height: info.height,
+        channels: 4,
+      },
+    };
+  };
+  assert.equal(
+    (
+      await validateFinalVisualQualification(report, {
+        evidenceRoot: root,
+        decodePng,
+      })
+    ).status,
+    'passed',
+  );
+  for (const mutate of [
+    (decoded) => {
+      decoded.info.channels = 3;
+    },
+    (decoded) => {
+      decoded.data = decoded.data.subarray(4);
+    },
+    (decoded) => {
+      decoded.info.width--;
+    },
+    (decoded) => {
+      decoded.info.format = 'png';
+    },
+  ])
+    await assert.rejects(
+      validateFinalVisualQualification(report, {
+        evidenceRoot: root,
+        decodePng: async (bytes) => {
+          const decoded = await decodePng(bytes);
+          mutate(decoded);
+          return decoded;
+        },
+      }),
+      /decode/,
+    );
+});
+
+test('repeated visual consumer preserves native checks and rejects unplanned, selected or changed inputs', async (t) => {
+  const captures = await Promise.all([fixture(t), fixture(t), fixture(t)]);
+  const first = captures[0].report;
+  const planBytes = Buffer.from(
+    JSON.stringify(
+      createRepeatedVisualPlan({
+        'baseline-app-sha': first.application.baselineSha,
+        'candidate-app-sha': first.application.candidateSha,
+        'visual-harness-sha': first.harness.visualHarnessCommit,
+      }),
+    ),
+  );
+  const paint = {
+    schema: 'gev-visual-paint-inputs/v1',
+    status: 'observed',
+    fontsLoaded: true,
+    dpr: 1,
+    overflow: false,
+    radioBroadcasting: false,
+    activeAnimations: 0,
+    svgMarkup: '<svg/>',
+    elements: [{ tag: 'svg', style: {} }],
+    logoPseudo: { before: {}, after: {} },
+  };
+  for (const [index, { report }] of captures.entries()) {
+    report.rasterPolicy = 'repeated-full-image-controls-v1';
+    report.comparisonEligible = false;
+    report.evidenceScope = 'repeated-control-acquisition-only';
+    report.repeatedControlPlan = {
+      policy: 'repeated-full-image-controls-v1',
+      planSha256: digest(planBytes),
+      pairOrdinal: index + 1,
+    };
+    for (const [sideIndex, side] of ['baseline', 'candidate'].entries()) {
+      const pid = 1000 + index * 2 + sideIndex;
+      report.environment.browserPid[side] = pid;
+      for (const state of report.states) {
+        state.foreground[side].foregroundPid = pid;
+        state.paint ||= {};
+        state.paint[side] = {
+          before: structuredClone(paint),
+          after: structuredClone(paint),
+        };
+        state.presentation[side].attempts = [
+          {
+            accepted: true,
+            image: structuredClone(state[side]),
+          },
+        ];
+      }
+    }
+  }
+  const input = () => ({
+    planBytes,
+    pairs: captures.map(({ report, root }) => ({
+      bytes: Buffer.from(JSON.stringify(report)),
+      evidenceRoot: root,
+    })),
+  });
+  const success = await validateRepeatedVisualQualification(input());
+  assert.equal(success.status, 'passed');
+  assert.equal(success.pngCount, 24);
+  assert.equal(success.historicalSinglePairResultsSuperseded, false);
+  await assert.rejects(
+    validateFinalVisualQualification(captures[0].report, {
+      evidenceRoot: captures[0].root,
+    }),
+    /Unsupported visual raster policy/,
+  );
+  await assert.rejects(
+    validateRepeatedVisualQualification({
+      ...input(),
+      pairs: input().pairs.slice(0, 1),
+    }),
+    /All three/,
+  );
+  const original = structuredClone(captures[1].report);
+  const mutations = [
+    (r) => {
+      delete r.repeatedControlPlan;
+    },
+    (r) => {
+      r.repeatedControlPlan.pairOrdinal = 1;
+    },
+    (r) => {
+      r.states[0].presentation.candidate.attempts.push(
+        r.states[0].presentation.candidate.attempts[0],
+      );
+    },
+    (r) => {
+      r.states[0].paint.candidate.after.svgMarkup = '<svg><path/></svg>';
+    },
+    (r) => {
+      r.states[0].paint.candidate.before.svgMarkup = '<svg><path/></svg>';
+      r.states[0].paint.candidate.after.svgMarkup = '<svg><path/></svg>';
+    },
+    (r) => {
+      r.environment.browserPid.baseline =
+        captures[0].report.environment.browserPid.baseline;
+    },
+    (r) => {
+      r.teardown.candidate.browserClose.forcedProcessTermination = true;
+    },
+    (r) => {
+      r.masks = [{ x: 1, y: 1, width: 1, height: 1 }];
+    },
+  ];
+  for (const mutate of mutations) {
+    captures[1].report = structuredClone(original);
+    mutate(captures[1].report);
+    await assert.rejects(validateRepeatedVisualQualification(input()));
+  }
 });
 
 test('explicit control policy requires independent full-image witnesses on both builds', async (t) => {

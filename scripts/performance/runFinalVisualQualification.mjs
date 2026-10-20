@@ -48,6 +48,10 @@ import {
   waitForVisualReadinessInPage,
 } from './finalVisualQualificationState.mjs';
 import { captureWithDebuggerPause } from './debuggerPausedCapture.mjs';
+import {
+  createVisualPaintSnapshotReader,
+  assertVisualPaintSignature,
+} from './visualPaintSignature.mjs';
 import { VISIBLE_CONTROL_VARIANCE_POLICY } from './visibleControlVariance.mjs';
 import {
   closeOwnedRecoveryPage,
@@ -106,7 +110,7 @@ function usage() {
   );
 }
 
-function args(argv) {
+export function parseFinalVisualQualificationArgs(argv) {
   const result = {};
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i];
@@ -545,7 +549,9 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         try {
           pausedCapture = await captureWithDebuggerPause({
             page,
-            readCallback: readVisualSnapshotPhaseInPage,
+            readCallback: createVisualPaintSnapshotReader(
+              readVisualSnapshotPhaseInPage,
+            ),
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
             describeGuardFailure: describeVisualPauseReadiness,
@@ -586,6 +592,29 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         const after = pausedCapture.readAfter?.hud;
         const beforePhase = pausedCapture.readBefore?.phase;
         const afterPhase = pausedCapture.readAfter?.phase;
+        try {
+          assertVisualPaintSignature(pausedCapture.readBefore?.paint);
+          assertVisualPaintSignature(pausedCapture.readAfter?.paint);
+          assert.deepEqual(
+            pausedCapture.readBefore.paint,
+            pausedCapture.readAfter.paint,
+            'Header paint inputs changed during the paused screenshot',
+          );
+        } catch (error) {
+          attempts.push({
+            attempt,
+            accepted: false,
+            error: boundedError(error),
+            image: pausedCapture.screenshot,
+            cleanup: pausedCapture.cleanup,
+            paint: {
+              before: pausedCapture.readBefore?.paint,
+              after: pausedCapture.readAfter?.paint,
+            },
+          });
+          states.push({ id, captureFailed: true, presentation: { attempts } });
+          throw error;
+        }
         const readinessInputsAtCapture = visualReadinessInputsMatch(
           readiness.proof,
           before,
@@ -624,6 +653,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           pause: pausedCapture.pause,
           phaseBefore: beforePhase,
           phaseAfter: afterPhase,
+          paint: {
+            before: pausedCapture.readBefore.paint,
+            after: pausedCapture.readAfter.paint,
+          },
           phaseDimensions: {
             before: pausedCapture.readBefore?.dimensions,
             after: pausedCapture.readAfter?.dimensions,
@@ -672,6 +705,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           ...observed,
           observedStatePhase: 'pre-readiness-structural-observation',
           presentation: { before, after, attempts },
+          paint: {
+            before: pausedCapture.readBefore.paint,
+            after: pausedCapture.readAfter.paint,
+          },
           frameDelivery: { ...frameDelivery },
           [label]: pausedCapture.screenshot,
         };
@@ -795,7 +832,22 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
   return { ...result, teardown };
 }
 
-async function produceFinalVisualQualificationInternal(options, progress) {
+async function produceFinalVisualQualificationInternal(
+  options,
+  progress,
+  captureOnly = false,
+) {
+  if (captureOnly) {
+    assert.match(
+      options.repeatedControlPlan?.planSha256 || '',
+      /^[a-f0-9]{64}$/,
+    );
+    assert.equal(
+      options.repeatedControlPlan.policy,
+      'repeated-full-image-controls-v1',
+    );
+    assert.ok([1, 2, 3].includes(options.repeatedControlPlan.pairOrdinal));
+  }
   if (process.platform !== 'win32')
     throw new Error('Final visual qualification requires Windows hardware.');
   const out = path.resolve(options.out);
@@ -1005,7 +1057,9 @@ async function produceFinalVisualQualificationInternal(options, progress) {
         ),
     },
     masks: [],
-    rasterPolicy: VISIBLE_CONTROL_VARIANCE_POLICY,
+    rasterPolicy: captureOnly
+      ? 'repeated-full-image-controls-v1'
+      : VISIBLE_CONTROL_VARIANCE_POLICY,
     states: STATES.map((id, index) => ({
       id,
       observedStatePhase: 'pre-readiness-structural-observation',
@@ -1043,6 +1097,10 @@ async function produceFinalVisualQualificationInternal(options, progress) {
         baseline: baseline.states[index].presentation,
         candidate: candidate.states[index].presentation,
       },
+      paint: {
+        baseline: baseline.states[index].paint,
+        candidate: candidate.states[index].paint,
+      },
       captureMethod: {
         baseline: baseline.states[index].captureMethod,
         candidate: candidate.states[index].captureMethod,
@@ -1072,12 +1130,23 @@ async function produceFinalVisualQualificationInternal(options, progress) {
     })),
     teardown: { baseline: baseline.teardown, candidate: candidate.teardown },
     outputRoot: out,
+    ...(captureOnly
+      ? {
+          repeatedControlPlan: options.repeatedControlPlan,
+          comparisonEligible: false,
+          evidenceScope: 'repeated-control-acquisition-only',
+        }
+      : {}),
   };
   await fs.writeFile(
     path.join(out, 'final-visual-qualification.json'),
     `${JSON.stringify(report, null, 2)}\n`,
     { flag: 'wx' },
   );
+  if (captureOnly) {
+    progress.stage = 'capture-complete-awaiting-repeated-control-validation';
+    return report;
+  }
   progress.stage = 'pixel-validation';
   const validation = await validateFinalVisualQualification(report, {
     evidenceRoot: out,
@@ -1091,10 +1160,14 @@ async function produceFinalVisualQualificationInternal(options, progress) {
   return report;
 }
 
-export async function produceFinalVisualQualification(options) {
+async function produceWithFailureEvidence(options, captureOnly) {
   const progress = { stage: 'initialization', baseline: null, candidate: null };
   try {
-    return await produceFinalVisualQualificationInternal(options, progress);
+    return await produceFinalVisualQualificationInternal(
+      options,
+      progress,
+      captureOnly,
+    );
   } catch (error) {
     try {
       const out = path.resolve(options.out);
@@ -1118,8 +1191,19 @@ export async function produceFinalVisualQualification(options) {
   }
 }
 
+export async function produceFinalVisualQualification(options) {
+  return produceWithFailureEvidence(options, false);
+}
+
+/** Acquisition only; no visual pass is emitted without the repeated consumer. */
+export async function produceRepeatedVisualPairEvidence(options) {
+  return produceWithFailureEvidence(options, true);
+}
+
 if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 )
-  await produceFinalVisualQualification(args(process.argv));
+  await produceFinalVisualQualification(
+    parseFinalVisualQualificationArgs(process.argv),
+  );

@@ -3,7 +3,6 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sharp from 'sharp';
 import {
   presentationStayedSettled,
   visualReadinessInputsMatch,
@@ -150,7 +149,7 @@ function assertContained(file, root, label) {
   return absolute;
 }
 
-async function assertPng(record, root, label) {
+async function assertPng(record, root, label, decodePng) {
   assert.equal(typeof record?.path, 'string', `${label} PNG path`);
   const file = assertContained(record.path, root, label);
   const realRoot = await fs.realpath(root);
@@ -170,10 +169,25 @@ async function assertPng(record, root, label) {
   );
   const bytes = await fs.readFile(file);
   const dimensions = pngDimensions(bytes);
-  const decoded = await sharp(bytes)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+  const decoded = decodePng
+    ? await decodePng(bytes)
+    : await (
+        await import('sharp')
+      )
+        .default(bytes)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+  assert.ok(
+    Buffer.isBuffer(decoded.data),
+    `${label} decoded RGBA buffer missing`,
+  );
+  assert.equal(decoded.info.channels, 4, `${label} decoded RGBA channel count`);
+  assert.equal(
+    decoded.data.length,
+    dimensions.width * dimensions.height * 4,
+    `${label} decoded RGBA byte count`,
+  );
   assert.equal(
     decoded.info.format,
     'raw',
@@ -216,9 +230,10 @@ export async function captureQualificationPng(page, outputPath) {
   };
 }
 
-export async function validateFinalVisualQualification(
+async function inspectFinalVisualQualification(
   report,
-  { evidenceRoot } = {},
+  { evidenceRoot, decodePng } = {},
+  comparePixels = true,
 ) {
   assert.equal(report?.schema, FINAL_VISUAL_QUALIFICATION_SCHEMA);
   for (const [label, value] of [
@@ -343,7 +358,9 @@ export async function validateFinalVisualQualification(
   const root = path.resolve(evidenceRoot || report.outputRoot || '.');
   assert.ok(
     report.rasterPolicy == null ||
-      report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY,
+      report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY ||
+      (!comparePixels &&
+        report.rasterPolicy === 'repeated-full-image-controls-v1'),
     'Unsupported visual raster policy',
   );
   const decoded = new Map();
@@ -576,11 +593,13 @@ export async function validateFinalVisualQualification(
       state.baseline,
       root,
       `${state.id} baseline`,
+      decodePng,
     );
     const candidate = await assertPng(
       state.candidate,
       root,
       `${state.id} candidate`,
+      decodePng,
     );
     assert.deepEqual(
       baseline.pixelInfo.width && {
@@ -608,7 +627,10 @@ export async function validateFinalVisualQualification(
       baseline: baseline.pixels,
       candidate: candidate.pixels,
     });
-    if (state.id !== 'still-settled' || report.rasterPolicy == null)
+    if (
+      comparePixels &&
+      (state.id !== 'still-settled' || report.rasterPolicy == null)
+    )
       assert.equal(
         sha256(candidate.pixels),
         sha256(baseline.pixels),
@@ -621,7 +643,10 @@ export async function validateFinalVisualQualification(
     );
   }
   let rasterVariance = null;
-  if (report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY) {
+  if (
+    comparePixels &&
+    report.rasterPolicy === VISIBLE_CONTROL_VARIANCE_POLICY
+  ) {
     const still = report.states[0];
     for (const id of ['hud-visible', 'hud-restored']) {
       const control = report.states.find((state) => state.id === id);
@@ -650,10 +675,20 @@ export async function validateFinalVisualQualification(
   }
   return {
     schema: report.schema,
-    status: 'passed',
+    status: comparePixels ? 'passed' : 'structural-evidence-validated-only',
     states: report.states.length,
+    ...(!comparePixels ? { decoded } : {}),
     ...(rasterVariance ? { rasterVariance } : {}),
   };
+}
+
+export async function validateFinalVisualQualification(report, options) {
+  return inspectFinalVisualQualification(report, options, true);
+}
+
+/** All original provenance/state/PNG/cleanup checks; deliberately no pixel pass. */
+export async function inspectRepeatedVisualPairEvidence(report, options) {
+  return inspectFinalVisualQualification(report, options, false);
 }
 
 if (
