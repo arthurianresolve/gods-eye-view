@@ -330,7 +330,35 @@ export class PanelLayoutController {
     if (!stack) return;
 
     if (typeof ResizeObserver !== 'undefined') {
-      this._leftStackResizeObserver = new ResizeObserver(() => {
+      let previousRootBox = null;
+      this._leftStackResizeObserver = new ResizeObserver((entries) => {
+        if (this.destroyed) return;
+        const entry = entries?.length === 1 ? entries[0] : null;
+        const rect = entry?.target === stack ? entry.contentRect : null;
+        const rootBox =
+          Number.isFinite(rect?.width) &&
+          rect.width > 0 &&
+          Number.isFinite(rect?.height) &&
+          rect.height > 0
+            ? { width: rect.width, height: rect.height }
+            : null;
+        // The left solver uses this root's horizontal extent, not its height.
+        // Its top/bottom transition can resize the root without changing any
+        // measurement input. Panels, inners and obstacles remain observed, and
+        // viewport/DOM/HUD invalidations still schedule their ordinary pass.
+        // Current CSS changes the root's x position only with viewport, HUD
+        // theme or cockpit changes, which independently invalidate layout.
+        // This is that layout contract, not equal width implying equal x.
+        // Use the reported physical CSS width, never logical inlineSize or a
+        // synchronous layout read. Initial, mixed and ambiguous deliveries
+        // retain the full pass and reset this narrow comparison.
+        const rootHeightOnly =
+          rootBox &&
+          previousRootBox &&
+          rootBox.width === previousRootBox.width &&
+          rootBox.height !== previousRootBox.height;
+        previousRootBox = rootBox;
+        if (rootHeightOnly) return;
         this._scheduleLeftPanelLayout();
       });
       this._leftStackResizeObserver.observe(stack);
