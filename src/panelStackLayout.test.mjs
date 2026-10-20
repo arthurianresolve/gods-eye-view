@@ -4,6 +4,7 @@ import { readStylesheet } from './testSupport/readStylesheet.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { layoutLeftPanelRail, layoutRightPanelRail, layoutPanelRails } from './ui/panelRails.js';
 const leftRail = readFileSync(new URL('./ui/leftPanelRail.js', import.meta.url), 'utf8');
 const rightRail = readFileSync(new URL('./ui/rightPanelRail.js', import.meta.url), 'utf8');
 const rails = leftRail + rightRail;
@@ -171,18 +172,8 @@ test('desktop panel lanes use per-panel allocations and presentation-only auto-c
   assert.match(leftRail, /--left-panel-allocated-height/);
   assert.match(rightRail, /--right-panel-allocated-height/);
   assert.match(
-    leftRail,
-    /setAttribute\('data-rail-measuring', ''\)[\s\S]*?measurePanelNaturalHeight[\s\S]*?finally[\s\S]*?removeAttribute\('data-rail-measuring'\)/,
-    'left intrinsic measurement must lift allocations and always restore presentation',
-  );
-  assert.match(
     css,
     /#left-panel-stack\[data-rail-measuring\] > \[data-panel-id\]:not\(\.collapsed\)\s*\{\s*--left-panel-allocated-height:\s*initial !important;/,
-  );
-  assert.match(
-    rightRail,
-    /setAttribute\('data-rail-measuring', ''\)[\s\S]*?getBoundingClientRect\(\)\.height[\s\S]*?finally[\s\S]*?removeAttribute\('data-rail-measuring'\)/,
-    'right intrinsic measurement must neutralize allocations and always restore presentation',
   );
   assert.match(css, /var\(\s*--left-panel-allocated-height/);
   assert.match(css, /var\(\s*--right-panel-allocated-height/);
@@ -194,6 +185,91 @@ test('desktop panel lanes use per-panel allocations and presentation-only auto-c
   assert.doesNotMatch(css, /layout-focus > \[data-panel-id\]\.collapsed:not\(\.layout-auto-collapsed\)/);
   assert.match(leftRail, /const hiddenSibling =\s*shouldFocus && panel\.classList\.contains\('collapsed'\);/);
 });
+
+for (const { side, paired } of [
+  { side: 'left', paired: false },
+  { side: 'left', paired: true },
+  { side: 'right', paired: false },
+]) {
+  test(`${side} intrinsic measurement restores presentation through the ${paired ? 'paired' : 'standalone'} owner`, () => {
+    for (const failMeasurement of [false, true]) {
+      const node = (id) => {
+        const attributes = new Map();
+        const properties = new Map();
+        const classes = new Set();
+        return {
+          id,
+          children: [],
+          dataset: {},
+          contains: () => false,
+          classList: {
+            contains: (name) => classes.has(name),
+            toggle(name, enabled) {
+              if (enabled) classes.add(name);
+              else classes.delete(name);
+            },
+          },
+          style: {
+            getPropertyValue: (name) => properties.get(name) || '',
+            setProperty: (name, value) => properties.set(name, value),
+            removeProperty: (name) => properties.delete(name),
+          },
+          getAttribute: (name) => attributes.get(name) ?? null,
+          setAttribute: (name, value) => attributes.set(name, value),
+          removeAttribute: (name) => attributes.delete(name),
+          getBoundingClientRect: () => ({
+            left: 20, right: 300, top: 234, bottom: 294, width: 280, height: 60,
+          }),
+        };
+      };
+      const stack = node(`${side}-panel-stack`);
+      const panel = node('data-panel');
+      stack.children = [panel];
+      stack.querySelectorAll = () => stack.children;
+      panel.matches = () => true;
+      const allocation = `--${side}-panel-allocated-height`;
+      panel.style.setProperty(allocation, '60px');
+      let reads = 0;
+      Object.defineProperty(panel, 'scrollHeight', {
+        get() {
+          reads++;
+          assert.equal(stack.getAttribute('data-rail-measuring'), '',
+            'the actual natural-height read must run with allocations lifted');
+          assert.equal(panel.style.getPropertyValue(allocation), '60px',
+            'measurement must not remove the stored presentation allocation');
+          if (failMeasurement) throw new Error('intrinsic measurement failed');
+          return 200;
+        },
+      });
+      const options = {
+        stack,
+        obstacles: [],
+        windowRef: {
+          innerHeight: 900,
+          matchMedia: () => ({ matches: false }),
+          getComputedStyle: () => ({ rowGap: '0px' }),
+        },
+        hud: { visible: true, variant: 'tactical' },
+        collapsedHeights: new Map(),
+        documentRef: { activeElement: null },
+        onAligned() {},
+        onCollapse() { assert.fail('one fitting panel must remain expanded'); },
+        onRetry() { assert.fail('one fitting panel must not require a retry'); },
+        readDisplayScrollTop: () => 0,
+      };
+      const run = () => paired
+        ? layoutPanelRails({ left: options, readRight: () => ({ stack: null }) })
+        : (side === 'left' ? layoutLeftPanelRail : layoutRightPanelRail)(options);
+      if (failMeasurement) assert.throws(run, /intrinsic measurement failed/);
+      else run();
+      assert.equal(reads, 1);
+      assert.equal(stack.getAttribute('data-rail-measuring'), null,
+        'both success and failure must release the measurement override');
+      assert.equal(panel.style.getPropertyValue(allocation),
+        failMeasurement ? '60px' : '200.0px');
+    }
+  });
+}
 
 test('share-panel state excludes responsive collapse and preserves recipient preferences', () => {
   const ui = readShellSource();
