@@ -308,17 +308,42 @@ const contains = (outer, inner) =>
   inner.bottom <= outer.bottom;
 
 function mapCdpBounds(bounds, host, dpr) {
-  for (const rectName of ['windowRect', 'visibleFrameRect'])
-    for (const units of ['physical-pixels', 'native-DIPs'])
+  for (const rectName of ['windowRect', 'visibleFrameRect']) {
+    const physical = host[rectName];
+    const enclosed = physicalRectToEnclosingDips(physical, dpr);
+    for (const [units, expected] of [
+      ['physical-pixels', physical],
+      ['native-DIPs', enclosed],
+    ])
       if (
         ['left', 'top', 'width', 'height'].every(
-          (axis) =>
-            Math.round(bounds[axis] * (units === 'native-DIPs' ? dpr : 1)) ===
-            host[rectName][axis],
+          (axis) => bounds[axis] === expected[axis],
         )
       )
         return units + ':' + rectName;
+  }
   return null;
+}
+
+/** Match Chromium's enclosing rectangle conversion, not rounded size scaling. */
+export function physicalRectToEnclosingDips(physical, nativeScale) {
+  validateRect(physical, 'Coordinate conversion input');
+  assert.ok(
+    Number.isFinite(nativeScale) && nativeScale > 0,
+    'Native scale is invalid',
+  );
+  const left = Math.floor(physical.left / nativeScale);
+  const top = Math.floor(physical.top / nativeScale);
+  const right = Math.ceil(physical.right / nativeScale);
+  const bottom = Math.ceil(physical.bottom / nativeScale);
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: right - left,
+    height: bottom - top,
+  };
 }
 
 /** Refuse missing proof; this contract never substitutes a smaller renderer scale. */
@@ -634,7 +659,7 @@ export async function createNativeWindowViewportOwner({
           page: 'CSS pixels',
           hostRects: 'physical pixels under a temporary PMv2 reader',
           cdpWindowBounds:
-            'raw protocol pixels; not assumed equal to physical pixels',
+            'raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges',
           nativeWindowScale:
             'GetDpiForWindow / 96 from a per-monitor-aware target',
           browserZoom: 'Page.getLayoutMetrics.cssVisualViewport.zoom',

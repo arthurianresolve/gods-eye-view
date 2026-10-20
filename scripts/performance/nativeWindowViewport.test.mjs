@@ -8,6 +8,7 @@ import {
   createNativeWindowViewportOwner,
   readNativeWindowViewportInPage,
   readOwnedWindowsNativeWindowGeometry,
+  physicalRectToEnclosingDips,
   resolveNativeWindowBrowserOptions,
 } from './nativeWindowViewport.mjs';
 
@@ -204,6 +205,78 @@ test('physical content fits without rejecting the invisible maximized outer bord
   assert.equal(
     assertNativeWindowViewportEvidence(visibleBounds, { expectedDpr: 2 }),
     visibleBounds,
+  );
+});
+
+test('native DIP enclosure rounds edges outward including odd negative invisible borders', () => {
+  assert.deepEqual(
+    physicalRectToEnclosingDips(rect(-13, -13, 2586, 1386), 2),
+    rect(-7, -7, 1294, 694),
+  );
+  assert.deepEqual(
+    physicalRectToEnclosingDips(rect(13, 13, 2586, 1386), 2),
+    rect(6, 6, 1294, 694),
+  );
+  assert.deepEqual(
+    physicalRectToEnclosingDips(rect(-13, -13, 2586, 1386), 1.25),
+    rect(-11, -11, 2070, 1110),
+  );
+  assert.throws(
+    () => physicalRectToEnclosingDips(rect(0, 0, 1, 1), 0),
+    /scale/,
+  );
+});
+
+test('actual odd-border native preparation maps exactly and rejects every one-DIP mismatch', () => {
+  const evidence = fixture({ canvas: false });
+  evidence.host.windowRect = rect(-13, -13, 2586, 1386);
+  evidence.host.clientRect = rect(0, 0, 2560, 1360);
+  evidence.host.visibleFrameRect = rect(0, 0, 2560, 1360);
+  evidence.host.monitor.workArea = rect(0, 0, 2560, 1360);
+  evidence.page.screen.availHeight = 680;
+  evidence.page.outer.height = 680;
+  evidence.page.inner.height = 537;
+  evidence.page.visualViewport.height = 537;
+  evidence.page.documentClient.height = 537;
+  evidence.cdp.layoutMetrics.cssLayoutViewport.clientHeight = 537;
+  evidence.cdp.layoutMetrics.cssVisualViewport.clientHeight = 537;
+  evidence.cdp.layoutMetrics.cssContentSize.height = 537;
+  evidence.cdp.windowBounds = {
+    left: -7,
+    top: -7,
+    width: 1294,
+    height: 694,
+    windowState: 'maximized',
+  };
+  assert.equal(
+    assertNativeWindowViewportEvidence(evidence, {
+      expectedDpr: 2,
+      requireCanvas: false,
+    }),
+    evidence,
+  );
+  for (const axis of ['left', 'top', 'width', 'height'])
+    for (const delta of [-1, 1]) {
+      const changed = clone(evidence);
+      changed.cdp.windowBounds[axis] += delta;
+      assert.throws(
+        () =>
+          assertNativeWindowViewportEvidence(changed, {
+            expectedDpr: 2,
+            requireCanvas: false,
+          }),
+        /coordinate mapping/,
+      );
+    }
+  const clipped = clone(evidence);
+  clipped.host.visibleFrameRect = rect(-1, 0, 2560, 1360);
+  assert.throws(
+    () =>
+      assertNativeWindowViewportEvidence(clipped, {
+        expectedDpr: 2,
+        requireCanvas: false,
+      }),
+    /outside/,
   );
 });
 
