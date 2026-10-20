@@ -30,8 +30,22 @@ including the existing `display: contents` badge wrapper. The raw failure
 does not preserve the exact rejected rectangle, so the source-based diagnosis
 is not presented as a recovered browser measurement. Normal owned-browser
 closure passes. Correcting that proof requirement leaves visible surface/text
-boxes, source/style equality and pixel limits intact; a fresh actual-page
-check and new cohort are still required.
+boxes, source/style equality and pixel limits intact.
+
+Commit `7ab0acac` implements that correction and retains the exact rejected
+proof inputs on future failures. Its [validation receipt](decoration-boxless-validation.json)
+records 36/36 focused tests, formatting and undefined-reference checks passing
+on both Node 24 and 26, with independent source/log readback. A separate
+four-state check of the actual baseline page passes on each first attempt:
+the sole zero-box ancestor is the existing `DIV.cyber-panel-body` with
+`display: contents`; the visible decoration and text remain nonempty.
+This check captures zero images and is explicitly ineligible for visual
+acceptance. Its seven files (5,165,019 bytes), including result SHA-256
+`3b7c4d3b90be77057b0e84f5175a95e1310e9a38362773cded4d0db2c72bba20`,
+are preserved at VM task
+`decoration-eligibility-e7-boxless-complete-20261020`.
+The fresh `e6e1abc1` / QA `7ab0acac` 24-image cohort is in progress;
+all sixty comparisons and normal cleanup must pass.
 
 The [rail measurement correction](rail-measurement-validation.json) at
 `e6e1abc1` preserves the existing layout equations while reading invariant
@@ -56,7 +70,24 @@ validate the configured trace. The [validation receipt](native-window-settlement
 records 153/153 focused tests on both Node 24 and 26 and all required static
 checks passing, with independent source/input/log readback. The initial sparse
 setup failure is retained separately; its missing tracked helper is present
-in the passing run. A fresh hardware attempt is still required.
+in the passing run.
+
+The fresh [paired hardware diagnostic](native-window-rail-e6e1abc1-diagnostic.json)
+and [independent readback](native-window-rail-e6e1abc1-readback.json)
+complete all sixteen trusted actions in four normally closed browsers.
+All four preparations encounter one incoherent observation followed by two
+matching coherent observations, exercising the actual transient condition.
+Twenty native canvas checkpoints and four configured proofs pass.
+The 1280 × 537 CSS viewport, native DPR 2 and 2560 × 1074 drawing buffer match;
+all enabled/disabled geometry and ordered height-query tuples match.
+
+Both `c373d91b` and `e6e1abc1` have three of eight native Event Timing
+observations above 100 ms, all on disabling datacenters. The candidate observations
+are 40, 96, 48, 112, 80, 128, 80 and 128 ms. Median full scene readiness
+changes from 303.7 to 304.75 ms for enabling and 17.85 to 16.65 ms for disabling.
+These mixed diagnostic results establish neither an interaction pass nor a
+repeatable performance benefit. The next gate uses the formal twenty-sample
+producer without these additional attribution observers.
 
 The [exact `e6e1abc1` CI receipt](rail-layout-e6e1abc1-ci.json) records
 seven selected CI jobs and release verification passing. Node 24/26,

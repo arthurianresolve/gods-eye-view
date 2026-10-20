@@ -32,6 +32,14 @@ not generate a box. The failed attempt and normal browser closure remain
 recorded. A correction preserves nonempty visible decoration/text boxes,
 complete ancestor geometry/style evidence and all pixel limits. It requires
 automatic and actual-application validation before a fresh cohort.
+Commit `7ab0acac` supplies that correction and preserves exact proof inputs
+on future eligibility failures. Its [validation receipt](performance-evidence/s69-native-matrix-20261019/decoration-boxless-validation.json)
+records 36/36 focused tests plus formatting and undefined-reference checks
+passing on both Node versions. The actual baseline page passes all four
+proof states on their first attempt and confirms the zero-box ancestor is
+the existing `display: contents` wrapper. That separate check captures no
+images and carries no visual-acceptance credit. The fresh 24-image cohort
+is underway; all sixty comparisons and cleanup remain mandatory.
 
 Runtime `e6e1abc1` moves invariant panel-spacing and collapsed-sibling reads
 before temporary measurement styles are restored, avoiding a redundant forced
@@ -56,7 +64,16 @@ records 153 passing focused tests on both Node 24 and 26, with formatting,
 import/package boundaries and undefined-reference checks passing. Independent
 source and raw-log readback passes. The first sparse validation attempt lacked
 a tracked build helper and remains preserved; the completed run includes it.
-Fresh hardware execution of this preparation fix remains pending.
+The fresh [sixteen-action diagnostic](performance-evidence/s69-native-matrix-20261019/native-window-rail-e6e1abc1-diagnostic.json)
+completes in four normally closed browsers, and every preparation recovers
+from one incoherent observation to two exact matching proofs.
+All twenty native canvas checkpoints, geometry and query tuples match.
+However, both `c373d91b` and `e6e1abc1` have three of eight native Event Timing
+observations above 100 ms. Enabling median full scene readiness changes from
+303.7 to 304.75 ms; disabling changes from 17.85 to 16.65 ms. These mixed
+diagnostic results establish no repeatable latency benefit or acceptance pass.
+Formal twenty-sample qualification without the extra attribution observers
+is next; its timing limits remain unchanged.
 
 Its [exact-commit CI receipt](performance-evidence/s69-native-matrix-20261019/rail-layout-e6e1abc1-ci.json)
 records all seven selected CI jobs and release verification passing.
