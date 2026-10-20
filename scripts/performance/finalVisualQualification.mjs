@@ -11,6 +11,11 @@ import {
   VISIBLE_CONTROL_VARIANCE_POLICY,
   validateVisibleControlVariance,
 } from './visibleControlVariance.mjs';
+import {
+  CANONICAL_POINTER_HISTORY,
+  assertCanonicalPointerHistory,
+  readCanonicalPointerMutationSequence,
+} from './canonicalPointerHistory.mjs';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -21,6 +26,32 @@ export const FINAL_VISUAL_STATES = Object.freeze([
   'hud-restored',
 ]);
 export const FINAL_VISUAL_TIME_MS = Date.parse('2026-10-08T12:00:00.000Z');
+
+export function assertCanonicalVisualStateHistory(state) {
+  let canonicalMutations;
+  for (const side of ['baseline', 'candidate']) {
+    const history = state.pointerHistory?.[side];
+    for (const phase of ['acquisition', 'before', 'after'])
+      assertCanonicalPointerHistory(history?.[phase]);
+    assert.deepEqual(
+      history.acquisition,
+      history.before,
+      `${state.id} ${side} canonical history changed before PNG`,
+    );
+    assert.deepEqual(
+      history.before,
+      history.after,
+      `${state.id} ${side} canonical history changed during PNG`,
+    );
+    const mutations = readCanonicalPointerMutationSequence(history.acquisition);
+    canonicalMutations ??= mutations;
+    assert.deepEqual(
+      mutations,
+      canonicalMutations,
+      `${state.id} canonical transform history differs between builds`,
+    );
+  }
+}
 
 /** Structural intent precedes readiness; CSS proof belongs to the paused PNG. */
 export function readScreenshotBoundaryHudState(state, side) {
@@ -439,12 +470,16 @@ async function inspectFinalVisualQualification(
     'Unsupported visual raster policy',
   );
   const decoded = new Map();
+  if (report.pointerHistoryPolicy != null)
+    assert.equal(report.pointerHistoryPolicy, CANONICAL_POINTER_HISTORY);
   for (const state of report.states) {
     assert.equal(
       state.observedStatePhase,
       'pre-readiness-structural-observation',
       `${state.id} structural state is not screenshot-time evidence`,
     );
+    if (report.pointerHistoryPolicy === CANONICAL_POINTER_HISTORY)
+      assertCanonicalVisualStateHistory(state);
     for (const side of ['baseline', 'candidate']) {
       const proof = state.foreground?.[side];
       assert.equal(

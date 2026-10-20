@@ -12,6 +12,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/runRepeatedVisualQualification.test.mjs',
   'scripts/performance/visualPaintSignature.mjs',
   'scripts/performance/visualPaintSignature.test.mjs',
+  'scripts/performance/canonicalPointerHistory.mjs',
+  'scripts/performance/canonicalPointerHistory.test.mjs',
   'scripts/performance/startupOperatingContract.mjs',
   'scripts/performance/startupOperatingContract.test.mjs',
   'scripts/capture-scene-performance.mjs',

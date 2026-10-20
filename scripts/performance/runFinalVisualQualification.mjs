@@ -15,7 +15,6 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
-import { calculateLogoGaze } from '../../src/logoGaze.js';
 import {
   bootFixturePage,
   cleanupFixturePageDiagnostics,
@@ -61,11 +60,17 @@ import {
 import {
   installVisualPresentationBoundaryInPage,
   disposeVisualPresentationBoundaryInPage,
-  readVisibleLogoGazeTargetsInPage,
   setExpectedLogoGazeInPage,
   presentationStayedSettled,
   visualReadinessInputsMatch,
 } from './visualPresentationBoundary.mjs';
+import {
+  CANONICAL_POINTER_HISTORY,
+  acquireCanonicalPointerHistory,
+  assertCanonicalPointerHistory,
+  createCanonicalPointerSnapshotReader,
+  disposeCanonicalPointerHistoryInPage,
+} from './canonicalPointerHistory.mjs';
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -451,24 +456,20 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         foreground.status !== 'foreground-confirmed'
       )
         throw new Error(`Foreground proof failed for ${id}.`);
-      await page.mouse.move(CAPTURE_POINTER.x + 3, CAPTURE_POINTER.y + 3);
-      await page.mouse.move(CAPTURE_POINTER.x, CAPTURE_POINTER.y);
-      const visibleLogos = await page.evaluate(
-        readVisibleLogoGazeTargetsInPage,
-      );
-      const expectedLogos = visibleLogos.map(({ id, key, rect }) => {
-        const offset = calculateLogoGaze(
-          CAPTURE_POINTER.x,
-          CAPTURE_POINTER.y,
-          rect,
-        );
-        return {
+      let pointerHistory;
+      try {
+        pointerHistory = await acquireCanonicalPointerHistory(page, {
+          capturePointer: CAPTURE_POINTER,
+        });
+      } catch (error) {
+        states.push({
           id,
-          key,
-          rect,
-          transform: `translate(${offset.x.toFixed(2)} ${offset.y.toFixed(2)})`,
-        };
-      });
+          captureFailed: true,
+          pointerHistory: error.pointerHistory || null,
+        });
+        throw error;
+      }
+      const expectedLogos = pointerHistory.contract.stages[2].logos;
       await page.evaluate(setExpectedLogoGazeInPage, {
         pointer: CAPTURE_POINTER,
         logos: expectedLogos,
@@ -549,14 +550,20 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         try {
           pausedCapture = await captureWithDebuggerPause({
             page,
-            readCallback: createVisualPaintSnapshotReader(
-              readVisualSnapshotPhaseInPage,
+            readCallback: createCanonicalPointerSnapshotReader(
+              createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
             ),
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
             describeGuardFailure: describeVisualPauseReadiness,
             requestNextGuardFrame: requestVisualGuardFrame,
             screenshot: (readBefore) => {
+              assertCanonicalPointerHistory(readBefore?.pointerHistory);
+              assert.deepEqual(
+                readBefore.pointerHistory,
+                pointerHistory,
+                'Canonical pointer history changed after acquisition',
+              );
               const settled = presentationStayedSettled(
                 readBefore?.hud,
                 readBefore?.hud,
@@ -593,6 +600,14 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         const beforePhase = pausedCapture.readBefore?.phase;
         const afterPhase = pausedCapture.readAfter?.phase;
         try {
+          assertCanonicalPointerHistory(
+            pausedCapture.readAfter?.pointerHistory,
+          );
+          assert.deepEqual(
+            pausedCapture.readBefore.pointerHistory,
+            pausedCapture.readAfter.pointerHistory,
+            'Canonical pointer history changed during capture',
+          );
           assertVisualPaintSignature(pausedCapture.readBefore?.paint);
           assertVisualPaintSignature(pausedCapture.readAfter?.paint);
           assert.deepEqual(
@@ -688,6 +703,11 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
           },
           foreground,
           captureMethod: 'debugger-paused-snapshot',
+          pointerHistory: {
+            acquisition: pointerHistory,
+            before: pausedCapture.readBefore.pointerHistory,
+            after: pausedCapture.readAfter.pointerHistory,
+          },
           pauseCleanup: pausedCapture.cleanup,
           pause: pausedCapture.pause,
           phase: {
@@ -721,6 +741,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         );
       }
       states.push(accepted);
+      await page.evaluate(disposeCanonicalPointerHistoryInPage);
     }
     stage = 'fixture-network-verification';
     const network = await prepared.verifyNetwork();
@@ -749,6 +770,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         teardown.errors.push({ stage: name, ...boundedError(error) });
       }
     };
+    if (page && !page.isClosed())
+      await clean('canonical-pointer-observer', () =>
+        page.evaluate(disposeCanonicalPointerHistoryInPage),
+      );
     if (page && !page.isClosed())
       await clean('presentation-observer', () =>
         page.evaluate(disposeVisualPresentationBoundaryInPage),
@@ -1060,8 +1085,13 @@ async function produceFinalVisualQualificationInternal(
     rasterPolicy: captureOnly
       ? 'repeated-full-image-controls-v1'
       : VISIBLE_CONTROL_VARIANCE_POLICY,
+    pointerHistoryPolicy: CANONICAL_POINTER_HISTORY,
     states: STATES.map((id, index) => ({
       id,
+      pointerHistory: {
+        baseline: baseline.states[index].pointerHistory,
+        candidate: candidate.states[index].pointerHistory,
+      },
       observedStatePhase: 'pre-readiness-structural-observation',
       completedRender: {
         baseline: baseline.states[index].completedRender,

@@ -13,6 +13,10 @@ import {
   validateRepeatedFullImageControls,
 } from './repeatedFullImageControls.mjs';
 import { assertVisualPaintSignature } from './visualPaintSignature.mjs';
+import {
+  CANONICAL_POINTER_HISTORY,
+  readCanonicalPointerMutationSequence,
+} from './canonicalPointerHistory.mjs';
 
 export const REPEATED_VISUAL_SCHEMA = 'gev-repeated-visual-qualification/v1';
 export const REPEATED_VISUAL_ORDER = Object.freeze([
@@ -164,6 +168,12 @@ export async function validateRepeatedVisualQualification({
         delete gaze.pointerMoveSequence;
         delete gaze.resetSequence;
         const current = {
+          canonicalPointerMutations:
+            report.pointerHistoryPolicy === CANONICAL_POINTER_HISTORY
+              ? readCanonicalPointerMutationSequence(
+                  state.pointerHistory?.[side]?.acquisition,
+                )
+              : null,
           renderer: report.environment.renderer,
           profile: state.nativeSharpnessProfileByRevision[side],
           camera: state.cameraByRevision[side],
