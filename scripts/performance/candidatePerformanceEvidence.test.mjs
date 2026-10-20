@@ -157,6 +157,7 @@ async function createComparison(
   for (const report of [baseline, candidate]) {
     report.comparisonContract.workloadId = workloadId;
     report.graphics = {
+      ...report.graphics,
       featureStatus: { webgl: 'enabled', webgl2: 'enabled' },
       devices: [{ vendor: 'Intel', device: 'UHD 620', driver: '31.0' }],
     };

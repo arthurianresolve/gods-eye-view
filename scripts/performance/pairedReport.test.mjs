@@ -110,6 +110,57 @@ test('valid paired reports calculate scenario medians, objective and regressions
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
 });
 
+test('paired reports distinguish full Chrome patch versions with identical reduced user agents', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const report of [baseline, candidate]) {
+    report.environment.userAgent = 'Mozilla/5.0 Chrome/155.0.0.0';
+    report.comparisonContract.browser.version = '155.0.0.0';
+    report.graphics.browserVersion = 'Chrome/155.0.8059.84';
+  }
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+  candidate.graphics.browserVersion = 'Chrome/155.0.8059.85';
+  assert.throws(
+    () => validate(baseline, candidate),
+    /Full browser products differ/,
+  );
+  baseline.graphics.browserVersion = candidate.graphics.browserVersion;
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+});
+
+test('paired reports leave missing or reduced-only full browser identity unavailable', () => {
+  for (const side of ['baseline', 'candidate']) {
+    for (const product of [
+      undefined,
+      null,
+      '',
+      'Chrome/155.0.0.0',
+      'Chrome/155',
+    ]) {
+      const pair = {
+        baseline: makeReport(baselineCommit),
+        candidate: makeReport(candidateCommit),
+      };
+      if (product === undefined) delete pair[side].graphics;
+      else pair[side].graphics.browserVersion = product;
+      assert.throws(
+        () => validate(pair.baseline, pair.candidate),
+        (error) => {
+          assert.equal(error.code, 'ERR_FULL_BROWSER_IDENTITY_UNAVAILABLE');
+          assert.equal(error.evidenceStatus, 'unavailable');
+          assert.match(error.message, new RegExp(`^${side}:`));
+          return true;
+        },
+      );
+    }
+  }
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const report of [baseline, candidate])
+    report.graphics.browserVersion = 'Chrome/155.0.8059.85';
+  assert.throws(() => validate(baseline, candidate), /observed user agent/);
+});
+
 test('native comparison cannot bypass profile evidence by stripping fields', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);

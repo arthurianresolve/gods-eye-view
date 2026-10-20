@@ -149,6 +149,7 @@ export function makeReport(
   }
   return {
     schema: 'gev-performance-capture/v1',
+    graphics: { browserVersion: 'Chrome/152.0.7977.75' },
     url: 'http://localhost:4173/austin',
     source: {
       appCommit: commit,

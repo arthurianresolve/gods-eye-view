@@ -41,6 +41,33 @@ const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
 const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
+const FULL_BROWSER_PRODUCT =
+  /^(?:Headless)?Chrome\/([1-9]\d{0,3})\.\d{1,4}\.[1-9]\d{0,5}\.\d{1,6}$/;
+
+function observedFullBrowserProduct(report, side) {
+  const product = report?.graphics?.browserVersion;
+  const match =
+    typeof product === 'string' && product.match(FULL_BROWSER_PRODUCT);
+  if (!match)
+    throw Object.assign(
+      new Error(
+        `${side}: full browser identity is unavailable; observed graphics.browserVersion is required`,
+      ),
+      {
+        code: 'ERR_FULL_BROWSER_IDENTITY_UNAVAILABLE',
+        evidenceStatus: 'unavailable',
+      },
+    );
+  const userAgentMajor = report.environment?.userAgent?.match(
+    /(?:Headless)?Chrome\/(\d+)\./,
+  )?.[1];
+  assert.equal(
+    match[1],
+    userAgentMajor,
+    `${side}: full browser product differs from the observed user agent`,
+  );
+  return product;
+}
 const canonical = (value) => {
   if (Array.isArray(value)) return value.map(canonical);
   if (!value || typeof value !== 'object') return value;
@@ -2087,6 +2114,13 @@ function validatePairedReports(
     'candidate',
     expectedAppCommits.candidate,
     { settledIdleOnly },
+  );
+  // A reduced UA is identical across Chrome patch versions. Use the existing
+  // browser-level observation before aggregating any performance samples.
+  assert.equal(
+    observedFullBrowserProduct(baseline, 'baseline'),
+    observedFullBrowserProduct(candidate, 'candidate'),
+    'Full browser products differ between paired captures',
   );
   assert.equal(
     baseline.source.harnessCommit,
