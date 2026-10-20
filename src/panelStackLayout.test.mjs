@@ -172,8 +172,12 @@ test('desktop panel lanes use per-panel allocations and presentation-only auto-c
   assert.match(rightRail, /--right-panel-allocated-height/);
   assert.match(
     leftRail,
-    /expandedPanels[\s\S]*?removeProperty\('--left-panel-allocated-height'\)[\s\S]*?measurePanelNaturalHeight/,
-    'left intrinsic measurement must clear the prior allocation first',
+    /setAttribute\('data-rail-measuring', ''\)[\s\S]*?measurePanelNaturalHeight[\s\S]*?finally[\s\S]*?removeAttribute\('data-rail-measuring'\)/,
+    'left intrinsic measurement must lift allocations and always restore presentation',
+  );
+  assert.match(
+    css,
+    /#left-panel-stack\[data-rail-measuring\] > \[data-panel-id\]:not\(\.collapsed\)\s*\{\s*--left-panel-allocated-height:\s*initial !important;/,
   );
   assert.match(
     rightRail,

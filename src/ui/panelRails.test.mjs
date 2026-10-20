@@ -207,6 +207,177 @@ test('left layout records collapsed heights and aligns the right rail without ch
   assert.equal(f.stack.dataset.layoutMode, 'normal');
 });
 
+test('left alignment initializes restored coordinates and only wakes the right rail after corridor changes', () => {
+  const f = fixture('left');
+  f.stack.style.setProperty('--left-stack-safe-top', '26.000vh');
+  f.stack.style.setProperty('--left-stack-safe-bottom', '26.000vh');
+  f.stack.writes.length = 0;
+  f.run();
+  assert.equal(f.aligned(), 1, 'initialization still aligns the other rail');
+  assert.deepEqual(f.stack.writes, []);
+  f.run();
+  assert.equal(
+    f.aligned(),
+    1,
+    'equivalent content must not enqueue another right pass',
+  );
+  f.options.obstacles = [element('lower', { top: 600, height: 80 })];
+  f.run();
+  assert.equal(f.aligned(), 2);
+  assert.equal(
+    f.stack.style.getPropertyValue('--left-stack-safe-top'),
+    '34.533vh',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+    '34.533vh',
+  );
+});
+
+test('left intrinsic measurement preserves stored allocations and always releases its CSS override', () => {
+  const f = fixture('left');
+  f.expand(f.first, 200);
+  f.first.style.setProperty('--left-panel-allocated-height', '60px');
+  let measured = 0;
+  Object.defineProperty(f.first, 'scrollHeight', {
+    get() {
+      assert.equal(f.stack.getAttribute('data-rail-measuring'), '');
+      assert.equal(
+        f.first.style.getPropertyValue('--left-panel-allocated-height'),
+        '60px',
+      );
+      measured++;
+      return 200;
+    },
+  });
+  f.first.writes.length = 0;
+  f.run();
+  assert.equal(measured, 1);
+  assert.equal(f.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.deepEqual(f.first.writes, [
+    ['set', '--left-panel-allocated-height', '200.0px'],
+  ]);
+
+  const failed = fixture('left');
+  failed.expand(failed.first, 200);
+  failed.first.style.setProperty('--left-panel-allocated-height', '60px');
+  Object.defineProperty(failed.first, 'scrollHeight', {
+    get() {
+      throw new Error('intrinsic measurement failed');
+    },
+  });
+  assert.throws(() => failed.run(), /intrinsic measurement failed/);
+  assert.equal(failed.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(
+    failed.first.style.getPropertyValue('--left-panel-allocated-height'),
+    '60px',
+  );
+});
+
+test('left content growth recomputes allocations inside an unchanged corridor and preserves disclosure geometry', () => {
+  const f = fixture('left', { hud: { visible: true, variant: 'operator' } });
+  const positions = [];
+  const record = () => {
+    f.run();
+    positions.push({
+      mode: f.stack.dataset.layoutMode,
+      top: f.stack.style.getPropertyValue('--left-stack-safe-top'),
+      bottom: f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+      first: f.first.style.getPropertyValue('--left-panel-allocated-height'),
+      second: f.second.style.getPropertyValue('--left-panel-allocated-height'),
+    });
+  };
+  record();
+  f.expand(f.first, 200);
+  record();
+  f.expand(f.first, 600);
+  f.expand(f.second, 400);
+  record();
+  const alignedBeforeGrowth = f.aligned();
+  f.expand(f.first, 700);
+  record();
+  assert.equal(f.aligned(), alignedBeforeGrowth);
+  f.options.obstacles = [element('lower', { top: 600, height: 80 })];
+  record();
+  assert.equal(f.aligned(), alignedBeforeGrowth + 1);
+  f.first.classList.add('collapsed');
+  f.second.classList.add('collapsed');
+  f.first.rect.height = f.first.scrollHeight = 42;
+  f.second.rect.height = f.second.scrollHeight = 42;
+  record();
+  // These coordinates and allocations are the original layout's six states.
+  assert.deepEqual(positions, [
+    {
+      mode: 'normal',
+      top: '26.000vh',
+      bottom: '26.000vh',
+      first: '',
+      second: '',
+    },
+    {
+      mode: 'tail',
+      top: '26.000vh',
+      bottom: '45.778vh',
+      first: '200.0px',
+      second: '',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '4.000vh',
+      first: '485.2px',
+      second: '330.8px',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '4.000vh',
+      first: '511.1px',
+      second: '304.9px',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '34.533vh',
+      first: '328.3px',
+      second: '212.9px',
+    },
+    {
+      mode: 'normal',
+      top: '34.533vh',
+      bottom: '34.533vh',
+      first: '',
+      second: '',
+    },
+  ]);
+});
+
+for (const side of ['left', 'right']) {
+  for (const mobile of [false, true]) {
+    test(`${side} equivalent ${mobile ? 'mobile' : 'desktop'} passes retain allocations without style churn`, () => {
+      const f = fixture(side, { mobile });
+      f.expand(f.first, 200);
+      f.run();
+      const nodes = [f.stack, f.first, f.second];
+      const allocation = f.first.style.getPropertyValue(
+        `--${side}-panel-allocated-height`,
+      );
+      for (const node of nodes) node.writes.length = 0;
+      const aligned = f.aligned();
+      for (let pass = 0; pass < 4; pass++) f.run();
+      assert.deepEqual(
+        nodes.flatMap((node) => node.writes),
+        [],
+      );
+      assert.equal(
+        f.first.style.getPropertyValue(`--${side}-panel-allocated-height`),
+        allocation,
+      );
+      assert.equal(f.aligned(), aligned);
+    });
+  }
+}
+
 test('left corridor respects a lower obstacle but ignores an obstacle hidden by its parent', () => {
   const f = fixture('left');
   const blocker = element('blocker', { top: 600, height: 80 });

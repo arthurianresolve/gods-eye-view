@@ -130,10 +130,15 @@ export function layoutRightPanelRail({
 
   if (isMobile) {
     stack.classList.remove('layout-focus');
-    stack.style.removeProperty('--right-stack-safe-top');
-    stack.style.removeProperty('--right-stack-max-height');
+    for (const property of [
+      '--right-stack-safe-top',
+      '--right-stack-max-height',
+    ])
+      if (stack.style.getPropertyValue(property))
+        stack.style.removeProperty(property);
     for (const panel of panels)
-      panel.style.removeProperty('--right-panel-allocated-height');
+      if (panel.style.getPropertyValue('--right-panel-allocated-height'))
+        panel.style.removeProperty('--right-panel-allocated-height');
     stack.dataset.layoutMode = 'mobile';
     return;
   }
@@ -315,17 +320,18 @@ export function layoutRightPanelRail({
   });
   for (const panel of panels) {
     if (expandedPanels.includes(panel)) continue;
-    panel.style.removeProperty('--right-panel-allocated-height');
+    if (panel.style.getPropertyValue('--right-panel-allocated-height'))
+      panel.style.removeProperty('--right-panel-allocated-height');
   }
 
-  stack.style.setProperty(
-    '--right-stack-safe-top',
-    `${layoutTop.toFixed(1)}px`,
-  );
-  stack.style.setProperty(
-    '--right-stack-max-height',
-    `${Math.max(0, safeBottom - layoutTop).toFixed(1)}px`,
-  );
+  const topValue = `${layoutTop.toFixed(1)}px`;
+  const maxHeightValue = `${Math.max(0, safeBottom - layoutTop).toFixed(1)}px`;
+  if (stack.style.getPropertyValue('--right-stack-safe-top') !== topValue)
+    stack.style.setProperty('--right-stack-safe-top', topValue);
+  if (
+    stack.style.getPropertyValue('--right-stack-max-height') !== maxHeightValue
+  )
+    stack.style.setProperty('--right-stack-max-height', maxHeightValue);
   stack.classList.toggle('layout-focus', shouldFocus);
   stack.dataset.layoutMode = shouldFocus ? 'focus' : 'normal';
   stack.dataset.safeTop = layoutTop.toFixed(1);
