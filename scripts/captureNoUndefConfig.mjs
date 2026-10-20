@@ -84,6 +84,7 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/performanceMatrix.test.mjs',
   'scripts/performance/qualificationMetrics.mjs',
   'scripts/performance/qualificationMetrics.test.mjs',
+  'scripts/performance/visibleButtonFeedback.test.mjs',
   'scripts/qa-qualification-metrics-capture.mjs',
   'scripts/performance/idleCadenceDisposition.mjs',
   'scripts/performance/idleCadenceDisposition.test.mjs',

@@ -641,11 +641,8 @@ export function installInteractionObserverInPage(fixtureContract) {
           ? 'settled'
           : null;
       if (visibleState) {
-        if (sample.buttonFeedbackFirstState !== visibleState) {
-          sample.buttonFeedbackConsecutiveFrames = 0;
-          sample.buttonFeedbackFirstFrameAtMs = null;
-          sample.buttonFeedbackFirstRafTimestampMs = null;
-        }
+        // A request stays visibly acknowledged when ENABLING/DISABLING settles
+        // between frames. Both observations must still match the same intent.
         if (
           sample.buttonFeedbackFirstRafTimestampMs != null &&
           timestamp <= sample.buttonFeedbackFirstRafTimestampMs
@@ -653,12 +650,13 @@ export function installInteractionObserverInPage(fixtureContract) {
           sample.buttonFeedbackConsecutiveFrames = 0;
           sample.buttonFeedbackFirstFrameAtMs = null;
           sample.buttonFeedbackFirstRafTimestampMs = null;
+          sample.buttonFeedbackFirstState = null;
         }
         sample.buttonFeedbackConsecutiveFrames =
           (sample.buttonFeedbackConsecutiveFrames || 0) + 1;
         sample.buttonFeedbackFirstFrameAtMs ??= observedAtMs;
         sample.buttonFeedbackFirstRafTimestampMs ??= timestamp;
-        sample.buttonFeedbackFirstState = visibleState;
+        sample.buttonFeedbackFirstState ??= visibleState;
         if (sample.buttonFeedbackConsecutiveFrames >= 2) {
           sample.buttonFeedbackAtMs = observedAtMs;
           sample.buttonFeedbackSecondRafTimestampMs = timestamp;
