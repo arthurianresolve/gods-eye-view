@@ -5,6 +5,7 @@ import test from 'node:test';
 import {
   layoutLeftPanelRail,
   layoutRightPanelRail,
+  layoutPanelRails,
   measurePanelNaturalHeight,
 } from './panelRails.js';
 
@@ -143,7 +144,12 @@ function element(
       attributeWrites.push(['remove', name]);
       attributes.delete(name);
     },
-    getAttribute: (name) => attributes.get(name),
+    getAttribute: (name) =>
+      name === 'style'
+        ? JSON.stringify([...properties])
+        : name === 'class'
+          ? [...classes].join(' ')
+          : attributes.get(name),
     writes,
     datasetWrites,
     attributeWrites,
@@ -209,6 +215,352 @@ function fixture(
     aligned: () => aligned,
   };
 }
+
+function pairedFixture() {
+  const left = fixture('left');
+  const right = fixture('right');
+  left.expand(left.first, 200);
+  right.expand(right.first, 220);
+  right.options.leftStack = left.stack;
+  left.run();
+  right.run();
+  // The controller already owns the pending right pass; no caller callback is
+  // needed for alignment. A custom callback is separately tested as invalid.
+  left.options.onAligned = undefined;
+  return {
+    left,
+    right,
+    run: () =>
+      layoutPanelRails({
+        left: left.options,
+        readRight: () => right.options,
+      }),
+  };
+}
+
+function railSnapshot(f) {
+  return [f.stack, f.first, f.second].map((node) => ({
+    dataset: { ...node.dataset },
+    style: node.getAttribute('style'),
+    classes: node.getAttribute('class'),
+    ariaHidden: node.getAttribute('aria-hidden'),
+    scrollTop: node.scrollTop,
+  }));
+}
+
+test('paired intrinsic reads match sequential allocation even when the left corridor changes', () => {
+  const paired = pairedFixture();
+  const sequential = pairedFixture();
+  for (const f of [paired, sequential]) {
+    f.left.expand(f.left.first, 350);
+    f.left.stack.style.setProperty('--left-stack-safe-top', '0vh');
+  }
+  const phases = [];
+  for (const [name, f] of [
+    ['left', paired.left],
+    ['right', paired.right],
+  ]) {
+    const set = f.stack.setAttribute;
+    const remove = f.stack.removeAttribute;
+    f.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring') phases.push(`${name}:enter`);
+      return set(key, value);
+    };
+    f.stack.removeAttribute = (key) => {
+      if (key === 'data-rail-measuring') phases.push(`${name}:leave`);
+      return remove(key);
+    };
+  }
+  Object.defineProperty(paired.left.first, 'scrollHeight', {
+    get() {
+      assert.equal(paired.left.stack.getAttribute('data-rail-measuring'), '');
+      assert.equal(paired.right.stack.getAttribute('data-rail-measuring'), '');
+      phases.push('left:read');
+      return 350;
+    },
+  });
+  const read = paired.right.first.getBoundingClientRect.bind(
+    paired.right.first,
+  );
+  paired.right.first.getBoundingClientRect = () => {
+    if (paired.right.stack.getAttribute('data-rail-measuring') === '') {
+      assert.equal(paired.left.stack.getAttribute('data-rail-measuring'), '');
+      phases.push('right:read');
+    }
+    return read();
+  };
+  paired.run();
+  sequential.left.options.onAligned = () => {};
+  sequential.left.run();
+  sequential.right.run();
+  assert.deepEqual(railSnapshot(paired.left), railSnapshot(sequential.left));
+  assert.deepEqual(railSnapshot(paired.right), railSnapshot(sequential.right));
+  assert.deepEqual(
+    phases,
+    [
+      'left:enter',
+      'right:enter',
+      'left:read',
+      'right:read',
+      'left:leave',
+      'right:leave',
+    ],
+    'one shared override/read phase; this is not a browser flush count',
+  );
+});
+
+for (const callback of ['onAligned', 'onCollapse', 'onRetry']) {
+  test(`paired pass falls back after left ${callback} mutates right width/content`, () => {
+    const f = pairedFixture();
+    let calls = 0;
+    let reads = 0;
+    const read = f.right.first.getBoundingClientRect.bind(f.right.first);
+    f.right.first.getBoundingClientRect = () => {
+      if (f.right.stack.getAttribute('data-rail-measuring') === '') reads++;
+      return read();
+    };
+    f.left.options[callback] = () => {
+      calls++;
+      f.right.stack.style.setProperty('width', '310px');
+      f.right.expand(f.right.first, 310);
+    };
+    if (callback === 'onAligned')
+      f.left.stack.style.setProperty('--left-stack-safe-top', '0vh');
+    else {
+      f.left.expand(f.left.first, 800);
+      f.left.expand(f.left.second, 800);
+    }
+    f.run();
+    assert.equal(calls, 1);
+    assert.equal(reads, 2);
+    assert.equal(
+      f.right.first.style.getPropertyValue('--right-panel-allocated-height'),
+      '310.0px',
+    );
+  });
+}
+
+test('changed placement and replacement participants use the original right measurement', () => {
+  const f = pairedFixture();
+  const replacement = element('replacement', { height: 310 });
+  layoutPanelRails({
+    left: f.left.options,
+    readRight: () => f.right.options,
+    syncRightPlacement() {
+      f.right.first.hidden = true;
+      replacement.parentElement = f.right.stack;
+      f.right.stack.children.push(replacement);
+      return false;
+    },
+  });
+  assert.equal(
+    replacement.style.getPropertyValue('--right-panel-allocated-height'),
+    '310.0px',
+  );
+  assert.equal(f.right.stack.dataset.expandedCount, '1');
+});
+
+for (const change of ['width-style', 'participant', 'viewport']) {
+  test(`late right ${change} input change discards the single-use snapshot`, () => {
+    const f = pairedFixture();
+    let preparations = 0;
+    let rightLifts = 0;
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring') rightLifts++;
+      return set(key, value);
+    };
+    layoutPanelRails({
+      left: f.left.options,
+      readRight() {
+        if (++preparations === 2) {
+          if (change === 'width-style')
+            f.right.stack.style.setProperty('width', '300px');
+          if (change === 'participant') f.right.first.hidden = true;
+          if (change === 'viewport')
+            f.right.options.windowRef.innerHeight = 850;
+        }
+        return f.right.options;
+      },
+    });
+    assert.equal(rightLifts, 2);
+  });
+}
+
+for (const kind of [
+  'mobile',
+  'cyber',
+  'auto-collapse',
+  'exclusive-change',
+  'expanded-aria',
+  'collapsed-aria',
+]) {
+  test(`paired pass does not premeasure right ${kind} reconciliation`, () => {
+    const f = pairedFixture();
+    if (kind === 'mobile')
+      f.right.options.windowRef.matchMedia = () => ({ matches: true });
+    if (kind === 'cyber')
+      f.right.options.hud = { visible: true, variant: 'cyber' };
+    if (kind === 'auto-collapse')
+      f.right.first.classList.add('collapsed', 'layout-auto-collapsed');
+    if (kind === 'exclusive-change')
+      f.right.stack.classList.remove('layout-exclusive');
+    if (kind === 'expanded-aria') {
+      f.right.first.setAttribute('aria-hidden', 'true');
+      // Model a restored ARIA-dependent hide: measuring before normalization
+      // would incorrectly retain a zero intrinsic height.
+      const rect = f.right.first.getBoundingClientRect.bind(f.right.first);
+      f.right.first.getBoundingClientRect = () =>
+        f.right.first.getAttribute('aria-hidden') === 'true'
+          ? { ...rect(), height: 0 }
+          : rect();
+      Object.defineProperty(f.right.first, 'scrollHeight', {
+        get: () =>
+          f.right.first.getAttribute('aria-hidden') === 'true' ? 0 : 220,
+      });
+    }
+    if (kind === 'collapsed-aria')
+      f.right.second.removeAttribute('aria-hidden');
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring')
+        assert.equal(
+          f.left.stack.getAttribute('data-rail-measuring'),
+          undefined,
+        );
+      return set(key, value);
+    };
+    f.run();
+    if (kind === 'expanded-aria') {
+      assert.equal(f.right.first.getAttribute('aria-hidden'), undefined);
+      assert.equal(
+        f.right.first.style.getPropertyValue('--right-panel-allocated-height'),
+        '220.0px',
+      );
+    }
+    if (kind === 'collapsed-aria')
+      assert.equal(f.right.second.getAttribute('aria-hidden'), 'true');
+  });
+}
+
+for (const side of ['left', 'right']) {
+  test(`paired ${side} measurement failure restores both overrides and right scroll`, () => {
+    const f = pairedFixture();
+    f.right.first.scrollTop = 31;
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      const result = set(key, value);
+      if (key === 'data-rail-measuring') f.right.first.scrollTop = 0;
+      return result;
+    };
+    if (side === 'left') {
+      Object.defineProperty(f.left.first, 'scrollHeight', {
+        get() {
+          throw new Error('intrinsic failed');
+        },
+      });
+    } else {
+      f.right.first.getBoundingClientRect = () => {
+        throw new Error('intrinsic failed');
+      };
+    }
+    assert.throws(f.run, /intrinsic failed/);
+    assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.first.scrollTop, 31);
+  });
+}
+
+test('paired restoration releases right override even if left removal throws', () => {
+  const f = pairedFixture();
+  const remove = f.left.stack.removeAttribute;
+  f.left.stack.removeAttribute = (key) => {
+    remove(key);
+    if (key === 'data-rail-measuring') throw new Error('release failed');
+  };
+  assert.throws(f.run, /release failed/);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+});
+
+test('failed right override entry restores both markers and every remaining scroll owner', () => {
+  const f = pairedFixture();
+  f.right.first.scrollTop = 31;
+  f.right.second.scrollTop = 47;
+  const set = f.right.stack.setAttribute;
+  f.right.stack.setAttribute = (key, value) => {
+    const result = set(key, value);
+    if (key === 'data-rail-measuring') {
+      f.right.first.scrollTop = f.right.second.scrollTop = 0;
+      throw new Error('entry failed');
+    }
+    return result;
+  };
+  assert.throws(f.run, /entry failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.first.scrollTop, 31);
+  assert.equal(f.right.second.scrollTop, 47);
+});
+
+test('one throwing scroll restore does not strand another scroll owner', () => {
+  const f = pairedFixture();
+  let top = 31;
+  Object.defineProperty(f.right.first, 'scrollTop', {
+    get: () => top,
+    set(value) {
+      if (value === 31) throw new Error('scroll restore failed');
+      top = value;
+    },
+  });
+  f.right.second.scrollTop = 47;
+  const set = f.right.stack.setAttribute;
+  f.right.stack.setAttribute = (key, value) => {
+    const result = set(key, value);
+    if (key === 'data-rail-measuring')
+      f.right.first.scrollTop = f.right.second.scrollTop = 0;
+    return result;
+  };
+  assert.throws(f.run, /scroll restore failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.second.scrollTop, 47);
+});
+
+test('right geometry, scroll getter and final constrained clamp remain after left apply', () => {
+  const f = pairedFixture();
+  f.right.options.displayPanel = f.right.first;
+  f.right.first.scrollHeight = 400;
+  f.right.first.clientHeight = 350;
+  let applied = false;
+  const toggle = f.left.stack.classList.toggle;
+  f.left.stack.classList.toggle = (...args) => {
+    applied = true;
+    return toggle(...args);
+  };
+  const rightRect = f.right.stack.getBoundingClientRect.bind(f.right.stack);
+  f.right.stack.getBoundingClientRect = () => {
+    assert.equal(applied, true);
+    assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+    return rightRect();
+  };
+  f.right.options.readDisplayScrollTop = () => {
+    assert.equal(applied, true);
+    return 80;
+  };
+  f.run();
+  assert.equal(f.right.first.scrollTop, 50);
+});
+
+test('throwing right scroll getter leaves the completed shared transaction restored', () => {
+  const f = pairedFixture();
+  f.right.options.readDisplayScrollTop = () => {
+    throw new Error('scroll reader failed');
+  };
+  assert.throws(f.run, /scroll reader failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+});
 
 test('missing rails are inert without browser globals', () => {
   layoutLeftPanelRail({});

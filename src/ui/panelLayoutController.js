@@ -1,6 +1,13 @@
 /** Own rail measurement, layout scheduling and dock tray observation. */
-import { layoutLeftPanelRail, layoutRightPanelRail } from './panelRails.js';
-import { syncRadioPanelPlacement } from './radioPanelPlacement.js';
+import {
+  layoutLeftPanelRail,
+  layoutRightPanelRail,
+  layoutPanelRails,
+} from './panelRails.js';
+import {
+  isRadioPanelPlacementCurrent,
+  syncRadioPanelPlacement,
+} from './radioPanelPlacement.js';
 const COCKPIT_LAYOUT_SETTLE_MS = 240;
 /**
  * Fixed UI regions that can occupy the left accordion's vertical lane.
@@ -291,8 +298,8 @@ export class PanelLayoutController {
     if (this.destroyed) return;
     if (reconsiderAutoCollapse) this._rightStackReconsiderAutoCollapse = true;
     if (!this._rightPanelStack || this._rightStackLayoutFrame !== null) return;
-    this._rightStackLayoutFrame = requestAnimationFrame(() => {
-      if (this.destroyed) return;
+    const frame = requestAnimationFrame(() => {
+      if (this.destroyed || this._rightStackLayoutFrame !== frame) return;
       this._rightStackLayoutFrame = null;
       if (this._rightStackReconsiderAutoCollapse) {
         this._rightStackReconsiderAutoCollapse = false;
@@ -305,12 +312,18 @@ export class PanelLayoutController {
       }
       this._syncRightPanelAdaptiveLayout();
     });
+    this._rightStackLayoutFrame = frame;
   }
 
   _syncRightPanelAdaptiveLayout() {
     if (this.destroyed) return;
     syncRadioPanelPlacement(document);
-    layoutRightPanelRail({
+    layoutRightPanelRail(this._rightPanelLayoutOptions());
+  }
+
+  _rightPanelLayoutOptions() {
+    if (this.destroyed) return { stack: null };
+    return {
       stack: this._rightPanelStack,
       obstacles: document.querySelectorAll(RIGHT_STACK_OBSTACLE_SELECTOR),
       windowRef: window,
@@ -321,7 +334,7 @@ export class PanelLayoutController {
       leftStack: this._leftPanelStack,
       displayPanel: this._ppToggles,
       readDisplayScrollTop: this.readDisplayScrollTop,
-    });
+    };
   }
 
   _initLeftPanelAdaptiveLayout() {
@@ -457,6 +470,31 @@ export class PanelLayoutController {
     this._leftStackLayoutFrame = requestAnimationFrame(() => {
       if (this.destroyed) return;
       this._leftStackLayoutFrame = null;
+      // Only consume a right pass that is already pending behind this left
+      // callback. Disclosure reconsideration retains the ordinary callbacks.
+      // Tactical desktop widths are independent in layers.css/scenes.css;
+      // right vertical obstacle/alignment reads still follow left application.
+      if (
+        this._rightStackLayoutFrame !== null &&
+        !this._leftStackReconsiderAutoCollapse &&
+        !this._rightStackReconsiderAutoCollapse &&
+        window.matchMedia &&
+        !window.matchMedia('(max-width: 720px)').matches &&
+        this.readHud().variant === 'tactical' &&
+        isRadioPanelPlacementCurrent(document)
+      ) {
+        cancelAnimationFrame(this._rightStackLayoutFrame);
+        this._rightStackLayoutFrame = null;
+        try {
+          this._syncPairedPanelAdaptiveLayout();
+        } catch (error) {
+          // A failed left measurement must not lose the previously owned right
+          // request. Any newer request made during the pass remains coalesced.
+          this._scheduleRightPanelLayout();
+          throw error;
+        }
+        return;
+      }
       if (this._leftStackReconsiderAutoCollapse) {
         this._leftStackReconsiderAutoCollapse = false;
         for (const panel of this._leftPanelStack.querySelectorAll(
@@ -472,7 +510,11 @@ export class PanelLayoutController {
 
   _syncLeftPanelAdaptiveLayout() {
     if (this.destroyed) return;
-    layoutLeftPanelRail({
+    layoutLeftPanelRail(this._leftPanelLayoutOptions());
+  }
+
+  _leftPanelLayoutOptions() {
+    return {
       stack: this._leftPanelStack,
       obstacles: document.querySelectorAll(LEFT_STACK_OBSTACLE_SELECTOR),
       windowRef: window,
@@ -482,6 +524,24 @@ export class PanelLayoutController {
       onRetry: () => this._scheduleLeftPanelLayout(),
       collapsedHeights: this._leftStackCollapsedHeights,
       onAligned: () => this._scheduleRightPanelLayout(),
+    };
+  }
+
+  _syncPairedPanelAdaptiveLayout() {
+    if (this.destroyed) return;
+    layoutPanelRails({
+      left: {
+        ...this._leftPanelLayoutOptions(),
+        // The right pass below already owns the alignment notification.
+        onAligned: undefined,
+      },
+      readRight: () => this._rightPanelLayoutOptions(),
+      syncRightPlacement: () => {
+        if (this.destroyed) return false;
+        const unchanged = isRadioPanelPlacementCurrent(document);
+        syncRadioPanelPlacement(document);
+        return unchanged;
+      },
     });
   }
   destroy() {

@@ -32,6 +32,7 @@ export function layoutLeftPanelRail({
   onRetry,
   collapsedHeights,
   onAligned,
+  measureIntrinsicHeights,
   getComputedStyle = (element) => windowRef.getComputedStyle(element),
 }) {
   if (!stack) return;
@@ -169,13 +170,19 @@ export function layoutLeftPanelRail({
   // the world-overlay chrome observer and schedules unnecessary rendering.
   let naturalExpandedHeights = [];
   if (expandedPanels.length) {
-    stack.setAttribute('data-rail-measuring', '');
-    try {
-      naturalExpandedHeights = expandedPanels.map((panel) =>
+    const measure = () =>
+      expandedPanels.map((panel) =>
         measurePanelNaturalHeight(panel, getComputedStyle),
       );
-    } finally {
-      stack.removeAttribute('data-rail-measuring');
+    if (measureIntrinsicHeights) {
+      naturalExpandedHeights = measureIntrinsicHeights(measure);
+    } else {
+      stack.setAttribute('data-rail-measuring', '');
+      try {
+        naturalExpandedHeights = measure();
+      } finally {
+        stack.removeAttribute('data-rail-measuring');
+      }
     }
   }
   const availableHeight = Math.max(0, safeBottom - safeTop);

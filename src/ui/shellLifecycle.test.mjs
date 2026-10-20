@@ -174,6 +174,144 @@ test('panel layout coalesces each rail and cannot rearm after destruction', () =
   }
 });
 
+function pairedControllerFixture() {
+  const f = fixture();
+  window.matchMedia = () => ({ matches: false });
+  const calls = [];
+  const owner = new PanelLayoutController({
+    readHud: () => ({ visible: true, variant: 'tactical' }),
+    scheduleCockpitLayout() {},
+    syncPanelCollapseButton() {},
+    readDisplayScrollTop: () => 0,
+  });
+  owner._syncLeftPanelAdaptiveLayout = () => calls.push('left');
+  owner._syncRightPanelAdaptiveLayout = () => calls.push('right');
+  owner._syncPairedPanelAdaptiveLayout = () => calls.push('pair');
+  const run = (id) => {
+    const callback = f.frames.get(id);
+    f.frames.delete(id);
+    callback();
+  };
+  return { ...f, owner, calls, run };
+}
+
+test('pending Tactical pair consumes the right callback without an alignment follow-up', () => {
+  const f = pairedControllerFixture();
+  try {
+    f.owner._scheduleLeftPanelLayout();
+    f.owner._scheduleRightPanelLayout();
+    const left = f.owner._leftStackLayoutFrame;
+    const oldRight = f.frames.get(f.owner._rightStackLayoutFrame);
+    f.run(left);
+    assert.deepEqual(f.calls, ['pair']);
+    assert.equal(f.frames.size, 0);
+    oldRight();
+    assert.deepEqual(
+      f.calls,
+      ['pair'],
+      'cancelled callback cannot execute twice',
+    );
+  } finally {
+    f.owner.destroy();
+    f.restore();
+  }
+});
+
+test('requests made during a paired pass survive and a cancelled old callback cannot clear them', () => {
+  const f = pairedControllerFixture();
+  try {
+    f.owner._syncPairedPanelAdaptiveLayout = () => {
+      f.calls.push('pair');
+      f.owner._scheduleRightPanelLayout();
+      f.owner._scheduleLeftPanelLayout();
+    };
+    f.owner._scheduleLeftPanelLayout();
+    f.owner._scheduleRightPanelLayout();
+    const oldRight = f.frames.get(f.owner._rightStackLayoutFrame);
+    f.run(f.owner._leftStackLayoutFrame);
+    const nextRight = f.owner._rightStackLayoutFrame;
+    const nextLeft = f.owner._leftStackLayoutFrame;
+    assert.equal(f.frames.size, 2);
+    oldRight();
+    assert.equal(f.owner._rightStackLayoutFrame, nextRight);
+    f.run(nextRight);
+    f.run(nextLeft);
+    assert.deepEqual(f.calls, ['pair', 'right', 'left']);
+    assert.equal(f.frames.size, 0);
+  } finally {
+    f.owner.destroy();
+    f.restore();
+  }
+});
+
+for (const reason of [
+  'left-reconsider',
+  'right-reconsider',
+  'mobile',
+  'cyber',
+  'placement',
+]) {
+  test(`paired scheduling retains separate passes for ${reason}`, () => {
+    const f = pairedControllerFixture();
+    try {
+      if (reason === 'mobile') window.matchMedia = () => ({ matches: true });
+      if (reason === 'cyber')
+        f.owner.readHud = () => ({ visible: true, variant: 'cyber' });
+      if (reason === 'placement') {
+        const panel = { parentElement: null };
+        const parent = {};
+        const header = {};
+        f.nodes.set('radio-panel', panel);
+        f.nodes.set('global-context-panel', {
+          querySelector: (selector) =>
+            selector === '.panel-header' ? header : parent,
+        });
+        f.nodes.set('context-radio-dock', { parentElement: header });
+        f.nodes.set('context-radio-mini', { parentElement: null });
+      }
+      f.owner._scheduleLeftPanelLayout({
+        reconsiderAutoCollapse: reason === 'left-reconsider',
+      });
+      f.owner._scheduleRightPanelLayout({
+        reconsiderAutoCollapse: reason === 'right-reconsider',
+      });
+      const right = f.owner._rightStackLayoutFrame;
+      f.run(f.owner._leftStackLayoutFrame);
+      assert.equal(f.owner._rightStackLayoutFrame, right);
+      f.run(right);
+      assert.deepEqual(f.calls, ['left', 'right']);
+    } finally {
+      f.owner.destroy();
+      f.restore();
+    }
+  });
+}
+
+test('failed paired measurement retains one right request and destruction cancels it', () => {
+  const f = pairedControllerFixture();
+  try {
+    f.owner._syncPairedPanelAdaptiveLayout = () => {
+      f.owner._scheduleRightPanelLayout();
+      throw new Error('measurement failed');
+    };
+    f.owner._scheduleLeftPanelLayout();
+    f.owner._scheduleRightPanelLayout();
+    assert.throws(
+      () => f.run(f.owner._leftStackLayoutFrame),
+      /measurement failed/,
+    );
+    assert.equal(f.frames.size, 1);
+    const late = [...f.frames.values()][0];
+    f.owner.destroy();
+    late();
+    assert.deepEqual(f.calls, []);
+    assert.equal(f.frames.size, 0);
+  } finally {
+    f.owner.destroy();
+    f.restore();
+  }
+});
+
 function leftRailResizeFixture(t) {
   const f = fixture();
   const savedResize = globalThis.ResizeObserver;
