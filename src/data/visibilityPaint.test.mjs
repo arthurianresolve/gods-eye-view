@@ -7,7 +7,10 @@ import { waitForVisibilityPaint } from './visibilityPaint.js';
 function browser() {
   const documentRef = new EventTarget();
   const frames = new Map();
+  const tasks = new Map();
+  const knownTasks = new Map();
   let nextFrame = 0;
+  let nextTask = 0;
   documentRef.hidden = false;
   documentRef.defaultView = {
     requestAnimationFrame(callback) {
@@ -18,10 +21,21 @@ function browser() {
     cancelAnimationFrame(id) {
       frames.delete(id);
     },
+    setTimeout(callback, delay) {
+      assert.equal(delay, 0);
+      const id = ++nextTask;
+      tasks.set(id, callback);
+      knownTasks.set(id, callback);
+      return id;
+    },
+    clearTimeout(id) {
+      tasks.delete(id);
+    },
   };
   return {
     documentRef,
     frames,
+    tasks,
     frame() {
       // RAFs registered by a callback belong to the next rendering update.
       for (const [id, callback] of [...frames]) {
@@ -29,12 +43,23 @@ function browser() {
         callback(nextFrame * 16);
       }
     },
+    task() {
+      // Tasks created from a RAF run only after that rendering update.
+      for (const [id, callback] of [...tasks]) {
+        if (!tasks.delete(id)) continue;
+        callback();
+      }
+    },
+    invokeStaleTask(id) {
+      knownTasks.get(id)?.();
+    },
     hide() {
       documentRef.hidden = true;
       documentRef.dispatchEvent(new Event('visibilitychange'));
     },
     assertReleased(signal) {
       assert.equal(frames.size, 0);
+      assert.equal(tasks.size, 0);
       assert.equal(
         getEventListeners(documentRef, 'visibilitychange').length,
         0,
@@ -88,7 +113,7 @@ function fixture() {
   return { ...page, calls, layer, manager, events, presentations };
 }
 
-test('paint wait spans a rendering opportunity and releases all owned callbacks', async () => {
+test('layer work waits for the post-RAF task and releases both owned callbacks', async () => {
   const page = browser();
   const controller = new AbortController();
   let complete = false;
@@ -105,14 +130,15 @@ test('paint wait spans a rendering opportunity and releases all owned callbacks'
     false,
     'The first pre-paint callback must not start layer work',
   );
-  assert.equal(page.frames.size, 1);
-  page.frame();
+  assert.equal(page.frames.size, 0);
+  assert.equal(page.tasks.size, 1);
+  page.task();
   await waiting;
   assert.equal(complete, true);
   page.assertReleased(controller.signal);
 });
 
-test('paint wait releases hidden, aborted and unavailable browser paths without a timer', async () => {
+test('paint wait releases hidden, aborted and unavailable browser paths', async () => {
   for (const afterFirstFrame of [false, true]) {
     const page = browser();
     const controller = new AbortController();
@@ -141,6 +167,69 @@ test('paint wait releases hidden, aborted and unavailable browser paths without 
     signal: controller.signal,
   });
   page.assertReleased(controller.signal);
+
+  const noTimer = browser();
+  noTimer.documentRef.defaultView.setTimeout = undefined;
+  await waitForVisibilityPaint({ documentRef: noTimer.documentRef });
+  noTimer.assertReleased();
+});
+
+test('abort or hide between RAF and task cancels the task; stale tasks finish once', async () => {
+  for (const end of ['abort', 'hide']) {
+    const page = browser();
+    const controller = new AbortController();
+    let completions = 0;
+    const waiting = waitForVisibilityPaint({
+      documentRef: page.documentRef,
+      signal: controller.signal,
+    }).then(() => completions++);
+    page.frame();
+    const [taskId] = page.tasks.keys();
+    if (end === 'abort') controller.abort();
+    else page.hide();
+    await waiting;
+    assert.equal(completions, 1);
+    page.invokeStaleTask(taskId);
+    assert.equal(completions, 1);
+    page.assertReleased(controller.signal);
+  }
+
+  const page = browser();
+  let completions = 0;
+  const waiting = waitForVisibilityPaint({
+    documentRef: page.documentRef,
+  }).then(() => completions++);
+  page.frame();
+  const [taskId] = page.tasks.keys();
+  page.task();
+  await waiting;
+  page.invokeStaleTask(taskId);
+  assert.equal(completions, 1);
+  page.assertReleased();
+});
+
+test('RAF or task scheduling errors resume lifecycle without leaking listeners', async () => {
+  const rafPage = browser();
+  rafPage.documentRef.defaultView.requestAnimationFrame = () => {
+    throw new Error('RAF scheduler unavailable');
+  };
+  await waitForVisibilityPaint({ documentRef: rafPage.documentRef });
+  rafPage.assertReleased();
+
+  const taskPage = browser();
+  taskPage.documentRef.defaultView.setTimeout = () => {
+    throw new Error('task scheduler unavailable');
+  };
+  let complete = false;
+  const waiting = waitForVisibilityPaint({
+    documentRef: taskPage.documentRef,
+  }).then(() => {
+    complete = true;
+  });
+  taskPage.frame();
+  await waiting;
+  assert.equal(complete, true);
+  taskPage.assertReleased();
 });
 
 test('user enable can paint before work while disable starts without waiting for a frame', async () => {
@@ -167,7 +256,7 @@ test('user enable can paint before work while disable starts without waiting for
     f.events.some(({ type }) => type === 'visibility'),
     false,
   );
-  f.frame();
+  f.task();
   assert.equal(await enabling, true);
   assert.equal(f.manager.isEnabled(f.layer.id), true);
   assert.equal(f.calls.enable, 1);
@@ -208,6 +297,7 @@ test('caller abort before layer work cancels once without compensating untouched
   });
   await until(() => f.frames.size === 1);
   f.frame();
+  assert.equal(f.tasks.size, 1);
   controller.abort();
   assert.equal(await enabling, false);
   f.assertReleased(controller.signal);
@@ -284,7 +374,7 @@ test('a same-target successor gets its own paint wait and sole settled publicati
   f.frame();
   await Promise.resolve();
   assert.equal(f.calls.enable, 0);
-  f.frame();
+  f.task();
   assert.equal(await second.promise, true);
   assert.equal(f.calls.enable, 1);
   assert.deepEqual(
@@ -396,7 +486,7 @@ test('a blocked request schedules no paint and errors after presentation retain 
   const on = f.manager.setEnabled(f.layer.id, true, { origin: 'user' });
   await until(() => f.frames.size === 1);
   f.frame();
-  f.frame();
+  f.task();
   assert.equal(await on, false);
   assert.equal(f.calls.disable, 1);
   assert.equal(
