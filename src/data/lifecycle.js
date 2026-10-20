@@ -668,6 +668,7 @@ export class LayerLifecycle {
       intentEpoch = null,
       suppressWillChangeNotification = false,
       beforeEnableParams = null,
+      deferUserDisable = true,
     } = {},
   ) {
     const desiredState = Boolean(targetEnabled);
@@ -739,9 +740,10 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
-    // Enabling can schedule expensive first-frame geometry/depth work. Let its
-    // acknowledgment paint first; disabling must instead hide that work now.
-    if (origin === 'user' && desiredState) {
+    // Direct user transitions publish honest busy presentation before the
+    // owned rendering opportunity. Settled visibility and live resources stay
+    // unchanged until the following task. Bulk clear keeps immediate teardown.
+    if (origin === 'user' && (desiredState || deferUserDisable)) {
       this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
       await waitForVisibilityPaint({
         signal,
@@ -1129,6 +1131,7 @@ export class LayerLifecycle {
       notificationToken = null,
       notifyWillChangeBeforeEffective = false,
       beforeEnableParams = null,
+      deferUserDisable = true,
     } = {},
   ) {
     const entry = this.layers.get(layerId);
@@ -1435,6 +1438,7 @@ export class LayerLifecycle {
           intentEpoch,
           suppressWillChangeNotification: notifyWillChangeBeforeEffective,
           beforeEnableParams,
+          deferUserDisable,
         });
       } finally {
         signal?.removeEventListener('abort', forwardCallerAbort);
@@ -1632,10 +1636,11 @@ export class LayerLifecycle {
         }
         try {
           const clearIntentEpoch = entry.visibilityIntentEpoch + 1;
-          const result = await this.setEnabled(layerId, false, {
+          const result = await this._setEnabledWithIntent(layerId, false, {
             origin,
+            deferUserDisable: false,
             ...(notificationToken ? { notificationToken } : {}),
-          });
+          }).promise;
           attempts.set(layerId, {
             result,
             superseded: entry.visibilityIntentEpoch !== clearIntentEpoch,
