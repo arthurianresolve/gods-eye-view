@@ -25,7 +25,42 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
-The latest formal attempt is `fbe839ea` with feedback v4/readiness v7. It remains
+The latest formal attempt is frozen application and QA `278c7854`, with
+feedback v5/readiness v7. Acquisition completed on the Windows UHD 620 at
+1280×537 CSS pixels, DPR 2, with unchanged Manual 75% settings. Both roles
+completed 20 local actions, 20 replay seeks, two warmup and six measured
+lifecycle cycles. Both browsers and their owned geometry helpers closed
+normally; each helper supplied 22 fresh readings without the earlier timeout.
+This is **not an acceptance pass**:
+
+- The frozen consumer rejects local feedback because some mutation batches
+  lack a timely post-layout proof. Later positive readings do not discharge
+  that requirement. No measured hiding is claimed from an unavailable proof.
+- Raw native local-control p95 is **144 ms**, above 100 ms. The first two
+  candidate actions are 192 and 144 ms; the other 18 are 40–88 ms. Keep all
+  actions, including the slow first pair, in the cohort.
+- Descriptive pre-render readiness p95 is **230.9 ms versus 119 ms** on the
+  control, and completed-frame p95 is **235.6 ms versus 123.2 ms**. These
+  independent regressions remain failures even if feedback proof is repaired.
+- Replay completed-frame p95 is **96.3 ms**, below 250 ms; sampled peak heap
+  is **5.67% above control**, within its 10% gate. The heap measurement is a
+  short non-GC sampled peak, not retained-heap or final-soak evidence.
+
+The raw capture SHA-256 is
+`106ea65ddfc578389edd7a260c7b5ff06d7672ea9b7ad1a81c0581708970c8fa`.
+All 23 raw, derived and supporting files (6,049,050 bytes) have independent
+VM105 readback under
+`qualification-metrics-278c7854-native-window-v5-v7-acceptance-failed-complete-20261020`.
+The original completed acquisition and failed acceptance statuses are both
+preserved. No final Ampfing soak has started for this failed candidate.
+
+A subsequent two-action diagnostic confirms the single-use allocation-response
+filter works, but exposes a separate right-first scheduling path: right and
+left rails measure separately, and the left pass queues another right pass.
+Correct that owner ordering and isolate ON completion-to-readiness cost before
+another formal capture. Prepared visual/startup captures remain unrun.
+
+The preceding `fbe839ea` attempt with feedback v4/readiness v7 remains
 **failed**, not accepted: candidate native local-control p95 was 208 ms versus
 the 100 ms limit; pre-render readiness p95 was 138 ms versus 101.3 ms on the
 control. The control's mixed-use acquisition also stopped at a native geometry
@@ -33,7 +68,8 @@ query, so this is not a valid complete comparison. Both owned browsers closed
 normally, and the complete failed attempt is retained on VM105. No final soak
 has been commissioned for this failed candidate.
 
-Three corrections are in progress before another formal capture:
+The following corrections were implemented for `278c7854`; their original
+focused validation is recorded below. They do not establish overall acceptance:
 
 - Keep one disposable Windows geometry helper per browser owner. Compile its
   read-only declarations once, take a fresh PID-bound reading per request,
@@ -72,8 +108,13 @@ DISABLING feedback through the existing owned rendering opportunity, preserving
 settled visibility until teardown starts. Programmatic changes, bulk Clear
 Selected and teardown remain immediate; abort and superseding intent release
 the pending work. These counts are overlapping scopes, not a summed total.
-None establishes a latency improvement. Final-source Node 26, CI, matched
-browser qualification and soak remain pending.
+None of those focused tests establishes a latency improvement. Final-source
+Node 26 now passes 531/531 affected tests and all adopted static checks.
+Test-only `3f46ae3a` repairs a stale Clear Selected assertion with actual batch
+behavior; its 38-test file passes on Node 24 and 26 without changing frozen
+application or QA `278c7854`. GitHub's versioned artifact verification passes
+for that test-only revision; stable promotion was not requested or performed.
+The completed hardware attempt and remaining failures are recorded above.
 
 1. **Finish the bounded latency diagnosis and correct measurement defects.**
    Keep the native 100 ms local-control target and independent 10% regression
