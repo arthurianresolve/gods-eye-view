@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { webcrypto } from 'node:crypto';
+import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { createWorkspaceStorage } from '../../src/storage/index.js';
@@ -30,6 +30,14 @@ import {
   collectQualificationMetricsForBuild,
 } from '../qa-qualification-metrics-capture.mjs';
 import { INTERACTION_EVENT_TIMING_PLAN } from './interactionEventTiming.mjs';
+import {
+  createQualificationBuildIdentityPlan,
+  inspectQualificationBuildIdentityPlan,
+  assertQualificationLiveBuildIdentity,
+  createQualificationBuildIdentityEvidence,
+  qualificationBuildExpectedIdentity,
+  qualificationBuildIdentityEvidenceReference,
+} from './qualificationBuildIdentity.mjs';
 
 test('heap sampler keeps the final measured cycle while awaiting end-state verification', async () => {
   const source = readFileSync(
@@ -100,6 +108,7 @@ test('heap sampler keeps the final measured cycle while awaiting end-state verif
       SAMPLE_MAX_GAP_MS: 5000,
       SAMPLE_CADENCE_MS: 1000,
       nativeWindowViewport: false,
+      buildIdentityContext: null,
       performance: { now: () => 1 },
       setTimeout(callback, delay) {
         if (delay === 1000) {
@@ -533,6 +542,286 @@ function useNativeWindowEnvironment(evidence) {
   };
   return evidence;
 }
+
+function directIdentityMetricEvidence() {
+  const interactionEvidence = useNativeWindowEnvironment(
+    eventTimingInteractionEvidence(),
+  );
+  const sampledHeapEvidence = useNativeWindowEnvironment(heapEvidence());
+  const hash = (value) => createHash('sha256').update(value).digest('hex');
+  const userAgent =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36';
+  const renderer = 'ANGLE (Intel, Intel UHD Graphics 620, D3D11)';
+  const application = { baseline: '1'.repeat(40), candidate: '2'.repeat(40) };
+  const harness = '3'.repeat(40);
+  const receipts = {},
+    builds = {};
+  for (const role of ['baseline', 'candidate']) {
+    const identity = interactionEvidence.builds[role].identity;
+    identity.userAgent = userAgent;
+    identity.renderer = renderer;
+    Object.assign(identity.settings, {
+      bloom: identity.settings.visual.bloomEnabled,
+      bloomIntensity: identity.settings.visual.bloomIntensity,
+      sharpen: identity.settings.visual.sharpenEnabled,
+      sharpenIntensity: identity.settings.visual.sharpenIntensity,
+    });
+    identity.settingsAfter = structuredClone(identity.settings);
+    sampledHeapEvidence.builds[role].identity = structuredClone(identity);
+    const receipt = {
+      schema: 'gev-build-provenance/v1',
+      scope:
+        'unsigned local source-build receipt; not a hardware or release attestation',
+      source: { commit: application[role], worktree: 'clean' },
+      harness: { commit: harness, worktree: 'clean' },
+      buildRecipe: {},
+      assetCount: 1,
+      totalAssetBytes: 13,
+      assets: [
+        { path: 'index.html', bytes: 13, sha256: hash('<main></main>') },
+      ],
+    };
+    receipts[role] = {
+      ...receipt,
+      receiptSha256: hash(JSON.stringify(receipt)),
+    };
+    builds[role] = {
+      checkout: `/fixture/${role}`,
+      root: `/fixture/${role}-build`,
+      receipt: `/fixture/${role}-receipt.json`,
+      receiptFileSha256: hash(JSON.stringify(receipts[role])),
+      receiptSha256: receipts[role].receiptSha256,
+      baseUrl: `http://127.0.0.1:${role === 'baseline' ? 4316 : 4315}/`,
+      profile: 'standard',
+    };
+  }
+  const plan = createQualificationBuildIdentityPlan({
+    createdAt: '2026-10-20T00:00:00.000Z',
+    application,
+    buildHarness: { commit: harness, checkout: '/fixture/harness' },
+    browser: {
+      executable: '/fixture/chrome.exe',
+      executableSha256: 'c'.repeat(64),
+      product: ID.browserVersion,
+      userAgent,
+      platform: 'Win32',
+      renderer,
+    },
+    measurementEnvironment: QUALIFICATION_NATIVE_WINDOW_MODE,
+    nativeDpr: 2,
+    settings: interactionEvidence.builds.baseline.identity.settings,
+    builds,
+  });
+  const planBytes = Buffer.from(JSON.stringify(plan));
+  const context = inspectQualificationBuildIdentityPlan(planBytes, {
+    expectedPlanSha256: hash(planBytes),
+  });
+  const boundaries = {},
+    live = {};
+  for (const role of ['baseline', 'candidate']) {
+    boundaries[role] = {};
+    live[role] = {};
+    for (const phase of ['before', 'after']) {
+      const at =
+        phase === 'before'
+          ? '2026-10-20T00:00:01.000Z'
+          : '2026-10-20T00:00:16.000Z';
+      boundaries[role][phase] = {
+        schema: 'gev-qualification-build-identity-verification/v1',
+        kind: plan.kind,
+        scope: plan.scope,
+        comparisonEligible: false,
+        coldStartupEligible: false,
+        performanceEligible: false,
+        planSha256: context.planSha256,
+        role,
+        phase,
+        applicationCommit: application[role],
+        startedAt: at,
+        completedAt: at,
+        browserExecutableSha256: plan.browser.executableSha256,
+        receiptFileSha256: builds[role].receiptFileSha256,
+        receipt: receipts[role],
+        served: {
+          schema: 'gev-served-assets-verification/v1',
+          status: 'served-assets-match',
+          receiptSha256: receipts[role].receiptSha256,
+          assetCount: 1,
+          totalAssetBytes: 13,
+        },
+      };
+      const identity = interactionEvidence.builds[role].identity;
+      const actual = Object.fromEntries(
+        [
+          'applicationCommit',
+          'browserVersion',
+          'renderer',
+          'userAgent',
+          'platform',
+          'viewport',
+          'drawingBuffer',
+          'nativeSharpnessProfile',
+          'settings',
+        ].map((key) => [key, identity[key]]),
+      );
+      const nativeWindowEvidence = identity.nativeWindowViewport[phase];
+      live[role][phase] = assertQualificationLiveBuildIdentity(context, role, {
+        actual,
+        browserVersion: { product: plan.browser.product, userAgent },
+        browserProcess: {
+          pid: nativeWindowEvidence.browserPid,
+          executable: plan.browser.executable,
+        },
+        nativeWindowEvidence,
+      });
+    }
+  }
+  const buildIdentityEvidence = createQualificationBuildIdentityEvidence(
+    context,
+    {
+      boundaries,
+      live,
+      captureSpan: {
+        startedAt: '2026-10-20T00:00:02.500Z',
+        completedAt: '2026-10-20T00:00:15.000Z',
+      },
+    },
+  );
+  const reference = qualificationBuildIdentityEvidenceReference(
+    buildIdentityEvidence,
+  );
+  interactionEvidence.sourceIdentity = reference;
+  sampledHeapEvidence.sourceIdentity = structuredClone(reference);
+  return {
+    context,
+    buildIdentityEvidence,
+    interactionEvidence,
+    sampledHeapEvidence,
+  };
+}
+
+test('direct build identity validates native timing and heap without supplying startup or performance captures', () => {
+  const fixture = directIdentityMetricEvidence();
+  const args = { ...fixture };
+  delete args.context;
+  const result = evaluateQualificationMetrics(args);
+  for (const name of ['localControl', 'loadedReplaySeek', 'sampledPeakHeap'])
+    assert.equal(
+      result.metrics[name].status,
+      'measured',
+      result.metrics[name].reason,
+    );
+  assert.equal(result.metrics.coldStartup.status, 'unavailable');
+  assert.match(result.metrics.coldStartup.reason, /no cold-startup/);
+  assert.equal(result.acceptanceEligible, false);
+  assert.equal(result.status, 'pending');
+  assert.equal(
+    result.metrics.localControl.candidate.clickToNextRenderingP95Ms,
+    64,
+  );
+  assert.equal(
+    result.metrics.localControl.baseline.clickToNextRenderingP95Ms,
+    136,
+  );
+  assert.equal(fixture.buildIdentityEvidence.performanceEligible, false);
+  const slow = structuredClone(args);
+  for (const entry of slow.interactionEvidence.builds.candidate
+    .eventTimingCapture.entries)
+    entry.duration = 104;
+  assert.equal(
+    evaluateQualificationMetrics(slow).metrics.localControl.status,
+    'failed',
+  );
+  const missing = structuredClone(args);
+  missing.interactionEvidence.builds.candidate.eventTimingCapture.entries.pop();
+  assert.notEqual(
+    evaluateQualificationMetrics(missing).metrics.localControl.status,
+    'measured',
+  );
+});
+
+test('direct timing and heap require the complete exact envelope and its same owned browser', () => {
+  const { context, ...args } = directIdentityMetricEvidence();
+  for (const mutate of [
+    (x) => {
+      x.interactionEvidence.sourceIdentity.evidenceSha256 = '0'.repeat(64);
+    },
+    (x) => {
+      delete x.interactionEvidence.sourceIdentity;
+    },
+    (x) => {
+      x.interactionEvidence.builds.baseline.identity.nativeWindowViewport.before
+        .ordinal++;
+    },
+    (x) => {
+      x.interactionEvidence.builds.candidate.identity.applicationCommit =
+        '1'.repeat(40);
+    },
+    (x) => {
+      x.buildIdentityEvidence.live.candidate.after.browserProcess.pid++;
+    },
+    (x) => {
+      delete x.buildIdentityEvidence.boundaries.baseline.after;
+    },
+    (x) => {
+      x.baseline = capture();
+      x.candidate = capture(undefined, '2');
+    },
+    (x) => {
+      delete x.buildIdentityEvidence;
+    },
+  ]) {
+    const value = structuredClone(args);
+    mutate(value);
+    assert.notEqual(
+      evaluateQualificationMetrics(value).metrics.localControl.status,
+      'measured',
+    );
+  }
+  const wrongHeap = structuredClone(args);
+  wrongHeap.sampledHeapEvidence.sourceIdentity.planSha256 = '0'.repeat(64);
+  assert.notEqual(
+    evaluateQualificationMetrics(wrongHeap).metrics.sampledPeakHeap.status,
+    'measured',
+  );
+  const malformed = structuredClone(args);
+  malformed.buildIdentityEvidence.comparisonEligible = true;
+  assert.equal(
+    evaluateQualificationMetrics(malformed).metrics.sampledPeakHeap.status,
+    'failed',
+  );
+  assert.equal(context.plan.application.baseline, '1'.repeat(40));
+});
+
+test('direct producer launches the exact declared executable before any measurements', async () => {
+  const { context } = directIdentityMetricEvidence();
+  let calls = 0;
+  const result = await collectQualificationMetricsForBuild({
+    role: 'baseline',
+    url: context.plan.builds.baseline.baseUrl,
+    expected: qualificationBuildExpectedIdentity(context, 'baseline'),
+    fixture: {},
+    nativeWindowViewport: true,
+    buildIdentityContext: context,
+    createDriver: async (url, options) => {
+      calls++;
+      assert.equal(url, context.plan.builds.baseline.baseUrl);
+      assert.equal(
+        options.browserOptions.executablePath,
+        context.plan.browser.executable,
+      );
+      assert.equal(options.browserOptions.headless, false);
+      throw Object.assign(new Error('bounded fixture factory failure'), {
+        browserClose: { closeCompleted: true, forcedProcessTermination: false },
+      });
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.status, 'failed');
+  assert.equal(result.failureReason, 'bounded fixture factory failure');
+  assert.deepEqual(result.localControl, []);
+  assert.deepEqual(result.heapSamples, []);
+});
 
 test('native-window metrics keep the actual client extent and require complete owned proofs', () => {
   const expected = {

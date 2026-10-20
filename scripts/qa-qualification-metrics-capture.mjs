@@ -15,6 +15,17 @@ import {
 } from './performance/qualificationMetrics.mjs';
 import { assertNativeWindowViewportPair } from './performance/nativeWindowViewport.mjs';
 import {
+  QUALIFICATION_BUILD_IDENTITY_KIND,
+  resolveQualificationIdentitySource,
+  readQualificationBuildIdentityPlan,
+  qualificationBuildExpectedIdentity,
+  verifyQualificationBuildIdentityAssets,
+  assertQualificationLiveBuildIdentity,
+  readQualificationBrowserVersion,
+  createQualificationBuildIdentityEvidence,
+  qualificationBuildIdentityEvidenceReference,
+} from './performance/qualificationBuildIdentity.mjs';
+import {
   installInteractionEventTimingInPage,
   INTERACTION_EVENT_TIMING_PLAN,
 } from './performance/interactionEventTiming.mjs';
@@ -62,19 +73,21 @@ function cliArgs(argv) {
       throw new Error(`Expected --name value near ${key}`);
     args[key.slice(2)] = argv[index + 1];
   }
-  for (const key of [
-    'baseline-url',
-    'candidate-url',
-    'baseline-capture',
-    'candidate-capture',
-    'out',
-  ])
+  for (const key of ['baseline-url', 'candidate-url', 'out'])
     if (!args[key]) throw new Error(`Missing --${key}`);
   if (
     args['native-window-viewport'] !== undefined &&
     !['true', 'false'].includes(args['native-window-viewport'])
   )
     throw new Error('--native-window-viewport must be true or false');
+  resolveQualificationIdentitySource({
+    baselineCapturePath: args['baseline-capture'],
+    candidateCapturePath: args['candidate-capture'],
+    weatherIdentityEnvelopePath: args['weather-identity-envelope'],
+    buildIdentityPlanPath: args['build-identity-plan'],
+    buildIdentityPlanSha256: args['build-identity-plan-sha256'],
+    nativeWindowViewport: args['native-window-viewport'] === 'true',
+  });
   return args;
 }
 
@@ -191,6 +204,8 @@ export function buildQualificationIdentity(
   fixture = {},
   { nativeWindowViewport = null } = {},
 ) {
+  const expectedDpr =
+    expected.nativeDpr ?? expected.sourceProfile?.viewport?.dpr;
   assert.equal(actual.applicationCommit, expected.applicationCommit);
   assert.equal(actual.browserVersion, expected.browserVersion);
   assert.equal(actual.renderer, expected.renderer);
@@ -207,11 +222,11 @@ export function buildQualificationIdentity(
     assert.deepEqual(actual.viewport, {
       width: 1440,
       height: 1000,
-      dpr: expected.sourceProfile.viewport.dpr,
+      dpr: expectedDpr,
     });
     assert.deepEqual(actual.drawingBuffer, {
-      width: Math.floor(1440 * expected.sourceProfile.viewport.dpr),
-      height: Math.floor(1000 * expected.sourceProfile.viewport.dpr),
+      width: Math.floor(1440 * expectedDpr),
+      height: Math.floor(1000 * expectedDpr),
     });
   }
   assert.deepEqual(actual.nativeSharpnessProfile.viewport, actual.viewport);
@@ -247,11 +262,9 @@ export function buildQualificationIdentity(
       : {}),
   };
   if (nativeWindowViewport)
-    assertQualificationNativeWindowIdentity(
-      identity,
-      expected.sourceProfile.viewport.dpr,
-      { complete: false },
-    );
+    assertQualificationNativeWindowIdentity(identity, expectedDpr, {
+      complete: false,
+    });
   return identity;
 }
 
@@ -1540,14 +1553,39 @@ async function loadReplay(page) {
   });
 }
 
+async function readDirectBuildIdentity(
+  context,
+  role,
+  driver,
+  actual,
+  nativeWindowEvidence,
+) {
+  const browser = driver.page.browser(),
+    ownedProcess = browser.process();
+  return assertQualificationLiveBuildIdentity(context, role, {
+    actual,
+    browserVersion: await readQualificationBrowserVersion(driver.page),
+    browserProcess: {
+      pid: ownedProcess?.pid,
+      executable: ownedProcess?.spawnfile,
+    },
+    nativeWindowEvidence,
+  });
+}
+
 export async function collectQualificationMetricsForBuild({
   role,
   url,
   expected,
   fixture,
   nativeWindowViewport = false,
+  buildIdentityContext = null,
   createDriver = createRenderedSoakDriver,
 }) {
+  const expectedDpr =
+    expected.nativeDpr ?? expected.sourceProfile?.viewport?.dpr;
+  if (buildIdentityContext) assert.equal(nativeWindowViewport, true);
+  const buildIdentityLive = { before: null, after: null };
   let driver;
   let closeEvidence = null;
   let operationFailure = null;
@@ -1580,7 +1618,12 @@ export async function collectQualificationMetricsForBuild({
       expectedCommit: expected.applicationCommit,
       nativeResolution: true,
       prewarmApplication: false,
-      browserOptions: { headless: false },
+      browserOptions: {
+        headless: false,
+        ...(buildIdentityContext
+          ? { executablePath: buildIdentityContext.plan.browser.executable }
+          : {}),
+      },
       ...(nativeWindowViewport ? { nativeWindowViewport: true } : {}),
     });
     if (process.env.GEV_QA_SOFTWARE_RENDERING === '1')
@@ -1621,6 +1664,14 @@ export async function collectQualificationMetricsForBuild({
       nativeWindowViewport: nativeWindowProof,
     });
     browserIdentity = identity;
+    if (buildIdentityContext)
+      buildIdentityLive.before = await readDirectBuildIdentity(
+        buildIdentityContext,
+        role,
+        driver,
+        actual,
+        nativeWindowProof.before,
+      );
 
     if (process.platform !== 'win32')
       throw new Error(
@@ -1871,11 +1922,16 @@ export async function collectQualificationMetricsForBuild({
         nativeWindowProof.after = await driver.captureNativeWindowEvidence(
           'qualification-after',
         );
-        assertQualificationNativeWindowIdentity(
-          identity,
-          expected.sourceProfile.viewport.dpr,
-        );
+        assertQualificationNativeWindowIdentity(identity, expectedDpr);
       }
+      if (buildIdentityContext)
+        buildIdentityLive.after = await readDirectBuildIdentity(
+          buildIdentityContext,
+          role,
+          driver,
+          { ...actual, ...endState },
+          nativeWindowProof.after,
+        );
       assert.deepEqual(
         sampleErrors,
         [],
@@ -1967,6 +2023,7 @@ export async function collectQualificationMetricsForBuild({
     heapStatus,
     failureReason: operationFailure?.message || null,
     identity: browserIdentity,
+    ...(buildIdentityContext ? { buildIdentityLive } : {}),
     localControlCameraSetup,
     datacenterFixtureReceipt,
     replayCameraSetup,
@@ -2003,10 +2060,37 @@ export async function runQualificationMetricsCapture({
   baselineCapturePath,
   candidateCapturePath,
   weatherIdentityEnvelopePath,
+  buildIdentityPlanPath,
+  buildIdentityPlanSha256,
   outputPath,
   nativeWindowViewport = false,
 }) {
   assert.equal(typeof nativeWindowViewport, 'boolean');
+  const sourceKind = resolveQualificationIdentitySource({
+    baselineCapturePath,
+    candidateCapturePath,
+    weatherIdentityEnvelopePath,
+    buildIdentityPlanPath,
+    buildIdentityPlanSha256,
+    nativeWindowViewport,
+  });
+  const buildIdentityContext =
+    sourceKind.kind === QUALIFICATION_BUILD_IDENTITY_KIND
+      ? await readQualificationBuildIdentityPlan({
+          planPath: buildIdentityPlanPath,
+          expectedPlanSha256: buildIdentityPlanSha256,
+        })
+      : null;
+  if (buildIdentityContext) {
+    assert.equal(
+      new URL(baselineUrl).origin,
+      new URL(buildIdentityContext.plan.builds.baseline.baseUrl).origin,
+    );
+    assert.equal(
+      new URL(candidateUrl).origin,
+      new URL(buildIdentityContext.plan.builds.candidate.baseUrl).origin,
+    );
+  }
   const weatherIdentityPair = weatherIdentityEnvelopePath
     ? readWeatherBalancedIdentityCapturePair({
         envelopePath: weatherIdentityEnvelopePath,
@@ -2014,15 +2098,25 @@ export async function runQualificationMetricsCapture({
         candidatePath: candidateCapturePath,
       })
     : null;
-  const [baseline, candidate] = weatherIdentityPair
-    ? [weatherIdentityPair.baseline, weatherIdentityPair.candidate]
-    : await Promise.all([
-        readCapture(baselineCapturePath, 'baseline'),
-        readCapture(candidateCapturePath, 'candidate'),
-      ]);
+  const [baseline, candidate] = buildIdentityContext
+    ? [null, null]
+    : weatherIdentityPair
+      ? [weatherIdentityPair.baseline, weatherIdentityPair.candidate]
+      : await Promise.all([
+          readCapture(baselineCapturePath, 'baseline'),
+          readCapture(candidateCapturePath, 'candidate'),
+        ]);
+  const expectedIdentities = buildIdentityContext
+    ? Object.fromEntries(
+        ['baseline', 'candidate'].map((role) => [
+          role,
+          qualificationBuildExpectedIdentity(buildIdentityContext, role),
+        ]),
+      )
+    : { baseline: baseline.identity, candidate: candidate.identity };
   assert.notEqual(
-    baseline.identity.applicationCommit,
-    candidate.identity.applicationCommit,
+    expectedIdentities.baseline.applicationCommit,
+    expectedIdentities.candidate.applicationCommit,
   );
   const fixture = fixtureIdentity();
   const report = {
@@ -2042,6 +2136,18 @@ export async function runQualificationMetricsCapture({
           new URL('./performance/interactionEventTiming.mjs', import.meta.url),
         ),
       ),
+      ...(buildIdentityContext
+        ? {
+            buildIdentityModuleSha256: sha256(
+              await readFile(
+                new URL(
+                  './performance/qualificationBuildIdentity.mjs',
+                  import.meta.url,
+                ),
+              ),
+            ),
+          }
+        : {}),
       ...(nativeWindowViewport
         ? {
             nativeWindowViewportHelperSha256: sha256(
@@ -2060,31 +2166,43 @@ export async function runQualificationMetricsCapture({
           }
         : {}),
     },
-    sourceCaptures: weatherIdentityPair
+    sourceCaptures: buildIdentityContext
       ? {
-          purpose: 'identity-only-from-validated-weather-balanced-pair',
+          purpose: QUALIFICATION_BUILD_IDENTITY_KIND,
+          comparisonEligible: false,
           coldStartupEligible: false,
-          pairIndex: weatherIdentityPair.pairIndex,
-          envelope: weatherIdentityPair.envelope,
-          baseline: {
-            path: baseline.path,
-            sha256: baseline.sha256,
-            role: baseline.role,
-            pairIndex: baseline.pairIndex,
-            comparisonEligible: false,
+          performanceEligible: false,
+          plan: {
+            path: buildIdentityContext.path,
+            sha256: buildIdentityContext.planSha256,
           },
-          candidate: {
-            path: candidate.path,
-            sha256: candidate.sha256,
-            role: candidate.role,
-            pairIndex: candidate.pairIndex,
-            comparisonEligible: false,
-          },
+          application: buildIdentityContext.plan.application,
         }
-      : {
-          baseline: { path: baseline.path, sha256: baseline.sha256 },
-          candidate: { path: candidate.path, sha256: candidate.sha256 },
-        },
+      : weatherIdentityPair
+        ? {
+            purpose: 'identity-only-from-validated-weather-balanced-pair',
+            coldStartupEligible: false,
+            pairIndex: weatherIdentityPair.pairIndex,
+            envelope: weatherIdentityPair.envelope,
+            baseline: {
+              path: baseline.path,
+              sha256: baseline.sha256,
+              role: baseline.role,
+              pairIndex: baseline.pairIndex,
+              comparisonEligible: false,
+            },
+            candidate: {
+              path: candidate.path,
+              sha256: candidate.sha256,
+              role: candidate.role,
+              pairIndex: candidate.pairIndex,
+              comparisonEligible: false,
+            },
+          }
+        : {
+            baseline: { path: baseline.path, sha256: baseline.sha256 },
+            candidate: { path: candidate.path, sha256: candidate.sha256 },
+          },
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
       interactionProtocol: INTERACTION_PROTOCOL,
@@ -2129,14 +2247,16 @@ export async function runQualificationMetricsCapture({
                 'startup, single seeded-recording document restore, before/after cohort and the latest workspace restore per completed warmup/measured cycle; the driver validates both workspace restores live; exact helper validation across roles',
             }
           : {}),
-        browserVersion: baseline.identity.browserVersion,
-        renderer: baseline.identity.renderer,
+        browserVersion: expectedIdentities.baseline.browserVersion,
+        renderer: expectedIdentities.baseline.renderer,
         nativeSharpnessProfile: {
           id: 'native-sharpness-v1',
           useBrowserRecommendedResolution: false,
           resolutionScale: 1,
           maximumScreenSpaceError: 1,
-          dpr: baseline.identity.sourceProfile.viewport.dpr,
+          dpr:
+            expectedIdentities.baseline.nativeDpr ??
+            expectedIdentities.baseline.sourceProfile.viewport.dpr,
         },
         settingsSemantics:
           'effective application settings are read from the live viewer before and after this dedicated workload; each build must preserve its settings and both builds must match; matrix-workload settings are not copied',
@@ -2164,21 +2284,43 @@ export async function runQualificationMetricsCapture({
     writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, {
       flag: 'w',
     });
+  const identityBoundaries = { baseline: {}, candidate: {} };
+  let captureSpan = null;
   try {
+    if (buildIdentityContext) {
+      report.buildIdentityPreparation = {
+        planSha256: buildIdentityContext.planSha256,
+        boundaries: identityBoundaries,
+        status: 'running',
+      };
+      for (const role of ['baseline', 'candidate']) {
+        identityBoundaries[role].before =
+          await verifyQualificationBuildIdentityAssets(
+            buildIdentityContext,
+            role,
+            'before',
+          );
+        await persistProgress();
+      }
+      report.buildIdentityPreparation.status = 'completed';
+      captureSpan = { startedAt: new Date().toISOString(), completedAt: null };
+    }
     report.builds.baseline = await collectQualificationMetricsForBuild({
       role: 'baseline',
       url: baselineUrl,
-      expected: baseline.identity,
+      expected: expectedIdentities.baseline,
       fixture,
       nativeWindowViewport,
+      ...(buildIdentityContext ? { buildIdentityContext } : {}),
     });
     await persistProgress();
     report.builds.candidate = await collectQualificationMetricsForBuild({
       role: 'candidate',
       url: candidateUrl,
-      expected: candidate.identity,
+      expected: expectedIdentities.candidate,
       fixture,
       nativeWindowViewport,
+      ...(buildIdentityContext ? { buildIdentityContext } : {}),
     });
     await persistProgress();
     if (
@@ -2219,6 +2361,59 @@ export async function runQualificationMetricsCapture({
     report.status = 'failed';
     report.failureReason = error.message;
   } finally {
+    let directIdentityReference = null;
+    if (buildIdentityContext) {
+      report.buildIdentityPostflightErrors = [];
+      if (captureSpan) {
+        captureSpan.completedAt = new Date().toISOString();
+        report.buildIdentityCaptureSpan = captureSpan;
+        for (const role of ['baseline', 'candidate']) {
+          try {
+            identityBoundaries[role].after =
+              await verifyQualificationBuildIdentityAssets(
+                buildIdentityContext,
+                role,
+                'after',
+              );
+          } catch (error) {
+            report.status = 'failed';
+            report.failureReason ||= error.message;
+            report.buildIdentityPostflightErrors.push({
+              role,
+              message: error.message,
+            });
+          }
+        }
+        if (report.status === 'completed') {
+          try {
+            report.buildIdentityEvidence =
+              createQualificationBuildIdentityEvidence(buildIdentityContext, {
+                boundaries: identityBoundaries,
+                captureSpan,
+                live: Object.fromEntries(
+                  ['baseline', 'candidate'].map((role) => [
+                    role,
+                    report.builds[role].buildIdentityLive,
+                  ]),
+                ),
+              });
+            directIdentityReference =
+              qualificationBuildIdentityEvidenceReference(
+                report.buildIdentityEvidence,
+              );
+            // The complete envelope is retained once; children bind it by digest.
+            delete report.buildIdentityPreparation;
+          } catch (error) {
+            report.status = 'failed';
+            report.failureReason ||= error.message;
+            report.buildIdentityPostflightErrors.push({
+              role: 'pair',
+              message: error.message,
+            });
+          }
+        }
+      }
+    }
     const measurementEnvironment = nativeWindowViewport
       ? {
           schema: QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
@@ -2231,15 +2426,26 @@ export async function runQualificationMetricsCapture({
       : null;
     report.interactionEvidence = {
       schema: INTERACTION_SCHEMA,
+      ...(buildIdentityContext
+        ? {
+            sourceIdentity: directIdentityReference || {
+              kind: QUALIFICATION_BUILD_IDENTITY_KIND,
+              planSha256: buildIdentityContext.planSha256,
+              evidenceSha256: null,
+            },
+          }
+        : {}),
       ...(measurementEnvironment ? { measurementEnvironment } : {}),
       eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
       eventTimingProducerSha256:
         report.captureProducer.eventTimingObserverSha256,
-      status: ['baseline', 'candidate'].every(
-        (role) => report.builds[role]?.interactionStatus === 'completed',
-      )
-        ? 'completed'
-        : 'failed',
+      status:
+        (!buildIdentityContext || directIdentityReference) &&
+        ['baseline', 'candidate'].every(
+          (role) => report.builds[role]?.interactionStatus === 'completed',
+        )
+          ? 'completed'
+          : 'failed',
       pairing: fixture,
       builds: Object.fromEntries(
         ['baseline', 'candidate'].map((role) => [
@@ -2266,12 +2472,23 @@ export async function runQualificationMetricsCapture({
     };
     report.sampledHeapEvidence = {
       schema: HEAP_SCHEMA,
+      ...(buildIdentityContext
+        ? {
+            sourceIdentity: directIdentityReference || {
+              kind: QUALIFICATION_BUILD_IDENTITY_KIND,
+              planSha256: buildIdentityContext.planSha256,
+              evidenceSha256: null,
+            },
+          }
+        : {}),
       ...(measurementEnvironment ? { measurementEnvironment } : {}),
-      status: ['baseline', 'candidate'].every(
-        (role) => report.builds[role]?.heapStatus === 'completed',
-      )
-        ? 'completed'
-        : 'failed',
+      status:
+        (!buildIdentityContext || directIdentityReference) &&
+        ['baseline', 'candidate'].every(
+          (role) => report.builds[role]?.heapStatus === 'completed',
+        )
+          ? 'completed'
+          : 'failed',
       failureReason: report.failureReason,
       workPlan: WORK_PLAN,
       sampling: {
@@ -2322,6 +2539,8 @@ if (isMain()) {
     baselineCapturePath: args['baseline-capture'],
     candidateCapturePath: args['candidate-capture'],
     weatherIdentityEnvelopePath: args['weather-identity-envelope'],
+    buildIdentityPlanPath: args['build-identity-plan'],
+    buildIdentityPlanSha256: args['build-identity-plan-sha256'],
     outputPath: args.out,
     nativeWindowViewport: args['native-window-viewport'] === 'true',
   });

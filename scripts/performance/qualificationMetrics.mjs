@@ -4,6 +4,10 @@ import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
 import {
+  inspectQualificationBuildIdentityEvidence,
+  qualificationBuildIdentityEvidenceReference,
+} from './qualificationBuildIdentity.mjs';
+import {
   INTERACTION_EVENT_TIMING_PLAN,
   validateInteractionEventTiming,
 } from './interactionEventTiming.mjs';
@@ -1154,7 +1158,35 @@ function validateInteractionSide(
   });
 }
 
-function compareInteractionMetric(evidence, name, limitMs, captures) {
+function assertIdentitySourceReference(evidence, identitySource) {
+  if (identitySource) {
+    assert.deepEqual(
+      evidence.sourceIdentity,
+      identitySource.reference,
+      'Direct identity source reference is missing or changed',
+    );
+    for (const role of ['baseline', 'candidate'])
+      for (const phase of ['before', 'after'])
+        assert.deepEqual(
+          evidence.builds?.[role]?.identity?.nativeWindowViewport?.[phase],
+          identitySource.live[role][phase].nativeWindowEvidence,
+          'Timing/heap browser differs from the direct identity browser',
+        );
+  } else
+    assert.equal(
+      evidence.sourceIdentity,
+      undefined,
+      'Direct identity evidence requires its complete source envelope',
+    );
+}
+
+function compareInteractionMetric(
+  evidence,
+  name,
+  limitMs,
+  captures,
+  identitySource = null,
+) {
   if (!evidence)
     return unavailable('No interaction timing capture was supplied.');
   const protocolVersion =
@@ -1178,13 +1210,15 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     return unavailable('Interaction capture did not complete.');
 
   try {
+    assertIdentitySourceReference(evidence, identitySource);
     const nativeWindowViewport = validateMeasurementEnvironment(evidence);
+    if (identitySource) assert.equal(nativeWindowViewport, true);
     if (protocolVersion === 4) {
       assert.deepEqual(evidence.eventTimingPlan, INTERACTION_EVENT_TIMING_PLAN);
       assert.match(evidence.eventTimingProducerSha256 || '', /^[a-f0-9]{64}$/);
     }
     assert.ok(evidence.pairing && typeof evidence.pairing === 'object');
-    const expected = {
+    const expected = identitySource?.identities || {
       baseline: captureIdentity(captures?.baseline, 'Baseline'),
       candidate: captureIdentity(captures?.candidate, 'Candidate'),
     };
@@ -1536,7 +1570,7 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
   }
 }
 
-function compareSampledPeakHeap(evidence, captures) {
+function compareSampledPeakHeap(evidence, captures, identitySource = null) {
   if (!evidence)
     return unavailable(
       'Dedicated timestamped sampled-heap evidence is absent.',
@@ -1553,7 +1587,9 @@ function compareSampledPeakHeap(evidence, captures) {
         }
       : unavailable('Sampled heap evidence did not complete.');
   try {
+    assertIdentitySourceReference(evidence, identitySource);
     const nativeWindowViewport = validateMeasurementEnvironment(evidence);
+    if (identitySource) assert.equal(nativeWindowViewport, true);
     const plan = evidence.workPlan;
     if (
       !plan ||
@@ -1590,7 +1626,9 @@ function compareSampledPeakHeap(evidence, captures) {
     const result = {};
     for (const role of ['baseline', 'candidate']) {
       const side = evidence.builds?.[role];
-      const identity = captureIdentity(captures?.[role], `${role} heap`);
+      const identity =
+        identitySource?.identities[role] ||
+        captureIdentity(captures?.[role], `${role} heap`);
       if (
         !side ||
         !Array.isArray(side.samples) ||
@@ -1752,24 +1790,76 @@ export function evaluateQualificationMetrics({
   candidate,
   interactionEvidence = null,
   sampledHeapEvidence = null,
+  buildIdentityEvidence = null,
 } = {}) {
-  const coldStartup = evaluateColdStartupReadiness(baseline, candidate);
+  let identitySource = null;
+  if (buildIdentityEvidence !== null) {
+    try {
+      assert.equal(
+        baseline,
+        undefined,
+        'Direct identity and performance captures cannot be mixed',
+      );
+      assert.equal(
+        candidate,
+        undefined,
+        'Direct identity and performance captures cannot be mixed',
+      );
+      const inspected = inspectQualificationBuildIdentityEvidence(
+        buildIdentityEvidence,
+      );
+      identitySource = {
+        identities: inspected.identities,
+        live: buildIdentityEvidence.live,
+        reference: qualificationBuildIdentityEvidenceReference(
+          buildIdentityEvidence,
+        ),
+      };
+    } catch (error) {
+      return {
+        schema: METRIC_SCHEMA,
+        status: 'failed',
+        acceptanceEligible: false,
+        metrics: {
+          coldStartup: unavailable(
+            'Identity-only build proof supplies no cold-startup observations.',
+          ),
+          ...Object.fromEntries(
+            ['localControl', 'loadedReplaySeek', 'sampledPeakHeap'].map(
+              (name) => [name, { status: 'failed', reason: error.message }],
+            ),
+          ),
+        },
+      };
+    }
+  }
+  const coldStartup = identitySource
+    ? unavailable(
+        'Identity-only build proof supplies no cold-startup observations.',
+      )
+    : evaluateColdStartupReadiness(baseline, candidate);
   const localControl = compareInteractionMetric(
     interactionEvidence,
     'localControl',
     LOCAL_CONTROL_LIMIT_MS,
     { baseline, candidate },
+    identitySource,
   );
   const loadedReplaySeek = compareInteractionMetric(
     interactionEvidence,
     'loadedReplaySeek',
     REPLAY_SEEK_LIMIT_MS,
     { baseline, candidate },
+    identitySource,
   );
-  const sampledPeakHeap = compareSampledPeakHeap(sampledHeapEvidence, {
-    baseline,
-    candidate,
-  });
+  const sampledPeakHeap = compareSampledPeakHeap(
+    sampledHeapEvidence,
+    {
+      baseline,
+      candidate,
+    },
+    identitySource,
+  );
   const metrics = {
     coldStartup,
     localControl,
