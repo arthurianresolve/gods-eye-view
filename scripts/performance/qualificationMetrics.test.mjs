@@ -476,7 +476,32 @@ function nativeWindowIdentity(commit) {
       },
     },
   });
+  const configurationAttempts = [boundary(), boundary()];
+  for (const evidence of configurationAttempts) {
+    evidence.page.nativeResolution = null;
+    evidence.page.canvasRect = null;
+  }
+  const configured = structuredClone(configurationAttempts[1]);
+  configured.preparation = {
+    schema: 'gev-native-window-preparation/v1',
+    status: 'passed',
+    maximumAttempts: 40,
+    timeoutMs: 15_000,
+    cleanupTimeoutMs: 1000,
+    deadlineScope: 'after-owned-CDP-session-ready-before-navigation',
+    intervalMs: 50,
+    requiredConsecutiveCoherentProofs: 2,
+    elapsedMs: 1,
+    acceptedAttempt: 2,
+    attempts: configurationAttempts.map((evidence, index) => ({
+      attempt: index + 1,
+      status: 'coherent',
+      matchesPrevious: index === 1,
+      evidence,
+    })),
+  };
   actual.nativeWindowViewport = {
+    configured,
     startup: boundary(),
     freshDocumentRestore: boundary(),
     before: boundary(),
@@ -663,15 +688,16 @@ test('native-window consumer rejects relabelled, stale, clipped, emulated and mi
     'measured',
   );
   const mismatchedMonitor = structuredClone(pristine);
+  const candidateProof =
+    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport;
   for (const boundary of [
-    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.startup,
-    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport
-      .freshDocumentRestore,
-    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.before,
-    mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.after,
-    ...mismatchedMonitor.builds.candidate.identity.nativeWindowViewport.restores.flatMap(
-      (r) => [r.latestWorkspaceRestore],
-    ),
+    candidateProof.configured,
+    ...candidateProof.configured.preparation.attempts.map((a) => a.evidence),
+    candidateProof.startup,
+    candidateProof.freshDocumentRestore,
+    candidateProof.before,
+    candidateProof.after,
+    ...candidateProof.restores.flatMap((r) => [r.latestWorkspaceRestore]),
   ])
     boundary.host.monitor.displayMode.adapter = 'Different native GPU';
   assert.notEqual(
@@ -743,7 +769,7 @@ test('native-window preparation failure retains OS/CDP evidence and factory clea
   assert.equal(result.cleanupError, 'retained cleanup diagnostic');
 });
 
-test('native-window producer retains the single document restore and each latest cycle restore in source order', () => {
+test('native-window producer retains every configured preparation attempt before document and cycle restores', async () => {
   const source = readFileSync(
     new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
     'utf8',
@@ -757,13 +783,33 @@ test('native-window producer retains the single document restore and each latest
   );
   const actual = nativeWindowIdentity('1');
   const original = structuredClone(actual.nativeWindowViewport);
-  actual.nativeWindowViewport.restores = [];
   const driver = {
     nativeWindowViewport: {
+      configured: structuredClone(original.configured),
+      startup: structuredClone(original.startup),
       freshDocumentRestore: structuredClone(original.freshDocumentRestore),
       latestWorkspaceRestore: null,
     },
+    captureNativeWindowEvidence: async (label) => {
+      assert.equal(label, 'qualification-before');
+      return structuredClone(original.before);
+    },
   };
+  const proofStart = source.indexOf(
+    '    const nativeWindowProof = nativeWindowViewport',
+  );
+  const proofEnd = source.indexOf('\n    const identity =', proofStart);
+  assert.ok(proofStart > 0 && proofEnd > proofStart);
+  const collectProof = runInNewContext(
+    `(async () => { ${source.slice(proofStart, proofEnd)}; return nativeWindowProof; })`,
+    { nativeWindowViewport: true, driver, structuredClone },
+  );
+  actual.nativeWindowViewport = await collectProof();
+  actual.nativeWindowViewport.after = structuredClone(original.after);
+  assert.deepEqual(actual.nativeWindowViewport.configured, original.configured);
+  driver.nativeWindowViewport.configured.preparation.attempts[0].evidence.page
+    .inner.width--;
+  assert.deepEqual(actual.nativeWindowViewport.configured, original.configured);
   for (const checkpoint of original.restores) {
     driver.nativeWindowViewport.latestWorkspaceRestore = structuredClone(
       checkpoint.latestWorkspaceRestore,
@@ -787,6 +833,72 @@ test('native-window producer retains the single document restore and each latest
       stale.nativeWindowViewport.restores[0].latestWorkspaceRestore,
     );
   assert.throws(() => assertQualificationNativeWindowIdentity(stale, 2));
+});
+
+test('new native metrics require the complete accepted preparation trace without weakening legacy modes', () => {
+  const mutations = [
+    (p) => {
+      delete p.configured;
+    },
+    (p) => {
+      delete p.configured.preparation;
+    },
+    (p) => {
+      p.configured.preparation.status = 'failed';
+    },
+    (p) => {
+      p.configured.preparation.attempts.shift();
+    },
+    (p) => {
+      p.configured.preparation.acceptedAttempt++;
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].matchesPrevious = true;
+    },
+    (p) => {
+      p.configured.preparation.attempts[1].evidence.cdp.layoutMetrics
+        .cssVisualViewport.clientWidth--;
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].evidence.browserPid++;
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].evidence.ordinal++;
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].evidence.observedAtUtc = 'invalid';
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].evidence.cdp.windowId++;
+    },
+    (p) => {
+      p.configured.preparation.attempts[0].evidence.host.windowHandle =
+        'foreign-window';
+    },
+    (p) => {
+      p.configured.ordinal = p.startup.ordinal;
+    },
+    (p) => {
+      p.configured.page.outer.height--;
+    },
+  ];
+  assertQualificationNativeWindowIdentity(nativeWindowIdentity('1'), 2);
+  for (const [index, mutate] of mutations.entries()) {
+    const actual = nativeWindowIdentity('1');
+    mutate(actual.nativeWindowViewport);
+    assert.throws(
+      () => assertQualificationNativeWindowIdentity(actual, 2),
+      `preparation negative ${index + 1}`,
+    );
+  }
+  assert.equal(
+    evaluateQualificationMetrics({
+      baseline: capture(),
+      candidate: capture(undefined, '2'),
+      interactionEvidence: eventTimingInteractionEvidence(),
+    }).metrics.localControl.status,
+    'measured',
+  );
 });
 
 function cameraSetup(routeId, location, frameNumber) {

@@ -587,6 +587,10 @@ function ownerHarness() {
     commands: [],
     detached: 0,
     waits: 0,
+    layoutReads: 0,
+    pageReads: 0,
+    hostReads: 0,
+    sessions: 0,
   };
   const session = {
     async send(method, params) {
@@ -598,8 +602,11 @@ function ownerHarness() {
         };
       if (method === 'Browser.getWindowBounds')
         return { bounds: clone(state.evidence.cdp.windowBounds) };
-      if (method === 'Page.getLayoutMetrics')
-        return clone(state.evidence.cdp.layoutMetrics);
+      if (method === 'Page.getLayoutMetrics') {
+        state.layoutReads++;
+        const layout = clone(state.evidence.cdp.layoutMetrics);
+        return state.onLayout?.(layout, state.layoutReads) ?? layout;
+      }
       if (
         method === 'Browser.setWindowBounds' ||
         method === 'Emulation.clearDeviceMetricsOverride'
@@ -609,15 +616,18 @@ function ownerHarness() {
     },
     async detach() {
       state.detached++;
+      return state.onDetach?.();
     },
   };
   const page = {
     viewport: () => state.viewport,
     async createCDPSession() {
+      state.sessions++;
       return session;
     },
     async evaluate(callback) {
       assert.equal(callback, readNativeWindowViewportInPage);
+      state.pageReads++;
       return clone(state.evidence.page);
     },
     async setViewport() {
@@ -628,23 +638,223 @@ function ownerHarness() {
     page,
     browserPid: 1122,
     browserOptions: { headless: false, defaultViewport: null },
-    readHostWindow: async (pid) => {
+    readHostWindow: async (pid, operationOptions) => {
       assert.equal(pid, 1122);
-      return clone(state.evidence.host);
+      state.hostReads++;
+      return state.onHost?.(operationOptions) ?? clone(state.evidence.host);
     },
     wait: async (ms) => {
       assert.equal(ms, 50);
       state.waits++;
+      return state.onWait?.();
     },
   };
   return { state, options };
 }
+
+function staleLayout(layout) {
+  for (const viewport of [layout.cssLayoutViewport, layout.cssVisualViewport])
+    Object.assign(viewport, { clientWidth: 1037, clientHeight: 511 });
+  return layout;
+}
+
+test('already cancelled preparation allocates no CDP session or native reads', async () => {
+  const h = ownerHarness(),
+    controller = new AbortController();
+  controller.abort(new Error('cancelled before preparation'));
+  h.options.preparationSignal = controller.signal;
+  await assert.rejects(
+    createNativeWindowViewportOwner(h.options),
+    /cancelled before preparation/,
+  );
+  assert.equal(h.state.sessions, 0);
+  assert.equal(h.state.commands.length, 0);
+  assert.equal(h.state.hostReads, 0);
+});
+
+test('preparation retains stale CDP then A/B/B exact proofs and freezes only the final stable geometry', async () => {
+  const h = ownerHarness();
+  h.options.settleAttempts = 4;
+  h.state.onLayout = (layout, count) =>
+    count === 1 ? staleLayout(layout) : layout;
+  h.state.onWait = () => {
+    if (h.state.waits === 2) h.state.evidence.page.outer.height--;
+  };
+  const owner = await createNativeWindowViewportOwner(h.options);
+  assert.deepEqual(
+    owner.preparation.attempts.map((a) => a.status),
+    ['incoherent', 'coherent', 'coherent', 'coherent'],
+  );
+  assert.equal(owner.preparation.acceptedAttempt, 4);
+  assert.equal(
+    owner.preparation.attempts[0].evidence.cdp.layoutMetrics.cssVisualViewport
+      .clientWidth,
+    1037,
+  );
+  assert.equal(owner.preparation.attempts[0].evidence.page.inner.width, 1280);
+  assert.equal(owner.preparation.attempts[2].matchesPrevious, false);
+  assert.equal(owner.configured.page.outer.height, 699);
+  assert.doesNotThrow(() => JSON.stringify(owner.configured));
+  h.state.evidence = fixture();
+  h.state.evidence.page.outer.height = 699;
+  await owner.capture('startup');
+  await owner.dispose();
+  assert.equal(h.state.detached, 1);
+});
+
+test('incoherent preparation breaks consecutive matches and bounded non-settlement preserves every attempt', async () => {
+  const broken = ownerHarness();
+  broken.options.settleAttempts = 4;
+  broken.state.onLayout = (layout, count) =>
+    count === 2 ? staleLayout(layout) : layout;
+  const owner = await createNativeWindowViewportOwner(broken.options);
+  assert.deepEqual(
+    owner.preparation.attempts.map((a) => a.status),
+    ['coherent', 'incoherent', 'coherent', 'coherent'],
+  );
+  assert.equal(owner.preparation.acceptedAttempt, 4);
+  await owner.dispose();
+  for (const alternate of [false, true]) {
+    const h = ownerHarness();
+    h.options.settleAttempts = 3;
+    if (alternate)
+      h.state.onWait = () => {
+        h.state.evidence.page.outer.height = h.state.waits % 2 ? 699 : 700;
+      };
+    else h.state.onLayout = (layout) => staleLayout(layout);
+    await assert.rejects(
+      createNativeWindowViewportOwner(h.options),
+      (error) => {
+        assert.match(error.message, /did not settle/);
+        const proof = error.nativeWindowViewport;
+        assert.equal(proof.preparation.status, 'failed');
+        assert.equal(proof.preparation.attempts.length, 3);
+        assert.equal(proof.preparation.cleanup.status, 'completed');
+        assert.throws(() =>
+          assertNativeWindowViewportEvidence(proof, {
+            expectedDpr: 2,
+            requireCanvas: false,
+          }),
+        );
+        return true;
+      },
+    );
+    assert.equal(h.state.detached, 1);
+    assert.equal(h.state.waits, 2);
+  }
+});
+
+test('preparation cancellation consumes late work and disposes the owned session once', async () => {
+  const h = ownerHarness(),
+    controller = new AbortController();
+  h.options.preparationSignal = controller.signal;
+  let reachedWait, releaseWait, waitSignal;
+  const waiting = new Promise((resolve) => {
+    reachedWait = resolve;
+  });
+  h.options.wait = (ms, { signal }) => {
+    assert.equal(ms, 50);
+    waitSignal = signal;
+    reachedWait();
+    return new Promise((resolve) => {
+      releaseWait = resolve;
+    });
+  };
+  const pending = createNativeWindowViewportOwner(h.options);
+  await waiting;
+  controller.abort(new Error('cancelled owned preparation'));
+  await assert.rejects(pending, (error) => {
+    assert.match(error.message, /cancelled owned preparation/);
+    assert.equal(error.nativeWindowViewport.preparation.attempts.length, 1);
+    assert.equal(
+      error.nativeWindowViewport.preparation.cleanup.status,
+      'completed',
+    );
+    return true;
+  });
+  assert.equal(waitSignal.aborted, true);
+  const reads = h.state.hostReads;
+  releaseWait();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(h.state.hostReads, reads);
+  assert.equal(h.state.detached, 1);
+});
+
+test('preparation deadline retains a partial host read and bounded cleanup cannot block factory close', async () => {
+  const h = ownerHarness();
+  h.options.settleTimeoutMs = 20;
+  let releaseHost, hostSignal;
+  h.state.onHost = ({ signal }) => {
+    hostSignal = signal;
+    return new Promise((resolve) => {
+      releaseHost = resolve;
+    });
+  };
+  await assert.rejects(createNativeWindowViewportOwner(h.options), (error) => {
+    assert.match(error.message, /timed out/);
+    const attempt = error.nativeWindowViewport.preparation.attempts[0];
+    assert.ok(attempt.evidence.cdp.layoutMetrics);
+    assert.equal(attempt.evidence.page, undefined);
+    assert.equal(
+      error.nativeWindowViewport.preparation.cleanup.status,
+      'completed',
+    );
+    return true;
+  });
+  assert.equal(hostSignal.aborted, true);
+  const pageReads = h.state.pageReads;
+  releaseHost(clone(h.state.evidence.host));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(h.state.pageReads, pageReads);
+  assert.equal(h.state.detached, 1);
+
+  const blocked = ownerHarness();
+  blocked.options.settleTimeoutMs = 20;
+  blocked.options.preparationCleanupTimeoutMs = 20;
+  blocked.state.onLayout = () => new Promise(() => {});
+  blocked.state.onDetach = () => new Promise(() => {});
+  await assert.rejects(
+    createNativeWindowViewportOwner(blocked.options),
+    (error) => {
+      assert.match(error.message, /preparation timed out/);
+      assert.match(error.cleanupError.message, /cleanup timed out/);
+      assert.equal(
+        error.nativeWindowViewport.preparation.cleanup.status,
+        'failed',
+      );
+      assert.equal(error.nativeWindowViewport.preparation.attempts.length, 1);
+      return true;
+    },
+  );
+  assert.equal(blocked.state.detached, 1);
+});
+
+test('post-navigation drift remains single-shot without preparation waits or retries', async () => {
+  const h = ownerHarness(),
+    controller = new AbortController();
+  h.options.preparationSignal = controller.signal;
+  const owner = await createNativeWindowViewportOwner(h.options);
+  controller.abort(new Error('finished preparation is no longer subscribed'));
+  h.state.evidence = fixture();
+  await owner.capture('startup');
+  const waits = h.state.waits,
+    snapshots = h.state.layoutReads;
+  h.state.onLayout = (layout) => staleLayout(layout);
+  await assert.rejects(owner.capture('post-navigation'), /1280/);
+  assert.equal(h.state.layoutReads, snapshots + 1);
+  assert.equal(h.state.waits, waits);
+  assert.equal(owner.preparation.attempts.length, 2);
+  assert.equal(owner.preparation.status, 'passed');
+  await owner.dispose();
+});
 
 test('owned preparation maximizes once, clears emulation, then only reads checkpoints', async () => {
   const { state, options } = ownerHarness();
   const owner = await createNativeWindowViewportOwner(options);
   assert.equal(owner.nativeDpr, 2);
   assert.equal(owner.configured.page.nativeResolution, null);
+  assert.equal(owner.preparation.status, 'passed');
+  assert.equal(owner.preparation.attempts.length, 2);
   assert.equal(state.waits, 1);
   const writes = state.commands.filter((entry) =>
     [
@@ -663,7 +873,7 @@ test('owned preparation maximizes once, clears emulation, then only reads checkp
   const startup = await owner.capture('startup');
   const restored = await owner.capture('workspace-restored');
   assert.equal(assertMatchingNativeWindowViewport(startup, restored), true);
-  assert.equal(restored.ordinal, 3);
+  assert.equal(restored.ordinal, 4);
   assert.equal(
     state.commands.filter((entry) => entry.method === 'Browser.setWindowBounds')
       .length,
@@ -678,6 +888,7 @@ test('owned preparation maximizes once, clears emulation, then only reads checkp
 test('owned failure cleans its CDP session and preserves failed geometry evidence', async () => {
   const { state, options } = ownerHarness();
   state.evidence.page.visualViewport.scale = 2;
+  options.settleAttempts = 3;
   await assert.rejects(createNativeWindowViewportOwner(options), (error) => {
     assert.equal(error.nativeWindowViewport.page.visualViewport.scale, 2);
     return /scale/.test(error.message);
@@ -710,13 +921,16 @@ test('native window association and unchanged geometry remain mandatory after na
 test('Windows host probe is bounded, PID-bound and read-only for target windows', async () => {
   let calls = 0;
   const expected = fixture().host;
+  const controller = new AbortController();
   const result = await readOwnedWindowsNativeWindowGeometry(1122, {
     platform: 'win32',
+    signal: controller.signal,
     run: async (executable, args, options) => {
       calls++;
       assert.equal(executable, 'powershell.exe');
       assert.equal(options.timeout, 5000);
       assert.equal(options.windowsHide, true);
+      assert.equal(options.signal, controller.signal);
       assert.equal(options.env.GEV_NATIVE_WINDOW_BROWSER_PID, '1122');
       const source = Buffer.from(args.at(-1), 'base64').toString('utf16le');
       assert.match(source, /GetWindowDpiAwarenessContext/);

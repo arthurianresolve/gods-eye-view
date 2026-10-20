@@ -1605,6 +1605,7 @@ export async function collectQualificationMetricsForBuild({
     };
     const nativeWindowProof = nativeWindowViewport
       ? {
+          configured: structuredClone(driver.nativeWindowViewport?.configured),
           startup: structuredClone(driver.nativeWindowViewport?.startup),
           freshDocumentRestore: structuredClone(
             driver.nativeWindowViewport?.freshDocumentRestore,

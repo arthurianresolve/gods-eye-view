@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 
 export const NATIVE_WINDOW_VIEWPORT_SCHEMA = 'gev-native-window-viewport/v1';
 const executeFile = promisify(execFile);
@@ -134,7 +134,7 @@ try {
 /** Read the one owned Chrome window; never activate, resize or inspect other apps. */
 export async function readOwnedWindowsNativeWindowGeometry(
   browserPid,
-  { platform = process.platform, run = executeFile } = {},
+  { platform = process.platform, run = executeFile, signal } = {},
 ) {
   if (platform !== 'win32')
     throw new Error('Native-window geometry requires the Windows desktop');
@@ -156,6 +156,7 @@ export async function readOwnedWindowsNativeWindowGeometry(
       timeout: 5000,
       maxBuffer: 64 * 1024,
       windowsHide: true,
+      ...(signal ? { signal } : {}),
     },
   );
   const evidence = JSON.parse(String(result.stdout).trim());
@@ -352,6 +353,21 @@ export function assertNativeWindowViewportEvidence(
   { expectedDpr, requireCanvas = true, reference = null } = {},
 ) {
   assert.equal(evidence?.schema, NATIVE_WINDOW_VIEWPORT_SCHEMA);
+  if (evidence.preparation !== undefined) {
+    assert.equal(
+      evidence.preparation.schema,
+      'gev-native-window-preparation/v1',
+    );
+    assert.equal(evidence.preparation.status, 'passed');
+    assert.ok(evidence.preparation.attempts?.length >= 2);
+    assert.equal(
+      evidence.preparation.acceptedAttempt,
+      evidence.preparation.attempts.length,
+    );
+    assert.equal(evidence.preparation.attempts.at(-1).status, 'coherent');
+    assert.equal(evidence.preparation.attempts.at(-2).status, 'coherent');
+    assert.equal(evidence.preparation.attempts.at(-1).matchesPrevious, true);
+  }
   const { page, host, cdp } = evidence;
   assert.equal(evidence.metricsEmulation, 'cleared-before-navigation');
   assert.equal(
@@ -516,6 +532,8 @@ export function assertNativeWindowViewportEvidence(
     assert.equal(page.canvasRect.bottom, page.inner.height);
   }
   if (reference) assertMatchingNativeWindowViewport(reference, evidence);
+  if (evidence.preparation !== undefined)
+    assertNativeWindowPreparationTrace(evidence, expectedDpr);
   return evidence;
 }
 
@@ -544,6 +562,104 @@ function comparisonGeometry(evidence) {
   };
 }
 
+function configurationGeometry(evidence) {
+  const { nativeResolution, canvasRect, ...geometry } =
+    comparisonGeometry(evidence);
+  return geometry;
+}
+
+/** Match configured chrome/viewport geometry to another exact proof. */
+export function assertNativeWindowConfigurationPair(
+  configured,
+  evidence,
+  { requireCanvas = false } = {},
+) {
+  const expectedDpr = configured?.page?.devicePixelRatio;
+  assertNativeWindowViewportEvidence(configured, {
+    expectedDpr,
+    requireCanvas: false,
+  });
+  assertNativeWindowViewportEvidence(evidence, { expectedDpr, requireCanvas });
+  assert.deepEqual(
+    configurationGeometry(configured),
+    configurationGeometry(evidence),
+    'Configured native window geometry changed',
+  );
+  return true;
+}
+
+function assertNativeWindowPreparationTrace(configured, expectedDpr) {
+  const proof = configured.preparation;
+  assert.equal(proof.requiredConsecutiveCoherentProofs, 2);
+  assert.equal(proof.intervalMs, 50);
+  assert.equal(
+    proof.deadlineScope,
+    'after-owned-CDP-session-ready-before-navigation',
+  );
+  assert.ok(
+    Number.isSafeInteger(proof.maximumAttempts) &&
+      proof.maximumAttempts >= 2 &&
+      proof.maximumAttempts <= 40,
+  );
+  assert.ok(
+    Number.isSafeInteger(proof.timeoutMs) &&
+      proof.timeoutMs > 0 &&
+      proof.timeoutMs <= 30_000,
+  );
+  assert.ok(
+    Number.isFinite(proof.elapsedMs) &&
+      proof.elapsedMs >= 0 &&
+      proof.elapsedMs < proof.timeoutMs,
+  );
+  assert.ok(proof.attempts.length <= proof.maximumAttempts);
+  let previous = null;
+  let previousObservedAt = -Infinity;
+  for (const [index, attempt] of proof.attempts.entries()) {
+    assert.equal(attempt.attempt, index + 1);
+    const evidence = attempt.evidence;
+    assert.equal(evidence?.preparation, undefined);
+    assert.equal(evidence?.ordinal, index + 1);
+    assert.equal(evidence?.browserPid, configured.browserPid);
+    const observedAt = Date.parse(evidence.observedAtUtc);
+    assert.ok(Number.isFinite(observedAt) && observedAt >= previousObservedAt);
+    previousObservedAt = observedAt;
+    let coherent = true;
+    try {
+      assertNativeWindowViewportEvidence(evidence, {
+        expectedDpr,
+        requireCanvas: false,
+      });
+    } catch {
+      coherent = false;
+    }
+    assert.equal(attempt.status, coherent ? 'coherent' : 'incoherent');
+    if (coherent) {
+      assert.equal(evidence.cdp.windowId, configured.cdp.windowId);
+      assert.equal(evidence.host.windowHandle, configured.host.windowHandle);
+      const geometry = configurationGeometry(evidence);
+      const matches =
+        previous !== null && isDeepStrictEqual(previous, geometry);
+      assert.equal(attempt.matchesPrevious, matches);
+      if (matches)
+        assert.equal(
+          index,
+          proof.attempts.length - 1,
+          'Preparation must stop at its first complete stable pair',
+        );
+      previous = geometry;
+    } else {
+      assert.ok(typeof attempt.error === 'string' && attempt.error.length > 0);
+      previous = null;
+    }
+  }
+  const { preparation, ...accepted } = configured;
+  assert.deepEqual(
+    accepted,
+    proof.attempts.at(-1).evidence,
+    'Accepted configured proof differs from its retained attempt',
+  );
+}
+
 /** Strict paired/checkpoint geometry; only ownership identifiers/timestamps differ. */
 export function assertMatchingNativeWindowViewport(baseline, candidate) {
   assertNativeWindowViewportEvidence(baseline, {
@@ -562,15 +678,37 @@ export function assertMatchingNativeWindowViewport(baseline, candidate) {
 
 export { assertMatchingNativeWindowViewport as assertNativeWindowViewportPair };
 
-/** Configure one owned page before navigation, then retain read-only checkpoints. */
+function waitForNativePreparation(milliseconds, { signal }) {
+  return new Promise((resolve, reject) => {
+    signal.throwIfAborted();
+    const cancel = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', cancel);
+      reject(signal.reason);
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', cancel);
+      resolve();
+    }, milliseconds);
+    signal.addEventListener('abort', cancel, { once: true });
+  });
+}
+
+/**
+ * Settle complete proofs before navigation; never resample a later checkpoint.
+ * The local deadline starts after CDP session acquisition. Browser/session
+ * acquisition retain the driver's existing protocol and browser-close bounds.
+ */
 export async function createNativeWindowViewportOwner({
   page,
   browserPid,
   browserOptions,
   readHostWindow = readOwnedWindowsNativeWindowGeometry,
   settleAttempts = 40,
-  wait = (milliseconds) =>
-    new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  settleTimeoutMs = 15_000,
+  preparationCleanupTimeoutMs = 1000,
+  preparationSignal = null,
+  wait = waitForNativePreparation,
 } = {}) {
   resolveNativeWindowBrowserOptions(browserOptions, {
     nativeResolution: true,
@@ -586,52 +724,138 @@ export async function createNativeWindowViewportOwner({
       settleAttempts >= 2 &&
       settleAttempts <= 40,
   );
+  assert.ok(
+    Number.isSafeInteger(settleTimeoutMs) &&
+      settleTimeoutMs > 0 &&
+      settleTimeoutMs <= 30_000,
+  );
+  assert.ok(
+    Number.isSafeInteger(preparationCleanupTimeoutMs) &&
+      preparationCleanupTimeoutMs > 0 &&
+      preparationCleanupTimeoutMs <= 5000,
+  );
+  preparationSignal?.throwIfAborted();
   const session = await page.createCDPSession();
   let disposed = false;
+  let preparing = true;
   let reference = null;
   let configuredGeometry = null;
   let captureCount = 0;
+  const preparationStarted = performance.now();
+  const preparation = {
+    schema: 'gev-native-window-preparation/v1',
+    status: 'settling',
+    maximumAttempts: settleAttempts,
+    timeoutMs: settleTimeoutMs,
+    deadlineScope: 'after-owned-CDP-session-ready-before-navigation',
+    cleanupTimeoutMs: preparationCleanupTimeoutMs,
+    intervalMs: 50,
+    requiredConsecutiveCoherentProofs: 2,
+    attempts: [],
+  };
+  const preparationAbort = new AbortController();
+  const cancelPreparation = () =>
+    preparationAbort.abort(
+      preparationSignal.reason instanceof Error
+        ? preparationSignal.reason
+        : new Error(
+            String(
+              preparationSignal.reason || 'Native window preparation aborted',
+            ),
+          ),
+    );
+  preparationSignal?.addEventListener('abort', cancelPreparation, {
+    once: true,
+  });
+  if (preparationSignal?.aborted) cancelPreparation();
+  const preparationTimeout = setTimeout(() => {
+    preparationAbort.abort(new Error('Native window preparation timed out'));
+  }, settleTimeoutMs);
+  let rejectCancellation;
+  const cancelled = new Promise((resolve, reject) => {
+    rejectCancellation = () => reject(preparationAbort.signal.reason);
+    if (preparationAbort.signal.aborted) reject(preparationAbort.signal.reason);
+    else
+      preparationAbort.signal.addEventListener('abort', rejectCancellation, {
+        once: true,
+      });
+  });
+  // Cancellation can occur between observations; always consume its rejection.
+  cancelled.catch(() => {});
+  const assertActive = () => {
+    assert.equal(disposed, false, 'Native window owner disposed');
+    if (preparing) {
+      if (
+        performance.now() - preparationStarted >= settleTimeoutMs &&
+        !preparationAbort.signal.aborted
+      )
+        preparationAbort.abort(
+          new Error('Native window preparation timed out'),
+        );
+      preparationAbort.signal.throwIfAborted();
+    }
+  };
+  const read = async (operation) => {
+    assertActive();
+    if (!preparing) {
+      const value = await operation();
+      assertActive();
+      return value;
+    }
+    const pending = Promise.resolve().then(() => {
+      assertActive();
+      return operation();
+    });
+    const value = await (preparing
+      ? Promise.race([pending, cancelled])
+      : pending);
+    assertActive();
+    return value;
+  };
   const dispose = async () => {
     if (disposed) return;
     disposed = true;
+    if (preparing && !preparationAbort.signal.aborted)
+      preparationAbort.abort(new Error('Native window preparation disposed'));
     try {
-      await session.detach();
+      if (preparing) {
+        let timer;
+        try {
+          await Promise.race([
+            Promise.resolve().then(() => session.detach()),
+            new Promise((resolve, reject) => {
+              timer = setTimeout(
+                () =>
+                  reject(new Error('Native preparation CDP cleanup timed out')),
+                preparationCleanupTimeoutMs,
+              );
+            }),
+          ]);
+        } finally {
+          clearTimeout(timer);
+        }
+      } else await session.detach();
     } catch (error) {
       if (!/Target closed|Session closed/i.test(String(error?.message)))
         throw error;
     }
   };
+  let lastEvidence = null;
   try {
-    const before = await page.evaluate(readNativeWindowViewportInPage);
-    const window = await session.send('Browser.getWindowForTarget');
+    const before = await read(() =>
+      page.evaluate(readNativeWindowViewportInPage),
+    );
+    const window = await read(() => session.send('Browser.getWindowForTarget'));
     assert.ok(Number.isSafeInteger(window.windowId) && window.windowId > 0);
-    await session.send('Browser.setWindowBounds', {
-      windowId: window.windowId,
-      bounds: { windowState: 'maximized' },
-    });
-    await session.send('Emulation.clearDeviceMetricsOverride');
-    let previous = null;
-    let settled = false;
-    for (let attempt = 0; attempt < settleAttempts; attempt++) {
-      const bounds = await session.send('Browser.getWindowBounds', {
+    await read(() =>
+      session.send('Browser.setWindowBounds', {
         windowId: window.windowId,
-      });
-      const observed = await page.evaluate(readNativeWindowViewportInPage);
-      const key = JSON.stringify({
-        inner: observed.inner,
-        outer: observed.outer,
-        bounds: bounds.bounds,
-      });
-      if (bounds.bounds.windowState === 'maximized' && key === previous) {
-        settled = true;
-        break;
-      }
-      previous = key;
-      if (attempt + 1 < settleAttempts) await wait(50);
-    }
-    assert.ok(settled, 'Native maximization geometry did not settle');
-    const capture = async (label, { requireCanvas = true } = {}) => {
-      assert.equal(disposed, false, 'Native window owner disposed');
+        bounds: { windowState: 'maximized' },
+      }),
+    );
+    await read(() => session.send('Emulation.clearDeviceMetricsOverride'));
+    const snapshot = async (label) => {
+      assertActive();
       assert.ok(
         typeof label === 'string' && label.length > 0 && label.length <= 96,
       );
@@ -640,15 +864,6 @@ export async function createNativeWindowViewportOwner({
         null,
         'Viewport emulation was introduced after preparation',
       );
-      const currentWindow = await session.send('Browser.getWindowForTarget');
-      assert.equal(
-        currentWindow.windowId,
-        window.windowId,
-        'Owned CDP window changed',
-      );
-      const layout = await session.send('Page.getLayoutMetrics');
-      const host = await readHostWindow(browserPid);
-      const observed = await page.evaluate(readNativeWindowViewportInPage);
       const evidence = {
         schema: NATIVE_WINDOW_VIEWPORT_SCHEMA,
         browserPid,
@@ -668,38 +883,57 @@ export async function createNativeWindowViewportOwner({
         metricsEmulation: 'cleared-before-navigation',
         puppeteerViewport: page.viewport(),
         observedDprBeforeConfiguration: before.devicePixelRatio,
-        page: observed,
-        host,
-        cdpBoundsMapping: mapCdpBounds(
-          currentWindow.bounds,
-          host,
-          observed.devicePixelRatio,
-        ),
-        cdp: {
+      };
+      lastEvidence = evidence;
+      try {
+        const currentWindow = await read(() =>
+          session.send('Browser.getWindowForTarget'),
+        );
+        evidence.cdp = {
           windowId: currentWindow.windowId,
           windowBounds: currentWindow.bounds,
-          layoutMetrics: {
-            cssLayoutViewport: layout.cssLayoutViewport,
-            cssVisualViewport: layout.cssVisualViewport,
-            cssContentSize: layout.cssContentSize,
-          },
-        },
-      };
+        };
+        if (currentWindow.windowId !== window.windowId)
+          throw new Error('Owned CDP window changed');
+        const layout = await read(() => session.send('Page.getLayoutMetrics'));
+        evidence.cdp.layoutMetrics = {
+          cssLayoutViewport: layout.cssLayoutViewport,
+          cssVisualViewport: layout.cssVisualViewport,
+          cssContentSize: layout.cssContentSize,
+        };
+        evidence.host = await read(() =>
+          readHostWindow(
+            browserPid,
+            preparing ? { signal: preparationAbort.signal } : undefined,
+          ),
+        );
+        evidence.page = await read(() =>
+          page.evaluate(readNativeWindowViewportInPage),
+        );
+        evidence.cdpBoundsMapping = mapCdpBounds(
+          currentWindow.bounds,
+          evidence.host,
+          evidence.page.devicePixelRatio,
+        );
+        return evidence;
+      } catch (error) {
+        error.nativeWindowViewport = evidence;
+        throw error;
+      }
+    };
+    const capture = async (label, { requireCanvas = true } = {}) => {
+      const evidence = await snapshot(label);
       try {
         assertNativeWindowViewportEvidence(evidence, {
           expectedDpr: before.devicePixelRatio,
           requireCanvas,
           reference: requireCanvas ? reference : null,
         });
-        const { nativeResolution, canvasRect, ...geometry } =
-          comparisonGeometry(evidence);
-        if (configuredGeometry)
-          assert.deepEqual(
-            geometry,
-            configuredGeometry,
-            'Configured native window geometry changed',
-          );
-        else configuredGeometry = geometry;
+        assert.deepEqual(
+          configurationGeometry(evidence),
+          configuredGeometry,
+          'Configured native window geometry changed',
+        );
       } catch (error) {
         error.nativeWindowViewport = evidence;
         throw error;
@@ -707,22 +941,87 @@ export async function createNativeWindowViewportOwner({
       if (requireCanvas && !reference) reference = evidence;
       return evidence;
     };
-    const configured = await capture('native-window-configured', {
+    let configured = null;
+    let previousGeometry = null;
+    let lastFailure = null;
+    for (let index = 0; index < settleAttempts; index++) {
+      const attempt = { attempt: index + 1, status: 'reading', evidence: null };
+      preparation.attempts.push(attempt);
+      try {
+        const evidence = await snapshot('native-window-configured');
+        attempt.evidence = structuredClone(evidence);
+        assertNativeWindowViewportEvidence(evidence, {
+          expectedDpr: before.devicePixelRatio,
+          requireCanvas: false,
+        });
+        const geometry = configurationGeometry(evidence);
+        attempt.status = 'coherent';
+        attempt.matchesPrevious =
+          previousGeometry !== null &&
+          isDeepStrictEqual(geometry, previousGeometry);
+        assertActive();
+        if (attempt.matchesPrevious) {
+          configured = evidence;
+          configuredGeometry = geometry;
+          break;
+        }
+        previousGeometry = geometry;
+      } catch (error) {
+        attempt.evidence ||= structuredClone(
+          error.nativeWindowViewport || lastEvidence,
+        );
+        attempt.status = 'incoherent';
+        attempt.error = error.message;
+        previousGeometry = null;
+        lastFailure = error;
+        if (error.name !== 'AssertionError') throw error;
+      }
+      if (index + 1 < settleAttempts)
+        await read(() => wait(50, { signal: preparationAbort.signal }));
+    }
+    if (!configured)
+      throw new Error(
+        'Native window complete proof did not settle' +
+          (lastFailure ? ': ' + lastFailure.message : ''),
+      );
+    assertActive();
+    preparation.status = 'passed';
+    preparation.elapsedMs = performance.now() - preparationStarted;
+    preparation.acceptedAttempt = preparation.attempts.length;
+    configured.preparation = structuredClone(preparation);
+    assertNativeWindowViewportEvidence(configured, {
+      expectedDpr: before.devicePixelRatio,
       requireCanvas: false,
     });
+    assertActive();
     return {
       schema: NATIVE_WINDOW_VIEWPORT_SCHEMA,
       configured,
+      preparation,
       nativeDpr: before.devicePixelRatio,
       capture,
       dispose,
     };
   } catch (error) {
+    preparation.status = 'failed';
+    preparation.elapsedMs = performance.now() - preparationStarted;
+    const failedEvidence = error.nativeWindowViewport || lastEvidence;
     try {
       await dispose();
+      preparation.cleanup = { status: 'completed' };
     } catch (cleanupError) {
       error.cleanupError = cleanupError;
+      preparation.cleanup = { status: 'failed', reason: cleanupError.message };
     }
+    error.nativeWindowViewport = {
+      ...failedEvidence,
+      preparation: structuredClone(preparation),
+    };
     throw error;
+  } finally {
+    clearTimeout(preparationTimeout);
+    preparationSignal?.removeEventListener('abort', cancelPreparation);
+    preparationAbort.signal.removeEventListener('abort', rejectCancellation);
+    preparing = false;
   }
 }

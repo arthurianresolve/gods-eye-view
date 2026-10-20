@@ -10,6 +10,7 @@ import {
 import {
   assertNativeWindowViewportEvidence,
   assertNativeWindowViewportPair,
+  assertNativeWindowConfigurationPair,
 } from './nativeWindowViewport.mjs';
 
 export const QUALIFICATION_NATIVE_WINDOW_MODE = 'native-window-viewport-v1';
@@ -569,8 +570,11 @@ export function assertQualificationNativeWindowIdentity(
   assert.ok(proof, 'Native-window qualification proof is absent');
   let lastOrdinal = 0;
   let lastObservedAt = -Infinity;
-  const validate = (evidence) => {
-    assertNativeWindowViewportEvidence(evidence, { expectedDpr });
+  const validate = (evidence, requireCanvas = true) => {
+    assertNativeWindowViewportEvidence(evidence, {
+      expectedDpr,
+      requireCanvas,
+    });
     assert.equal(evidence.observedDprBeforeConfiguration, expectedDpr);
     assert.ok(
       Number.isSafeInteger(evidence.ordinal) && evidence.ordinal > lastOrdinal,
@@ -579,14 +583,27 @@ export function assertQualificationNativeWindowIdentity(
     assert.ok(Number.isFinite(observedAt) && observedAt >= lastObservedAt);
     lastOrdinal = evidence.ordinal;
     lastObservedAt = observedAt;
-    assert.equal(evidence.browserPid, proof.startup.browserPid);
-    assert.equal(evidence.host.windowHandle, proof.startup.host.windowHandle);
-    assert.equal(evidence.cdp.windowId, proof.startup.cdp.windowId);
-    assert.equal(evidence.page.focused, true);
-    assert.equal(evidence.host.foreground, true);
-    assertNativeWindowViewportPair(proof.before, evidence);
+    assert.equal(evidence.browserPid, proof.configured.browserPid);
+    assert.equal(
+      evidence.host.windowHandle,
+      proof.configured.host.windowHandle,
+    );
+    assert.equal(evidence.cdp.windowId, proof.configured.cdp.windowId);
+    if (requireCanvas) {
+      assert.equal(evidence.page.focused, true);
+      assert.equal(evidence.host.foreground, true);
+      assertNativeWindowViewportPair(proof.before, evidence);
+    } else
+      assertNativeWindowConfigurationPair(evidence, proof.before, {
+        requireCanvas: true,
+      });
   };
   assertNativeWindowViewportEvidence(proof.before, { expectedDpr });
+  assert.equal(
+    proof.configured?.preparation?.schema,
+    'gev-native-window-preparation/v1',
+  );
+  validate(proof.configured, false);
   validate(proof.startup);
   validate(proof.freshDocumentRestore);
   validate(proof.before);
