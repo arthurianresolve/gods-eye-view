@@ -10,6 +10,14 @@ candidate-only cause. Their
 corrects the initial grouping of a minified Cesium function as garbage collection
 and identifies context-probe instrumentation. Neither report is timing acceptance.
 
+The [candidate CI review](exact-ci-190c5ab6.json) now includes the explicit
+tracking run at `190c5ab6`, alongside its passing standard CI and signed-package
+workflow. Every required standard job checked out `596a5d32`; the recorded Git
+objects prove that this PR merge has the same source tree as the candidate.
+Tracking and packaging used `190c5ab6` directly. VM105 independently verified
+thirteen raw workflow, checkout-log, Git-object and review files. Skipped
+optional jobs remain skipped, and this does not replace hardware qualification.
+
 The [fresh visible-wind probe](weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready-review.json)
 passes flow, pause and resume for both current candidate and correctness control;
 the original camera and pause state are restored. The
@@ -114,6 +122,13 @@ before refreshing Flights. Option selection and recording loading share one
 be the historical CI timeout's cause. Bounded diagnostics retain failed replay
 states without recorded payloads.
 
+The [full hosted run at `b843cac5`](qa-ci-b843cac5.json) now passes all seven
+required CI jobs and release packaging. The rendered mixed-use smoke and the
+remaining browser journeys complete; Windows onboarding and Linux/macOS/Windows
+recovery pass. VM105 independently verifies the raw workflow records. This
+confirms the corrected smoke path; it does not clear hardware visual or
+performance gates, and the historical failed runs remain preserved.
+
 Two fixed four-page visual diagnostics stopped before images: the
 [first](visual-transition-path-20261020-review.json) failed readiness, and the
 [observed follow-up](visual-transition-path-observed-20261020-review.json)
@@ -125,6 +140,18 @@ deadline and all image masks/tolerances remain unchanged. The original reports
 and normal cleanup receipts are hash-verified on VM105. The combined replay,
 capture and production timeline/source tests [pass 122/122 on Node 24 and 26](replay-capture-validation-20261020.json).
 Fresh browser evidence is still required.
+
+The infrastructure-labelled startup shards measure empty-layer boot and the
+default Austin fly-in before activating dams. Both builds use live Esri and
+Re:Earth responses without payload hashes. A new, separate four-slot ABBA
+diagnostic will use the existing deterministic Austin map responses to test
+that variable; it will not replace the failed live-provider comparison. It
+requires response acknowledgements, payload hashes, bounded redacted unmatched
+request records and confirmed interception cleanup. The synthetic imagery and
+terrain change decoding/rendering work, so the report explicitly rejects
+acceptance use. [55 focused checks per Node version and 79 lint files pass](startup-provider-validation-20261020-r2.json)
+on VM105. The [initial test-message failure](startup-provider-validation-20261020.json)
+is preserved; its correction changes only the new CLI test expectation.
 
 The corrected candidate's [cable pair](infrastructure-cables-190c5ab6-result.json)
 has now passed independent VM validation. Its five-run motion median p95 is
@@ -142,6 +169,13 @@ cable/map orchestration receipt is separately preserved on VM105 with SHA-256
 `459c329d1f650b54daffa266c98a2e4e9dbe4824b8b0859063f4dc0c0d5a2bfc`.
 The comparison explicitly reuses the saved five-run baseline. It does not prove
 a repeatable speedup or satisfy the distinct dense/tracking 20% objective.
+
+The current [operating-view pair](operating-view-190c5ab6-result.json) now has
+five samples per scenario, with all seven raw/report/protocol files verified
+on VM105. Motion median p95 changes 299.6 to 254.5 ms (-15.05%), app readiness
+-17.19% and loading completion -12.06%. It declares the saved baseline reuse.
+Its raw idle frame-spacing flag (+282.67%) remains open pending a fresh,
+candidate-bound render-demand diagnostic; frame spacing is not execution time.
 
 The preceding complete workload matrix applies to `b3c49b19`. Its
 [recorded-position regression suite](replay-runtime-tests-b3c49b19.json) passes

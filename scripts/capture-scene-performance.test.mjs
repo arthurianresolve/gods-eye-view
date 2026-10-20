@@ -691,6 +691,65 @@ test('capture CLI recognizes an infrastructure workload before browser startup',
   );
 });
 
+test('startup provider-response diagnostic is explicit, startup-only and ineligible', async () => {
+  const flagOnly = invoke(['--startup-provider-fixture-diagnostic']);
+  assert.equal(flagOnly.status, 1, flagOnly.stderr);
+  assert.match(
+    flagOnly.stderr,
+    /requires an infrastructure-dams --startup-only-shard with --startup-page-observed-v1/,
+  );
+
+  const missingPageMethod = invoke([
+    '--startup-only-shard',
+    '--startup-provider-fixture-diagnostic',
+    '--provider-fixture',
+    'infrastructure-dams',
+  ]);
+  assert.equal(missingPageMethod.status, 1, missingPageMethod.stderr);
+  assert.match(missingPageMethod.stderr, /requires an infrastructure-dams/);
+
+  const wrongFixture = invoke([
+    '--startup-only-shard',
+    '--startup-page-observed-v1',
+    '--startup-provider-fixture-diagnostic',
+    '--provider-fixture',
+    'infrastructure-datacenters',
+  ]);
+  assert.equal(wrongFixture.status, 1, wrongFixture.stderr);
+  assert.match(wrongFixture.stderr, /requires an infrastructure-dams/);
+
+  const acceptedContractBeforeProvenance = invoke([
+    '--startup-only-shard',
+    '--startup-page-observed-v1',
+    '--startup-provider-fixture-diagnostic',
+    '--provider-fixture',
+    'infrastructure-dams',
+    '--startup-shard-id',
+    'provider-diagnostic-control-01',
+    '--startup-role',
+    'control',
+    '--hardware-required',
+    '--out',
+    path.join(os.tmpdir(), 'provider-diagnostic-contract-only.json'),
+  ]);
+  assert.equal(acceptedContractBeforeProvenance.status, 1);
+  assert.match(
+    acceptedContractBeforeProvenance.stderr,
+    /--startup-only-shard requires verified, headed native hardware capture/,
+  );
+  assert.doesNotMatch(
+    acceptedContractBeforeProvenance.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+
+  const source = await fs.readFile(SCRIPT, 'utf8');
+  assert.match(source, /gev-startup-provider-fixture-diagnostic-shard\/v1/);
+  assert.match(source, /acceptanceEligible:\s*false/);
+  assert.match(source, /comparisonEligible:\s*false/);
+  assert.match(source, /manifestSha256/);
+  assert.match(source, /unmatchedExternal/);
+});
+
 test('receipt-only worker auditing is accepted for dense and infrastructure comparisons before provenance validation', () => {
   for (const args of [
     [

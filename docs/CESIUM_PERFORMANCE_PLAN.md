@@ -11,7 +11,11 @@ The corrected runtime candidate is `190c5ab6`; production remains at
 `e7a878e`. The complete historical workload results below apply to `b3c49b19`.
 Recorded-aircraft position ownership passes 158/158 focused tests
 on each VM105 Node version and all eight fleet/eight tracked physical Windows
-observations. Its exact CI, tracking and signed-package workflows pass. The
+observations. Its [candidate CI, explicit tracking and signed-package checks](performance-evidence/s69-native-matrix-20261019/exact-ci-190c5ab6.json)
+pass. All seven standard jobs checked out PR merge `596a5d32`, whose source tree
+exactly matches `190c5ab6`; tracking and packaging used the candidate commit
+directly. VM105 verified all thirteen workflow, checkout-log and source-object
+files. These checks remain separate from physical GPU acceptance. The
 corrected archive, GitHub attestation, 2,128 packaged files and 16 private HTTP
 checks are verified for `190c5ab6`. The private signed-package browser preflight
 also preserves asset bytes through save/export/import/reload/reopen. The package
@@ -110,8 +114,11 @@ jointly qualify, with 111–355 ms spent reading pixels per observation. The pha
 observer now skips readback while REC is hidden and reads both original edge
 samples in one shallow strip. It changes no pixels, clocks, deadlines or
 comparison thresholds. [All 122 focused and production-contract tests](performance-evidence/s69-native-matrix-20261019/replay-capture-validation-20261020.json)
-pass on each of VM105 Node 24 and 26. Browser confirmation remains required;
-neither change clears the prior visual or mixed-use failures by itself.
+pass on each of VM105 Node 24 and 26. The [complete hosted run at `b843cac5`](performance-evidence/s69-native-matrix-20261019/qa-ci-b843cac5.json)
+now passes all seven required jobs, including rendered mixed-use smoke, browser
+journeys, Windows onboarding and recovery on all three operating systems;
+release packaging also passes. The historical failures remain recorded. Fresh
+physical GPU capture is still required to assess the image-readback correction.
 
 The current [cable comparison](performance-evidence/s69-native-matrix-20261019/infrastructure-cables-190c5ab6-result.json)
 passes independent VM hash/identity review: motion median p95 is 332.8 versus
@@ -125,6 +132,15 @@ also completes and passes independent VM verification: motion median p95 changes
 idle frame-interval comparison changes +0.95%. App readiness changes -29.56%
 and loading completion -19.43%. These are separate metrics, using the declared
 saved baseline; they do not establish the dense/tracking improvement objective.
+
+The current [operating-view comparison](performance-evidence/s69-native-matrix-20261019/operating-view-190c5ab6-result.json)
+has five samples per scenario: motion median p95 changes 299.6 to 254.5 ms
+(-15.05%), app readiness -17.19% and loading completion -12.06%. All seven
+raw/report/protocol files are independently hash-verified on VM105. Its raw
+idle frame-interval flag remains unresolved (+282.67%); the wider spacing can
+only be interpreted after a fresh diagnostic at this exact candidate. It is
+not a CPU/GPU execution-time measurement. The comparison declares saved
+baseline reuse and does not establish a repeatable speedup.
 
 The corrected interaction/heap run exposed a workspace persistence defect:
 saved canonical views omit visual settings, and reopening them disables
@@ -184,6 +200,22 @@ a candidate-only application cause. The
 corrects a minified Cesium buffer-copy function incorrectly grouped as garbage
 collection and identifies the injected context probe among sampled frames.
 These diagnostic samples cannot clear the failed startup comparison.
+The startup source audit also finds that the infrastructure-labelled startup
+shards measure the empty-layer application boot and default Austin fly-in,
+before dam activation. Both roles use live Esri imagery and Re:Earth terrain;
+those response bodies are not pinned in the failed startup comparison. This
+does not prove that providers caused the slowdown. A separate, four-slot
+control/candidate/candidate/control diagnostic will replace only those provider
+responses with the existing hash-bound Austin map fixture. Its synthetic
+payloads also change decoding and rendering costs, so its results cannot
+replace the live-provider failure or qualify startup performance.
+The diagnostic implementation requires acknowledged, hash-bound payloads,
+bounded redacted unmatched-request records and confirmed interception cleanup.
+Its report is explicitly ineligible for acceptance. [VM source validation](performance-evidence/s69-native-matrix-20261019/startup-provider-validation-20261020-r2.json)
+passes 55 focused checks on each Node version, formatting and 79 capture lint
+files. The [initial assertion failure](performance-evidence/s69-native-matrix-20261019/startup-provider-validation-20261020.json)
+is retained: a new CLI test expected the wrong existing argument guard. Only
+that expectation changed; no runtime guard or acceptance threshold changed.
 The first attribution attempt stopped before navigation because
 the owned Chrome window was not in front. Its failure is preserved, and the
 corrected handoff observes the actual foreground process before releasing the

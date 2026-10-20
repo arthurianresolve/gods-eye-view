@@ -1367,6 +1367,8 @@
   "scripts/performance/boundedCpuProfile.test.mjs",
   "scripts/performance/startupCpuAttribution.mjs",
   "scripts/performance/startupCpuAttribution.test.mjs",
+  "scripts/performance/startupProviderFixtureDiagnostic.mjs",
+  "scripts/performance/startupProviderFixtureDiagnostic.test.mjs",
   "scripts/performance/providerSampleCpuProfileWindow.mjs",
   "scripts/performance/providerSampleCpuProfileWindow.test.mjs",
   "scripts/performance/providerDocumentRetirement.mjs",

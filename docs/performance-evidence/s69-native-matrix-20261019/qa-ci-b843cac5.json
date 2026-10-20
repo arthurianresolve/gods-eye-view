@@ -1,0 +1,67 @@
+{
+  "schema": "gev-qa-producer-ci-review/v1",
+  "reviewedAt": "2026-10-20T02:13:48.127Z",
+  "status": "passed",
+  "qaCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "frozenApplicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "applicationRuntimeDiff": [],
+  "checks": [
+    {
+      "kind": "ci",
+      "runId": 39355411657,
+      "headSha": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+      "event": "pull_request",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39355411657",
+      "workflowName": "CI",
+      "passedJobs": [
+        "Street Level browser gate",
+        "Windows onboarding",
+        "Node 26.x",
+        "Install and update recovery (windows-latest)",
+        "Install and update recovery (macos-latest)",
+        "Node 24.14.0",
+        "Install and update recovery (ubuntu-latest)"
+      ],
+      "intentionallySkippedJobs": [
+        "Free hosted Mac rendering diagnostic",
+        "Isolated import and workspace lifecycle",
+        "Baseline-compatible performance build smoke",
+        "Isolated CCTV lifecycle",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "60-minute rendered application soak",
+        "Isolated terrain and picking lifecycle",
+        "Isolated mission render-demand correctness",
+        "Isolated rendered mixed-use smoke",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Aircraft tracking regression",
+        "Native WebGL probe (${{ matrix.os }})"
+      ]
+    },
+    {
+      "kind": "release",
+      "runId": 39355411562,
+      "headSha": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+      "event": "pull_request",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39355411562",
+      "workflowName": "Versioned release",
+      "passedJobs": [
+        "Build and verify release artifact"
+      ],
+      "intentionallySkippedJobs": []
+    }
+  ],
+  "files": [
+    {
+      "name": "ci.json",
+      "bytes": 24904,
+      "sha256": "58e2bb4b24bfc4e90ef89801bc43fff0fcb8ad27124dc2d125b92fee8435dcbf"
+    },
+    {
+      "name": "release.json",
+      "bytes": 4086,
+      "sha256": "2db6fe746a776edbbe7b3c9289610d5c9675174797eea8237363c080713b9b43"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-ci-b843cac5",
+  "scope": "CI and candidate packaging for the QA producer revision. PR runs retain GitHub event/head identity; this does not relabel the 190c5ab6 hardware candidate or authorize publication."
+}

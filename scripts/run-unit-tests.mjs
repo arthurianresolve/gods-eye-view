@@ -47,6 +47,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/startupDiagnostics.test.mjs',
   'scripts/performance/startupAttribution.test.mjs',
   'scripts/performance/startupCpuAttribution.test.mjs',
+  'scripts/performance/startupProviderFixtureDiagnostic.test.mjs',
   'scripts/performance/profileRecoveryPageOwnership.test.mjs',
   'scripts/performance/profileRecoveryBrowserVersion.test.mjs',
   'scripts/performance/productionFlightFixture.test.mjs',

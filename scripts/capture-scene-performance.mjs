@@ -205,6 +205,7 @@ import {
   installWeatherGovernorModeTraceInPage,
 } from './performance/weatherIdleDiagnostic.mjs';
 import { probeWeatherVisibleWind } from './performance/weatherVisibleWindProbe.mjs';
+import { summarizeStartupProviderFixtureDiagnostic } from './performance/startupProviderFixtureDiagnostic.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -218,6 +219,9 @@ const seconds = Math.max(1, Number(option('--seconds', '60')) || 60);
 const warmupMs = Math.max(0, Number(option('--warmup-ms', '30000')) || 0);
 const runs = Math.max(1, Math.min(10, Number(option('--runs', '5')) || 5));
 const startupOnlyShard = args.includes('--startup-only-shard');
+const startupProviderFixtureDiagnosticEnabled = args.includes(
+  '--startup-provider-fixture-diagnostic',
+);
 const startupAttributionEnabled = assertStartupAttributionMode({
   enabled: args.includes('--startup-attribution'),
   startupOnlyShard,
@@ -277,6 +281,24 @@ if (
   );
 const mapStreamingWorkloadSelected =
   providerFixtureMode === MAP_STREAMING_WORKLOAD_ID;
+if (
+  startupProviderFixtureDiagnosticEnabled &&
+  (!startupOnlyShard ||
+    !startupPageObservedEnabled ||
+    providerFixtureMode !== 'infrastructure-dams' ||
+    startupAttributionEnabled ||
+    startupCpuProfileEnabled ||
+    weatherPhaseDiagnostic ||
+    weatherInterleavedDiagnostic ||
+    weatherBalancedQualificationShard ||
+    weatherIdleDiagnosticEnabled ||
+    weatherVisibleWindProbeEnabled)
+)
+  throw new TypeError(
+    '--startup-provider-fixture-diagnostic requires an infrastructure-dams --startup-only-shard with --startup-page-observed-v1 and cannot be combined with other startup/weather diagnostics.',
+  );
+const startupProviderDiagnosticIneligibleReason =
+  'startup provider fixture diagnostics change native provider responses and are not acceptance evidence';
 let mapStreamingModule = null;
 let mapStreamingDeliveryFactory = null;
 let assertMapStreamingDeliveryHealthy = null;
@@ -286,6 +308,8 @@ let mapStreamingJourneys = [];
 let mapStreamingCaptureReport = null;
 let mapStreamingFinalEvidence = null;
 const mapStreamingFixtureOwners = [];
+const startupProviderFixtureOwners = [];
+let startupProviderFixture = null;
 let austinOperatingModule = null;
 let austinOperatingWorkload = null;
 let austinSatelliteEpochModule = null;
@@ -1597,6 +1621,12 @@ async function writeCaptureFailure(error, { refresh = false } = {}) {
     workload: {
       ...failureProgress.workload,
       scenarios: failureProgress.scenarios || [],
+      ...(failureProgress.startupProviderFixtureDiagnostic
+        ? {
+            startupProviderFixtureDiagnostic:
+              failureProgress.startupProviderFixtureDiagnostic,
+          }
+        : {}),
     },
     phase: failureProgress.current?.phase || failureProgress.phase,
     scenario: failureProgress.current?.scenario || failureProgress.scenario,
@@ -1688,8 +1718,9 @@ if (austinOperatingWorkloadSelected) {
     );
   failureProgress.fixture = austinOperatingWorkload;
 }
-if (mapStreamingWorkloadSelected) {
-  mapStreamingModule = await import('./performance/mapStreamingCapture.mjs');
+if (mapStreamingWorkloadSelected || startupProviderFixtureDiagnosticEnabled) {
+  if (mapStreamingWorkloadSelected)
+    mapStreamingModule = await import('./performance/mapStreamingCapture.mjs');
   const { createDeterministicMapStreamingFixture } =
     await import('./performance/mapStreamingFixture.mjs');
   ({
@@ -1697,6 +1728,30 @@ if (mapStreamingWorkloadSelected) {
     assertMapStreamingDeliveryHealthy,
   } = await import('./performance/mapStreamingFixtureDelivery.mjs'));
   mapStreamingFixture = await createDeterministicMapStreamingFixture();
+  if (startupProviderFixtureDiagnosticEnabled) {
+    startupProviderFixture = {
+      schema: 'gev-startup-provider-fixture/v1',
+      fixtureId: mapStreamingFixture.id,
+      manifestSha256: mapStreamingFixture.manifestSha256,
+      manifestByteLength: mapStreamingFixture.manifestBytes.byteLength,
+      assetCount: mapStreamingFixture.manifest.assetCount,
+      totalPayloadBytes: mapStreamingFixture.manifest.totalBytes,
+      generatorSourceSha256: mapStreamingFixture.manifest.generatorSourceSha256,
+      responseScope: 'allowlisted-native-map-and-terrain-provider-responses',
+    };
+    failureProgress.startupProviderFixtureDiagnostic = {
+      schema: 'gev-startup-provider-fixture-diagnostic/v1',
+      status: 'pending',
+      diagnosticOnly: true,
+      comparisonEligible: false,
+      acceptanceEligible: false,
+      ineligibleReason: startupProviderDiagnosticIneligibleReason,
+      fixture: startupProviderFixture,
+      documents: [],
+    };
+  }
+}
+if (mapStreamingWorkloadSelected) {
   failureProgress.fixture = {
     id: mapStreamingFixture.id,
     sha256: mapStreamingFixture.manifestSha256,
@@ -1958,20 +2013,64 @@ async function configureMapStreamingFixturePage(
   page,
   { documentRole = 'unclassified', documentId = null } = {},
 ) {
-  if (!mapStreamingWorkloadSelected) return null;
+  if (!mapStreamingWorkloadSelected && !startupProviderFixtureDiagnosticEnabled)
+    return null;
   const delivery = mapStreamingDeliveryFactory(mapStreamingFixture, {
     appOrigin: new URL(url).origin,
   });
+  const unmatchedExternal = {
+    count: 0,
+    byProvider: Object.create(null),
+    examples: [],
+    omittedExamples: 0,
+  };
+  const providerClass = (requestUrl) => {
+    const host = requestUrl.hostname.toLowerCase();
+    if (host === 'services.arcgisonline.com') return 'arcgis';
+    if (host === 'tile.openstreetmap.org') return 'osm';
+    if (host === 'terrain.reearth.land') return 'reearth';
+    if (host === 'tile.googleapis.com') return 'google';
+    if (host === 'assets.ion.cesium.com') return 'ion-assets';
+    return 'other-external';
+  };
+  const respond = async (requestUrl, request) => {
+    const response = await delivery.respond(requestUrl, request);
+    if (
+      startupProviderFixtureDiagnosticEnabled &&
+      !response &&
+      ['http:', 'https:'].includes(requestUrl.protocol) &&
+      requestUrl.origin !== new URL(url).origin
+    ) {
+      const category = providerClass(requestUrl);
+      unmatchedExternal.count += 1;
+      unmatchedExternal.byProvider[category] =
+        (unmatchedExternal.byProvider[category] || 0) + 1;
+      if (unmatchedExternal.examples.length < 8)
+        unmatchedExternal.examples.push({
+          provider: category,
+          method: String(request?.method?.() || 'unknown').slice(0, 12),
+          resourceType: String(request?.resourceType?.() || 'unknown').slice(
+            0,
+            24,
+          ),
+        });
+      else unmatchedExternal.omittedExamples += 1;
+    }
+    return response;
+  };
   const owner = {
     delivery,
     documentRole,
     documentId,
+    unmatchedExternal,
     sessionOrdinal: null,
     disposed: false,
     finalEvidence: null,
     error: null,
   };
   mapStreamingFixtureOwners.push(owner);
+  if (startupProviderFixtureDiagnosticEnabled)
+    startupProviderFixtureOwners.push(owner);
   page.once('close', () => delivery.cancel());
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
@@ -1988,7 +2087,7 @@ async function configureMapStreamingFixturePage(
   sessionContext.interception = await interceptFixtureSession(
     session,
     new URL(url).origin + '/',
-    (requestUrl, request) => delivery.respond(requestUrl, request),
+    respond,
     fixtureInterceptionErrorRecorder.onError,
     {
       onFulfilled: delivery.onFulfilled,
@@ -2033,6 +2132,39 @@ function collectMapStreamingFixtureDocumentDeliveries() {
       release: matchingReleases.length === 1 ? matchingReleases[0] : null,
     };
   });
+}
+
+function publishStartupProviderFixtureDiagnostic() {
+  if (!startupProviderFixtureDiagnosticEnabled) return;
+  try {
+    failureProgress.startupProviderFixtureDiagnostic =
+      summarizeStartupProviderFixtureDiagnostic({
+        fixture: startupProviderFixture,
+        owners: startupProviderFixtureOwners,
+        releases: failureProgress.workload.fixtureInterceptionReleases,
+        ineligibleReason: startupProviderDiagnosticIneligibleReason,
+      });
+    const sample = failureProgress.startupSamples?.[0];
+    if (sample)
+      sample.startupProviderFixtureDiagnostic =
+        failureProgress.startupProviderFixtureDiagnostic;
+  } catch (error) {
+    failureProgress.startupProviderFixtureDiagnostic = {
+      schema: 'gev-startup-provider-fixture-diagnostic/v1',
+      status: 'failed',
+      diagnosticOnly: true,
+      comparisonEligible: false,
+      acceptanceEligible: false,
+      ineligibleReason: startupProviderDiagnosticIneligibleReason,
+      fixture: startupProviderFixture,
+      documents: [],
+      diagnosticError: { name: String(error?.name || 'Error').slice(0, 48) },
+    };
+    const sample = failureProgress.startupSamples?.[0];
+    if (sample)
+      sample.startupProviderFixtureDiagnostic =
+        failureProgress.startupProviderFixtureDiagnostic;
+  }
 }
 
 function publishAustinOperatingFixtureDocumentEvidence() {
@@ -3503,7 +3635,7 @@ try {
         visible: details.visible,
         focused: details.focused,
       };
-    startupSamples.push({
+    const startupSampleRecord = {
       run,
       cacheDisabled: true,
       foregroundActivation: startupForegroundActivation,
@@ -3522,7 +3654,8 @@ try {
           }
         : {}),
       ...details,
-    });
+    };
+    startupSamples.push(startupSampleRecord);
     await auditPageWorkerEvidence(startupPage, startupAuditState, {
       documentRole: startupDocumentRole,
       documentId: startupDocumentId,
@@ -3566,6 +3699,11 @@ try {
       );
     if (startupMapFixture?.owner)
       finalizeMapStreamingFixtureDelivery(startupMapFixture.owner);
+    if (startupProviderFixtureDiagnosticEnabled) {
+      publishStartupProviderFixtureDiagnostic();
+      startupSampleRecord.startupProviderFixtureDiagnostic =
+        failureProgress.startupProviderFixtureDiagnostic;
+    }
   }
 
   if (startupOnlyShard) {
@@ -8125,6 +8263,18 @@ try {
     if (ownedBrowserPidFile)
       await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
   }
+  if (startupProviderFixtureDiagnosticEnabled) {
+    for (const owner of startupProviderFixtureOwners) {
+      if (owner.disposed) continue;
+      try {
+        finalizeMapStreamingFixtureDelivery(owner);
+      } catch (error) {
+        captureFailure ||= error;
+        process.exitCode = 1;
+      }
+    }
+    publishStartupProviderFixtureDiagnostic();
+  }
   await refreshShaderProgramAttributionCheckpoint().catch(() => {});
 }
 if (startupOnlyShard && !captureFailure) {
@@ -8176,13 +8326,20 @@ if (startupOnlyShard && !captureFailure) {
         'Startup shard is missing measured environment or settings.',
       );
     const shard = {
-      schema: startupAttributionEnabled
-        ? STARTUP_ATTRIBUTION_SCHEMA
-        : 'gev-startup-observation-shard/v1',
-      status: startupAttributionEnabled ? 'diagnostic-only' : 'completed',
+      schema: startupProviderFixtureDiagnosticEnabled
+        ? 'gev-startup-provider-fixture-diagnostic-shard/v1'
+        : startupAttributionEnabled
+          ? STARTUP_ATTRIBUTION_SCHEMA
+          : 'gev-startup-observation-shard/v1',
+      status:
+        startupAttributionEnabled || startupProviderFixtureDiagnosticEnabled
+          ? 'diagnostic-only'
+          : 'completed',
       comparisonEligible: false,
       motionEligible: false,
-      ...(startupAttributionEnabled ? { diagnosticOnly: true } : {}),
+      ...(startupAttributionEnabled || startupProviderFixtureDiagnosticEnabled
+        ? { diagnosticOnly: true, acceptanceEligible: false }
+        : {}),
       slotId: startupShardId,
       role: startupShardRole,
       source: {
@@ -8233,6 +8390,12 @@ if (startupOnlyShard && !captureFailure) {
       },
       ...(startupAttributionEnabled
         ? { startupAttribution: sample.startupAttribution }
+        : {}),
+      ...(startupProviderFixtureDiagnosticEnabled
+        ? {
+            startupProviderFixtureDiagnostic:
+              failureProgress.startupProviderFixtureDiagnostic,
+          }
         : {}),
       ...(startupCpuProfileEnabled
         ? { startupCpuProfile: sample.startupCpuProfile || null }
