@@ -40,16 +40,22 @@ export function installVisualPresentationBoundaryInPage() {
       pointerType: String(event.pointerType || 'mouse').slice(0, 16),
     };
   };
-  const onGazeReset = () => {
+  const onGazeReset = (event) => {
+    if (
+      (event.type === 'pointerleave' &&
+        event.target !== document.documentElement) ||
+      (event.type === 'blur' && event.target !== window)
+    )
+      return;
     resetSequence = pointerMoveSequence;
   };
   window.addEventListener('pointermove', onPointerMove, {
     capture: true,
     passive: true,
   });
-  window.addEventListener('blur', onGazeReset, { capture: true });
+  window.addEventListener('blur', onGazeReset, { capture: false });
   document.documentElement.addEventListener('pointerleave', onGazeReset, {
-    capture: true,
+    capture: false,
   });
   const readScrollContainer = (id, element) => {
     if (!element) return { id, present: false };
@@ -353,11 +359,11 @@ export function installVisualPresentationBoundaryInPage() {
     dispose() {
       observer.disconnect();
       window.removeEventListener('pointermove', onPointerMove, true);
-      window.removeEventListener('blur', onGazeReset, true);
+      window.removeEventListener('blur', onGazeReset, false);
       document.documentElement.removeEventListener(
         'pointerleave',
         onGazeReset,
-        true,
+        false,
       );
       delete window.__gevVisualPresentationBoundary;
     },

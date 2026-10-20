@@ -92,8 +92,12 @@ test('presentation observer counts real changes, retains cycles and releases its
       __godsEyeView: {
         styleManager: { hud: { _summaryTypingInterval: null, visible: true } },
       },
-      addEventListener: (name, listener) => listeners.set(name, listener),
-      removeEventListener: (name, listener) => {
+      addEventListener: (name, listener, options) => {
+        assert.equal(options.capture, name !== 'blur');
+        listeners.set(name, listener);
+      },
+      removeEventListener: (name, listener, capture) => {
+        assert.equal(capture, name !== 'blur');
         if (listeners.get(name) === listener) listeners.delete(name);
       },
       matchMedia: () => ({ matches: reducedMotion }),
@@ -103,8 +107,12 @@ test('presentation observer counts real changes, retains cycles and releases its
       activeElement,
       hasFocus: () => true,
       documentElement: {
-        addEventListener: (name, listener) => rootListeners.set(name, listener),
-        removeEventListener: (name, listener) => {
+        addEventListener: (name, listener, options) => {
+          assert.equal(options.capture, false);
+          rootListeners.set(name, listener);
+        },
+        removeEventListener: (name, listener, capture) => {
+          assert.equal(capture, false);
           if (rootListeners.get(name) === listener) rootListeners.delete(name);
         },
       },
@@ -196,14 +204,20 @@ test('presentation observer counts real changes, retains cycles and releases its
   globe.value = 'translate(-0.20 -0.20)';
   assert.equal(boundary.read().gaze.status, 'gaze-not-settled');
   globe.value = 'translate(-1.00 -1.00)';
-  listeners.get('blur')();
+  listeners.get('blur')({ type: 'blur', target: {} });
+  rootListeners.get('pointerleave')({ type: 'pointerleave', target: {} });
+  assert.equal(boundary.read().gaze.status, 'ready');
+  listeners.get('blur')({ type: 'blur', target: scope.window });
   assert.equal(boundary.read().gaze.status, 'pointer-reset-after-positioning');
   listeners.get('pointermove')({
     clientX: 1,
     clientY: 1,
     pointerType: 'mouse',
   });
-  rootListeners.get('pointerleave')();
+  rootListeners.get('pointerleave')({
+    type: 'pointerleave',
+    target: scope.document.documentElement,
+  });
   assert.equal(boundary.read().gaze.status, 'pointer-reset-after-positioning');
   listeners.get('pointermove')({
     clientX: 1,

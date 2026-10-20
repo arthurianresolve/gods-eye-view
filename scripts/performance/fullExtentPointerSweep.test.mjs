@@ -44,17 +44,39 @@ function harness(options = {}) {
   class Target {
     constructor() {
       this.listeners = new Map();
+      this.captureModes = new Map();
     }
-    addEventListener(type, callback) {
+    addEventListener(type, callback, options) {
       if (!this.listeners.has(type)) this.listeners.set(type, new Set());
       this.listeners.get(type).add(callback);
+      if (!this.captureModes.has(type)) this.captureModes.set(type, new Map());
+      this.captureModes
+        .get(type)
+        .set(callback, options === true || options?.capture === true);
     }
-    removeEventListener(type, callback) {
-      this.listeners.get(type)?.delete(callback);
+    removeEventListener(type, callback, options) {
+      if (
+        this.captureModes.get(type)?.get(callback) ===
+        (options === true || options?.capture === true)
+      ) {
+        this.listeners.get(type)?.delete(callback);
+        this.captureModes.get(type)?.delete(callback);
+      }
     }
     emit(type, detail = {}) {
       for (const callback of [...(this.listeners.get(type) || [])])
-        callback({ type, timeStamp: now, ...detail });
+        if (
+          !detail.target ||
+          detail.target === this ||
+          this.captureModes.get(type)?.get(callback)
+        )
+          callback({
+            type,
+            timeStamp: now,
+            target: this,
+            currentTarget: this,
+            ...detail,
+          });
     }
     get count() {
       return [...this.listeners.values()].reduce(
@@ -471,6 +493,23 @@ test('unexpected input, focus loss and same-value writes after settlement perman
     'unexpected-blur',
   );
   blur.dispose();
+});
+
+test('ordinary descendant leaves do not reset gaze; actual root/window boundaries still fail', async () => {
+  const h = harness();
+  await h.ready();
+  h.install();
+  await h.settle(0);
+  h.doc.documentElement.emit('pointerleave', { target: {}, isTrusted: true });
+  h.win.emit('blur', { target: {}, isTrusted: true });
+  h.win.emit('focus', { target: {}, isTrusted: true });
+  h.frame();
+  assert.equal(h.read().error, null);
+  h.doc.documentElement.emit('pointerleave', { isTrusted: true });
+  assert.equal(h.read().error, 'unexpected-pointerleave');
+  assert.equal(h.read().rejectedEvents[0].targetKind, 'document-element');
+  h.dispose();
+  assert.equal(h.win.count + h.doc.count + h.doc.documentElement.count, 0);
 });
 
 test('timeout, bounded mutation overflow and disposal release every owned callback', async () => {

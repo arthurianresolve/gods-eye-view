@@ -279,9 +279,25 @@ export function installFullExtentPointerSweepInPage(contract) {
     pointerEvents.push({ stage: stage.id, ...stage.event });
   };
   const onReset = (event) => {
+    // Match logoGaze's native boundary listeners. Non-bubbling descendant
+    // pointerleave/blur events are ordinary hover/focus traversal, not resets.
+    if (
+      (event.type === 'pointerleave' &&
+        event.target !== document.documentElement) ||
+      (['blur', 'focus'].includes(event.type) && event.target !== window)
+    )
+      return;
     if (rejectedEvents.length < 8)
       rejectedEvents.push({
         type: event.type,
+        targetKind:
+          event.target === window
+            ? 'window'
+            : event.target === document.documentElement
+              ? 'document-element'
+              : event.target === document
+                ? 'document'
+                : 'descendant',
         trusted: event.isTrusted === true,
         atMs: performance.now(),
       });
@@ -292,15 +308,15 @@ export function installFullExtentPointerSweepInPage(contract) {
     [window, 'pointerdown', onReset],
     [window, 'pointerup', onReset],
     [window, 'pointercancel', onReset],
-    [window, 'blur', onReset],
-    [window, 'focus', onReset],
+    [window, 'blur', onReset, false],
+    [window, 'focus', onReset, false],
     [document, 'visibilitychange', onReset],
     [document, 'focusin', onReset],
     [document, 'focusout', onReset],
-    [document.documentElement, 'pointerleave', onReset],
+    [document.documentElement, 'pointerleave', onReset, false],
   ];
-  for (const [target, type, listener] of listeners)
-    target.addEventListener(type, listener, { capture: true, passive: true });
+  for (const [target, type, listener, capture = true] of listeners)
+    target.addEventListener(type, listener, { capture, passive: true });
   function read() {
     collectMutations(observer.takeRecords());
     if (!environmentReady()) error ||= 'document-not-visible-and-focused';
@@ -428,8 +444,8 @@ export function installFullExtentPointerSweepInPage(contract) {
       if (frame !== null) cancelAnimationFrame(frame);
       if (timer !== null) clearTimeout(timer);
       observer.disconnect();
-      for (const [target, type, listener] of listeners)
-        target.removeEventListener(type, listener, true);
+      for (const [target, type, listener, capture = true] of listeners)
+        target.removeEventListener(type, listener, capture);
       delete window.__gevFullExtentPointerSweep;
     },
   };
