@@ -7,25 +7,45 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-The latest [combined runtime diagnostic](performance-evidence/s69-native-matrix-20261019/hidden-layout-f637e20c-diagnostic.json)
+The latest [natural-feedback diagnostic](performance-evidence/s69-native-matrix-20261019/natural-feedback-c373d91b-diagnostic.json)
+compares `8c14b106` with `c373d91b`, which restores visible first-render
+grounding, avoids unchanged toggle DOM writes, and adds a second natural RAF
+opportunity before the owned enable task. All sixteen actions are isolated and
+have matching native Event Timing entries. Six of eight candidate observations
+exceed 100 ms, versus five of eight control observations. First-OFF full
+readiness regresses to 95.3–107.2 ms from 14.9–18.3 ms, despite early visibility
+cleanup and zero height queries. The wait precedes the first recorded
+`preRender`; worker state and the precise scheduling cause are unmeasured.
+The panel callbacks begin after that readiness timestamp.
+
+All recorded fixture geometry and ordered height-query tuples agree exactly
+between these builds. This eight-record fixture result does not establish raster
+or general scene equivalence. The diagnostic uses a matched 1440 × 1000 CSS
+viewport at DPR 2, as did the preceding `f637e20c` diagnostic; it differs from
+the 1440 × 900 visual captures. It is not the required twenty-sample interaction
+cohort and does not qualify the unchanged 100 ms or 10% readiness gates. The
+original failures, frozen r21 result and public deployment remain unchanged.
+
+The earlier [hidden-grounding diagnostic](performance-evidence/s69-native-matrix-20261019/hidden-layout-f637e20c-diagnostic.json)
 compares `8c14b106` with `f637e20c`. All sixteen actions have matching native
 Event Timing entries. Five of eight candidate observations exceed 100 ms,
 versus four of eight baseline observations; no interaction pass is claimed.
 Click processing takes 2.9–10.3 ms on the candidate, while most of the delay
 occurs after processing. Cold full readiness improves in this small diagnostic,
 but the hidden-source grounding experiment changes the pick command set and
-does not establish general scene-height equivalence. That part is being
-replaced with the original visible, first-render grounding semantics.
-The next bounded experiment retains panel-layout cleanup, avoids unchanged
-toggle-button DOM writes, and gives user-enable feedback an additional natural
-rendering opportunity before expensive work. It still must pass the unchanged
-100 ms and 10% readiness gates.
+does not establish general scene-height equivalence. That part was rejected
+and replaced with the original visible, first-render grounding semantics in
+`c373d91b`. Its measured timing failures are retained separately from the new
+diagnostic.
 
-The full-application visual run with QA `3e71b4f6` stopped before its first
+The earlier full-application visual run with QA `3e71b4f6` stopped before its first
 screenshot: capture-phase listeners treated descendant `pointerleave` events
-as a document exit. The application’s gaze handler does not do that. A
-prospective observer correction is required; the failed run and pixel policy
-remain intact. The `f637e20c` CI unit/release failure is separately traced to a
+as a document exit. The correction at `f5cac94f` implements the application's
+boundary-event semantics, and an actual-application baseline still capture now
+succeeds. A subsequent HUD-visible capture reached its guard deadline; that
+failed attempt is preserved and under investigation. Full visual acceptance
+remains unqualified, and the failed runs and pixel policy remain intact.
+The `f637e20c` CI unit/release failure is separately traced to a
 source-text test of mobile height cleanup. Commit `77d7fc13` replaces that
 literal-call assertion with the actual mobile behavior; 57 tests pass on both
 Node 24 and 26. These corrections do not change the frozen r21 result or public
@@ -43,7 +63,7 @@ separate implementation investigations.
 The [natural pointer-sweep diagnostic](performance-evidence/s69-native-matrix-20261019/natural-pointer-sweep-diagnostic.json)
 produces three byte-identical positive screenshots of the unchanged baseline
 logo; a deliberate geometry change still fails. This is a standalone acquisition
-test, not full-application visual acceptance. The shared capture harness is being
+test, not full-application visual acceptance. The shared capture harness has been
 updated without changing pixel thresholds. CI and signed-release verification
 for `3add2a3a` pass, including Windows recovery; the frozen `190c5ab6` r21
 qualification and public deployment remain unchanged.

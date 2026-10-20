@@ -2,7 +2,26 @@
 
 ## Current qualification checkpoint
 
-The latest [combined runtime diagnostic](hidden-layout-f637e20c-diagnostic.json)
+The latest [natural-feedback diagnostic](natural-feedback-c373d91b-diagnostic.json)
+retains all sixteen isolated actions comparing `8c14b106` with `c373d91b`.
+Every action has a matching native Event Timing entry; six of eight candidate
+observations exceed 100 ms, versus five of eight control observations. First-OFF
+full readiness takes 95.3–107.2 ms on the candidate and 14.9–18.3 ms on control,
+despite early visibility cleanup and zero height queries. The extra wait occurs
+before the first recorded `preRender`; the capture cannot identify pending
+worker state or the precise scheduling cause. The panel callbacks start after
+that readiness timestamp.
+
+All recorded geometry and ordered height-query tuples agree exactly across this
+eight-record fixture after visible first-render grounding was restored. That
+does not qualify raster quality or arbitrary scene overlap. All four slots use
+1440 × 1000 CSS pixels at DPR 2, matching the preceding `f637e20c` diagnostic
+and differing from the 1440 × 900 visual captures. The report binds the six raw
+files (1,693,829 bytes), independently rehashed on VM105. This is not the required
+twenty-sample interaction cohort; the 100 ms target and 10% readiness gate remain
+unchanged and unqualified. Production remains unchanged.
+
+The earlier [hidden-grounding diagnostic](hidden-layout-f637e20c-diagnostic.json)
 preserves sixteen actions comparing `8c14b106` with `f637e20c`. Native
 next-rendering latency exceeds 100 ms in five of eight candidate observations
 and four of eight baseline observations. Candidate event processing itself
@@ -11,8 +30,9 @@ presentation; OFF can also be slow without height queries. Initial readiness
 improves in this small diagnostic, but this is not an acceptance cohort.
 Hidden-source grounding changes the pick command set; flat-fixture geometry
 differences below 0.1 mm do not prove arbitrary building/overlap equivalence.
-The next experiment restores normal visible first-render grounding and retains
-the independent cleanup improvements. Production remains unchanged.
+That grounding experiment was rejected; `c373d91b` restores normal visible
+first-render grounding and retains the independent cleanup improvements.
+The historical failures remain preserved.
 
 The first full-application run with the new pointer-sweep harness stopped before
 any screenshot because descendant `pointerleave` events were incorrectly
@@ -21,6 +41,9 @@ are preserved and hash-verified at VM validation task
 `repeated-full-extent-f637e20c-3e71b4f6-failed-20261020`. The observer
 correction at `f5cac94f` matches the application's boundary-event semantics;
 49 tests pass on both Node 24 and 26. It does not relax any visual threshold.
+An actual-application baseline still capture now succeeds. A subsequent
+HUD-visible capture reached its guard deadline; that failed attempt is preserved
+and under investigation. No full visual acceptance is established.
 
 The `f637e20c` CI unit and release checks fail one brittle mobile-height
 source-text assertion. The behavior-based replacement at `77d7fc13` passes
