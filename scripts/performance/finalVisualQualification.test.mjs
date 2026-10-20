@@ -497,11 +497,14 @@ test('repeated visual consumer preserves native checks and rejects unplanned, se
   const first = captures[0].report;
   const planBytes = Buffer.from(
     JSON.stringify(
-      createRepeatedVisualPlan({
-        'baseline-app-sha': first.application.baselineSha,
-        'candidate-app-sha': first.application.candidateSha,
-        'visual-harness-sha': first.harness.visualHarnessCommit,
-      }),
+      createRepeatedVisualPlan(
+        {
+          'baseline-app-sha': first.application.baselineSha,
+          'candidate-app-sha': first.application.candidateSha,
+          'visual-harness-sha': first.harness.visualHarnessCommit,
+        },
+        { legacyAcquisition: true },
+      ),
     ),
   );
   const paint = {

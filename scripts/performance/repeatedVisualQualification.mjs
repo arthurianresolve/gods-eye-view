@@ -17,6 +17,11 @@ import {
   CANONICAL_POINTER_HISTORY,
   readCanonicalPointerMutationSequence,
 } from './canonicalPointerHistory.mjs';
+import {
+  FULL_EXTENT_POINTER_SWEEP_POLICY,
+  createFullExtentPointerSweepPlan,
+  readFullExtentPointerSweepMutationSequence,
+} from './fullExtentPointerSweep.mjs';
 
 export const REPEATED_VISUAL_SCHEMA = 'gev-repeated-visual-qualification/v1';
 export const REPEATED_VISUAL_ORDER = Object.freeze([
@@ -29,7 +34,10 @@ export const REPEATED_VISUAL_ORDER = Object.freeze([
 ]);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
-export function createRepeatedVisualPlan(options) {
+export function createRepeatedVisualPlan(
+  options,
+  { legacyAcquisition = false } = {},
+) {
   const application = {
     baselineSha: options['baseline-app-sha'],
     candidateSha: options['candidate-app-sha'],
@@ -43,6 +51,9 @@ export function createRepeatedVisualPlan(options) {
     policy: REPEATED_VISUAL_POLICY,
     application,
     visualHarnessCommit: options['visual-harness-sha'],
+    ...(!legacyAcquisition
+      ? { fullExtentPointerSweep: createFullExtentPointerSweepPlan() }
+      : {}),
     roleOrder: REPEATED_VISUAL_ORDER,
     states: FINAL_VISUAL_STATES,
     freshDocumentsPerBuild: 3,
@@ -69,11 +80,14 @@ export async function validateRepeatedVisualQualification({
   const plan = JSON.parse(planBytes.toString('utf8'));
   assert.deepEqual(
     plan,
-    createRepeatedVisualPlan({
-      'baseline-app-sha': plan.application?.baselineSha,
-      'candidate-app-sha': plan.application?.candidateSha,
-      'visual-harness-sha': plan.visualHarnessCommit,
-    }),
+    createRepeatedVisualPlan(
+      {
+        'baseline-app-sha': plan.application?.baselineSha,
+        'candidate-app-sha': plan.application?.candidateSha,
+        'visual-harness-sha': plan.visualHarnessCommit,
+      },
+      { legacyAcquisition: plan.fullExtentPointerSweep === undefined },
+    ),
     'Repeated visual plan differs from the fixed policy',
   );
   assert.ok(
@@ -93,6 +107,11 @@ export async function validateRepeatedVisualQualification({
     );
     const report = JSON.parse(pair.bytes.toString('utf8'));
     assert.equal(report.rasterPolicy, REPEATED_VISUAL_POLICY);
+    assert.equal(
+      report.fullExtentPointerSweepPolicy,
+      plan.fullExtentPointerSweep?.policy,
+      'Pair pointer acquisition differs from the predeclared plan',
+    );
     assert.equal(report.comparisonEligible, false);
     assert.equal(report.evidenceScope, 'repeated-control-acquisition-only');
     assert.deepEqual(
@@ -168,6 +187,13 @@ export async function validateRepeatedVisualQualification({
         delete gaze.pointerMoveSequence;
         delete gaze.resetSequence;
         const current = {
+          fullExtentPointerMutations:
+            report.fullExtentPointerSweepPolicy ===
+            FULL_EXTENT_POINTER_SWEEP_POLICY
+              ? readFullExtentPointerSweepMutationSequence(
+                  state.fullExtentPointerSweep?.[side]?.acquisition,
+                )
+              : null,
           canonicalPointerMutations:
             report.pointerHistoryPolicy === CANONICAL_POINTER_HISTORY
               ? readCanonicalPointerMutationSequence(

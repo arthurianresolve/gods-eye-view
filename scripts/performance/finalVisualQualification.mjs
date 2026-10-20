@@ -16,6 +16,11 @@ import {
   assertCanonicalPointerHistory,
   readCanonicalPointerMutationSequence,
 } from './canonicalPointerHistory.mjs';
+import {
+  FULL_EXTENT_POINTER_SWEEP_POLICY,
+  assertFullExtentCanonicalContinuity,
+  readFullExtentPointerSweepMutationSequence,
+} from './fullExtentPointerSweep.mjs';
 
 export const FINAL_VISUAL_QUALIFICATION_SCHEMA =
   'gev-final-visual-qualification/v1';
@@ -49,6 +54,37 @@ export function assertCanonicalVisualStateHistory(state) {
       mutations,
       canonicalMutations,
       `${state.id} canonical transform history differs between builds`,
+    );
+  }
+}
+
+export function assertFullExtentVisualStateHistory(state) {
+  let common;
+  for (const side of ['baseline', 'candidate']) {
+    const sweep = state.fullExtentPointerSweep?.[side];
+    for (const phase of ['acquisition', 'before', 'after'])
+      assertFullExtentCanonicalContinuity(
+        sweep?.[phase],
+        state.pointerHistory?.[side]?.[phase],
+      );
+    assert.deepEqual(
+      sweep.acquisition,
+      sweep.before,
+      `${state.id} ${side} sweep changed before PNG`,
+    );
+    assert.deepEqual(
+      sweep.before,
+      sweep.after,
+      `${state.id} ${side} sweep changed during PNG`,
+    );
+    const normalized = readFullExtentPointerSweepMutationSequence(
+      sweep.acquisition,
+    );
+    common ??= normalized;
+    assert.deepEqual(
+      normalized,
+      common,
+      `${state.id} normalized extent sweep differs between builds`,
     );
   }
 }
@@ -472,6 +508,13 @@ async function inspectFinalVisualQualification(
   const decoded = new Map();
   if (report.pointerHistoryPolicy != null)
     assert.equal(report.pointerHistoryPolicy, CANONICAL_POINTER_HISTORY);
+  if (report.fullExtentPointerSweepPolicy != null) {
+    assert.equal(
+      report.fullExtentPointerSweepPolicy,
+      FULL_EXTENT_POINTER_SWEEP_POLICY,
+    );
+    assert.equal(report.pointerHistoryPolicy, CANONICAL_POINTER_HISTORY);
+  }
   for (const state of report.states) {
     assert.equal(
       state.observedStatePhase,
@@ -480,6 +523,10 @@ async function inspectFinalVisualQualification(
     );
     if (report.pointerHistoryPolicy === CANONICAL_POINTER_HISTORY)
       assertCanonicalVisualStateHistory(state);
+    if (
+      report.fullExtentPointerSweepPolicy === FULL_EXTENT_POINTER_SWEEP_POLICY
+    )
+      assertFullExtentVisualStateHistory(state);
     for (const side of ['baseline', 'candidate']) {
       const proof = state.foreground?.[side];
       assert.equal(

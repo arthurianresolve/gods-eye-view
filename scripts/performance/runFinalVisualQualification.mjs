@@ -71,6 +71,13 @@ import {
   createCanonicalPointerSnapshotReader,
   disposeCanonicalPointerHistoryInPage,
 } from './canonicalPointerHistory.mjs';
+import {
+  FULL_EXTENT_POINTER_SWEEP_POLICY,
+  acquireFullExtentPointerSweep,
+  assertFullExtentCanonicalContinuity,
+  createFullExtentPointerSweepSnapshotReader,
+  disposeFullExtentPointerSweepInPage,
+} from './fullExtentPointerSweep.mjs';
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -457,15 +464,23 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       )
         throw new Error(`Foreground proof failed for ${id}.`);
       let pointerHistory;
+      let fullExtentPointerSweep;
       try {
+        fullExtentPointerSweep = await acquireFullExtentPointerSweep(page);
         pointerHistory = await acquireCanonicalPointerHistory(page, {
           capturePointer: CAPTURE_POINTER,
         });
+        assertFullExtentCanonicalContinuity(
+          fullExtentPointerSweep,
+          pointerHistory,
+        );
       } catch (error) {
         states.push({
           id,
           captureFailed: true,
           pointerHistory: error.pointerHistory || null,
+          fullExtentPointerSweep:
+            error.fullExtentPointerSweep || fullExtentPointerSweep || null,
         });
         throw error;
       }
@@ -550,8 +565,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         try {
           pausedCapture = await captureWithDebuggerPause({
             page,
-            readCallback: createCanonicalPointerSnapshotReader(
-              createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
+            readCallback: createFullExtentPointerSweepSnapshotReader(
+              createCanonicalPointerSnapshotReader(
+                createVisualPaintSnapshotReader(readVisualSnapshotPhaseInPage),
+              ),
             ),
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
@@ -559,6 +576,14 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             requestNextGuardFrame: requestVisualGuardFrame,
             screenshot: (readBefore) => {
               assertCanonicalPointerHistory(readBefore?.pointerHistory);
+              assertFullExtentCanonicalContinuity(
+                readBefore?.fullExtentPointerSweep,
+                readBefore.pointerHistory,
+              );
+              assert.deepEqual(
+                readBefore.fullExtentPointerSweep,
+                fullExtentPointerSweep,
+              );
               assert.deepEqual(
                 readBefore.pointerHistory,
                 pointerHistory,
@@ -602,6 +627,14 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
         try {
           assertCanonicalPointerHistory(
             pausedCapture.readAfter?.pointerHistory,
+          );
+          assertFullExtentCanonicalContinuity(
+            pausedCapture.readAfter?.fullExtentPointerSweep,
+            pausedCapture.readAfter.pointerHistory,
+          );
+          assert.deepEqual(
+            pausedCapture.readBefore.fullExtentPointerSweep,
+            pausedCapture.readAfter.fullExtentPointerSweep,
           );
           assert.deepEqual(
             pausedCapture.readBefore.pointerHistory,
@@ -708,6 +741,11 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
             before: pausedCapture.readBefore.pointerHistory,
             after: pausedCapture.readAfter.pointerHistory,
           },
+          fullExtentPointerSweep: {
+            acquisition: fullExtentPointerSweep,
+            before: pausedCapture.readBefore.fullExtentPointerSweep,
+            after: pausedCapture.readAfter.fullExtentPointerSweep,
+          },
           pauseCleanup: pausedCapture.cleanup,
           pause: pausedCapture.pause,
           phase: {
@@ -742,6 +780,7 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
       }
       states.push(accepted);
       await page.evaluate(disposeCanonicalPointerHistoryInPage);
+      await page.evaluate(disposeFullExtentPointerSweepInPage);
     }
     stage = 'fixture-network-verification';
     const network = await prepared.verifyNetwork();
@@ -773,6 +812,10 @@ async function captureRevision({ label, url, appSha, receipt, out }) {
     if (page && !page.isClosed())
       await clean('canonical-pointer-observer', () =>
         page.evaluate(disposeCanonicalPointerHistoryInPage),
+      );
+    if (page && !page.isClosed())
+      await clean('full-extent-pointer-observer', () =>
+        page.evaluate(disposeFullExtentPointerSweepInPage),
       );
     if (page && !page.isClosed())
       await clean('presentation-observer', () =>
@@ -1086,11 +1129,16 @@ async function produceFinalVisualQualificationInternal(
       ? 'repeated-full-image-controls-v1'
       : VISIBLE_CONTROL_VARIANCE_POLICY,
     pointerHistoryPolicy: CANONICAL_POINTER_HISTORY,
+    fullExtentPointerSweepPolicy: FULL_EXTENT_POINTER_SWEEP_POLICY,
     states: STATES.map((id, index) => ({
       id,
       pointerHistory: {
         baseline: baseline.states[index].pointerHistory,
         candidate: candidate.states[index].pointerHistory,
+      },
+      fullExtentPointerSweep: {
+        baseline: baseline.states[index].fullExtentPointerSweep,
+        candidate: candidate.states[index].fullExtentPointerSweep,
       },
       observedStatePhase: 'pre-readiness-structural-observation',
       completedRender: {
