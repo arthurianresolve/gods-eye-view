@@ -9,27 +9,54 @@ completion is separate from performance acceptance.
 
 Current qualification checkpoint: application candidate `190c5ab6` remains
 unactivated; production remains `e7a878e`. Engineering completion is still
-**21/24 slices (87.5%)**. The new ten-slot default-empty-layer startup
-confirmation passes its declared startup-only 10% gates (app-ready +5.383%,
-loading-hidden -0.0219%), with independent VM readback marked measured. The
-earlier live-provider startup comparison remains a separate failed result
-(+28.53% / +26.46%) and is not retroactively cleared. See the [normalized
-startup report](performance-evidence/s69-native-matrix-20261019/normalized-startup-default-boot-190c5ab6-79d555cf-report.json).
+**21/24 slices (87.5%)**. The ten-slot default-empty-layer startup confirmation
+passes its scoped 10% gates (app-ready +5.383%, loading-hidden -0.0219%), with
+independent VM readback measured. The integrated cold-startup gate is measured
+under that explicitly scoped boot contract. The earlier live-provider startup
+comparisons remain preserved as failed evidence (+28.53% / +26.46% in the
+page-observed run and +43.23% in the original matrix dams row); the scoped
+confirmation does not retroactively clear them or qualify dam activation. See
+the [normalized startup report](performance-evidence/s69-native-matrix-20261019/normalized-startup-default-boot-190c5ab6-79d555cf-report.json).
 
 The [normalized current v3 interaction/heap report](performance-evidence/s69-native-matrix-20261019/normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
 passes loaded replay (91.3 ms p95) and
 non-GC sampled peak heap (-2.634%), but fails local-control visible feedback
-(709.3 ms p95) and the full-readiness 10% regression gate. Its baseline is
-`76cc760b`, which contains matching correctness changes and is not the original
-`e7a878e` runtime. The 60m39s signed-package Ampfing soak passes at 2.895%
-retained-heap growth. The [five-run cable idle capture](performance-evidence/s69-native-matrix-20261019/cable-settled-idle-190c5ab6-79d555cf-report.json)
+(709.3 ms p95) and the full-readiness 10% regression gate. A separate
+`716b6cc3` runtime experiment also fails the 100 ms visible-feedback target:
+all eight candidate two-RAF samples are 134.1–688.5 ms. That experiment changes
+application code; it is not QA-only evidence and does not clear the failure.
+The `716b6cc3` runtime experiment uses current-190 as its control; the separate
+v3 QA interaction comparison uses `76cc760b`, which contains matching
+correctness changes and is not the original `e7a878e` runtime. See the
+[716 runtime feedback report](performance-evidence/s69-native-matrix-20261019/feedback-runtime-716b6cc3-diagnostic.json)
+and its [successful browser-recovery check](performance-evidence/s69-native-matrix-20261019/windows-recovery-716b6cc3-success.json).
+The separate `2663fbff` runtime diagnostic records 37–103 ms disable full-render
+time and two-RAF visible feedback above 100 ms in seven of eight samples; see
+[its diagnostic report](performance-evidence/s69-native-matrix-20261019/feedback-runtime-2663fbff-diagnostic.json).
+A supplemental [browser Event Timing diagnostic](performance-evidence/s69-native-matrix-20261019/event-timing-2663fbff-diagnostic.json)
+also observes delayed next rendering on `2663fbff`: seven matching click
+entries take 136–624 ms; one entry is unavailable. Event processing itself
+takes 2.7–18.8 ms. This supports investigating presentation scheduling and
+render work, rather than treating the failure as solely an observer artifact.
+These quantized browser durations are not physical display timestamps or field
+INP. The diagnostic does not replace the existing 100 ms acceptance gate.
+The 60m39s signed-package Ampfing soak passes at 2.895% retained-heap growth.
+The [five-run cable idle capture](performance-evidence/s69-native-matrix-20261019/cable-settled-idle-190c5ab6-79d555cf-report.json)
 records zero completed frames in every candidate window. The baseline has a
 13-frame first-window burst; its other four windows have zero. The corrected
 candidate-facing evaluator at `0c5c4608` retains that baseline failure separately
-and keeps the original two-frame limit. Independent pair review remains pending.
-Full visual qualification still fails strict pixel policy. The stale pre-readiness HUD comparison was
+and keeps the original two-frame limit. Independent r21 review confirms that
+the candidate passes all five settled-idle windows while the baseline failure
+remains recorded. The complete [integrated r21 report](performance-evidence/s69-native-matrix-20261019/final-review-190c5ab6-r21-20261020.json)
+(SHA-256 `b800329bc9f5a0713365584f00037f29b4a8698e07c7ff0f772a86d45b6dc1e3`)
+is `NOT_ACCEPTED`: local-control interaction and strict visual equivalence fail;
+matrix, scoped startup, weather, idle dispositions, soak, private workspace, CI
+and signed-release artifact are measured. No gate is pending. The original
+live-provider startup and baseline cable failures remain in the report's
+preserved failures. The stale pre-readiness HUD comparison was
 corrected separately at `220349dd`; all screenshot-boundary HUD states agree.
-CI and signed-release checks for `6dcf9a0e` passed. The [Windows recovery job at
+Exact-190 CI and signed-release checks are measured in r21. Historical CI and
+release checks for `6dcf9a0e` also passed. The [Windows recovery job at
 `220349dd`](performance-evidence/s69-native-matrix-20261019/windows-recovery-220349dd-failure.json)
 fails browser shutdown after settings and workspace checks pass; its page had
 closed successfully, unlike the older page-close failure below. Chrome acknowledged
@@ -49,7 +76,8 @@ records all seven selected jobs passing. The final signed-`190`/`b843` Ampfing s
 foreground, cleanup and owned-resource checks passing. The [normalized soak
 report](performance-evidence/s69-native-matrix-20261019/ampfing-soak-190c5ab6-b843-20261020-report.json)
 binds the raw SHA and independent review. The [r11 integration report](performance-evidence/s69-native-matrix-20261019/qualification-r11-20261020-report.json)
-keeps startup, local-control, visual and cable-idle gates open. The subsequent
+is retained as a historical partial review and is superseded for current gate
+status by the complete r21 report. The subsequent
 QA-only URL fix `45cd4c6a` prevents a trailing slash in a preview origin from
 creating a `//?welcome=0` request. Its [current eight-file test closure](performance-evidence/s69-native-matrix-20261019/qa-boot-url-fix-20261020.json)
 passes nine tests on each of Node 24 and 26; it does not change the tested runtime.
@@ -644,8 +672,8 @@ human review or performance-objective achievement is inferred from a build pass.
 | S66   | Unchanged/hidden HUD writes and preserved phase                   | implemented                                                                            | 24 focused checks and exact CI pass at `19065997`                                                                                                                                                                                                                     | exact `d8ef9002` retention passes; visual variance diagnosis and final matrix remain open                                                                                                   |
 | S67   | Async locale preparation, races and retry                         | implemented                                                                            | 19 focused checks, builds and browser gates pass at `19065997`                                                                                                                                                                                                        | pending shared matrix                                                                                                                                                                       |
 | S68   | Measure and evaluate voice adapter splitting                      | narrow split evaluated and rejected; audit implemented                                 | [paired build-size evidence](performance-evidence/s68-voice-bundle-20261018/README.md); 940 gzip / 610 Brotli bytes saved                                                                                                                                             | runtime unchanged; no latency benefit claimed                                                                                                                                               |
-| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | current `190c5ab6` preserves workspace visual settings; subsequent changes are QA only | exact `190c5ab6` CI and signed packaging pass; eight workload captures retained with declared baseline reuse; map/weather measured gates, sampled peak heap and replay pass; dam-labelled startup, local control and visual gates fail; cable idle comparison pending | primary qualification remains open; raw failures and unavailable cable idle evidence remain preserved; 20% objective not achieved                                                           |
-| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `190c5ab6` prepared privately on VM105; production remains at `e7a878e`          | archive/attestation, all 2,128 packaged files, 16 private host checks and isolated workspace save/export/import/reload/reopen preflight pass                                                                                                                          | signed-`190`/`b843` Ampfing soak passes 60m39s/251 cycles at 2.895% retained growth; r11 still records startup, local-control, visual and cable-idle gates open; deployment remains pending |
+| S69   | Freeze candidate, Node 24/26 CI, eight-row matrix and attestation | current `190c5ab6` preserves workspace visual settings; subsequent changes are QA only | exact `190c5ab6` CI and signed packaging pass; eight workload captures retained with declared baseline reuse; matrix, scoped default-boot startup, weather, replay and sampled-heap evidence measured; local-control interaction and visual equivalence fail; candidate cable idle passes while baseline burst is preserved | r21 review is `NOT_ACCEPTED`; original live-provider startup failure remains preserved; strict visual/local-control failures block acceptance; 20% objective not achieved |
+| S70   | Stage exact artifact, verify HTTPS/workspaces, final Ampfing soak | exact `190c5ab6` prepared privately on VM105; production remains at `e7a878e`          | archive/attestation, all 2,128 packaged files, 16 private host checks and isolated workspace save/export/import/reload/reopen preflight pass                                                                                                                          | signed-`190`/`b843` Ampfing soak passes 60m39s/251 cycles at 2.895% retained growth; r21 records workspace, CI and release checks measured, while local-control and visual gates fail; no deployment or overall acceptance |
 
 The [Windows foreground diagnosis](performance-evidence/windows-foreground-20261018/README.md)
 records the failed matrix and separate phase-timing runs. Most observed helper

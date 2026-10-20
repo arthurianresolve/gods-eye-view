@@ -119,6 +119,21 @@
       ]
     }
   },
-  "independentSourceAndPairReview": "pending",
+  "independentSourceAndPairReview": {
+    "status": "verified",
+    "consumerCommit": "0c5c4608e12f5976e6dc2a32f4538b4708b1aa2c",
+    "note": "This confirms the candidate-facing settled idle budget only. The complete baseline control remains failed and the historical symmetric review remains failed; no full paired performance or overall acceptance claim.",
+    "fullMotionStartupPerformanceAssessed": false,
+    "transferManifestSha256": "b4d6ccaba6afedc9f5bed68f708c87919d256ffbb765eccad65d1e891709ca1c",
+    "schema": "gev-cable-settled-idle-independent-review/v1",
+    "sourceProofSha256": "efe58fb357d803ac153208034210a5b50421f510de8e6c6b390a640065cbc1a0",
+    "sourceManifestSha256": "94954138bbc233b8c718996fe6f56783248c4e9155e4ec9ad0e9b73bdaf789a8",
+    "baselineStatus": "failed",
+    "pairedValidatorStatus": "passed",
+    "originalSymmetricFailureSha256": "ac6e845d2ef7ea3238b427841e59c5534ececbfc908de225c09552ec56d0f8fa",
+    "vmPath": "/opt/gods-eye-view-validation/s61-s70-20261018/cable-settled-idle-independent-0c5c4608-20261020-r4",
+    "independentReviewSha256": "2cd44800c9c6cc4cc318a9ee0add5a165dd8b404327081f53f02caa32914b26a",
+    "candidateStatus": "passed"
+  },
   "interpretation": "All five candidate windows meet the unchanged two-frames-per-ten-seconds requirement. A complete settled baseline exceeded that budget in its first window. The corrected candidate-facing evaluator preserves that baseline failure separately. Historical candidate bursts and original symmetric review remain unchanged; this does not assess motion, startup or explain the intermittent old burst."
 }

@@ -4,7 +4,14 @@
 
 The current application candidate is `190c5ab6`; public production remains at
 `e7a878e`. Engineering completion remains **21/24 slices (87.5%)**. The latest
-selected CI and signed-release checks at QA revision `6dcf9a0e` passed. The
+exact-current-190 CI checks passed. The complete r21 integrated review is
+recorded at [final-review-190c5ab6-r21-20261020.json](final-review-190c5ab6-r21-20261020.json)
+(SHA-256 `b800329bc9f5a0713365584f00037f29b4a8698e07c7ff0f772a86d45b6dc1e3`);
+it returns `NOT_ACCEPTED`. Of 12 gates, ten are measured and two fail:
+local-control interaction and strict visual equivalence. No gates are pending.
+The earlier r15 and r18 outputs used incomplete evidence configurations and are
+preserved under [qa-artifacts/preserved-intermediate-reviews-20261020](../../../qa-artifacts/preserved-intermediate-reviews-20261020/)
+but superseded for current status by r21. The
 [Windows recovery job for `220349dd`](windows-recovery-220349dd-failure.json)
 fails browser shutdown after successful data checks. No production activation
 is claimed.
@@ -12,8 +19,11 @@ is claimed.
 The new [default-boot startup confirmation](normalized-startup-default-boot-190c5ab6-79d555cf-report.json)
 passes its predeclared ten-slot startup-only gates: app-ready +5.383% and
 loading-hidden -0.0219%, within 10%. Its independent VM readback is recorded as
-measured. This does not erase the earlier live-provider startup failure
-(+28.53% / +26.46%), qualify dam activation, or replace motion evidence.
+measured. The integrated cold-startup gate is measured under this explicitly
+scoped default-empty-layer boot contract. The earlier live-provider startup
+regressions (+28.53% / +26.46% in the page-observed run, and +43.23% in the
+original matrix dams row) remain preserved as failed historical evidence; this
+confirmation does not retroactively clear them or measure dam activation cost.
 
 The [v3 interaction/heap report](normalized-interaction-heap-190c5ab6-cd4005dd-report.json)
 passes loaded replay seek at 91.3 ms p95 and sampled peak heap at -2.634%.
@@ -22,13 +32,18 @@ more than 10%, so the metrics report remains failed. The 76cc control includes
 the same correctness changes and is not the original e7 runtime.
 
 The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
-2.895% retained-heap growth. Map and weather measured gates qualify. The new
+2.895% retained-heap growth. The weather balanced comparison and idle
+disposition are measured. The new
 [five-run cable idle capture](cable-settled-idle-190c5ab6-79d555cf-report.json)
 records zero frames in all five candidate windows. Its baseline records 13
 frames in the first window and zero in the others. The corrected evaluator at
-`0c5c4608` applies the unchanged budget to the candidate while preserving the
-baseline failure; independent pair review remains pending.
-Full visual qualification still fails its strict pixel policy.
+`0c5c4608` and the independent r21 review apply the unchanged budget to the
+candidate: cable idle is measured, the candidate passes all five windows, and
+the baseline's first-window failure remains preserved. Full visual
+qualification still fails its strict pixel policy. The r21 review measures
+the operating-view idle interpretation, weather comparison and disposition,
+soak, private workspace, CI and signed-release artifact; only interaction and
+visual equivalence fail in that complete review.
 The stale pre-readiness HUD comparison was corrected separately at `220349dd`;
 all screenshot-boundary HUD states agree. Production remains unchanged.
 
@@ -37,14 +52,29 @@ intent changes from transition to settled text between frames. The subsequent
 four-slot ABBA diagnostic still finds delayed feedback on both builds. The
 transition settles before the first natural frame; eight synchronous height
 queries consume 310–555 ms on each enable. This identifies work to fix without
-clearing the earlier failed acceptance report.
+clearing the earlier failed acceptance report. The separate `716b6cc3` runtime
+experiment also fails the 100 ms visible-feedback target: all eight candidate
+two-RAF feedback samples fall between 134.1 and 688.5 ms. It changes application
+code and is a runtime experiment, not a QA-only validation or acceptance pass;
+its diagnostic remains non-acceptance evidence. The [normalized runtime
+report](feedback-runtime-716b6cc3-diagnostic.json) preserves all 16 original
+rows, and the [browser-recovery check](windows-recovery-716b6cc3-success.json)
+passed. A separate `2663fbff` runtime diagnostic reports 37–103 ms disable
+full-render time and two-RAF visible feedback above 100 ms in seven of eight
+samples; see [its diagnostic report](feedback-runtime-2663fbff-diagnostic.json).
+The [supplemental Event Timing diagnostic](event-timing-2663fbff-diagnostic.json)
+finds seven matching click entries with 136–624 ms next-rendering duration;
+one entry is unavailable. Processing takes 2.7–18.8 ms. The browser durations
+confirm presentation delay but do not isolate GPU execution from compositor
+scheduling or measure physical display time. They do not replace the existing
+100 ms target or clear either failed runtime experiment.
 
 The final signed-`190`/`b843` Ampfing soak **passes**: 60m39s, 251 cycles,
 2.895% retained-heap growth, native Windows UHD 620/Chrome 155, with schedule,
 foreground, cleanup and owned-resource checks passing. See the [normalized soak
 report](ampfing-soak-190c5ab6-b843-20261020-report.json). The earlier no-space
 attempt remains historical; the [r11 integration report](qualification-r11-20261020-report.json)
-keeps startup, local-control, visual and cable-idle gates open.
+is a preserved partial review and is superseded for current status by r21.
 
 The subsequent QA-only URL fix `45cd4c6a` prevents preview origins ending in a
 slash from producing `//?welcome=0` requests. The [exact current fixture closure](qa-boot-url-fix-20261020.json)
