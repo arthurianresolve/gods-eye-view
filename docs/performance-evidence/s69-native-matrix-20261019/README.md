@@ -19,11 +19,13 @@ verify all 886 candidate assets and 443 control assets, locally and as served,
 against their exact source and build receipts. Hardware qualification remains
 pending; production is unchanged.
 
-The preceding `9d355c29` checkpoint passes all seven selected CI jobs and
-release verification, including Windows, macOS and Linux recovery. Its
-[integration receipt](qualification-9d355c29-ci.json) independently verifies
-equal trees for the PR head and tested merge. Twelve optional jobs remain
-skipped. This receipt does not cover the subsequent `a18c6a76` runtime change.
+The `b5e596ff` checkpoint passes all seven selected CI jobs and release
+verification, including Windows, macOS and Linux recovery. Its
+[integration receipt](qualification-b5e596ff-ci.json) independently verifies
+equal trees for the PR head and tested merge and includes runtime `a18c6a76`.
+Twelve optional jobs remain skipped. This receipt does not cover the later
+`3fdbcf42` QA observer change. The preceding
+[9d355c29 receipt](qualification-9d355c29-ci.json) remains historical evidence.
 
 The [bounded actual-CSS reproduction](left-measurement-restoration-review.json)
 rejects the proposed attribute-only continuity exemption before any new capture.
