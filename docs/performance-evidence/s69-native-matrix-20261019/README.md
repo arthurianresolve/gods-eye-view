@@ -2,7 +2,29 @@
 
 ## Current qualification checkpoint
 
-The latest [natural-feedback diagnostic](natural-feedback-c373d91b-diagnostic.json)
+The subsequent [frame-phase trace](render-phase-c373d91b-diagnostic.json) retains
+four actions and both complete browser traces. The earlier 95.3–107.2 ms
+first-disable full-render delay does not recur; the candidate completes its
+scene frame at 30.3 ms, but the browser Event Timing API records 240 ms
+(236.024 ms in the unrounded trace).
+Rail layout delays commit, followed by 167.2 ms from commit to presentation.
+No unique GPU cause is established. All four traced interactions exceed 100 ms;
+this diagnostic does not qualify latency or replace the earlier failures.
+
+The [independent display audit](native-display-viewport-audit.json) confirms
+that the fixed 1440 × 1000 CSS fixture preserves native DPR, but its 2880 × 2000
+canvas exceeds the currently observed 2560 × 1440 physical display. Historical
+evidence lacks owned-window fit measurements. An additive visible-window mode
+will establish that separate condition without changing the old fixtures or
+lowering native pixel density and visual quality.
+
+Runtime `c373d91b` passes [CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609327)
+and [release-artifact verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39403609275).
+This includes Node 24/26, browser journeys, production builds, Windows onboarding
+and recovery on Windows, macOS and Linux. Optional dispatch-only jobs were
+skipped; hardware performance acceptance remains separate.
+
+The earlier untraced [natural-feedback diagnostic](natural-feedback-c373d91b-diagnostic.json)
 retains all sixteen isolated actions comparing `8c14b106` with `c373d91b`.
 Every action has a matching native Event Timing entry; six of eight candidate
 observations exceed 100 ms, versus five of eight control observations. First-OFF

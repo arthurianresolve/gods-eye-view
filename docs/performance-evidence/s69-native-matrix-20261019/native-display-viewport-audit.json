@@ -1,0 +1,221 @@
+{
+  "schema": "gev-native-display-viewport-audit/v1",
+  "status": "source-and-current-host-audit-completed",
+  "acceptanceEligible": false,
+  "formalCriteriaChanged": false,
+  "auditChangedRuntime": false,
+  "browserOrGpuExecuted": false,
+  "productionChanged": false,
+  "sourceProducerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+  "sourceEvidence": [
+    {
+      "path": "scripts/qa-rendered-soak-driver.mjs",
+      "sha256": "7c6c27c788d03d0ce565652b9168bb96aaf965bd619fdc2f98cf71b5f6c71778",
+      "relevantLines": [
+        569,
+        590,
+        626,
+        655,
+        743,
+        836,
+        842
+      ]
+    },
+    {
+      "path": "scripts/qa-application-fixtures.mjs",
+      "sha256": "d7cb838d1a00f1dfafd1e234fa71d3ca8b4052c33a9dbf8d31b4cb2764c841e8",
+      "relevantLines": [
+        41,
+        63,
+        136
+      ]
+    },
+    {
+      "path": "scripts/performance/rendererEvidence.mjs",
+      "sha256": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64",
+      "relevantLines": [
+        8,
+        25,
+        36
+      ]
+    },
+    {
+      "path": "puppeteer-core@25.10.0/lib/puppeteer/cdp/Page.js",
+      "sha256": "0a9dc10eff1a93950584a8e3df22ddaec6fd3bef03e561b22a5646010c4c9d82",
+      "relevantLines": [
+        108,
+        836
+      ]
+    },
+    {
+      "path": "puppeteer-core@25.10.0/lib/puppeteer/cdp/EmulationManager.js",
+      "sha256": "81d95aa752004079c3f23e273663f09d17aa8abf811fe82c47ce93e66ca222fa",
+      "relevantLines": [
+        129,
+        137,
+        338
+      ]
+    }
+  ],
+  "hostObservations": [
+    {
+      "file": "qa-artifacts/native-display-host-20261020.json",
+      "sha256": "7ac274f56ae77f17b27069b15b7cd06db9274b44d7771c49d084db4436c0571d",
+      "observedAtUtc": "2026-10-20T10:10:00.0542018Z",
+      "independent": true,
+      "scope": "Current OS display-mode corroboration only. This does not establish historical monitor mode, per-window visibility or scaling, browser zoom, compositor fit, physical presentation time, or a cause of timing failures."
+    },
+    {
+      "file": "qa-artifacts/windows-display-observation-20261020.json",
+      "sha256": "291b636889cb69da995a755d8ba08ff32ae1078a8a479ee9299f8de6584114c5",
+      "independent": true,
+      "scope": "Separate root-agent current OS display observation; neither file records historical browser-window geometry."
+    }
+  ],
+  "currentHostDisplay": {
+    "width": 2560,
+    "height": 1440,
+    "refreshHz": 60,
+    "pixels": 3686400
+  },
+  "legacyInteraction": {
+    "rawSha256": "66db161dff27c458fb82c23d147eb99bc386301f59d92752feafc700a29f8a96",
+    "applicationCommits": {
+      "baseline": "8c14b106eb064f63eab193c1af06bb8b7480cb55",
+      "candidate": "c373d91b89a74d25e22ca87db925eee0d425b1ea"
+    },
+    "allFourSlotsNativeResolutionEqual": true,
+    "observedNativeResolution": {
+      "observedDpr": 2,
+      "initial": {
+        "devicePixelRatio": 2,
+        "canvas": {
+          "clientWidth": 1440,
+          "clientHeight": 1000,
+          "width": 2880,
+          "height": 2000
+        },
+        "sceneDrawingBuffer": {
+          "width": 2880,
+          "height": 2000
+        },
+        "resolutionScale": 1,
+        "useBrowserRecommendedResolution": false,
+        "maximumScreenSpaceError": 1
+      }
+    },
+    "rendering": {
+      "cssWidth": 1440,
+      "cssHeight": 1000,
+      "dpr": 2,
+      "drawingBufferWidth": 2880,
+      "drawingBufferHeight": 2000,
+      "pixels": 5760000,
+      "pixelCountRelativeToCurrentDisplay": 1.5625,
+      "pixelCountAboveCurrentDisplayPct": 56.25,
+      "canFitOneToOneOnCurrentDisplay": false
+    }
+  },
+  "legacyVisual": {
+    "producerCommit": "f5cac94f",
+    "producerSourceSha256": "d59ab359687ff4a0fe462a1eac271d0c481b355cd0b455062d100e2966af41ed",
+    "viewportDeclarationLine": 86,
+    "declaredViewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 0
+    },
+    "partialSha256": "839f9092a77df610fcaee8a02aa2df26db6626b646673857135c3be718053863",
+    "baselineStillImageSha256": "d8ce3c6b53cac3436c151ed429d3c2109c7e8e336632a6d046e73281001ff25b",
+    "baselineStillImageDimensions": {
+      "width": 2880,
+      "height": 1800
+    },
+    "rendering": {
+      "cssWidth": 1440,
+      "cssHeight": 900,
+      "dpr": 2,
+      "drawingBufferWidth": 2880,
+      "drawingBufferHeight": 1800,
+      "pixels": 5184000,
+      "pixelCountRelativeToCurrentDisplay": 1.40625,
+      "pixelCountAboveCurrentDisplayPct": 40.625,
+      "canFitOneToOneOnCurrentDisplay": false
+    },
+    "scope": "One accepted baseline still screenshot in a subsequently failed partial batch; this is not a complete visual comparison or acceptance."
+  },
+  "findings": [
+    {
+      "status": "source-proven",
+      "finding": "nativeResolution=true disables Puppeteer default viewport at launch only long enough to observe the blank-page devicePixelRatio. The driver then supplies a fixed 1440 × 1000 CSS viewport with deviceScaleFactor equal to that observed DPR. prepareFixturePage always invokes page.setViewport."
+    },
+    {
+      "status": "source-proven",
+      "finding": "Pinned Puppeteer-core 25.10.0 implements setViewport via EmulationManager.emulateViewport and Emulation.setDeviceMetricsOverride. That implementation does not call Browser.setWindowBounds. The legacy interaction path therefore applies emulated page dimensions despite preserving the native DPR."
+    },
+    {
+      "status": "source-proven",
+      "finding": "The visual producer similarly applies 1440 × 900 page dimensions through prepareFixturePage. Its deviceScaleFactor=0 leaves the device-scale override disabled, but does not disable the width/height override. The retained still PNG has 2880 × 1800 pixels."
+    },
+    {
+      "status": "source-proven",
+      "finding": "nativeResolution and native-sharpness-v1 validate DPR, CSS/canvas dimensions, full-resolution drawing buffers, resolutionScale=1, browser-recommended-resolution=false and SSE=1. They do not validate actual monitor/work-area dimensions, native window placement or content fit."
+    },
+    {
+      "status": "source-proven",
+      "finding": "rendererEvidence.physicalDesktopCoverage requires a nonsoftware native GPU, enabled WebGL and absence of the CI environment flag. It does not inspect headful/window state, monitor bounds, browser zoom, viewport emulation or physical content visibility. The flag is insufficient by itself to establish a fully visible native window."
+    },
+    {
+      "status": "current-host-proven",
+      "finding": "Two independent current OS observations report an Intel UHD 620 display mode of 2560 × 1440 at 60 Hz. The 2880 × 2000 interaction buffer has 56.25% more pixels than that full display; the 2880 × 1800 visual buffer has 40.625% more. Neither rectangle can be wholly shown one-to-one on that display mode."
+    },
+    {
+      "status": "unavailable",
+      "finding": "The historical captures do not record the OS display mode or owned window/client/DWM rectangles, CDP window bounds, screen/work-area data, browser zoom or visual-viewport scale. The exact historical compositor crop/scale/off-screen arrangement is unavailable. Current display observations cannot retroactively prove historical window geometry."
+    },
+    {
+      "status": "unavailable",
+      "finding": "This audit does not identify the cause of the observed 167 ms post-commit presentation delay. Larger render targets are a workload difference worth controlling, not proof of a GPU, driver, compositor or viewport cause."
+    }
+  ],
+  "prospectiveNativeWindowContract": {
+    "status": "proposed-environment-proof-only-not-formal-acceptance",
+    "launch": "Owned headful Chrome with defaultViewport=null; maximize the actual owned window before all measured work. Keep the active monitor mode and OS scaling. Clear metric emulation before setup and do not subsequently set page viewport/device metrics, DPR, visible size, browser zoom or page scale.",
+    "evidenceBeforeMeasurement": [
+      "Fresh OS active display mode and refresh, with timestamps and SHA-256 archive",
+      "Fresh owned browser PID/HWND ownership, monitor association, window DPI and its DPI awareness",
+      "Raw native/client/DWM-visible bounds and monitor/work-area rectangles, with declared coordinate units and context",
+      "Raw Browser.getWindowForTarget/getWindowBounds results and observed maximized state",
+      "DOM inner/outer/screen/available-screen/screen-position/DPR/visualViewport values",
+      "Page.getLayoutMetrics cssLayoutViewport and cssVisualViewport, including distinct scale and page-zoom evidence",
+      "Canvas CSS geometry and full drawing-buffer dimensions plus all unchanged quality settings, camera and fixture populations"
+    ],
+    "fit": "Prove the visible content lies within the actual target monitor/work area with consistent OS/window/DOM units. Do not infer fit merely from an emulated DOM viewport, page.viewport()===null, GPU classification or buffer arithmetic. Missing per-window proof is unavailable.",
+    "units": "CDP Browser.Bounds describes pixels while setContentsSize explicitly describes DIP; record raw values and establish the mapping for the actual window instead of assuming these terms identify physical pixels. GetWindowRect is DPI-virtualized and may include invisible resize borders; use DWM visible bounds or correctly mapped client geometry rather than an arbitrary border tolerance.",
+    "zoom": "DOM visualViewport.scale and desktop page zoom are separate. Bind the raw cssVisualViewport.zoom when available, original blank-page DPR, actual owned-window DPI/awareness and later DPR. A missing zoom or DPI mapping must not be silently interpreted as 100%.",
+    "geometry": "Freeze the actual observed native content geometry during unmeasured calibration before choosing or measuring outcomes. At DPR 2 the current full-display upper limit is 1280 × 720 CSS pixels before browser/taskbar chrome; the real content viewport must be observed, not assumed. Baseline and candidate require matching geometry, with checks after setup, restoration and measurement.",
+    "quality": "Keep the real native DPR, resolutionScale=1, browser-recommended-resolution=false, SSE=1, and exactly matching AA/MSAA/effects/density/camera/data populations. Fitting the real browser content area must not be achieved by reducing DPR, render scale, visual effects or fixture work.",
+    "firstExperiment": "One prospectively fixed matched baseline/candidate diagnostic using the actual maximized-window geometry, the same trusted alternating actions and fixed drains, all raw entries and failures retained. It is not the required twenty-sample acceptance cohort and does not imply that the actual-window result will pass.",
+    "formalAcceptance": "Any later actual-display acceptance protocol must be explicitly versioned and predeclared. The existing 100 ms target and 10% full-readiness comparison are unchanged by this audit."
+  },
+  "historicalDisposition": "Keep all oversized-viewport captures and their original failed results as measured stress evidence. Do not rewrite old native flags, clear old gates, normalize times by pixel count, subtract assumed GPU cost, or call a new actual-window diagnostic an acceptance pass.",
+  "references": [
+    {
+      "title": "Chrome DevTools Protocol Browser domain",
+      "url": "https://chromedevtools.github.io/devtools-protocol/tot/Browser/"
+    },
+    {
+      "title": "Chrome DevTools Protocol Emulation domain",
+      "url": "https://chromedevtools.github.io/devtools-protocol/tot/Emulation/"
+    },
+    {
+      "title": "Microsoft GetWindowRect: DPI virtualization and visible bounds",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect"
+    },
+    {
+      "title": "Microsoft GetDpiForWindow: result depends on window awareness",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow"
+    }
+  ],
+  "completedAtUtc": "2026-10-20T10:12:25.860Z"
+}
