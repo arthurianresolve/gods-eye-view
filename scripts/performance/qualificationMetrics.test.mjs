@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { createWorkspaceStorage } from '../../src/storage/index.js';
 import {
@@ -23,6 +24,100 @@ import {
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
 } from '../qa-qualification-metrics-capture.mjs';
+
+test('heap sampler keeps the final measured cycle while awaiting end-state verification', async () => {
+  const source = readFileSync(
+    new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('      let measuredCycle = 0;');
+  const endMarker = '      samplerPromise = null;';
+  const end = source.indexOf(endMarker, start);
+  assert.ok(start > 0 && end > start);
+  const producerBlock = source.slice(start, end + endMarker.length);
+
+  let releaseMetrics;
+  const metricsPending = new Promise((resolve) => {
+    releaseMetrics = resolve;
+  });
+  let sampleRecorded;
+  const finalSamplePending = new Promise((resolve) => {
+    sampleRecorded = resolve;
+  });
+  let samplerWake;
+  const heapSamples = [];
+  heapSamples.push = (...samples) => {
+    const length = Array.prototype.push.apply(heapSamples, samples);
+    sampleRecorded();
+    return length;
+  };
+  const completedCycleOperations = [];
+  const identity = { settings: {}, nativeSharpnessProfile: {} };
+  const readEndState = () => {};
+  const driver = {
+    nativeResolution: {},
+    metrics: () => metricsPending,
+    runCycle: async () => ({}),
+  };
+  const page = {
+    evaluate: async (reader) => {
+      if (reader === readEndState) {
+        // Resolve an already in-flight sample only after all six cycles end.
+        releaseMetrics({
+          JSHeapUsedSize: 123456,
+          consoleHandleOwnership: {},
+        });
+        await finalSamplePending;
+        return { settings: {}, nativeSharpnessProfile: {} };
+      }
+      return { visibilityState: 'visible', focused: true };
+    },
+  };
+  const result = await runInNewContext(
+    `(async () => {
+      let sampling, samplerPromise;
+      ${producerBlock}
+      return { sampleErrors };
+    })()`,
+    {
+      assert,
+      driver,
+      page,
+      heapSamples,
+      completedCycleOperations,
+      identity,
+      role: 'baseline',
+      readEffectiveMeasurementStateInPage: readEndState,
+      assertCycleOperations: () => {},
+      foregroundObservations: [],
+      consoleHandleOwnership: [],
+      SAMPLE_MAX_GAP_MS: 5000,
+      SAMPLE_CADENCE_MS: 1000,
+      performance: { now: () => 1 },
+      setTimeout(callback, delay) {
+        if (delay === 1000) {
+          samplerWake = callback;
+          return;
+        }
+        assert.equal(delay, 25);
+        queueMicrotask(() => {
+          callback();
+          queueMicrotask(() => samplerWake());
+        });
+      },
+    },
+  );
+  assert.deepEqual(Array.from(result.sampleErrors), []);
+  assert.deepEqual(
+    completedCycleOperations.map(({ cycle }) => cycle),
+    [1, 2, 3, 4, 5, 6],
+  );
+  assert.deepEqual(
+    Array.from(heapSamples, ({ cycle }) => cycle),
+    [6],
+    'A late sample belongs to the last completed cycle, never loop sentinel 7',
+  );
+});
 
 const ID = Object.freeze({
   fixtureId: 'fixture-123',

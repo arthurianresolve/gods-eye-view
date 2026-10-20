@@ -1728,7 +1728,8 @@ async function collectForBuild({ role, url, expected, fixture }) {
           );
         }
       })();
-      for (measuredCycle = 1; measuredCycle <= 6; measuredCycle++) {
+      for (let cycle = 1; cycle <= 6; cycle++) {
+        measuredCycle = cycle;
         const operations = await driver.runCycle();
         assertCycleOperations(
           operations,
