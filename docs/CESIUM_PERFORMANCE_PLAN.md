@@ -31,7 +31,40 @@ and [release verification](https://github.com/arthurianresolve/gods-eye-view/act
 Twelve optional jobs were skipped. This validates that head's software checks;
 it does not close the hardware gates below.
 
-The latest private experiment `143eae30` removes redundant inactive Context
+The separate S56 private experiment `2979530e`, a direct child of `ec0f1b2b`,
+changes only the viewer default from `preserveDrawingBuffer=true` to `false`.
+It passes **222 focused tests on each Node version**, import/package checks
+and an isolated production build. Both roles retain the same native geometry,
+settings, fixture and other context attributes. All **14 actual bundled
+viewport/pointer captures** exactly match their own same-postRender references,
+including resized, portrait, moving and restored cases. Native picking/depth,
+hidden-null behavior and pending-capture destruction checks pass, with normal
+browser/helper closure.
+
+The full-app functional gate nevertheless **fails two independent checks**:
+
+- The candidate renders one frame during the declared two-second idle park:
+  native frame number **82→83**, completed-frame count **72→73**. A retained
+  `local-ground-retry:local-datacenters` request occurs 832 ms into that interval.
+  The sampled compositor crop remains identical and nonblack, but the required
+  no-render idle interval is not established.
+- The restored full-viewport cross-role comparison differs in **5,384 pixels**
+  and exceeds its declared limits. The control's retained LOD reference is
+  still at the moved location before capture and updates afterward; the child
+  already reports the restored reference. Every capture still matches its own
+  completed-frame reference. Equal camera poses alone did not establish equal
+  geometry readiness, and these observations do not identify a unique cause
+  attributable to buffer preservation.
+
+The [S56 disposition receipt](performance-evidence/s69-native-matrix-20261019/framebuffer-2979530e-functional-failed.json)
+binds the source, complete raw result, independent reviews and VM105 archive:
+**115 files, 3,566,204 bytes**, plus 39 existing QA source references, verified
+through two independent readbacks. Both prior unrun plans are preserved.
+The application default retains preservation; `2979530e` remains private and
+unadopted. No latency comparison, performance acceptance or final Ampfing soak
+is credited to this experiment.
+
+The preceding private experiment `143eae30` removes redundant inactive Context
 writes and skips intrinsic Data-panel measurement only when a guarded padding
 lower bound proves the same allocation. An initial implementation, `e96717fe`,
 was ineligible in the real fixture because it required visible HUD readouts;

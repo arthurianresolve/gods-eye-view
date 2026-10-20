@@ -1,0 +1,130 @@
+{
+  "schema": "gev-private-framebuffer-functional-disposition/v1",
+  "recordedAt": "2026-10-20T21:14:11.880Z",
+  "status": "failed-functional-preserved",
+  "adopted": false,
+  "acceptanceEligible": false,
+  "application": {
+    "baseline": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+    "candidate": "2979530ec0d974ae5d351839c678e8d49299f501"
+  },
+  "harness": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "buildHarness": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "browser": "Chrome/155.0.8059.85",
+  "source": {
+    "runtimeDelta": ["src/app/viewer.js"],
+    "testDelta": ["src/app/viewer.test.mjs"],
+    "viewerSha256": {
+      "baseline": "a7d3d9088b5719666a3825d40a45f6b339c95a1ef3726948dc6e65f07565cadb",
+      "candidate": "152bd9f7cf747a3cd30748dcce2778cf5abf4360ebf46181418509cf5c769d7e"
+    },
+    "qaFreezeSha256": "544831774ba32b5d25a9916a5cf422c3c208ae35beba3b460ed2d578989e049a",
+    "wrapperSha256": "8d652fc9443df9d84abed1e2d5340ffe3be3e172dad2cdf668ca7a233c32d3e2",
+    "helperSha256": "3320edf317b2c0c01eea27c4dc5b2eadec4f9176adef8229f016c3d245267044"
+  },
+  "validation": {
+    "node24Passed": 222,
+    "node26Passed": 222,
+    "productionBuild": "passed",
+    "importAndPackageBoundaries": "passed",
+    "inputPreflightSha256": "5eaf9d46729db446f4cbde21075ed3a475769f4065712eafc786865b98472891",
+    "candidateBuildReceiptFileSha256": "773df99e52e4b37ba57382e055631b9a78026f3f305cdc4c441acdb97dbb5e3f",
+    "candidateBuildReceiptSha256": "411d2478f8fe9813e68b41a0d65a0c97da0b415b3bbf5320d168f8576f9fcc24"
+  },
+  "functional": {
+    "casesPerRole": 10,
+    "roleCasePasses": {
+      "baseline": 10,
+      "candidate": 9
+    },
+    "samePostRenderCapturePairs": 14,
+    "exactCaptureReferencePairs": 14,
+    "actualPreservation": {
+      "baseline": true,
+      "candidate": false
+    },
+    "otherContextAttributesMatched": true,
+    "nativeViewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "nativePickAndDepthMatched": true,
+    "hiddenNullAndPendingDestroyChecksPassed": true,
+    "normalCleanup": true,
+    "performanceMeasured": false
+  },
+  "failures": [
+    {
+      "check": "no-render-idle-interval",
+      "parkMs": 2000,
+      "actualParkMs": 2080,
+      "candidateNativeFrame": [82, 83],
+      "candidateCompletedFrames": [72, 73],
+      "request": {
+        "reason": "local-ground-retry:local-datacenters",
+        "offsetMs": 832
+      },
+      "compositorPixelsExact": true,
+      "compositorNonblack": true,
+      "conclusion": "An intervening application retry/render invalidates the declared idle proof; no compositor blanking was observed in the retained ROI."
+    },
+    {
+      "check": "restored-viewport-cross-role-pixels",
+      "changedPixelCount": 5384,
+      "changedPixelRatio": 0.004987531172069825,
+      "meanAbsoluteChannelError": 0.06158892330837097,
+      "rmsChannelError": 2.7499979788465465,
+      "withinDeclaredTolerance": false,
+      "lodReadinessDifferentBeforeCapture": true,
+      "conclusion": "Control LOD reference changes from moved to restored across capture while the child already has the restored reference. Own completed-frame reference matches remain exact. Unique cause attributable to preserveDrawingBuffer=false is unavailable."
+    }
+  ],
+  "evidence": {
+    "raw": {
+      "path": "../gev-s61-evidence-19065997/full-app-capture-ec0-2979530e-chrome85-20261020-r3/result.json",
+      "bytes": 1281553,
+      "sha256": "d11629f5d5f96f9959b169c3b07193d051ec08df7b25025a05a9d289f98441cc"
+    },
+    "plan": {
+      "path": "../gev-s61-evidence-19065997/full-app-capture-ec0-2979530e-chrome85-20261020-r3/plan.json",
+      "bytes": 21332,
+      "sha256": "8e2cd62e2863a7a9b9d3f9f7644c168603711474d88a6002d0812a4a589aa893"
+    },
+    "independentReview": {
+      "path": "qa-artifacts/full-app-framebuffer-functional-r3-independent-review-20261020.json",
+      "bytes": 45385,
+      "sha256": "0441bba3fbc00f400e5f37e96f7642a9470eeb6f7ee0fa6c4c115b3b461319fa"
+    },
+    "boundaryDisposition": {
+      "path": "qa-artifacts/full-app-framebuffer-boundary-disposition-20261020-r2.json",
+      "bytes": 12288,
+      "sha256": "379dceba4f442fcd53f780c0d318fb93c348a235c1d82eaa8e081ecb326380d6"
+    },
+    "restoredSourceReview": {
+      "path": "qa-artifacts/full-app-297-restored-geometry-source-review-20261020.json",
+      "bytes": 9504,
+      "sha256": "2cc43b12b7f6186e88d9a411e2e937112dd74d5f2294f2cf9d3141f2348dfede"
+    }
+  },
+  "archive": {
+    "directory": "full-app-framebuffer-ec0-2979530e-r3-failed-functional-complete-20261020",
+    "files": 115,
+    "bytes": 3566204,
+    "sourceReferences": 39,
+    "receiptSha256": "ccc80f28d605b24ad1d3fea24b17ab4d1df764b77beb737a64754674885a3a64",
+    "manifestSha256": "572963e13ab8e25006e454b1884d290240bf54c3875ce1963c8a787533cb8b3b",
+    "independentReadbacks": 2
+  },
+  "priorUnrunPlans": [
+    "df3f1f6ad8f64badc5bfb31b0c8c2188cfde86aeab4623e36257f7777e81f411",
+    "97c98d87d74122d4fcaee7e0f88243cf99ac945e072c24beee29db12f5d7931e"
+  ],
+  "isolatedCaptureMatrix": "deferred-not-run",
+  "productionChanged": false,
+  "disposition": "Retain the default preserveDrawingBuffer=true behavior. Keep2979530e private and unadopted; no latency comparison or acceptance, and no final Ampfing soak is credited. All functional failures and successful capture pairs remain preserved."
+}
