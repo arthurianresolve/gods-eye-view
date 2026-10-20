@@ -8,11 +8,15 @@ import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { createWindowsForegroundActivationSession } from './performance/windowsForegroundWindow.mjs';
 import { readWeatherBalancedIdentityCapturePair } from './performance/qualificationMetrics.mjs';
+import {
+  installInteractionEventTimingInPage,
+  INTERACTION_EVENT_TIMING_PLAN,
+} from './performance/interactionEventTiming.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v3';
+const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v4';
 const INTERACTION_PROTOCOL =
-  'trusted-click-activation-prerender-postrender-witness-v5';
+  'trusted-click-event-timing-prerender-postrender-witness-v6';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -337,6 +341,7 @@ export async function disposeQualificationObserver(page) {
     try {
       observer?.dispose();
     } finally {
+      window.__qualificationEventTiming?.dispose();
       delete window.__qualificationMetricsObserver;
       delete window.__qualificationFlightWitnessReader;
     }
@@ -363,6 +368,12 @@ export function installInteractionObserverInPage(fixtureContract) {
   // keep its witness identifiers local so it has no module-scope closures.
   const localRenderWitnessType = 'natural-prerender-postrender-pair-v1';
   const replayRenderWitnessType = 'natural-replay-prerender-postrender-v1';
+  const eventTiming =
+    fixtureContract?.interactionProtocolVersion === 4
+      ? window.__qualificationEventTiming
+      : null;
+  if (fixtureContract?.interactionProtocolVersion === 4 && !eventTiming)
+    throw new Error('Qualification Event Timing observer is missing');
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
   if (
@@ -641,6 +652,7 @@ export function installInteractionObserverInPage(fixtureContract) {
           ? 'settled'
           : null;
       if (visibleState) {
+        eventTiming?.witness(sample, timestamp, visibleState, observedAtMs);
         // A request stays visibly acknowledged when ENABLING/DISABLING settles
         // between frames. Both observations must still match the same intent.
         if (
@@ -763,6 +775,7 @@ export function installInteractionObserverInPage(fixtureContract) {
         sample.clickAtMs = event.timeStamp;
         sample.clickReceivedAtMs = receivedAtMs;
         sample.pointerDownToClickMs = event.timeStamp - sample.pointerDownAtMs;
+        eventTiming?.registerClick(sample, event);
         if (typeof requestAnimationFrame === 'function')
           observer.feedbackAnimationFrame = requestAnimationFrame((timestamp) =>
             observer.observeVisibleButtonFrame(sample, timestamp),
@@ -1120,6 +1133,7 @@ export function installInteractionObserverInPage(fixtureContract) {
       observer.pending = null;
       observer.armedTarget = null;
       observer.pollPromise = null;
+      eventTiming?.dispose();
     },
   };
   for (const [selector, name] of [
@@ -1343,7 +1357,11 @@ async function setUnmeasuredCameraPose(page, location, routeId) {
 }
 
 async function installInteractionObserver(page, fixture) {
-  await page.evaluate(installInteractionObserverInPage, fixture);
+  await page.evaluate(installInteractionEventTimingInPage);
+  await page.evaluate(installInteractionObserverInPage, {
+    ...fixture,
+    interactionProtocolVersion: 4,
+  });
 }
 
 async function collectInteraction(
@@ -1395,6 +1413,11 @@ async function collectInteraction(
   const sample = await page.evaluate(() =>
     window.__qualificationMetricsObserver.take(),
   );
+  if (kind === 'localControl')
+    await page.evaluate(
+      (generation) => window.__qualificationEventTiming.drain(generation),
+      sample.generation,
+    );
   const foreground = await readAndAssertPageForeground(
     page,
     `${sampleId} interaction`,
@@ -1483,6 +1506,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
   let interactionStatus = 'failed';
   let heapStatus = 'failed';
   const localControl = [];
+  let eventTimingCapture = null;
   const loadedReplaySeek = [];
   const heapSamples = [];
   const completedCycleOperations = [];
@@ -1660,6 +1684,9 @@ async function collectForBuild({ role, url, expected, fixture }) {
         });
       }
 
+      eventTimingCapture = await page.evaluate(() =>
+        window.__qualificationEventTiming.read(),
+      );
       const cleanupObserver = await disposeQualificationObserver(page);
       assert.equal(
         cleanupObserver,
@@ -1773,6 +1800,10 @@ async function collectForBuild({ role, url, expected, fixture }) {
         );
       heapStatus = 'completed';
     } finally {
+      if (!eventTimingCapture)
+        eventTimingCapture = await page
+          .evaluate(() => window.__qualificationEventTiming?.read() || null)
+          .catch(() => null);
       await disposeQualificationObserver(page).catch(() => {});
     }
   } catch (error) {
@@ -1855,6 +1886,7 @@ async function collectForBuild({ role, url, expected, fixture }) {
       observations: foregroundObservations,
     },
     localControl,
+    eventTimingCapture,
     loadedReplaySeek,
     heapSamples,
     completedCycleOperations,
@@ -1902,6 +1934,11 @@ export async function runQualificationMetricsCapture({
           new URL('./qa-rendered-soak-driver.mjs', import.meta.url),
         ),
       ),
+      eventTimingObserverSha256: sha256(
+        await readFile(
+          new URL('./performance/interactionEventTiming.mjs', import.meta.url),
+        ),
+      ),
     },
     sourceCaptures: weatherIdentityPair
       ? {
@@ -1931,6 +1968,7 @@ export async function runQualificationMetricsCapture({
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
       interactionProtocol: INTERACTION_PROTOCOL,
+      eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
       controls: ['local-datacenters-toggle', 'loaded-replay-slider-home-end'],
       datacenterFixture: {
         schema: 'gev-soak-datacenter-fixture/v2',
@@ -1941,7 +1979,7 @@ export async function runQualificationMetricsCapture({
           'the prepared same-origin response is acknowledged after successful Fetch.fulfillRequest; its delivered bytes/hash/count and exactly eight materialized features are verified by an unmeasured enable-disable preflight before interaction timing',
       },
       interactionSemantics:
-        'v3 local controls start at trusted click event.timeStamp after a recorded trusted pointerdown/up sequence; accepted visibility intent and two consecutive visible-button requestAnimationFrame observations are separate acknowledgements; full active-LOD readiness and same-frame postRender remain separately reported. Replay seeks retain trusted input event timestamps and their same-frame rendered-aircraft witness.',
+        'v4 local controls use an exact trusted-click Event Timing entry for next-rendering latency, guarded by same-intent visible feedback before its earliest quantized endpoint. Every unchanged primary action has a fixed one-second delivery drain; no missing entry is imputed. Accepted intent and full active-LOD/same-frame readiness remain separate. Two-RAF observations remain diagnostic. Replay seeks retain their trusted input and same-frame rendered-aircraft witness.',
       inputClockSource:
         'trusted-click-event-timeStamp for local controls; trusted-event-timeStamp for replay',
       renderWitnessTypes: {
@@ -2030,6 +2068,9 @@ export async function runQualificationMetricsCapture({
   } finally {
     report.interactionEvidence = {
       schema: INTERACTION_SCHEMA,
+      eventTimingPlan: INTERACTION_EVENT_TIMING_PLAN,
+      eventTimingProducerSha256:
+        report.captureProducer.eventTimingObserverSha256,
       status: ['baseline', 'candidate'].every(
         (role) => report.builds[role]?.interactionStatus === 'completed',
       )
@@ -2053,6 +2094,7 @@ export async function runQualificationMetricsCapture({
             datacenterFixtureReceipt:
               report.builds[role]?.datacenterFixtureReceipt,
             localControl: report.builds[role]?.localControl,
+            eventTimingCapture: report.builds[role]?.eventTimingCapture,
             loadedReplaySeek: report.builds[role]?.loadedReplaySeek,
           },
         ]),

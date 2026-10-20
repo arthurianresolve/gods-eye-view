@@ -16,6 +16,8 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/performance/canonicalPointerHistory.test.mjs',
   'scripts/performance/fullExtentPointerSweep.mjs',
   'scripts/performance/fullExtentPointerSweep.test.mjs',
+  'scripts/performance/interactionEventTiming.mjs',
+  'scripts/performance/interactionEventTiming.test.mjs',
   'scripts/performance/startupOperatingContract.mjs',
   'scripts/performance/startupOperatingContract.test.mjs',
   'scripts/capture-scene-performance.mjs',

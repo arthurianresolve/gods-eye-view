@@ -3,14 +3,21 @@ import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
+import {
+  INTERACTION_EVENT_TIMING_PLAN,
+  validateInteractionEventTiming,
+} from './interactionEventTiming.mjs';
 
 const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
 const INTERACTION_SCHEMA_V2 = 'gev-interaction-latency-evidence/v2';
 const INTERACTION_SCHEMA_V3 = 'gev-interaction-latency-evidence/v3';
+const INTERACTION_SCHEMA_V4 = 'gev-interaction-latency-evidence/v4';
 const INTERACTION_PROTOCOL_V2 =
   'trusted-event-timeStamp-prerender-postrender-witness-v4';
 const INTERACTION_PROTOCOL_V3 =
   'trusted-click-activation-prerender-postrender-witness-v5';
+const INTERACTION_PROTOCOL_V4 =
+  'trusted-click-event-timing-prerender-postrender-witness-v6';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
 const REPLAY_RENDER_WITNESS = 'natural-replay-prerender-postrender-v1';
 const SAMPLED_HEAP_SCHEMA = 'gev-sampled-heap-evidence/v1';
@@ -786,7 +793,7 @@ function validateInteractionSide(
     );
     assert.equal(
       sample.inputClockSource,
-      protocolVersion === 3 && label.startsWith('localControl')
+      protocolVersion >= 3 && label.startsWith('localControl')
         ? 'trusted-click-event-timeStamp'
         : 'trusted-event-timeStamp',
     );
@@ -794,13 +801,13 @@ function validateInteractionSide(
     assert.equal(sample.inputTargetMatched, true);
     assert.equal(
       sample.inputEventType,
-      protocolVersion === 3 && label.startsWith('localControl')
+      protocolVersion >= 3 && label.startsWith('localControl')
         ? 'click'
         : label.startsWith('localControl')
           ? 'pointerdown'
           : 'input',
     );
-    if (protocolVersion === 3 && label.startsWith('localControl')) {
+    if (protocolVersion >= 3 && label.startsWith('localControl')) {
       assert.ok(
         Number.isFinite(sample.pointerDownAtMs) &&
           Number.isFinite(sample.pointerUpAtMs) &&
@@ -986,27 +993,27 @@ function validateInteractionSide(
       inputToStateMs: stateAtMs - inputAtMs,
       inputToRenderedFrameMs: renderedFrameAtMs - inputAtMs,
       clickToStateMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? stateAtMs - sample.clickAtMs
           : null,
       clickToRenderedFrameMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? renderedFrameAtMs - sample.clickAtMs
           : null,
       clickToAcceptedIntentMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? sample.acceptedIntentAtMs - sample.clickAtMs
           : null,
       clickToVisibleFeedbackMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? sample.buttonFeedbackAtMs - sample.clickAtMs
           : null,
       pointerdownToReadyMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? renderedFrameAtMs - sample.pointerDownAtMs
           : null,
       pointerdownToStateMs:
-        protocolVersion === 3 && label.startsWith('localControl')
+        protocolVersion >= 3 && label.startsWith('localControl')
           ? stateAtMs - sample.pointerDownAtMs
           : null,
     };
@@ -1021,10 +1028,12 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       ? 2
       : evidence.schema === INTERACTION_SCHEMA_V3
         ? 3
-        : null;
+        : evidence.schema === INTERACTION_SCHEMA_V4
+          ? 4
+          : null;
   if (!protocolVersion)
     return unavailable(
-      `Interaction evidence must use ${INTERACTION_SCHEMA_V2} or ${INTERACTION_SCHEMA_V3}.`,
+      `Interaction evidence must use ${INTERACTION_SCHEMA_V2}, ${INTERACTION_SCHEMA_V3}, or ${INTERACTION_SCHEMA_V4}.`,
     );
   if (evidence.status === 'failed')
     return {
@@ -1035,6 +1044,10 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     return unavailable('Interaction capture did not complete.');
 
   try {
+    if (protocolVersion === 4) {
+      assert.deepEqual(evidence.eventTimingPlan, INTERACTION_EVENT_TIMING_PLAN);
+      assert.match(evidence.eventTimingProducerSha256 || '', /^[a-f0-9]{64}$/);
+    }
     assert.ok(evidence.pairing && typeof evidence.pairing === 'object');
     const expected = {
       baseline: captureIdentity(captures?.baseline, 'Baseline'),
@@ -1109,9 +1122,11 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
     for (const role of ['baseline', 'candidate'])
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
-        protocolVersion === 3
-          ? INTERACTION_PROTOCOL_V3
-          : INTERACTION_PROTOCOL_V2,
+        protocolVersion === 4
+          ? INTERACTION_PROTOCOL_V4
+          : protocolVersion === 3
+            ? INTERACTION_PROTOCOL_V3
+            : INTERACTION_PROTOCOL_V2,
         `${role} interaction protocol is missing or unsupported`,
       );
     assert.ok(
@@ -1205,6 +1220,73 @@ function compareInteractionMetric(evidence, name, limitMs, captures) {
       candidateSamples.map((sample) => sample.inputToRenderedFrameMs),
     );
     const failures = [];
+    if (name === 'localControl' && protocolVersion === 4) {
+      const observed = {};
+      for (const [role, samples] of [
+        ['baseline', baselineSamples],
+        ['candidate', candidateSamples],
+      ]) {
+        const durations = validateInteractionEventTiming(
+          evidence.builds[role].eventTimingCapture,
+          evidence.builds[role].localControl,
+        );
+        observed[role] = {
+          sampleCount: samples.length,
+          clickToAcceptedIntentP95Ms: p95(
+            samples.map((sample) => sample.clickToAcceptedIntentMs),
+          ),
+          clickToNextRenderingP95Ms: p95(durations),
+          diagnosticTwoRafFeedbackP95Ms: p95(
+            samples.map((sample) => sample.clickToVisibleFeedbackMs),
+          ),
+          clickToFullReadyStateP95Ms: p95(
+            samples.map((sample) => sample.inputToStateMs),
+          ),
+          clickToFullRenderedReadinessP95Ms: p95(
+            samples.map((sample) => sample.inputToRenderedFrameMs),
+          ),
+        };
+      }
+      const absoluteFailures = (values) => [
+        ...(values.clickToAcceptedIntentP95Ms > limitMs
+          ? ['click-to-accepted-intent p95 exceeds the 100ms limit']
+          : []),
+        ...(values.clickToNextRenderingP95Ms > limitMs
+          ? ['matched click-to-next-rendering p95 exceeds the 100ms limit']
+          : []),
+      ];
+      failures.push(...absoluteFailures(observed.candidate));
+      for (const [field, message] of [
+        [
+          'clickToFullReadyStateP95Ms',
+          'click-to-full-ready state regression exceeds 10%',
+        ],
+        [
+          'clickToFullRenderedReadinessP95Ms',
+          'click-to-full-rendered readiness regression exceeds 10%',
+        ],
+      ]) {
+        const control = observed.baseline[field];
+        const candidate = observed.candidate[field];
+        if (control === 0 ? candidate !== 0 : candidate / control > 1.1)
+          failures.push(message);
+      }
+      return {
+        status: failures.length ? 'failed' : 'measured',
+        protocolVersion,
+        semantic:
+          'v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
+        baseline: {
+          ...observed.baseline,
+          absoluteAcknowledgementFailures: absoluteFailures(observed.baseline),
+        },
+        candidate: observed.candidate,
+        absoluteAcknowledgementLimitMs: limitMs,
+        absoluteAcknowledgementGateAppliesTo: 'candidate',
+        fullReadinessRegressionLimitPct: STARTUP_REGRESSION_LIMIT_PCT,
+        failures,
+      };
+    }
     if (name === 'localControl' && protocolVersion === 3) {
       const baselineIntentP95Ms = p95(
         baselineSamples.map((sample) => sample.clickToAcceptedIntentMs),

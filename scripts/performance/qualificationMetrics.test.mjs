@@ -24,6 +24,7 @@ import {
   readEffectiveMeasurementStateInPage,
   readAndAssertPageForeground,
 } from '../qa-qualification-metrics-capture.mjs';
+import { INTERACTION_EVENT_TIMING_PLAN } from './interactionEventTiming.mjs';
 
 test('heap sampler keeps the final measured cycle while awaiting end-state verification', async () => {
   const source = readFileSync(
@@ -632,6 +633,184 @@ function clickInteractionEvidence({
   }
   return evidence;
 }
+
+function eventTimingInteractionEvidence() {
+  const evidence = clickInteractionEvidence();
+  evidence.schema = 'gev-interaction-latency-evidence/v4';
+  evidence.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN;
+  evidence.eventTimingProducerSha256 = 'f'.repeat(64);
+  for (const role of ['baseline', 'candidate']) {
+    const build = evidence.builds[role];
+    build.interactionProtocol =
+      'trusted-click-event-timing-prerender-postrender-witness-v6';
+    for (const [index, sample] of build.localControl.entries())
+      for (const key of Object.keys(sample))
+        if (/(AtMs|TimestampMs)$/.test(key) && typeof sample[key] === 'number')
+          sample[key] += index * 2000;
+    for (const sample of build.localControl)
+      sample.buttonFeedbackFirstState = 'transition';
+    build.eventTimingCapture = {
+      ...INTERACTION_EVENT_TIMING_PLAN,
+      status: 'observed',
+      installedAtMs: 0,
+      overflow: false,
+      actions: build.localControl.map((sample) => ({
+        generation: sample.generation,
+        clickAtMs: sample.clickAtMs,
+        expected: sample.expectedLayerEnabled,
+        targetMatched: true,
+        trusted: true,
+        visible: true,
+        focused: true,
+        witness: {
+          atMs: sample.buttonFeedbackFirstFrameAtMs,
+          rafTimestampMs: sample.buttonFeedbackFirstRafTimestampMs,
+          intentEpoch: sample.acceptedIntentEpoch,
+          expected: sample.expectedLayerEnabled,
+          state: 'transition',
+          generation: sample.generation,
+          visible: true,
+          focused: true,
+        },
+        drainStartedAtMs: sample.renderedFrameAtMs + 10,
+        drainEndedAtMs: sample.renderedFrameAtMs + 1010,
+      })),
+      entries: build.localControl.map((sample, index) => ({
+        name: 'click',
+        entryType: 'event',
+        startTime: sample.clickAtMs,
+        duration: role === 'baseline' ? 136 : 64,
+        processingStart: sample.clickAtMs + 0.5,
+        processingEnd: sample.clickAtMs + 2,
+        interactionId: (index + 1) * 7,
+        deliveredAtMs: sample.clickAtMs + 200,
+        targetMatched: true,
+        generation: sample.generation,
+      })),
+      observations: [],
+    };
+  }
+  return evidence;
+}
+
+test('v4 gates candidate Event Timing, preserves baseline absolute failure and v3 semantics', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const evidence = eventTimingInteractionEvidence();
+  const evaluate = (value) =>
+    evaluateQualificationMetrics({
+      ...args,
+      interactionEvidence: value,
+    }).metrics.localControl;
+  const metric = evaluate(evidence);
+  assert.equal(metric.status, 'measured', metric.reason);
+  assert.equal(metric.candidate.clickToNextRenderingP95Ms, 64);
+  assert.equal(metric.baseline.clickToNextRenderingP95Ms, 136);
+  assert.equal(metric.baseline.absoluteAcknowledgementFailures.length, 1);
+  assert.equal(metric.absoluteAcknowledgementGateAppliesTo, 'candidate');
+  assert.equal(metric.candidate.diagnosticTwoRafFeedbackP95Ms, 30);
+  const late = structuredClone(evidence);
+  for (const entry of late.builds.candidate.eventTimingCapture.entries)
+    entry.duration = 104;
+  assert.equal(evaluate(late).status, 'failed');
+  assert.match(evaluate(late).failures.join('; '), /next-rendering/);
+  const missing = structuredClone(evidence);
+  missing.builds.candidate.eventTimingCapture.entries.pop();
+  assert.notEqual(evaluate(missing).status, 'measured');
+  const slowerReady = structuredClone(evidence);
+  for (const sample of slowerReady.builds.candidate.localControl)
+    sample.renderedFrameAtMs += 20;
+  for (const action of slowerReady.builds.candidate.eventTimingCapture
+    .actions) {
+    action.drainStartedAtMs += 20;
+    action.drainEndedAtMs += 20;
+  }
+  assert.match(
+    evaluate(slowerReady).failures.join('; '),
+    /readiness regression/,
+  );
+  const legacy = clickInteractionEvidence();
+  for (const sample of legacy.builds.baseline.localControl) {
+    sample.buttonFeedbackFirstFrameAtMs += 100;
+    sample.buttonFeedbackFirstRafTimestampMs += 100;
+    sample.buttonFeedbackSecondRafTimestampMs += 100;
+    sample.buttonFeedbackAtMs += 100;
+  }
+  assert.equal(evaluate(legacy).status, 'failed');
+  assert.match(evaluate(legacy).failures.join('; '), /visible-feedback/);
+  const relabelled = structuredClone(legacy);
+  relabelled.schema = 'gev-interaction-latency-evidence/v4';
+  assert.notEqual(evaluate(relabelled).status, 'measured');
+});
+
+test('v4 actual producer action awaits its owned drain after full readiness before returning', async () => {
+  const source = readFileSync(
+    new URL('../qa-qualification-metrics-capture.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('async function collectInteraction(');
+  const end = source.indexOf('\nasync function loadReplay(', start);
+  assert.ok(start > 0 && end > start);
+  const calls = [];
+  let releaseDrain;
+  const pendingDrain = new Promise((resolve) => {
+    releaseDrain = resolve;
+  });
+  const sample = { generation: 17, renderedFrameAtMs: 80 };
+  const window = {
+    __qualificationMetricsObserver: {
+      records: [sample],
+      arm() {
+        calls.push('armed');
+      },
+      take() {
+        calls.push('full-ready');
+        return sample;
+      },
+    },
+    __qualificationEventTiming: {
+      drain(generation) {
+        assert.equal(generation, 17);
+        calls.push('drain-start');
+        return pendingDrain;
+      },
+    },
+  };
+  const page = {
+    evaluate(fn, arg) {
+      return runInNewContext(`(${fn.toString()})(arg)`, { window, arg });
+    },
+    async click() {
+      calls.push('trusted-click');
+    },
+    async waitForFunction() {},
+  };
+  const collect = runInNewContext(
+    `${source.slice(start, end)}; collectInteraction`,
+    {
+      INTERACTION_TIMEOUT_MS: 15000,
+      readAndAssertPageForeground: async () => {
+        calls.push('foreground-after-drain');
+        return { focused: true, visibilityState: 'visible' };
+      },
+    },
+  );
+  let returned = false;
+  const result = collect(page, 'localControl', true, 'one').then((value) => {
+    returned = true;
+    return value;
+  });
+  for (let i = 0; i < 12; i++) await Promise.resolve();
+  assert.deepEqual(calls, [
+    'armed',
+    'trusted-click',
+    'full-ready',
+    'drain-start',
+  ]);
+  assert.equal(returned, false);
+  releaseDrain();
+  assert.equal((await result).sampleId, 'one');
+  assert.equal(calls.at(-1), 'foreground-after-drain');
+});
 
 function heapEvidence() {
   const workPlan = {
@@ -1595,6 +1774,28 @@ test('interaction measures the first naturally produced matching frame without r
       },
     },
   };
+  const eventTimingCalls = [];
+  globalWindow.__qualificationEventTiming = {
+    registerClick(sample, event) {
+      eventTimingCalls.push({
+        type: 'click',
+        generation: sample.generation,
+        atMs: event.timeStamp,
+      });
+    },
+    witness(sample, timestamp, state, observedAtMs) {
+      eventTimingCalls.push({
+        type: 'witness',
+        generation: sample.generation,
+        timestamp,
+        state,
+        observedAtMs,
+      });
+    },
+    dispose() {
+      eventTimingCalls.push({ type: 'dispose' });
+    },
+  };
   const restoreGlobals = replacePageGlobals({
     window: globalWindow,
     document: {
@@ -1611,7 +1812,10 @@ test('interaction measures the first naturally produced matching frame without r
     clearInterval() {},
   });
   try {
-    installInteractionObserverInPage(QUALIFICATION_REPLAY_FIXTURE_CONTRACT);
+    installInteractionObserverInPage({
+      ...QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
+      interactionProtocolVersion: 4,
+    });
     const observer = globalWindow.__qualificationMetricsObserver;
     await observer.pollState();
     assert.equal(observer.pending, null);
@@ -1622,6 +1826,7 @@ test('interaction measures the first naturally produced matching frame without r
       '[data-layer-id="local-datacenters"] .data-toggle-btn',
     );
     dispatchLocalClick(node);
+    assert.equal(eventTimingCalls[0].type, 'click');
     layerEntry.visibilityIntentEpoch = ++intentEpoch;
     layerEntry.visibilityIntentEnabled = true;
     globalWindow.__godsEyeView.dataManager.visibilityListener({
@@ -1644,6 +1849,10 @@ test('interaction measures the first naturally produced matching frame without r
     for (let index = 0; index < 25; index++) await intervalCallback();
     const firstFrameTimestamp = performance.now() + 16;
     raf.flush(firstFrameTimestamp);
+    assert.equal(eventTimingCalls[1].type, 'witness');
+    assert.equal(eventTimingCalls[1].timestamp, firstFrameTimestamp);
+    assert.equal(eventTimingCalls[1].state, 'transition');
+    assert.equal(observer.pending.buttonFeedbackAtMs, null);
     raf.flush(firstFrameTimestamp);
     assert.equal(
       observer.pending.buttonFeedbackAtMs,

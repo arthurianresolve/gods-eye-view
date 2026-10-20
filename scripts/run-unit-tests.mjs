@@ -15,6 +15,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/visualPaintSignature.test.mjs',
   'scripts/performance/canonicalPointerHistory.test.mjs',
   'scripts/performance/fullExtentPointerSweep.test.mjs',
+  'scripts/performance/interactionEventTiming.test.mjs',
   'scripts/performance/startupOperatingContract.test.mjs',
   'scripts/accessibilityFocusDiagnostics.test.mjs',
   'scripts/performance/cesiumDisabledInputInertia.test.mjs',
