@@ -25,6 +25,56 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
+The latest formal attempt is `fbe839ea` with feedback v4/readiness v7. It remains
+**failed**, not accepted: candidate native local-control p95 was 208 ms versus
+the 100 ms limit; pre-render readiness p95 was 138 ms versus 101.3 ms on the
+control. The control's mixed-use acquisition also stopped at a native geometry
+query, so this is not a valid complete comparison. Both owned browsers closed
+normally, and the complete failed attempt is retained on VM105. No final soak
+has been commissioned for this failed candidate.
+
+Three corrections are in progress before another formal capture:
+
+- Keep one disposable Windows geometry helper per browser owner. Compile its
+  read-only declarations once, take a fresh PID-bound reading per request,
+  preserve the existing five-second deadline, and retain structured failures
+  and normal-exit evidence. Never cache a viewport reading or retry a timeout.
+- Declare feedback policy **v5** prospectively. A still-visible original
+  same-intent control may move during panel allocation; exact rectangle
+  restoration is recorded but is not itself a visibility requirement.
+  Every uncertain mutation batch requires a complete, timely owned
+  post-layout ResizeObserver proof before the earliest quantized native
+  Event Timing endpoint. An existing later RAF cannot replace this obligation.
+  Scroll/resize uncertainty without mutation metadata retains the prior
+  current-state RAF recovery contract. Known hidden, unfocused, replaced or
+  contrary-state observations remain fatal. The default remains v3; v2–v4
+  retain their original interpretation. Fresh acquisition on both roles is
+  required; the 100 ms/250 ms limits, independent 10% gates, 20 actions,
+  one-second drains and eight-owned-proof bound do not change.
+- Remove demonstrated application work at its owner: finish GeoJSON Entity
+  styling before attaching scene visualizers, and correct allocated panel
+  ResizeObserver feedback. The latter is supported by one bounded OFF
+  diagnostic: the shared left/right measurement runs successfully, then a
+  panel/inner-height notification schedules another left measurement inside
+  the native interaction interval. These changes still require measured
+  benefit, genuine-content-resize behavior and visual qualification.
+
+The prospective feedback correction (`35174137`) passes 111 focused Node 24
+tests, including the serialized browser producer, old-policy rejection,
+late/missing/negative proof and CLI/build binding. The owned Windows helper
+(`f06eca67`) passes the combined 173-test Node 24 suite and an actual
+compile/normal-exit smoke; that smoke issued no geometry queries and is not
+hardware evidence. Its bounded protocol permits long soaks without a
+128-query lifetime cutoff. Pre-attachment graphics (`975544a4`) pass 194
+focused data/manager/infrastructure tests. The separate direct-user OFF
+experiment (`d6a3848a`) passes 130 visibility/manager tests: it publishes honest
+DISABLING feedback through the existing owned rendering opportunity, preserving
+settled visibility until teardown starts. Programmatic changes, bulk Clear
+Selected and teardown remain immediate; abort and superseding intent release
+the pending work. These counts are overlapping scopes, not a summed total.
+None establishes a latency improvement. Final-source Node 26, CI, matched
+browser qualification and soak remain pending.
+
 1. **Finish the bounded latency diagnosis and correct measurement defects.**
    Keep the native 100 ms local-control target and independent 10% regression
    gates. A simple native DOM control completes six clicks in
