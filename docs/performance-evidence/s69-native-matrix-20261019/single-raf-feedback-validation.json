@@ -1,0 +1,216 @@
+{
+  "schema": "gev-single-raf-feedback-validation/v1",
+  "status": "passed",
+  "baseCommit": "9d355c29ba9d7e29a5212e82a53e90575b061e10",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/single-raf-feedback-validation-20261020-r1/source",
+  "files": [
+    {
+      "file": "src/data/visibilityPaint.js",
+      "bytes": 2492,
+      "sha256": "02698f6bf5d1689797a8af5a71fe32f89b67cfafae31514ee72fd97b8c0a2673"
+    },
+    {
+      "file": "src/data/visibilityPaint.test.mjs",
+      "bytes": 16797,
+      "sha256": "af63e1f29fb343411c5751d7379c0e7a3411880d66958b5f6463b2c6a958c4b6"
+    }
+  ],
+  "docs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 36215,
+      "sha256": "0c73cf8eae0f38f9912c49f5719be39360c5a7be72f117e05686d53a02aebbf7",
+      "tests": 146,
+      "pass": 146,
+      "fail": 0,
+      "tail": "448:16\n✔ layer work waits for one RAF update and the following owned task (1.186999ms)\n✔ real lifecycle presentation is synchronous before the RAF and work waits for its task (2.428914ms)\n✔ paint wait releases hidden, aborted and unavailable browser paths (0.540061ms)\n✔ abort or hide cancels either owned RAF or task and stale callbacks finish once (0.578706ms)\n✔ RAF or task scheduling errors resume lifecycle without leaking listeners (0.232448ms)\n✔ user enable yields a rendering opportunity while disable starts without waiting for a frame (1.149417ms)\n✔ caller abort before layer work cancels once without compensating untouched resources (0.621759ms)\n✔ a newer OFF cancels an unstarted ON and owns its exact settled result (0.465027ms)\n✔ a same-target successor gets its own paint wait and sole settled publication (0.504252ms)\n✔ a prompt OFF superseded during teardown compensates before the newer ON settles (0.577414ms)\n✔ teardown cancels the paint wait before draining the visibility queue (0.409369ms)\n✔ hidden documents and non-user origins do not wait for suspended presentation (0.537216ms)\n✔ a blocked request schedules no paint and errors after presentation retain lifecycle cleanup (1.197118ms)\n✔ toggle reconciliation preserves lifecycle, feed and accessible states without repeat DOM writes (20.688249ms)\n✔ toggle reconciliation updates changed guidance and repairs externally changed DOM values (0.589397ms)\n✔ toggle reconciliation applies a changed language before becoming quiet again (4.557077ms)\n✔ full panel refresh still visits every row and mutates only a changed toggle (0.959459ms)\n✔ panel presentation places Transit between Street Traffic and Bike Share in Movement (1.295909ms)\n✔ partial feed controls distinguish incomplete records from stale data and outages (0.620667ms)\n✔ readout rows contain only toggles and metadata; ordinary rows retain controls (3.494307ms)\n✔ the Recent Imagery readout mounts in its rail body like the weather readout and is rebuilt or released with the panel (0.381777ms)\n✔ an omitted source is visibly unavailable and cannot be toggled on (0.278206ms)\n✔ row text keeps a hyphenated code whole and never starts a line with the separator (0.42981ms)\n✔ the unavailable chip may abbreviate, but its accessible name keeps the full state (0.218431ms)\n✔ the Weather readout receives enabled air-quality alongside weather layers (0.260463ms)\nℹ tests 146\nℹ suites 0\nℹ pass 146\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2444.867181\n",
+      "reusedFrom": "/opt/gods-eye-view-validation/s61-s70-20261018/single-raf-feedback-validation-20261020-r1/validation.json",
+      "reuseReason": "Exact two owned source bytes and all committed focused dependencies unchanged; reuse successful Node24 focused146 while completing missing static/Node26 checks."
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 36215,
+      "sha256": "7d548554bdd04892c34cd48be63cbeae851fcc2e37bc5d4507b037572014b264",
+      "tests": 146,
+      "pass": 146,
+      "fail": 0,
+      "tail": "e disable starts without waiting for a frame (1.289165ms)\n✔ caller abort before layer work cancels once without compensating untouched resources (0.677907ms)\n✔ a newer OFF cancels an unstarted ON and owns its exact settled result (0.627761ms)\n✔ a same-target successor gets its own paint wait and sole settled publication (0.624454ms)\n✔ a prompt OFF superseded during teardown compensates before the newer ON settles (0.558026ms)\n✔ teardown cancels the paint wait before draining the visibility queue (0.430711ms)\n✔ hidden documents and non-user origins do not wait for suspended presentation (0.511596ms)\n✔ a blocked request schedules no paint and errors after presentation retain lifecycle cleanup (1.219702ms)\n✔ toggle reconciliation preserves lifecycle, feed and accessible states without repeat DOM writes (17.544838ms)\n✔ toggle reconciliation updates changed guidance and repairs externally changed DOM values (1.433234ms)\n✔ toggle reconciliation applies a changed language before becoming quiet again (3.277229ms)\n✔ full panel refresh still visits every row and mutates only a changed toggle (1.091675ms)\n✔ panel presentation places Transit between Street Traffic and Bike Share in Movement (1.280028ms)\n✔ partial feed controls distinguish incomplete records from stale data and outages (0.631738ms)\n✔ readout rows contain only toggles and metadata; ordinary rows retain controls (3.736425ms)\n✔ the Recent Imagery readout mounts in its rail body like the weather readout and is rebuilt or released with the panel (0.478553ms)\n✔ an omitted source is visibly unavailable and cannot be toggled on (0.39926ms)\n✔ row text keeps a hyphenated code whole and never starts a line with the separator (0.426512ms)\n✔ the unavailable chip may abbreviate, but its accessible name keeps the full state (0.230195ms)\n✔ the Weather readout receives enabled air-quality alongside weather layers (0.278146ms)\nℹ tests 146\nℹ suites 0\nℹ pass 146\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2536.889571\n"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "sourceStatus": " M src/data/visibilityPaint.js\n M src/data/visibilityPaint.test.mjs\n",
+  "completedAt": "2026-10-20T12:09:36.450Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "limits": "Pure/mock and static checks. No live qualification capture, startup or performance credit. Only the helper and existing test are overlaid; lifecycle callers remain committed base bytes.",
+  "validationOutput": "/opt/gods-eye-view-validation/s61-s70-20261018/single-raf-feedback-validation-20261020-r2",
+  "previousFailedAttempt": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/single-raf-feedback-validation-20261020-r1/validation.json",
+    "status": "failed",
+    "reason": "Sparse setup omitted committed server/standalone/vite.config.js; format stopped before remaining checks. Full known closure server/patches/.github restored; failed log retained."
+  }
+}

@@ -2,6 +2,35 @@
 
 ## Current qualification checkpoint
 
+Runtime candidate `a18c6a76` removes the second animation-frame wait from
+user-triggered layer preparation. The lifecycle's loading presentation is
+already reconciled synchronously; one callback followed by its owned task
+preserves a rendering opportunity before preparation. This follows the
+[browser rendering guidance](https://web.dev/articles/optimize-inp#yield_to_allow_rendering_work_to_occur_sooner)
+without treating it as proof of physical presentation or latency.
+The [validation receipt](single-raf-feedback-validation.json) records
+146/146 focused tests on both Node 24 and 26 and all static checks passing.
+The integration test exercises the real lifecycle/presentation subscription;
+abort, hide, supersession, teardown and scheduler failures retain cleanup.
+The initial sparse-source formatting setup failure remains recorded, and its
+successful Node 24 focused results are reused only with identical source bytes.
+The private build is pending hardware qualification; production is unchanged.
+
+The [bounded actual-CSS reproduction](left-measurement-restoration-review.json)
+rejects the proposed attribute-only continuity exemption before any new capture.
+All sixteen normal cases start with the target visible. Eight restore exact
+geometry and offsets; eight with deliberately disabled scroll anchoring retain
+displacement after height styles are restored. Four leave the target outside
+its clip. All sixteen deliberately persistent scroll-change negatives are
+detected. Both marker and inline-allocation mechanisms, focus/tail layouts
+and tactical/cyber styles are covered. Current source does not set
+`overflow-anchor:none`, so this is a proof-rule counterexample rather than an
+established cause of the earlier application failure. The tested but uncommitted
+attribute-only QA draft remains rejected intermediate evidence. Its replacement
+must recheck geometry at a natural layout boundary. The larger joint-rail
+measurement experiment is parked separately, with 68 passing unit tests but
+no browser timing result or shipped runtime change.
+
 The fresh visual cohort passes under the explicitly amended
 [source-bound decoration contract](decoration-quantization-v1/policy.md).
 The complete `c373d91b` / QA `3cd4d528` cohort retains all 24 images and fails

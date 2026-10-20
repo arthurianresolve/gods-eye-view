@@ -7,6 +7,26 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The current runtime candidate is `a18c6a76`. User-triggered layer activation
+now waits for one animation-frame callback followed by its owned task,
+instead of waiting for two callbacks. The real lifecycle already publishes
+the loading presentation synchronously. This preserves a rendering opportunity
+before preparation while removing the second wait; it neither guarantees
+physical presentation nor establishes a performance pass. The
+[focused validation](performance-evidence/s69-native-matrix-20261019/single-raf-feedback-validation.json)
+passes 146 tests on each Node version and all required static checks.
+Earlier sparse-source setup failure is retained. A private VM build is being
+prepared; its hardware comparison, final soak and deployment remain pending.
+
+A proposed QA exemption for restored measurement attributes was rejected
+before capture. The [actual-CSS browser reproduction](performance-evidence/s69-native-matrix-20261019/left-measurement-restoration-review.json)
+shows that disabled scroll anchoring can leave a control displaced after its
+height styles are restored. Current application source does not disable scroll
+anchoring; this is a counterexample to the proof rule, not an established
+production failure. A replacement must prove visibility after natural layout.
+The larger shared-rail experiment is parked with its 68 passing unit tests;
+it is not shipped and has no measured performance benefit.
+
 The fresh `e6e1abc1` visual cohort passes the prospectively declared
 [decoration quantization contract](performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/policy.md).
 The completed 24-image `c373d91b` / `3cd4d528` cohort remains a strict-policy
