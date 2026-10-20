@@ -733,6 +733,8 @@
   "src/services/groundSnap.js",
   "src/app/operations.test.mjs",
   "src/data/lifecycle.js",
+  "src/data/visibilityPaint.js",
+  "src/data/visibilityPaint.test.mjs",
   "src/data/manager.js",
   "src/app/layerPresentation.js",
   "src/ui/navigationController.js",

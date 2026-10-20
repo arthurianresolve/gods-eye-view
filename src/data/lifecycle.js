@@ -1,4 +1,5 @@
 import { cancelCameraArrival } from './cameraArrival.js';
+import { waitForVisibilityPaint } from './visibilityPaint.js';
 
 import { beginCpuTiming, endCpuTiming } from '../performance/cpuTimings.js';
 
@@ -738,6 +739,31 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
+    if (origin === 'user') {
+      this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
+      await waitForVisibilityPaint({
+        signal,
+        documentRef: this.viewer?.container?.ownerDocument,
+      });
+    }
+    if (signal?.aborted || isSuperseded()) {
+      // No lifecycle work has started, so cancellation restores presentation
+      // without enabling/disabling untouched resources. A newer intent retains
+      // its own transitional presentation through the existing adoption lane.
+      settleLifecycle();
+      this._publishActivity({ type: 'status' });
+      this._notifyListeners({
+        ...requestedChange,
+        type: 'visibility-cancelled',
+        ...this._visibilityCancellationMetadata(
+          entry,
+          intentEpoch,
+          signal,
+          'presentation',
+        ),
+      });
+      return false;
+    }
     if (!desiredState) {
       // Disable
       this._invalidateRefresh(layerId, entry, 'layer-disabled');
