@@ -68,10 +68,20 @@ function element(
   const properties = new Map();
   const attributes = new Map();
   const writes = [];
+  const datasetWrites = [];
+  const attributeWrites = [];
   const node = {
     id,
     children: [],
-    dataset: {},
+    dataset: new Proxy(
+      {},
+      {
+        set(target, key, value) {
+          datasetWrites.push([key, value]);
+          return Reflect.set(target, key, value);
+        },
+      },
+    ),
     parentElement: null,
     scrollHeight: height,
     clientHeight: height,
@@ -125,10 +135,18 @@ function element(
     querySelectorAll() {
       return this.children;
     },
-    setAttribute: (name, value) => attributes.set(name, value),
-    removeAttribute: (name) => attributes.delete(name),
+    setAttribute(name, value) {
+      attributeWrites.push(['set', name, value]);
+      attributes.set(name, value);
+    },
+    removeAttribute(name) {
+      attributeWrites.push(['remove', name]);
+      attributes.delete(name);
+    },
     getAttribute: (name) => attributes.get(name),
     writes,
+    datasetWrites,
+    attributeWrites,
   };
   return node;
 }
@@ -489,7 +507,7 @@ test('left content growth recomputes allocations inside an unchanged corridor an
 
 for (const side of ['left', 'right']) {
   for (const mobile of [false, true]) {
-    test(`${side} equivalent ${mobile ? 'mobile' : 'desktop'} passes retain allocations without style churn`, () => {
+    test(`${side} equivalent ${mobile ? 'mobile' : 'desktop'} passes retain allocations and metadata without redundant writes`, () => {
       const f = fixture(side, { mobile });
       f.expand(f.first, 200);
       f.run();
@@ -497,11 +515,22 @@ for (const side of ['left', 'right']) {
       const allocation = f.first.style.getPropertyValue(
         `--${side}-panel-allocated-height`,
       );
-      for (const node of nodes) node.writes.length = 0;
+      for (const node of nodes) {
+        node.writes.length = 0;
+        node.datasetWrites.length = 0;
+        node.attributeWrites.length = 0;
+      }
       const aligned = f.aligned();
       for (let pass = 0; pass < 4; pass++) f.run();
       assert.deepEqual(
         nodes.flatMap((node) => node.writes),
+        [],
+      );
+      assert.deepEqual(f.stack.datasetWrites, []);
+      assert.deepEqual(
+        nodes.flatMap((node) =>
+          node.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+        ),
         [],
       );
       assert.equal(
@@ -511,6 +540,71 @@ for (const side of ['left', 'right']) {
       assert.equal(f.aligned(), aligned);
     });
   }
+
+  test(`${side} metadata repairs live DOM corruption and follows disclosure and mobile changes`, () => {
+    const f = fixture(side);
+    f.expand(f.first, 200);
+    f.run();
+    const expected = { ...f.stack.dataset };
+    assert.equal(Object.keys(expected).length, side === 'left' ? 7 : 6);
+    for (const key of Object.keys(expected)) f.stack.dataset[key] = 'external';
+    delete f.stack.dataset.expandedCount;
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual({ ...f.stack.dataset }, expected);
+    assert.equal(f.stack.datasetWrites.length, Object.keys(expected).length);
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, []);
+
+    f.first.classList.add('collapsed');
+    f.first.rect.height = f.first.scrollHeight = 42;
+    f.run();
+    assert.equal(f.stack.dataset.expandedCount, '0');
+    assert.equal(f.stack.dataset.layoutMode, 'normal');
+    assert.ok(f.stack.datasetWrites.length > 0);
+    f.options.windowRef.matchMedia = () => ({ matches: true });
+    f.run();
+    assert.equal(f.stack.dataset.layoutMode, 'mobile');
+    f.stack.dataset.layoutMode = 'external';
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, [['layoutMode', 'mobile']]);
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, []);
+    f.options.windowRef.matchMedia = () => ({ matches: false });
+    f.run();
+    assert.equal(f.stack.dataset.layoutMode, 'normal');
+  });
+
+  test(`${side} aria-hidden repairs external values and changes with the live layout`, () => {
+    const f = fixture(side);
+    f.expand(f.first, side === 'left' ? 900 : 200);
+    f.run();
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(f.second.getAttribute('aria-hidden'), 'true');
+    f.first.setAttribute('aria-hidden', 'true');
+    f.second.setAttribute('aria-hidden', 'false');
+    for (const panel of [f.first, f.second]) panel.attributeWrites.length = 0;
+    f.run();
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(f.second.getAttribute('aria-hidden'), 'true');
+    assert.deepEqual(f.first.attributeWrites, [['remove', 'aria-hidden']]);
+    assert.deepEqual(f.second.attributeWrites, [
+      ['set', 'aria-hidden', 'true'],
+    ]);
+    for (const panel of [f.first, f.second]) panel.attributeWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.first.attributeWrites, []);
+    assert.deepEqual(f.second.attributeWrites, []);
+
+    f.first.classList.add('collapsed');
+    f.first.rect.height = f.first.scrollHeight = 42;
+    f.run();
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
+    assert.deepEqual(f.second.attributeWrites, [['remove', 'aria-hidden']]);
+  });
 }
 
 test('left corridor respects a lower obstacle but ignores an obstacle hidden by its parent', () => {

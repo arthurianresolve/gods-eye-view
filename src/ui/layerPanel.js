@@ -556,7 +556,8 @@ export class LayerPanel {
     const legend = controls?.legend || [];
     const infoText = controls?.info;
     this._syncRowList(listContainer, controls?.list || null);
-    container.hidden = chips.length === 0 && legend.length === 0 && !infoText;
+    const hidden = chips.length === 0 && legend.length === 0 && !infoText;
+    if (container.hidden !== hidden) container.hidden = hidden;
 
     const info = container._rowControlsInfo || null;
     const firstLegend = container.querySelector('.data-toggle-legend-item');

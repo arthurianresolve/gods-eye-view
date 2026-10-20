@@ -123,9 +123,11 @@ export function layoutRightPanelRail({
   });
   stack.classList.toggle('layout-exclusive', exclusive);
   for (const panel of panels) {
-    if (exclusive && panel.classList.contains('collapsed'))
-      panel.setAttribute('aria-hidden', 'true');
-    else panel.removeAttribute('aria-hidden');
+    if (exclusive && panel.classList.contains('collapsed')) {
+      if (panel.getAttribute('aria-hidden') !== 'true')
+        panel.setAttribute('aria-hidden', 'true');
+    } else if (panel.getAttribute('aria-hidden') != null)
+      panel.removeAttribute('aria-hidden');
   }
 
   if (isMobile) {
@@ -139,7 +141,8 @@ export function layoutRightPanelRail({
     for (const panel of panels)
       if (panel.style.getPropertyValue('--right-panel-allocated-height'))
         panel.style.removeProperty('--right-panel-allocated-height');
-    stack.dataset.layoutMode = 'mobile';
+    if (stack.dataset.layoutMode !== 'mobile')
+      stack.dataset.layoutMode = 'mobile';
     return;
   }
 
@@ -335,12 +338,16 @@ export function layoutRightPanelRail({
   )
     stack.style.setProperty('--right-stack-max-height', maxHeightValue);
   stack.classList.toggle('layout-focus', shouldFocus);
-  stack.dataset.layoutMode = shouldFocus ? 'focus' : 'normal';
-  stack.dataset.safeTop = layoutTop.toFixed(1);
-  stack.dataset.safeBottom = safeBottom.toFixed(1);
-  stack.dataset.availableHeight = availableHeight.toFixed(1);
-  stack.dataset.requiredHeight = naturalHeight.toFixed(1);
-  stack.dataset.expandedCount = String(expandedPanels.length);
+  const metadata = {
+    layoutMode: shouldFocus ? 'focus' : 'normal',
+    safeTop: layoutTop.toFixed(1),
+    safeBottom: safeBottom.toFixed(1),
+    availableHeight: availableHeight.toFixed(1),
+    requiredHeight: naturalHeight.toFixed(1),
+    expandedCount: String(expandedPanels.length),
+  };
+  for (const [key, value] of Object.entries(metadata))
+    if (stack.dataset[key] !== value) stack.dataset[key] = value;
 
   if (displayPanel && expandedPanels.includes(displayPanel)) {
     const scroller = displayPanelScroller(displayPanel);

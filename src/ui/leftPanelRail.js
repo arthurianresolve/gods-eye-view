@@ -59,9 +59,11 @@ export function layoutLeftPanelRail({
     ])
       if (stack.style.getPropertyValue(property))
         stack.style.removeProperty(property);
-    stack.dataset.layoutMode = 'mobile';
+    if (stack.dataset.layoutMode !== 'mobile')
+      stack.dataset.layoutMode = 'mobile';
     for (const panel of panels) {
-      panel.removeAttribute('aria-hidden');
+      if (panel.getAttribute('aria-hidden') != null)
+        panel.removeAttribute('aria-hidden');
       if (panel.style.getPropertyValue('--left-panel-allocated-height'))
         panel.style.removeProperty('--left-panel-allocated-height');
     }
@@ -295,26 +297,20 @@ export function layoutLeftPanelRail({
 
   stack.classList.toggle('layout-focus', shouldFocus);
   stack.classList.toggle('layout-tail', shouldTail);
-  stack.dataset.layoutMode = shouldFocus
-    ? 'focus'
-    : shouldTail
-      ? 'tail'
-      : 'normal';
-  stack.dataset.safeTopPct = topPct.toFixed(2);
-  stack.dataset.safeBottomPct = (100 - bottomPct).toFixed(2);
-  stack.dataset.availableHeightPct = (
-    (availableHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.requiredHeightPct = (
-    (requiredHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.tailAvailableHeightPct = (
-    (tailAvailableHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.expandedCount = String(expandedPanels.length);
+  const metadata = {
+    layoutMode: shouldFocus ? 'focus' : shouldTail ? 'tail' : 'normal',
+    safeTopPct: topPct.toFixed(2),
+    safeBottomPct: (100 - bottomPct).toFixed(2),
+    availableHeightPct: ((availableHeight / viewportHeight) * 100).toFixed(2),
+    requiredHeightPct: ((requiredHeight / viewportHeight) * 100).toFixed(2),
+    tailAvailableHeightPct: (
+      (tailAvailableHeight / viewportHeight) *
+      100
+    ).toFixed(2),
+    expandedCount: String(expandedPanels.length),
+  };
+  for (const [key, value] of Object.entries(metadata))
+    if (stack.dataset[key] !== value) stack.dataset[key] = value;
 
   // Cockpit Display/Radio live in the opposite margin and no longer borrow
   // this corridor: the left accordion's top is solved against left-lane
@@ -323,8 +319,11 @@ export function layoutLeftPanelRail({
 
   for (const panel of panels) {
     const hiddenSibling = shouldFocus && panel.classList.contains('collapsed');
-    if (hiddenSibling) panel.setAttribute('aria-hidden', 'true');
-    else panel.removeAttribute('aria-hidden');
+    if (hiddenSibling) {
+      if (panel.getAttribute('aria-hidden') !== 'true')
+        panel.setAttribute('aria-hidden', 'true');
+    } else if (panel.getAttribute('aria-hidden') != null)
+      panel.removeAttribute('aria-hidden');
   }
   // The right controls share this top baseline; update them after the left
   // accordion commits an HUD-variant or obstacle-driven position change.

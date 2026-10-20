@@ -268,6 +268,124 @@ test('full panel refresh still visits every row and mutates only a changed toggl
   assert.deepEqual(second.writes, []);
 });
 
+test('row controls update their content and visibility without repeating the hidden write', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const f = railFixture();
+  const container = f.document.createElement('div');
+  const hiddenWrites = [];
+  let hidden = container.hidden;
+  Object.defineProperty(container, 'hidden', {
+    get: () => hidden,
+    set(value) {
+      hiddenWrites.push(value);
+      hidden = value;
+    },
+  });
+  let controls = {};
+  let reads = 0;
+  const panel = new LayerPanel({
+    getRowControls: () => {
+      reads++;
+      return controls;
+    },
+  });
+  const layer = { id: 'controls-fixture', enabled: true };
+  const previousDocument = globalThis.document;
+  globalThis.document = f.document;
+  try {
+    const states = [
+      { controls: {}, hidden: true },
+      {
+        controls: { chips: [{ id: 'mode', label: 'First mode' }] },
+        hidden: false,
+      },
+      {
+        controls: { chips: [{ id: 'mode', label: 'Second mode' }] },
+        hidden: false,
+      },
+      {
+        controls: { legend: [{ label: 'Coverage', color: '#abcdef' }] },
+        hidden: false,
+      },
+      { controls: { info: 'Current information' }, hidden: false },
+      { controls: {}, hidden: true },
+    ];
+    for (const state of states) {
+      controls = state.controls;
+      const previouslyHidden = container.hidden;
+      hiddenWrites.length = 0;
+      panel._syncRowControls(container, layer);
+      assert.equal(container.hidden, state.hidden);
+      assert.deepEqual(
+        hiddenWrites,
+        previouslyHidden === state.hidden ? [] : [state.hidden],
+      );
+      if (controls.chips)
+        assert.equal(
+          container.querySelector('.data-toggle-chip').textContent,
+          controls.chips[0].label,
+        );
+      if (controls.legend)
+        assert.equal(
+          container.querySelector('.data-toggle-legend-item').children[1]
+            .textContent,
+          'Coverage',
+        );
+      if (controls.info)
+        assert.equal(
+          container.querySelector('.data-toggle-controls-info').textContent,
+          controls.info,
+        );
+      const beforeReads = reads;
+      hiddenWrites.length = 0;
+      for (let repeat = 0; repeat < 3; repeat++)
+        panel._syncRowControls(container, layer);
+      assert.equal(
+        reads - beforeReads,
+        3,
+        'every refresh still reads current controls',
+      );
+      assert.deepEqual(hiddenWrites, []);
+    }
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test('row controls repair externally changed visibility and honor live enabled state', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const f = railFixture();
+  const container = f.document.createElement('div');
+  const writes = [];
+  let hidden = false;
+  Object.defineProperty(container, 'hidden', {
+    get: () => hidden,
+    set(value) {
+      writes.push(value);
+      hidden = value;
+    },
+  });
+  const panel = new LayerPanel({
+    getRowControls: () => ({ chips: [{ id: 'mode', label: 'Mode' }] }),
+  });
+  const layer = { id: 'controls-fixture', enabled: true };
+  for (const enabled of [true, false, true]) {
+    layer.enabled = enabled;
+    panel._syncRowControls(container, layer);
+    assert.equal(container.hidden, !enabled);
+    container.hidden = enabled;
+    writes.length = 0;
+    panel._syncRowControls(container, layer);
+    assert.equal(container.hidden, !enabled);
+    assert.deepEqual(writes, [!enabled]);
+    writes.length = 0;
+    panel._syncRowControls(container, layer);
+    assert.deepEqual(writes, []);
+  }
+});
+
 test('panel presentation places Transit between Street Traffic and Bike Share in Movement', () => {
   const source = readFileSync(
     new URL('./layerPanel.js', import.meta.url),
