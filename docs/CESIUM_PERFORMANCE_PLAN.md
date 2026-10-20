@@ -7,6 +7,23 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
+The latest [isolated ABBA diagnostic](performance-evidence/s69-native-matrix-20261019/feedback-runtime-8c14b106-isolated-diagnostic.json)
+compares runtime experiment `8c14b106` with `2663fbff`, retaining all sixteen
+actions. Both have six of eight browser Event Timing observations above 100 ms.
+Four first-action focus observations fail the frozen isolation policy; they are
+not retrospectively accepted. Four of the six isolated candidate actions also
+exceed 100 ms. The yield-only change has no established acceptance benefit.
+Initial exact terrain sampling and forced layout in panel callbacks are now
+separate implementation investigations.
+
+The [natural pointer-sweep diagnostic](performance-evidence/s69-native-matrix-20261019/natural-pointer-sweep-diagnostic.json)
+produces three byte-identical positive screenshots of the unchanged baseline
+logo; a deliberate geometry change still fails. This is a standalone acquisition
+test, not full-application visual acceptance. The shared capture harness is being
+updated without changing pixel thresholds. CI and signed-release verification
+for `3add2a3a` pass, including Windows recovery; the frozen `190c5ab6` r21
+qualification and public deployment remain unchanged.
+
 Current qualification checkpoint: application candidate `190c5ab6` remains
 unactivated; production remains `e7a878e`. Engineering completion is still
 **21/24 slices (87.5%)**. The ten-slot default-empty-layer startup confirmation

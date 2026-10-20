@@ -2,6 +2,29 @@
 
 ## Current qualification checkpoint
 
+The latest [isolated ABBA scheduling diagnostic](feedback-runtime-8c14b106-isolated-diagnostic.json)
+compares `2663fbff` with runtime experiment `8c14b106`. It retains all sixteen
+trusted actions and their matching Event Timing entries, with a fixed one-second
+drain between actions. Both builds have six of eight next-rendering observations
+above 100 ms. Four first actions fail the frozen focus-isolation policy; the
+observer also captures descendant focus and did not record its target, so these
+failures remain recorded. Among the six isolated candidate actions, four still
+exceed 100 ms. No acceptance benefit is established for the yield-only change.
+The trace identifies forced layout in the left/right panel callbacks, separately
+from the exact depth queries on enable.
+
+The [natural pointer-sweep experiment](natural-pointer-sweep-diagnostic.json)
+produces three byte-identical positive logo captures. A deliberate one-unit SVG
+geometry shift still changes 1,794 pixels, with maximum RGB difference 195.
+Only trusted pointer input changes; CSS, geometry, masks and pixel thresholds
+remain unchanged. This standalone result supports the capture-harness fix but
+does not clear full-application visual qualification.
+
+The [full CI run for `3add2a3a`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39395627455)
+and its [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39395627520)
+pass, including Windows recovery. These results do not replace hardware
+qualification for a new runtime.
+
 The current application candidate is `190c5ab6`; public production remains at
 `e7a878e`. Engineering completion remains **21/24 slices (87.5%)**. The latest
 exact-current-190 CI checks passed. The complete r21 integrated review is
