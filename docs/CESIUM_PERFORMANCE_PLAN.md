@@ -178,10 +178,34 @@ was retained without a favorable rerun. The original and continuation raw
 results are independently verified on VM105, with SHA-256
 `9200bd3615001284f739bb8bd28020833b040f4e4742b838b6e0f095df4de5aa`
 and `60316dcb9e3d240ce3564535b8f7d7a61b4784901a6962cadde35470e4edc3fc`.
-The remaining completed-render-to-native-presentation gap is unattributed.
-The next bounded discriminator must follow the Submit carrying the click's
-latency ID through its actual surface aggregation and presentation, rather than
-using the initial surface or a nearby presentation timestamp.
+The subsequent [four-action presentation trace](performance-evidence/s69-native-matrix-20261019/late-presentation-acd-disposition-20261021.json)
+now follows each input-bearing Submit through its actual surface aggregation
+and matching EventLatency endpoint. All four joins succeed; the initial
+click-to-EventLatency association is explicitly timestamp-based, not an exact
+emitted input flow. The 48,099,732-byte raw trace and supporting records are
+independently verified on VM105. All actions retain normal browser/helper
+closure, foreground and before/after asset verification.
+
+On warm ON, completed Cesium rendering is at **51.600 ms**, commit at
+**67.544 ms**, input-bearing Submit at **70.429 ms**, aggregation at
+**71.473 ms**, swap acknowledgement at **121.625 ms**, and the matched
+EventLatency endpoint at **128.636 ms**. The dominant remaining stage is
+aggregation to swap acknowledgement (**50.152 ms**). Chrome GPU-service
+scheduler work occupies **47.887 ms** of that interval, including raster-command
+service (**34.341 ms wall / 33.911 ms thread CPU**) and four render-pass finishes
+(**9.714 / 9.581 ms**). Nested spans must not be added as independent costs.
+These are browser service measurements, not hardware GPU timings. The trace
+does not establish the DOM/layer owner of that raster work, so it does not
+justify another terrain-pick patch or a speculative panel/filter change.
+
+The four native durations are **312/56/128/48 ms**. Tracing is diagnostic;
+none receives formal performance or soak credit. A separately reviewed
+preparation-overlap proposal is also rejected as the next intervention:
+acd's entire warm enable lifecycle is only **4.5–4.6 ms**, of which detached
+preparation is a subset. That cannot explain the much larger presentation tail.
+No runtime change is adopted from these findings. Next, identify the raster
+owner before a targeted quality-preserving experiment; retain the independent
+native, readiness, completed-frame and visual gates.
 
 Candidate preflight discovered that **all 886 previously verified USB cache
 files now read as same-length zeros**. New writes to D: were stopped; the
@@ -222,7 +246,10 @@ recovered from the unchanged source matching its predeclared hash. Streamed
 archive and directly written report bytes were independently verified at that time;
 new D: writes are now stopped after the later integrity failure above. External
 capacity does not waive the Windows system-drive safety floor or establish
-that local space has been reclaimed. Production remains unchanged. S60, S69, S70 and the final Ampfing
+that local space has been reclaimed. After the completed presentation trace,
+C: again has approximately 2 GB free, below the unchanged 2.5 GiB GPU start
+threshold. Offline analysis and VM archiving continue; further GPU acquisition
+waits for adequate system-drive space. Production remains unchanged. S60, S69, S70 and the final Ampfing
 soak remain open; no failed result is converted to a pass.
 
 ### Remaining work, in execution order

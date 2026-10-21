@@ -1,0 +1,134 @@
+{
+  "schema": "gev-late-presentation-disposition/v1",
+  "createdAt": "2026-10-21T09:07:03.473Z",
+  "status": "diagnostic-complete-latency-unresolved",
+  "acceptanceEligible": false,
+  "runtimeChangesAdopted": false,
+  "productionChanged": false,
+  "applicationCommit": "acd65cc680c2728e41b0796e2274f6afb25018aa",
+  "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "raw": {
+    "planSha256": "f9d0c23e5d6756163ca5be3511b7d60a9543a2aa451ccc41290c02ccb43bcd6c",
+    "resultSha256": "00eb37d3e31b409ac1d7d91a8bc6071f42d7c60d504ff60330c0b00a0363ea48",
+    "tracePath": "late-present-acd-preparation/capture/trace.json",
+    "traceBytes": 48099732,
+    "traceSha256": "24e267bf2d353ec4f33fc50db28b3275dbdc29d142e9376469b0865c10a93ca8",
+    "eventCount": 228252
+  },
+  "derivedSha256": "e0fb59cb9f9fc786cb96ca58b65657274ee8306bd6b38610ae56f5e38778ab94",
+  "serviceAnalysisSha256": "f56205fccb66b7bb14ce16ca90cd21388c98f670bbc40fa82350b8a7dc8c41bb",
+  "transferReceiptSha256": "e5ef1b71b662af8a31b8b0e78d869d769c4c97062185e361ee28b6375180f707",
+  "vmArchive": "late-present-acd-20261021",
+  "findingsSha256": "0f6562e44e362b4bb47f4796a32501b94fe2a3502f6cfe678f0a9b1bc8ccbdda",
+  "analysisArchive": "late-present-acd-20261021-analysis",
+  "analysisTransferReceiptSha256": "09e39d2b4add251842b0438d80dff9db11c9dcffe231f012e5dbb8bde63473c6",
+  "actions": [
+    {
+      "generation": 1,
+      "enabled": true,
+      "joinStatus": "linked",
+      "timelineMs": {
+        "postRender": 200.5,
+        "commitFinish": 228.195,
+        "inputBearingSubmit": 233.971,
+        "surfaceAggregation": 235.132,
+        "swapAcknowledgement": 297.541,
+        "eventLatencyEnd": 309.946,
+        "nativeRounded": 312
+      },
+      "stageDifferencesMs": {
+        "postRenderToCommit": 27.695,
+        "commitToSubmit": 5.776,
+        "submitToAggregation": 1.161,
+        "aggregationToAck": 62.409,
+        "ackToEventLatencyEnd": 12.405,
+        "postRenderToEventLatencyEnd": 109.446
+      },
+      "gpuServiceSchedulerWallUnionInAggregationToAckMs": 61.345
+    },
+    {
+      "generation": 2,
+      "enabled": false,
+      "joinStatus": "linked",
+      "timelineMs": {
+        "postRender": 36.7,
+        "commitFinish": 26.147,
+        "inputBearingSubmit": 29.065,
+        "surfaceAggregation": 29.723,
+        "swapAcknowledgement": 48.097,
+        "eventLatencyEnd": 59.369,
+        "nativeRounded": 56
+      },
+      "stageDifferencesMs": {
+        "postRenderToCommit": -10.553,
+        "commitToSubmit": 2.918,
+        "submitToAggregation": 0.658,
+        "aggregationToAck": 18.374,
+        "ackToEventLatencyEnd": 11.272,
+        "postRenderToEventLatencyEnd": 22.669
+      },
+      "gpuServiceSchedulerWallUnionInAggregationToAckMs": 18.214
+    },
+    {
+      "generation": 3,
+      "enabled": true,
+      "joinStatus": "linked",
+      "timelineMs": {
+        "postRender": 51.6,
+        "commitFinish": 67.544,
+        "inputBearingSubmit": 70.429,
+        "surfaceAggregation": 71.473,
+        "swapAcknowledgement": 121.625,
+        "eventLatencyEnd": 128.636,
+        "nativeRounded": 128
+      },
+      "stageDifferencesMs": {
+        "postRenderToCommit": 15.944,
+        "commitToSubmit": 2.885,
+        "submitToAggregation": 1.044,
+        "aggregationToAck": 50.152,
+        "ackToEventLatencyEnd": 7.011,
+        "postRenderToEventLatencyEnd": 77.036
+      },
+      "gpuServiceSchedulerWallUnionInAggregationToAckMs": 47.887
+    },
+    {
+      "generation": 4,
+      "enabled": false,
+      "joinStatus": "linked",
+      "timelineMs": {
+        "postRender": 36.5,
+        "commitFinish": 20.16,
+        "inputBearingSubmit": 21.443,
+        "surfaceAggregation": 21.902,
+        "swapAcknowledgement": 32.86,
+        "eventLatencyEnd": 44.438,
+        "nativeRounded": 48
+      },
+      "stageDifferencesMs": {
+        "postRenderToCommit": -16.34,
+        "commitToSubmit": 1.283,
+        "submitToAggregation": 0.459,
+        "aggregationToAck": 10.958,
+        "ackToEventLatencyEnd": 11.578,
+        "postRenderToEventLatencyEnd": 7.938
+      },
+      "gpuServiceSchedulerWallUnionInAggregationToAckMs": 10.822
+    }
+  ],
+  "normalClose": true,
+  "foreground": "completed",
+  "interpretation": [
+    "The dominant warm ON delay is downstream of the completed Cesium frame: aggregation to swap acknowledgement takes 50.152 ms.",
+    "47.887 ms of that interval overlaps GPU-service scheduler work, primarily raster commands followed by composition. Thread CPU and wall spans are not hardware GPU timings.",
+    "The initial click-to-EventLatency link is a unique timestamp association, explicitly qualified; subsequent surface/display IDs and the matched lifecycle endpoint are linked.",
+    "Tracing is diagnostic only. All four declared actions remain; no formal sample or soak credit is claimed.",
+    "Do not adopt the rejected terrain-culling, paired-readback, framebuffer-preservation or preparation-overlap experiments from these observations."
+  ],
+  "preparationProposal": {
+    "status": "rejected-as-next-intervention",
+    "dispositionSha256": "e7c1d95b3c057c4c627142b04f655861e287a8c323fcc822e2dc621770d5f6d9",
+    "reason": "The entire measured warm enable lifecycle is 4.5–4.6 ms; detached preparation is only part of that and cannot explain the larger presentation tail."
+  },
+  "next": "Attribute the recorded raster commands to their actual page/layer owner before a targeted quality-preserving runtime experiment. Additional Windows GPU acquisition requires recovery above the unchanged system-drive safety floor."
+}
