@@ -5,7 +5,10 @@ import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
-import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
+import {
+  createRenderedSoakDriver,
+  readSoakReplayDiagnosticInPage,
+} from './qa-rendered-soak-driver.mjs';
 import { createWindowsForegroundActivationSession } from './performance/windowsForegroundWindow.mjs';
 import {
   assertQualificationNativeWindowIdentity,
@@ -1689,23 +1692,61 @@ async function collectInteraction(
 }
 
 async function loadReplay(page) {
-  await page.select(
-    '.investigation-timeline-aircraft-select',
-    'recording-rendered-soak',
-  );
-  await page.waitForFunction(
-    () => window.__godsEyeView.aircraftSource.getState()?.mode === 'recorded',
-    { timeout: INTERACTION_TIMEOUT_MS },
-  );
-  await page.waitForFunction(
-    async () => {
-      const records =
-        (await window.__godsEyeView.aircraftSource.getSnapshot())?.records ||
-        [];
-      return records.some((record) => record.id === 'SYNTH-001');
-    },
-    { timeout: INTERACTION_TIMEOUT_MS },
-  );
+  let phase = 'recording-option';
+  try {
+    await page.waitForFunction(
+      () =>
+        Array.from(
+          document.querySelector('.investigation-timeline-aircraft-select')
+            ?.options || [],
+        ).some((option) => option.value === 'recording-rendered-soak'),
+      { timeout: INTERACTION_TIMEOUT_MS, polling: 100 },
+    );
+    phase = 'recording-selection';
+    const selected = await page.select(
+      '.investigation-timeline-aircraft-select',
+      'recording-rendered-soak',
+    );
+    assert.ok(
+      selected.includes('recording-rendered-soak'),
+      'Qualification recording option was not selected',
+    );
+    phase = 'recording-load';
+    await page.waitForFunction(
+      () => {
+        const state = window.__godsEyeView?.aircraftSource?.getState?.();
+        return (
+          state?.mode === 'recorded' &&
+          state.recordingId === 'recording-rendered-soak'
+        );
+      },
+      { timeout: INTERACTION_TIMEOUT_MS, polling: 100 },
+    );
+    phase = 'snapshot-load';
+    await page.waitForFunction(
+      async () => {
+        try {
+          const records =
+            (await window.__godsEyeView.aircraftSource.getSnapshot())
+              ?.records || [];
+          return records.some((record) => record.id === 'SYNTH-001');
+        } catch (error) {
+          // The previous live request may settle across a source switch.
+          // Wait for the selected recording; unrelated snapshot errors fail.
+          if (error?.name === 'AbortError') return false;
+          throw error;
+        }
+      },
+      { timeout: INTERACTION_TIMEOUT_MS, polling: 100 },
+    );
+  } catch (error) {
+    const diagnostic = await page
+      .evaluate(readSoakReplayDiagnosticInPage, phase)
+      .catch(() => null);
+    error.message +=
+      '; replay ' + phase + ' state: ' + JSON.stringify(diagnostic);
+    throw error;
+  }
   return setUnmeasuredCameraPose(
     page,
     { latitude: 0, longitude: 179.7, altitude: 500_000 },

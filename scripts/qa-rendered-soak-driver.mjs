@@ -141,6 +141,21 @@ export function createSoakDatacenterFixture(location) {
   };
 }
 
+/** Keep the live source empty until the seeded recording is selected. */
+export function respondToSoakLiveFlights(url, request, base) {
+  if (
+    url.origin !== new URL(base).origin ||
+    url.pathname !== '/api/flights' ||
+    request?.method?.() !== 'GET'
+  )
+    return undefined;
+  return {
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ time: 0, states: [] }),
+  };
+}
+
 /** Select and commit one endpoint through the actual recorded timeline control. */
 export async function seekRenderedSoakRecordingInPage(iteration) {
   const app = window.__godsEyeView;
@@ -930,6 +945,8 @@ export async function createRenderedSoakDriver(
           }
         },
         respond(url, request) {
+          const liveFlights = respondToSoakLiveFlights(url, request, base);
+          if (liveFlights) return liveFlights;
           if (url.hostname === 'terrain.reearth.land')
             return {
               status: 404,

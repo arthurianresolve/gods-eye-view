@@ -18,6 +18,7 @@ import {
   readNativeResolutionEvidenceInPage,
   resolveNativeSoakViewport,
   createSoakDatacenterFixture,
+  respondToSoakLiveFlights,
   createSoakDatacenterFixtureReceipt,
   createSoakFixtureShareHash,
   bootSoakFixtureFromFreshDocument,
@@ -55,6 +56,27 @@ import {
   FULL_SOAK_MS,
 } from './performance/soakStability.mjs';
 import { resolveNativeWindowBrowserOptions } from './performance/nativeWindowViewport.mjs';
+
+test('rendered soak keeps live flights empty until the recording is selected', () => {
+  const base = 'http://127.0.0.1:4184/';
+  const request = { method: () => 'GET' };
+  const response = respondToSoakLiveFlights(
+    new URL('/api/flights?lamin=40', base),
+    request,
+    base,
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(JSON.parse(response.body), { time: 0, states: [] });
+  for (const [url, method] of [
+    ['http://other.test/api/flights', 'GET'],
+    ['http://127.0.0.1:4184/api/flights/track', 'GET'],
+    ['http://127.0.0.1:4184/api/flights', 'POST'],
+  ])
+    assert.equal(
+      respondToSoakLiveFlights(new URL(url), { method: () => method }, base),
+      undefined,
+    );
+});
 
 const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
   JSHeapUsedSize: heap,
