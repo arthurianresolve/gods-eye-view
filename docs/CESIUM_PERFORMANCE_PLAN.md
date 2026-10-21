@@ -23,9 +23,119 @@ completion is separate from performance acceptance.
 | S69     | Open: complete candidate qualification                       | New measurement corrections pass 82 focused tests on each Node version and static checks; full integration tracked separately below | Local-control latency remains unresolved; current visual, startup and matrix qualification pending |
 | S70     | Open: verify the staged artifact and deliver                 | Native-window soak support implemented; final packaging/deployment checks pending                                                   | One final frozen-runtime Ampfing soak pending                                                      |
 
+### Latest investigation checkpoint — 21 October 2026
+
+The public documentation head `fd34e5d5` passed six selected CI jobs and
+release verification, but [macOS recovery failed again](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39541631101).
+That run timed out waiting for terminal import status. Its later diagnostic
+snapshot shows one imported feature, but cannot establish whether terminal
+status arrived before the timeout. This remains distinct from the later
+renderer-readiness failure described below; historical outcomes remain
+revision-specific.
+
+The QA follow-up `5eedcd1a` replaced timer polling of terminal import status
+with mutation observation and bounded, disposable status timestamps, retaining
+the 30-second deadline and separate feature-count check. After CI exposed a
+missing full-suite test-list entry, `ca1931ed` fixed it; its macOS recovery run
+then exposed a different issue: restored geometry was not yet drawable when
+workspace reopening returned. `dc242a16` added a bounded QA-fixture wait for
+renderer feature readiness. The final head passed [CI run 39548209045](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39548209045)
+and [release verification 39548209166](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39548209166).
+These results validate the fixture recovery check; they do not establish the
+unique cause of the earlier import-status timeout.
+
+Six further [bounded latency diagnostics](performance-evidence/s69-native-matrix-20261019/activation-short-experiments-disposition-20261021.json)
+are complete. None justifies adopting its scheduling or framebuffer change:
+
+- Message-channel task scheduling did not produce a consistent improvement.
+- Immediate ON improved readiness but worsened warmed native presentation.
+- Removing the extra V6 geometry/mutation observation did not resolve that
+  warmed delay; other observation overhead is not ruled out.
+- Disabling framebuffer preservation and forcing a post-acknowledgement render
+  did not establish a useful, consistent benefit.
+- ON preparation directly from a RAF callback worsened both observed native
+  latency and readiness. OFF retained its original post-RAF task.
+
+All raw samples and normal-cleanup records are retained in independently
+verified VM105 archives. These are diagnostic dispositions, with no formal
+qualification credit.
+
+The synchronous picking-readback experiment was privately implemented in
+`411c13bc`, based on `acd65cc6`. Its hash-pinned Cesium source patch combines
+the existing one-pixel ID/depth reads into one CPU retrieval, retaining the
+existing decoders and query order. Unsupported shapes keep the original path.
+Forty focused Windows checks pass; all 53 focused installer, decoder and viewer
+checks pass on VM Node 24 and Node 26. The isolated production build, import
+and package boundaries, and verification of all 886 served assets also pass.
+The first hardware diagnostic then found a **build-integration failure**:
+the Vite Cesium plugin externalizes the engine to its prebuilt `Cesium.js`,
+while this experiment patched only engine source modules. The delivered app
+contained the opt-in flag but not the new readback implementation. All 24
+query identities, results and ID/depth bytes matched the control, but none
+used the paired readback. This proves neither its correctness nor its benefit.
+The raw diagnostic is preserved with SHA-256
+`a360efe1fe33ab069f68ad56d0525475dba39e9e2605afcc2c79ce09a8455a58`.
+The uninstrumented latency follow-up on that source-only build was not run.
+The correction in `a4b4b9e5` patches both distributed browser bundles and
+registers the tests in the full-suite inventory. Its fixture-only follow-up
+`ea2bfe36` passes 89 focused checks on each of VM Node 24 and 26. Hardware
+diagnostics confirm that all 24 queries execute the paired readback and retain
+exact query identities, results and ID/depth bytes. Nevertheless, the bounded
+uninstrumented comparison **rejects its performance benefit**: baseline native
+samples are 392, 56, 96, 48, 112, 48 ms; candidate samples are 392, 176, 128,
+48, 112, 48 ms. This does not justify formal qualification or the final soak.
+
+A separate four-action diagnostic attributes 5.0 ms of the eight warm height
+queries to PACK_ALIGNMENT reads and 1.8 ms to PACK_ROW_LENGTH reads. These
+are instrumented wall times; removing a query may move its wait elsewhere.
+Private child `910608ab` removes only the unnecessary single-row alignment
+query and retrieves directly from PIXEL_PACK_BUFFER, preserving row-length,
+skip, null-buffer guards, clearing and cleanup. Its 87 focused Windows checks
+and 100 focused checks on each of VM Node 24 and 26 pass. Its Intel UHD 620
+functional diagnostic also passes: 24 exact height/byte matches and an owned
+WebGL context verify all four legal alignments, error preservation, zeroed
+failed reads, state restoration and cleanup. However, the uninstrumented
+short comparison **rejects this child too**: baseline native samples are
+304, 56, 96, 48, 112, 48 ms; candidate samples are 328, 56, 144, 48, 128, 48 ms.
+Fewer readback calls have not established lower end-to-end latency. Both
+paired-read experiments remain private and unadopted. No further broad
+qualification or final soak is justified by these results.
+
+A four-action structural diagnostic on original `acd65cc6` now rejects an
+empty-query shortcut. All 16 height queries, including eight undefined
+results, execute 50 draws: 44 globe draws, three other geometry draws and
+three copy draws. Undefined results contain zero ID/depth bytes only after
+those contributors execute. The run has no observation overflow/errors,
+preserves the four normal input/drain boundaries and closes normally. Its raw
+SHA-256 is `354350202d71a8e9530535c4fa2b576c90298a30bf2f2b42b75e240c14db67fd`;
+it is independently mirrored on VM105. This is diagnostic evidence, not a
+latency or visual-equivalence pass. The next bounded source investigation is
+whether offscreen globe commands can be conservatively culled at execution
+time without changing frustum fitting, depth precision or returned results.
+
+The three completed `ea2bfe36` runs and supporting evidence are archived on
+VM105 as `queued-height-ea2bfe36-diagnostic-evidence-20261021`: 31 files,
+4,846,961 bytes, independently read back twice. Manifest SHA-256:
+`7bc780c26c963401063449c7d25b66df06601213a96405d307f10b3af305d666`.
+No experimental performance acceptance or production deployment is claimed.
+
+The user cleared the npm cache, recovering Windows free space to approximately
+4.2 GiB and removing the acquisition blocker without lowering its 2.5 GiB
+threshold. Earlier automated deletion attempts were blocked and deleted
+nothing. Subsequent storage pressure remains monitored. An external USB drive
+now holds a checksum-verified 1,383,608,320-byte evidence archive covering
+16,925 files; an independently verified VM master is retained. Two native
+file-copy attempts to USB produced all-zero destination files. Those failures
+are preserved; originals were not removed, and copied runner provenance was
+recovered from the unchanged source matching its predeclared hash. Streamed
+archive and directly written report bytes were independently verified. External
+capacity does not waive the Windows system-drive safety floor or establish
+that local space has been reclaimed. Production remains unchanged. S60, S69, S70 and the final Ampfing
+soak remain open; no failed result is converted to a pass.
+
 ### Remaining work, in execution order
 
-The current public head `1b53f706` passes
+The earlier public head `1b53f706` passes
 [all seven selected CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717261)
 and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717279).
 Twelve optional jobs are skipped. The release source is PR merge
@@ -89,9 +199,9 @@ preserves all samples, both short diagnostics, source/build/test evidence and
 **63 files / 7,839,081 bytes**, independently read back twice from VM105.
 Neither the earlier failures nor the final Ampfing soak are reclassified.
 
-Full twenty-sample verification of `468f6bf0` is pending. The canonical
-release and final-soak gates remain open. The following entries preserve
-their earlier revision-specific scope.
+Full twenty-sample verification of `468f6bf0` is complete and rejected, as
+recorded above. The canonical release and final-soak gates remain open.
+The following entries preserve their earlier revision-specific scope.
 
 The public QA head `09df4331` has passed [all seven selected CI
 jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39482916327)
