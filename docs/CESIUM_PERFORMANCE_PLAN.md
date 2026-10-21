@@ -203,9 +203,31 @@ none receives formal performance or soak credit. A separately reviewed
 preparation-overlap proposal is also rejected as the next intervention:
 acd's entire warm enable lifecycle is only **4.5–4.6 ms**, of which detached
 preparation is a subset. That cannot explain the much larger presentation tail.
-No runtime change is adopted from these findings. Next, identify the raster
-owner before a targeted quality-preserving experiment; retain the independent
-native, readiness, completed-frame and visual gates.
+No runtime change is adopted from these findings.
+
+The subsequent [bounded layer-ownership diagnostic](performance-evidence/s69-native-matrix-20261019/raster-owner-acd-disposition-20261021.json)
+completed all four actions, normal cleanup and independent VM readback of
+31 raw/support files plus eight analysis records. Native durations are
+**256/56/128/64 ms**, with no acceptance credit. The exact Chrome source
+establishes a shared layer-ID namespace. Across 65 retained tree snapshots,
+the layer-toggle list has a stable observed owner; warm ON includes three
+of its raster tasks, totaling **1.945 ms worker wall time**. This does not
+allocate the later **31.373 ms raster-service interval** to that DOM node.
+The proposed client/decoder integer join is rejected: those counters have
+different lifetimes and increments, and the tracing ID is not transmitted.
+
+Tracing stops here. The [single uninstrumented row-isolation comparison](performance-evidence/s69-native-matrix-20261019/row-isolation-acd-rejected-20261021.json)
+tests the current immediate-ON path; the older experiment used deferred ON
+feedback. Control durations are **352/112/112/48/144/48 ms**, versus
+**312/64/112/48/112/48 ms** with isolation. The first pair remains reported
+warmup. One warm ON improves and one is unchanged, failing the predeclared
+requirement that both improve. The prototype is rejected; its two warm ON
+values remain **112 ms**, above the independent 100 ms target. This small
+experiment does not establish a hardware floor or the unique cause of latency.
+Both roles preserve settings/populations, assets, foreground observations and
+normal style/browser/helper cleanup. All 13 records (1,450,955 bytes) are
+independently verified on VM105. No runtime change is adopted, no acceptance
+gate is relaxed, and no further row-isolation run is justified by these results.
 
 Candidate preflight discovered that **all 886 previously verified USB cache
 files now read as same-length zeros**. New writes to D: were stopped; the
@@ -247,10 +269,23 @@ archive and directly written report bytes were independently verified at that ti
 new D: writes are now stopped after the later integrity failure above. External
 capacity does not waive the Windows system-drive safety floor or establish
 that local space has been reclaimed. After the completed presentation trace,
-C: again has approximately 2 GB free, below the unchanged 2.5 GiB GPU start
-threshold. Offline analysis and VM archiving continue; further GPU acquisition
-waits for adequate system-drive space. Production remains unchanged. S60, S69, S70 and the final Ampfing
-soak remain open; no failed result is converted to a pass.
+C: temporarily fell to approximately 2 GB free, below the unchanged 2.5 GiB
+GPU start threshold. It subsequently recovered to approximately 3.8 GiB;
+no C: evidence was deleted for this recovery. E: passed bounded write and
+separate uncached readback checks of 80 files (2,416,181,248 bytes), plus
+the two archive copies recovered from VM105. These checks do not certify
+its advertised capacity or power-cycle persistence. Independent VM masters
+remain authoritative. New captures use E:, with an exFAT-compatible verified
+publication step; 85 focused tests and an actual E: publication smoke pass.
+The user-authorized cleanup removed only `D:/Codex/gods-eye-view` after backup
+verification: 1,489 files and 1,301,612,550 logical bytes. Unrelated data remains.
+
+The later documentation head `be9e9c71` passes
+[all seven selected CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39574715963)
+and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39574715956);
+twelve optional jobs remain intentionally skipped. Production remains unchanged.
+S60, S69, S70 and the final Ampfing soak remain open; no failed result is converted
+to a pass.
 
 ### Remaining work, in execution order
 
