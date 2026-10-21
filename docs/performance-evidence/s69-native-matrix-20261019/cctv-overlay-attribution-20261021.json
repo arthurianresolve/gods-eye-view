@@ -1,0 +1,40 @@
+{
+  "schema": "gev-cctv-overlay-attribution-diagnostic/v1",
+  "recordedDate": "2026-10-21",
+  "applicationCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+  "environment": "Windows Chrome, ANGLE Intel UHD 620 D3D11, 2880x1800 drawing buffer",
+  "scope": "diagnostic-only local source build and CCTV fixture; ordinary Puppeteer screenshots, not the formal debugger-paused capture",
+  "attempts": [
+    {
+      "state": "initial CCTV activation",
+      "valid": false,
+      "reason": "same-state screenshots changed by millions of pixels while the scene settled"
+    },
+    {
+      "state": "settled CCTV with HUD hidden",
+      "validWithinState": true,
+      "sequence": ["hidden", "shown", "hidden", "shown"],
+      "overlayChange": {
+        "pixels": 12364,
+        "maximumChannelDelta": 1
+      },
+      "hiddenRepeatChangedPixels": 0,
+      "shownRepeatChangedPixels": 0,
+      "formalStillCrossBuildChangedPixels": 12249,
+      "changedPixelPositionOverlap": 170,
+      "limit": "HUD and other capture conditions differ from the formal still-settled state, so similar changed-pixel totals do not establish attribution."
+    },
+    {
+      "state": "CCTV with HUD visible",
+      "valid": false,
+      "reason": "same-state screenshot controls changed by thousands to millions of pixels despite a bounded settle"
+    }
+  ],
+  "decision": "Do not revert the runtime change or relax visual acceptance from these captures. An attribution test must use the formal paused-frame boundary with matching HUD, fixture and visual state.",
+  "evidenceArchive": {
+    "machine": "VM105",
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/cctv-overlay-diagnostic-20261021.tar",
+    "sha256": "683c2e8b418ff84d9168036443b4d54968fdc511583dea82c91ed710122cc156",
+    "readback": "independent SHA-256 match after transfer; 12 PNGs and diagnostic scripts retained"
+  }
+}

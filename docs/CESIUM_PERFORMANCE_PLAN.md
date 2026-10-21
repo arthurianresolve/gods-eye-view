@@ -65,6 +65,14 @@ because map imagery changed. Only 160 of those pixel positions overlap the
 does not attribute that comparison to the whiteboard change or confer visual
 acceptance. The diagnostic images and scripts are preserved in a VM105 archive
 with independent SHA-256 readback. The runtime remains unchanged.
+A [closer CCTV-fixture probe](performance-evidence/s69-native-matrix-20261019/cctv-overlay-attribution-20261021.json)
+shows a repeatable 12,364-pixel, 1/255 empty-overlay toggle in a settled
+HUD-hidden state. Only 170 changed pixel positions overlap the 12,249-pixel
+formal still-state difference; the HUD-visible attempt fails its own repeat
+control. Similar totals do not establish a cause across different scene states.
+Those failed and partial attempts remain archived on VM105. Further attribution
+requires the formal paused-frame boundary and identical visual state; neither
+a speculative runtime revert nor a weaker screenshot gate is adopted.
 
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
@@ -78,9 +86,11 @@ not converted into pending evidence by the passing CI or workspace journey.
 The candidate runner now activates required performance gates when a version-1
 manifest names either the visual or local-control check; previously those
 checks could be parsed but omitted unless performance evidence was separately
-required. Ten focused runner tests pass with this correction. The manifest
-remains bound to the tested `86abeb79` runtime and cannot certify a later
-source commit or artifact.
+required. Ten focused runner tests pass with this correction. The exact
+QA/documentation head `45d1abbb` passes [CI run 39619884024](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39619884024)
+across seven selected jobs and [signed release verification 39619884103](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39619884103).
+The manifest remains bound to the tested `86abeb79` runtime and cannot
+certify a later source commit or artifact.
 
 The current review branch has no new application-runtime change after the
 reverted layer-row-cache experiment. That experiment reduced selector calls but
