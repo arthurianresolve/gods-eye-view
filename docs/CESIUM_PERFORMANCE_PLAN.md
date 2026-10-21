@@ -20,10 +20,38 @@ completion is separate from performance acceptance.
 | S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                             | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                                                                      |
 | S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                       | Performance objectives and final acceptance unresolved                                                                                                                                                                      |
 | S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                               | Final shared qualification pending                                                                                                                                                                                          |
-| S69     | Open: complete candidate qualification                       | Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `82d83475` passes all seven selected CI jobs and signed release verification. The replay fixture now returns deterministic empty live flights and records bounded selection/materialization diagnostics. | Source-bound visual equivalence passes on the physical Intel UHD 620. The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved |
-| S70     | Open: finish private recovery checks and deliver             | The signed PR-merge archive is independently verified on VM105; its private package passes workspace and evidence-transfer browser journeys. Production remains on `e7a878e`.                                                                                                                                                       | Packaged build still needs its own candidate HTTPS and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending                                                                      |
+| S69     | Open: complete candidate qualification                       | Latest runtime `8ee87442` passes focused annotation/governor tests, package boundaries and a production build; exact-head CI is pending. Earlier `33d3d72c` has the source-bound physical visual pass for its annotation-free fixture. The replay fixture returns deterministic empty live flights and bounded selection/materialization diagnostics. | The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved. The new annotation demand needs affected visual/idle qualification. |
+| S70     | Open: finish private recovery checks and deliver             | The earlier signed PR-merge archive is independently verified on VM105; its private package passes workspace and evidence-transfer browser journeys. The new runtime has no signed-package qualification yet. Production remains on `e7a878e`. | Packaged build still needs its own candidate HTTPS and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending. |
 
 ### Latest investigation checkpoint — 21 October 2026
+
+**S51 annotation-demand follow-up, engineering implemented at `8ee87442`.**
+The hybrid renderer now holds continuous Cesium rendering only while an
+annotation has animated world geometry (a resolved area or route). Screen-only
+pins, arrows, callouts and pending area points keep their existing SVG/CSS
+animation and scene-driven reprojection without forcing otherwise idle globe
+frames. A deferred outline upgrade reacquires the hold, and clear/destroy
+release it. Temporary annotations also stop their JavaScript RAF loop after
+fade-in, schedule one bounded wake at the original TTL fade boundary, then
+resume RAF for the visible fade; clear/destroy cancel the wake. Unknown custom
+renderers retain their previous continuous-demand behavior.
+
+The exact source passes 45 focused annotation, screen-renderer and governor
+tests, package-boundary checks, scoped runtime formatting, whitespace checks,
+and a production Vite build on Windows Node 24. **Automatic behavior validation
+is complete for this narrow change; GPU frame-count reduction, visual fidelity
+under camera movement, and long-run timer ownership are not yet hardware
+validated.** No local-control or replay improvement is inferred. The prior
+`33d3d72c` annotation-free visual and interaction evidence remains tied to
+that runtime; affected annotation idle/animation behavior requires its own
+comparison. The independent 100 ms local-control and readiness gates still
+fail, so the final Ampfing soak remains uncommissioned.
+
+At review head `785bb416`, [CI run 39644280201](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39644280201)
+passes all seven selected jobs, and [signed release run 39644280190](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39644280190)
+passes. These checks preceded the S51 follow-up; exact-head CI and release
+verification for the new change remain pending. Twelve optional jobs were
+skipped, not passed. Production remains at `e7a878e`.
 
 The [interrupted interaction diagnostic](performance-evidence/s69-native-matrix-20261019/interrupted-interaction-33d3d72c-20261021.json)
 reconsumes the complete local-control cohorts from the failed `33d3d72c`
