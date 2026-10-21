@@ -749,7 +749,12 @@ function validateIdentityAgainstCapture(
   assert.equal(typeof identity.settings.fxaa, 'boolean');
 }
 
-function assertSharedPairIdentity(baseline, candidate, label) {
+function assertSharedPairIdentity(
+  baseline,
+  candidate,
+  label,
+  { complete = true } = {},
+) {
   for (const key of [
     'browserVersion',
     'renderer',
@@ -773,7 +778,7 @@ function assertSharedPairIdentity(baseline, candidate, label) {
     baseline?.identity?.measurementEnvironment ===
     QUALIFICATION_NATIVE_WINDOW_MODE
   ) {
-    for (const boundary of ['before', 'after'])
+    for (const boundary of complete ? ['before', 'after'] : ['before'])
       assertNativeWindowViewportPair(
         baseline.identity.nativeWindowViewport[boundary],
         candidate.identity.nativeWindowViewport[boundary],
@@ -1967,6 +1972,187 @@ export function evaluateQualificationMetrics({
     acceptanceEligible: false,
     metrics,
   };
+}
+
+/**
+ * Preserve useful, complete interaction cohorts after a later capture stage
+ * fails. This deliberately never returns an acceptance-eligible metric: the
+ * source identity proof and the paired replay cohort did not finish.
+ */
+export function evaluateInterruptedInteractionDiagnostics({
+  schema,
+  status,
+  interactionEvidence,
+  sourceCaptures,
+} = {}) {
+  const result = {
+    schema: 'gev-interrupted-interaction-diagnostics/v1',
+    status: 'failed',
+    acceptanceEligible: false,
+  };
+  try {
+    assert.equal(schema, 'gev-qualification-capture/v1');
+    assert.equal(status, 'failed');
+    const evidence = interactionEvidence;
+    assert.equal(evidence?.schema, INTERACTION_SCHEMA_V4);
+    assert.equal(evidence.status, 'failed');
+    assert.equal(sourceCaptures?.comparisonEligible, false);
+    assert.equal(sourceCaptures?.performanceEligible, false);
+    assert.equal(
+      evidence.sourceIdentity?.planSha256,
+      sourceCaptures.plan?.sha256,
+    );
+    assert.equal(
+      evidence.sourceIdentity?.kind,
+      'predeclared-build-receipt-identity-only-v1',
+    );
+    assert.equal(evidence.sourceIdentity?.evidenceSha256, null);
+    assert.match(sourceCaptures.plan.sha256, /^[a-f0-9]{64}$/);
+    assert.equal(validateMeasurementEnvironment(evidence), true);
+    assertInteractionEventTimingPlan(evidence.eventTimingPlan);
+    assert.match(evidence.eventTimingProducerSha256 || '', /^[a-f0-9]{64}$/);
+    assert.equal(evidence.builds?.baseline?.interactionStatus, 'failed');
+    assert.equal(evidence.builds?.candidate?.interactionStatus, 'completed');
+    assert.equal(evidence.builds.baseline.loadedReplaySeek?.length, 0);
+    assertSharedPairIdentity(
+      evidence.builds.baseline,
+      evidence.builds.candidate,
+      'Interrupted interaction',
+      { complete: false },
+    );
+    assert.equal(
+      evidence.pairing?.fixtureSha256,
+      evidence.builds.baseline.identity.fixtureSha256,
+    );
+    assert.equal(
+      evidence.pairing?.routeId,
+      evidence.builds.baseline.identity.routeId,
+    );
+    const local = {};
+    for (const role of ['baseline', 'candidate']) {
+      const side = evidence.builds[role];
+      assert.equal(side.applicationCommit, sourceCaptures.application?.[role]);
+      assert.equal(side.identity.applicationCommit, side.applicationCommit);
+      assert.match(side.applicationCommit, /^[a-f0-9]{40}$/);
+      assertQualificationNativeWindowIdentity(
+        side.identity,
+        side.identity.viewport.dpr,
+        {
+          complete: role === 'candidate',
+        },
+      );
+      assert.deepEqual(side.identity.settingsAfter, side.identity.settings);
+      assert.deepEqual(
+        side.identity.nativeSharpnessProfileAfter,
+        side.identity.nativeSharpnessProfile,
+      );
+      assert.equal(side.identity.settings.qualityMode, 'manual');
+      assert.equal(side.identity.settings.detectionMode, 'DENSE');
+      assert.equal(side.identity.settings.densityPct, 75);
+      assertBrowserClose(side, `Interrupted ${role}`);
+      assertForegroundIntegrity(side, `Interrupted ${role}`);
+      assert.equal(
+        side.interactionProtocol,
+        INTERACTION_PROTOCOL_LATE_READINESS,
+      );
+      assert.equal(
+        side.localReadinessRegistrationPolicy,
+        LOCAL_READINESS_REGISTRATION_POLICY,
+      );
+      const setup = side.localControlCameraSetup;
+      assert.equal(setup?.routeId, LOCAL_CONTROL_CAMERA_ROUTE_ID);
+      assert.deepEqual(setup.requestedLocation, LOCAL_CONTROL_CAMERA_LOCATION);
+      assertCameraPosesClose(
+        setup.observedPose,
+        {
+          ...LOCAL_CONTROL_CAMERA_LOCATION,
+          heading: 0,
+          pitch: -Math.PI / 2,
+          roll: 0,
+        },
+        `${role} local-control camera`,
+      );
+      validateDatacenterFixtureReceipt(side.datacenterFixtureReceipt, role);
+      assert.equal(
+        side.eventTimingCapture?.policy,
+        evidence.eventTimingPlan.policy,
+      );
+      const samples = validateInteractionSide(
+        side.localControl,
+        `localControl ${role}`,
+        DATACENTER_FIXTURE_FEATURE_COUNT,
+        4,
+        true,
+      );
+      const durations = validateInteractionEventTiming(
+        side.eventTimingCapture,
+        side.localControl,
+      );
+      local[role] = {
+        sampleCount: samples.length,
+        clickToAcceptedIntentP95Ms: p95(
+          samples.map((sample) => sample.clickToAcceptedIntentMs),
+        ),
+        clickToNextRenderingP95Ms: p95(durations),
+        clickToFullReadyStateP95Ms: p95(
+          samples.map((sample) => sample.inputToStateMs),
+        ),
+        clickToFullRenderedReadinessP95Ms: p95(
+          samples.map((sample) => sample.inputToRenderedFrameMs),
+        ),
+      };
+    }
+    const replaySide = evidence.builds.candidate;
+    const replaySetup = replaySide.replayCameraSetup;
+    assert.equal(replaySetup?.routeId, REPLAY_CAMERA_ROUTE_ID);
+    assert.deepEqual(replaySetup.requestedLocation, REPLAY_CAMERA_LOCATION);
+    assertCameraPosesClose(
+      replaySetup.observedPose,
+      { ...REPLAY_CAMERA_LOCATION, heading: 0, pitch: -Math.PI / 2, roll: 0 },
+      'candidate replay camera',
+    );
+    const replaySamples = validateInteractionSide(
+      replaySide.loadedReplaySeek,
+      'loadedReplaySeek candidate',
+      null,
+      4,
+      true,
+    );
+    const failures = [];
+    if (local.candidate.clickToAcceptedIntentP95Ms > LOCAL_CONTROL_LIMIT_MS)
+      failures.push('candidate accepted-intent p95 exceeds 100 ms');
+    if (local.candidate.clickToNextRenderingP95Ms > LOCAL_CONTROL_LIMIT_MS)
+      failures.push('candidate native next-rendering p95 exceeds 100 ms');
+    for (const key of [
+      'clickToFullReadyStateP95Ms',
+      'clickToFullRenderedReadinessP95Ms',
+    ])
+      if (local.candidate[key] > local.baseline[key] * 1.1)
+        failures.push(`${key} regression exceeds 10%`);
+    return {
+      ...result,
+      status: 'diagnostic',
+      sourceStatus: evidence.status,
+      localControl: local,
+      candidateReplay: {
+        sampleCount: replaySamples.length,
+        inputToStateP95Ms: p95(
+          replaySamples.map((sample) => sample.inputToStateMs),
+        ),
+        inputToRenderedFrameP95Ms: p95(
+          replaySamples.map((sample) => sample.inputToRenderedFrameMs),
+        ),
+      },
+      limits: {
+        localControlP95Ms: LOCAL_CONTROL_LIMIT_MS,
+        loadedReplaySeekP95Ms: REPLAY_SEEK_LIMIT_MS,
+        fullReadinessRegressionPct: STARTUP_REGRESSION_LIMIT_PCT,
+      },
+      failures,
+    };
+  } catch (error) {
+    return { ...result, reason: error.message };
+  }
 }
 
 export const QUALIFICATION_METRIC_THRESHOLDS = Object.freeze({

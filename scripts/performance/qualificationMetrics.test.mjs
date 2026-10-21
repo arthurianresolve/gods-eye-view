@@ -11,6 +11,7 @@ import {
 } from '../../src/recording/index.js';
 import {
   evaluateQualificationMetrics,
+  evaluateInterruptedInteractionDiagnostics,
   QUALIFICATION_METRIC_THRESHOLDS,
   QUALIFICATION_NATIVE_WINDOW_ENVIRONMENT_SCHEMA,
   QUALIFICATION_NATIVE_WINDOW_MODE,
@@ -5089,5 +5090,95 @@ test('qualification replay fixture contract matches persisted correction rows an
         QUALIFICATION_REPLAY_FIXTURE_CONTRACT,
       ),
     { actual: 4000, expected: 3000 },
+  );
+});
+
+test('interrupted replay retains complete local diagnostics without granting acceptance', () => {
+  const fixture = directIdentityMetricEvidence();
+  const evidence = fixture.interactionEvidence;
+  evidence.status = 'failed';
+  evidence.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V6;
+  evidence.localReadinessRegistrationPolicy =
+    LOCAL_READINESS_REGISTRATION_POLICY;
+  for (const side of Object.values(evidence.builds)) {
+    Object.assign(side.eventTimingCapture, INTERACTION_EVENT_TIMING_PLAN_V6);
+    side.interactionProtocol =
+      'trusted-click-event-timing-prerender-postrender-witness-v7';
+    side.localReadinessRegistrationPolicy = LOCAL_READINESS_REGISTRATION_POLICY;
+    for (const sample of side.localControl)
+      sample.localReadinessRegistration = {
+        policy: LOCAL_READINESS_REGISTRATION_POLICY,
+        generation: sample.generation,
+        intentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+        completedAtMs: sample.acceptedIntentAtMs + 1,
+        registeredAtMs: sample.acceptedIntentAtMs + 2,
+      };
+  }
+  evidence.builds.baseline.interactionStatus = 'failed';
+  evidence.builds.baseline.loadedReplaySeek = [];
+  evidence.builds.baseline.identity.nativeWindowViewport.restores = [];
+  evidence.builds.baseline.identity.nativeWindowViewport.after = null;
+  evidence.sourceIdentity = {
+    kind: 'predeclared-build-receipt-identity-only-v1',
+    planSha256: fixture.context.planSha256,
+    evidenceSha256: null,
+  };
+  const sourceCaptures = {
+    comparisonEligible: false,
+    performanceEligible: false,
+    plan: { sha256: fixture.context.planSha256 },
+    application: {
+      baseline: '1'.repeat(40),
+      candidate: '2'.repeat(40),
+    },
+  };
+  const diagnose = (value) =>
+    evaluateInterruptedInteractionDiagnostics({
+      schema: 'gev-qualification-capture/v1',
+      status: 'failed',
+      interactionEvidence: value,
+      sourceCaptures,
+    });
+  const diagnostic = diagnose(evidence);
+  assert.equal(diagnostic.status, 'diagnostic', diagnostic.reason);
+  assert.equal(diagnostic.acceptanceEligible, false);
+  assert.equal(diagnostic.localControl.baseline.sampleCount, 20);
+  assert.equal(diagnostic.localControl.candidate.sampleCount, 20);
+  assert.equal(diagnostic.candidateReplay.sampleCount, 20);
+  for (const mutate of [
+    (value) => value.builds.baseline.localControl.pop(),
+    (value) => value.builds.candidate.loadedReplaySeek.pop(),
+    (value) => {
+      value.builds.baseline.localControl[0].expectedLayerEnabled = false;
+    },
+    (value) => {
+      value.builds.baseline.foregroundIntegrity.observations[0].focused = false;
+    },
+    (value) => {
+      value.builds.candidate.browserClose.closeCompleted = false;
+    },
+    (value) => {
+      value.builds.candidate.applicationCommit = '3'.repeat(40);
+    },
+    (value) => {
+      value.builds.baseline.identity.nativeWindowViewport.before = null;
+    },
+  ]) {
+    const invalid = structuredClone(evidence);
+    mutate(invalid);
+    assert.equal(diagnose(invalid).status, 'failed');
+  }
+  assert.equal(
+    evaluateInterruptedInteractionDiagnostics({
+      schema: 'gev-qualification-capture/v1',
+      status: 'failed',
+      interactionEvidence: evidence,
+      sourceCaptures: {
+        ...sourceCaptures,
+        plan: { sha256: '0'.repeat(64) },
+      },
+    }).status,
+    'failed',
   );
 });
