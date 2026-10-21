@@ -74,6 +74,21 @@ Those failed and partial attempts remain archived on VM105. Further attribution
 requires the formal paused-frame boundary and identical visual state; neither
 a speculative runtime revert nor a weaker screenshot gate is adopted.
 
+That missing attribution is now supplied by the [paused-frame CCTV control](performance-evidence/s69-native-matrix-20261019/paused-empty-overlay-attribution-20261021.json).
+On the exact `86abeb79` fixture and physical Intel UHD 620, alternating only
+the empty whiteboard's display state under the HUD-visible, phase-zero capture
+changes 12,223 pixels by at most 1/255. All 12,223 positions occur in the
+failed formal pair's 12,249 changed pixels, with the same per-channel deltas.
+Same-state repeats vary by only 30 and 8 pixels. All four debugger sessions,
+the fixture, interception and browser close normally; the raw images and
+scripts have an independently verified VM105 archive. This establishes the
+cause of the large compositor difference in that pair, while the separate
+small same-build variation remains. The unproved empty-overlay suppression
+is reverted at `4e7e3f4c`; seven focused annotation tests, package boundaries,
+formatting and a production build pass. The old visual failure remains failed.
+Fresh exact-runtime repeated visual qualification and native latency are still
+required before hardware acceptance; a diagnostic toggle is not a visual pass.
+
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
 GeoJSON preview/apply/save/reload rendering and the synthetic demo against a

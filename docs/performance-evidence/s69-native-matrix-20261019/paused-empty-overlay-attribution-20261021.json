@@ -1,0 +1,48 @@
+{
+  "schema": "gev-paused-empty-overlay-attribution/v1",
+  "recordedDate": "2026-10-21",
+  "scope": "diagnostic attribution, not visual acceptance or a latency comparison",
+  "formalFailedComparison": {
+    "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+    "state": "pair-1 still-settled",
+    "changedPixels": 12249,
+    "rawArchiveSha256": "7ce45e4a07a92aff45ebf4287f22a3e44077bbede2dfc99d5f01e1bf83095902"
+  },
+  "controlledToggle": {
+    "applicationCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+    "fixture": "qa-cctv-still-hud-v1",
+    "conditions": "same CCTV fixture, 1440x900 CSS viewport, 2880x1800 drawing buffer, HUD visible, manual DENSE 75%, fixed wall time; four alternating hidden/shown/hidden/shown captures",
+    "renderer": "ANGLE Intel UHD Graphics 620 D3D11",
+    "capture": "existing atomic debugger-paused phase-zero guard; before/after HUD revision and phase checked; complete formal pointer sweep and build-receipt checks not run",
+    "hiddenToShownChangedPixels": 12223,
+    "maximumChannelDelta": 1,
+    "hiddenRepeatChangedPixels": 30,
+    "shownRepeatChangedPixels": 8,
+    "repeatMaximumChannelDelta": 7,
+    "pauseCleanup": "resume, disable and detach confirmed for all four captures",
+    "browserCleanup": "fixture/interception cleanup and owned Chrome/foreground-helper close confirmed"
+  },
+  "attribution": {
+    "changedPixelPositionOverlap": 12223,
+    "formalChangedPixelCoverage": 0.9978773777451221,
+    "toggleChangedPixelCoverage": 1,
+    "matchingPerChannelDeltas": 12223,
+    "deltaAgreement": 1,
+    "interpretation": "The empty-overlay visibility change accounts for the large one-level panel-raster difference in this failed formal still-state pair. Small independent same-build variation remains."
+  },
+  "decision": {
+    "commit": "4e7e3f4cf419a0b7ca0400bb127cb79ddb3c0a66",
+    "change": "Revert only the unproved empty-whiteboard display suppression and its related tests; restore the baseline compositor behavior.",
+    "focusedValidation": "Seven annotation tests, package boundaries (1077 modules), formatting and production build pass. Exact new-runtime visual qualification and native latency are still pending.",
+    "acceptance": "not accepted yet; this diagnostic does not replace the predeclared repeated full-image comparison"
+  },
+  "evidenceArchive": {
+    "machine": "VM105",
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/paused-cctv-overlay-20261021.tar",
+    "bytes": 3966976,
+    "sha256": "2edd95d94050b12984ca480c20713e9131e8eecc1625eb789dec30867ffb2117",
+    "contents": "four PNGs, capture summary, attribution result and both diagnostic scripts",
+    "independentReadback": "VM105 SHA-256 and eight archive paths verified after transfer"
+  }
+}
