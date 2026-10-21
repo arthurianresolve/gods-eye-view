@@ -229,6 +229,19 @@ normal style/browser/helper cleanup. All 13 records (1,450,955 bytes) are
 independently verified on VM105. No runtime change is adopted, no acceptance
 gate is relaxed, and no further row-isolation run is justified by these results.
 
+A separate, reviewable layer-panel refresh change at `68e4d196` caches row
+references only while their owning panel is mounted, discards detached rows,
+and passes one live layer snapshot to both the toggle and weather readouts.
+It removes repeated DOM selector searches and a second `getAll()` call on each
+status refresh without changing layer state, label content, density or Cesium
+render settings. Sixteen focused panel tests pass on Windows Node 24, including
+changed status, keyboard focus, detached-row cleanup and weather-readout
+content; formatting, import direction and package boundaries pass. This is
+implemented and automatically checked code, **not yet a demonstrated native
+latency improvement**. Exact-commit CI, browser visual checks and affected
+Windows comparison remain pending. It receives no 100 ms latency, S69 matrix
+or final soak credit, and production remains unchanged.
+
 Candidate preflight discovered that **all 886 previously verified USB cache
 files now read as same-length zeros**. New writes to D: were stopped; the
 originals and verified VM copies were retained. Recovery uses 873 unchanged,
