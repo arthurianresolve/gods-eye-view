@@ -38,7 +38,7 @@ instrumented [macOS seed diagnostic](https://github.com/arthurianresolve/gods-ey
 at `ae49a6f9` completed successfully: its bounded ledger records the original
 click, admitted apply, save and refresh, with no dropped events. It did not
 reproduce the timeout and does not establish its cause or replace full recovery
-acceptance. The original CI failure remains unresolved. The diagnostic changes
+acceptance. The original CI failure's cause remains unproven. The diagnostic changes
 only its disposable historical installation and is not part of the candidate.
 
 Recovery-fixture readiness is now tightened at two public UI boundaries:
@@ -48,7 +48,36 @@ than accepting retained summary text. Thirteen focused Node 24 tests pass,
 including the intermediate-save and hidden-stale-preview cases. This fixes
 observable fixture races without changing application rendering, repeating
 clicks or extending deadlines. It is not proof of the earlier macOS timeout's
-cause; full recovery verification remains required.
+cause. The corrected head `3565b92e` now passes
+[all seven selected CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39532108907),
+including full Windows, Linux and macOS installation/update recovery, both Node
+suites, Windows onboarding and the Street Level browser gate. Its separate
+[release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39532108975)
+also passes. This closes the current recovery verification gap without
+reclassifying the earlier failed run or establishing its unique cause. It does
+not close the independent hardware latency gate.
+
+The right rail now computes available height from the same rounded coordinate
+that it writes to CSS. Previously a fractional transition target and its
+settled layout-unit position could leave the painted top unchanged while
+alternating the available height by 0.1 CSS px, causing redundant observer
+work. The new regression fails against `3565b92e` and passes with the fix;
+all 74 focused rail tests pass on Node 24. Mounted checks preserve exact
+pixels for idle, settled status, scrolling/keyboard focus and compact-tail
+cases. The broader optical fixture remains incomplete: an identical-code
+control exposed initialization nondeterminism, and a disclosure capture still
+moves during acquisition. These failures are preserved; there is no blanket
+visual or latency acceptance for the rounding correction.
+
+A separate row-compositing prototype is rejected. In the single declared
+six-action comparison, control native durations were **200/184/48/96/48/96 ms**
+and prototype durations were **264/136/48/96/48/96 ms**. Warmed results are
+identical and the first ON is worse; no consistent benefit is established.
+The original attempt failed before its first input because the harness
+rejected an empty control stylesheet. Its corrected attempt completed both
+roles with unchanged settings/populations and normal browser cleanup. The
+prototype is not part of the runtime, and neither attempt earns formal
+twenty-sample or final-soak credit.
 
 The separate private child, `3a16f8de`, corrects a source-owned demand mismatch:
 known hidden-source fade states retained scene demand even though the existing

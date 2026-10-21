@@ -297,9 +297,17 @@ export function layoutRightPanelRail({
     viewportHeight,
     getComputedStyle,
   );
-  const alignedTop = Number.isFinite(leftStackTop)
-    ? leftStackTop
-    : viewportHeight * 0.26;
+  // The rail writes its top at 0.1 CSS-pixel precision below. Use that same
+  // coordinate for allocation: a transition target (21.48px) and its settled
+  // layout-unit rect (21.46875px) otherwise both write 21.5px but alternate
+  // between 494.0px and 494.1px of height in a 537px viewport. That changes the
+  // allocation and wakes observers despite an unchanged painted top.
+  const alignedTop = Number(
+    (Number.isFinite(leftStackTop)
+      ? leftStackTop
+      : viewportHeight * 0.26
+    ).toFixed(1),
+  );
   const obstacleRects = [];
 
   for (const obstacle of obstacles) {

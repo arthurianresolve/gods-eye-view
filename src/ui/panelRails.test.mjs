@@ -1140,6 +1140,66 @@ test('right rail aligns to where a mid-transition left rail settles', () => {
   );
 });
 
+test('right allocation stays stable when a fractional transition target settles to layout units', () => {
+  const f = fixture('right');
+  f.options.windowRef.innerHeight = 537;
+  const left = f.options.leftStack;
+  left.rect.top = 100;
+  left.computed.top = '100px';
+  left.getAnimations = () => [
+    {
+      transitionProperty: 'top',
+      effect: { getKeyframes: () => [{ top: '100px' }, { top: '21.48px' }] },
+    },
+  ];
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-safe-top'),
+    '21.5px',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '494.0px',
+  );
+  const styleWrites = f.stack.writes.length;
+  const metadataWrites = f.stack.datasetWrites.length;
+
+  left.rect.top = 21.46875;
+  left.computed.top = '21.46875px';
+  left.getAnimations = () => [];
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '494.0px',
+  );
+  assert.equal(f.stack.dataset.availableHeight, '494.0');
+  assert.equal(
+    f.stack.writes.length,
+    styleWrites,
+    'no allocation rewrite after settling',
+  );
+  assert.equal(
+    f.stack.datasetWrites.length,
+    metadataWrites,
+    'no metadata churn after settling',
+  );
+
+  left.rect.top = 22.46875;
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-safe-top'),
+    '22.5px',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '493.0px',
+  );
+  assert.ok(
+    f.stack.writes.length > styleWrites,
+    'real movement still updates allocation',
+  );
+});
+
 test('right rail falls back to the committed left target when the transition end is unreadable', () => {
   const f = animatingLeftRail({ keyframes: false });
   f.run();
