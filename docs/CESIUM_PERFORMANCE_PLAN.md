@@ -15,13 +15,13 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                    | Hardware qualification                                                                                    |
-| ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                 | Results have their recorded workload/revision scope; no blanket current-candidate pass                    |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                           | Performance objectives and final acceptance unresolved                                                    |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                   | Final shared qualification pending                                                                        |
-| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` CI and signed workflow pass; strict visual acquisition fails. Current runtime `33d3d72c` passes focused tests and a local production build; exact-head release workflow passes, CI is pending. | Local-control latency, new-runtime visual equivalence, startup and matrix qualification remain unresolved |
-| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                                                      | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending      |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                 | Hardware qualification                                                                                                                          |
+| ------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                              | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                          |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                        | Performance objectives and final acceptance unresolved                                                                                          |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                | Final shared qualification pending                                                                                                              |
+| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` results remain historical. Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `32be0e46` passes CI and signed release verification. | Source-bound visual equivalence passes on the physical Intel UHD 620; local-control latency, startup and matrix qualification remain unresolved |
+| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                                                                   | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending                                            |
 
 ### Latest investigation checkpoint — 21 October 2026
 
@@ -111,7 +111,35 @@ raw proof to that deadline in the unchanged full-image validator. Earlier
 five-second plans remain readable under their original contract. The longer
 deadline does not relax the required pointer extrema, stable-frame proof,
 image controls or pixel comparison. Eleven focused sweep/plan tests pass;
-fresh three-pair acquisition under the new plan remains pending.
+fresh three-pair acquisition under the new plan follows below.
+
+The first complete `33d3d72c` three-pair acquisition with a 10,000 ms pointer
+deadline still **fails** the older `repeated-full-image-controls-v1` policy.
+All 24 PNGs were acquired with normal cleanup, but a baseline still image
+lacked an independently reproduced complete-image control. A separate decoded
+image analysis found same-build logo variation of up to 7,212 pixels, while at
+most eight changed pixels lay outside the calibrated logo rectangle. Source
+files for the logo, gaze, styles, templates and frame UI match the previously
+calibrated decoration policy on both builds. This failure remains failed; its
+images were not selected or retrospectively reinterpreted as an acceptance
+pass.
+
+The [fresh source-bound visual receipt](performance-evidence/s69-native-matrix-20261019/visual-33d3d72c-20261021.json)
+records a separate predeclared `source-bound-decoration-quantization-v1`
+batch on Windows Chrome 155 / physical Intel UHD 620 D3D11. The existing
+source-calibrated validator **passes** all 24 images and 60 unordered pairwise
+comparisons across still, HUD-visible, HUD-hidden and HUD-restored states.
+Every changed pixel outside the calibrated logo and badge support is zero;
+maximum logo RGB variation is 1 and maximum badge variation is 7. Alpha,
+protected interior content, source hashes, viewport, drawing-buffer size,
+settings, camera, timestamp and populations satisfy the existing contract.
+All six fresh browser documents and their debugger/interception ownership
+clean up. The raw 35-file packet has a local SHA-256-bound archive; independent
+VM105 readback is pending. This is a physical Windows visual pass for the exact
+`33d3d72c` runtime under the **source-bound** policy, not a pass of the failed
+full-image policy or a latency/performance result. [CI run 39629558657](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629558657)
+and [signed release run 39629559144](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629559144)
+pass at review head `32be0e46`.
 
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
