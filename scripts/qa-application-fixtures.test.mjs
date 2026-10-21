@@ -5,6 +5,7 @@ import {
   cleanupFixturePageDiagnostics,
   flushFixturePageConsoleOwnership,
   bootFixturePage,
+  assertPersistentWorkspace,
   importFixtureGeometry,
   isImportPreviewReadyForFixtureInPage,
   isWorkspaceSaveCompleteForFixtureInPage,
@@ -261,6 +262,66 @@ test('import fixture releases the document mutation root after the status wait',
     events.indexOf('status-mutation-wait') <
       events.indexOf('document-root-dispose'),
   );
+});
+
+test('persistent workspace verification waits for restored geometry before reading it', async () => {
+  const events = [];
+  const expected = {
+    id: 'saved-workspace',
+    sha256: 'asset-digest',
+    bundle: JSON.stringify({ workspace: 'saved-workspace' }),
+    settings: { 'gev:detection-allocation:v1': 'ELASTIC' },
+  };
+  let evaluateCount = 0;
+  const page = {
+    async waitForFunction(predicate, options = {}, id) {
+      if (id !== undefined) {
+        assert.equal(id, expected.id);
+        events.push('workspace-option-wait');
+        return;
+      }
+      assert.equal(options.timeout, 30_000);
+      assert.equal(options.polling, 50);
+      assert.match(predicate.toString(), /featureCount/);
+      events.push('renderer-readiness-wait');
+    },
+    async select(selector, id) {
+      assert.equal(selector, '.workspace-library [data-workspace-select]');
+      assert.equal(id, expected.id);
+      events.push('workspace-select');
+    },
+    async evaluate(_operation) {
+      evaluateCount += 1;
+      if (evaluateCount === 1) {
+        events.push('workspace-restore');
+        return;
+      }
+      events.push('persistent-state-read');
+      return {
+        saved: true,
+        version: 1,
+        sha256: expected.sha256,
+        bundle: expected.bundle,
+        drawn: 1,
+        settings: expected.settings,
+      };
+    },
+  };
+
+  const result = await assertPersistentWorkspace(page, expected);
+  assert.deepEqual(result, {
+    assetSha256: expected.sha256,
+    renderedFeatures: 1,
+    settingsMatch: true,
+    workspaceBundleMatches: true,
+  });
+  assert.deepEqual(events, [
+    'workspace-option-wait',
+    'workspace-select',
+    'workspace-restore',
+    'renderer-readiness-wait',
+    'persistent-state-read',
+  ]);
 });
 
 function workspaceDisclosureFixture({ open = false, collapsed = true } = {}) {

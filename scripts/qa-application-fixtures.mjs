@@ -842,6 +842,12 @@ export async function seedPersistentWorkspace(page) {
 
 export async function assertPersistentWorkspace(page, expected) {
   await openWorkspace(page, expected.id);
+  await page.waitForFunction(
+    () =>
+      window.__godsEyeView?.importedGeometryLayer?.getState?.()?.featureCount >=
+      1,
+    { timeout: 30_000, polling: 50 },
+  );
   const actual = await page.evaluate(async (id) => {
     const app = window.__godsEyeView;
     const record = await app.workspaceLibraryPanel.library.getWorkspace(id);
