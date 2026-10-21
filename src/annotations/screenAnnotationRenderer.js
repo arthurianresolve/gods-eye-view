@@ -74,6 +74,9 @@ export function createScreenAnnotationRenderer(
     scene.camera.positionWC,
   );
   const records = new Map(); // anno.id -> { anno, group, parts }
+  // Departing marks keep their existing 360 ms fade; destroy owns the pending
+  // removals so a released renderer cannot mutate its detached SVG later.
+  const departing = new Set();
   const scratch = new Cesium.Cartesian2();
   const scratchDir = new Cesium.Cartesian3();
   // Per-point ground height cache. Marks must sit on the real surface, not at
@@ -684,13 +687,23 @@ export function createScreenAnnotationRenderer(
     rec.group.classList.remove('gev-in');
     rec.group.classList.add('gev-out');
     const node = rec.group;
-    window.setTimeout(() => {
-      try {
-        node.remove();
-      } catch {
-        /* gone */
-      }
-    }, 360);
+    const departure = { node, timer: null };
+    departing.add(departure);
+    try {
+      departure.timer = window.setTimeout(() => {
+        if (!departing.has(departure)) return;
+        try {
+          node.remove();
+        } catch {
+          /* gone */
+        } finally {
+          departing.delete(departure);
+        }
+      }, 360);
+    } catch (error) {
+      departing.delete(departure);
+      throw error;
+    }
     records.delete(anno.id);
     // Board emptied → drop accumulated height samples (natural reset point).
     if (records.size === 0) heightCache.clear();
@@ -702,6 +715,8 @@ export function createScreenAnnotationRenderer(
   }
 
   function destroy() {
+    for (const departure of departing) window.clearTimeout(departure.timer);
+    departing.clear();
     try {
       scene.postRender.removeEventListener(onPostRender);
     } catch {

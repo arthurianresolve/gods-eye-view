@@ -387,3 +387,101 @@ test('an add that throws after inserting its group unwinds instead of orphaning 
   );
   renderer.destroy();
 });
+
+test('destroy cancels departing timers while the empty board retains its compositor surface', (t) => {
+  const originals = new Map(
+    ['document', 'window', 'requestAnimationFrame'].map((key) => [
+      key,
+      globalThis[key],
+    ]),
+  );
+  const originalProjection = Cesium.SceneTransforms.worldToWindowCoordinates;
+  const timers = new Map();
+  const cancelled = [];
+  const postRenderListeners = new Set();
+  globalThis.document = fakeDocument();
+  globalThis.requestAnimationFrame = (callback) => {
+    callback();
+    return 1;
+  };
+  globalThis.window = {
+    setTimeout(callback, delay) {
+      const id = timers.size + cancelled.length + 1;
+      timers.set(id, { callback, delay });
+      return id;
+    },
+    clearTimeout(id) {
+      cancelled.push(id);
+      timers.delete(id);
+    },
+  };
+  Cesium.SceneTransforms.worldToWindowCoordinates = () => ({ x: 10, y: 10 });
+  t.after(() => {
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProjection;
+    for (const [key, value] of originals) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+  });
+  const positionWC = Cesium.Cartesian3.fromDegrees(0, 0, 1000);
+  const directionWC = Cesium.Cartesian3.normalize(
+    Cesium.Cartesian3.negate(positionWC, new Cesium.Cartesian3()),
+    new Cesium.Cartesian3(),
+  );
+  const camera = {
+    positionWC,
+    directionWC,
+    positionCartographic: { height: 1000 },
+  };
+  const scene = {
+    camera,
+    canvas: { clientWidth: 800, clientHeight: 600, width: 800, height: 600 },
+    clampToHeightSupported: false,
+    postRender: {
+      addEventListener(callback) {
+        postRenderListeners.add(callback);
+      },
+      removeEventListener(callback) {
+        postRenderListeners.delete(callback);
+      },
+    },
+  };
+  const renderer = createScreenAnnotationRenderer({
+    scene,
+    camera,
+    trackedEntity: null,
+  });
+  const board = document.body.children[0];
+  assert.notEqual(
+    board.style.display,
+    'none',
+    'empty board retains baseline display',
+  );
+  for (const id of ['one', 'two']) {
+    const anno = {
+      id,
+      type: 'label',
+      color: 'primary',
+      label: 'VISIBLE',
+      alpha: 1,
+      anchor: { lon: 0, lat: 0, height: 0 },
+    };
+    renderer.add(anno);
+    renderer.remove(anno);
+  }
+  const callbacks = [...timers.values()].map((timer) => timer.callback);
+  const remainingGroups = board.children[0].children.slice();
+  assert.deepEqual(
+    [...timers.values()].map((timer) => timer.delay),
+    [360, 360],
+  );
+  renderer.destroy();
+  assert.equal(timers.size, 0);
+  assert.equal(cancelled.length, 2);
+  assert.equal(postRenderListeners.size, 0);
+  assert.equal(board.parentNode, null);
+  for (const callback of callbacks) callback();
+  assert.deepEqual(board.children[0].children, remainingGroups);
+  renderer.destroy();
+  assert.equal(cancelled.length, 2);
+});
