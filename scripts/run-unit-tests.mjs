@@ -70,6 +70,7 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/pairedRendererExperiment.test.mjs',
   'scripts/performance/shaderProgramAttributionArtifact.test.mjs',
   'scripts/performance/importFrameDiagnostics.test.mjs',
+  'scripts/performance/importStatusDiagnostics.test.mjs',
   'scripts/performance/importPointState.test.mjs',
   'scripts/performance/importPointRepresentationComparison.test.mjs',
   'scripts/performance/importPointRepresentationBenefit.test.mjs',
