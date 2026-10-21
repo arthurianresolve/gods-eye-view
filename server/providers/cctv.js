@@ -206,7 +206,7 @@ export function cctvProxy({
 
         if (url.pathname === '/sources') {
           const body = {
-            trimmedPacks: getCctvSources.trimmedPacks?.() ?? [],
+            trimmedPacks: getCctvSources.trimmedPacks?.(sources) ?? [],
             sources: sources.map((source) => ({
               id: source.id,
               pack: source.pack,
