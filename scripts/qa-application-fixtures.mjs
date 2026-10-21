@@ -16,6 +16,12 @@ import {
   parseWebglDiagnosticMarker,
   sanitizeDiagnosticText,
 } from './performance/startupDiagnostics.mjs';
+import {
+  installImportStatusDiagnosticsInPage,
+  markImportStatusWaitReferenceInPage,
+  withImportStatusDiagnostics,
+  withImportStatusWaitRoot,
+} from './performance/importStatusDiagnostics.mjs';
 
 const fixtureDiagnostics = new WeakMap();
 
@@ -255,6 +261,9 @@ export function collectWorkspaceImportDiagnostics(input) {
   const importLayer = safeCall(() => app?.importedGeometryLayer?.getState());
   return {
     phase: String(phase).slice(0, 80),
+    importStatusProgress: safeCall(() =>
+      scope.__gevImportStatusDiagnostics?.snapshot(),
+    ),
     document: {
       readyState: scope.document.readyState,
       visibility: scope.document.visibilityState,
@@ -701,42 +710,65 @@ export async function importFixtureGeometry(
     () =>
       page.waitForFunction(
         isImportPreviewReadyForFixtureInPage,
-        // Timer polling continues when a headed page is occluded or hidden;
-        // the predicate is application state, not a rendered-frame condition.
+        // This is application state, so poll by timer instead of animation frame.
         { timeout: timeoutMs, polling: 50 },
       ),
     phaseOptions,
   );
-  await runWorkspaceFixturePhase(
+  await withImportStatusDiagnostics(
     page,
-    'import-apply-click',
-    () => clickControl(page, '.workspace-library [data-action="apply-import"]'),
-    phaseOptions,
-  );
-  await runWorkspaceFixturePhase(
-    page,
-    'import-apply-status-wait',
     () =>
-      page.waitForFunction(
-        () =>
-          document
-            .querySelector('.workspace-library [data-import-status]')
-            ?.textContent.includes('Imported 1 features'),
-        { timeout: timeoutMs, polling: 50 },
+      runWorkspaceFixturePhase(
+        page,
+        'import-status-observer-install',
+        () => page.evaluate(installImportStatusDiagnosticsInPage),
+        phaseOptions,
       ),
-    phaseOptions,
-  );
-  await runWorkspaceFixturePhase(
-    page,
-    'import-layer-state-wait',
-    () =>
-      page.waitForFunction(
+    async (ownerToken) => {
+      await runWorkspaceFixturePhase(
+        page,
+        'import-apply-click',
         () =>
-          window.__godsEyeView.importedGeometryLayer.getState().featureCount >=
-          1,
-        { timeout: timeoutMs, polling: 50 },
-      ),
-    phaseOptions,
+          clickControl(page, '.workspace-library [data-action="apply-import"]'),
+        phaseOptions,
+      );
+      await runWorkspaceFixturePhase(
+        page,
+        'import-apply-status-wait',
+        async () => {
+          const documentRoot = await page.evaluateHandle(() => document);
+          return withImportStatusWaitRoot(documentRoot, async () => {
+            // Record the browser-clock reference first. It precedes Puppeteer's
+            // host-side wait timer, so the resulting comparison is conservative.
+            await page.evaluate(
+              markImportStatusWaitReferenceInPage,
+              ownerToken,
+              timeoutMs,
+            );
+            return await page.waitForFunction(
+              () =>
+                document
+                  .querySelector('.workspace-library [data-import-status]')
+                  ?.textContent.includes('Imported 1 features'),
+              { timeout: timeoutMs, polling: 'mutation', root: documentRoot },
+            );
+          });
+        },
+        phaseOptions,
+      );
+      await runWorkspaceFixturePhase(
+        page,
+        'import-layer-state-wait',
+        () =>
+          page.waitForFunction(
+            () =>
+              window.__godsEyeView.importedGeometryLayer.getState()
+                .featureCount >= 1,
+            { timeout: timeoutMs, polling: 50 },
+          ),
+        phaseOptions,
+      );
+    },
   );
 }
 

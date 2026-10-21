@@ -201,8 +201,13 @@ test('native-window fixture skips emulation only on its explicit opt-in path', a
   await cleanupFixturePageDiagnostics(page);
 });
 
-test('import fixture releases the selector ElementHandle it does not retain', async () => {
+test('import fixture releases the document mutation root after the status wait', async () => {
   const events = [];
+  const documentRoot = {
+    async dispose() {
+      events.push('document-root-dispose');
+    },
+  };
   const page = {
     async waitForSelector(selector, options) {
       events.push('selector-wait');
@@ -221,7 +226,17 @@ test('import fixture releases the selector ElementHandle it does not retain', as
           : 'import-stage',
       );
     },
-    async waitForFunction() {},
+    async evaluateHandle(operation) {
+      assert.match(operation.toString(), /document/);
+      events.push('document-root-create');
+      return documentRoot;
+    },
+    async waitForFunction(_predicate, options = {}) {
+      if (options.polling === 'mutation') {
+        assert.equal(options.root, documentRoot);
+        events.push('status-mutation-wait');
+      }
+    },
   };
 
   await importFixtureGeometry(page, 'Persistent fixture', {
@@ -238,6 +253,14 @@ test('import fixture releases the selector ElementHandle it does not retain', as
     'selector-phase-complete',
     'import-stage',
   ]);
+  assert.ok(
+    events.indexOf('document-root-create') <
+      events.indexOf('status-mutation-wait'),
+  );
+  assert.ok(
+    events.indexOf('status-mutation-wait') <
+      events.indexOf('document-root-dispose'),
+  );
 });
 
 function workspaceDisclosureFixture({ open = false, collapsed = true } = {}) {
