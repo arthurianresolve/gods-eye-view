@@ -20,8 +20,8 @@ completion is separate from performance acceptance.
 | S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                              | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                          |
 | S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                        | Performance objectives and final acceptance unresolved                                                                                          |
 | S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                | Final shared qualification pending                                                                                                              |
-| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` results remain historical. Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `32be0e46` passes CI and signed release verification. The replay fixture now returns deterministic empty live flights and records bounded selection/materialization diagnostics. | Source-bound visual equivalence passes on the physical Intel UHD 620. The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved |
-| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                                                                   | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending                                            |
+| S69     | Open: complete candidate qualification                       | Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `82d83475` passes all seven selected CI jobs and signed release verification. The replay fixture now returns deterministic empty live flights and records bounded selection/materialization diagnostics. | Source-bound visual equivalence passes on the physical Intel UHD 620. The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved |
+| S70     | Open: finish private recovery checks and deliver             | The signed PR-merge archive is independently verified on VM105; its private package passes workspace and evidence-transfer browser journeys. Production remains on `e7a878e`. | Packaged build still needs its own candidate HTTPS and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending |
 
 ### Latest investigation checkpoint — 21 October 2026
 
@@ -168,6 +168,34 @@ absolute-latency evaluation, but a motion/replay improvement percentage
 requires a visually valid comparable baseline. A compatible baseline must
 remain a separately identified build, not a silent replacement of the frozen
 `e7a878e` comparison reference.
+
+The [private signed-package receipt](performance-evidence/s69-native-matrix-20261019/signed-package-pr6-20261021.json)
+records a new independent S70 check. Review head `82d83475` passes all seven
+selected [CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39638226367)
+and the [signed release workflow](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39638226424).
+The latter builds PR merge commit `1f3e4a18`; its Git tree matches review head
+`82d83475` exactly. GitHub attestation, the archive SHA-256 and all 2,129
+packaged file hashes verify. VM105 independently checks the archive and
+manifest, then serves an isolated runtime copy on loopback. The main served
+JavaScript matches its signed manifest hash. Private HTTP checks cover the
+root, immutable asset cache, blocked host, unknown API and rejected private
+archive target. Real Chrome journeys against that signed package pass
+workspace save/duplicate/conflict/reopen/import and evidence-reference
+attachment, pin/save/reload and transfer to another browser profile.
+
+The evidence journey first failed before acquisition because its QA script
+imported `/src/data/contextStore.js`, a Vite development-only URL absent from
+production packages. QA commit `81fce327` keeps native Entity selection on
+development builds and uses an actual materialized datacenter analyst record
+to exercise the same inspector event on packages. The corrected signed-package
+journey passes. The private host and tunnel are closed; the existing VM105
+service remains on `e7a878e`, and its public HTTPS endpoint is healthy. This
+does **not** establish candidate HTTPS or transfer the earlier `33d3d72c`
+visual pass to the differently version-stamped signed build. Those checks,
+the paired performance gates, final Ampfing soak and release promotion remain
+open. Automatic approval review rejected removal of the temporary local
+download; its verified VM copy is retained and no further GPU capture starts
+below the Windows disk safety floor.
 
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
