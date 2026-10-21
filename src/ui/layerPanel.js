@@ -235,7 +235,6 @@ export class LayerPanel {
     this._removers = [];
     this._destroyed = false;
     this._cancelRowControlsRefresh = null;
-    this._rowNodes = new Map();
     this._recentImageryFactory = null;
     this._recentImageryPanel = null;
   }
@@ -295,7 +294,6 @@ export class LayerPanel {
   }
   _releaseBindings() {
     this._generation++;
-    this._rowNodes.clear();
     this._cancelRowControlsRefresh?.();
     this._cancelRowControlsRefresh = null;
     for (const remove of this._removers.splice(0)) remove();
@@ -408,8 +406,6 @@ export class LayerPanel {
 
       row.appendChild(topRow);
       row.appendChild(bottomRow);
-      let controls = null;
-      let list = null;
 
       // Optional per-layer sub-controls (chips + color legend). The click
       // listener is delegated and attached once here, so it survives
@@ -423,7 +419,7 @@ export class LayerPanel {
         );
         if (unsubscribe) this._removers.push(unsubscribe);
         if (!readout) {
-          controls = document.createElement('div');
+          const controls = document.createElement('div');
           controls.className = 'data-toggle-controls';
           this._bind(controls, 'click', (event) => {
             const button = event.target?.closest?.('.data-toggle-chip');
@@ -442,7 +438,7 @@ export class LayerPanel {
           // An ordered list below the chips, for a layer whose row carries a
           // sequence (turn-by-turn directions). Its own delegated listener, its
           // own container — the chip row stays a chip row.
-          list = document.createElement('ol');
+          const list = document.createElement('ol');
           list.className = 'data-row-list';
           list.hidden = true;
           this._bind(list, 'click', (event) => {
@@ -460,14 +456,6 @@ export class LayerPanel {
       }
 
       this._toggleContainer.appendChild(row);
-      this._rowNodes.set(layer.id, {
-        row,
-        button: toggle,
-        count: readout ? null : count,
-        meta: bottomRow,
-        controls,
-        list,
-      });
     }
     this._refreshWeatherPanel();
   }
@@ -495,9 +483,9 @@ export class LayerPanel {
     this._refreshTogglePanel();
   }
 
-  _refreshWeatherPanel(layers = this.getAll()) {
+  _refreshWeatherPanel() {
     this._weatherPanel?.update(
-      layers
+      this.getAll()
         .filter(
           (layer) =>
             layer.enabled &&
@@ -646,45 +634,34 @@ export class LayerPanel {
       this.onHiddenRefresh();
       return;
     }
-    const layers = this.getAll();
-    for (const layer of layers) {
-      let nodes = this._rowNodes.get(layer.id);
-      // The panel owns rows between mounts. If another owner has replaced a
-      // row, discard the stale reference and reconcile against the live DOM.
-      if (
-        nodes &&
-        (nodes.row.parentNode ?? nodes.row.parent) !== this._toggleContainer
-      ) {
-        this._rowNodes.delete(layer.id);
-        nodes = null;
-      }
-      const row =
-        nodes?.row ||
-        this._toggleContainer.querySelector(`[data-layer-id="${layer.id}"]`);
+    for (const layer of this.getAll()) {
+      const row = this._toggleContainer.querySelector(
+        `[data-layer-id="${layer.id}"]`,
+      );
       if (!row) continue;
 
-      const btn = nodes?.button || row.querySelector('.data-toggle-btn');
+      const btn = row.querySelector('.data-toggle-btn');
       if (btn) {
         this._syncToggleButton(btn, layer);
       }
 
-      const count = nodes ? nodes.count : row.querySelector('.data-count');
+      const count = row.querySelector('.data-count');
       if (count) {
         this._syncCount(row, count, layer.stats);
       }
 
-      const meta = nodes?.meta || row.querySelector('.data-toggle-meta');
+      const meta = row.querySelector('.data-toggle-meta');
       if (meta) {
         setRowText(meta, this._buildMetaText(layer));
       }
 
       this._syncRowControls(
-        nodes ? nodes.controls : row.querySelector('.data-toggle-controls'),
+        row.querySelector('.data-toggle-controls'),
         layer,
-        nodes ? nodes.list : row.querySelector('.data-row-list'),
+        row.querySelector('.data-row-list'),
       );
     }
-    this._refreshWeatherPanel(layers);
+    this._refreshWeatherPanel();
   }
 
   _buildMetaText(layer) {
