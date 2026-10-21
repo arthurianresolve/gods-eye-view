@@ -65,6 +65,10 @@ export function createRepeatedVisualPlan(
     !decoration || !legacyAcquisition,
     'Decoration policy requires full pointer acquisition',
   );
+  const pointerTimeoutMs =
+    options['full-extent-timeout-ms'] === undefined
+      ? 5000
+      : Number(options['full-extent-timeout-ms']);
   return {
     schema: REPEATED_VISUAL_SCHEMA,
     policy: decoration
@@ -73,7 +77,11 @@ export function createRepeatedVisualPlan(
     application,
     visualHarnessCommit: options['visual-harness-sha'],
     ...(!legacyAcquisition
-      ? { fullExtentPointerSweep: createFullExtentPointerSweepPlan() }
+      ? {
+          fullExtentPointerSweep: createFullExtentPointerSweepPlan({
+            timeoutMs: pointerTimeoutMs,
+          }),
+        }
       : {}),
     roleOrder: REPEATED_VISUAL_ORDER,
     states: FINAL_VISUAL_STATES,
@@ -113,6 +121,9 @@ export async function validateRepeatedVisualQualification({
         'baseline-app-sha': plan.application?.baselineSha,
         'candidate-app-sha': plan.application?.candidateSha,
         'visual-harness-sha': plan.visualHarnessCommit,
+        ...(plan.fullExtentPointerSweep?.timeoutMs
+          ? { 'full-extent-timeout-ms': plan.fullExtentPointerSweep.timeoutMs }
+          : {}),
         ...(plan.policy === DECORATION_QUANTIZATION_POLICY
           ? { 'raster-policy': plan.policy }
           : {}),
@@ -161,6 +172,15 @@ export async function validateRepeatedVisualQualification({
       plan.fullExtentPointerSweep?.policy,
       'Pair pointer acquisition differs from the predeclared plan',
     );
+    if (plan.fullExtentPointerSweep)
+      for (const state of report.states)
+        for (const side of ['baseline', 'candidate'])
+          assert.equal(
+            state.fullExtentPointerSweep?.[side]?.acquisition?.contract
+              ?.timeoutMs,
+            plan.fullExtentPointerSweep.timeoutMs ?? 5000,
+            'Pointer sweep deadline differs from the predeclared plan',
+          );
     assert.equal(report.comparisonEligible, false);
     assert.equal(report.evidenceScope, 'repeated-control-acquisition-only');
     assert.deepEqual(

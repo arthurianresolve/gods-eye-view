@@ -15,13 +15,13 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                           | Hardware qualification                                                                                    |
-| ------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                        | Results have their recorded workload/revision scope; no blanket current-candidate pass                    |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                  | Performance objectives and final acceptance unresolved                                                    |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                          | Final shared qualification pending                                                                        |
-| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` CI and signed workflow pass; strict visual acquisition fails. Current runtime `33d3d72c` passes focused tests and a local production build; exact-head CI is pending. | Local-control latency, new-runtime visual equivalence, startup and matrix qualification remain unresolved |
-| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                             | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending      |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                    | Hardware qualification                                                                                    |
+| ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                 | Results have their recorded workload/revision scope; no blanket current-candidate pass                    |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                           | Performance objectives and final acceptance unresolved                                                    |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                   | Final shared qualification pending                                                                        |
+| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` CI and signed workflow pass; strict visual acquisition fails. Current runtime `33d3d72c` passes focused tests and a local production build; exact-head release workflow passes, CI is pending. | Local-control latency, new-runtime visual equivalence, startup and matrix qualification remain unresolved |
+| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                                                      | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending      |
 
 ### Latest investigation checkpoint — 21 October 2026
 
@@ -92,6 +92,27 @@ failure remains failed.
 Fresh exact-runtime repeated visual qualification and native latency are still
 required before hardware acceptance; a diagnostic toggle is not a visual pass.
 
+The first `33d3d72c` repeated-visual batch passed exact-byte served-build
+preflight for both clean receipts, then stopped before opening a browser because
+Puppeteer's executable-path resolver returned a Promise. That failed batch is
+preserved. A fresh batch using the installed Chrome path completed two of three
+pairs, then failed before the third pair's first image: the unchanged baseline
+missed the five-second leftmost logo-pointer collection deadline. The first
+two baseline leftmost stages had settled at 4,913 and 4,761 ms; the failed
+stage reached the expected transform but acquired only one of two required
+stable frames before the deadline. These two pairs are diagnostics, not a
+completed visual qualification. The failed batch and its ordinary browser,
+debugger and interception cleanup remain recorded.
+
+The producer now awaits Puppeteer's executable-path result when no explicit
+Chrome path is set. A new prospective sweep option declares a 10,000 ms
+collection deadline in the plan, passes it to both captures, and binds each
+raw proof to that deadline in the unchanged full-image validator. Earlier
+five-second plans remain readable under their original contract. The longer
+deadline does not relax the required pointer extrema, stable-frame proof,
+image controls or pixel comparison. Eleven focused sweep/plan tests pass;
+fresh three-pair acquisition under the new plan remains pending.
+
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
 GeoJSON preview/apply/save/reload rendering and the synthetic demo against a
@@ -110,13 +131,12 @@ across seven selected jobs and [signed release verification 39619884103](https:/
 The manifest remains bound to the tested `86abeb79` runtime and cannot
 certify a later source commit or artifact.
 
-The current review branch has no new application-runtime change after the
-reverted layer-row-cache experiment. That experiment reduced selector calls but
-failed its declared repeatable browser-time benefit and remains unadopted. The
-later visual producer correction and evidence commits do not transfer the
-historical `190c5ab6` hardware result to `86abeb79`. The current visual gate
-fails; native local-control, matched workload, and final Ampfing acceptance
-remain open.
+At the earlier layer-row-cache checkpoint, its experiment reduced selector
+calls but failed its declared repeatable browser-time benefit and remained
+unadopted. The later visual producer correction and evidence commits did not
+transfer the historical `190c5ab6` hardware result to `86abeb79`. The new
+`33d3d72c` runtime must pass its own affected visual and local-control gates;
+matched workload and final Ampfing acceptance remain open.
 No additional raster-owner inference is made from the previous trace: it did
 not bind the delayed GPU-service work to an application node.
 

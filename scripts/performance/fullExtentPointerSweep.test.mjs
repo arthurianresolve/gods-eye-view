@@ -553,6 +553,50 @@ test('new repeated plans require the sweep while historical plans remain explici
   );
 });
 
+test('a longer pointer settling deadline is declared before capture and bound to the raw proof', async () => {
+  const options = {
+    'baseline-app-sha': 'a'.repeat(40),
+    'candidate-app-sha': 'b'.repeat(40),
+    'visual-harness-sha': 'c'.repeat(40),
+    'full-extent-timeout-ms': '10000',
+  };
+  const plan = createRepeatedVisualPlan(options);
+  assert.equal(plan.fullExtentPointerSweep.timeoutMs, 10000);
+  assert.equal(
+    createRepeatedVisualPlan({
+      ...options,
+      'full-extent-timeout-ms': undefined,
+    }).fullExtentPointerSweep.timeoutMs,
+    undefined,
+  );
+  assert.throws(() =>
+    createRepeatedVisualPlan({ ...options, 'full-extent-timeout-ms': '16000' }),
+  );
+  const pairs = Array.from({ length: 3 }, () => ({
+    bytes: Buffer.from(
+      JSON.stringify({
+        rasterPolicy: plan.policy,
+        fullExtentPointerSweepPolicy: plan.fullExtentPointerSweep.policy,
+        states: [
+          {
+            fullExtentPointerSweep: {
+              baseline: { acquisition: { contract: { timeoutMs: 5000 } } },
+              candidate: { acquisition: { contract: { timeoutMs: 10000 } } },
+            },
+          },
+        ],
+      }),
+    ),
+  }));
+  await assert.rejects(
+    validateRepeatedVisualQualification({
+      planBytes: Buffer.from(JSON.stringify(plan)),
+      pairs,
+    }),
+    /Pointer sweep deadline differs from the predeclared plan/,
+  );
+});
+
 test('a predeclared sweep batch cannot consume a historical acquisition without its proof', async () => {
   const options = {
     'baseline-app-sha': 'a'.repeat(40),

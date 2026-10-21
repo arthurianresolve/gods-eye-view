@@ -5,15 +5,17 @@ import { assertCanonicalPointerHistory } from './canonicalPointerHistory.mjs';
 
 export const FULL_EXTENT_POINTER_SWEEP_POLICY = 'reachable-logo-extents-v1';
 
-export function createFullExtentPointerSweepPlan() {
+export function createFullExtentPointerSweepPlan({ timeoutMs = 5000 } = {}) {
   const titleRect = { left: 36, top: 32, width: 52, height: 34.8828125 };
   const contract = createFullExtentPointerSweepContract({
     titleRect,
     viewport: { width: 1440, height: 900 },
     logos: [{ id: '', key: 'logo-0', rect: titleRect }],
+    timeoutMs,
   });
   return {
     policy: contract.policy,
+    ...(timeoutMs !== 5000 ? { timeoutMs } : {}),
     coordinatePolicy: contract.coordinatePolicy,
     titleRect,
     viewport: contract.viewport,

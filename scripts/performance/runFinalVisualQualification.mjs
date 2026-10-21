@@ -175,6 +175,13 @@ export function parseFinalVisualQualificationArgs(argv) {
     throw new Error(
       'Baseline and candidate application revisions must differ.',
     );
+  if (result['full-extent-timeout-ms'] !== undefined) {
+    const timeoutMs = Number(result['full-extent-timeout-ms']);
+    if (!Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 15_000)
+      throw new Error(
+        'full-extent-timeout-ms must be an integer from 100 to 15000.',
+      );
+  }
   return result;
 }
 
@@ -336,6 +343,7 @@ async function captureRevision({
   receipt,
   out,
   decoration = false,
+  fullExtentTimeoutMs = 5000,
 }) {
   const fixture = createCctvLifecycleFixture();
   let browser;
@@ -361,7 +369,8 @@ async function captureRevision({
     browser = await puppeteer.launch({
       headless: false,
       executablePath:
-        process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+        process.env.PUPPETEER_EXECUTABLE_PATH ||
+        (await puppeteer.executablePath()),
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
       defaultViewport: null,
     });
@@ -489,7 +498,9 @@ async function captureRevision({
       let pointerHistory;
       let fullExtentPointerSweep;
       try {
-        fullExtentPointerSweep = await acquireFullExtentPointerSweep(page);
+        fullExtentPointerSweep = await acquireFullExtentPointerSweep(page, {
+          timeoutMs: fullExtentTimeoutMs,
+        });
         pointerHistory = await acquireCanonicalPointerHistory(page, {
           capturePointer: CAPTURE_POINTER,
         });
@@ -1150,6 +1161,7 @@ async function produceFinalVisualQualificationInternal(
     receipt: baselineReceipt,
     out,
     decoration,
+    fullExtentTimeoutMs: Number(options['full-extent-timeout-ms'] || 5000),
   });
   progress.baseline = baseline;
   await fs.writeFile(
@@ -1165,6 +1177,7 @@ async function produceFinalVisualQualificationInternal(
     receipt: candidateReceipt,
     out,
     decoration,
+    fullExtentTimeoutMs: Number(options['full-extent-timeout-ms'] || 5000),
   });
   progress.candidate = candidate;
   await fs.writeFile(
