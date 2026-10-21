@@ -32,9 +32,10 @@
     "interpretation": "The empty-overlay visibility change accounts for the large one-level panel-raster difference in this failed formal still-state pair. Small independent same-build variation remains."
   },
   "decision": {
-    "commit": "4e7e3f4cf419a0b7ca0400bb127cb79ddb3c0a66",
-    "change": "Revert only the unproved empty-whiteboard display suppression and its related tests; restore the baseline compositor behavior.",
-    "focusedValidation": "Seven annotation tests, package boundaries (1077 modules), formatting and production build pass. Exact new-runtime visual qualification and native latency are still pending.",
+    "initialRevertCommit": "4e7e3f4cf419a0b7ca0400bb127cb79ddb3c0a66",
+    "finalRuntimeCommit": "33d3d72c4668d847af26606ca1fc3f53ffaa139c",
+    "change": "Restore the baseline empty-whiteboard display while retaining departure-timer cancellation and stale-callback protection on destroy.",
+    "focusedValidation": "Eight annotation tests, package boundaries (1077 modules), formatting and a production build pass. Exact new-runtime visual qualification and native latency are still pending.",
     "acceptance": "not accepted yet; this diagnostic does not replace the predeclared repeated full-image comparison"
   },
   "evidenceArchive": {

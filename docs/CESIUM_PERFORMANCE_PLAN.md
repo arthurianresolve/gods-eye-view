@@ -15,13 +15,13 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                         | Hardware qualification                                                                        |
-| ------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                      | Results have their recorded workload/revision scope; no blanket current-candidate pass        |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                | Performance objectives and final acceptance unresolved                                        |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                        | Final shared qualification pending                                                            |
-| S69     | Open: complete candidate qualification                       | Exact-runtime `86abeb79` CI and signed candidate workflow pass; prospective three-pair visual acquisition completes but its validator fails  | Local-control latency, visual equivalence, startup and matrix qualification remain unresolved |
-| S70     | Open: finish private recovery checks and deliver             | Signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e` | Signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending      |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                           | Hardware qualification                                                                                    |
+| ------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                        | Results have their recorded workload/revision scope; no blanket current-candidate pass                    |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                  | Performance objectives and final acceptance unresolved                                                    |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                          | Final shared qualification pending                                                                        |
+| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` CI and signed workflow pass; strict visual acquisition fails. Current runtime `33d3d72c` passes focused tests and a local production build; exact-head CI is pending. | Local-control latency, new-runtime visual equivalence, startup and matrix qualification remain unresolved |
+| S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                             | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending      |
 
 ### Latest investigation checkpoint — 21 October 2026
 
@@ -84,8 +84,11 @@ the fixture, interception and browser close normally; the raw images and
 scripts have an independently verified VM105 archive. This establishes the
 cause of the large compositor difference in that pair, while the separate
 small same-build variation remains. The unproved empty-overlay suppression
-is reverted at `4e7e3f4c`; seven focused annotation tests, package boundaries,
-formatting and a production build pass. The old visual failure remains failed.
+is reverted at `4e7e3f4c`. Follow-up `33d3d72c` keeps the independently useful
+departure-timer cancellation and stale-callback guard without reintroducing
+the display change. Eight focused annotation tests, package boundaries,
+formatting and a production build pass on the final source. The old visual
+failure remains failed.
 Fresh exact-runtime repeated visual qualification and native latency are still
 required before hardware acceptance; a diagnostic toggle is not a visual pass.
 
