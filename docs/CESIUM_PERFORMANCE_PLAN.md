@@ -20,7 +20,7 @@ completion is separate from performance acceptance.
 | S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                              | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                          |
 | S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                        | Performance objectives and final acceptance unresolved                                                                                          |
 | S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                | Final shared qualification pending                                                                                                              |
-| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` results remain historical. Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `32be0e46` passes CI and signed release verification. | Source-bound visual equivalence passes on the physical Intel UHD 620; local-control latency, startup and matrix qualification remain unresolved |
+| S69     | Open: complete candidate qualification                       | Prior-runtime `86abeb79` results remain historical. Current runtime `33d3d72c` passes focused tests, a clean build and a prospectively planned native visual gate; review head `32be0e46` passes CI and signed release verification. The replay fixture now returns deterministic empty live flights and records bounded selection/materialization diagnostics. | Source-bound visual equivalence passes on the physical Intel UHD 620. The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved |
 | S70     | Open: finish private recovery checks and deliver             | Prior signed archive verified and privately served on VM105; local browser workspace journey passes at `86abeb79`; production remains on `e7a878e`                                                                                   | New-runtime signed-package browser recovery, HTTPS and one final frozen-runtime Ampfing soak pending                                            |
 
 ### Latest investigation checkpoint — 21 October 2026
@@ -141,6 +141,33 @@ comparison records. This is a physical Windows visual pass for the exact
 full-image policy or a latency/performance result. [CI run 39629558657](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629558657)
 and [signed release run 39629559144](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629559144)
 pass at review head `32be0e46`.
+
+The [21 October local-control/replay failure receipt](performance-evidence/s69-native-matrix-20261019/local-control-replay-33d3d72c-20261021.json)
+keeps the subsequent exact-build paired capture **failed**. A first run found
+that the hermetic driver returned HTTP 503 for its unhandled live aircraft
+request. The fixture now supplies a same-origin, GET-only empty live response
+until the seeded recording is selected. Its bounded replay waits distinguish
+missing options, source selection, snapshot loading and displayed-aircraft
+materialization; transient `AbortError` from the old live request is retried
+only during unmeasured setup. A direct baseline probe then selected the
+recording and observed `SYNTH-001`. The two relevant harness suites pass 114
+focused tests, and candidate flight replay tests pass eight checks.
+
+The full diagnostic rerun captured 20 local-control actions on each build.
+The candidate also completed 20 loaded replay seeks and six measured
+lifecycle cycles, but the baseline completed no replay seeks. Its recorded
+source and analyst record both locate `SYNTH-001` at longitude 179.7000,
+while the baseline billboard is visibly at 179.73308843. The same source
+revision diff shows the candidate's recorded-position owner bypasses live
+dead-reckoning and places the billboard at the selected observation. The
+15-second exact-position visual witness correctly rejects the baseline.
+No threshold is widened and no timing comparison or acceptance pass is
+claimed from this pair. VM105 stores the failed raw report and independently
+matches its SHA-256. The current candidate can still receive separate
+absolute-latency evaluation, but a motion/replay improvement percentage
+requires a visually valid comparable baseline. A compatible baseline must
+remain a separately identified build, not a silent replacement of the frozen
+`e7a878e` comparison reference.
 
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
