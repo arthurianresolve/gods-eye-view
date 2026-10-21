@@ -10,6 +10,18 @@ This is evidence ingestion for S60.1, not evidence that S47–S60 have passed.
 Missing workloads, unavailable hardware and incomplete retention remain pending.
 Invalid artifacts and measured acceptance failures remain failures.
 
+When performance evidence is required, the runner also keeps separate
+`local-control-latency` and `visual-equivalence` checks pending until their
+candidate-commit-bound external manifest entries are supplied. The former must
+cover native local-control p95 and the independent readiness/full-render
+regression limits; the latter must cover matched scene images, populations and
+effective visual settings. These entries use the existing external-check
+contract (environment, timestamp and artifact reference). The runner records
+their disposition but does **not** recompute native Event Timing or image
+differences from those references. A version-1 manifest remains readable and
+does not require these new gates unless performance evidence is explicitly
+requested. Missing or failed checks must not be described as S69 acceptance.
+
 ## Manifest shape
 
 The following is a template. Replace each placeholder with an actual commit,

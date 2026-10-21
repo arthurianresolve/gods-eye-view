@@ -40,9 +40,31 @@ const EXTERNAL_CHECK_IDS = new Set([
   'platform-installs',
   'mixed-use-soak',
   'hardware-matrix',
+  'local-control-latency',
+  'visual-equivalence',
   'accessibility-review',
   'release-tag-match',
 ]);
+
+/** Keep the S69 gates visible until their revision-bound evidence is attached. */
+export function pendingPerformanceQualificationChecks() {
+  return [
+    {
+      id: 'local-control-latency',
+      required: true,
+      status: 'pending',
+      summary:
+        'Native local-control p95 <=100 ms with the independent readiness and full-render regression limits.',
+    },
+    {
+      id: 'visual-equivalence',
+      required: true,
+      status: 'pending',
+      summary:
+        'Matched screenshots and scene populations at unchanged effective visual settings.',
+    },
+  ];
+}
 
 /** Validate an external acceptance manifest against the candidate being reported. */
 export function readValidationManifest(
@@ -331,6 +353,7 @@ export async function runCandidateMatrix({
         status: 'pending',
         summary: 'Awaiting a hash-bound raw full-duration retention report.',
       },
+      ...pendingPerformanceQualificationChecks(),
     );
   }
 

@@ -242,6 +242,13 @@ predeclared benefit criterion failed, so `20fa36b4` reverts the runtime change.
 The diagnostic is not native click-latency or visual acceptance; no 100 ms,
 S69 matrix or final soak credit follows. Production remains unchanged.
 
+The candidate runner now carries the two missing S69 dispositions explicitly
+when performance evidence is required: native local-control latency and matched
+visual equivalence. They remain pending without revision-bound external
+evidence, separate from paired motion/retention reports. This is an acceptance
+ledger correction, not an automated replay of Event Timing or image review,
+and does not change the failed hardware result or justify the final soak.
+
 Candidate preflight discovered that **all 886 previously verified USB cache
 files now read as same-length zeros**. New writes to D: were stopped; the
 originals and verified VM copies were retained. Recovery uses 873 unchanged,
