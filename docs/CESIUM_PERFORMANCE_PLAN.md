@@ -167,15 +167,41 @@ mirror preserves the eight baseline proof records and that failed attempt.
 The runtime experiment remains private and unadopted. Draw-count reduction
 alone does not justify a broad qualification campaign or final Ampfing soak.
 
+A subsequent [bounded sampling-cost diagnostic](performance-evidence/s69-native-matrix-20261019/late-globe-cost-7947-disposition-20261021.json)
+also demonstrates no sampling improvement. The baseline's eight warm queries
+take 17.9 ms (8.3 ms first reads, 4.0 ms second reads, 5.6 ms residual); the
+candidate takes 23.2 ms (10.5, 5.1 and 7.6 ms respectively). Both retain the same
+16 query results and close normally. These are instrumented wall-time spans,
+not pure CPU/GPU timings or an acceptance cohort. The candidate run was
+interrupted by the storage failure below and resumed alone; the valid baseline
+was retained without a favorable rerun. The original and continuation raw
+results are independently verified on VM105, with SHA-256
+`9200bd3615001284f739bb8bd28020833b040f4e4742b838b6e0f095df4de5aa`
+and `60316dcb9e3d240ce3564535b8f7d7a61b4784901a6962cadde35470e4edc3fc`.
+The remaining completed-render-to-native-presentation gap is unattributed.
+The next bounded discriminator must follow the Submit carrying the click's
+latency ID through its actual surface aggregation and presentation, rather than
+using the initial surface or a nearby presentation timestamp.
+
+Candidate preflight discovered that **all 886 previously verified USB cache
+files now read as same-length zeros**. New writes to D: were stopped; the
+originals and verified VM copies were retained. Recovery uses 873 unchanged,
+hash-verified C: hardlinks plus 13 exact VM files (6,057,069 bytes). Independent
+verification confirms every recovered asset and unchanged application/build
+identity; the identity plan changes only its local cache path and creation time.
+The recovery helper's final console summary failed after writing its receipt;
+that failure is preserved and a separate verifier checked the completed output
+without overwriting or repeating materialization. This storage incident does
+not alter production and does not justify weakening any integrity gate.
 The first private build was killed by the VM kernel for memory exhaustion.
 Eighteen validated, unused preview processes were gracefully stopped; another
 old preview had already exited. Free swap increased from 30,904 to 1,591,208 KiB.
 The same-source, same-recipe rebuild then passed. Failed artifacts remain
 preserved; production and the active comparison baseline were unchanged.
 
-The public documentation head `f5c2615d` passes
-[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39560702416)
-and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39560702585).
+The public documentation head `79a4dfc6` passes
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39568181576)
+and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39568181664).
 Those checks do not cover the unadopted private runtime experiment.
 
 The three completed `ea2bfe36` runs and supporting evidence are archived on
@@ -188,12 +214,13 @@ The user cleared the npm cache, recovering Windows free space to approximately
 4.2 GiB and removing the acquisition blocker without lowering its 2.5 GiB
 threshold. Earlier automated deletion attempts were blocked and deleted
 nothing. Subsequent storage pressure remains monitored. An external USB drive
-now holds a checksum-verified 1,383,608,320-byte evidence archive covering
-16,925 files; an independently verified VM master is retained. Two native
+received a 1,383,608,320-byte evidence archive covering
+16,925 files. Its initial checksum verification passed; an independently verified VM master is retained. Two native
 file-copy attempts to USB produced all-zero destination files. Those failures
 are preserved; originals were not removed, and copied runner provenance was
 recovered from the unchanged source matching its predeclared hash. Streamed
-archive and directly written report bytes were independently verified. External
+archive and directly written report bytes were independently verified at that time;
+new D: writes are now stopped after the later integrity failure above. External
 capacity does not waive the Windows system-drive safety floor or establish
 that local space has been reclaimed. Production remains unchanged. S60, S69, S70 and the final Ampfing
 soak remain open; no failed result is converted to a pass.
