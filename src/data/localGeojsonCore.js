@@ -1144,6 +1144,12 @@ export function createLocalGeoJsonLayer(
           // frame, forever) and must not spend ANY per-record work trying.
           // Read once per walk, not per record.
           const canSampleGround = viewer.scene.sampleHeightSupported === true;
+          // A flat ellipsoid has no terrain mesh or other height-bearing owner
+          // in this exact scene shape. Avoid eight synchronous depth picks on
+          // every fresh enable; a loaded globe height is the same ground. The
+          // conservative ownership check falls back as soon as another scene
+          // primitive or populated data source appears.
+          const flatGlobeOnly = canUseFlatGlobeGround(viewer, _dataSource);
           // Capability can arrive late (WebGL context restore, a tileset that
           // finally supports sampling). A parked camera has no moveEnd to
           // re-open a spent budget, so the false→true edge does it.
@@ -1219,13 +1225,25 @@ export function createLocalGeoJsonLayer(
             if (!isActive) continue;
 
             const wasGroundSampled = record.groundSampled;
+            if (!flatGlobeOnly && record.groundSampleSource === 'flat-globe') {
+              record.groundSampled = false;
+              record.groundSampleSource = null;
+              record.lastGroundSampleMs = 0;
+            }
             const terrainFloorChanged = refreshLocalTerrainFloor(
               viewer,
               record,
               ownsPass,
             );
             if (refreshStemGeometry || terrainFloorChanged) {
-              updateLocalStemGeometry(viewer, record, now, null, ownsPass);
+              updateLocalStemGeometry(
+                viewer,
+                record,
+                now,
+                null,
+                ownsPass,
+                flatGlobeOnly,
+              );
             } else if (
               canSampleGround &&
               !record.groundSampled &&
@@ -1239,7 +1257,13 @@ export function createLocalGeoJsonLayer(
               );
               if (
                 distance < GROUND_SAMPLE_MAX_DISTANCE_M &&
-                sampleLocalGroundHeight(viewer, record, now, ownsPass)
+                sampleLocalGroundHeight(
+                  viewer,
+                  record,
+                  now,
+                  ownsPass,
+                  flatGlobeOnly,
+                )
               ) {
                 updateLocalStemGeometry(
                   viewer,
@@ -1247,6 +1271,7 @@ export function createLocalGeoJsonLayer(
                   now,
                   distance,
                   ownsPass,
+                  flatGlobeOnly,
                 );
               }
             }
@@ -1432,13 +1457,65 @@ function refreshLocalTerrainFloor(viewer, record, ownsPass = null) {
   return true;
 }
 
-function sampleLocalGroundHeight(viewer, record, now, ownsPass = null) {
+function canUseFlatGlobeGround(viewer, source) {
+  const scene = viewer?.scene;
+  const display = viewer?.dataSourceDisplay;
+  const dataSources = viewer?.dataSources;
+  if (
+    !(viewer?.terrainProvider instanceof Cesium.EllipsoidTerrainProvider) ||
+    !scene?.globe?.show ||
+    scene.globe.tilesLoaded !== true ||
+    !display ||
+    scene.primitives?.length !== 1 ||
+    scene.primitives.get(0) !== display._primitives ||
+    scene.groundPrimitives?.length !== 1 ||
+    scene.groundPrimitives.get(0) !== display._groundPrimitives ||
+    !Array.isArray(viewer.entities?.values) ||
+    viewer.entities.values.length !== 0 ||
+    !Number.isInteger(dataSources?.length) ||
+    !source
+  )
+    return false;
+  let ownsSource = false;
+  for (let index = 0; index < dataSources.length; index++) {
+    const candidate = dataSources.get(index);
+    if (candidate === source) ownsSource = true;
+    else if (!Array.isArray(candidate?.entities?.values)) return false;
+    else if (
+      candidate.show !== false &&
+      candidate.entities.values.some((entity) => entity.show !== false)
+    )
+      return false;
+  }
+  return ownsSource;
+}
+
+function sampleLocalGroundHeight(
+  viewer,
+  record,
+  now,
+  ownsPass = null,
+  flatGlobeOnly = false,
+) {
   if (ownsPass && !ownsPass()) return false;
   if (record.groundSampled || !viewer.scene.sampleHeightSupported) return false;
   if (now - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS) return false;
   record.lastGroundSampleMs = now;
   const globe = viewer.scene.globe;
   if (globe?.show && globe.tilesLoaded === false) return false;
+  if (flatGlobeOnly) {
+    // Ellipsoid terrain is exactly height zero. getHeight may differ by tiny
+    // loaded-tile quantization, so retain it when finite for visual parity.
+    const loadedHeight = globe.getHeight?.(record.carto);
+    if (ownsPass && !ownsPass()) return false;
+    record.groundSampled = true;
+    record.groundSampleSource = 'flat-globe';
+    setLocalGroundHeight(
+      record,
+      Number.isFinite(loadedHeight) ? loadedHeight : 0,
+    );
+    return true;
+  }
   let sampled;
   try {
     sampled = viewer.scene.sampleHeight(record.carto, [record.entity]);
@@ -1466,6 +1543,7 @@ function sampleLocalGroundHeight(viewer, record, now, ownsPass = null) {
     sampled = Math.max(sampled, terrainHeight);
   }
   record.groundSampled = true;
+  record.groundSampleSource = null;
   setLocalGroundHeight(record, sampled);
   return true;
 }
@@ -1488,13 +1566,14 @@ function updateLocalStemGeometry(
   now,
   knownDistance = null,
   ownsPass = null,
+  flatGlobeOnly = false,
 ) {
   if (ownsPass && !ownsPass()) return false;
   const distance = Number.isFinite(knownDistance)
     ? knownDistance
     : Cesium.Cartesian3.distance(viewer.camera.positionWC, record.base);
   if (distance < GROUND_SAMPLE_MAX_DISTANCE_M)
-    sampleLocalGroundHeight(viewer, record, now, ownsPass);
+    sampleLocalGroundHeight(viewer, record, now, ownsPass, flatGlobeOnly);
   if (ownsPass && !ownsPass()) return false;
   // Keep the intended screen-size scaling in close-up views too. A 5 km
   // minimum made a marker hundreds of metres tall beside a nearby building.

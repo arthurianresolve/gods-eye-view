@@ -25,6 +25,16 @@ completion is separate from performance acceptance.
 
 ### Latest investigation checkpoint — 21 October 2026
 
+**Flat-globe infrastructure readback experiment.** A guarded path now uses
+loaded globe height instead of synchronous scene-depth sampling only for a
+settled ellipsoid scene without visible competing geometry. It reverts to
+depth sampling when a height owner appears. [The hardware diagnostic](performance-evidence/s69-native-matrix-20261019/flat-globe-ground-20261021.md)
+shows eight to zero depth reads per enabled action and a repeatable warmed
+completed-render improvement in both acquisition orders. Native-click timing
+is unstable across those orders, and the strict visual comparison has not
+passed. This is implemented and focused-tested code, not S69 performance
+acceptance or a substitute for the final candidate/soak evidence.
+
 **Current integration and package checkpoint.** The performance branch at
 `9adbd583` contains the targeted CCTV stale-catalog correction from current
 `dev` (`55dd552c`); no further `dev` reconciliation is needed. Its selected

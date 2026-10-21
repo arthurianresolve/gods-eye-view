@@ -2415,6 +2415,38 @@ test('ground sampling waits for visible globe tiles before caching a height', as
   assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
 });
 
+test('a lone ellipsoid globe uses loaded height, then resamples when another height owner appears', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  const clock = installFakeClock(t);
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  const displayRoot = {};
+  const groundRoot = {};
+  const scene = env.viewer.scene;
+  env.viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+  env.viewer.entities = { values: [] };
+  env.viewer.dataSourceDisplay = { _primitives: displayRoot, _groundPrimitives: groundRoot };
+  Object.defineProperty(env.viewer.dataSources, 'length', { get: () => env.dataSources.length });
+  env.viewer.dataSources.get = (index) => env.dataSources[index];
+  scene.primitives.length = 1;
+  scene.primitives.get = (index) => index === 0 ? displayRoot : undefined;
+  scene.groundPrimitives = { length: 1, get: (index) => index === 0 ? groundRoot : undefined };
+  scene.globe = { show: true, tilesLoaded: true, getHeight: () => 0 };
+  const previewEntity = { show: false };
+  env.dataSources.push({ show: true, entities: { values: [previewEntity] } });
+  setCameraAltitude(env, 20_000);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0, 'flat globe should avoid scene-depth readback');
+  assert.ok(Math.abs(baseHeightM(env)) < 0.01);
+  previewEntity.show = true;
+  clock.advance(2_100);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1, 'new scene ownership requires a real depth sample');
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+});
+
 test('settled terrain refinement lifts an already sampled stem without another GPU sample', async (t) => {
   const env = await createRealLocalLayerHarness({
     sampleHeightSupported: true, sampleHeight: () => 117,
