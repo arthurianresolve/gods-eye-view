@@ -46,6 +46,19 @@ because Vite preview transformed a compressed asset; the successful acquisition
 used a byte-preserving loopback static server. No mask, visual threshold or
 deadline was changed.
 
+A [second frozen-pair capture](performance-evidence/s69-native-matrix-20261019/final-visual-replicate-d4bdf390-review.json)
+also completed eight images and failed the same cross-build pixel check. Its
+independent readback shows real **same-build** variation at identical captured
+paint, settings, populations, camera, profile and timestamp: the unchanged
+baseline's HUD-visible image differs by 43 pixels, maximum 7/255, between the
+two runs. The candidate's states vary too. The second raw attempt and its
+derived input review have independent VM105 SHA-256 verification. These two
+runs were not acquired under the existing prospective three-pair
+`repeated-full-image-controls-v1` plan, and neither is visual acceptance. A
+future candidate must use that predeclared full-image control policy or retain
+a failed visual status; selecting a favorable image, changing pixels or
+retrospectively relaxing the current single-pair result is not allowed.
+
 The public documentation head `fd34e5d5` passed six selected CI jobs and
 release verification, but [macOS recovery failed again](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39541631101).
 That run timed out waiting for terminal import status. Its later diagnostic
