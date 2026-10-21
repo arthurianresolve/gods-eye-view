@@ -64,6 +64,12 @@ The [exact-commit pre-release validation manifest](performance-evidence/s69-nati
 records `visual-equivalence` as failed; the candidate reader accepts its
 revision and artifact while release readiness remains false. This failure is
 not converted into pending evidence by the passing CI or workspace journey.
+The candidate runner now activates required performance gates when a version-1
+manifest names either the visual or local-control check; previously those
+checks could be parsed but omitted unless performance evidence was separately
+required. Ten focused runner tests pass with this correction. The manifest
+remains bound to the tested `86abeb79` runtime and cannot certify a later
+source commit or artifact.
 
 The current review branch has no new application-runtime change after the
 reverted layer-row-cache experiment. That experiment reduced selector calls but

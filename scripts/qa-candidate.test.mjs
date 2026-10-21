@@ -276,7 +276,7 @@ test('publication verification stays separate from pre-release readiness', async
   );
 });
 
-test('v2 manifests automatically require computed performance gates; v1 remains compatible', async () => {
+test('performance checks in v1 and all v2 manifests require computed performance gates', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-v2-'));
   const manifestPath = path.join(dir, 'manifest.json');
   const candidate = 'a'.repeat(40);
@@ -287,6 +287,30 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   };
   await writeFile(manifestPath, JSON.stringify(v1));
   assert.equal(requiresPerformanceEvidence({}, manifestPath), false);
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      checks: [
+        {
+          id: 'visual-equivalence',
+          outcome: 'failed',
+          environment: 'Windows Chrome physical GPU',
+          timestamp: '2026-10-21T14:12:52Z',
+        },
+      ],
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      checks: [{ id: 'local-control-latency' }],
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  await writeFile(manifestPath, JSON.stringify(v1));
   assert.equal(
     requiresPerformanceEvidence({ GEV_REQUIRE_PERFORMANCE_EVIDENCE: '1' }),
     true,

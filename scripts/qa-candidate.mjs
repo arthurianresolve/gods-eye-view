@@ -191,7 +191,14 @@ export function requiresPerformanceEvidence(
     return true;
   if (!manifestPath) return false;
   try {
-    return JSON.parse(readFileSync(manifestPath, 'utf8')).schemaVersion === 2;
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    return (
+      manifest.schemaVersion === 2 ||
+      (Array.isArray(manifest.checks) &&
+        manifest.checks.some((check) =>
+          ['local-control-latency', 'visual-equivalence'].includes(check?.id),
+        ))
+    );
   } catch {
     return false;
   }
