@@ -1,0 +1,49 @@
+{
+  "schema": "gev-final-visual-failure-review/v1",
+  "status": "failed-pixel-validation",
+  "acceptanceEligible": false,
+  "captureProducerCommit": "c133c2a05b6331c2c5af05bccab1cb242a41ecda",
+  "baselineApplicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "candidateApplicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "hardware": "Windows Chrome 155.0.8059.85, ANGLE Direct3D 11 on Intel UHD Graphics 620",
+  "capture": {
+    "states": 4,
+    "images": 8,
+    "baselineAndCandidateClosedNormally": true,
+    "interceptionReleased": true,
+    "allDebuggerSessionsResumedDisabledAndDetached": true,
+    "sameAtomicPhaseHudGuard": true,
+    "fullEvidenceReadBeforeAndAfterEachPausedScreenshot": true
+  },
+  "decodedDifference": [
+    {
+      "state": "still-settled",
+      "changedPixels": 175,
+      "maximumChannelDelta": 1
+    },
+    {
+      "state": "hud-visible",
+      "changedPixels": 43,
+      "maximumChannelDelta": 7
+    },
+    {
+      "state": "hud-hidden",
+      "changedPixels": 0,
+      "maximumChannelDelta": 0
+    },
+    {
+      "state": "hud-restored",
+      "changedPixels": 33,
+      "maximumChannelDelta": 7
+    }
+  ],
+  "rawEvidence": {
+    "vm105Directory": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-190c5ab6-c133c2a0-static",
+    "manifestSha256": "27f3f812d8ff293a312d2913206bae979c571adecfeb1842db9d534776c36031",
+    "fullReportSha256": "f9dc6e555aafb48f79e08a9d69615dafa719589883b9a19107d5bec0b6973331",
+    "failureReportSha256": "23218dbb151446e836aef983f92bc029c3555638faf00e9500ec305bf243b2f8",
+    "decodedDifferenceReviewSha256": "f683a2419fb4f5a078a46bd120912cf26bbd63c136f2c7d415d38886b64a4b0b",
+    "fileCountVerifiedOnVm": 14
+  },
+  "scope": "The narrower QA guard resolves the previous before-PNG capture failure on the frozen e7a878e/190c5ab6 pair. Equal DOM and computed paint signatures do not erase the observed pixel differences. This old runtime pair does not qualify the current PR application, and its decoded pixel differences fail the existing visual contract. No image, mask, threshold, animation setting, source setting, or deadline was changed to obtain this result."
+}

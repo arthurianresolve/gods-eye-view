@@ -32,8 +32,19 @@ The prior failure spent its unchanged five-second deadline polling phase 2 and
 never reached a PNG. This narrows repeated QA observer work without changing
 the eligible phase, screenshot settings, attempt count or deadlines. Focused
 tests cover repeated guard reads, both paused full reads and owned debugger
-cleanup. **This is a producer correction, not visual or GPU acceptance**; the
-affected paired capture must be reacquired on hardware before S69 can close.
+cleanup. The [hardware repeat](performance-evidence/s69-native-matrix-20261019/final-visual-c133c2a0-failure-review.json)
+on the frozen `e7a878e`/`190c5ab6` application pair captured all eight images
+with normal browser/interception/debugger cleanup. This closes the prior
+before-PNG producer failure on that pair. The decoded images still differ:
+175 pixels at most 1/255 in the initial still, 43 at most 7/255 in HUD-visible,
+none in HUD-hidden, and 33 at most 7/255 in HUD-restored. The identical
+cross-build paint-input signatures do not prove equivalent pixels. The
+unchanged visual validator **fails**; neither that old runtime pair nor the
+current PR has visual acceptance. The 14 raw records have independently verified
+SHA-256 values in the VM105 copy. A first, separate preflight attempt stopped
+because Vite preview transformed a compressed asset; the successful acquisition
+used a byte-preserving loopback static server. No mask, visual threshold or
+deadline was changed.
 
 The public documentation head `fd34e5d5` passed six selected CI jobs and
 release verification, but [macOS recovery failed again](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39541631101).
