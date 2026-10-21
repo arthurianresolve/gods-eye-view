@@ -1,6 +1,16 @@
 import { createWorldAnnotationRenderer } from './worldAnnotationRenderer.js';
 import { createScreenAnnotationRenderer } from './screenAnnotationRenderer.js';
 
+/** World geometry has live Cesium color/route uniforms; screen marks animate in SVG. */
+export function annotationHasWorldAnimation(anno) {
+  return (
+    (anno.type === 'area' &&
+      Array.isArray(anno.ring) &&
+      anno.ring.length >= 3) ||
+    (anno.type === 'route' && Array.isArray(anno.path) && anno.path.length >= 2)
+  );
+}
+
 /**
  * Hybrid annotation renderer (Direction C — the recommended production blend).
  *
@@ -148,7 +158,14 @@ export function createHybridAnnotationRenderer(viewer) {
     routed.clear();
   }
 
-  return { add, update, remove, sync, destroy };
+  return {
+    add,
+    update,
+    remove,
+    sync,
+    destroy,
+    requiresContinuousRender: annotationHasWorldAnimation,
+  };
 }
 
 /**

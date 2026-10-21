@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { createHybridAnnotationRenderer } from './hybridAnnotationRenderer.js';
+import { annotationHasWorldAnimation, createHybridAnnotationRenderer } from './hybridAnnotationRenderer.js';
+
+test('continuous demand matches the hybrid world routes', () => {
+  assert.equal(annotationHasWorldAnimation({ type: 'pin' }), false);
+  assert.equal(annotationHasWorldAnimation({ type: 'area', ring: null }), false);
+  assert.equal(annotationHasWorldAnimation({ type: 'area', ring: [[0, 0], [1, 0], [0, 1]] }), true);
+  assert.equal(annotationHasWorldAnimation({ type: 'route', path: [[0, 0]] }), false);
+  assert.equal(annotationHasWorldAnimation({ type: 'route', path: [[0, 0], [1, 0]] }), true);
+});
 
 class FakeClassList {
   constructor(owner) {
