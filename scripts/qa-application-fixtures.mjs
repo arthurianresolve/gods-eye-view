@@ -700,10 +700,7 @@ export async function importFixtureGeometry(
     'import-preview-wait',
     () =>
       page.waitForFunction(
-        () =>
-          document
-            .querySelector('.workspace-library [data-import-summary]')
-            ?.textContent.includes('1 accepted'),
+        isImportPreviewReadyForFixtureInPage,
         // Timer polling continues when a headed page is occluded or hidden;
         // the predicate is application state, not a rendered-frame condition.
         { timeout: timeoutMs, polling: 50 },
@@ -743,13 +740,39 @@ export async function importFixtureGeometry(
   );
 }
 
+// Replacing a file hides its old review immediately, but older installations
+// retain the previous summary text while File.text() and previewing are pending.
+// Waiting for the text alone can click Apply against a null/stale preview.
+export function isImportPreviewReadyForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  return Boolean(
+    root?.querySelector('[data-workspace-select]')?.value &&
+    root.querySelector('[data-import-review]')?.hidden === false &&
+    root.querySelector('[data-action="apply-import"]')?.disabled === false &&
+    root
+      .querySelector('[data-import-summary]')
+      ?.textContent.includes('1 accepted'),
+  );
+}
+
+// The select is populated partway through refresh(), before getWorkspace()
+// resolves and before save() publishes completion. Do not stage an import in
+// that intermediate state. These are public UI state checks on both releases.
+export function isWorkspaceSaveCompleteForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  return Boolean(
+    root?.querySelector('[data-workspace-select]')?.value &&
+    root.querySelector('[data-status]')?.dataset.state === 'saved',
+  );
+}
+
 export async function seedPersistentWorkspace(page) {
   await clickControl(page, '.workspace-library [data-action="save-as"]');
-  await page.waitForFunction(
-    () =>
-      document.querySelector('.workspace-library [data-workspace-select]')
-        .value,
-    { polling: 50 },
+  await runWorkspaceFixturePhase(page, 'workspace-save-complete-wait', () =>
+    page.waitForFunction(isWorkspaceSaveCompleteForFixtureInPage, {
+      timeout: 30_000,
+      polling: 50,
+    }),
   );
   await importFixtureGeometry(page);
   return page.evaluate(async (workspaceAssetText) => {

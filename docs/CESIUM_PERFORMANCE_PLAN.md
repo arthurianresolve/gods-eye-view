@@ -41,6 +41,15 @@ reproduce the timeout and does not establish its cause or replace full recovery
 acceptance. The original CI failure remains unresolved. The diagnostic changes
 only its disposable historical installation and is not part of the candidate.
 
+Recovery-fixture readiness is now tightened at two public UI boundaries:
+seeding waits for a selected workspace **and completed save status**, and
+importing waits for a visible review with an enabled Apply control, rather
+than accepting retained summary text. Thirteen focused Node 24 tests pass,
+including the intermediate-save and hidden-stale-preview cases. This fixes
+observable fixture races without changing application rendering, repeating
+clicks or extending deadlines. It is not proof of the earlier macOS timeout's
+cause; full recovery verification remains required.
+
 The separate private child, `3a16f8de`, corrects a source-owned demand mismatch:
 known hidden-source fade states retained scene demand even though the existing
 paint gate rejected their owner. Its active-lane behavior checks pass **95

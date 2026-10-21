@@ -6,10 +6,64 @@ import {
   flushFixturePageConsoleOwnership,
   bootFixturePage,
   importFixtureGeometry,
+  isImportPreviewReadyForFixtureInPage,
+  isWorkspaceSaveCompleteForFixtureInPage,
   prepareFixturePage,
   readFixturePageDiagnostics,
   showWorkspaceLibraryForFixtureInPage,
 } from './qa-application-fixtures.mjs';
+
+function importReadinessFixture() {
+  const elements = new Map([
+    ['[data-workspace-select]', { value: 'saved-investigation' }],
+    ['[data-status]', { dataset: { state: 'info' } }],
+    ['[data-import-review]', { hidden: false }],
+    ['[data-action="apply-import"]', { disabled: false }],
+    ['[data-import-summary]', { textContent: '1 accepted, 0 rejected.' }],
+  ]);
+  const root = { querySelector: (selector) => elements.get(selector) };
+  return { elements, scope: { document: { querySelector: () => root } } };
+}
+
+test('seed waits past a populated select until the original save publishes completion', () => {
+  const { elements, scope } = importReadinessFixture();
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+  elements.get('[data-status]').dataset.state = 'saved';
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), true);
+  for (const state of ['info', 'warning', 'error', 'conflict']) {
+    elements.get('[data-status]').dataset.state = state;
+    assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+  }
+  elements.get('[data-status]').dataset.state = 'saved';
+  elements.get('[data-workspace-select]').value = '';
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+});
+
+test('replacement-file staging cannot reuse the preceding hidden preview summary', () => {
+  const { elements, scope } = importReadinessFixture();
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), true);
+  // Prior releases keep the text and enabled button while hiding the review
+  // and clearing the staged preview synchronously before awaiting File.text().
+  elements.get('[data-import-review]').hidden = true;
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-import-review]').hidden = false;
+  elements.get('[data-action="apply-import"]').disabled = true;
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-action="apply-import"]').disabled = false;
+  elements.get('[data-workspace-select]').value = '';
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-workspace-select]').value = 'saved-investigation';
+  elements.get('[data-import-summary]').textContent = '0 accepted, 1 rejected.';
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+});
+
+test('readiness predicates refuse an absent or incomplete workspace panel', () => {
+  for (const root of [null, { querySelector: () => null }]) {
+    const scope = { document: { querySelector: () => root } };
+    assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+    assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  }
+});
 
 class MockPage extends EventEmitter {
   constructor(events = []) {
