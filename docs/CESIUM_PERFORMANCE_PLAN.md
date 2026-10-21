@@ -109,9 +109,74 @@ those contributors execute. The run has no observation overflow/errors,
 preserves the four normal input/drain boundaries and closes normally. Its raw
 SHA-256 is `354350202d71a8e9530535c4fa2b576c90298a30bf2f2b42b75e240c14db67fd`;
 it is independently mirrored on VM105. This is diagnostic evidence, not a
-latency or visual-equivalence pass. The next bounded source investigation is
-whether offscreen globe commands can be conservatively culled at execution
-time without changing frustum fitting, depth precision or returned results.
+latency or visual-equivalence pass.
+
+Private candidate `29dc80fc` adds conservative late draw culling, preserving
+the command lists used for frustum fitting. Its 178 focused checks pass on
+Windows Node 24 and VM Node 24/26; formatting, package boundaries, the private
+build and all 886 served-asset checks pass. A four-action-per-role GPU diagnostic
+preserves all 16 query results, 32 ID/depth readbacks, fitted frustums and normal
+cleanup, but **fails the mechanism gate: zero draws are skipped**. The installed
+marker alone is insufficient. Raw SHA-256:
+`1fd2d6871779c58bd88fdf98509d94969924427efcc256bc1780f2ae0c0101d6`.
+No uninstrumented latency campaign was launched for this candidate.
+
+A separate two-action eligibility diagnostic identifies the exact mismatch:
+all 44 globe commands use level-17 BITS12 meshes, while this first implementation
+supports only uncompressed meshes. Every other inspected eligibility guard
+passes. Raw SHA-256:
+`fa83cf79036096af5edb409743641350624bfdcc945be2cac16cee7be55040ee`.
+Both reports are independently mirrored on VM105. The next patch must bound
+the actual quantized decoder and shader arithmetic before repeating exact
+result/draw-reduction checks; no guard is simply disabled to obtain a pass.
+
+That follow-up is privately implemented in `7947d2fd`, retaining `acd65cc6`
+as its comparison baseline. It bounds the actual BITS12 decoder, skirt vertices,
+both Float32 affine transforms and numerical uncertainty; unknown ownership,
+unsupported shaders and uncertain clipping keep the original draw. All **198
+focused tests** pass on Windows Node 24 and VM Node 24/26; the 28 diagnostic
+harness checks, formatting, import/package boundaries, private build and all
+886 served assets also pass. The initial local command lacked the sparse
+checkout's dependency resolver and failed before acquisition; that setup log
+is preserved separately from the successful checks.
+
+The four-action-per-role Intel UHD 620 diagnostic now **passes exact functional
+parity and draw reduction**: all 16 height results and 32 ID/depth readbacks
+match, with unchanged fitted frustums, clear operations and non-globe draws.
+The candidate suppresses **690 of 704 globe draws**, leaving 14 across those
+queries. Both sessions retain foreground evidence and close normally without
+forced termination. Raw SHA-256:
+`aa002452ccd7f0549cfbafdd105f565d8d933ba302ff9d91f75be238a7513c84`.
+The raw report, source/build proofs and supporting logs comprise 39 files /
+4,850,941 bytes, independently read back from VM105. This establishes the
+mechanism and scoped correctness; its instrumented timing is not acceptance
+evidence.
+
+The subsequent six-action **uninstrumented comparison rejects a demonstrated
+latency benefit**. Baseline native durations are 312, 56, 112, 48, 112, 48 ms;
+candidate durations are 344, 64, 112, 48, 112, 48 ms. Warm ON readiness is
+35.1/34.8 ms for baseline and 40.1/34.8 ms for candidate; completed-render
+durations are 36.9/36.6 and 42.3/36.8 ms respectively. Cold samples remain
+included, both sessions retain settings/native geometry and foreground evidence,
+and both close normally. Raw SHA-256:
+`2088d1fc85843a45e89dd2d752ef58a66909548a7822faec6bb41d5ac600d93e`.
+All 33 files / 2,495,239 bytes are independently verified on VM105. The first
+mirror attempt incorrectly included the baseline's already-inventoried asset
+tree and stopped before remote writes at its file-count limit; the corrected
+mirror preserves the eight baseline proof records and that failed attempt.
+The runtime experiment remains private and unadopted. Draw-count reduction
+alone does not justify a broad qualification campaign or final Ampfing soak.
+
+The first private build was killed by the VM kernel for memory exhaustion.
+Eighteen validated, unused preview processes were gracefully stopped; another
+old preview had already exited. Free swap increased from 30,904 to 1,591,208 KiB.
+The same-source, same-recipe rebuild then passed. Failed artifacts remain
+preserved; production and the active comparison baseline were unchanged.
+
+The public documentation head `f5c2615d` passes
+[CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39560702416)
+and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39560702585).
+Those checks do not cover the unadopted private runtime experiment.
 
 The three completed `ea2bfe36` runs and supporting evidence are archived on
 VM105 as `queued-height-ea2bfe36-diagnostic-evidence-20261021`: 31 files,
