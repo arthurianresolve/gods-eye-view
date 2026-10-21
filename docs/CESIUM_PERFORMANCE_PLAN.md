@@ -60,6 +60,10 @@ open, two-tab conflict handling, reload/reopen, command-palette access,
 GeoJSON preview/apply/save/reload rendering and the synthetic demo against a
 verified source build on Windows Chrome. It does not establish signed-package
 browser recovery, public HTTPS behavior or production deployment.
+The [exact-commit pre-release validation manifest](performance-evidence/s69-native-matrix-20261019/validation-manifest-86abeb79-20261021.json)
+records `visual-equivalence` as failed; the candidate reader accepts its
+revision and artifact while release readiness remains false. This failure is
+not converted into pending evidence by the passing CI or workspace journey.
 
 The current review branch has no new application-runtime change after the
 reverted layer-row-cache experiment. That experiment reduced selector calls but
