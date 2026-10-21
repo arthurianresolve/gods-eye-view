@@ -1,0 +1,32 @@
+{
+  "schema": "gev-performance-experiment-disposition/v1",
+  "date": "2026-10-21",
+  "status": "rejected-before-hardware-comparison",
+  "productionCandidate": "9adbd58331ab00141d154c955a4c4f0bd3596293",
+  "experiment": "Move the hidden local GeoJSON data-source attachment ahead of Entity styling while retaining the candidate's activation epochs, rollback, and user-ON presentation wait.",
+  "scope": "Private, uncommitted single-file control; no runtime change was adopted or pushed.",
+  "reason": "The early attachment exposes partially styled entities to DataSourceCollection listeners and permits attachment before a later conversion failure. These violate lifecycle and visualizer ownership invariants, so a timing result could not qualify the change.",
+  "validation": {
+    "command": "node --test src/data/localGeojson.test.mjs src/data/infrastructure.test.mjs src/data/localGeojsonLifecycle.test.mjs",
+    "node": "v24.16.0",
+    "currentCandidate": { "passed": 105, "failed": 0 },
+    "earlyAttachment": {
+      "passed": 100,
+      "failed": 5,
+      "failedCases": [
+        "entities attachment observes completed graphics without setup notifications",
+        "primitive-collections attachment observes completed graphics without setup notifications",
+        "stem-collection attachment observes completed graphics without setup notifications",
+        "destroy during staged context registration prevents attachment and later graphics writes",
+        "a conversion failure never attaches a partial source and the retry adds once"
+      ]
+    }
+  },
+  "localEvidence": {
+    "directory": "E:/Codex/gods-eye-view/evidence/attachment-order-20261021",
+    "earlyAttachmentPatchSha256": "d6b6b1e39f1cb67b4d745354efdfb39296db8e88a04b0adc5f2d10cdc1296423",
+    "earlyAttachmentTestLogSha256": "9c4bfdf79cb49911e66daf859716922f1a9f5f0431b6109497f8403eb390adae",
+    "currentCandidateTestLogSha256": "91e815df0b98ad90044c186cebd6a0752031ac020b7a10ab7c0f9662d51ceafc"
+  },
+  "acceptanceImpact": "None. The independent native local-control and full-render readiness failures remain open; this rejected control supplies no performance or visual acceptance evidence."
+}

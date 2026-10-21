@@ -20,10 +20,37 @@ completion is separate from performance acceptance.
 | S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                                                                     |
 | S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                          | Performance objectives and final acceptance unresolved                                                                                                                                                                     |
 | S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                  | Final shared qualification pending                                                                                                                                                                                         |
-| S69     | Open: complete candidate qualification                       | Runtime `8ee87442` passes focused annotation/governor tests, package boundaries, a production build and all seven selected CI jobs at review head `fb7b48f8`. A local production-browser functional smoke passes screen/world render-demand transitions. Earlier `33d3d72c` has the source-bound physical visual pass for its annotation-free fixture. | The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved. The new annotation demand needs affected visual/idle qualification. |
-| S70     | Open: finish private recovery checks and deliver             | The earlier signed PR-merge archive is independently verified on VM105; its private package passes workspace and evidence-transfer browser journeys. The new runtime has no signed-package qualification yet. Production remains on `e7a878e`.                                                                                                         | Packaged build still needs its own candidate HTTPS and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending.                                                                    |
+| S69     | Open: complete candidate qualification                       | Runtime `8ee87442` passes focused annotation/governor tests, package boundaries, a production build and all seven selected CI jobs at review head `9adbd583`. A local production-browser functional smoke passes screen/world render-demand transitions. Earlier `33d3d72c` has the source-bound physical visual pass for its annotation-free fixture. | The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved. The new annotation demand needs affected visual/idle qualification. |
+| S70     | Open: finish private recovery checks and deliver             | The signed PR-merge archive for tree-equivalent `9adbd583` passes attestation, checksum, all 2,129 packaged-file checks on VM105 and an isolated private-host smoke. Earlier private package workspace/evidence journeys retain their exact revision scope. Production remains on `e7a878e`.                                                           | The current package still needs HTTPS/recovery and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending.                                                                        |
 
 ### Latest investigation checkpoint — 21 October 2026
+
+**Current integration and package checkpoint.** The performance branch at
+`9adbd583` contains the targeted CCTV stale-catalog correction from current
+`dev` (`55dd552c`); no further `dev` reconciliation is needed. Its selected
+[CI run 39659621746](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39659621746)
+and [release verification run 39659621845](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39659621845)
+pass. The signed merge archive's tree matches `9adbd583`; its downloaded
+SHA-256 is `fb7116ab27725ab069db4d2a586bfd4d2c21779f97e831ba82a4ad0b384531ca`.
+Repository/workflow/source-commit attestation checks, VM105 archive transfer,
+all 2,129 release-manifest files, and an isolated private production-host
+smoke pass. These checks close the former **package integrity** gap for this
+tree, but do not satisfy HTTPS/recovery, rendered hardware, or final-soak
+acceptance. They do not authorize stable publication.
+This ledger edit does not change application runtime, but it changes the Git
+commit; final exact-commit release qualification must use the eventual frozen
+candidate rather than treating the older archive as its artifact.
+
+The [isolated attachment-order control](performance-evidence/s69-native-matrix-20261019/attachment-order-control-disposition-20261021.json)
+was rejected before hardware comparison: moving hidden GeoJSON attachment
+ahead of Entity styling fails five lifecycle/ownership tests, while the current
+candidate passes all 105 focused tests. In particular, early attachment lets
+visualizers see incomplete graphics and permits a partially converted source
+to enter the scene. The production attachment order stays unchanged. Current
+raw Windows interactions show two distinct failures: the 144 ms native p95 is
+driven by the first OFF action, whereas warmed ON actions have slower full
+rendered readiness than the control. Neither result is waived; the next
+runtime diagnosis must preserve the current ownership invariants.
 
 **S51 annotation-demand follow-up, engineering implemented at `8ee87442`.**
 The hybrid renderer now holds continuous Cesium rendering only while an
