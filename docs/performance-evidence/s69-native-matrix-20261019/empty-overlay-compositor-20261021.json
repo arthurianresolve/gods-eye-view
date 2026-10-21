@@ -1,0 +1,49 @@
+{
+  "schema": "gev-empty-overlay-compositor-diagnostic/v1",
+  "recordedDate": "2026-10-21",
+  "applicationCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+  "scope": "diagnostic only; local standard source build, not a signed artifact or formal visual comparison",
+  "environment": {
+    "os": "Windows",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "drawingBuffer": [2880, 1800],
+    "browserVersion": "not recorded"
+  },
+  "staticImageControl": {
+    "input": "Previously captured baseline PNG displayed at native CSS size and DPR 2",
+    "emptyOverlayShownVersusHidden": {
+      "changedPixels": 0,
+      "maximumChannelDelta": 0
+    }
+  },
+  "liveGlobe": {
+    "firstAttempt": "invalid: map imagery changed across captures; retained as a failed diagnostic",
+    "settledAttempt": {
+      "sequence": ["hidden", "shown", "hidden", "shown"],
+      "shownVersusHidden": {
+        "changedPixels": 3021,
+        "maximumChannelDelta": 1
+      },
+      "hiddenRepeat": {
+        "changedPixels": 0,
+        "maximumChannelDelta": 0
+      },
+      "shownRepeat": {
+        "changedPixels": 0,
+        "maximumChannelDelta": 0
+      }
+    },
+    "overlapWithEarlierCrossBuildPixelPositions": {
+      "overlayChangedPixels": 3021,
+      "crossBuildChangedPixels": 12249,
+      "overlap": 160
+    }
+  },
+  "conclusion": "The empty overlay can change live WebGL raster bytes on this GPU, but this different-scene toggle does not establish that it caused the formal baseline/candidate mismatch or a measurable performance benefit. No visual acceptance or runtime change follows.",
+  "evidenceArchive": {
+    "machine": "VM105",
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/live-overlay-diagnostic-20261021.tar",
+    "sha256": "643b4763457418913dc3aebf16e006b833583cd26955bafbddc0361738e75038",
+    "readback": "independent SHA-256 match after transfer"
+  }
+}

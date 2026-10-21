@@ -55,6 +55,17 @@ After archiving, a local E: report returned zero bytes despite having parsed
 earlier. E: is withdrawn from build or evidence use until its integrity is
 repaired independently; the verified VM archive is the evidence master.
 
+A [bounded empty-overlay diagnostic](performance-evidence/s69-native-matrix-20261019/empty-overlay-compositor-20261021.json)
+on the exact source runtime finds no changed pixels over a static decoded PNG.
+On a settled live Intel UHD 620 globe, toggling the empty full-screen SVG
+produces 3,021 changed pixels at most 1/255; repeated captures within each
+toggle state are byte-identical. An earlier unsettled attempt is invalid
+because map imagery changed. Only 160 of those pixel positions overlap the
+12,249 changed positions in the different-scene formal comparison, so this
+does not attribute that comparison to the whiteboard change or confer visual
+acceptance. The diagnostic images and scripts are preserved in a VM105 archive
+with independent SHA-256 readback. The runtime remains unchanged.
+
 The exact-runtime local browser workspace journey passes save, duplicate and
 open, two-tab conflict handling, reload/reopen, command-palette access,
 GeoJSON preview/apply/save/reload rendering and the synthetic demo against a
