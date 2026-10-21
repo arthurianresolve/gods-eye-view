@@ -1760,39 +1760,89 @@ async function loadReplay(page) {
       await app.dataManager.refreshLayer('flights');
       app.viewer.scene.requestRender();
     });
-    await page.waitForFunction(
-      async () => {
-        const app = window.__godsEyeView;
-        const selected = await app.aircraftSource.getSnapshot();
-        const aircraft = selected.records?.find(
-          (record) => record.id === 'SYNTH-001',
-        );
-        const module = app.dataManager.layers.get('flights')?.module;
-        const rendered = module
-          ?.getAnalystRecords?.(8)
-          ?.find((record) => record.icao24 === aircraft?.id);
-        const visual = window.__qualificationFlightWitnessReader?.(
-          aircraft?.id,
-        );
-        return Boolean(
-          aircraft &&
-          rendered?.provenance?.positionObservedAtMs ===
-            aircraft.positionTimeMs &&
-          Math.abs(rendered.lat - aircraft.latitude) <= 1e-9 &&
-          Math.abs(rendered.lon - aircraft.longitude) <= 1e-9 &&
-          visual?.billboardVisible &&
-          Math.abs(visual.billboardPosition?.latitude - aircraft.latitude) <=
-            1e-9 &&
-          Math.abs(visual.billboardPosition?.longitude - aircraft.longitude) <=
-            1e-9 &&
-          visual.screenPosition?.x >= 0 &&
-          visual.screenPosition?.y >= 0 &&
-          visual.screenPosition.x < visual.canvas.width &&
-          visual.screenPosition.y < visual.canvas.height,
-        );
-      },
-      { timeout: INTERACTION_TIMEOUT_MS },
-    );
+    try {
+      await page.waitForFunction(
+        async () => {
+          const app = window.__godsEyeView;
+          const selected = await app.aircraftSource.getSnapshot();
+          const aircraft = selected.records?.find(
+            (record) => record.id === 'SYNTH-001',
+          );
+          const module = app.dataManager.layers.get('flights')?.module;
+          const rendered = module
+            ?.getAnalystRecords?.(8)
+            ?.find((record) => record.icao24 === aircraft?.id);
+          const visual = window.__qualificationFlightWitnessReader?.(
+            aircraft?.id,
+          );
+          return Boolean(
+            aircraft &&
+            rendered?.provenance?.positionObservedAtMs ===
+              aircraft.positionTimeMs &&
+            Math.abs(rendered.lat - aircraft.latitude) <= 1e-9 &&
+            Math.abs(rendered.lon - aircraft.longitude) <= 1e-9 &&
+            visual?.billboardVisible &&
+            Math.abs(visual.billboardPosition?.latitude - aircraft.latitude) <=
+              1e-9 &&
+            Math.abs(
+              visual.billboardPosition?.longitude - aircraft.longitude,
+            ) <= 1e-9 &&
+            visual.screenPosition?.x >= 0 &&
+            visual.screenPosition?.y >= 0 &&
+            visual.screenPosition.x < visual.canvas.width &&
+            visual.screenPosition.y < visual.canvas.height,
+          );
+        },
+        { timeout: INTERACTION_TIMEOUT_MS, polling: 100 },
+      );
+    } catch (error) {
+      const diagnostic = await page
+        .evaluate(async () => {
+          const app = window.__godsEyeView;
+          const state = app?.aircraftSource?.getState?.();
+          let aircraft = null;
+          let snapshotError = null;
+          try {
+            aircraft = (await app.aircraftSource.getSnapshot())?.records?.find(
+              (record) => record.id === 'SYNTH-001',
+            );
+          } catch (snapshotFailure) {
+            snapshotError = snapshotFailure?.name || 'Error';
+          }
+          const rendered = app?.dataManager?.layers
+            ?.get('flights')
+            ?.module?.getAnalystRecords?.(8)
+            ?.find((record) => record.icao24 === 'SYNTH-001');
+          const visual =
+            window.__qualificationFlightWitnessReader?.('SYNTH-001');
+          return {
+            mode: state?.mode || null,
+            recordingId: state?.recordingId || null,
+            snapshotError,
+            aircraft: aircraft
+              ? {
+                  latitude: aircraft.latitude,
+                  longitude: aircraft.longitude,
+                  positionTimeMs: aircraft.positionTimeMs,
+                }
+              : null,
+            rendered: rendered
+              ? {
+                  latitude: rendered.lat,
+                  longitude: rendered.lon,
+                  positionObservedAtMs:
+                    rendered.provenance?.positionObservedAtMs,
+                }
+              : null,
+            visual,
+            flightsEnabled: app?.dataManager?.isEnabled?.('flights') || false,
+          };
+        })
+        .catch(() => null);
+      error.message +=
+        '; replay materialization state: ' + JSON.stringify(diagnostic);
+      throw error;
+    }
     return replayCameraSetup;
   });
 }
