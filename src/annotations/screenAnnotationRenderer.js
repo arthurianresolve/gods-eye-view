@@ -74,16 +74,6 @@ export function createScreenAnnotationRenderer(
     scene.camera.positionWC,
   );
   const records = new Map(); // anno.id -> { anno, group, parts }
-  // Departing groups remain painted for the existing 360 ms removal window.
-  // An empty SVG otherwise owns a viewport-sized compositor surface even with
-  // only <defs> present. Hide only when neither active nor departing marks exist.
-  const departing = new Set();
-  let destroyed = false;
-  function syncLayerVisibility() {
-    const display =
-      !destroyed && (records.size || departing.size) ? '' : 'none';
-    if (layer.style.display !== display) layer.style.display = display;
-  }
   const scratch = new Cesium.Cartesian2();
   const scratchDir = new Cesium.Cartesian3();
   // Per-point ground height cache. Marks must sit on the real surface, not at
@@ -289,7 +279,6 @@ export function createScreenAnnotationRenderer(
     // annotate of the same geometry stacked a fresh mark on top of the corpse.
     records.set(anno.id, { anno, group, parts });
     try {
-      syncLayerVisibility();
       svg.appendChild(group);
       // trigger draw-on / fade-in on the next frame
       requestAnimationFrame(() => group.classList.add('gev-in'));
@@ -322,7 +311,6 @@ export function createScreenAnnotationRenderer(
         /* never inserted */
       }
       if (records.size === 0) heightCache.clear();
-      syncLayerVisibility();
       throw error;
     }
   }
@@ -696,29 +684,16 @@ export function createScreenAnnotationRenderer(
     rec.group.classList.remove('gev-in');
     rec.group.classList.add('gev-out');
     const node = rec.group;
-    const departure = { node, timer: null };
-    departing.add(departure);
-    try {
-      departure.timer = window.setTimeout(() => {
-        // A callback queued before destroy must not touch a released overlay.
-        if (!departing.has(departure)) return;
-        try {
-          node.remove();
-        } catch {
-          /* gone */
-        } finally {
-          departing.delete(departure);
-          syncLayerVisibility();
-        }
-      }, 360);
-    } catch (error) {
-      departing.delete(departure);
-      throw error;
-    }
+    window.setTimeout(() => {
+      try {
+        node.remove();
+      } catch {
+        /* gone */
+      }
+    }, 360);
     records.delete(anno.id);
     // Board emptied → drop accumulated height samples (natural reset point).
     if (records.size === 0) heightCache.clear();
-    syncLayerVisibility();
   }
 
   function sync() {
@@ -727,9 +702,6 @@ export function createScreenAnnotationRenderer(
   }
 
   function destroy() {
-    destroyed = true;
-    for (const departure of departing) window.clearTimeout(departure.timer);
-    departing.clear();
     try {
       scene.postRender.removeEventListener(onPostRender);
     } catch {
@@ -752,7 +724,6 @@ export function createScreenAnnotationRenderer(
 function buildOverlay() {
   const layer = document.createElement('div');
   layer.className = 'gev-screen-whiteboard';
-  layer.style.display = 'none';
   const svg = document.createElementNS(SVGNS, 'svg');
   svg.setAttribute('class', 'gev-screen-whiteboard-svg');
   svg.setAttribute('preserveAspectRatio', 'none');
