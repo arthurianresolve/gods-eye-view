@@ -1,6 +1,6 @@
 # Cesium performance plan
 
-## Current execution plan — amended 20 October 2026
+## Current execution plan — amended 21 October 2026
 
 This section is the current execution and acceptance policy. The dated
 checkpoints below retain their original revision-specific results and do not
@@ -31,7 +31,17 @@ and [release verification](https://github.com/arthurianresolve/gods-eye-view/act
 Twelve optional jobs were skipped. This validates that head's software checks;
 it does not close the hardware gates below.
 
-The latest private child, `3a16f8de`, corrects a source-owned demand mismatch:
+The later documentation head `9cc4175f` passed six selected CI jobs and release
+verification, but its [macOS installation/recovery job failed](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39503819167)
+while importing into the prior `6b896e2a` installation. A single isolated,
+instrumented [macOS seed diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39509413079)
+at `ae49a6f9` completed successfully: its bounded ledger records the original
+click, admitted apply, save and refresh, with no dropped events. It did not
+reproduce the timeout and does not establish its cause or replace full recovery
+acceptance. The original CI failure remains unresolved. The diagnostic changes
+only its disposable historical installation and is not part of the candidate.
+
+The separate private child, `3a16f8de`, corrects a source-owned demand mismatch:
 known hidden-source fade states retained scene demand even though the existing
 paint gate rejected their owner. Its active-lane behavior checks pass **95
 Node 24 tests**; the staged broader suite passes **192 tests on each Node
@@ -64,7 +74,7 @@ including resized, portrait, moving and restored cases. Native picking/depth,
 hidden-null behavior and pending-capture destruction checks pass, with normal
 browser/helper closure.
 
-The full-app functional gate nevertheless **fails two independent checks**:
+Its original R3 full-app functional acquisition **failed two independent checks**:
 
 - The candidate renders one frame during the declared two-second idle park:
   native frame number **82→83**, completed-frame count **72→73**. A retained
@@ -83,9 +93,45 @@ The [S56 disposition receipt](performance-evidence/s69-native-matrix-20261019/fr
 binds the source, complete raw result, independent reviews and VM105 archive:
 **115 files, 3,566,204 bytes**, plus 39 existing QA source references, verified
 through two independent readbacks. Both prior unrun plans are preserved.
-The application default retains preservation; `2979530e` remains private and
-unadopted. No latency comparison, performance acceptance or final Ampfing soak
-is credited to this experiment.
+That acquisition remains failed; no performance acceptance or final Ampfing
+soak is credited to it.
+
+The prospective R4 settlement correction also fails preparation in both roles:
+all eight validation demands are spent before the first eligible completed
+frame, leaving only one of the required two confirmations at the 75-second
+deadline. Its complete failed result and **101 files, 4,158,369 bytes** remain
+archived separately. R5 corrects only ownership of the final reserved demand:
+it can be spent by an eligible completed-frame callback. The same bounds of
+**75 seconds, eight requests and two completed confirmations** remain in place,
+with the original geometry, idle, hidden, destruction and pixel gates.
+
+The fresh R5 functional pair **passes all ten cases in each role**. All 14
+product captures match their own same-postRender references, and all four
+declared cross-role viewport/pointer comparisons are pixel-exact. Both
+two-second idle parks retain native frame **117→117**, stable nonblack pixels
+and no outstanding render demand. Native picking/depth, hidden-null behavior,
+pending destruction and normal browser/helper closure pass. This is a bounded
+functional pass; the original R3 and R4 failures are not reclassified.
+
+The subsequent single six-action latency comparison still demonstrates
+**no consistent native benefit**. Control native durations are
+**512/208/56/104/48/96 ms**; the private child records
+**424/144/56/112/56/112 ms**. The first pair improves descriptively, but both
+warm OFF durations worsen to 112 ms; warm ON native latency has no gain.
+Warm ON readiness is **136.7/119.3 ms** versus **124.9/108.1 ms**, a descriptive
+improvement that does not compensate for failed native limits. All twelve
+trusted actions are retained with unchanged frozen QA `6de65358` v6/v7,
+matched fixture/native settings, stable actual context attributes apart from
+the declared preservation flag, four complete asset checks and normal closure.
+Six actions per role cannot satisfy the unchanged twenty-sample contract.
+
+The [combined R5 functional and latency disposition](performance-evidence/s69-native-matrix-20261019/framebuffer-2979530e-functional-pass-latency-rejected.json)
+binds both complete acquisitions and independent image/timing readbacks to
+**126 files, 5,467,772 bytes**, verified through two independent VM105
+readbacks, with 39 existing QA source references and 32 unchanged build-support
+files also rehashed. The application default retains preservation;
+`2979530e` remains private and unadopted. No new formal twenty-sample capture
+or final Ampfing soak is justified by this diagnostic.
 
 The preceding private experiment `143eae30` removes redundant inactive Context
 writes and skips intrinsic Data-panel measurement only when a guarded padding
