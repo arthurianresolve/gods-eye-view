@@ -229,18 +229,18 @@ normal style/browser/helper cleanup. All 13 records (1,450,955 bytes) are
 independently verified on VM105. No runtime change is adopted, no acceptance
 gate is relaxed, and no further row-isolation run is justified by these results.
 
-A separate, reviewable layer-panel refresh change at `68e4d196` caches row
-references only while their owning panel is mounted, discards detached rows,
-and passes one live layer snapshot to both the toggle and weather readouts.
-It removes repeated DOM selector searches and a second `getAll()` call on each
-status refresh without changing layer state, label content, density or Cesium
-render settings. Sixteen focused panel tests pass on Windows Node 24, including
-changed status, keyboard focus, detached-row cleanup and weather-readout
-content; formatting, import direction and package boundaries pass. This is
-implemented and automatically checked code, **not yet a demonstrated native
-latency improvement**. Exact-commit CI, browser visual checks and affected
-Windows comparison remain pending. It receives no 100 ms latency, S69 matrix
-or final soak credit, and production remains unchanged.
+A separate, reviewable layer-panel refresh experiment at `68e4d196` cached
+owned row references and reused one layer snapshot. Its 16 focused tests,
+formatting, import direction and package boundaries passed; the exact-source
+release artifact also passed signed verification. The [bounded real-browser
+comparison](performance-evidence/s69-native-matrix-20261019/layer-refresh-rejected-20261021.json)
+on Windows UHD 620 used verified baseline/candidate release trees, five batches
+of 40 synchronous status refreshes per role and normal browser cleanup. It
+reduced panel queries from 6,400 to 600 and layer snapshots from 400 to 200,
+but only **one of four post-warmup elapsed-time batches** improved. The
+predeclared benefit criterion failed, so `20fa36b4` reverts the runtime change.
+The diagnostic is not native click-latency or visual acceptance; no 100 ms,
+S69 matrix or final soak credit follows. Production remains unchanged.
 
 Candidate preflight discovered that **all 886 previously verified USB cache
 files now read as same-length zeros**. New writes to D: were stopped; the
