@@ -601,6 +601,10 @@ async function captureRevision({
           pausedCapture = await captureWithDebuggerPause({
             page,
             readCallback: snapshotReader,
+            // The atomic guard needs only the scanline and HUD state. Paint,
+            // pointer and decoration proofs are read after the debugger pauses;
+            // repeating them on every phase-2 poll can consume the deadline.
+            guardReadCallback: readVisualSnapshotPhaseInPage,
             readCallbackArgs: { expectedHudVisible },
             pauseWhen: isVisualSnapshotReadyToPause,
             describeGuardFailure: describeVisualPauseReadiness,

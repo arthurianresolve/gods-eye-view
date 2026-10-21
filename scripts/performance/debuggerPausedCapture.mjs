@@ -54,6 +54,7 @@ export async function captureWithDebuggerPause({
   page,
   readCallback = null,
   readCallbackArgs,
+  guardReadCallback = null,
   pauseWhen = null,
   describeGuardFailure = null,
   requestNextGuardFrame = null,
@@ -74,10 +75,18 @@ export async function captureWithDebuggerPause({
     'operationTimeoutMs',
   );
   const expression = callbackExpression(readCallback, readCallbackArgs);
+  const guardExpression =
+    guardReadCallback === null
+      ? expression
+      : callbackExpression(guardReadCallback, readCallbackArgs);
+  if (guardReadCallback !== null && (pauseWhen === null || !expression))
+    throw new TypeError(
+      'A separate guard read requires a pause guard and a paused read callback.',
+    );
   if (
     pauseWhen !== null &&
     (typeof pauseWhen !== 'function' ||
-      !expression ||
+      !guardExpression ||
       pauseWhen.toString().length > 4096)
   )
     throw new TypeError(
@@ -109,7 +118,7 @@ export async function captureWithDebuggerPause({
     pauseWhen === null
       ? null
       : `(() => {
-    const snapshot = ${expression};
+    const snapshot = ${guardExpression};
     const ready = (${pauseWhen.toString()})(snapshot);
     if (typeof ready !== 'boolean') throw new TypeError('Pause guard must return a boolean.');
     if (ready) debugger;

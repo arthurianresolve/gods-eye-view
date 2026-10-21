@@ -25,6 +25,16 @@ completion is separate from performance acceptance.
 
 ### Latest investigation checkpoint — 21 October 2026
 
+The final-visual capture producer now uses the existing atomic phase/HUD reader
+for each debugger pause poll and reserves the full paint, pointer-history,
+full-extent sweep and decoration reads for the paused before/after evidence.
+The prior failure spent its unchanged five-second deadline polling phase 2 and
+never reached a PNG. This narrows repeated QA observer work without changing
+the eligible phase, screenshot settings, attempt count or deadlines. Focused
+tests cover repeated guard reads, both paused full reads and owned debugger
+cleanup. **This is a producer correction, not visual or GPU acceptance**; the
+affected paired capture must be reacquired on hardware before S69 can close.
+
 The public documentation head `fd34e5d5` passed six selected CI jobs and
 release verification, but [macOS recovery failed again](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39541631101).
 That run timed out waiting for terminal import status. Its later diagnostic

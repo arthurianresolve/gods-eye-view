@@ -17,6 +17,7 @@ function fakePage({
   enableGate = null,
   detachError = false,
   guardContext = {},
+  evaluatePausedExpressions = false,
 } = {}) {
   const events = new EventEmitter();
   const calls = [];
@@ -57,6 +58,13 @@ function fakePage({
       if (method === 'Runtime.evaluate') return new Promise(() => {});
       if (method === 'Debugger.evaluateOnCallFrame') {
         if (evaluateError) return { exceptionDetails: { text: 'read failed' } };
+        if (evaluatePausedExpressions)
+          return {
+            result: {
+              type: 'object',
+              value: runInNewContext(params.expression, guardContext),
+            },
+          };
         return { result: { type: 'object', value: { readOnly: true } } };
       }
       if (method === 'Debugger.resume' && resumeError)
@@ -168,6 +176,50 @@ test('atomic guard waits for the declared phase without taking rejected screensh
   });
 });
 
+test('separate atomic guard reads phase without repeatedly reading paused evidence', async () => {
+  const context = { phase: 2, guardReads: 0, proofReads: 0 };
+  const fake = fakePage({
+    guardContext: context,
+    evaluatePausedExpressions: true,
+  });
+  const result = await captureWithDebuggerPause({
+    page: fake.page,
+    readCallback: () => {
+      globalThis.proofReads++;
+      return { phase: globalThis.phase, proof: 'complete' };
+    },
+    guardReadCallback: () => {
+      globalThis.guardReads++;
+      return { phase: globalThis.phase };
+    },
+    pauseWhen: (snapshot) => snapshot.phase === 0,
+    requestNextGuardFrame: (snapshot) => {
+      if (snapshot.phase !== 2) return false;
+      globalThis.phase = 0;
+      return true;
+    },
+    screenshot: fake.screenshot,
+    pauseTimeoutMs: 1000,
+  });
+  assert.equal(context.guardReads, 2);
+  assert.equal(context.proofReads, 2);
+  assert.equal(result.pause.guard.checks, 2);
+  assert.equal(result.readBefore.proof, 'complete');
+  assert.equal(result.readAfter.proof, 'complete');
+  const pausedReads = fake.calls.filter(
+    ({ method }) => method === 'Debugger.evaluateOnCallFrame',
+  );
+  assert.equal(pausedReads.length, 2);
+  assert.ok(
+    pausedReads.every(({ params }) => params.expression.includes('proofReads')),
+  );
+  assert.deepEqual(result.cleanup, {
+    resumed: true,
+    disabled: true,
+    detached: true,
+  });
+});
+
 test('atomic guard rejects thrown, asynchronous, and nonboolean predicates before capture', async () => {
   for (const pauseWhen of [
     () => {
@@ -227,6 +279,8 @@ test('atomic guards require a bounded synchronous read/predicate contract', asyn
   for (const options of [
     { pauseWhen: () => true },
     { pauseWhen: 1, readCallback: () => ({}) },
+    { guardReadCallback: () => ({ phase: 0 }), readCallback: () => ({}) },
+    { guardReadCallback: () => ({ phase: 0 }), pauseWhen: () => true },
   ]) {
     const fake = fakePage();
     await assert.rejects(
@@ -235,7 +289,7 @@ test('atomic guards require a bounded synchronous read/predicate contract', asyn
         screenshot: fake.screenshot,
         ...options,
       }),
-      /atomic pause guard requires/,
+      /(?:atomic pause guard requires|separate guard read requires)/i,
     );
     assert.equal(fake.calls.length, 0);
   }

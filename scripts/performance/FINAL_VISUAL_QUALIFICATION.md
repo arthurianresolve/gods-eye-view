@@ -74,6 +74,13 @@ animation parameters or application timers. The validator independently derives
 the phase from eight raw alpha rows, checks their CSS-to-native-pixel mapping,
 and rejects missing, contradictory or changed evidence.
 
+Each pre-pause poll reads only the phase and required HUD presentation state.
+The full paint, pointer, sweep and decoration evidence is read before and after
+the screenshot while the debugger is paused. These reads retain the same
+evidence contract; this avoids repeating large DOM snapshots on every
+ineligible phase-2 poll. A timeout still fails the attempt and releases its
+debugger session.
+
 This bounded pause addresses a measured fixture limitation: ordinary PNG
 capture on this machine took 1.7–1.9 seconds, longer than the HUD's 800 ms REC
 blink. The first unpaused attempts remain failed evidence. Wall-clock freezing
