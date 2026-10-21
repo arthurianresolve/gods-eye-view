@@ -46,7 +46,17 @@
     "archiveBytes": 38611303,
     "archiveSha256": "fd9cc691b63161aeb631373b1228a82f4d5ec841d30f15324fbfb3edb9d1ff16",
     "archiveFileEntries": 35,
-    "vm105IndependentReadback": "pending"
+    "vm105IndependentReadback": {
+      "status": "passed",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/repeated-33d3d72c-decoration-20261021.tar.gz",
+      "verifierSha256": "bb61a44b9e784896a22210d60dfe1be35f695572070169d956da74663329b683",
+      "verified": [
+        "archive SHA-256",
+        "35 regular files and 24 PNGs",
+        "plan, validation and three pair-report SHA-256 values",
+        "60 comparisons with exact pixels outside decoration support"
+      ]
+    }
   },
   "limits": [
     "The earlier repeated-full-image-controls-v1 batch remains failed and is not rewritten.",

@@ -134,8 +134,9 @@ maximum logo RGB variation is 1 and maximum badge variation is 7. Alpha,
 protected interior content, source hashes, viewport, drawing-buffer size,
 settings, camera, timestamp and populations satisfy the existing contract.
 All six fresh browser documents and their debugger/interception ownership
-clean up. The raw 35-file packet has a local SHA-256-bound archive; independent
-VM105 readback is pending. This is a physical Windows visual pass for the exact
+clean up. VM105 independently verifies the raw 35-file archive SHA-256, all 24
+PNG entries, the plan, validation and three pair-report hashes, and the 60
+comparison records. This is a physical Windows visual pass for the exact
 `33d3d72c` runtime under the **source-bound** policy, not a pass of the failed
 full-image policy or a latency/performance result. [CI run 39629558657](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629558657)
 and [signed release run 39629559144](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39629559144)
