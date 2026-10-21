@@ -1,0 +1,340 @@
+{
+  "schema": "gev-disable-presentation-formal-disposition/v1",
+  "createdAt": "2026-10-21T03:37:06.537Z",
+  "candidate": "108c7b67246e8d7b09e495ebdd07cf8b9b884cff",
+  "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+  "qa": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "status": "formal-acquisition-completed-acceptance-failed",
+  "acceptanceEligible": false,
+  "adopted": false,
+  "productionChanged": false,
+  "change": "Direct user OFF receives the existing abortable RAF-to-task presentation opportunity. Bulk clear/compensation keep immediate teardown. Public API unchanged.",
+  "validation": {
+    "focused": {
+      "windowsNode24": 177,
+      "vmNode24": 177,
+      "vmNode26": 177
+    },
+    "boundaries": "passed",
+    "standardBuild": "passed"
+  },
+  "metrics": {
+    "coldStartup": {
+      "status": "unavailable",
+      "reason": "Identity-only build proof supplies no cold-startup observations."
+    },
+    "localControl": {
+      "status": "failed",
+      "protocolVersion": 4,
+      "feedbackPolicy": "trusted-click-event-timing-observed-acknowledgement-v6",
+      "semantic": "Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.",
+      "baseline": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 1.800000011920929,
+        "clickToNextRenderingP95Ms": 192,
+        "diagnosticTwoRafFeedbackP95Ms": 150.5,
+        "clickToFullReadyStateP95Ms": 55.5,
+        "clickToFullRenderedReadinessP95Ms": 57.19999998807907,
+        "acknowledgementCorrectness": {
+          "status": "observed",
+          "proof": "same-intent-current-visible-natural-raf-v1",
+          "sampleCount": 20
+        },
+        "compositorAttribution": {
+          "status": "unavailable",
+          "reason": "no-acknowledgement-to-presented-frame-binding"
+        },
+        "diagnosticUncertainGeometryObservations": 270,
+        "absoluteAcknowledgementFailures": [
+          "matched click-to-next-rendering p95 exceeds the 100ms limit"
+        ]
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 3.0999999940395355,
+        "clickToNextRenderingP95Ms": 104,
+        "diagnosticTwoRafFeedbackP95Ms": 119.69999998807907,
+        "clickToFullReadyStateP95Ms": 149.2000000178814,
+        "clickToFullRenderedReadinessP95Ms": 154.5,
+        "acknowledgementCorrectness": {
+          "status": "observed",
+          "proof": "same-intent-current-visible-natural-raf-v1",
+          "sampleCount": 20
+        },
+        "compositorAttribution": {
+          "status": "unavailable",
+          "reason": "no-acknowledgement-to-presented-frame-binding"
+        },
+        "diagnosticUncertainGeometryObservations": 258
+      },
+      "absoluteAcknowledgementLimitMs": 100,
+      "absoluteAcknowledgementGateAppliesTo": "candidate",
+      "fullReadinessRegressionLimitPct": 10,
+      "failures": [
+        "matched click-to-next-rendering p95 exceeds the 100ms limit",
+        "click-to-full-ready state regression exceeds 10%",
+        "click-to-full-rendered readiness regression exceeds 10%"
+      ],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "loadedReplaySeek": {
+      "status": "measured",
+      "protocolVersion": 4,
+      "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+      "baseline": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 49.400000005960464,
+        "inputToRenderedFrameP95Ms": 61.69999998807907
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 55.900000005960464,
+        "inputToRenderedFrameP95Ms": 60.70000001788139
+      },
+      "limitMs": 250,
+      "failures": [],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "sampledPeakHeap": {
+      "status": "measured",
+      "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+      "baselinePeakHeapBytes": 74396192,
+      "candidatePeakHeapBytes": 72170376,
+      "sampleCountByBuild": {
+        "baseline": 83,
+        "candidate": 82
+      },
+      "actualDurationMsByBuild": {
+        "baseline": 87079.02120000002,
+        "candidate": 86022.86569999997
+      },
+      "changePct": -2.9918413028451782,
+      "regressionOver10Pct": false,
+      "sourceSoakStatus": null,
+      "sourceSoakFailurePreserved": false,
+      "thresholdPct": 10,
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    }
+  },
+  "roles": {
+    "baseline": {
+      "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+      "nativeDurationsMs": [
+        424,
+        192,
+        128,
+        96,
+        128,
+        96,
+        128,
+        96,
+        128,
+        96,
+        144,
+        112,
+        128,
+        96,
+        144,
+        96,
+        128,
+        96,
+        128,
+        96
+      ],
+      "nativeP95Ms": 192,
+      "readinessP95Ms": 55.5,
+      "fullRenderP95Ms": 57.19999998807907,
+      "replayRenderP95Ms": 61.69999998807907,
+      "actionCount": 20,
+      "replaySampleCount": 20,
+      "completedMixedUseCycles": 6,
+      "warmupCycles": 2,
+      "foreground": {
+        "status": "completed",
+        "failureReason": null,
+        "observations": 125,
+        "allObservedVisibleAndFocused": true
+      },
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "effectiveCloseDeadlineMs": 5000,
+          "postDisconnectExitTimeoutMs": 5000,
+          "postDisconnectExitWaitAttempted": false,
+          "closeStartHostMs": 209001.1747,
+          "closeSettledHostMs": 209969.7783,
+          "closeElapsedMs": 968.6036000000022,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 889.981300000014
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        },
+        "nativeWindowGeometryHelper": {
+          "schema": "gev-owned-native-window-geometry-session/v1",
+          "status": "closed",
+          "helperPid": 45320,
+          "requests": 22,
+          "exitCode": 0,
+          "signal": null,
+          "forcedTermination": false,
+          "elapsedMs": 52.580199999996694
+        }
+      },
+      "cleanupError": null
+    },
+    "candidate": {
+      "applicationCommit": "108c7b67246e8d7b09e495ebdd07cf8b9b884cff",
+      "nativeDurationsMs": [
+        304,
+        104,
+        80,
+        64,
+        48,
+        48,
+        48,
+        48,
+        48,
+        80,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48
+      ],
+      "nativeP95Ms": 104,
+      "readinessP95Ms": 149.2000000178814,
+      "fullRenderP95Ms": 154.5,
+      "replayRenderP95Ms": 60.70000001788139,
+      "actionCount": 20,
+      "replaySampleCount": 20,
+      "completedMixedUseCycles": 6,
+      "warmupCycles": 2,
+      "foreground": {
+        "status": "completed",
+        "failureReason": null,
+        "observations": 124,
+        "allObservedVisibleAndFocused": true
+      },
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "effectiveCloseDeadlineMs": 5000,
+          "postDisconnectExitTimeoutMs": 5000,
+          "postDisconnectExitWaitAttempted": false,
+          "closeStartHostMs": 377981.8728,
+          "closeSettledHostMs": 379004.2006,
+          "closeElapsedMs": 1022.32779999997,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 916.9557000000495
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        },
+        "nativeWindowGeometryHelper": {
+          "schema": "gev-owned-native-window-geometry-session/v1",
+          "status": "closed",
+          "helperPid": 45284,
+          "requests": 22,
+          "exitCode": 0,
+          "signal": null,
+          "forcedTermination": false,
+          "elapsedMs": 52.69660000002477
+        }
+      },
+      "cleanupError": null
+    }
+  },
+  "rawSha256": "544db8787a4235ae717bf6f60eabfb30148bb90a1bc3dafc06fccbae895d5ea0",
+  "reviewSha256": "036a4fc0e8b6300b391048c3c46520a0a2c816d2e819b05a5dac6e6cfa8f8882",
+  "compactReviewSha256": "e08e4e3b60ab365a398a73ef2bb8e4aea32d3f338576ed996f18f59461e2599a",
+  "archive": {
+    "status": "all-files-independently-verified",
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/disable-presentation-108c7b67-formal-20261021",
+    "fileCount": 36,
+    "totalBytes": 4800070,
+    "manifestSha256": "0d5f7f9e17d113ba5079e4006627eb4b5488c95f7aa9913ed12b7ed05831bc9c",
+    "completedAt": "2026-10-21T03:34:05.571Z",
+    "rawModified": false,
+    "productionChanged": false,
+    "acceptanceEligible": false
+  },
+  "conclusion": "Acknowledgement improves descriptively but fails100ms and independent readiness/render regression limits. No threshold changes, sample exclusions, rerating, final-soak credit or deployment. Investigate the activation phases before another acceptance campaign.",
+  "limitations": [
+    "Native Event Timing plus acknowledgement geometry does not identify presented acknowledgement pixels.",
+    "Sampled peak heap is not retained-heap plateau evidence.",
+    "Initial offline consumer invocation lacked the existing Cesium resolver; it failed before evaluation. Re-executing with that resolver used unchanged frozen consumer and raw data."
+  ]
+}

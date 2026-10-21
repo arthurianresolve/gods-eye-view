@@ -25,6 +25,74 @@ completion is separate from performance acceptance.
 
 ### Remaining work, in execution order
 
+The current public head `1b53f706` passes
+[all seven selected CI jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717261)
+and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717279).
+Twelve optional jobs are skipped. The release source is PR merge
+`a79676cf`, whose Git tree equals `1b53f706`; this is software validation,
+not an exact-head final release artifact or hardware acceptance.
+
+The new private child `108c7b67` gives direct user OFF requests the existing
+abortable RAF-to-task presentation opportunity before teardown. Bulk clear
+and compensation retain immediate ordered cleanup. All **177 focused tests**
+pass on Windows Node 24 and VM Node 24/26, with import/package checks and a
+verified isolated standard build. The full unchanged QA `6de65358` V6/V7
+comparison against correctness control `76cc760b` completes normally with
+twenty local actions, twenty replay seeks and eight mixed-use cycles per role.
+Its acknowledgement, asset, foreground and cleanup proofs pass, but its
+**performance acceptance fails**:
+
+- Native click p95 is **104 ms**, above 100 ms; control is **192 ms**.
+- Pre-render readiness is **149.2 versus 55.5 ms**, a **168.83%** regression.
+  Completed rendering is **154.5 versus 57.2 ms**, a **170.10%** regression.
+  Both exceed their independent 10% limits.
+- Replay p95 is **60.7 ms**, within 250 ms. Sampled peak heap is **2.99% below
+  control**. This is not a retained-heap plateau result.
+
+The [formal disposition](performance-evidence/s69-native-matrix-20261019/disable-presentation-108c7b67-formal-disposition.json)
+binds the complete capture, frozen review, source/build/test evidence and
+**36 files / 4,800,070 bytes**, verified through two independent VM105
+readbacks. The raw capture SHA-256 is
+`544db8787a4235ae717bf6f60eabfb30148bb90a1bc3dafc06fccbae895d5ea0`.
+`108c7b67` remains private and unadopted. Its acknowledgement gain does not
+waive the failed limits, and no final Ampfing soak or production update is
+credited to it.
+
+A separate bounded six-action diagnostic on those same builds locates warm
+ON costs in two places: the presentation opportunity delays the first
+eligible source render by roughly one frame, and existing synchronous
+height queries consume **35–46 ms**, including **25–35 ms** in `readPixels`.
+These instrumented spans are diagnostic wall times, not GPU timestamps or
+acceptance results. All 24 queried heights per role match exactly, including
+undefined results. The observations do not justify a query cache, a reduced
+population or a change to terrain/picking semantics.
+
+The later private `468f6bf0` combines the presentation change with the
+previously verified, version-guarded exclusion bridge. It retains the exact
+original Entity exclusion while avoiding its redundant first offscreen pick.
+The prior standalone bridge timing remains unsuccessful; this combination
+must demonstrate a new benefit. **277 focused tests** pass on Windows Node 24
+and VM Node 24/26, and the isolated standard build/import/package checks pass.
+The package checker exceeded deliberately supplied 256/512 MiB heap caps;
+the unchanged checker passes with a 1024 MiB cap. Those failed attempts are
+preserved. The private source is not accepted, published or deployed.
+
+The complete twenty-action comparison for `468f6bf0` now also **fails**.
+Native p95 is **104 ms versus 144 ms** for control, still above 100 ms.
+Pre-render readiness is **73.0 versus 58.2 ms** (+25.43%); completed
+rendering is **75.4 versus 59.9 ms** (+25.88%). Both exceed their independent
+10% limits. All twenty acknowledgement observations pass; eighteen warmed
+native samples are 48 ms, but the initial 352/104 ms pair remains included.
+Replay p95 is **67.7 ms** and sampled peak heap is **0.61% below control**.
+The [formal disposition](performance-evidence/s69-native-matrix-20261019/activation-readbacks-468f6bf0-formal-disposition.json)
+preserves all samples, both short diagnostics, source/build/test evidence and
+**63 files / 7,839,081 bytes**, independently read back twice from VM105.
+Neither the earlier failures nor the final Ampfing soak are reclassified.
+
+Full twenty-sample verification of `468f6bf0` is pending. The canonical
+release and final-soak gates remain open. The following entries preserve
+their earlier revision-specific scope.
+
 The public QA head `09df4331` has passed [all seven selected CI
 jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39482916327)
 and [release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39482916170).
@@ -200,7 +268,7 @@ Six actions do not establish the twenty-sample gate. The next investigation
 must distinguish browser presentation work from completed Cesium rendering;
 another broad qualification run is not justified by this result.
 
-The latest formal attempt compares the default Entity application
+An earlier formal attempt compares the default Entity application
 `ec0f1b2b` with correctness control `76cc760b`, using unchanged frozen QA
 `6de65358`, acknowledgement v6 and readiness v7. Both roles use the newly
 observed **Chrome 155.0.8059.85** executable after the authorized closure of
