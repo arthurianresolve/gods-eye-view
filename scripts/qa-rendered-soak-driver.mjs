@@ -570,6 +570,38 @@ export function evaluateSoakDatacenterEnabledState(
   };
 }
 
+export function evaluateSoakDatacenterDisabledState(state, renderedFrameStart) {
+  const enabled = state?.enabled === true;
+  const computed = state?.computed === true;
+  const total = Number.isInteger(state?.total) ? state.total : null;
+  const active = Number.isInteger(state?.active) ? state.active : null;
+  const renderedFrames = Number.isFinite(state?.renderedFrames)
+    ? state.renderedFrames
+    : null;
+  const frameNumber = Number.isFinite(state?.frameNumber)
+    ? state.frameNumber
+    : null;
+  const renderedFrameObserved =
+    Number.isFinite(renderedFrameStart) &&
+    renderedFrames !== null &&
+    renderedFrames > renderedFrameStart;
+  return {
+    enabled,
+    computed,
+    total,
+    active,
+    renderedFrames,
+    frameNumber,
+    renderedFrameObserved,
+    observed:
+      !enabled &&
+      !computed &&
+      total === 0 &&
+      active === 0 &&
+      renderedFrameObserved,
+  };
+}
+
 async function assertSoakConsoleOwnership(page) {
   const ownership = await flushFixturePageConsoleOwnership(page);
   if (
@@ -865,6 +897,10 @@ export async function createRenderedSoakDriver(
     preloadRenderedFrameEnd: null,
     preloadRenderWitness: null,
     preloadRenderedFrameObserved: false,
+    preloadDisabledRenderedFrameStart: null,
+    preloadDisabledRenderedFrameEnd: null,
+    preloadDisabledRenderWitness: null,
+    preloadDisabledRenderedFrameObserved: false,
     preloadWitnessCollectionStopped: false,
     preloadDisabledObserved: false,
     failureReason: null,
@@ -1924,47 +1960,49 @@ export async function createRenderedSoakDriver(
                 );
               datacenterFixtureValidation.preloadEnabledObserved =
                 datacenterFixtureValidation.preloadEnabledState.observed;
+              datacenterFixtureValidation.preloadDisabledRenderedFrameStart =
+                diagnostics.renderedFrames;
               await page.evaluate(async () => {
-                await window.__godsEyeView.dataManager.setEnabled(
-                  'local-datacenters',
-                  false,
-                  { origin: 'programmatic' },
-                );
+                const app = window.__godsEyeView;
+                await app.dataManager.setEnabled('local-datacenters', false, {
+                  origin: 'programmatic',
+                });
+                app.viewer.scene.requestRender();
               });
               await page.waitForFunction(
-                () => {
-                  const app = window.__godsEyeView;
-                  const lod = app.dataManager.layers
-                    .get('local-datacenters')
-                    ?.module?.getLodDiagnostics?.();
+                (frameStart) => {
+                  const witness = window.__soakDatacenterRenderWitness;
                   return (
-                    !app.dataManager.isEnabled('local-datacenters') &&
-                    lod?.computed === false &&
-                    lod.total === 0 &&
-                    lod.active === 0
+                    Number.isFinite(frameStart) &&
+                    witness?.renderedFrames > frameStart &&
+                    witness.enabled === false &&
+                    witness.computed === false &&
+                    witness.total === 0 &&
+                    witness.active === 0
                   );
                 },
                 { timeout: 30_000 },
+                datacenterFixtureValidation.preloadDisabledRenderedFrameStart,
               );
-              const disabledState = await page.evaluate(() => {
-                const app = window.__godsEyeView;
-                const lod = app.dataManager.layers
-                  .get('local-datacenters')
-                  ?.module?.getLodDiagnostics?.();
-                return {
-                  enabled: app.dataManager.isEnabled('local-datacenters'),
-                  total: lod?.total ?? null,
-                  active: lod?.active ?? null,
-                };
-              });
+              const disabledWitness = await page.evaluate(
+                () => window.__soakDatacenterRenderWitness,
+              );
+              const disabledState = evaluateSoakDatacenterDisabledState(
+                disabledWitness,
+                datacenterFixtureValidation.preloadDisabledRenderedFrameStart,
+              );
+              datacenterFixtureValidation.preloadDisabledRenderedFrameEnd =
+                disabledState.renderedFrames;
+              datacenterFixtureValidation.preloadDisabledRenderWitness =
+                disabledWitness;
+              datacenterFixtureValidation.preloadDisabledRenderedFrameObserved =
+                disabledState.renderedFrameObserved;
               datacenterFixtureValidation.disabledMaterializedFeatureCount =
                 disabledState.total;
               datacenterFixtureValidation.disabledRenderableCount =
                 disabledState.active;
               datacenterFixtureValidation.preloadDisabledObserved =
-                disabledState.enabled === false &&
-                disabledState.total === 0 &&
-                disabledState.active === 0;
+                disabledState.observed;
               assert.equal(
                 datacenterFixtureValidation.requestCount,
                 1,

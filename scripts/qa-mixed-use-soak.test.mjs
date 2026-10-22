@@ -27,6 +27,7 @@ import {
   prepareSoakDatacenterFixtureViewInPage,
   readSoakDatacenterCameraPoseInPage,
   evaluateSoakDatacenterEnabledState,
+  evaluateSoakDatacenterDisabledState,
   installSoakDatacenterPostRenderWitnessInPage,
   startSoakDatacenterPreflightWitnessInPage,
   stopSoakDatacenterPreflightWitness,
@@ -118,6 +119,17 @@ const testDatacenterFixtureReceipt = () => ({
   disabledRenderableCount: 0,
   setupTiming: 'unmeasured-before-interaction-samples',
   preloadEnabledObserved: true,
+  preloadDisabledRenderedFrameStart: 10,
+  preloadDisabledRenderedFrameEnd: 11,
+  preloadDisabledRenderedFrameObserved: true,
+  preloadDisabledRenderWitness: {
+    renderedFrames: 11,
+    frameNumber: 21,
+    enabled: false,
+    computed: false,
+    total: 0,
+    active: 0,
+  },
   preloadDisabledObserved: true,
   requests: [
     {
@@ -619,6 +631,7 @@ test('datacenter camera preflight timeout retains final pose and cleans listener
 test('datacenter postRender witness inspects LOD only during bounded preflight and stops in cleanup', async () => {
   let lodReads = 0;
   let enabled = true;
+  let lod = { computed: true, total: 8, active: 2 };
   const listeners = [];
   const scene = {
     frameState: { frameNumber: 10 },
@@ -638,7 +651,7 @@ test('datacenter postRender witness inspects LOD only during bounded preflight a
             module: {
               getLodDiagnostics() {
                 lodReads++;
-                return { computed: true, total: 8, active: 2 };
+                return lod;
               },
             },
           }),
@@ -677,6 +690,39 @@ test('datacenter postRender witness inspects LOD only during bounded preflight a
     },
   );
 
+  const disabledFrameStart = window.__soakRenderedFrames;
+  enabled = false;
+  lod = { computed: false, total: 0, active: 0 };
+  scene.frameState.frameNumber = 12;
+  listeners[0]();
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(window.__soakDatacenterRenderWitness)),
+    {
+      renderedFrames: 3,
+      frameNumber: 12,
+      enabled: false,
+      computed: false,
+      total: 0,
+      active: 0,
+    },
+  );
+  assert.deepEqual(
+    evaluateSoakDatacenterDisabledState(
+      window.__soakDatacenterRenderWitness,
+      disabledFrameStart,
+    ),
+    {
+      enabled: false,
+      computed: false,
+      total: 0,
+      active: 0,
+      renderedFrames: 3,
+      frameNumber: 12,
+      renderedFrameObserved: true,
+      observed: true,
+    },
+  );
+
   const validation = {
     status: 'validated',
     failureReason: null,
@@ -688,10 +734,9 @@ test('datacenter postRender witness inspects LOD only during bounded preflight a
     },
     validation,
   );
-  enabled = false;
   listeners[0]();
-  assert.equal(window.__soakRenderedFrames, 3);
-  assert.equal(lodReads, 1, 'cleanup must stop per-frame LOD inspection');
+  assert.equal(window.__soakRenderedFrames, 4);
+  assert.equal(lodReads, 2, 'cleanup must stop per-frame LOD inspection');
   assert.equal(window.__soakDatacenterPreflightActive, false);
   assert.equal(validation.preloadWitnessCollectionStopped, true);
 
@@ -720,6 +765,36 @@ test('datacenter postRender witness inspects LOD only during bounded preflight a
     existingFailure,
   );
   assert.match(existingFailure.failureReason, /preflight timeout.*page closed/);
+});
+
+test('datacenter disabled preflight rejects logical teardown without a fresh completed frame', () => {
+  const logicalOnly = evaluateSoakDatacenterDisabledState(
+    {
+      enabled: false,
+      computed: false,
+      total: 0,
+      active: 0,
+      renderedFrames: 10,
+      frameNumber: 20,
+    },
+    10,
+  );
+  assert.equal(logicalOnly.renderedFrameObserved, false);
+  assert.equal(logicalOnly.observed, false);
+
+  const wrongVisualState = evaluateSoakDatacenterDisabledState(
+    {
+      enabled: false,
+      computed: true,
+      total: 8,
+      active: 2,
+      renderedFrames: 11,
+      frameNumber: 21,
+    },
+    10,
+  );
+  assert.equal(wrongVisualState.renderedFrameObserved, true);
+  assert.equal(wrongVisualState.observed, false);
 });
 
 test('soak replay commits the selected endpoint before enabling and refreshing Flights', async () => {

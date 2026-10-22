@@ -1274,6 +1274,17 @@ const datacenterFixtureReceipt = () => ({
   disabledRenderableCount: 0,
   setupTiming: 'unmeasured-before-interaction-samples',
   preloadEnabledObserved: true,
+  preloadDisabledRenderedFrameStart: 10,
+  preloadDisabledRenderedFrameEnd: 11,
+  preloadDisabledRenderedFrameObserved: true,
+  preloadDisabledRenderWitness: {
+    renderedFrames: 11,
+    frameNumber: 21,
+    enabled: false,
+    computed: false,
+    total: 0,
+    active: 0,
+  },
   preloadDisabledObserved: true,
   failureReason: null,
   requests: [

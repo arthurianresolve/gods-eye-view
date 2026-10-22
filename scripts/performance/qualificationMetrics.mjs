@@ -845,6 +845,22 @@ function validateDatacenterFixtureReceipt(receipt, label) {
   assert.equal(receipt?.disabledMaterializedFeatureCount, 0);
   assert.equal(receipt?.disabledRenderableCount, 0);
   assert.equal(receipt?.preloadEnabledObserved, true);
+  assert.equal(receipt?.preloadDisabledRenderedFrameObserved, true);
+  assert.ok(Number.isFinite(receipt?.preloadDisabledRenderedFrameStart));
+  assert.ok(Number.isFinite(receipt?.preloadDisabledRenderedFrameEnd));
+  assert.ok(
+    receipt.preloadDisabledRenderedFrameEnd >
+      receipt.preloadDisabledRenderedFrameStart,
+  );
+  assert.deepEqual(receipt?.preloadDisabledRenderWitness, {
+    renderedFrames: receipt.preloadDisabledRenderedFrameEnd,
+    frameNumber: receipt.preloadDisabledRenderWitness?.frameNumber,
+    enabled: false,
+    computed: false,
+    total: 0,
+    active: 0,
+  });
+  assert.ok(Number.isFinite(receipt.preloadDisabledRenderWitness.frameNumber));
   assert.equal(receipt?.preloadDisabledObserved, true);
   assert.equal(receipt?.setupTiming, 'unmeasured-before-interaction-samples');
   assert.equal(Array.isArray(receipt?.requests), true);

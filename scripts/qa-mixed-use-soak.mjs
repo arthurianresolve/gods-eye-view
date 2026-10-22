@@ -75,6 +75,17 @@ function assertSoakDatacenterFixtureReceipt(receipt) {
     receipt.disabledRenderableCount !== 0 ||
     receipt.setupTiming !== 'unmeasured-before-interaction-samples' ||
     receipt.preloadEnabledObserved !== true ||
+    receipt.preloadDisabledRenderedFrameObserved !== true ||
+    !Number.isFinite(receipt.preloadDisabledRenderedFrameStart) ||
+    !Number.isFinite(receipt.preloadDisabledRenderedFrameEnd) ||
+    receipt.preloadDisabledRenderedFrameEnd <=
+      receipt.preloadDisabledRenderedFrameStart ||
+    receipt.preloadDisabledRenderWitness?.renderedFrames !==
+      receipt.preloadDisabledRenderedFrameEnd ||
+    receipt.preloadDisabledRenderWitness?.enabled !== false ||
+    receipt.preloadDisabledRenderWitness?.computed !== false ||
+    receipt.preloadDisabledRenderWitness?.total !== 0 ||
+    receipt.preloadDisabledRenderWitness?.active !== 0 ||
     receipt.preloadDisabledObserved !== true ||
     !Array.isArray(receipt.requests) ||
     receipt.requests.length !== 1 ||
