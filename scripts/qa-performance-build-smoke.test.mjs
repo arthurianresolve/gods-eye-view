@@ -4,7 +4,14 @@ import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -39,6 +46,7 @@ import {
   validateMapStreamingFaultControlDocument,
   validateMapSmokeLayerPopulation,
   readProviderCpuProfileIndexSet,
+  readReceiptedCesiumWorkerContract,
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
@@ -47,6 +55,7 @@ import {
   projectMapStreamingJourneyFailureForSmoke,
   projectMapStreamingJourneyValidationFailureForSmoke,
 } from './qa-performance-build-smoke.mjs';
+
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
   getMapFixtureBuildProfileGoogleApiKey,
@@ -97,6 +106,56 @@ import {
   createShaderProgramAttributionEnvelope,
   earlyRendererDocumentHook,
 } from './performance/earlyCesiumRendererProbe.mjs';
+
+test('smoke reads legacy and digest-versioned Cesium bundles from their receipts', async () => {
+  const buildRoot = await mkdtemp(path.join(os.tmpdir(), 'gev-smoke-cesium-'));
+  const bundleBytes = Buffer.from(
+    `globalThis.CESIUM_WORKERS=atob("${Buffer.from('self.postMessage("ready");').toString('base64')}");`,
+  );
+  const digest = createHash('sha256').update(bundleBytes).digest('hex');
+  try {
+    for (const bundlePath of [
+      'cesium/Cesium.js',
+      `cesium/${digest}/Cesium.js`,
+    ]) {
+      const parent = bundlePath.slice(0, bundlePath.lastIndexOf('/'));
+      const workerPath = `${parent}/Workers/createGeometry.js`;
+      await mkdir(path.join(buildRoot, ...parent.split('/')), {
+        recursive: true,
+      });
+      await writeFile(
+        path.join(buildRoot, ...bundlePath.split('/')),
+        bundleBytes,
+      );
+      const receipt = {
+        assets: [
+          { path: bundlePath, bytes: bundleBytes.length, sha256: digest },
+          { path: workerPath, bytes: 1, sha256: '0'.repeat(64) },
+        ],
+      };
+      const contract = await readReceiptedCesiumWorkerContract({
+        buildRoot,
+        receipt,
+      });
+      assert.equal(contract.bundlePath, bundlePath);
+      assert.deepEqual(contract.allowedModuleIds, ['createGeometry']);
+      await assert.rejects(
+        readReceiptedCesiumWorkerContract({
+          buildRoot,
+          receipt: {
+            assets: [
+              { ...receipt.assets[0], sha256: '0'.repeat(64) },
+              receipt.assets[1],
+            ],
+          },
+        }),
+        /bytes do not match/,
+      );
+    }
+  } finally {
+    await rm(buildRoot, { recursive: true, force: true });
+  }
+});
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MAP_SMOKE_APP_ORIGIN = 'http://127.0.0.1:4173';

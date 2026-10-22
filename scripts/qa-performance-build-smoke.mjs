@@ -48,6 +48,7 @@ import {
 } from './performance/productionFlightFixture.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  resolveCesiumBundlePath,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_TARGETS,
   restoreCesiumWorkerBlobAudit,
@@ -97,6 +98,17 @@ export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
 const ROOT = await realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
+export async function readReceiptedCesiumWorkerContract(build) {
+  const bundlePath = resolveCesiumBundlePath(build.receipt.assets);
+  const bundleBytes = await readFile(
+    path.join(build.buildRoot, ...bundlePath.split('/')),
+  );
+  return deriveCesiumEmbeddedWorkerContract({
+    bundlePath,
+    bundleBytes,
+    assets: build.receipt.assets,
+  });
+}
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
 // The dense integration capture runs six independent browser samples. On the
@@ -5614,13 +5626,7 @@ async function runCandidateCaptureCli({
   const expectedReceiptOnlyWorkerContract =
     workerAuditMode === 'receipt-only'
       ? {
-          ...deriveCesiumEmbeddedWorkerContract({
-            bundlePath: 'cesium/Cesium.js',
-            bundleBytes: await readFile(
-              path.join(build.buildRoot, 'cesium', 'Cesium.js'),
-            ),
-            assets: build.receipt.assets,
-          }),
+          ...(await readReceiptedCesiumWorkerContract(build)),
           assetPaths: build.receipt.assets.map((asset) => asset.path),
         }
       : null;
@@ -5918,20 +5924,7 @@ async function runRevision({
           ? MAP_FIXTURE_BUILD_PROFILE_ID
           : null,
     });
-    const bundlePath = 'cesium/Cesium.js';
-    const bundleAsset = build.receipt.assets.find(
-      (asset) => asset.path === bundlePath,
-    );
-    if (!bundleAsset)
-      throw new Error('Build receipt is missing the Cesium bundle.');
-    const bundleBytes = await readFile(
-      path.join(build.buildRoot, ...bundlePath.split('/')),
-    );
-    workerContract = deriveCesiumEmbeddedWorkerContract({
-      bundlePath,
-      bundleBytes,
-      assets: build.receipt.assets,
-    });
+    workerContract = await readReceiptedCesiumWorkerContract(build);
   } catch (error) {
     error.smokeDiagnostics = {
       phase: 'clean-source-build',
