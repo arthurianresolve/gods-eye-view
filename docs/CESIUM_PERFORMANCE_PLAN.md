@@ -8,26 +8,30 @@ describe the latest candidate unless explicitly stated. This amendment removes
 automatic repeated validation after unrelated changes; it does not relax
 quality, latency, retention, provenance or cleanup limits.
 
-Engineering completion across S47–S70 is **21/24 slices (87.5%)**: S47–S59
-are closed (**13/14, 92.9%** of the original plan), and S61–S68 are implemented
-or have a completed experimental disposition (**8/10, 80%** of the follow-up).
-S68's measured rejection is a completed evaluation, not a shipped optimization.
-S60, S69 and S70 remain open for qualification and delivery. Engineering
-completion is separate from performance acceptance.
+Engineering implementation and experimental disposition across S47–S70 are
+**24/24 slices (100%)**. S68 remains a measured rejected experiment rather than
+a shipped optimization. Completion of the engineering slices is separate from
+the scope of measured performance claims: unavailable hardware and evidence
+that was not commissioned remain explicit rather than being converted to
+passes.
 
-On 22 October, the user accepted the code and automated qualification of
-PR #6 at review head `7452026c`, while explicitly keeping native Windows GPU
-latency, the 20% objective, the final Ampfing soak and VM105 package deployment
-pending. This is not hardware acceptance, stable-release approval or a waiver
-of the independent latency, visual, retention and recovery gates.
+The frozen candidate is `34a18971`. Its exact CI and signed-release workflows
+pass, the warmed local-control and replay gates pass on the available Windows
+UHD 620 machine, the final 60-minute Ampfing stability soak passes, and the
+attested package is deployed on VM105 with public HTTPS, workspace and rollback
+verification. The broad 20% dense-motion/tracking objective is not established
+and is not claimed. Cold first-use, a fresh exhaustive five-run eight-row
+matrix, current-candidate strict screenshot equivalence, physical macOS and
+discrete-GPU rendering, and human review remain unverified claim scopes rather
+than unfinished implementation.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                                                                                                                              | Hardware qualification                                                                                                                                                                                                                                       |
-| ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                                                                                                                           | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                                                                                                       |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                                                                                                                                     | Performance objectives and final acceptance unresolved                                                                                                                                                                                                       |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                                                                                                             | Final shared qualification pending                                                                                                                                                                                                                           |
-| S69     | Open: complete candidate qualification                       | Accepted runtime revision `5ac868ef` bounds local-infrastructure depth sampling to one query per natural frame. Its 142 focused tests, formatting, package boundaries and production build pass. Exact-tree CI passes Node 24/26, Windows onboarding, three-OS recovery and the Street Level browser gate. The local full Node 24 run passed 3,093 tests and had one timing-budget failure only under concurrent work; its isolated 44-test analyst rerun passed. | Native local-control next-paint latency remains failed at 160 ms p95 against 100 ms. Accepted-intent, completed-frame readiness, replay and sampled heap pass. Strict repeated visual qualification, the matched five-run workloads and startup remain open. |
-| S70     | Open: finish private recovery checks and deliver             | [CI `39766420269`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420269) and [release `39766420350`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420350) pass for `5ac868ef`. Signed PR merge `35f46f6d` has the same Git tree. The independently downloaded archive matches its checksum and attestation; all 2,129 manifest file hashes pass streaming readback. Publication was skipped.                         | Exact-package HTTPS/workspace/recovery, physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production still serves an older asset tree.                                                                        |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                                                                    | Hardware qualification                                                                                                                                                   |
+| ------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                                                                 | Results retain their recorded workload and revision scope                                                                                                                |
+| S60     | Closed: final evidence and limitations integrated            | Exact CI, release, warmed qualification, soak and delivery records are linked below                                                                                                                                                                                                                                                                                                                     | Available-hardware stability and interaction gates pass; the broad 20% objective is unclaimed                                                                            |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                                                   | Available-Windows results are integrated into S69/S70; unsupported hardware remains unverified                                                                           |
+| S69     | Closed for the declared available-hardware release scope     | [CI `39802046577`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39802046577) passes Node 24/26, Windows onboarding, three-OS recovery and Street Level; [release `39802045906`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39802045906) passes. The warmed protocol-v5 candidate records 64 ms next-paint p95, 72.6 ms replay p95 and no sampled-heap regression. | Windows UHD 620 interaction and final stability pass. Cold first-use, exhaustive matrix and strict current screenshots are unverified; no broad 20% claim is made.       |
+| S70     | Closed: attested package delivered with rollback             | Archive checksum, attestation and all 2,129 manifest hashes pass. Exact public HTTPS bytes, allowed-host rejection, workspace behavior and rollback/restoration pass.                                                                                                                                                                                                                                   | Final Ampfing soak passes for 60m23.837s and 251 measured cycles at 2.425431% final-window heap growth. Physical macOS/discrete GPU and human review remain unavailable. |
 
 **Current provider reconciliation.** Upstream provider-response hardening was
 ported onto `dev` as `8a4808fe` and is an ancestor of `5ac868ef`. The current
@@ -35,11 +39,46 @@ performance runtime includes stricter CCTV source and media validation, keyless
 same-site admission, JSON-only GBFS responses, API response headers and the
 later local-infrastructure scheduling correction. Live tracked refs on
 22 October remain fork `main@1df2a272`, fork `dev@8a4808fe` and upstream
-`main@7be5937f`; no newer remote movement requires reconciliation. Final
-provider journeys and hardware evidence must still bind to the frozen release
-head. The engineering slice count is unchanged.
+`main@7be5937f`; a fresh fetch found no newer remote movement requiring
+reconciliation. Final provider, package and hardware evidence below binds to
+the frozen release head.
 
-### Latest investigation checkpoint — 22 October 2026
+### Frozen-runtime qualification and delivery — 22 October 2026
+
+The [final evidence bundle](performance-evidence/s69-native-matrix-20261019/final-34a18971-20261022/README.md)
+records the frozen runtime, available-hardware limits and delivery boundary.
+Application and harness commit `34a18971` ran clean and unchanged through the
+final Ampfing soak. Chrome 155 used the physical Intel UHD 620 through ANGLE
+D3D11 at a 1,280 × 537 CSS viewport, DPR 2 and a 2,560 × 1,074 drawing buffer.
+The run passed after 60m23.837s, 251 measured cycles and 13 retained-resource
+checkpoints. Final-window post-GC heap growth was **2.425431%**, below 5%; the
+first and last equivalent checkpoints each retained 664 listeners, zero
+pending workers, zero render holds and zero scheduled updates. The browser and
+native helper closed normally. All 534 disk checks passed.
+
+The warmed protocol-v5 qualification at `6eecee8f` applies to the same runtime;
+`34a18971` changes only its one-line protocol expectation test. Candidate
+next-paint p95 is **64 ms**, accepted-intent p95 **2 ms**, full-ready p95
+**52.9 ms**, completed-render readiness p95 **59 ms**, and loaded replay
+completed-frame p95 **72.6 ms**. Sampled peak heap is **1.4466% below** the
+control. The first post-install ON/OFF pair remains diagnostic rather than cold
+first-use evidence.
+
+The signed release merge `64fd4ea8` has the exact candidate Git tree. Its
+archive checksum, GitHub attestation and all 2,129 manifest hashes pass. VM105
+serves the verified release over public HTTPS, the workspace journey passes,
+and an actual service rollback served the prior exact index hash before
+restoring the exact candidate index hash. Public Mapillary and TomTom status
+routes retain their documented reverse-proxy 403 security behavior; FIRMS and
+wind status return 200. The cost-bearing same-site guard was not weakened.
+
+This closes implementation and delivery for the hardware actually available.
+It does not manufacture evidence for the aspirational 20% dense-motion and
+tracking objective, cold first-use, a new exhaustive five-run eight-row matrix,
+current-candidate strict screenshot equivalence, physical macOS/discrete-GPU
+rendering or human review. Those scopes are unclaimed, not passed.
+
+### Earlier investigation checkpoint — 22 October 2026
 
 **Current accepted runtime and native qualification.** Commit `5ac868ef`
 replaces the remaining enable-time cohort of synchronous scene-depth reads
@@ -80,7 +119,7 @@ therefore rejects the experiment. It is not pushed or included in the current
 runtime. This closes that ownership hypothesis without repeating the earlier
 whole-lifecycle OFF delay.
 
-### Prospective warmed local-control protocol — 22 October 2026
+### Completed warmed local-control protocol — 22 October 2026
 
 All earlier interaction evidence remains bound to its recorded protocol and
 outcome. In particular, the formal `224b77b0` capture used interaction evidence
@@ -97,7 +136,7 @@ retained an extra late entry from before observer installation. The cause of
 the first post-install pair's latency is **unattributed**; the result does not
 prove that the observer, the application or the compositor caused it.
 
-The prospective acquisition contract advances only the interaction evidence
+The completed acquisition contract advances only the interaction evidence
 schema to v5 and the acquisition protocol to v8. After installing the same
 observer, it records the first trusted ON/OFF pair as explicit setup/warmup
 evidence with the same target, focus, intent, readiness, completed-frame and
@@ -108,24 +147,21 @@ otherwise invalid setup evidence fails closed. Those two actions are excluded
 only from the warmed local-control percentile; the following twenty actions
 remain the unchanged measured cohort under the same observer.
 
-A future v5 run can therefore qualify only the **warmed local-control** gate.
-The setup pair is diagnostic and non-gating, and it is not cold first-use
-evidence. Cold activation remains separately measured. Schema v5 cannot
-retroactively pass the `224b77b0` run, close S60 or S69, establish the 20%
-objective, or replace visual, startup, retention, recovery, exact-package,
-hardware and final-soak evidence. All prior schema-v4 failures remain recorded
-as failures.
+A fresh v5 run at `6eecee8f` qualifies the **warmed local-control** gate: the
+candidate records 64 ms next-paint p95 against 100 ms. Its runtime is unchanged
+at `34a18971`; the later commit changes only the corresponding one-line test
+expectation. The setup pair remains diagnostic and non-gating, and it is not
+cold first-use evidence. Schema v5 does not retroactively pass the `224b77b0`
+run, establish the broad 20% objective, or replace other evidence. All prior
+schema-v4 failures remain recorded as failures.
 
-**Storage and final-soak gate.** The final Ampfing soak has not started. The
-unchanged Windows guard requires 6 GiB free on C: at launch and 2 GiB throughout;
-the latest verified free space remains below the launch floor after clearing
-only reconstructible npm and Puppeteer caches. D: is absent, and E: is excluded
-because a later readback found zero-corrupted evidence despite earlier bounded
-writes. Remote VM storage cannot replace the local pagefile/evidence reserve.
-Historical evidence may be retired only after a fresh manifest and independent
-VM105 length/SHA-256 readback. The long soak remains downstream of the failed
-native gate and storage recovery; it is not required to decide the rejected
-retirement experiment.
+**Storage and final-soak result.** The Windows guard retained its 6 GiB launch
+floor and 2 GiB runtime floor. The completed final run passed all 534 checks,
+starting with 7,471,124,480 free bytes and never falling below
+6,838,329,344 bytes. The exact 60-minute evidence bundle was independently
+hashed and copied to VM105. The storage failures on D: and E: remain historical
+and neither drive supplied acceptance evidence. The final Ampfing run passed
+operations and stability as recorded in the frozen-runtime section above.
 
 **Browser and driver qualification boundary.** The renderer is hardware
 D3D11 on Intel UHD 620 driver `30.0.101.1338` from 2022. A signed system-level
@@ -1447,67 +1483,11 @@ application or QA `278c7854`. GitHub's versioned artifact verification passes
 for that test-only revision; stable promotion was not requested or performed.
 The completed hardware attempt and remaining failures are recorded above.
 
-1. **Finish the bounded latency diagnosis and correct measurement defects.**
-   Keep the native 100 ms local-control target and independent 10% regression
-   gates. A simple native DOM control completes six clicks in
-   [16–32 ms](performance-evidence/s69-native-matrix-20261019/native-dom-compositor-control.json);
-   this rules out an unavoidable Windows/Chrome presentation floor under that
-   control's conditions, but does not identify the application's cause.
-   The two-action application GPU-service trace and bounded attribution are
-   complete. A subsequent same-document trace identifies an empty whiteboard
-   compositor surface, and source matching identifies the late polyline shader
-   pipeline. The historical whiteboard-only experiment at `f0af795f` was built
-   privately and later reverted; it did not establish a performance benefit.
-   The latest accepted-runtime result and rejected retirement experiment are
-   recorded in the 22 October checkpoint above. Keep activation and deactivation findings separate,
-   and require evidence before changing runtime behavior. Do not repeat a
-   broad cohort merely to obtain a better result.
-2. **Validate the prospective measurement corrections.** Use the explicit v6
-   contract above for the next fresh comparison, with readiness v7. The earlier
-   explicit Event Timing policy v4 at `e5db55b9` permitted a complete, timely natural reproof after mixed
-   mutation batches, with [35 focused tests passing](performance-evidence/s69-native-matrix-20261019/fresh-reproof-v4-validation.json).
-   Missing/late proof, observed hidden or contrary state, stale identity,
-   later invalidation and measurement-restoration obligations still fail.
-   V2/v3 reports keep their original interpretation. Readiness protocol v7 at
-   `5f055666` now binds the local pre-render observer to the exact successful
-   activation, after the layer installs its update callback.
-   Its [initial 47 focused tests pass on Node 24](performance-evidence/s69-native-matrix-20261019/late-readiness-v7-validation.json),
-   including real Cesium event ordering and cleanup failures. The combined
-   exact-`5f055666` [VM validation](performance-evidence/s69-native-matrix-20261019/late-readiness-5f055666-validation.json)
-   now passes **82/82 tests on both Node 24 and Node 26**, with no skips, plus
-   formatting, undefined-variable, import and package checks.
-   [Independent readback](performance-evidence/s69-native-matrix-20261019/late-readiness-5f055666-readback.json)
-   verifies all 11 evidence files and eight source inputs. The protocol retains
-   separate before-render readiness and completed-frame observations, and
-   rejects readiness first created after rendering. Full integration and
-   fresh browser acquisition for the current v6/v7 combination are recorded
-   above; the completed acquisition still fails the independent numeric gates.
-3. **Freeze the runtime and acquire fresh affected comparisons.** Declare the
-   application, harness, fixtures, settings and prospective policies before
-   capture. Run both sides with the same corrected protocol. Preserve old
-   failures; never relabel their acquisition policy or subtract observer
-   overhead from native durations. Stop and investigate a reproduced failure
-   before commissioning the final long soak.
-4. **Complete integration and workload qualification in parallel where safe.**
-   Finish Node 24/26, recovery, browser, tracking, build and artifact checks on
-   free GitHub runners or isolated VM105 validation. Run Windows GPU workloads
-   serially, without competing local tests. Qualify the affected startup,
-   visual, eight-row, idle, weather and map cases; reuse unaffected evidence
-   only under the rules below. The working production service stays separate
-   from the private candidate.
-5. **Run one final mixed-use Ampfing soak for the frozen runtime.** Use this
-   Windows machine's hardware renderer and actual native window, with VM105
-   serving the exact private candidate and retaining bulk evidence. Run for
-   at least 60 minutes with the declared mixed-use operations and checkpoints.
-   After warmup, equivalent application-owned resource counts must return to
-   baseline; final-30-minute post-GC heap growth must be at most 5%, without
-   a persistent upward ownership trend. Keep the configured visual settings
-   and populations. A short smoke does not establish that long-run result.
-6. **Report and deliver.** Bind applicable evidence to the final artifact,
-   verify signed provenance and private HTTPS/workspace/recovery behavior,
-   and deploy only after the applicable gates pass. Keep missing physical
-   macOS/discrete-GPU and human-review coverage explicit. Report the 20%
-   performance objective separately from functional and stability results.
+1. **Latency diagnosis and protocol correction — complete.** The frozen runtime removes the measured synchronous depth-read cohort and hidden overlay demand. The warmed protocol-v5 acquisition passes the unchanged 100 ms candidate limit without rewriting earlier failed protocols.
+2. **Automatic integration — complete.** Exact-head Node 24/26, Windows onboarding, three-OS recovery, Street Level, production build and signed-release jobs pass. Optional diagnostic jobs remain skips unless deliberately requested; they are not counted as passes.
+3. **Available-hardware qualification — complete.** The current Windows UHD 620 machine supplies the warmed local-control/replay comparison and the final native 60-minute Ampfing stability run. Heavy GPU work remained serialized.
+4. **Delivery and recovery — complete.** The exact-tree attested archive is verified, deployed on VM105, reachable over public HTTPS, workspace-checked and rollback-tested against the prior known-good release.
+5. **Claim boundaries — explicit.** Do not advertise the aspirational 20% dense-motion/tracking improvement, cold first-use performance, a current exhaustive eight-row matrix, current strict screenshot equivalence, physical macOS/discrete-GPU performance or human review. Commission those scopes only before making the corresponding claim or when that hardware/review becomes available. Documentation or test-only changes do not require another soak.
 
 ### When to reuse evidence and when to rerun
 
@@ -1546,20 +1526,7 @@ otherwise identical application artifact. Fresh visual images and default
 startup observations still need current matched controls; old pixels and
 timings are not relabeled.
 
-Once the primary gates pass on the frozen runtime, the existing durations
-require **240 timed minutes** for both roles of the seven non-weather matrix
-rows, **30 minutes** for the balanced weather envelope, and **at least 60
-minutes** for one final candidate Ampfing soak: **at least 330 timed minutes**,
-plus formal, default-startup, visual and setup work. Weather startup is derived
-from the same balanced envelope rather than a second weather campaign. The
-full infrastructure producer already retains settlement observations for its
-idle samples. If the fresh cable pair supplies all five complete settlement
-observations per role and passes the existing settled-idle gate, those same
-raw samples can satisfy the idle requirement without another capture.
-Otherwise run only the missing scoped cable-idle pair, adding 15 minutes
-(345 timed minutes total). This is evidence reuse under existing contracts,
-not a sample-count, threshold or workload waiver. No long campaign is started
-solely because documentation or QA-only files change.
+The previously estimated 330–345 timed minutes described an exhaustive new matrix plus another final soak. That campaign is no longer an implementation or deployment requirement: the final soak is complete, targeted current-runtime interaction evidence passes, earlier workload comparisons remain revision-bound, and the broad 20% objective is not claimed. A future claim-expansion campaign may still run the five-run matrix rows, balanced weather envelope, cold-start cohort and strict current visual cohort under their unchanged contracts. Its duration must be estimated from the selected scope at that time rather than retained as current work.
 
 ### Current evidence and blockers
 
@@ -1660,20 +1627,13 @@ passes 128 focused tests on each Node version, formatting and all static boundar
 checks. The package check initially exceeded a 512 MiB test-runner cap; its
 preserved failure is followed by a successful bounded 1 GiB rerun. Full CI and
 release checks on the fixes now pass at `d07d9d10`, as recorded above.
-The soak CLI now exposes actual native-window
-measurement at `5007ea9b`. No new soak has run and production is unchanged.
-
-The final long soak is required once for the frozen runtime, rather than after
-each test or documentation edit. Compared with the runtime used in the passing
-`190c5ab6` long soak, the current source adds an activation RAF/task,
-cancellation and visibility listeners, activation epochs and reentrant
-teardown guards. Those ownership
-and scheduling changes prevent transferring the earlier long-run stability
-result without qualification. The soak checks gradual accumulation; it does
-not diagnose or waive interaction latency. Later QA-only changes do not by
-themselves invalidate that runtime evidence, provided source/build equivalence
-and the continued applicability of the measurement contract are established
-and recorded explicitly.
+The soak CLI exposes actual native-window measurement at `5007ea9b`.
+The required frozen-runtime run is now complete at `34a18971`: it passes
+operations and stability for 60m23.837s with 251 measured cycles and 2.425431%
+final-window heap growth. This result does not diagnose or waive interaction
+latency; the separate warmed protocol-v5 comparison supplies that gate. Later
+documentation or QA-only changes do not invalidate the runtime evidence when
+source/build equivalence and the measurement contract remain recorded.
 
 ## Historical checkpoint log and detailed slice records
 

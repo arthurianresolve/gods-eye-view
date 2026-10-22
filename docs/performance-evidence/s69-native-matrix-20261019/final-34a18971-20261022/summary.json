@@ -1,0 +1,126 @@
+{
+  "schema": "gev-final-qualification-summary/v1",
+  "candidateCommit": "34a1897150adf1c03eac72e04b9a9ec37fb09ba8",
+  "applicationCommit": "34a1897150adf1c03eac72e04b9a9ec37fb09ba8",
+  "harnessCommit": "34a1897150adf1c03eac72e04b9a9ec37fb09ba8",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessDirtyAtStart": false,
+  "harnessChangedDuringRun": false,
+  "operationStatus": "passed",
+  "fullSoak": true,
+  "durationMs": 3623837,
+  "warmupIterations": 2,
+  "measuredIterations": 251,
+  "hardwareRenderingValidated": true,
+  "browserVersion": "Chrome/155.0.8059.85",
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "renderingEvidence": {
+    "kind": "native-gpu",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": true
+  },
+  "nativeResolution": {
+    "devicePixelRatio": 2,
+    "canvas": {
+      "clientWidth": 1280,
+      "clientHeight": 537,
+      "width": 2560,
+      "height": 1074
+    },
+    "sceneDrawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "resolutionScale": 1,
+    "useBrowserRecommendedResolution": false,
+    "maximumScreenSpaceError": 1
+  },
+  "stability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.024254311964983725
+  },
+  "checkpointCount": 13,
+  "retainedFirst": {
+    "documents": 9,
+    "nodes": 6330,
+    "eventListeners": 664,
+    "pendingWorkers": 0,
+    "renderHolds": 0,
+    "scheduledUpdates": 0,
+    "dataSources": 3,
+    "entities": 12,
+    "primitives": 5,
+    "groundPrimitives": 1,
+    "imageryLayers": 1
+  },
+  "retainedLast": {
+    "documents": 9,
+    "nodes": 6298,
+    "eventListeners": 664,
+    "pendingWorkers": 0,
+    "renderHolds": 0,
+    "scheduledUpdates": 0,
+    "dataSources": 3,
+    "entities": 12,
+    "primitives": 5,
+    "groundPrimitives": 1,
+    "imageryLayers": 1
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 3672694.486,
+      "closeSettledHostMs": 3673857.5321,
+      "closeElapsedMs": 1163.0460999999195,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 934.031799999997
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    },
+    "nativeWindowGeometryHelper": {
+      "schema": "gev-owned-native-window-geometry-session/v1",
+      "status": "closed",
+      "helperPid": 50108,
+      "requests": 523,
+      "exitCode": 0,
+      "signal": null,
+      "forcedTermination": false,
+      "elapsedMs": 99.46100000012666
+    }
+  },
+  "diskGuard": {
+    "launchFloorBytes": 6442450944,
+    "runtimeFloorBytes": 2147483648,
+    "checkCount": 534,
+    "allPassed": true,
+    "launchFreeBytes": 7471124480,
+    "minimumFreeBytes": 6838329344
+  },
+  "rawSoakSha256": "ad65db4833177770172961b238dd48ca1342bd709fc9af649b1d46e94359e37b",
+  "independentReviewSha256": "b67bbc4715cacd4ad0408aea88129068d05369cec3327ebf94c952e624619dea"
+}
